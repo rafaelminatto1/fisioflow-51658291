@@ -3,6 +3,8 @@ import { createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { isUuid } from "../lib/validators";
 import type { Env } from "../types/env";
+import { structuredJson } from "../lib/ai/hermes";
+import { EXTRACT_MEASURES_SYSTEM, coerceMeasures } from "../lib/clinical/extractMeasures";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -134,6 +136,20 @@ app.get("/:id", requireAuth, async (c) => {
 });
 
 // POST /api/standardized-tests
+// POST /api/standardized-tests/extract { text } → { data: ExtractedMeasure[] }
+// Extrai pontuações de escalas/PROMs de um texto livre (IA). O clínico confirma e salva via POST /.
+app.post("/extract", requireAuth, async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as { text?: string };
+  const text = String(body.text ?? "").trim();
+  if (text.length < 5) return c.json({ error: "text é obrigatório (mín. 5 caracteres)" }, 400);
+  try {
+    const raw = await structuredJson(c.env, EXTRACT_MEASURES_SYSTEM, text.slice(0, 4000));
+    return c.json({ data: coerceMeasures(raw) });
+  } catch (e) {
+    return c.json({ error: "Falha ao extrair medições", details: (e as Error).message }, 500);
+  }
+});
+
 app.post("/", requireAuth, async (c) => {
   const user = c.get("user");
   const body = (await c.req.json()) as {

@@ -46,6 +46,29 @@ export const useStandardizedTests = (patientId: string, options?: UseStandardize
   });
 };
 
+export interface ExtractedMeasure {
+  scale: string;
+  score: number;
+  maxScore?: number;
+  interpretation?: string;
+}
+
+/** Extrai pontuações de escalas/PROMs de um texto livre (IA). Não persiste — o clínico salva depois. */
+export const useExtractMeasures = () =>
+  useMutation({
+    mutationFn: async (text: string): Promise<ExtractedMeasure[]> => {
+      const res = await request<{ data: ExtractedMeasure[] }>("/api/standardized-tests/extract", {
+        method: "POST",
+        body: JSON.stringify({ text }),
+      });
+      return res?.data ?? [];
+    },
+    onError: (error) => {
+      logger.error("Erro ao extrair medições", error, "useExtractMeasures");
+      toast.error("Não foi possível extrair as medições");
+    },
+  });
+
 interface CreateStandardizedTestInput {
   patient_id: string;
   scale_name: string;
