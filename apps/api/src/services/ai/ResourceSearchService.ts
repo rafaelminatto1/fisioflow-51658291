@@ -3,7 +3,7 @@ import { createDb, runWithOrg } from "../../lib/db";
 import { searchFilter } from "../../lib/db-utils";
 import { exercises, clinicalTestTemplates, clinicalResourceSuggestions } from "@fisioflow/db";
 import type { Env } from "../../types/env";
-import { runAi } from "../../lib/ai-native";
+import { runAi, readAiText } from "../../lib/ai-native";
 import { searchAiSearch } from "../../lib/cloudflareAiSearch";
 import { WORKERS_AI_MODELS } from "../../lib/workersAi";
 
@@ -193,7 +193,7 @@ export class ResourceSearchService {
         { cache: true, cacheTtl: 86400 },
       );
 
-      const content = (res as any).response || (res as any).text || "";
+      const content = readAiText(res) || (res as any).text || "";
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) return null;
 

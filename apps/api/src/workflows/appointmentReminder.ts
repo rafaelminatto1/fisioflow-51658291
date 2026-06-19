@@ -1,7 +1,7 @@
 import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from "cloudflare:workers";
 import type { Env } from "../types/env";
 import { WORKERS_AI_MODELS } from "../lib/workersAi";
-import { runAi } from "../lib/ai-native";
+import { runAi, readAiText } from "../lib/ai-native";
 
 export type AppointmentReminderParams = {
   appointmentId: string;
@@ -149,7 +149,7 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
           },
           { cache: false },
         );
-        msg = (aiResponse as any).response?.trim() || msg;
+        msg = readAiText(aiResponse).trim() || msg;
       } catch (e) {
         console.warn("[Reminder/AI] Failed to generate AI message, using default", e);
       }
