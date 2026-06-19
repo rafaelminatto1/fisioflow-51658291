@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { getWorkersApiUrl } from "@/lib/api/config";
+import { request } from "@/api/v2";
 import { BrainCircuit, LineChart as LineChartIcon, PieChart as PieChartIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -32,12 +32,11 @@ export function AIAnalyticsHubContent({ embedded = false }: { embedded?: boolean
   const revenueForecastData = asArray(data?.revenueForecast);
 
   useEffect(() => {
-    fetch(`${getWorkersApiUrl()}/api/ai-insights/analytics`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-      },
-    })
-      .then((res) => res.json())
+    request<{
+      retention?: unknown[];
+      noShow?: unknown[];
+      revenueForecast?: unknown[];
+    }>("/api/ai-insights/analytics")
       .then((json) => {
         setData(json);
         setLoading(false);

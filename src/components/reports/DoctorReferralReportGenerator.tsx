@@ -17,6 +17,13 @@ interface DoctorReferralReportGeneratorProps {
   condition: string;
 }
 
+const formatOptionalDate = (value?: string, pattern = "dd/MM/yyyy", fallback = "N/I") => {
+  if (!value) return fallback;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return fallback;
+  return format(parsed, pattern);
+};
+
 export function DoctorReferralReportGenerator({
   patientId,
   patientName,
@@ -63,11 +70,9 @@ export function DoctorReferralReportGenerator({
   const reportData: DoctorReferralPdfData = {
     patient: {
       name: patientName,
-      birthDate: birthDate ? format(new Date(birthDate), "dd/MM/yyyy") : "N/I",
+      birthDate: formatOptionalDate(birthDate),
       condition,
-      lastSession: records[0]?.recordDate
-        ? format(new Date(records[0].recordDate), "dd/MM/yyyy")
-        : "N/A",
+      lastSession: formatOptionalDate(records[0]?.recordDate, "dd/MM/yyyy", "N/A"),
     },
     clinic: {
       name: clinicProfile?.clinic_name || "Clínica de Fisioterapia",
@@ -82,7 +87,7 @@ export function DoctorReferralReportGenerator({
         .slice(0, 3)
         .map(
           (r) =>
-            `${format(new Date(r.recordDate), "dd/MM")}: ${r.assessment || "Evolução registrada"}`,
+            `${formatOptionalDate(r.recordDate, "dd/MM", "--/--")}: ${r.assessment || "Evolução registrada"}`,
         )
         .join("\n"),
       adherence: Math.round(progressPercentage || 0),

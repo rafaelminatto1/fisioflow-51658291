@@ -631,7 +631,7 @@ app.get("/overdue-payments", requireAuth, async (c) => {
         p.id::text as patient_id,
         p.full_name,
         p.phone,
-        p.whatsapp,
+        COALESCE(p.phone_secondary, p.phone) as whatsapp,
         COUNT(cf.id)::int as overdue_count,
         COALESCE(SUM(cf.valor), 0) as overdue_total,
         MIN(COALESCE(cf.data_vencimento, cf.created_at::date))::text as oldest_overdue_date
@@ -645,7 +645,7 @@ app.get("/overdue-payments", requireAuth, async (c) => {
         AND cf.status IN ('pendente', 'atrasado')
         AND COALESCE(cf.data_vencimento, cf.created_at::date) < CURRENT_DATE
         AND cf.patient_id IS NOT NULL
-      GROUP BY p.id, p.full_name, p.phone, p.whatsapp
+      GROUP BY p.id, p.full_name, p.phone, p.phone_secondary
       ORDER BY overdue_total DESC, oldest_overdue_date ASC`,
       [user.organizationId],
     );

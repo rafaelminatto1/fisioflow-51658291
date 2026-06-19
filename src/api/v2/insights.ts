@@ -73,6 +73,22 @@ export const aiApi = {
         };
       };
     }>("/api/ai/movement-video", { method: "POST", body: JSON.stringify(params) }),
+  executiveSummary: (payload: Record<string, unknown>) =>
+    request<{
+      data: {
+        summary: string;
+        trends?: Array<{
+          metric: string;
+          observation: string;
+          sentiment: "positive" | "neutral" | "negative";
+        }>;
+        clinicalAdvice?: string;
+        keyRisks?: string[];
+      };
+    }>("/api/ai/executive-summary", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   transcribeAudio: (params: { audio: string; mimeType: string }) =>
     request<{ data: { transcription: string } }>("/api/ai/transcribe-audio", {
       method: "POST",

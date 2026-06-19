@@ -8,14 +8,13 @@ import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
   Dumbbell,
   Plus,
-  X,
   CheckCircle2,
   AlertTriangle,
   Frown,
   Flame,
   ChevronDown,
   ChevronUp,
-  MoreVertical,
+  Trash2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -25,12 +24,7 @@ import { getImageUrlCandidates } from "@/lib/imageUtils";
 import type { ExerciseV2Item, ExerciseFeedback } from "./types";
 
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 
 interface ExerciseBlockV2Props {
   exercises: ExerciseV2Item[];
@@ -396,36 +390,14 @@ const ExerciseV2Row: React.FC<{
             )}
           </button>
 
-          {/* Actions dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="p-1 rounded-lg hover:bg-muted opacity-0 group-hover:opacity-100 transition-all">
-                <MoreVertical className="h-4 w-4 text-muted-foreground" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[160px]">
-              <DropdownMenuItem onClick={() => setExpanded(!expanded)} className="gap-2">
-                {expanded ? (
-                  <>
-                    <ChevronUp className="h-4 w-4" />
-                    Recolher detalhes
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="h-4 w-4" />
-                    Ver detalhes
-                  </>
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={handleRemove}
-                className="gap-2 text-destructive focus:text-destructive"
-              >
-                <X className="h-4 w-4" />
-                Remover
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Trash button for direct deletion */}
+          <button
+            onClick={handleRemove}
+            className="p-1 rounded-lg hover:bg-red-50 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all text-muted-foreground"
+            title="Remover exercício"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
         </div>
 
         {/* Expanded details with animation */}

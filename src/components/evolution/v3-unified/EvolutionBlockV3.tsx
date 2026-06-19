@@ -11,7 +11,6 @@ import {
   Dumbbell,
   Stethoscope,
   Info,
-  MoreVertical,
   MessageSquare,
   GripVertical,
   Search,
@@ -35,12 +34,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import type { EvolutionBlockV3Props, EvolutionItemType, EvolutionItemV3 } from "./types";
 import { COMMON_PROCEDURES } from "../v2-improved/types";
 import { useExercises, type Exercise } from "@/hooks/useExercises";
@@ -200,13 +193,9 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                 : provided.draggableProps.style?.width,
             }}
           >
-            {/* Row Header — arrastável em qualquer ponto da linha */}
+            {/* Row Header */}
             <div
-              {...provided.dragHandleProps}
-              className={cn(
-                "flex items-center gap-2 px-2.5 py-1.5",
-                !disabled && "cursor-grab active:cursor-grabbing",
-              )}
+              className="flex items-center gap-2 px-2.5 py-1.5"
               ref={(el) => {
                 if (el && snapshot.isDragging) {
                   // Captura o width original para usar no portal
@@ -226,9 +215,10 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                 {index + 1}
               </span>
               <div
+                {...provided.dragHandleProps}
                 className={cn(
-                  "flex h-7 w-5 shrink-0 items-center justify-center text-muted-foreground/35",
-                  disabled && "opacity-40",
+                  "flex h-7 w-5 shrink-0 items-center justify-center text-muted-foreground/35 transition-colors duration-150",
+                  !disabled ? "cursor-grab active:cursor-grabbing hover:text-muted-foreground/60" : "opacity-40",
                 )}
                 aria-hidden="true"
               >
@@ -240,6 +230,9 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                 onCheckedChange={() => handleToggleItem(item.id)}
                 disabled={disabled}
                 className="h-4 w-4 rounded data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
               />
 
               <div
@@ -343,27 +336,16 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                   )}
                 </Button>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 rounded-md text-muted-foreground opacity-0 group-hover/item:opacity-100 transition-opacity focus-visible:opacity-100"
-                      aria-label="Mais opções"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40 rounded-xl">
-                    <DropdownMenuItem
-                      onClick={() => handleRemoveItem(item.id)}
-                      className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Remover
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => handleRemoveItem(item.id)}
+                  className="h-7 w-7 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover/item:opacity-100 transition-opacity focus-visible:opacity-100"
+                  aria-label="Remover"
+                  title="Remover"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             </div>
 
@@ -479,6 +461,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
   const [newItemDialogOpen, setNewItemDialogOpen] = useState(false);
   const [pendingItemName, setPendingItemName] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [forceHideSuggestions, setForceHideSuggestions] = useState(false);
   const inputWrapRef = useRef<HTMLDivElement>(null);
   const [dropdownRect, setDropdownRect] = useState<{ top: number; left: number; width: number } | null>(null);
 
@@ -634,6 +617,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
     onChange([...items, newItem]);
     setNewItemName("");
     setPendingItemName("");
+    setForceHideSuggestions(true);
     // Item starts collapsed; user expands manually to fill details
   };
 
@@ -721,7 +705,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
   }, [procedureSuggestions, exerciseSuggestions]);
 
   const hasSuggestions = combinedSuggestions.length > 0;
-  const shouldShowSuggestions = hasSuggestions && (isInputFocused || trimmedQuery.length > 0);
+  const shouldShowSuggestions = hasSuggestions && !forceHideSuggestions && (isInputFocused || trimmedQuery.length > 0);
 
   // Posiciona o dropdown via portal (escapa de containers com overflow).
   const updateDropdownRect = React.useCallback(() => {
@@ -1046,9 +1030,15 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
             <Input
               data-evolution-input={type}
               value={newItemName}
-              onChange={(e) => setNewItemName(e.target.value)}
+              onChange={(e) => {
+                setNewItemName(e.target.value);
+                setForceHideSuggestions(false);
+              }}
               onKeyDown={handleKeyDown}
-              onFocus={() => setIsInputFocused(true)}
+              onFocus={() => {
+                setIsInputFocused(true);
+                setForceHideSuggestions(false);
+              }}
               onBlur={() => setTimeout(() => setIsInputFocused(false), 150)}
               placeholder={
                 placeholder ||

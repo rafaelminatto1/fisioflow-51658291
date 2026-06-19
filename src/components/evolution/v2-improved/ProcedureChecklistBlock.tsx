@@ -10,10 +10,9 @@ import {
   CheckCircle2,
   Zap,
   Trophy,
-  X,
   MessageSquare,
   Sparkles,
-  MoreVertical,
+  Trash2,
   CheckSquare,
 } from "lucide-react";
 import confetti from "canvas-confetti";
@@ -39,12 +38,7 @@ import {
 } from "@/components/ui/select";
 import { type ProcedureItem, type ProcedureCategory, PROCEDURE_CATEGORY_LABELS } from "./types";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 
 interface ProcedureChecklistBlockProps {
   procedures: ProcedureItem[];
@@ -494,30 +488,26 @@ const ProcedureRow: React.FC<{
             )}
           </div>
 
-          {/* Actions dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className="p-1 rounded-lg hover:bg-muted opacity-0 group-hover:opacity-100 transition-all"
-                aria-label="Mais opções"
-              >
-                <MoreVertical className="h-4 w-4 text-muted-foreground" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[160px]">
-              <DropdownMenuItem onClick={() => setShowNotes(!showNotes)} className="gap-2">
-                <MessageSquare className="h-4 w-4" />
-                {showNotes ? "Ocultar notas" : "Adicionar notas"}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={handleRemove}
-                className="gap-2 text-destructive focus:text-destructive"
-              >
-                <X className="h-4 w-4" />
-                Remover
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Notes toggle button */}
+          <button
+            onClick={() => setShowNotes(!showNotes)}
+            className={cn(
+              "p-1 rounded-lg hover:bg-muted opacity-0 group-hover:opacity-100 transition-all text-muted-foreground",
+              showNotes && "opacity-100 bg-muted"
+            )}
+            title={showNotes ? "Ocultar observações" : "Adicionar observações"}
+          >
+            <MessageSquare className="h-4 w-4" />
+          </button>
+
+          {/* Trash button for direct deletion */}
+          <button
+            onClick={handleRemove}
+            className="p-1 rounded-lg hover:bg-red-50 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all text-muted-foreground"
+            title="Remover procedimento"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
         </div>
 
         {/* Intensity and Notes area */}

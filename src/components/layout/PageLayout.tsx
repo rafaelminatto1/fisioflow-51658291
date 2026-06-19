@@ -9,6 +9,8 @@ interface PageLayoutProps {
   compactHeader?: boolean;
   fullWidth?: boolean;
   noPadding?: boolean;
+  hideDefaultHeader?: boolean;
+  customHeader?: React.ReactNode;
   className?: string;
 }
 
@@ -19,6 +21,8 @@ export function PageLayout({
   compactHeader = false,
   fullWidth = false,
   noPadding = false,
+  hideDefaultHeader = false,
+  customHeader,
   className,
 }: PageLayoutProps) {
   return (
@@ -27,6 +31,8 @@ export function PageLayout({
       compactPadding={compactHeader}
       fullWidth={fullWidth}
       noPadding={noPadding}
+      hideDefaultHeader={hideDefaultHeader}
+      customHeader={customHeader}
     >
       <div className={cn("flex-1 flex flex-col min-h-0", className)}>
         {children}

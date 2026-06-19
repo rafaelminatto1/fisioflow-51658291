@@ -8,59 +8,9 @@ import { Hono } from "hono";
 import { createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
+import { hasTable } from "./analytics/shared";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
-type Pool = ReturnType<typeof createPool>;
-
-let notificationPreferencesSchemaReady: Promise<void> | null = null;
-
-async function ensureNotificationPreferencesSchema(pool: Pool) {
-  if (!notificationPreferencesSchemaReady) {
-    notificationPreferencesSchemaReady = (async () => {
-      const statements = [
-        `CREATE TABLE IF NOT EXISTS notification_preferences (
-          id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
-          user_id TEXT NOT NULL,
-          organization_id TEXT,
-          appointment_reminders BOOLEAN NOT NULL DEFAULT TRUE,
-          exercise_reminders BOOLEAN NOT NULL DEFAULT TRUE,
-          progress_updates BOOLEAN NOT NULL DEFAULT TRUE,
-          system_alerts BOOLEAN NOT NULL DEFAULT TRUE,
-          therapist_messages BOOLEAN NOT NULL DEFAULT TRUE,
-          payment_reminders BOOLEAN NOT NULL DEFAULT TRUE,
-          quiet_hours_start TEXT NOT NULL DEFAULT '22:00',
-          quiet_hours_end TEXT NOT NULL DEFAULT '08:00',
-          weekend_notifications BOOLEAN NOT NULL DEFAULT FALSE,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )`,
-        `ALTER TABLE IF EXISTS notification_preferences ADD COLUMN IF NOT EXISTS user_id TEXT`,
-        `ALTER TABLE IF EXISTS notification_preferences ADD COLUMN IF NOT EXISTS organization_id TEXT`,
-        `ALTER TABLE IF EXISTS notification_preferences ADD COLUMN IF NOT EXISTS appointment_reminders BOOLEAN NOT NULL DEFAULT TRUE`,
-        `ALTER TABLE IF EXISTS notification_preferences ADD COLUMN IF NOT EXISTS exercise_reminders BOOLEAN NOT NULL DEFAULT TRUE`,
-        `ALTER TABLE IF EXISTS notification_preferences ADD COLUMN IF NOT EXISTS progress_updates BOOLEAN NOT NULL DEFAULT TRUE`,
-        `ALTER TABLE IF EXISTS notification_preferences ADD COLUMN IF NOT EXISTS system_alerts BOOLEAN NOT NULL DEFAULT TRUE`,
-        `ALTER TABLE IF EXISTS notification_preferences ADD COLUMN IF NOT EXISTS therapist_messages BOOLEAN NOT NULL DEFAULT TRUE`,
-        `ALTER TABLE IF EXISTS notification_preferences ADD COLUMN IF NOT EXISTS payment_reminders BOOLEAN NOT NULL DEFAULT TRUE`,
-        `ALTER TABLE IF EXISTS notification_preferences ADD COLUMN IF NOT EXISTS quiet_hours_start TEXT NOT NULL DEFAULT '22:00'`,
-        `ALTER TABLE IF EXISTS notification_preferences ADD COLUMN IF NOT EXISTS quiet_hours_end TEXT NOT NULL DEFAULT '08:00'`,
-        `ALTER TABLE IF EXISTS notification_preferences ADD COLUMN IF NOT EXISTS weekend_notifications BOOLEAN NOT NULL DEFAULT FALSE`,
-        `ALTER TABLE IF EXISTS notification_preferences ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
-        `ALTER TABLE IF EXISTS notification_preferences ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
-        `CREATE UNIQUE INDEX IF NOT EXISTS idx_notification_preferences_user_id ON notification_preferences (user_id)`,
-      ];
-
-      for (const statement of statements) {
-        await pool.query(statement);
-      }
-    })().catch((error) => {
-      notificationPreferencesSchemaReady = null;
-      throw error;
-    });
-  }
-
-  await notificationPreferencesSchemaReady;
-}
 
 const DEFAULT_PREFS = {
   appointment_reminders: true,
@@ -78,11 +28,25 @@ app.get("/", requireAuth, async (c) => {
   const user = c.get("user");
   const pool = await createPool(c.env);
   try {
-    await ensureNotificationPreferencesSchema(pool);
+    if (!(await hasTable(pool, "notification_preferences"))) {
+      return c.json({
+        data: {
+          user_id: user.uid,
+          organization_id: user.organizationId,
+          ...DEFAULT_PREFS,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      });
+    }
 
-    const result = await pool.query("SELECT * FROM notification_preferences WHERE user_id = $1", [
-      user.uid,
-    ]);
+    const result = await pool.query(
+      `SELECT *
+       FROM notification_preferences
+       WHERE user_id = $1 AND organization_id = $2
+       LIMIT 1`,
+      [user.uid, user.organizationId],
+    );
 
     if (!result.rows.length) {
       const fallback = {
@@ -106,7 +70,10 @@ app.put("/", requireAuth, async (c) => {
   const user = c.get("user");
   const pool = await createPool(c.env);
   try {
-    await ensureNotificationPreferencesSchema(pool);
+    if (!(await hasTable(pool, "notification_preferences"))) {
+      return c.json({ error: "Tabela notification_preferences indisponível" }, 503);
+    }
+
     const body = (await c.req.json()) as Record<string, unknown>;
 
     const prefs = {
@@ -157,6 +124,7 @@ app.put("/", requireAuth, async (c) => {
         updated_at
       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW(),NOW())
       ON CONFLICT (user_id) DO UPDATE SET
+        organization_id = EXCLUDED.organization_id,
         appointment_reminders = EXCLUDED.appointment_reminders,
         exercise_reminders = EXCLUDED.exercise_reminders,
         progress_updates = EXCLUDED.progress_updates,

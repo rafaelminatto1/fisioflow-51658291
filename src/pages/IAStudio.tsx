@@ -27,23 +27,20 @@ import { GaitAnalysisStudio } from "@/features/ia-studio/components/GaitAnalysis
 import { PremiumReportGenerator } from "@/features/ia-studio/components/PremiumReportGenerator";
 import { IAInsightsBar } from "@/features/ia-studio/components/IAInsightsBar";
 import { AgentHub } from "@/features/ia-studio/components/AgentHub";
+import { request } from "@/api/v2";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { getWorkersApiUrl } from "@/lib/api/config";
 
 export const IAStudioWorkspace: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
   const { data: usageData } = useQuery({
     queryKey: ["ai-usage-weekly"],
-    queryFn: async () => {
-      const res = await fetch(`${getWorkersApiUrl()}/api/ai/usage/weekly`);
-      if (!res.ok) return null;
-      return res.json() as Promise<{
+    queryFn: () =>
+      request<{
         totalCalls: number;
         totalTokens: number;
         avgLatencyMs: number;
         fallbackCalls: number;
-      }>;
-    },
+      }>("/api/ai/usage/weekly"),
     staleTime: 1000 * 60 * 5,
   });
   const [isScribeOpen, setIsScribeOpen] = useState(false);

@@ -7,10 +7,13 @@ import { eq, desc, and } from "drizzle-orm";
 import { createPool } from "../lib/db";
 import { AdherencePredictor } from "../lib/ai/adherencePredictor";
 import { isUuid } from "../lib/validators";
+import { hasTable } from "./analytics/shared";
+import { registerPatientAnalyticsRoutes } from "./analytics/patient";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 app.use("*", requireAuth);
+registerPatientAnalyticsRoutes(app);
 
 /**
  * GET /at-risk-patients
@@ -219,6 +222,293 @@ app.get("/dashboard", async (c) => {
   } catch (error) {
     console.error("[Analytics] Insights Dashboard error:", error);
     return c.json({ error: "Failed to fetch insights dashboard" }, 500);
+  }
+});
+
+app.get("/bi", async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+  const monthsParam = Number(c.req.query("months") ?? 6);
+  const months = Number.isFinite(monthsParam) ? Math.min(Math.max(monthsParam, 1), 24) : 6;
+
+  try {
+    const periodStartRes = await pool.query(
+      `SELECT date_trunc('month', CURRENT_DATE) - (($1::int - 1) * interval '1 month') AS period_start`,
+      [months],
+    );
+    const periodStart = periodStartRes.rows[0]?.period_start;
+
+    const [revenueRes, currentMonthRes, occupancyRes, retentionRes, topTherapistsRes, statusRes] =
+      await Promise.all([
+        pool.query(
+          `
+            SELECT
+              to_char(date_trunc('month', created_at), 'YYYY-MM') AS month,
+              COUNT(*)::int AS payments_count,
+              COALESCE(SUM(amount), 0)::numeric AS revenue
+            FROM payments
+            WHERE organization_id = $1
+              AND created_at >= $2
+              AND deleted_at IS NULL
+              AND status IN ('completed', 'paid', 'realizado')
+            GROUP BY 1
+            ORDER BY 1 ASC
+          `,
+          [user.organizationId, periodStart],
+        ),
+        pool.query(
+          `
+            SELECT COALESCE(SUM(amount), 0)::numeric AS revenue
+            FROM payments
+            WHERE organization_id = $1
+              AND deleted_at IS NULL
+              AND status IN ('completed', 'paid', 'realizado')
+              AND created_at >= date_trunc('month', CURRENT_DATE)
+          `,
+          [user.organizationId],
+        ),
+        pool.query(
+          `
+            WITH scoped AS (
+              SELECT status
+              FROM appointments
+              WHERE organization_id = $1
+                AND date >= $2
+            )
+            SELECT
+              COUNT(*) FILTER (WHERE status IN ('confirmed', 'completed', 'realizado', 'scheduled', 'agendado'))::int AS booked,
+              COUNT(*)::int AS total
+            FROM scoped
+          `,
+          [user.organizationId, periodStart],
+        ),
+        pool.query(
+          `
+            WITH patient_visits AS (
+              SELECT patient_id, COUNT(*)::int AS total_visits
+              FROM appointments
+              WHERE organization_id = $1
+                AND patient_id IS NOT NULL
+                AND date >= $2
+              GROUP BY patient_id
+            )
+            SELECT
+              COUNT(*) FILTER (WHERE total_visits >= 2)::int AS retained_patients,
+              COUNT(*)::int AS total_active_patients
+            FROM patient_visits
+          `,
+          [user.organizationId, periodStart],
+        ),
+        pool.query(
+          `
+            WITH therapist_sessions AS (
+              SELECT
+                a.therapist_id,
+                COUNT(*) FILTER (WHERE a.status IN ('completed', 'realizado'))::int AS sessions_completed,
+                COUNT(*) FILTER (WHERE a.status = 'no_show')::int AS no_shows
+              FROM appointments a
+              WHERE a.organization_id = $1
+                AND a.date >= $2
+                AND a.therapist_id IS NOT NULL
+              GROUP BY a.therapist_id
+            ),
+            therapist_revenue AS (
+              SELECT
+                a.therapist_id,
+                COALESCE(SUM(p.amount), 0)::numeric AS revenue
+              FROM payments p
+              JOIN appointments a ON a.id = p.appointment_id
+              WHERE p.organization_id = $1
+                AND p.deleted_at IS NULL
+                AND p.status IN ('completed', 'paid', 'realizado')
+                AND p.created_at >= $2
+                AND a.therapist_id IS NOT NULL
+              GROUP BY a.therapist_id
+            )
+            SELECT
+              ts.therapist_id,
+              COALESCE(pr.full_name, ts.therapist_id::text, 'Profissional') AS name,
+              ts.sessions_completed,
+              ts.no_shows,
+              COALESCE(tr.revenue, 0)::text AS revenue
+            FROM therapist_sessions ts
+            LEFT JOIN profiles pr ON pr.id = ts.therapist_id
+            LEFT JOIN therapist_revenue tr ON tr.therapist_id = ts.therapist_id
+            ORDER BY ts.sessions_completed DESC, COALESCE(tr.revenue, 0) DESC
+            LIMIT 5
+          `,
+          [user.organizationId, periodStart],
+        ).catch(() => ({ rows: [] as Array<Record<string, unknown>> })),
+        pool.query(
+          `
+            SELECT status, COUNT(*)::int AS count
+            FROM appointments
+            WHERE organization_id = $1
+              AND date >= $2
+            GROUP BY status
+            ORDER BY count DESC
+          `,
+          [user.organizationId, periodStart],
+        ),
+      ]);
+
+    const revenueTrend = revenueRes.rows.map((row) => ({
+      month: String(row.month ?? ""),
+      sessions: Number(row.payments_count ?? 0),
+      revenue: String(row.revenue ?? "0"),
+    }));
+    const currentMonth = Number(currentMonthRes.rows[0]?.revenue ?? 0);
+    const previousMonthRevenue =
+      revenueTrend.length > 1 ? Number(revenueTrend[revenueTrend.length - 2]?.revenue ?? 0) : 0;
+    const trendPct =
+      previousMonthRevenue > 0
+        ? Number((((currentMonth - previousMonthRevenue) / previousMonthRevenue) * 100).toFixed(1))
+        : currentMonth > 0
+          ? 100
+          : 0;
+    const booked = Number(occupancyRes.rows[0]?.booked ?? 0);
+    const totalSlots = Number(occupancyRes.rows[0]?.total ?? 0);
+    const retainedPatients = Number(retentionRes.rows[0]?.retained_patients ?? 0);
+    const totalActivePatients = Number(retentionRes.rows[0]?.total_active_patients ?? 0);
+
+    return c.json({
+      data: {
+        revenue: {
+          trend: revenueTrend,
+          total_period: revenueTrend.reduce((sum, row) => sum + Number(row.revenue), 0),
+          current_month: currentMonth,
+          trend_pct: trendPct,
+        },
+        occupancy: {
+          rate: totalSlots > 0 ? Number(((booked / totalSlots) * 100).toFixed(1)) : 0,
+          booked,
+          total_slots: totalSlots,
+        },
+        retention: {
+          rate:
+            totalActivePatients > 0
+              ? Number(((retainedPatients / totalActivePatients) * 100).toFixed(1))
+              : 0,
+          retained_patients: retainedPatients,
+          total_active_patients: totalActivePatients,
+        },
+        top_therapists: topTherapistsRes.rows.map((row) => ({
+          therapist_id: String(row.therapist_id ?? ""),
+          name: String(row.name ?? "Profissional"),
+          sessions_completed: Number(row.sessions_completed ?? 0),
+          no_shows: Number(row.no_shows ?? 0),
+          revenue: String(row.revenue ?? "0"),
+        })),
+        status_breakdown: statusRes.rows.map((row) => ({
+          status: String(row.status ?? "unknown"),
+          count: Number(row.count ?? 0),
+        })),
+      },
+    });
+  } catch (error) {
+    console.error("[Analytics] BI error:", error);
+    return c.json({ error: "Failed to fetch BI analytics" }, 500);
+  }
+});
+
+app.get("/top-exercises", async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+  const limitParam = Number(c.req.query("limit") ?? 5);
+  const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 20) : 5;
+
+  try {
+    if (await hasTable(pool, "prescribed_exercises")) {
+      const result = await pool.query(
+        `
+          SELECT
+            COALESCE(exercise_id::text, 'sem-exercise-id') AS exercise_id,
+            COALESCE(MAX(notes), 'Exercício sem nome') AS name,
+            COUNT(*)::int AS usage_count
+          FROM prescribed_exercises
+          WHERE organization_id = $1
+            AND deleted_at IS NULL
+            AND is_active = true
+          GROUP BY exercise_id
+          ORDER BY usage_count DESC, name ASC
+          LIMIT $2
+        `,
+        [user.organizationId, limit],
+      );
+
+      return c.json({
+        data: result.rows.map((row) => ({
+          exercise_id: String(row.exercise_id ?? ""),
+          name: String(row.name ?? "Exercício"),
+          usage_count: Number(row.usage_count ?? 0),
+        })),
+      });
+    }
+
+    return c.json({ data: [] });
+  } catch (error) {
+    console.error("[Analytics] Top exercises error:", error);
+    return c.json({ error: "Failed to fetch top exercises" }, 500);
+  }
+});
+
+app.get("/pain-map", async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+  const limitParam = Number(c.req.query("limit") ?? 5);
+  const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 20) : 5;
+
+  try {
+    if (!(await hasTable(pool, "pain_maps"))) {
+      return c.json({ data: [] });
+    }
+
+    const hasPoints = await hasTable(pool, "pain_map_points");
+    const result = hasPoints
+      ? await pool.query(
+          `
+            SELECT
+              COALESCE(NULLIF(TRIM(pmp.region), ''), NULLIF(TRIM(pm.body_region), ''), 'Não informado') AS region,
+              COUNT(*)::int AS count,
+              COALESCE(AVG(COALESCE(pmp.intensity, pm.pain_level)), 0)::numeric AS avg_intensity
+            FROM pain_maps pm
+            LEFT JOIN pain_map_points pmp
+              ON pmp.pain_map_id = pm.id
+             AND (pmp.organization_id = $1 OR pmp.organization_id IS NULL)
+            WHERE pm.organization_id = $1
+              AND pm.deleted_at IS NULL
+            GROUP BY 1
+            ORDER BY count DESC, avg_intensity DESC
+            LIMIT $2
+          `,
+          [user.organizationId, limit],
+        )
+      : await pool.query(
+          `
+            SELECT
+              COALESCE(NULLIF(TRIM(body_region), ''), 'Não informado') AS region,
+              COUNT(*)::int AS count,
+              COALESCE(AVG(pain_level), 0)::numeric AS avg_intensity
+            FROM pain_maps
+            WHERE organization_id = $1
+              AND deleted_at IS NULL
+            GROUP BY 1
+            ORDER BY count DESC, avg_intensity DESC
+            LIMIT $2
+          `,
+          [user.organizationId, limit],
+        );
+
+    return c.json({
+      data: result.rows.map((row) => ({
+        region: String(row.region ?? "Não informado"),
+        count: Number(row.count ?? 0),
+        avg_intensity: Number(row.avg_intensity ?? 0),
+      })),
+    });
+  } catch (error) {
+    console.error("[Analytics] Pain map error:", error);
+    return c.json({ error: "Failed to fetch pain map analytics" }, 500);
   }
 });
 

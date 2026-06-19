@@ -65,6 +65,9 @@ import { MedicalReturnCard } from "@/components/evolution/MedicalReturnCard";
 import { SurgeriesCard } from "@/components/evolution/SurgeriesCard";
 import { EvolutionSummaryCard } from "@/components/evolution/EvolutionSummaryCard";
 import { MetasCard } from "@/components/evolution/MetasCard";
+import { MedicalReturnFormModal } from "@/components/evolution/MedicalReturnFormModal";
+import { SurgeryFormModal } from "@/components/evolution/SurgeryFormModal";
+import { MetaFormModal } from "@/components/evolution/MetaFormModal";
 import { ComponentErrorBoundary } from "@/components/error";
 import { ApplyTemplateModal } from "@/components/evolution/modals/ApplyTemplateModal";
 import {
@@ -178,6 +181,9 @@ const PatientEvolution = () => {
 			/* ignore */
 		}
 	}, []);
+	const [medicalReturnModalOpen, setMedicalReturnModalOpen] = useState(false);
+	const [surgeryModalOpen, setSurgeryModalOpen] = useState(false);
+	const [goalModalOpen, setGoalModalOpen] = useState(false);
 	const [evolutionBlocks, setEvolutionBlocks] = useState<EvolutionBlock[]>([]);
 	const blocksSeededRef = useRef<string | undefined>(undefined);
 	const blocksSaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -897,6 +903,13 @@ const PatientEvolution = () => {
 					<EvolutionTabsBar
 						activeTab={state.activeTab}
 						onTabChange={(v) => state.setActiveTab(v as EvolutionTab)}
+						onOpenMedicalReturn={() => setMedicalReturnModalOpen(true)}
+						onOpenSurgeries={() => setSurgeryModalOpen(true)}
+						onOpenGoals={() => setGoalModalOpen(true)}
+						metasCount={{
+							completed: state.goals?.filter((g: any) => g.status === "concluido").length || 0,
+							total: state.goals?.length || 0,
+						}}
 					/>
 
 					<div className="flex-1 overflow-y-auto relative bg-background">
