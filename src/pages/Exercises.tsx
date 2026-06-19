@@ -1,3 +1,8 @@
+/**
+ * DOCUMENTAÇÃO DESTA PÁGINA:
+ * Consulte o arquivo de documentação em 'docs/exercises-page.md' na raiz do projeto
+ * antes de fazer qualquer modificação neste arquivo ou em componentes relacionados à biblioteca de exercícios.
+ */
 import { useState, useMemo, useCallback, lazy, Suspense, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";

@@ -1,3 +1,8 @@
+/**
+ * DOCUMENTAÇÃO DESTA PÁGINA:
+ * Consulte o arquivo de documentação em 'docs/exercises-page.md' na raiz do projeto
+ * antes de fazer qualquer modificação neste arquivo ou em componentes relacionados à biblioteca de exercícios.
+ */
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
