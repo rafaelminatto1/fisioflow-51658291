@@ -204,6 +204,14 @@ new_sqlite_classes = ["VoiceScribeAgent"]
 tag = "v10"
 new_classes = ["EvolutionCollaboration"]
 
+# PatientAgent/ClinicAgent estendem o Agents SDK (requer SQLite), mas foram criados como
+# KV (new_classes v6/v8) → setState falhava (500). Recria como SQLite. Sem perda de dados
+# relevante (o estado nunca persistiu). KV→SQLite in-place não é suportado pela Cloudflare.
+[[migrations]]
+tag = "v11"
+deleted_classes = ["PatientAgent", "ClinicAgent"]
+new_sqlite_classes = ["PatientAgent", "ClinicAgent"]
+
 # ===== AI & BROWSER RENDERING =====
 [ai]
 binding = "AI"
@@ -404,6 +412,11 @@ new_sqlite_classes = ["VoiceScribeAgent"]
 [[env.production.migrations]]
 tag = "v10"
 new_classes = ["EvolutionCollaboration"]
+
+[[env.production.migrations]]
+tag = "v11"
+deleted_classes = ["PatientAgent", "ClinicAgent"]
+new_sqlite_classes = ["PatientAgent", "ClinicAgent"]
 
 [env.production.ai]
 binding = "AI"
