@@ -419,9 +419,11 @@ app.onError(errorHandler);
 import { handleScheduled } from "./cron";
 import { handleQueue } from "./queue";
 export { OrganizationState } from "./lib/realtime";
-export { PatientAgent } from "./agents/PatientAgent";
+// Exportadas com sufixo Sql: as classes KV originais (PatientAgent/ClinicAgent) foram
+// substituídas por DOs SQLite (Agents SDK exige SQLite). Ver migrations v11/v12 em wrangler.toml.
+export { PatientAgent as PatientAgentSql } from "./agents/PatientAgent";
 export { AssessmentLiveSession } from "./agents/AssessmentLiveSession";
-export { ClinicAgent } from "./agents/ClinicAgent";
+export { ClinicAgent as ClinicAgentSql } from "./agents/ClinicAgent";
 export { VoiceScribeAgent } from "./agents/VoiceScribeAgent";
 export { EvolutionCollaboration } from "./agents/EvolutionCollaboration";
 
