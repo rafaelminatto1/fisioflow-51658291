@@ -176,16 +176,17 @@ app.get("/dashboard", async (c) => {
       [user.organizationId],
     );
 
-    // Receita no período (payments usa amount_cents)
+    // Receita no período (payments usa amount numeric, paid_at date)
     const revenueRes = await pool.query(
       `SELECT 
-        COALESCE(SUM(amount_cents), 0) as total_revenue_cents,
+        COALESCE(SUM(amount), 0) as total_revenue,
         COUNT(*) as total_payments,
-        AVG(amount_cents) as avg_ticket_cents
+        AVG(amount) as avg_ticket
       FROM payments
       WHERE organization_id = $1
         AND status = 'completed'
-        AND created_at >= date_trunc('${truncPeriod}', CURRENT_DATE)`,
+        AND paid_at >= date_trunc('${truncPeriod}', CURRENT_DATE)
+        AND deleted_at IS NULL`,
       [user.organizationId],
     );
 
@@ -194,8 +195,7 @@ app.get("/dashboard", async (c) => {
       `SELECT COUNT(*) as count
       FROM patients
       WHERE organization_id = $1
-        AND created_at >= date_trunc('${truncPeriod}', CURRENT_DATE)
-        AND deleted_at IS NULL`,
+        AND created_at >= date_trunc('${truncPeriod}', CURRENT_DATE)`,
       [user.organizationId],
     );
 
@@ -209,11 +209,9 @@ app.get("/dashboard", async (c) => {
           upcoming: Number(appointmentsRes.rows[0]?.upcoming || 0),
         },
         financial: {
-          total_revenue_cents: Number(revenueRes.rows[0]?.total_revenue_cents || 0),
-          total_revenue_reais: (Number(revenueRes.rows[0]?.total_revenue_cents || 0) / 100).toFixed(2),
+          total_revenue: Number(revenueRes.rows[0]?.total_revenue || 0),
           total_payments: Number(revenueRes.rows[0]?.total_payments || 0),
-          avg_ticket_cents: Number(revenueRes.rows[0]?.avg_ticket_cents || 0),
-          avg_ticket_reais: (Number(revenueRes.rows[0]?.avg_ticket_cents || 0) / 100).toFixed(2),
+          avg_ticket: Number(revenueRes.rows[0]?.avg_ticket || 0),
         },
         new_patients: Number(newPatientsRes.rows[0]?.count || 0),
       },

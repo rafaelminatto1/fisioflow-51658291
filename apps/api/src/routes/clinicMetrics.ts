@@ -511,61 +511,58 @@ app.get("/at-risk-patients", requireAuth, async (c) => {
 /**
  * GET /api/clinic-metrics/revenue-forecast
  * Previsão de receita baseada em pagamentos confirmados.
- * Usa tabelas: payments
+ * Schema real: payments.amount (numeric), payments.paid_at (date), payments.status
  */
 app.get("/revenue-forecast", requireAuth, async (c) => {
   const user = c.get("user");
   const pool = createPool(c.env);
 
   try {
-    // Pagamentos dos próximos 30 dias (baseado em payment_date)
+    // Pagamentos dos próximos 30 dias (baseado em paid_at)
     const confirmedRes = await pool.query(
       `SELECT 
-        COALESCE(SUM(amount_cents), 0) as confirmed_revenue_cents,
+        COALESCE(SUM(amount), 0) as confirmed_revenue,
         COUNT(*) as confirmed_payments
       FROM payments
       WHERE organization_id = $1
         AND status = 'completed'
-        AND payment_date >= CURRENT_DATE
-        AND payment_date <= CURRENT_DATE + INTERVAL '30 days'`,
+        AND paid_at >= CURRENT_DATE
+        AND paid_at <= CURRENT_DATE + INTERVAL '30 days'
+        AND deleted_at IS NULL`,
       [user.organizationId],
     );
 
     // Pagamentos dos últimos 30 dias para comparação
     const historicalRes = await pool.query(
       `SELECT 
-        COALESCE(SUM(amount_cents), 0) as historical_revenue_cents,
+        COALESCE(SUM(amount), 0) as historical_revenue,
         COUNT(*) as historical_payments
       FROM payments
       WHERE organization_id = $1
         AND status = 'completed'
-        AND payment_date >= CURRENT_DATE - INTERVAL '30 days'
-        AND payment_date < CURRENT_DATE`,
+        AND paid_at >= CURRENT_DATE - INTERVAL '30 days'
+        AND paid_at < CURRENT_DATE
+        AND deleted_at IS NULL`,
       [user.organizationId],
     );
 
-    const confirmedRevenueCents = Number(confirmedRes.rows[0]?.confirmed_revenue_cents || 0);
-    const historicalRevenueCents = Number(historicalRes.rows[0]?.historical_revenue_cents || 0);
+    const confirmedRevenue = Number(confirmedRes.rows[0]?.confirmed_revenue || 0);
+    const historicalRevenue = Number(historicalRes.rows[0]?.historical_revenue || 0);
 
     return c.json({
       data: {
         forecast: {
           next_30_days: {
-            confirmed_revenue_cents: confirmedRevenueCents,
-            confirmed_revenue_reais: (confirmedRevenueCents / 100).toFixed(2),
+            confirmed_revenue: confirmedRevenue,
             confirmed_payments: Number(confirmedRes.rows[0]?.confirmed_payments || 0),
           },
           previous_30_days: {
-            revenue_cents: historicalRevenueCents,
-            revenue_reais: (historicalRevenueCents / 100).toFixed(2),
+            revenue: historicalRevenue,
             payments: Number(historicalRes.rows[0]?.historical_payments || 0),
           },
           trend:
-            historicalRevenueCents > 0
-              ? (
-                  ((confirmedRevenueCents - historicalRevenueCents) / historicalRevenueCents) *
-                  100
-                ).toFixed(1)
+            historicalRevenue > 0
+              ? (((confirmedRevenue - historicalRevenue) / historicalRevenue) * 100).toFixed(1)
               : "0",
         },
       },
@@ -592,15 +589,16 @@ app.get("/overdue-payments", requireAuth, async (c) => {
         p.full_name,
         p.phone,
         COUNT(pay.id) as overdue_count,
-        SUM(pay.amount_cents) as overdue_total_cents,
-        MIN(pay.payment_date) as oldest_overdue_date
+        SUM(pay.amount) as overdue_total,
+        MIN(pay.paid_at) as oldest_overdue_date
       FROM payments pay
       JOIN patients p ON p.id = pay.patient_id
       WHERE pay.organization_id = $1
         AND pay.status = 'pending'
-        AND pay.payment_date < CURRENT_DATE
+        AND pay.paid_at < CURRENT_DATE
+        AND pay.deleted_at IS NULL
       GROUP BY p.id, p.full_name, p.phone
-      ORDER BY overdue_total_cents DESC`,
+      ORDER BY overdue_total DESC`,
       [user.organizationId],
     );
 
@@ -634,7 +632,7 @@ app.get("/overdue-payments", requireAuth, async (c) => {
 /**
  * GET /api/clinic-metrics/packages-expiring
  * Pacotes de sessões com saldo baixo ou próximos da expiração.
- * Usa tabelas: patient_session_packages
+ * Schema real: patient_packages (name, total_sessions, remaining_sessions, expires_at, status, deleted_at)
  */
 app.get("/packages-expiring", requireAuth, async (c) => {
   const user = c.get("user");
@@ -647,35 +645,37 @@ app.get("/packages-expiring", requireAuth, async (c) => {
         pkg.patient_id,
         p.full_name as patient_name,
         p.phone,
-        pkg.sessions_count as total_sessions,
-        pkg.sessions_count - pkg.sessions_used as remaining_sessions,
-        pkg.valid_until as expires_at,
+        pkg.name as package_name,
+        pkg.total_sessions,
+        pkg.remaining_sessions,
+        pkg.expires_at,
         CASE 
-          WHEN pkg.valid_until IS NOT NULL 
-          THEN (pkg.valid_until::date - CURRENT_DATE)
+          WHEN pkg.expires_at IS NOT NULL 
+          THEN (pkg.expires_at::date - CURRENT_DATE)
           ELSE NULL
         END as days_until_expiry,
         CASE 
-          WHEN pkg.sessions_count - pkg.sessions_used = 0 THEN 'zero'
-          WHEN pkg.sessions_count - pkg.sessions_used <= 2 THEN 'low'
-          WHEN pkg.valid_until IS NOT NULL AND pkg.valid_until::date <= CURRENT_DATE + INTERVAL '14 days' THEN 'expiring_soon'
+          WHEN pkg.remaining_sessions = 0 THEN 'zero'
+          WHEN pkg.remaining_sessions <= 2 THEN 'low'
+          WHEN pkg.expires_at IS NOT NULL AND pkg.expires_at::date <= CURRENT_DATE + INTERVAL '14 days' THEN 'expiring_soon'
           ELSE 'ok'
         END as alert_type
-      FROM patient_session_packages pkg
+      FROM patient_packages pkg
       JOIN patients p ON p.id = pkg.patient_id
       WHERE pkg.organization_id = $1
-        AND pkg.is_active = true
+        AND pkg.deleted_at IS NULL
+        AND pkg.status = 'active'
         AND (
-          (pkg.sessions_count - pkg.sessions_used) <= 2
-          OR (pkg.valid_until IS NOT NULL AND pkg.valid_until::date <= CURRENT_DATE + INTERVAL '14 days')
+          pkg.remaining_sessions <= 2
+          OR (pkg.expires_at IS NOT NULL AND pkg.expires_at::date <= CURRENT_DATE + INTERVAL '14 days')
         )
       ORDER BY 
         CASE 
-          WHEN pkg.sessions_count - pkg.sessions_used = 0 THEN 0
-          WHEN pkg.sessions_count - pkg.sessions_used <= 2 THEN 1
+          WHEN pkg.remaining_sessions = 0 THEN 0
+          WHEN pkg.remaining_sessions <= 2 THEN 1
           ELSE 2
         END,
-        pkg.valid_until ASC NULLS LAST`,
+        pkg.expires_at ASC NULLS LAST`,
       [user.organizationId],
     );
 

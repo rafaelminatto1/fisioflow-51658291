@@ -47,7 +47,50 @@ Para que uma ilustração apareça corretamente em produção (Web App) e no app
 
 ---
 
+## ☁️ Infraestrutura Cloudflare & Deployment (Workers Assets)
+
+O deploy do frontend do FisioFlow (`fisioflow-web`) utiliza o novo recurso **Cloudflare Workers Assets** (e não Cloudflare Pages legado):
+* **Configuração de Assets:** Definida no [wrangler.toml](file:///home/rafael/Documents/fisioflow/fisioflow-51658291/wrangler.toml) da raiz:
+  ```toml
+  assets = { directory = "./apps/web/dist", binding = "ASSETS" }
+  ```
+* **Processo de Deploy:**
+  * O build compila o frontend e copia as mídias da pasta `apps/web/public/` para `apps/web/dist/`.
+  * O deploy é disparado automaticamente nas GitHub Actions pelo workflow `.github/workflows/production.yml` executando `wrangler deploy --env production`.
+  * > [!WARNING]
+    > **NUNCA** utilize o comando `wrangler pages deploy` para o frontend deste repositório, pois ele causará falhas de deploy de assets e rotas. Use apenas `wrangler deploy` com os ambientes adequados.
+
+---
+
+## 🗄️ Storage de Mídia (Cloudflare R2)
+
+Os vídeos demonstrativos de exercícios e outras mídias dinâmicas enviadas pelos profissionais não são salvos junto com o código do frontend. Eles utilizam o armazenamento em R2:
+* **Buckets Utilizados:**
+  * `MEDIA_BUCKET` (`fisioflow-media`): Bucket R2 principal configurado para armazenar os arquivos de vídeo e imagem de exercícios em produção.
+  * Mapeamento configurado no `apps/api/wrangler.toml`.
+* **Domínio Público de Mídia:**
+  * As mídias do bucket são servidas publicamente através do subdomínio configurado na variável de ambiente `R2_PUBLIC_URL = "https://media.moocafisio.com.br"`.
+* **Upload e Processamento:**
+  * Os uploads de vídeo passam pelo componente de frontend `ExerciseVideoUpload` e pela rota de API `/api/media/upload` que realiza a gravação direta ou via assinatura no Cloudflare R2 de forma segura.
+
+---
+
+## 🚀 Cache da CDN Cloudflare & Invalidação
+
+Para obter a menor latência e carregar ilustrações instantaneamente, o FisioFlow aproveita a rede global da Cloudflare (Edge Caching):
+* **Comportamento Padrão de Cache:**
+  * Arquivos dentro de `/exercises/illustrations/*` são cacheados pela Cloudflare nas rotas do Edge e retornam `cf-cache-status: HIT`.
+  * Os cabeçalhos retornados por padrão são `cache-control: public, max-age=0, must-revalidate`. Isso instrui o navegador a validar se a imagem mudou (usando eTags/If-None-Match), enquanto o Edge da Cloudflare mantém a cópia em cache de longa duração.
+* **Cache Busting (Forçar Atualização):**
+  * Ao substituir uma imagem com o **mesmo nome de arquivo** (ex: `stir-the-pot.avif`), a CDN da Cloudflare ou os navegadores dos usuários podem servir a imagem antiga em cache temporariamente.
+  * Para forçar uma invalidação sem alterar o nome do arquivo, você pode:
+    1. Realizar um cache purge específico para a URL no painel da Cloudflare.
+    2. Adicionar uma query string de versão ou hash do commit ao referenciar a imagem no frontend (ex: `/exercises/illustrations/stir-the-pot.avif?v=${commitSha}`). O componente `OptimizedImage` preserva essa query string ao realizar o carregamento.
+
+---
+
 ## 📐 Regras de Layout e CSS
 
 * O design é construído com Tailwind CSS. Os cards de exercícios devem manter estritamente a proporção `aspect-video` (16:9) nas imagens para evitar cortes e distorções anatômicas.
 * O grid principal deve seguir a estrutura responsiva padrão para evitar quebras em telas móveis e desktop.
+
