@@ -109,7 +109,7 @@ Itens adicionados: **Copiloto Clínico** + **Base de Conhecimento** (Inteligênc
 `0115` evidence · `0116` exercise provenance/curation · `0117` exercises embedding 1024 ·
 `0118` sessions device · `0119` automations · `0120` sessions blocks.
 
-## 12. IA estruturada (saída JSON) — PRs #184–#196
+## 12. IA estruturada (saída JSON) — PRs #184–#199
 
 Helper genérico de saída estruturada + aplicações.
 
@@ -123,10 +123,11 @@ Helper genérico de saída estruturada + aplicações.
   - ⚠️ **Lição (código morto):** a 1ª UI caiu no `GoalsManager` (importado em lugar nenhum) e depois no `MetasCard` (cujo `topSectionContent` nunca é montado em `PatientEvolution`). A superfície viva de metas é o `PatientDashboard360`. Sempre confirmar a árvore de render antes de plugar UI.
 
 - **CID-10 a partir de diagnóstico livre:** `POST /api/evidence/cid10/suggest {text}` → `CidSuggestion[]` (`{code, label, confidence?}`, `coerceCidSuggestions` valida formato `^[A-TV-Z]\d{2}(\.\d{1,2})?$`, bloqueia capítulo U, dedup, cap 5). UI: botão "Sugerir CID (IA)" no `PathologyFormModal` (vivo via `PatientDashboard360`) → clicar preenche `cid_code`. (#196)
+- **Escalas/PROMs a partir de texto:** `POST /api/standardized-tests/extract {text}` → `ExtractedMeasure[]` (`{scale, score, maxScore?, interpretation?}`, `coerceMeasures` exige escala+score numérico, cap 10). UI: painel "Extrair de texto (IA)" no `PROMsDashboard`; salva cada escala via `useCreateStandardizedTest`. ⚠️ A aba **ESCALAS** estava sem gatilho no `EvolutionTabsBar` (PROMs inacessível) — corrigido no #199. (#198–#199)
 
 ### Survey — onde mais aplicar harness e IA estruturada
 - **Harness (Cloudflare Agents SDK):** já usado no MCP server (`McpAgent`). Próximos: Copilot como agente persistente (estado por paciente via DO), agente de triagem reativo sobre o event bus.
-- **IA estruturada (`structuredJson`):** ~~sugerir metas (goals) a partir da avaliação~~ ✅ (#192–#194); ~~mapear CID-10 livre → código~~ ✅ (#196); classificar intenção de WhatsApp (já existe webhook); extrair medições/PROMs de texto; gerar rascunho de laudo.
+- **IA estruturada (`structuredJson`):** ~~sugerir metas (goals) a partir da avaliação~~ ✅ (#192–#194); ~~mapear CID-10 livre → código~~ ✅ (#196); ~~extrair medições/PROMs de texto~~ ✅ (#198–#199); ~~gerar rascunho de laudo~~ já existe (`IntelligentReports` / `POST /api/ia-studio/reports/synthesize`); classificar intenção de WhatsApp já existe (webhook). **Survey concluído.**
 - **Cuidado:** structuredJson não é determinístico — sempre validar com Zod/coerce (como fazemos) e manter o humano no loop para dados clínicos.
 
 ## Pendência operacional
