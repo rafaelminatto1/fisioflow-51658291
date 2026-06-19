@@ -116,6 +116,7 @@ Helper genérico de saída estruturada + 3 aplicações.
 - **Helper:** `apps/api/src/lib/ai/hermes.ts` — `structuredJson(env, system, user)` + `parseJsonLoose` (tolera markdown/objeto) + `readAiContent` (lê `.response` E `choices[].message.content`, pois os modelos `-fast` usam formato OpenAI).
 - ⚠️ **Hermes 2 Pro DEPRECADO no Cloudflare Workers AI em 2026-05-30.** `STRUCTURED_MODEL` usa **`@cf/meta/llama-3.3-70b-instruct-fp8-fast`** (ativo, forte em JSON). Em geral, modelos `-fast` permanecem após deprecações (ver `DEPRECATED_MODELS_2026_05_30` em `workersAi.ts`).
 - **Extração texto→blocos:** `POST /api/evolution/extract-blocks {text}` → blocos validados (`coerceBlocks`); botão "Gerar blocos do texto (IA)" no `EvolutionBlocksEditor`. (#184)
+- **Ditado de voz→blocos:** `POST /api/evolution/transcribe-blocks {audioBase64}` → `{transcript, blocks}` (transcrição Deepgram Nova-3 via `transcribeAudio` → `structuredJson` → `coerceBlocks`); botão "Ditar blocos (voz)" no `EvolutionBlocksEditor` (grava via `useAudioRecorder`).
 - **NL→condição de automação:** `POST /api/automation/nl-condition {text}` → `{field, op, value}` (`coerceCondition`). Ex.: "se a dor for maior que 7" → `{field:"evolution.painScale", op:"gt", value:7}`. (#188)
 - **Copilot A/B de modelo:** `POST /api/copilot/chat` aceita `model` opcional (`llama_3_1_8b` default | `llama_3_3_70b`). Achado do A/B: o **70b entra em loop de tool-calls sem concluir**; o **8b (default) é melhor** para o tool-calling do Copilot. (#188)
 
