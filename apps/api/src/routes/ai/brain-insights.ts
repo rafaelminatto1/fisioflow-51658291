@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type { Env } from "../../types/env";
 import type { AuthVariables } from "../../lib/auth";
 import { runAi, readAiText } from "../../lib/ai-native";
+import { parseJsonLoose } from "../../lib/ai/hermes";
 import { requireAuth } from "../../lib/auth";
 import { getRawSql } from "../../lib/db";
 import { isUuid } from "../../lib/validators";
@@ -102,16 +103,19 @@ app.get("/:patientId", requireAuth, async (c) => {
       WORKERS_AI_MODELS.llama_3_1_8b,
       {
         messages: [{ role: "user", content: prompt }],
+        max_tokens: 1024,
       },
       { cache: false },
     );
 
-    // Limpeza de resposta para garantir JSON válido (suporta modelos -fast)
-    let content = readAiText(aiResponse);
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    const result = jsonMatch
-      ? JSON.parse(jsonMatch[0])
-      : { insights: [], summary: "Análise concluída." };
+    // Parse tolerante (suporta modelos -fast + JSON com cercas/texto ao redor); degrada sem 500.
+    const parsed = parseJsonLoose(readAiText(aiResponse)) as
+      | { insights?: unknown[]; summary?: string }
+      | null;
+    const result =
+      parsed && Array.isArray(parsed.insights)
+        ? parsed
+        : { insights: [], summary: "Análise concluída." };
 
     return c.json({
       success: true,
