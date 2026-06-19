@@ -10,6 +10,8 @@ import { rankArticles } from "../lib/evidence/rank";
 import { queryCacheKey, getCachedSearch, setCachedSearch, upsertArticles } from "../lib/evidence/cache";
 import { summarizeArticles } from "../lib/evidence/summarize";
 import { lookupCid10 } from "../lib/evidence/cid10Physio";
+import { structuredJson } from "../lib/ai/hermes";
+import { SUGGEST_CID_SYSTEM, coerceCidSuggestions } from "../lib/evidence/suggestCid";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -86,6 +88,20 @@ app.get("/cid10/:code", requireAuth, async (c) => {
   const entry = lookupCid10(c.req.param("code"));
   if (!entry) return c.json({ error: "CID-10 sem mapeamento de fisioterapia" }, 404);
   return c.json({ data: entry });
+});
+
+// POST /api/evidence/cid10/suggest { text } → { data: CidSuggestion[] }
+// Sugere códigos CID-10 a partir de um diagnóstico/queixa em texto livre (IA). O clínico confirma.
+app.post("/cid10/suggest", requireAuth, async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as { text?: string };
+  const text = String(body.text ?? "").trim();
+  if (text.length < 3) return c.json({ error: "text é obrigatório (mín. 3 caracteres)" }, 400);
+  try {
+    const raw = await structuredJson(c.env, SUGGEST_CID_SYSTEM, text.slice(0, 1000));
+    return c.json({ data: coerceCidSuggestions(raw) });
+  } catch (e) {
+    return c.json({ error: "Falha ao sugerir CID", details: (e as Error).message }, 500);
+  }
 });
 
 export const EVIDENCE_TARGET_TYPES = ["exercise", "protocol", "wiki", "patient", "assessment"] as const;
