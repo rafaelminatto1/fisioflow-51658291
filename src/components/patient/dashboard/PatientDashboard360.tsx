@@ -33,6 +33,7 @@ import {
   usePatientPathologies,
 } from "@/hooks/usePatientEvolution";
 import { MetaFormModal } from "@/components/evolution/MetaFormModal";
+import { GoalSuggestModal } from "@/components/evolution/GoalSuggestModal";
 import { PathologyFormModal } from "@/components/evolution/PathologyFormModal";
 import type { PatientGoal, Pathology } from "@/types/evolution";
 import { Link } from "react-router-dom";
@@ -108,6 +109,7 @@ export const PatientDashboard360 = ({
   const { data: fetchedPathologies = [] } = usePatientPathologies(patientId || "");
   const completeGoal = useCompleteGoal();
   const [goalModalOpen, setGoalModalOpen] = useState(false);
+  const [goalSuggestOpen, setGoalSuggestOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<PatientGoal | null>(null);
   const [pathologyModalOpen, setPathologyModalOpen] = useState(false);
   const [editingPathology, setEditingPathology] = useState<Pathology | null>(null);
@@ -489,19 +491,31 @@ export const PatientDashboard360 = ({
               <Target className="w-4 h-4 text-blue-600" />
               Objetivos do Tratamento
             </CardTitle>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 text-[10px] font-bold uppercase tracking-wider text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-              onClick={() => {
-                setEditingGoal(null);
-                setGoalModalOpen(true);
-              }}
-              disabled={!patientId}
-            >
-              <Plus className="mr-1 h-3.5 w-3.5" />
-              Nova meta
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 text-[10px] font-bold uppercase tracking-wider text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                onClick={() => setGoalSuggestOpen(true)}
+                disabled={!patientId}
+              >
+                <Sparkles className="mr-1 h-3.5 w-3.5" />
+                Sugerir (IA)
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 text-[10px] font-bold uppercase tracking-wider text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                onClick={() => {
+                  setEditingGoal(null);
+                  setGoalModalOpen(true);
+                }}
+                disabled={!patientId}
+              >
+                <Plus className="mr-1 h-3.5 w-3.5" />
+                Nova meta
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="p-4 space-y-3">
             {resolvedActiveGoals.length > 0 ? (
@@ -717,6 +731,14 @@ export const PatientDashboard360 = ({
           }}
           patientId={patientId}
           goal={editingGoal}
+        />
+      )}
+
+      {patientId && (
+        <GoalSuggestModal
+          open={goalSuggestOpen}
+          onOpenChange={setGoalSuggestOpen}
+          patientId={patientId}
         />
       )}
 
