@@ -23,11 +23,11 @@ export function WikiLayout({ children }: { children: React.ReactNode }) {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/wiki">Base de Conhecimento</BreadcrumbLink>
+                  <BreadcrumbLink href="/wiki" className="font-bold font-display text-slate-500 hover:text-blue-600 transition-colors">Base de Conhecimento</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Dashboard</BreadcrumbPage>
+                  <BreadcrumbPage className="font-bold font-display text-slate-900">Wiki Hub</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>

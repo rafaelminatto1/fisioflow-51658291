@@ -152,7 +152,7 @@ export function WikiSidebar({
             className="w-full justify-start font-normal"
             onClick={onKnowledgeHubSelect}
           >
-            <Sparkles className="mr-2 h-4 w-4 text-amber-500" />
+            <Sparkles className="mr-2 h-4 w-4 text-orange-500" />
             Knowledge Hub
           </Button>
         </div>
@@ -217,7 +217,7 @@ export function WikiSidebar({
           {evidenceTree.root && (
             <div>
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground px-2 py-1 font-bold mb-1 flex items-center gap-1">
-                <Library className="w-3 h-3 text-emerald-600" />
+                <Library className="w-3 h-3 text-blue-600" />
                 Trilhas de Evidencia
               </div>
 

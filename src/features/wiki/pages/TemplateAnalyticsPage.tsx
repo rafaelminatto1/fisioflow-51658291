@@ -112,18 +112,20 @@ export default function TemplateAnalyticsPage() {
   }, [rows]);
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto p-8 space-y-10 animate-in fade-in duration-700">
+      <div className="flex items-center justify-between border-b border-slate-100 pb-6">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-primary" />
+          <h1 className="text-3xl font-bold font-display flex items-center gap-3 text-slate-900">
+            <div className="p-2 bg-blue-100 rounded-xl">
+              <BarChart3 className="h-7 w-7 text-blue-600" />
+            </div>
             Template Analytics
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-slate-500 font-medium mt-1">
             Desempenho operacional por tipo de documento na triagem.
           </p>
         </div>
-        <Button asChild variant="outline">
+        <Button asChild variant="outline" className="rounded-xl font-bold border-slate-200">
           <Link to="/wiki">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar para Wiki
@@ -131,111 +133,119 @@ export default function TemplateAnalyticsPage() {
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="bg-primary/5 border-primary/20">
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="bg-slate-50/50 border-slate-200/60 rounded-2xl shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-400">
               Volume Total
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{totals.totalPages}</p>
-            <p className="text-xs text-muted-foreground mt-1">Cards criados na triagem</p>
+            <p className="text-4xl font-bold text-slate-900">{totals.totalPages}</p>
+            <p className="text-xs text-slate-500 mt-1 font-medium">Cards criados na triagem</p>
           </CardContent>
         </Card>
-        <Card className="bg-emerald-500/5 border-emerald-500/20">
+        <Card className="bg-blue-500/5 border-blue-500/20 rounded-2xl shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-blue-400">
               Concluídos
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-emerald-600">{totals.totalDone}</p>
-            <p className="text-xs text-muted-foreground mt-1">Total de entregas finalizadas</p>
+            <p className="text-4xl font-bold text-blue-600">{totals.totalDone}</p>
+            <p className="text-xs text-blue-500/70 mt-1 font-medium">Total de entregas finalizadas</p>
           </CardContent>
         </Card>
-        <Card className="bg-blue-500/5 border-blue-500/20">
+        <Card className="bg-orange-500/5 border-orange-500/20 rounded-2xl shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-orange-400">
               Taxa de Eficiência
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-blue-600">{totals.avgCompletion}%</p>
-            <p className="text-xs text-muted-foreground mt-1">Média de conclusão global</p>
+            <p className="text-4xl font-bold text-orange-600">{totals.avgCompletion}%</p>
+            <p className="text-xs text-orange-500/70 mt-1 font-medium">Média de conclusão global</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
+      <div className="grid gap-8 lg:grid-cols-2">
+        <Card className="rounded-2xl border-slate-200 shadow-sm overflow-hidden bg-white">
+          <CardHeader className="border-b border-slate-50 bg-slate-50/30">
+            <CardTitle className="flex items-center gap-2 text-base font-bold font-display text-slate-900">
+              <TrendingUp className="h-5 w-5 text-blue-600" />
               Volume vs. Conclusão
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="font-medium">
               Comparativo de cards criados e finalizados por template.
             </CardDescription>
           </CardHeader>
-          <CardContent className="h-[300px] mt-4">
+          <CardContent className="h-[350px] mt-6 p-6">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={rows} layout="vertical" margin={{ left: 40, right: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
                 <XAxis type="number" hide />
                 <YAxis
                   dataKey="templateId"
                   type="category"
-                  width={100}
+                  width={120}
                   fontSize={10}
+                  fontWeight={700}
                   tickLine={false}
                   axisLine={false}
+                  tick={{ fill: '#64748b' }}
                 />
                 <Tooltip
-                  cursor={{ fill: "rgba(0,0,0,0.05)" }}
+                  cursor={{ fill: "rgba(59, 130, 246, 0.05)" }}
                   contentStyle={{
-                    borderRadius: "8px",
+                    borderRadius: "12px",
                     border: "1px solid #e2e8f0",
+                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                    fontSize: "12px",
+                    fontWeight: 700
                   }}
                 />
-                <Legend />
+                <Legend iconType="circle" />
                 <Bar
                   dataKey="total"
                   name="Total Criado"
-                  fill="#94a3b8"
+                  fill="#cbd5e1"
                   radius={[0, 4, 4, 0]}
-                  barSize={20}
+                  barSize={16}
                 />
                 <Bar
                   dataKey="done"
                   name="Concluído"
-                  fill="#10b981"
+                  fill="#3b82f6"
                   radius={[0, 4, 4, 0]}
-                  barSize={20}
+                  barSize={16}
                 />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+        <Card className="rounded-2xl border-slate-200 shadow-sm overflow-hidden bg-white">
+          <CardHeader className="border-b border-slate-50 bg-slate-50/30">
+            <CardTitle className="flex items-center gap-2 text-base font-bold font-display text-slate-900">
+              <CheckCircle2 className="h-5 w-5 text-blue-600" />
               Taxa de Conclusão (%)
             </CardTitle>
-            <CardDescription>Percentual de sucesso por tipo de template.</CardDescription>
+            <CardDescription className="font-medium">Percentual de sucesso por tipo de template.</CardDescription>
           </CardHeader>
-          <CardContent className="h-[300px] mt-4">
+          <CardContent className="h-[350px] mt-6 p-6">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={rows} margin={{ bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="templateId" fontSize={10} tickLine={false} axisLine={false} />
-                <YAxis fontSize={10} tickLine={false} axisLine={false} unit="%" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="templateId" fontSize={10} fontWeight={700} tickLine={false} axisLine={false} tick={{ fill: '#64748b' }} />
+                <YAxis fontSize={10} fontWeight={700} tickLine={false} axisLine={false} unit="%" tick={{ fill: '#64748b' }} />
                 <Tooltip
                   contentStyle={{
-                    borderRadius: "8px",
+                    borderRadius: "12px",
                     border: "1px solid #e2e8f0",
+                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                    fontSize: "12px",
+                    fontWeight: 700
                   }}
                 />
                 <Bar
@@ -243,7 +253,7 @@ export default function TemplateAnalyticsPage() {
                   name="Taxa %"
                   fill="#3b82f6"
                   radius={[4, 4, 0, 0]}
-                  barSize={30}
+                  barSize={24}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -251,55 +261,64 @@ export default function TemplateAnalyticsPage() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Detalhamento Operacional</CardTitle>
-          <CardDescription>
+      <Card className="rounded-2xl border-slate-200 shadow-sm overflow-hidden bg-white">
+        <CardHeader className="border-b border-slate-50 bg-slate-50/30">
+          <CardTitle className="text-base font-bold font-display text-slate-900">Detalhamento Operacional</CardTitle>
+          <CardDescription className="font-medium">
             Métricas granulares para ajuste de processos e templates.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <CardContent className="p-8">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {rows.map((row) => (
               <div
                 key={row.templateId}
-                className="flex flex-col rounded-xl border p-4 bg-card hover:shadow-md transition-shadow"
+                className="flex flex-col rounded-2xl border border-slate-100 p-5 bg-slate-50/30 hover:shadow-md hover:border-blue-100 transition-all group"
               >
                 <div className="flex items-start justify-between">
-                  <h3 className="font-semibold text-sm capitalize">{row.templateId}</h3>
-                  <Badge variant={row.completionRate > 50 ? "secondary" : "outline"}>
+                  <h3 className="font-bold text-sm capitalize text-slate-900 group-hover:text-blue-700 transition-colors">{row.templateId}</h3>
+                  <Badge 
+                    variant={row.completionRate > 50 ? "secondary" : "outline"}
+                    className={cn(
+                      "rounded-lg font-black uppercase tracking-widest text-[9px] px-2 py-0.5",
+                      row.completionRate > 50 ? "bg-blue-100 text-blue-700 border-transparent" : "bg-white text-slate-400 border-slate-200"
+                    )}
+                  >
                     {row.completionRate}%
                   </Badge>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-y-3 gap-x-2 text-xs">
+                <div className="mt-5 grid grid-cols-2 gap-y-4 gap-x-2 text-[10px]">
                   <div className="space-y-1">
-                    <p className="text-muted-foreground uppercase text-[10px]">Total / Done</p>
-                    <p className="font-medium">
+                    <p className="text-slate-400 font-black uppercase tracking-tighter">Total / Done</p>
+                    <p className="font-bold text-slate-700">
                       {row.total} / {row.done}
                     </p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-muted-foreground uppercase text-[10px]">Lead Time</p>
-                    <p className="font-medium">{row.avgLeadTimeDays} dias</p>
+                    <p className="text-slate-400 font-black uppercase tracking-tighter">Lead Time</p>
+                    <p className="font-bold text-slate-700">{row.avgLeadTimeDays} dias</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-muted-foreground uppercase text-[10px]">Atividade (14d)</p>
-                    <p className="font-medium text-blue-600">{row.movesLast14d} movs</p>
+                    <p className="text-slate-400 font-black uppercase tracking-tighter">Atividade (14d)</p>
+                    <p className="font-bold text-blue-600">{row.movesLast14d} movs</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-muted-foreground uppercase text-[10px]">Status</p>
+                    <p className="text-slate-400 font-black uppercase tracking-tighter">Status</p>
                     <p
-                      className={`font-medium ${row.completionRate > 70 ? "text-emerald-600" : "text-amber-600"}`}
+                      className={`font-black uppercase tracking-widest text-[9px] ${row.completionRate > 70 ? "text-blue-600" : "text-orange-600"}`}
                     >
                       {row.completionRate > 70 ? "Saudável" : "Atenção"}
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-4 w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                <div className="mt-5 w-full bg-slate-200 rounded-full h-1.5 overflow-hidden shadow-inner">
                   <div
-                    className={`h-full ${row.completionRate > 70 ? "bg-emerald-500" : "bg-blue-500"}`}
+                    className={cn(
+                      "h-full rounded-full transition-all duration-1000",
+                      row.completionRate > 70 ? "bg-blue-500" : "bg-orange-500"
+                    )}
                     style={{ width: `${row.completionRate}%` }}
                   />
                 </div>

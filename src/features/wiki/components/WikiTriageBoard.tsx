@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AlertTriangle, MoreVertical, Edit, ArrowLeft, Clock, ShieldCheck } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { WikiPage } from "@/types/wiki";
 import type { TriageStatus } from "@/features/wiki/triage/triageUtils";
 
@@ -37,23 +38,35 @@ function TriageColumn({
   const isOverLimit = wipLimit < 999 && pages.length > wipLimit;
 
   return (
-    <Card className={isOverLimit ? "border-amber-400 bg-amber-50/10" : ""}>
-      <CardContent className="p-3">
-        <div className="mb-3 flex items-center justify-between">
+    <Card className={cn(
+      "bg-slate-50/50 border-slate-200/60 rounded-xl shadow-sm overflow-hidden flex flex-col h-full min-h-[500px]",
+      isOverLimit && "border-orange-400 bg-orange-50/10"
+    )}>
+      <CardContent className="p-4 flex flex-col h-full">
+        <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h4 className={`text-sm font-semibold ${isOverLimit ? "text-amber-700" : ""}`}>
+            <h4 className={cn(
+              "text-xs font-bold uppercase tracking-widest text-slate-500",
+              isOverLimit && "text-orange-700"
+            )}>
               {title}
             </h4>
-            {isOverLimit && <AlertTriangle className="h-3.5 w-3.5 text-amber-500 animate-pulse" />}
+            {isOverLimit && <AlertTriangle className="h-4 w-4 text-orange-500 animate-pulse" />}
           </div>
-          <Badge variant={isOverLimit ? "destructive" : "secondary"}>
+          <Badge 
+            variant={isOverLimit ? "destructive" : "secondary"}
+            className={cn(
+              "rounded-lg font-bold px-2 py-0.5",
+              !isOverLimit && "bg-white text-slate-600 border-slate-200"
+            )}
+          >
             {pages.length} {wipLimit < 999 && `/ ${wipLimit}`}
           </Badge>
         </div>
 
         {isOverLimit && (
-          <p className="mb-2 text-[10px] text-amber-600 font-medium">
-            Limite WIP excedido ({pages.length}/{wipLimit})
+          <p className="mb-3 text-[10px] text-orange-600 font-bold uppercase tracking-wide">
+            Limite WIP excedido
           </p>
         )}
 
@@ -62,9 +75,10 @@ function TriageColumn({
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className={`min-h-[140px] space-y-2 rounded-md p-1 transition-colors ${
-                snapshot.isDraggingOver ? "bg-muted/60" : "bg-muted/20"
-              }`}
+              className={cn(
+                "flex-1 space-y-3 rounded-lg p-1 transition-all duration-200",
+                snapshot.isDraggingOver ? "bg-blue-50/50" : "bg-transparent"
+              )}
             >
               {pages.map((page, index) => (
                 <Draggable
@@ -78,19 +92,20 @@ function TriageColumn({
                       ref={dragProvided.innerRef}
                       {...dragProvided.draggableProps}
                       {...dragProvided.dragHandleProps}
-                      className={`group relative w-full rounded-md border bg-background p-3 text-left shadow-sm transition ${
+                      className={cn(
+                        "group relative w-full rounded-xl border bg-white p-4 text-left shadow-sm transition-all duration-200",
                         dragSnapshot.isDragging
-                          ? "ring-2 ring-primary/50"
-                          : "hover:border-primary/40"
-                      }`}
+                          ? "ring-2 ring-blue-500/50 shadow-lg scale-[1.02] z-50"
+                          : "hover:border-blue-400/40 hover:shadow-md"
+                      )}
                     >
-                      <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start justify-between gap-3">
                         <button
                           type="button"
                           className="flex-1 text-left"
                           onClick={() => onOpenPage(page)}
                         >
-                          <p className="line-clamp-2 text-sm font-medium group-hover:text-primary transition-colors">
+                          <p className="line-clamp-2 text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors font-display">
                             {page.title}
                           </p>
                         </button>
@@ -101,39 +116,45 @@ function TriageColumn({
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100"
                               >
-                                <MoreVertical className="h-3 w-3" />
+                                <MoreVertical className="h-3.5 w-3.5 text-slate-500" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => onOpenPage(page)}>
-                                <Edit className="mr-2 h-3 w-3" />
+                            <DropdownMenuContent align="end" className="rounded-xl border-slate-200 shadow-lg">
+                              <DropdownMenuItem 
+                                className="rounded-lg focus:bg-blue-50 focus:text-blue-700"
+                                onClick={() => onOpenPage(page)}
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
                                 Abrir página
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase">
+                              <DropdownMenuLabel className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                 Mover para
                               </DropdownMenuLabel>
                               <DropdownMenuItem
+                                className="rounded-lg focus:bg-slate-50"
                                 disabled={droppableId === "backlog"}
                                 onClick={() => onMoveStatus(page, "backlog")}
                               >
-                                <ArrowLeft className="mr-2 h-3 w-3" />
+                                <ArrowLeft className="mr-2 h-4 w-4" />
                                 Backlog
                               </DropdownMenuItem>
                               <DropdownMenuItem
+                                className="rounded-lg focus:bg-slate-50"
                                 disabled={droppableId === "in-progress"}
                                 onClick={() => onMoveStatus(page, "in-progress")}
                               >
-                                <Clock className="mr-2 h-3 w-3" />
+                                <Clock className="mr-2 h-4 w-4" />
                                 Em execução
                               </DropdownMenuItem>
                               <DropdownMenuItem
+                                className="rounded-lg focus:bg-green-50 focus:text-green-700"
                                 disabled={droppableId === "done"}
                                 onClick={() => onMoveStatus(page, "done")}
                               >
-                                <ShieldCheck className="mr-2 h-3 w-3" />
+                                <ShieldCheck className="mr-2 h-4 w-4" />
                                 Concluído
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -141,8 +162,8 @@ function TriageColumn({
                         </div>
                       </div>
 
-                      <div className="mt-2 flex items-center justify-between">
-                        <div className="flex flex-wrap gap-1">
+                      <div className="mt-3 flex items-center justify-between pt-2 border-t border-slate-50">
+                        <div className="flex flex-wrap gap-1.5">
                           {(page.tags || [])
                             .filter((tag) => tag && !tag.startsWith("triage-"))
                             .slice(0, 2)
@@ -150,13 +171,13 @@ function TriageColumn({
                               <Badge
                                 key={`${page.id}-${tag}`}
                                 variant="secondary"
-                                className="text-[10px] py-0 h-4"
+                                className="text-[9px] uppercase tracking-wider font-bold h-4.5 bg-slate-100 text-slate-500 border-transparent rounded-md"
                               >
-                                {tag}
+                                #{tag}
                               </Badge>
                             ))}
                         </div>
-                        <span className="text-[9px] text-muted-foreground opacity-60">
+                        <span className="text-[9px] font-bold uppercase tracking-tight text-slate-300">
                           {typeof page.template_id === "string"
                             ? page.template_id.split("-")[0]
                             : "manual"}
@@ -174,6 +195,7 @@ function TriageColumn({
     </Card>
   );
 }
+
 
 interface WikiTriageBoardProps {
   triageBuckets: Record<TriageStatus, WikiPage[]>;

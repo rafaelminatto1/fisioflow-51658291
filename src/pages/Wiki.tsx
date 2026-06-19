@@ -498,13 +498,13 @@ export default function WikiPage() {
                   <h2 className="text-xl font-semibold">Trilhas Integradas</h2>
                 </div>
 
-                <Card className="border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 shadow-sm">
+                <Card className="border-blue-200 bg-gradient-to-r from-blue-50 via-white to-sky-50 shadow-sm">
                   <CardContent className="p-6 md:p-7">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <Library className="h-5 w-5 text-emerald-700" />
-                          <p className="text-sm font-semibold text-emerald-900">
+                          <Library className="h-5 w-5 text-blue-700" />
+                          <p className="text-sm font-semibold text-blue-900">
                             Base estruturada por trilhas e protocolos
                           </p>
                         </div>
@@ -518,7 +518,7 @@ export default function WikiPage() {
                       </div>
                       <Button
                         onClick={() => handlePageSelect(evidenceTree.root!)}
-                        className="bg-emerald-700 hover:bg-emerald-800"
+                        className="bg-blue-700 hover:bg-blue-800"
                       >
                         Abrir visão geral
                       </Button>
@@ -538,7 +538,7 @@ export default function WikiPage() {
                             <div className="flex items-center gap-2">
                               <Badge
                                 variant="outline"
-                                className="border-emerald-200 text-emerald-800"
+                                className="border-blue-200 text-blue-800"
                               >
                                 Trilha
                               </Badge>

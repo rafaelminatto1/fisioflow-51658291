@@ -40,6 +40,12 @@ const EditTemplatePage = lazy(
 const AutomationBuilder = lazy(
   () => import(/* webpackChunkName: "automation-builder" */ "@/pages/automations/AutomationBuilderPage"),
 );
+const AutomationsDashboard = lazy(
+  () => import(/* webpackChunkName: "automations-dashboard" */ "@/pages/automations/AutomationsDashboardPage"),
+);
+const AutomationTemplates = lazy(
+  () => import(/* webpackChunkName: "automation-templates" */ "@/pages/automations/AutomationTemplatesPage"),
+);
 const CopilotChat = lazy(
   () => import(/* webpackChunkName: "copilot-chat" */ "@/pages/copilot/CopilotChatPage"),
 );
@@ -128,6 +134,38 @@ export const coreRoutes = (
     />
     <Route
       path="/automacoes"
+      element={
+        <RouteErrorBoundary routeName="AutomationsDashboard">
+          <ProtectedRoute>
+            <AutomationsDashboard />
+          </ProtectedRoute>
+        </RouteErrorBoundary>
+      }
+    />
+    <Route
+      path="/automacoes/templates"
+      element={
+        <RouteErrorBoundary routeName="AutomationTemplates">
+          <ProtectedRoute>
+            <AutomationTemplates />
+          </ProtectedRoute>
+        </RouteErrorBoundary>
+      }
+    />
+    <Route
+      path="/automacoes/builder/new"
+      element={
+        <RouteErrorBoundary routeName="AutomationBuilder">
+          <ProtectedRoute>
+            <PageLayout fullWidth noPadding>
+              <AutomationBuilder />
+            </PageLayout>
+          </ProtectedRoute>
+        </RouteErrorBoundary>
+      }
+    />
+    <Route
+      path="/automacoes/builder/:id"
       element={
         <RouteErrorBoundary routeName="AutomationBuilder">
           <ProtectedRoute>

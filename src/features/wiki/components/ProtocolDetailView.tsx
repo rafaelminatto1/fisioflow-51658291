@@ -16,7 +16,7 @@ export function ProtocolDetailView({ protocol, onSelectExercise }: ProtocolDetai
     <div className="space-y-6 max-w-4xl mx-auto p-1">
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <Badge className="bg-sky-500/10 text-sky-600 border-sky-200 hover:bg-sky-500/20">
+          <Badge className="bg-blue-500/10 text-blue-600 border-blue-200 hover:bg-blue-500/20">
             Protocolo Clínico
           </Badge>
           <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
@@ -69,15 +69,15 @@ export function ProtocolDetailView({ protocol, onSelectExercise }: ProtocolDetai
                           key={i}
                           className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400"
                         >
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                          <CheckCircle2 className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
                           {obj}
                         </li>
                       ))}
                     </ul>
                   </div>
 
-                  <div className="space-y-2 p-3 bg-amber-50/30 rounded-lg border border-amber-100">
-                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-amber-600">
+                  <div className="space-y-2 p-3 bg-orange-50/30 rounded-lg border border-orange-100">
+                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-orange-600">
                       <BookOpen className="h-3 w-3" /> Critérios de Progressão
                     </div>
                     <div className="flex flex-wrap gap-2 pt-1">
@@ -87,7 +87,7 @@ export function ProtocolDetailView({ protocol, onSelectExercise }: ProtocolDetai
                           <Badge
                             key={i}
                             variant="outline"
-                            className="bg-white border-amber-200 text-amber-700 text-[10px]"
+                            className="bg-white border-orange-200 text-orange-700 text-[10px]"
                           >
                             {test ? test.pt : crit}
                           </Badge>

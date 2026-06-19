@@ -55,11 +55,11 @@ interface KnowledgeCardProps {
 }
 
 const evidenceColorMap: Record<EvidenceTier, string> = {
-  CPG: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
+  CPG: "bg-blue-500/10 text-blue-700 border-blue-200",
   Consensus: "bg-blue-500/10 text-blue-700 border-blue-200",
   Guideline: "bg-indigo-500/10 text-indigo-700 border-indigo-200",
-  SystematicReview: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
-  PositionStatement: "bg-amber-500/10 text-amber-700 border-amber-200",
+  SystematicReview: "bg-blue-500/10 text-blue-700 border-blue-200",
+  PositionStatement: "bg-orange-500/10 text-orange-700 border-orange-200",
   Protocol: "bg-slate-500/10 text-slate-700 border-slate-200",
 };
 
@@ -86,28 +86,28 @@ function KnowledgeCard({
   };
 
   return (
-    <Card className="hover:shadow-md transition-all flex flex-col h-full border-slate-200/60 overflow-hidden group">
+    <Card className="bg-slate-50/50 border-slate-200/60 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex flex-col h-full overflow-hidden group">
       <CardContent className="p-0 flex flex-col h-full">
         {/* Header with Background Accent */}
         <div
-          className={`h-1.5 w-full ${item.status === "verified" ? "bg-emerald-500" : item.status === "review" ? "bg-amber-500" : "bg-slate-300"}`}
+          className={`h-1.5 w-full ${item.status === "verified" ? "bg-blue-500" : item.status === "review" ? "bg-orange-500" : "bg-slate-300"}`}
         />
 
-        <div className="p-4 flex flex-col h-full space-y-3">
+        <div className="p-5 flex flex-col h-full space-y-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1">
               <h4
-                className="font-semibold leading-tight line-clamp-2 text-slate-900 dark:text-slate-100"
+                className="font-bold font-display leading-tight line-clamp-2 text-slate-900 dark:text-slate-100"
                 title={item.title}
               >
                 {item.title}
               </h4>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+              <div className="flex items-center gap-2 mt-1.5">
+                <span className="text-[10px] uppercase font-black tracking-widest text-slate-400">
                   {item.group}
                 </span>
-                <span className="text-muted-foreground/30">•</span>
-                <span className="text-[10px] font-medium text-muted-foreground">
+                <span className="text-slate-200">•</span>
+                <span className="text-[10px] font-bold uppercase text-slate-400">
                   {item.subgroup}
                 </span>
               </div>
@@ -117,38 +117,38 @@ function KnowledgeCard({
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate(`/wiki/article/${item.id}`)}
-                className="h-7 w-7 text-emerald-600 hover:bg-emerald-50"
+                className="h-8 w-8 text-blue-600 hover:bg-blue-50 rounded-lg"
                 title="Ver Detalhes"
               >
-                <Eye className="h-3.5 w-3.5" />
+                <Eye className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleCopySummary}
-                className="h-7 w-7 text-slate-400 hover:text-slate-600"
+                className="h-8 w-8 text-slate-400 hover:text-slate-600 rounded-lg"
                 title="Copiar Resumo"
               >
-                <Copy className="h-3.5 w-3.5" />
+                <Copy className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => onEdit(item)}
-                className="h-7 w-7 text-slate-400 hover:text-slate-600"
+                className="h-8 w-8 text-slate-400 hover:text-slate-600 rounded-lg"
                 title="Editar"
               >
-                <Pencil className="h-3.5 w-3.5" />
+                <Pencil className="h-4 w-4" />
               </Button>
               {onDelete && (
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => onDelete(item)}
-                  className="h-7 w-7 text-destructive/40 hover:text-destructive hover:bg-destructive/5"
+                  className="h-8 w-8 text-destructive/40 hover:text-destructive hover:bg-destructive/5 rounded-lg"
                   title="Excluir"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               )}
             </div>
@@ -159,71 +159,68 @@ function KnowledgeCard({
               className={`p-1.5 rounded-lg ${item.evidence && evidenceColorMap[item.evidence] ? evidenceColorMap[item.evidence].split(" ")[0] : "bg-slate-100"}`}
             >
               {item.group === "Ortopedia" && (
-                <Stethoscope className="h-3.5 w-3.5 text-emerald-600" />
+                <Stethoscope className="h-4 w-4 text-blue-600" />
               )}
-              {item.group === "Esportiva" && <TrendingUp className="h-3.5 w-3.5 text-amber-600" />}
+              {item.group === "Esportiva" && <TrendingUp className="h-4 w-4 text-orange-600" />}
               {item.group === "Pos-operatorio esportivo" && (
-                <ShieldCheck className="h-3.5 w-3.5 text-sky-600" />
+                <ShieldCheck className="h-4 w-4 text-sky-600" />
               )}
             </div>
             <Badge
               variant="outline"
-              className={`${evidenceColorMap[item.evidence] || ""} border-0 font-bold text-[10px] px-2 py-0.5`}
+              className={`${evidenceColorMap[item.evidence] || ""} border-0 font-black uppercase tracking-wider text-[9px] px-2.5 py-1 rounded-md`}
             >
               {knowledgeEvidenceLabels[item.evidence] || item.evidence}
             </Badge>
             {item.status === "review" && reviewerName && (
               <Badge
                 variant="secondary"
-                className="bg-amber-100 text-amber-800 border-0 text-[10px] flex items-center gap-1"
+                className="bg-orange-100 text-orange-800 border-0 text-[10px] font-bold flex items-center gap-1.5 px-2.5 py-1 rounded-md"
               >
-                <UserCheck className="h-3 w-3" />
-                Validando: {reviewerName ? reviewerName.split(" ")[0] : "---"}
+                <UserCheck className="h-3.5 w-3.5" />
+                {reviewerName ? reviewerName.split(" ")[0] : "---"}
               </Badge>
             )}
             {item.status === "pending" && (
               <Badge
                 variant="outline"
-                className="text-[10px] bg-slate-50 text-slate-500 border-slate-200 flex items-center gap-1"
+                className="text-[9px] uppercase font-black tracking-widest bg-slate-100 text-slate-500 border-transparent flex items-center gap-1.5 px-2.5 py-1 rounded-md"
               >
-                <AlertCircle className="h-3 w-3" />
+                <AlertCircle className="h-3.5 w-3.5" />
                 IA Pendente
               </Badge>
-            )}
-            {item.year && (
-              <span className="text-[10px] text-muted-foreground font-medium">{item.year}</span>
             )}
           </div>
 
           {item.keyQuestions && item.keyQuestions.length > 0 && (
-            <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 rounded-lg p-2.5">
-              <div className="flex items-center gap-1.5 text-slate-500 mb-1">
-                <Lightbulb className="h-3 w-3 text-amber-500" />
-                <span className="text-[10px] font-bold uppercase tracking-tight">
-                  Clinician Q&A:
+            <div className="bg-white border border-slate-200/60 rounded-xl p-3.5 shadow-sm">
+              <div className="flex items-center gap-1.5 text-slate-400 mb-2">
+                <Lightbulb className="h-3.5 w-3.5 text-orange-500" />
+                <span className="text-[10px] font-black uppercase tracking-widest">
+                  Clinician Q&A
                 </span>
               </div>
-              <p className="text-xs font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-300 leading-relaxed italic">
                 "{item.keyQuestions[0]}"
               </p>
             </div>
           )}
 
-          <div className="flex-1 space-y-3 pt-1">
+          <div className="flex-1 space-y-4 pt-1">
             <div className="text-xs">
-              <p className="font-bold text-[10px] uppercase tracking-wider text-slate-400 mb-1.5">
+              <p className="font-black text-[10px] uppercase tracking-widest text-slate-400 mb-2">
                 Key Findings
               </p>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {(item.highlights && item.highlights.length
                   ? item.highlights.slice(0, 2)
                   : ["Aguardando curadoria..."]
                 ).map((hl, idx) => (
                   <div
                     key={idx}
-                    className="flex items-start gap-2 text-slate-600 dark:text-slate-400 leading-snug"
+                    className="flex items-start gap-2.5 text-slate-600 dark:text-slate-400 leading-relaxed font-medium"
                   >
-                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-slate-300" />
+                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-blue-400" />
                     <span className="line-clamp-2">{hl}</span>
                   </div>
                 ))}
@@ -243,13 +240,13 @@ function KnowledgeCard({
             />
           </div>
 
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 mt-auto flex items-center justify-between">
-            <div className="flex flex-wrap gap-1">
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 mt-auto flex items-center justify-between">
+            <div className="flex flex-wrap gap-1.5">
               {item.tags &&
                 item.tags.slice(0, 2).map((tag) => (
                   <span
                     key={tag}
-                    className="text-[10px] text-muted-foreground font-medium bg-slate-50 dark:bg-slate-900 px-1.5 py-0.5 rounded"
+                    className="text-[10px] text-blue-600 font-black uppercase tracking-wider bg-blue-50 dark:bg-blue-900 px-2 py-0.5 rounded-md"
                   >
                     #{tag}
                   </span>
@@ -261,7 +258,7 @@ function KnowledgeCard({
                 asChild
                 variant="link"
                 size="sm"
-                className="h-auto p-0 text-xs font-bold text-primary"
+                className="h-auto p-0 text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700"
               >
                 <a href={item.url} target="_blank" rel="noreferrer">
                   Ver Fonte
@@ -300,7 +297,7 @@ function KnowledgeMapView({ items }: { items: KnowledgeArticle[] }) {
 
   return (
     <div className="relative rounded-3xl border bg-slate-50/50 p-8 min-h-[650px] overflow-hidden shadow-inner animate-in fade-in duration-1000">
-      <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(circle_at_center,#64748b_0%,transparent_70%)]" />
+      <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(circle_at_center,#3b82f6_0%,transparent_70%)]" />
 
       <svg
         className="absolute inset-0 w-full h-full"
@@ -328,9 +325,9 @@ function KnowledgeMapView({ items }: { items: KnowledgeArticle[] }) {
               fill="none"
               stroke={
                 node.group.id === "Ortopedia"
-                  ? "#10b981"
+                  ? "#3b82f6"
                   : node.group.id === "Esportiva"
-                    ? "#f59e0b"
+                    ? "#f97316"
                     : "#0ea5e9"
               }
               strokeWidth="0.25"
@@ -348,10 +345,10 @@ function KnowledgeMapView({ items }: { items: KnowledgeArticle[] }) {
             <div
               className={`mx-auto inline-flex items-center gap-2 rounded-xl px-5 py-2.5 shadow-lg border border-white/20 ${
                 group.group.id === "Ortopedia"
-                  ? "bg-emerald-500 text-white"
+                  ? "bg-blue-600 text-white"
                   : group.group.id === "Esportiva"
-                    ? "bg-amber-500 text-white"
-                    : "bg-sky-500 text-white"
+                    ? "bg-orange-600 text-white"
+                    : "bg-sky-600 text-white"
               }`}
             >
               <span className="font-black uppercase tracking-widest text-[10px]">
@@ -368,9 +365,9 @@ function KnowledgeMapView({ items }: { items: KnowledgeArticle[] }) {
             key={`${node.group.id}-${node.subgroup}-node`}
             className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-2xl border-2 bg-white shadow-md px-5 py-4 min-w-[140px] transition-all hover:scale-110 hover:shadow-2xl cursor-pointer group/node ${
               node.group.id === "Ortopedia"
-                ? "border-emerald-100 hover:border-emerald-500"
+                ? "border-blue-100 hover:border-blue-500"
                 : node.group.id === "Esportiva"
-                  ? "border-amber-100 hover:border-amber-500"
+                  ? "border-orange-100 hover:border-orange-500"
                   : "border-sky-100 hover:border-sky-500"
             }`}
             style={{
@@ -385,9 +382,9 @@ function KnowledgeMapView({ items }: { items: KnowledgeArticle[] }) {
               <div
                 className={`text-[10px] font-black px-3 py-1 rounded-full ${
                   node.group.id === "Ortopedia"
-                    ? "bg-emerald-50 text-emerald-600"
+                    ? "bg-blue-50 text-blue-600"
                     : node.group.id === "Esportiva"
-                      ? "bg-amber-50 text-amber-600"
+                      ? "bg-orange-50 text-orange-600"
                       : "bg-sky-50 text-sky-600"
                 }`}
               >
@@ -399,9 +396,9 @@ function KnowledgeMapView({ items }: { items: KnowledgeArticle[] }) {
             <div
               className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full opacity-20 ${
                 node.group.id === "Ortopedia"
-                  ? "bg-emerald-500"
+                  ? "bg-blue-500"
                   : node.group.id === "Esportiva"
-                    ? "bg-amber-500"
+                    ? "bg-orange-500"
                     : "bg-sky-500"
               }`}
             />
@@ -546,8 +543,8 @@ export function KnowledgeHubView({
             <Stethoscope className="h-16 w-16" />
           </div>
           <div className="flex items-center gap-2 relative z-10">
-            <div className="h-7 w-7 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-              <ShieldCheck className="h-4 w-4 text-emerald-400 animate-pulse" />
+            <div className="h-7 w-7 rounded-lg bg-blue-500/20 flex items-center justify-center">
+              <ShieldCheck className="h-4 w-4 text-blue-400 animate-pulse" />
             </div>
             <h4 className="text-xs font-black uppercase tracking-wider">Base Certificada</h4>
           </div>
@@ -560,7 +557,7 @@ export function KnowledgeHubView({
             </div>
             <div className="w-full bg-white/10 h-1 rounded-full overflow-hidden">
               <div
-                className="bg-emerald-500 h-full transition-all duration-1000"
+                className="bg-blue-500 h-full transition-all duration-1000"
                 style={{
                   width: `${(knowledgeStats.verified / (knowledgeStats.total || 1)) * 100}%`,
                 }}
@@ -577,7 +574,7 @@ export function KnowledgeHubView({
         {/* Trending Widget (Moved from right) */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 px-1">
-            <TrendingUp className="h-4 w-4 text-amber-500" />
+            <TrendingUp className="h-4 w-4 text-orange-500" />
             <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
               Em Destaque
             </h3>
@@ -589,11 +586,11 @@ export function KnowledgeHubView({
                 className="flex gap-3 group cursor-pointer p-2 rounded-lg hover:bg-slate-50 transition-colors"
                 onClick={() => onEditArticle(article)}
               >
-                <div className="h-7 w-7 rounded-md bg-slate-100 flex items-center justify-center shrink-0 font-bold text-[10px] text-slate-400 group-hover:bg-amber-50 group-hover:text-amber-600 transition-colors">
+                <div className="h-7 w-7 rounded-md bg-slate-100 flex items-center justify-center shrink-0 font-bold text-[10px] text-slate-400 group-hover:bg-orange-50 group-hover:text-orange-600 transition-colors">
                   {idx + 1}
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-[11px] font-bold truncate leading-none mb-1 group-hover:text-amber-700 transition-colors">
+                  <h4 className="text-[11px] font-bold truncate leading-none mb-1 group-hover:text-orange-700 transition-colors">
                     {article.title}
                   </h4>
                   <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-tight">
@@ -672,23 +669,23 @@ export function KnowledgeHubView({
         <ClinicalImportIA />
 
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-background sticky top-0 z-20 pb-2">
-          <div className="relative flex-1 max-w-xl">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <div className="relative flex-1 max-w-xl group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
             <Input
-              placeholder="Pesquisar diretrizes clinicas..."
+              placeholder="Pesquisar diretrizes clínicas..."
               value={kbFilters.query}
               onChange={(e) => setKbFilters.setQuery(e.target.value)}
-              className="pl-10 h-11 bg-muted/50 border-transparent focus:border-primary transition-all rounded-xl"
+              className="pl-11 h-12 bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all rounded-xl font-medium"
             />
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 mr-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-transparent">
+            <div className="flex items-center gap-2 mr-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
               <Switch
                 checked={kbFilters.useSemantic}
                 onCheckedChange={setKbFilters.setUseSemantic}
-                size="sm"
+                className="data-[state=checked]:bg-blue-600"
               />
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-tight">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                 IA Semantic
               </span>
             </div>

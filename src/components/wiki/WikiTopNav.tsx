@@ -196,12 +196,12 @@ export function WikiTopNav({
           <Button
             variant="ghost"
             size="sm"
-            className="gap-2 font-bold font-display group relative overflow-hidden rounded-xl transition-all duration-300 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+            className="gap-2 font-bold font-display group relative overflow-hidden rounded-xl transition-all duration-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
             onClick={onKnowledgeHubSelect}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/10 to-amber-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-            <Sparkles className="h-4 w-4 text-amber-500 group-hover:animate-pulse" />
-            <span className="hidden sm:inline text-slate-700 dark:text-slate-300 group-hover:text-amber-600 transition-colors">
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/0 via-orange-500/10 to-orange-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+            <Sparkles className="h-4 w-4 text-orange-500 group-hover:animate-pulse" />
+            <span className="hidden sm:inline text-slate-700 dark:text-slate-300 group-hover:text-orange-600 transition-colors">
               Knowledge Hub
             </span>
           </Button>
@@ -220,22 +220,22 @@ export function WikiTopNav({
           <Button
             variant="ghost"
             size="sm"
-            className="gap-2 font-bold font-display rounded-xl transition-all duration-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+            className="gap-2 font-bold font-display rounded-xl transition-all duration-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
             onClick={onPapersSelect}
           >
-            <BookOpen className="h-4 w-4 text-emerald-500" />
-            <span className="hidden sm:inline text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition-colors">
+            <BookOpen className="h-4 w-4 text-blue-500" />
+            <span className="hidden sm:inline text-slate-700 dark:text-slate-300 hover:text-blue-600 transition-colors">
               Artigos
             </span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="gap-2 font-bold font-display rounded-xl transition-all duration-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+            className="gap-2 font-bold font-display rounded-xl transition-all duration-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
             onClick={onDictionarySelect}
           >
-            <Languages className="h-4 w-4 text-sky-500" />
-            <span className="hidden sm:inline text-slate-700 dark:text-slate-300 group-hover:text-sky-600 transition-colors">
+            <Languages className="h-4 w-4 text-orange-500" />
+            <span className="hidden sm:inline text-slate-700 dark:text-slate-300 group-hover:text-orange-600 transition-colors">
               Dicionário
             </span>
           </Button>
@@ -248,7 +248,7 @@ export function WikiTopNav({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="gap-2">
-                <Library className="h-4 w-4 text-emerald-600" />
+                <Library className="h-4 w-4 text-blue-600" />
                 <span>Trilhas</span>
                 <ChevronDown className="h-3 w-3 opacity-50" />
               </Button>
@@ -257,7 +257,7 @@ export function WikiTopNav({
               <DropdownMenuLabel>Trilhas de Evidência</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onPageSelect(evidenceTree.root!)}>
-                <Library className="mr-2 h-4 w-4 text-emerald-600" />
+                <Library className="mr-2 h-4 w-4 text-blue-600" />
                 {evidenceTree.root.title}
               </DropdownMenuItem>
               <DropdownMenuSeparator />

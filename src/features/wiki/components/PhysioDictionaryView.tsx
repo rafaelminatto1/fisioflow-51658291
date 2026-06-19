@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Search, BookA, Languages, Plus, Edit, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -83,26 +84,33 @@ export function PhysioDictionaryView() {
       <div className="border-b bg-background px-6 py-6 space-y-4">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Languages className="h-6 w-6 text-sky-500" />
+            <h1 className="text-3xl font-bold font-display flex items-center gap-3 text-slate-900">
+              <div className="p-2.5 bg-orange-100 rounded-2xl shadow-sm">
+                <Languages className="h-7 w-7 text-orange-600" />
+              </div>
               Dicionário Bilíngue
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Pesquise termos técnicos em português ou inglês e encontre traduções e sinônimos
-              aplicados em toda a plataforma.
+            <p className="text-slate-500 font-medium mt-2 max-w-2xl leading-relaxed">
+              Consulte termos técnicos em português ou inglês e encontre traduções, 
+              sinônimos e referências cruzadas aplicadas em toda a plataforma FisioFlow.
             </p>
           </div>
-          <Button onClick={handleAdd} className="gap-2">
-            <Plus className="h-4 w-4" />
+          <Button 
+            onClick={handleAdd} 
+            premium
+            glow
+            className="gap-2 h-11 px-6 rounded-2xl bg-slate-900 text-white font-bold shadow-lg shadow-slate-900/10"
+          >
+            <Plus className="h-5 w-5" />
             Novo Termo
           </Button>
         </div>
 
-        <div className="relative">
-          <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+        <div className="relative max-w-3xl">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-orange-500 transition-colors" />
           <Input
             placeholder="Buscar termo em PT ou EN (ex: LCA, Squat, Isquiotibiais)..."
-            className="pl-10 h-12 text-base shadow-sm"
+            className="pl-12 h-14 text-base rounded-2xl bg-white border-slate-200 shadow-sm focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500 transition-all font-medium"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -113,7 +121,12 @@ export function PhysioDictionaryView() {
             <Badge
               key={cat.id}
               variant={activeCategory === cat.id ? "default" : "outline"}
-              className="cursor-pointer px-3 py-1 text-xs"
+              className={cn(
+                "cursor-pointer px-4 py-1.5 text-xs font-bold uppercase tracking-widest rounded-xl transition-all",
+                activeCategory === cat.id 
+                  ? "bg-orange-600 text-white border-transparent shadow-md shadow-orange-500/20" 
+                  : "bg-white text-slate-400 border-slate-200 hover:text-slate-600 hover:border-slate-300"
+              )}
               onClick={() => setActiveCategory(cat.id)}
             >
               {cat.label}
@@ -137,7 +150,7 @@ export function PhysioDictionaryView() {
             {terms.map((term) => (
               <Card
                 key={term.id}
-                className="group relative border-slate-200/60 dark:border-slate-800/60 bg-card rounded-2xl transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 overflow-hidden cursor-pointer"
+                className="group relative border-slate-200/60 dark:border-slate-800/60 bg-slate-50/50 rounded-2xl transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-1 overflow-hidden cursor-pointer"
                 onClick={() => {
                   if (term.category === "procedure" || term.subcategory === "Protocolo") {
                     const proto = protocolDictionary.find((p) => p.id === term.id);
@@ -147,56 +160,62 @@ export function PhysioDictionaryView() {
                   }
                 }}
               >
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500/10 group-hover:bg-blue-500 transition-colors" />
-                <CardHeader className="p-4 pb-2 relative">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-orange-500/10 group-hover:bg-orange-500 transition-colors" />
+                <CardHeader className="p-5 pb-2 relative">
                   <div className="flex justify-between items-start">
-                    <CardTitle className="text-base font-bold text-primary pr-12">
+                    <CardTitle className="text-base font-bold font-display text-slate-900 pr-12 group-hover:text-orange-700 transition-colors">
                       {term.pt}
                     </CardTitle>
                     <div className="flex items-center gap-1 transition-opacity duration-200 group-hover:opacity-0">
                       <Badge
                         variant="secondary"
-                        className="text-[10px] uppercase tracking-wider whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-none"
+                        className="text-[9px] font-black uppercase tracking-widest whitespace-nowrap bg-white text-slate-400 border-slate-100 rounded-md"
                       >
                         {CATEGORIES.find((c) => c.id === term.category)?.label || term.category}
                       </Badge>
                     </div>
                   </div>
-                  <CardDescription className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
-                    <Languages className="h-3 w-3" />
+                  <CardDescription className="text-xs font-bold text-blue-600 uppercase tracking-widest mt-1.5 flex items-center gap-1.5">
+                    <Languages className="h-3.5 w-3.5" />
                     {term.en}
                   </CardDescription>
 
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-300 flex gap-1 bg-card p-1 rounded-xl border border-slate-200/50 dark:border-slate-800/50 shadow-lg z-10 translate-y-1 group-hover:translate-y-0">
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-300 flex gap-1 bg-white p-1 rounded-xl border border-slate-200/50 dark:border-slate-800/50 shadow-lg z-10 translate-y-1 group-hover:translate-y-0">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7"
-                      onClick={() => handleEdit(term)}
+                      className="h-8 w-8 rounded-lg hover:bg-slate-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(term);
+                      }}
                     >
-                      <Edit className="h-3.5 w-3.5" />
+                      <Edit className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => setDeleteId(term.id)}
+                      className="h-8 w-8 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/5"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteId(term.id);
+                      }}
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent className="p-4 space-y-3 text-sm">
+                <CardContent className="p-5 space-y-4 text-sm">
                   {term.aliasesPt && term.aliasesPt.length > 0 && (
-                    <div>
-                      <span className="text-xs font-semibold text-muted-foreground block mb-1">
-                        Sinônimos (PT):
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block">
+                        Sinônimos (PT)
                       </span>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1.5">
                         {term.aliasesPt.map((alias, idx) => (
                           <span
                             key={idx}
-                            className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded text-[10px]"
+                            className="bg-white border border-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-md text-[9px] uppercase tracking-tight shadow-sm"
                           >
                             {alias}
                           </span>
@@ -205,15 +224,15 @@ export function PhysioDictionaryView() {
                     </div>
                   )}
                   {term.aliasesEn && term.aliasesEn.length > 0 && (
-                    <div>
-                      <span className="text-xs font-semibold text-muted-foreground block mb-1">
-                        Synonyms (EN):
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block">
+                        Synonyms (EN)
                       </span>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1.5">
                         {term.aliasesEn.map((alias, idx) => (
                           <span
                             key={idx}
-                            className="bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 px-2 py-0.5 rounded text-[10px]"
+                            className="bg-blue-50/50 border border-blue-100/50 text-blue-700 font-bold px-2 py-0.5 rounded-md text-[9px] uppercase tracking-tight shadow-sm"
                           >
                             {alias}
                           </span>
@@ -222,9 +241,9 @@ export function PhysioDictionaryView() {
                     </div>
                   )}
                   {term.subcategory && (
-                    <div className="pt-2 border-t mt-2">
-                      <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                        <BookA className="h-3 w-3" />
+                    <div className="pt-3 border-t border-slate-100 mt-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <BookA className="h-3.5 w-3.5" />
                         {term.subcategory}
                       </span>
                     </div>
