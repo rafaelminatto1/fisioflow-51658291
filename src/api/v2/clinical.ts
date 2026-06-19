@@ -141,6 +141,17 @@ export const goalsApi = {
     }),
 
   delete: (id: string) => request<{ ok: boolean }>(`/api/goals/${id}`, { method: "DELETE" }),
+
+  suggest: (text: string) =>
+    request<{
+      data: Array<{
+        title: string;
+        category?: string;
+        priority: "baixa" | "media" | "alta" | "critica";
+        targetValue?: string;
+        rationale?: string;
+      }>;
+    }>("/api/goals/suggest", { method: "POST", body: JSON.stringify({ text }) }),
 };
 
 export const evolutionApi = {
