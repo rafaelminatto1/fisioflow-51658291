@@ -151,7 +151,7 @@ class_name = "OrganizationState"
 
 [[durable_objects.bindings]]
 name = "PATIENT_AGENT"
-class_name = "PatientAgent"
+class_name = "PatientAgentSql"
 
 [[durable_objects.bindings]]
 name = "ASSESSMENT_LIVE_SESSION"
@@ -159,7 +159,7 @@ class_name = "AssessmentLiveSession"
 
 [[durable_objects.bindings]]
 name = "CLINIC_AGENT"
-class_name = "ClinicAgent"
+class_name = "ClinicAgentSql"
 
 [[durable_objects.bindings]]
 name = "VOICE_SCRIBE_AGENT"
@@ -205,16 +205,17 @@ tag = "v10"
 new_classes = ["EvolutionCollaboration"]
 
 # PatientAgent/ClinicAgent estendem o Agents SDK (requer SQLite), mas foram criados como
-# KV (new_classes v6/v8) → setState falhava (500). Recria como SQLite. Sem perda de dados
-# relevante (o estado nunca persistiu). KV→SQLite in-place não é suportado pela Cloudflare.
-# Delete e recriação precisam de tags separadas (uma classe não pode ser alvo de 2 ops no mesmo tag).
+# KV (new_classes v6/v8) → setState falhava (500). KV→SQLite in-place não é suportado e
+# delete+recriar com o mesmo nome falha (não pode deletar classe com binding ativo).
+# Solução: novas classes SQLite (PatientAgentSql/ClinicAgentSql), bindings repontados, e as
+# KV antigas (agora sem binding) são deletadas. Sem perda de dados (o estado nunca persistiu).
 [[migrations]]
 tag = "v11"
-deleted_classes = ["PatientAgent", "ClinicAgent"]
+new_sqlite_classes = ["PatientAgentSql", "ClinicAgentSql"]
 
 [[migrations]]
 tag = "v12"
-new_sqlite_classes = ["PatientAgent", "ClinicAgent"]
+deleted_classes = ["PatientAgent", "ClinicAgent"]
 
 # ===== AI & BROWSER RENDERING =====
 [ai]
@@ -402,9 +403,9 @@ binding = "STREAM"
 [env.production.durable_objects]
 bindings = [
   { name = "ORGANIZATION_STATE", class_name = "OrganizationState" },
-  { name = "PATIENT_AGENT", class_name = "PatientAgent" },
+  { name = "PATIENT_AGENT", class_name = "PatientAgentSql" },
   { name = "ASSESSMENT_LIVE_SESSION", class_name = "AssessmentLiveSession" },
-  { name = "CLINIC_AGENT", class_name = "ClinicAgent" },
+  { name = "CLINIC_AGENT", class_name = "ClinicAgentSql" },
   { name = "VOICE_SCRIBE_AGENT", class_name = "VoiceScribeAgent" },
   { name = "EVOLUTION_COLLABORATION", class_name = "EvolutionCollaboration" },
 ]
@@ -419,11 +420,11 @@ new_classes = ["EvolutionCollaboration"]
 
 [[env.production.migrations]]
 tag = "v11"
-deleted_classes = ["PatientAgent", "ClinicAgent"]
+new_sqlite_classes = ["PatientAgentSql", "ClinicAgentSql"]
 
 [[env.production.migrations]]
 tag = "v12"
-new_sqlite_classes = ["PatientAgent", "ClinicAgent"]
+deleted_classes = ["PatientAgent", "ClinicAgent"]
 
 [env.production.ai]
 binding = "AI"
