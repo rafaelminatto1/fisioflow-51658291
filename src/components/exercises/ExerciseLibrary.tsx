@@ -158,13 +158,13 @@ const ExerciseCard = React.memo(function ExerciseCard({
       }}
     >
       {/* Image Section */}
-      <div className="relative h-40 bg-white dark:bg-slate-950 overflow-hidden flex-shrink-0">
+      <div className="relative aspect-video w-full bg-white dark:bg-slate-950 overflow-hidden flex-shrink-0">
         {thumbSrc ? (
           <OptimizedImage
             src={thumbSrc}
             alt={exercise.name ?? "Exercício"}
             className="h-full w-full transition-transform duration-500 group-hover:scale-[1.03]"
-            aspectRatio="4:3"
+            aspectRatio="16:9"
             fallback="/placeholder.svg"
             priority={imagePriority}
             style={{ objectFit: "contain" }}
@@ -233,7 +233,7 @@ const ExerciseCard = React.memo(function ExerciseCard({
       {/* Content Section */}
       <div className="p-4 space-y-3 flex-1 flex flex-col">
         <div className="space-y-1">
-          <h3 className="font-semibold text-base line-clamp-1 group-hover:text-primary transition-colors">
+          <h3 className="font-semibold text-base md:text-lg line-clamp-1 group-hover:text-primary transition-colors">
             {exercise.name ?? "Sem nome"}
           </h3>
           {exercise.description && (
@@ -870,10 +870,10 @@ export function ExerciseLibrary({
           </div>
         </div>
         {/* Card grid skeleton - mimics real cards (image + content) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
           {Array.from({ length: 9 }).map((_, i) => (
             <Card key={i} className="overflow-hidden">
-              <div className="relative h-40 bg-muted">
+              <div className="relative aspect-video w-full bg-muted">
                 <Skeleton className="h-full w-full rounded-none" />
               </div>
               <CardContent className="p-4 space-y-3">
@@ -1066,7 +1066,7 @@ export function ExerciseLibrary({
             </div>
           </div>
         ) : viewMode === "grid" ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 p-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 p-2">
             {filteredExercises.slice(0, visibleCount).map((exercise, index) => (
               <div
                 key={exercise.id}
