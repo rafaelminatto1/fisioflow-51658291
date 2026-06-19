@@ -195,6 +195,11 @@ export class PatientAgent extends Agent<Env, RetentionState> {
   }
 
   @callable()
+  async getStatus() {
+    return this.state;
+  }
+
+  @callable()
   async dismissAction() {
     this.setState({
       ...this.state,
