@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import type { Env } from "../../types/env";
 import type { AuthVariables } from "../../lib/auth";
-import { runAi } from "../../lib/ai-native";
+import { runAi, readAiText } from "../../lib/ai-native";
 import { requireAuth } from "../../lib/auth";
 import { getRawSql } from "../../lib/db";
 import { isUuid } from "../../lib/validators";
@@ -25,8 +25,8 @@ app.get("/:patientId", requireAuth, async (c) => {
 
     // 1. Coletar Contexto do Paciente
     const [patientRes, sessionsRes, biomechanicsRes, homeExRes] = await Promise.all([
-      sql`SELECT full_name, main_diagnosis FROM patients WHERE id = ${patientId}::uuid AND organization_id = ${user.organizationId}::uuid`,
-      sql`SELECT session_date, subjective, objective, assessment, plan, pain_scale FROM sessions WHERE patient_id = ${patientId}::uuid ORDER BY session_date DESC LIMIT 5`,
+      sql`SELECT full_name, main_condition FROM patients WHERE id = ${patientId}::uuid AND organization_id = ${user.organizationId}::uuid`,
+      sql`SELECT date, observacao, pain_scale, procedures, exercises FROM sessions WHERE patient_id = ${patientId}::uuid ORDER BY date DESC LIMIT 5`,
       sql`SELECT type, analysis_data, created_at FROM biomechanics_assessments WHERE patient_id = ${patientId}::uuid ORDER BY created_at DESC LIMIT 2`,
       sql`SELECT exercise_id, metrics, created_at FROM patient_home_exercises WHERE patient_id = ${patientId}::uuid AND status = 'shared' ORDER BY created_at DESC LIMIT 10`,
     ]);
@@ -49,7 +49,7 @@ app.get("/:patientId", requireAuth, async (c) => {
           messages: [
             {
               role: "user",
-              content: `Protocolo de tratamento para ${patient.main_diagnosis || "fisioterapia"}. Considerar dor e amplitude de movimento.`,
+              content: `Protocolo de tratamento para ${patient.main_condition || "fisioterapia"}. Considerar dor e amplitude de movimento.`,
             },
           ],
           maxNumResults: 3,
@@ -67,7 +67,7 @@ app.get("/:patientId", requireAuth, async (c) => {
 
       DADOS DO PACIENTE:
       - Nome: ${patient.full_name}
-      - Diagnóstico Principal: ${patient.main_diagnosis || "Não informado"}
+      - Diagnóstico Principal: ${patient.main_condition || "Não informado"}
       
       CONTEXTO CLÍNICO RECENTE (Últimas Sessões/Biomecânica/Exercícios Casa):
       ${JSON.stringify(context)}
@@ -106,8 +106,8 @@ app.get("/:patientId", requireAuth, async (c) => {
       { cache: false },
     );
 
-    // Limpeza de resposta para garantir JSON válido
-    let content = aiResponse.response || "";
+    // Limpeza de resposta para garantir JSON válido (suporta modelos -fast)
+    let content = readAiText(aiResponse);
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     const result = jsonMatch
       ? JSON.parse(jsonMatch[0])

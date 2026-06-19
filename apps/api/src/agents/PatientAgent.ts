@@ -2,7 +2,7 @@ import { Agent, callable } from "agents";
 import type { Env } from "../types/env";
 import { WORKERS_AI_MODELS } from "../lib/workersAi";
 import { recallAgentMemory } from "../lib/agentMemory";
-import { runAi } from "../lib/ai-native";
+import { runAi, readAiText } from "../lib/ai-native";
 
 type RetentionState = {
   patientId: string;
@@ -135,7 +135,7 @@ export class PatientAgent extends Agent<Env, RetentionState> {
       this.setState({
         ...this.state,
         draftMessage:
-          response.response ||
+          readAiText(response) ||
           "Olá! Notamos sua ausência e gostaríamos de saber como você está se sentindo em relação à dor.",
         suggestedAction: "Rascunho pronto para revisão.",
       });
@@ -187,7 +187,7 @@ export class PatientAgent extends Agent<Env, RetentionState> {
         { cache: false },
       );
 
-      return { answer: response.response };
+      return { answer: readAiText(response) };
     } catch (error) {
       console.error("[Brain/DO] Consult failed:", error);
       throw error;
