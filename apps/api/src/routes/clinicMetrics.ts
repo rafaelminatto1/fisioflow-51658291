@@ -480,7 +480,6 @@ app.get("/at-risk-patients", requireAuth, async (c) => {
         p.id,
         p.full_name,
         p.phone,
-        p.whatsapp,
         la.last_session_date,
         CURRENT_DATE - la.last_session_date::date as days_since_last_session,
         CASE 
@@ -496,7 +495,7 @@ app.get("/at-risk-patients", requireAuth, async (c) => {
       FROM patients p
       JOIN last_activity la ON la.patient_id = p.id
       WHERE p.organization_id = $1
-        AND p.deleted_at IS NULL
+        AND p.is_active = true
         AND la.last_session_date < CURRENT_DATE - INTERVAL '21 days'
       ORDER BY days_since_last_session DESC`,
       [user.organizationId],
@@ -592,7 +591,6 @@ app.get("/overdue-payments", requireAuth, async (c) => {
         p.id as patient_id,
         p.full_name,
         p.phone,
-        p.whatsapp,
         COUNT(pay.id) as overdue_count,
         SUM(pay.amount_cents) as overdue_total_cents,
         MIN(pay.payment_date) as oldest_overdue_date
@@ -601,7 +599,7 @@ app.get("/overdue-payments", requireAuth, async (c) => {
       WHERE pay.organization_id = $1
         AND pay.status = 'pending'
         AND pay.payment_date < CURRENT_DATE
-      GROUP BY p.id, p.full_name, p.phone, p.whatsapp
+      GROUP BY p.id, p.full_name, p.phone
       ORDER BY overdue_total_cents DESC`,
       [user.organizationId],
     );
@@ -649,7 +647,6 @@ app.get("/packages-expiring", requireAuth, async (c) => {
         pkg.patient_id,
         p.full_name as patient_name,
         p.phone,
-        p.whatsapp,
         pkg.sessions_count as total_sessions,
         pkg.sessions_count - pkg.sessions_used as remaining_sessions,
         pkg.valid_until as expires_at,
