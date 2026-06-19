@@ -62,12 +62,12 @@ const CALLOUT_STYLES: Record<CalloutTone, { label: string; className: string }> 
   info: {
     label: "Informacao",
     className:
-      "border-sky-300 bg-sky-50/80 text-sky-900 dark:border-sky-700 dark:bg-sky-950/30 dark:text-sky-100",
+      "border-blue-300 bg-blue-50/80 text-blue-900 dark:border-blue-700 dark:bg-blue-950/30 dark:text-blue-100",
   },
   warning: {
     label: "Atencao",
     className:
-      "border-amber-300 bg-amber-50/80 text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100",
+      "border-orange-300 bg-orange-50/80 text-orange-900 dark:border-orange-700 dark:bg-orange-950/30 dark:text-orange-100",
   },
   success: {
     label: "Sucesso",

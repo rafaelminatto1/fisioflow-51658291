@@ -44,58 +44,67 @@ export function WikiEditorMetaSidebar({
   onClinicalMetadataChange: (value: WikiPage["clinical_metadata"]) => void;
 }) {
   return (
-    <div className="w-80 space-y-6 overflow-auto border-l bg-muted/30 p-4">
-      <div className="flex items-center justify-between">
-        <Label htmlFor="published">Publicar</Label>
-        <Switch id="published" checked={isPublished} onCheckedChange={onPublishedChange} />
+    <div className="w-80 space-y-8 overflow-auto border-l bg-slate-50/30 p-6">
+      <div className="space-y-4">
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Publicação</p>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="published" className="font-bold text-slate-700">Publicar</Label>
+          <Switch id="published" checked={isPublished} onCheckedChange={onPublishedChange} className="data-[state=checked]:bg-blue-600" />
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="patient-visible" className="font-bold text-slate-700">Visível p/ pacientes</Label>
+            <Switch
+              id="patient-visible"
+              checked={patientVisible}
+              onCheckedChange={onPatientVisibleChange}
+              className="data-[state=checked]:bg-orange-500"
+            />
+          </div>
+          <p className="text-[10px] text-slate-500 font-medium leading-relaxed italic">
+            Entra no assistente do app do paciente. Use só para orientações revisadas.
+          </p>
+        </div>
       </div>
 
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="patient-visible">Visível p/ pacientes</Label>
-          <Switch
-            id="patient-visible"
-            checked={patientVisible}
-            onCheckedChange={onPatientVisibleChange}
+      <div className="space-y-4">
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Classificação</p>
+        <div className="space-y-2">
+          <Label className="text-xs font-bold text-slate-600 ml-1">Categoria</Label>
+          <Input
+            placeholder="Ex: Protocolos"
+            value={category}
+            onChange={(event) => onCategoryChange(event.target.value)}
+            className="rounded-xl border-slate-200 bg-white shadow-sm focus:ring-4 focus:ring-blue-500/5 transition-all"
           />
         </div>
-        <p className="text-xs text-muted-foreground">
-          Entra no assistente do app do paciente. Use só para orientações revisadas.
-        </p>
+
+        <div className="space-y-2">
+          <Label className="text-xs font-bold text-slate-600 ml-1">Tags</Label>
+          <Input
+            placeholder="tag1, tag2, tag3"
+            value={tags}
+            onChange={(event) => onTagsChange(event.target.value)}
+            className="rounded-xl border-slate-200 bg-white shadow-sm focus:ring-4 focus:ring-blue-500/5 transition-all"
+          />
+          <p className="text-[10px] text-slate-400 font-medium ml-1">Separadas por vírgula</p>
+        </div>
       </div>
 
-      <div className="space-y-2">
-        <Label>Categoria</Label>
-        <Input
-          placeholder="Ex: Protocolos"
-          value={category}
-          onChange={(event) => onCategoryChange(event.target.value)}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Tags</Label>
-        <Input
-          placeholder="tag1, tag2, tag3"
-          value={tags}
-          onChange={(event) => onTagsChange(event.target.value)}
-        />
-        <p className="text-xs text-muted-foreground">Separadas por vírgula</p>
-      </div>
-
-      <div className="space-y-3 pt-4 border-t border-border/60">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-primary/70">
+      <div className="space-y-4 pt-6 border-t border-slate-200/60">
+        <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">
           Inteligência Clínica
         </p>
 
         <div className="space-y-1.5">
-          <Label className="text-[11px] font-medium">Alvo RPE (Borg)</Label>
+          <Label className="text-[11px] font-bold text-slate-600">Alvo RPE (Borg)</Label>
           <Input
             type="number"
             min="0"
             max="10"
             placeholder="Ex: 7"
-            className="h-8 text-xs"
+            className="h-9 rounded-xl border-slate-200 bg-white"
             value={clinicalMetadata?.rpe_target || ""}
             onChange={(e) =>
               onClinicalMetadataChange({ ...clinicalMetadata, rpe_target: Number(e.target.value) })
@@ -104,10 +113,10 @@ export function WikiEditorMetaSidebar({
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-[11px] font-medium">Regra de Progressão</Label>
+          <Label className="text-[11px] font-bold text-slate-600">Regra de Progressão</Label>
           <Input
             placeholder="Ex: +2kg se RPE < 5"
-            className="h-8 text-xs"
+            className="h-9 rounded-xl border-slate-200 bg-white"
             value={clinicalMetadata?.progression_rule || ""}
             onChange={(e) =>
               onClinicalMetadataChange({ ...clinicalMetadata, progression_rule: e.target.value })
@@ -116,9 +125,9 @@ export function WikiEditorMetaSidebar({
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-[11px] font-medium">Nível de Evidência</Label>
+          <Label className="text-[11px] font-bold text-slate-600">Nível de Evidência</Label>
           <select
-            className="h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 py-1 text-xs shadow-sm transition-all focus:ring-4 focus:ring-blue-500/5 outline-none"
             value={clinicalMetadata?.evidence_level || ""}
             onChange={(e) =>
               onClinicalMetadataChange({
@@ -137,23 +146,33 @@ export function WikiEditorMetaSidebar({
       </div>
 
       {page && (
-        <div className="space-y-1 text-xs text-muted-foreground">
-          <p>Criado em: {formatTimestamp(page.created_at)}</p>
-          <p>Versão: {page.version}</p>
-          <p>Visualizações: {page.view_count}</p>
+        <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm space-y-1.5">
+           <p className="text-[10px] font-black uppercase tracking-widest text-slate-300 mb-1">Metadata</p>
+           <div className="flex justify-between text-[10px] font-bold">
+             <span className="text-slate-400">Criado</span>
+             <span className="text-slate-600">{formatTimestamp(page.created_at)}</span>
+           </div>
+           <div className="flex justify-between text-[10px] font-bold">
+             <span className="text-slate-400">Versão</span>
+             <span className="text-blue-600">v{page.version}</span>
+           </div>
+           <div className="flex justify-between text-[10px] font-bold">
+             <span className="text-slate-400">Visualizações</span>
+             <span className="text-orange-600">{page.view_count}</span>
+           </div>
         </div>
       )}
 
-      <div className="text-xs text-muted-foreground">
-        <p className="mb-2 font-medium">Recursos estilo Notion habilitados:</p>
-        <ul className="space-y-1">
-          <li>
-            <code>/</code> Slash menu com busca de blocos
+      <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100 text-[10px]">
+        <p className="mb-2 font-black uppercase tracking-widest text-blue-700">Notion Shortcuts</p>
+        <ul className="space-y-1.5 text-blue-600/80 font-medium">
+          <li className="flex items-center gap-2">
+            <code className="bg-white px-1 rounded border border-blue-200 text-[9px]">/</code> Slash menu
           </li>
-          <li>Drag-and-drop para reordenar</li>
-          <li>Callout, Toggle, Checklist e Colunas</li>
-          <li>Tabela embutida com filtro e sort</li>
-          <li>Mídia: imagem, vídeo, YouTube, embed</li>
+          <li>• Drag-and-drop blocos</li>
+          <li>• Callout e Colunas</li>
+          <li>• Tabelas Dinâmicas</li>
+          <li>• Mídia rica (Embeds)</li>
         </ul>
       </div>
     </div>

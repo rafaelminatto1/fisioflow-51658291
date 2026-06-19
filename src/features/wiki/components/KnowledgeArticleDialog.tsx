@@ -633,7 +633,7 @@ export function KnowledgeArticleDialog({
                       <Badge
                         key={idx}
                         variant="outline"
-                        className="pr-1 text-xs h-7 border-sky-200 bg-sky-50 text-sky-700 font-bold"
+                        className="pr-1 text-xs h-7 border-blue-200 bg-blue-50 text-blue-700 font-bold"
                       >
                         {id}
                         <Button
@@ -682,7 +682,7 @@ export function KnowledgeArticleDialog({
                       <Badge
                         key={idx}
                         variant="outline"
-                        className="pr-1 text-xs h-7 border-emerald-200 bg-emerald-50 text-emerald-700 font-bold"
+                        className="pr-1 text-xs h-7 border-blue-200 bg-blue-50 text-blue-700 font-bold"
                       >
                         {id}
                         <Button
@@ -741,19 +741,19 @@ export function KnowledgeArticleDialog({
                   {(formData.metadata?.attachments || []).map((att: any, idx: number) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-between gap-2 p-3 rounded-lg border bg-emerald-50/30 dark:bg-emerald-950/10 text-sm"
+                      className="flex items-center justify-between gap-2 p-3 rounded-lg border bg-blue-50/30 dark:bg-blue-950/10 text-sm"
                     >
                       <div className="flex items-center gap-3 overflow-hidden">
                         {att.type === "image" ? (
-                          <Image className="h-4 w-4 shrink-0 text-emerald-600" />
+                          <Image className="h-4 w-4 shrink-0 text-blue-600" />
                         ) : att.type === "url" ? (
-                          <LinkIcon className="h-4 w-4 shrink-0 text-emerald-600" />
-                        ) : att.type === "guideline" ? (
-                          <BookOpen className="h-4 w-4 shrink-0 text-emerald-600" />
+                          <LinkIcon className="h-4 w-4 shrink-0 text-blue-600" />
+                        ) : att.type === "paper" ? (
+                          <BookOpen className="h-4 w-4 shrink-0 text-blue-600" />
                         ) : (
-                          <FileText className="h-4 w-4 shrink-0 text-emerald-600" />
+                          <FileText className="h-4 w-4 shrink-0 text-blue-600" />
                         )}
-                        <span className="truncate font-bold text-emerald-800 dark:text-emerald-400">
+                        <span className="truncate font-bold text-blue-800 dark:text-blue-400">
                           {att.name}
                         </span>
                       </div>

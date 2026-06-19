@@ -178,13 +178,13 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
             className="hidden md:flex gap-2"
             onClick={handleFocusNotes}
           >
-            <Highlighter className="h-4 w-4 text-amber-500" />
+            <Highlighter className="h-4 w-4 text-orange-500" />
             Anotar
           </Button>
           <Button
             variant="default"
             size="sm"
-            className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+            className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
             onClick={handleFocusChat}
           >
             <Bot className="h-4 w-4" />
@@ -265,7 +265,7 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
               <div className="w-full max-w-5xl h-full min-h-[70vh] bg-white rounded-xl shadow-2xl overflow-hidden border relative">
                 {isBlockedDomain && !isLikelyPdf ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center space-y-4 bg-slate-50">
-                    <div className="h-20 w-20 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mb-2">
+                    <div className="h-20 w-20 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 mb-2">
                       <ExternalLink className="h-10 w-10" />
                     </div>
                     <h3 className="text-lg font-bold text-slate-800">
@@ -313,7 +313,7 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
               onClick={() => setActiveTab("chat")}
               className={`flex-1 py-4 text-xs font-bold uppercase tracking-widest border-b-2 transition-all ${
                 activeTab === "chat"
-                  ? "border-emerald-600 text-emerald-600 bg-white"
+                  ? "border-blue-600 text-blue-600 bg-white"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:bg-card"
               }`}
             >
@@ -326,7 +326,7 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
               onClick={() => setActiveTab("notes")}
               className={`flex-1 py-4 text-xs font-bold uppercase tracking-widest border-b-2 transition-all ${
                 activeTab === "notes"
-                  ? "border-emerald-600 text-emerald-600 bg-white"
+                  ? "border-blue-600 text-blue-600 bg-white"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:bg-card"
               }`}
             >
@@ -353,18 +353,18 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 text-[10px] font-bold uppercase shrink-0 gap-1 rounded-full border-amber-200 hover:bg-amber-50"
+                    className="h-8 text-[10px] font-bold uppercase shrink-0 gap-1 rounded-full border-orange-200 hover:bg-orange-50"
                     onClick={() => handleMagicAction("flashcards")}
                   >
-                    <Sparkles className="h-3 w-3 text-amber-500" /> Flashcards
+                    <Sparkles className="h-3 w-3 text-orange-500" /> Flashcards
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 text-[10px] font-bold uppercase shrink-0 gap-1 rounded-full border-emerald-200 hover:bg-emerald-50"
+                    className="h-8 text-[10px] font-bold uppercase shrink-0 gap-1 rounded-full border-blue-200 hover:bg-blue-50"
                     onClick={() => handleMagicAction("viva")}
                   >
-                    <Bot className="h-3 w-3 text-emerald-600" /> Viva Exam
+                    <Bot className="h-3 w-3 text-blue-600" /> Viva Exam
                   </Button>
                 </div>
 
@@ -378,14 +378,14 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
                         <div
                           className={`max-w-[90%] rounded-2xl p-4 shadow-sm ${
                             msg.role === "user"
-                              ? "bg-emerald-600 text-white rounded-tr-none"
+                              ? "bg-blue-600 text-white rounded-tr-none"
                               : "bg-white text-slate-800 border rounded-tl-none"
                           }`}
                         >
                           <div className="flex flex-col gap-2">
                             <div className="flex items-center gap-2 mb-1">
                               {msg.role === "assistant" ? (
-                                <Bot className="h-3.5 w-3.5 text-emerald-600" />
+                                <Bot className="h-3.5 w-3.5 text-blue-600" />
                               ) : (
                                 <div className="h-3.5 w-3.5 rounded-full bg-white/20" />
                               )}
@@ -419,15 +419,15 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
                       <div className="flex justify-start">
                         <div className="bg-white rounded-2xl p-4 border rounded-tl-none flex items-center gap-2 shadow-sm">
                           <div
-                            className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce"
+                            className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"
                             style={{ animationDelay: "0ms" }}
                           ></div>
                           <div
-                            className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce"
+                            className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"
                             style={{ animationDelay: "150ms" }}
                           ></div>
                           <div
-                            className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce"
+                            className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"
                             style={{ animationDelay: "300ms" }}
                           ></div>
                         </div>
@@ -448,7 +448,7 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg"
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg"
                       onClick={() => handleSendMessage()}
                       disabled={!query.trim() || isProcessing}
                     >

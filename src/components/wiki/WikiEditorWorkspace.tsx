@@ -60,32 +60,36 @@ export function WikiEditorWorkspace({
                   draggingBlockId === block.id && "opacity-50",
                 )}
               >
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2.5 bg-slate-50/50">
                   <div className="flex items-center gap-2">
-                    <GripVertical className="h-4 w-4 text-muted-foreground" />
-                    <Badge variant="outline">{getBlockLabel(block.type)}</Badge>
+                    <GripVertical className="h-4 w-4 text-slate-400 cursor-grab active:cursor-grabbing" />
+                    <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest bg-white border-slate-200 text-slate-500 rounded-md">
+                      {getBlockLabel(block.type)}
+                    </Badge>
                   </div>
 
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => onInsertBelow(block.id)}>
-                      <Plus className="mr-1 h-3.5 w-3.5" />
+                  <div className="flex items-center gap-1.5">
+                    <Button variant="ghost" size="sm" onClick={() => onInsertBelow(block.id)} className="h-8 rounded-lg text-xs font-bold text-slate-500 hover:text-blue-600 hover:bg-blue-50">
+                      <Plus className="mr-1.5 h-3.5 w-3.5" />
                       Inserir abaixo
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-8 w-8 rounded-lg text-slate-400 hover:text-slate-600"
                       onClick={() => onDuplicate(block.id)}
                       title="Duplicar bloco"
                     >
-                      <Copy className="h-4 w-4" />
+                      <Copy className="h-3.5 w-3.5" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-8 w-8 rounded-lg text-slate-400 hover:text-destructive hover:bg-destructive/5"
                       onClick={() => onRemove(block.id)}
                       title="Excluir bloco"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </div>

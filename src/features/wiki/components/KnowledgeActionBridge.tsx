@@ -55,7 +55,7 @@ export function KnowledgeActionBridge({ article, onActionSelect }: KnowledgeActi
             </span>
             <Badge
               variant="outline"
-              className="text-[9px] h-4 px-1.5 bg-sky-50 text-sky-700 border-sky-200"
+              className="text-[9px] h-4 px-1.5 bg-blue-50 text-blue-700 border-blue-200"
             >
               {suggestedTests.length} Sugestões
             </Badge>
@@ -66,12 +66,12 @@ export function KnowledgeActionBridge({ article, onActionSelect }: KnowledgeActi
               suggestedTests.map((test) => (
                 <Card
                   key={test?.id}
-                  className="border-slate-100 hover:border-sky-300 hover:shadow-sm transition-all group cursor-pointer overflow-hidden"
+                  className="border-slate-100 hover:border-blue-300 hover:shadow-sm transition-all group cursor-pointer overflow-hidden"
                   onClick={() => onActionSelect?.("test", test!.id)}
                 >
                   <CardContent className="p-3 flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-slate-800 truncate group-hover:text-sky-700 transition-colors">
+                      <p className="text-sm font-bold text-slate-800 truncate group-hover:text-blue-700 transition-colors">
                         {test?.pt}
                       </p>
                       <p className="text-[10px] text-slate-500 italic truncate">{test?.en}</p>
@@ -83,7 +83,7 @@ export function KnowledgeActionBridge({ article, onActionSelect }: KnowledgeActi
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="h-7 w-7 rounded-full text-slate-400 group-hover:text-sky-600 group-hover:bg-sky-50"
+                              className="h-7 w-7 rounded-full text-slate-400 group-hover:text-blue-600 group-hover:bg-blue-50"
                             >
                               <ClipboardCheck className="h-3.5 w-3.5" />
                             </Button>
@@ -115,7 +115,7 @@ export function KnowledgeActionBridge({ article, onActionSelect }: KnowledgeActi
             </span>
             <Badge
               variant="outline"
-              className="text-[9px] h-4 px-1.5 bg-emerald-50 text-emerald-700 border-emerald-200"
+              className="text-[9px] h-4 px-1.5 bg-blue-50 text-blue-700 border-blue-200"
             >
               {suggestedExercises.length} Exercícios
             </Badge>
@@ -126,7 +126,7 @@ export function KnowledgeActionBridge({ article, onActionSelect }: KnowledgeActi
               suggestedExercises.map((ex) => (
                 <Card
                   key={ex?.id}
-                  className="border-slate-100 hover:border-emerald-300 hover:shadow-sm transition-all group cursor-pointer overflow-hidden"
+                  className="border-slate-100 hover:border-blue-300 hover:shadow-sm transition-all group cursor-pointer overflow-hidden"
                   onClick={() => onActionSelect?.("exercise", ex!.id)}
                 >
                   <CardContent className="p-3 flex items-center justify-between gap-3">
@@ -143,7 +143,7 @@ export function KnowledgeActionBridge({ article, onActionSelect }: KnowledgeActi
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-bold text-slate-800 truncate group-hover:text-emerald-700 transition-colors">
+                        <p className="text-sm font-bold text-slate-800 truncate group-hover:text-blue-700 transition-colors">
                           {ex?.name}
                         </p>
                         <div className="flex items-center gap-1">
@@ -163,7 +163,7 @@ export function KnowledgeActionBridge({ article, onActionSelect }: KnowledgeActi
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="h-7 w-7 rounded-full text-slate-400 group-hover:text-emerald-600 group-hover:bg-emerald-50"
+                              className="h-7 w-7 rounded-full text-slate-400 group-hover:text-blue-600 group-hover:bg-blue-50"
                             >
                               <ExternalLink className="h-3.5 w-3.5" />
                             </Button>

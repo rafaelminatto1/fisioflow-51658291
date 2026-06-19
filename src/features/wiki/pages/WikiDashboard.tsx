@@ -22,13 +22,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { StudyMode } from "../components/StudyMode";
 import { ArticleUploadDialog } from "../components/dialogs/ArticleUploadDialog";
 import type { KnowledgeArtifact } from "@/features/wiki/types/knowledge";
-import { seedKnowledgeBase } from "@/features/wiki/utils/seedData";
-import { toast } from "sonner";
 import { wikiService } from "@/lib/services/wikiService";
 import { getEvidenceTree } from "@/features/wiki/utils/evidenceTrails";
 
 export default function WikiDashboard() {
-  const { organizationId, user } = useAuth();
+  const { organizationId } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,110 +62,101 @@ export default function WikiDashboard() {
     return <StudyMode artifact={selectedArtifact} onClose={() => setSelectedArtifact(null)} />;
   }
 
-  const handleSeed = async () => {
-    if (!user?.organizationId) {
-      // toast.error('Erro: Usuário sem Organização definida.');
-      return;
-    }
-    toast.promise(
-      async () => {
-        const count = await seedKnowledgeBase(user.organizationId);
-        await queryClient.invalidateQueries({
-          queryKey: ["knowledge-artifacts"],
-        });
-        return count;
-      },
-      {
-        loading: "Populando base de conhecimento...",
-        success: (count) => `Sucesso! ${count} artigos adicionados.`,
-        error: "Erro ao popular base.",
-      },
-    );
-  };
-
   return (
-    <div className="container mx-auto p-6 max-w-7xl space-y-8">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-8 md:p-12 shadow-2xl">
-        {/* ... existing hero content ... */}
-
-        {/* Dev Tool: Hidden Seed Button (visible on hover of bottom right corner or similar, but for now just a small discreet button) */}
-        <div className="absolute top-4 right-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-white/20 hover:text-white hover:bg-white/10"
-            onClick={handleSeed}
-          >
-            Seed DB
-          </Button>
+    <div className="container mx-auto p-8 max-w-5xl space-y-12">
+      {/* Hero Section - Minimal Single Column Pattern */}
+      <section className="text-center py-12 md:py-20 space-y-8 animate-in fade-in slide-in-from-top-4 duration-1000">
+        <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-50/50 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-blue-600 animate-in zoom-in-95 duration-500 delay-300">
+          <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+          FisioFlow Intelligence
+        </div>
+        
+        <div className="space-y-4 max-w-3xl mx-auto">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-slate-900 font-display leading-[1.1] animate-in fade-in slide-in-from-bottom-2 duration-700">
+            Excelência clínica <br />
+            <span className="text-blue-600">baseada em evidências.</span>
+          </h1>
+          <p className="text-xl text-slate-500 leading-relaxed font-body font-medium animate-in fade-in slide-in-from-bottom-2 duration-700 delay-200">
+            Acesse protocolos verificados e diretrizes internacionais atualizadas. 
+            Extraia respostas de documentos complexos com nossa IA em segundos.
+          </p>
         </div>
 
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')] opacity-10 bg-cover bg-center mix-blend-overlay" />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/90 to-emerald-900/40" />
-
-        <div className="relative z-10 max-w-2xl space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
-            <Sparkles className="h-3 w-3" />
-            FisioFlow Intelligence Hub
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            Excelência clínica <br />
-            <span className="text-emerald-400">baseada em evidências.</span>
-          </h1>
-          <p className="text-lg text-slate-300 leading-relaxed">
-            Acesse protocolos verificados, consensos internacionais e diretrizes atualizadas. Use
-            nossa IA para extrair respostas de documentos complexos em segundos.
-          </p>
-
-          <div className="relative max-w-lg">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+          <div className="relative w-full max-w-lg group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
             <Input
               placeholder="Busque por 'LCA', 'Ombro', 'Protocolo'..."
-              className="pl-12 h-14 rounded-xl bg-white/10 border-white/10 text-white placeholder:text-slate-400 focus:bg-white/20 transition-all"
+              className="pl-12 h-14 rounded-2xl bg-white border-slate-200 shadow-sm focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all text-lg"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+          <Button 
+            premium 
+            glow 
+            size="lg"
+            className="h-14 px-8 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-lg shadow-lg shadow-orange-500/20"
+            onClick={() => setIsUploadOpen(true)}
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Adicionar Artigo
+          </Button>
+        </div>
+
+        {/* Benefit Bullets (3 max) */}
+        <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 pt-8 text-sm font-semibold text-slate-400">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-blue-500" />
+            <span>Protocolos Verificados</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-blue-500" />
+            <span>Análise por IA</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-orange-500" />
+            <span>Evidência Clínica</span>
+          </div>
         </div>
       </section>
 
-      {/* Stats / Quick Access */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+      {/* Stats Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="bg-slate-50/50 border-slate-200/60 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-400">
               Artigos Verificados
             </CardTitle>
-            <ShieldCheck className="h-4 w-4 text-emerald-600 group-hover:scale-110 transition-transform" />
+            <ShieldCheck className="h-5 w-5 text-blue-600 group-hover:scale-125 transition-transform duration-300" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="text-3xl font-bold text-slate-900">
               {artifacts.filter((a) => a.status === "verified").length}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Nível ouro de evidência</p>
+            <p className="text-xs text-slate-500 mt-1 font-medium">Nível ouro de evidência</p>
           </CardContent>
         </Card>
-        <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+        <Card className="bg-slate-50/50 border-slate-200/60 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Em Estudo</CardTitle>
-            <Activity className="h-4 w-4 text-amber-500 group-hover:scale-110 transition-transform" />
+            <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-400">Em Estudo</CardTitle>
+            <Activity className="h-5 w-5 text-orange-500 group-hover:scale-125 transition-transform duration-300" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">3</div>
-            <p className="text-xs text-muted-foreground mt-1">Documentos abertos recentemente</p>
+            <div className="text-3xl font-bold text-slate-900">3</div>
+            <p className="text-xs text-slate-500 mt-1 font-medium">Documentos abertos recentemente</p>
           </CardContent>
         </Card>
-        <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+        <Card className="bg-slate-50/50 border-slate-200/60 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-400">
               Novos Insights
             </CardTitle>
-            <Sparkles className="h-4 w-4 text-cyan-500 group-hover:scale-110 transition-transform" />
+            <Sparkles className="h-5 w-5 text-cyan-500 group-hover:scale-125 transition-transform duration-300" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">12</div>
-            <p className="text-xs text-muted-foreground mt-1">Resumos gerados por IA</p>
+            <div className="text-3xl font-bold text-slate-900">12</div>
+            <p className="text-xs text-slate-500 mt-1 font-medium">Resumos gerados por IA</p>
           </CardContent>
         </Card>
       </div>
@@ -190,22 +179,22 @@ export default function WikiDashboard() {
             {evidenceTree.trails.map(({ trail, protocols }) => (
               <Card
                 key={trail.id}
-                className="border-slate-200 shadow-sm hover:shadow-md transition-shadow"
+                className="border-slate-200/60 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-blue-300/60"
               >
                 <CardHeader className="space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <Badge
                       variant="outline"
-                      className="border-emerald-200 bg-emerald-50 text-emerald-700"
+                      className="border-blue-200 bg-blue-50 text-blue-700 transition-colors"
                     >
                       Trilha
                     </Badge>
-                    <Badge variant="secondary">
+                    <Badge variant="secondary" className="transition-colors">
                       {protocols.length} protocolo
                       {protocols.length === 1 ? "" : "s"}
                     </Badge>
                   </div>
-                  <CardTitle className="text-base leading-snug">{trail.title}</CardTitle>
+                  <CardTitle className="text-base leading-snug group-hover:text-blue-700 transition-colors duration-300">{trail.title}</CardTitle>
                   <CardDescription className="line-clamp-3">
                     {trail.content.replace(/[#*`>-]/g, "").slice(0, 120)}...
                   </CardDescription>
@@ -213,7 +202,7 @@ export default function WikiDashboard() {
                 <CardContent className="space-y-3">
                   <Button
                     size="sm"
-                    className="w-full bg-emerald-600 hover:bg-emerald-700"
+                    className="w-full bg-blue-600 hover:bg-blue-700 transition-colors duration-300"
                     onClick={() => navigate(`/wiki/${trail.slug}`)}
                   >
                     Abrir trilha
@@ -222,7 +211,7 @@ export default function WikiDashboard() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="w-full"
+                      className="w-full transition-colors duration-300"
                       onClick={() => navigate(`/wiki/${protocols[0].slug}`)}
                     >
                       Abrir protocolo
@@ -251,7 +240,7 @@ export default function WikiDashboard() {
             </Button>
             <Button
               size="sm"
-              className="bg-emerald-600 hover:bg-emerald-700"
+              className="bg-orange-600 hover:bg-orange-700 text-white font-bold"
               onClick={() => setIsUploadOpen(true)}
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -297,7 +286,7 @@ function ArtifactCard({ artifact, onClick }: { artifact: KnowledgeArtifact; onCl
   return (
     <div
       onClick={onClick}
-      className="group relative flex flex-col justify-between rounded-xl border bg-white p-6 shadow-sm transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer"
+      className="group relative flex flex-col justify-between rounded-xl border border-slate-200/60 bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-blue-300/60 cursor-pointer"
     >
       <div className="space-y-3">
         <div className="flex items-start justify-between">
@@ -305,20 +294,20 @@ function ArtifactCard({ artifact, onClick }: { artifact: KnowledgeArtifact; onCl
             variant={artifact.status === "verified" ? "default" : "secondary"}
             className={
               artifact.status === "verified"
-                ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
-                : ""
+                ? "bg-blue-100 text-blue-700 hover:bg-blue-100 transition-colors"
+                : "transition-colors"
             }
           >
             {artifact.subgroup}
           </Badge>
           {artifact.evidenceLevel === "Consensus" && (
-            <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+            <Badge variant="outline" className="border-orange-200 bg-orange-50 text-orange-700 transition-colors">
               Gold
             </Badge>
           )}
         </div>
 
-        <h3 className="font-semibold text-slate-900 line-clamp-2 group-hover:text-emerald-700 transition-colors">
+        <h3 className="font-semibold text-slate-900 line-clamp-2 group-hover:text-blue-700 transition-colors duration-300">
           {artifact.title}
         </h3>
 
@@ -332,7 +321,7 @@ function ArtifactCard({ artifact, onClick }: { artifact: KnowledgeArtifact; onCl
           <Clock className="h-3 w-3" />
           <span>{artifact.metadata.year}</span>
         </div>
-        <div className="flex items-center gap-1 text-xs font-medium text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 text-xs font-medium text-blue-600 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300">
           Estudar <ArrowRight className="h-3 w-3" />
         </div>
       </div>

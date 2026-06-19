@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
+import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import ReactFlow, {
   Background,
   Controls,
@@ -13,8 +14,26 @@ import ReactFlow, {
   type NodeProps,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { Zap, GitBranch, Mail, Clock, Play, Save, Plus } from "lucide-react";
+import { 
+  Zap, 
+  GitBranch, 
+  Mail, 
+  Clock, 
+  Play, 
+  Save, 
+  Plus, 
+  ArrowLeft, 
+  MessageSquare, 
+  Calendar, 
+  UserPlus, 
+  TrendingUp, 
+  DollarSign,
+  Trash2,
+  AlertCircle
+} from "lucide-react";
 import { automationApi } from "@/api/v2";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 type NodeKind = "trigger" | "condition" | "action" | "wait";
 
@@ -62,6 +81,12 @@ function FlowNode({ data, selected }: NodeProps<AutomationNodeData>) {
         </div>
       </div>
       <Handle type="source" position={Position.Bottom} className="!bg-slate-400" />
+      {data.kind === "condition" && (
+         <>
+           <Handle type="source" position={Position.Left} id="false" className="!bg-red-400" />
+           <Handle type="source" position={Position.Right} id="true" className="!bg-emerald-400" />
+         </>
+      )}
     </div>
   );
 }
@@ -70,40 +95,89 @@ let idSeq = 1;
 const newId = (kind: NodeKind) => `${kind}-${idSeq++}`;
 
 export default function AutomationBuilderPage() {
+  const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const templateId = searchParams.get("template");
+  const navigate = useNavigate();
+
   const nodeTypes = useMemo(() => ({ flow: FlowNode }), []);
   const [name, setName] = useState("Nova automação");
   const [triggerEvent, setTriggerEvent] = useState("evolution.updated");
   const [nodes, setNodes, onNodesChange] = useNodesState<AutomationNodeData>([
-    { id: "trigger-0", type: "flow", position: { x: 240, y: 40 }, data: { kind: "trigger", label: "Evento" } },
+    { id: "trigger-0", type: "flow", position: { x: 400, y: 40 }, data: { kind: "trigger", label: "Evento" } },
   ]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [trace, setTrace] = useState<Array<Record<string, unknown>> | null>(null);
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (templateId) {
+      applyTemplate(templateId);
+    } else if (id && id !== "new") {
+      loadAutomation(id);
+    }
+  }, [id, templateId]);
+
+  const loadAutomation = async (automationId: string) => {
+    try {
+      const res = await automationApi.get(automationId);
+      const data = res.data;
+      setName(data.name);
+      setTriggerEvent(data.trigger_event ?? "evolution.updated");
+      // definition parsing logic here if needed
+    } catch (e) {
+      toast.error("Falha ao carregar automação");
+    }
+  };
+
+  const applyTemplate = (tid: string) => {
+    if (tid === "onboarding") {
+      setName("Boas-vindas (Onboarding)");
+      setTriggerEvent("patient.created");
+      setNodes([
+        { id: "trigger-0", type: "flow", position: { x: 400, y: 40 }, data: { kind: "trigger", label: "Paciente Cadastrado" } },
+        { id: "wait-1", type: "flow", position: { x: 400, y: 140 }, data: { kind: "wait", label: "aguardar 5min", seconds: 300 } },
+        { id: "action-1", type: "flow", position: { x: 400, y: 240 }, data: { kind: "action", label: "Enviar WhatsApp", action: "whatsapp_send", paramsJson: '{"message": "Olá! Bem-vindo à FisioFlow..."}' } },
+      ]);
+      setEdges([
+        { id: "e1", source: "trigger-0", target: "wait-1", markerEnd: { type: MarkerType.ArrowClosed } },
+        { id: "e2", source: "wait-1", target: "action-1", markerEnd: { type: MarkerType.ArrowClosed } },
+      ]);
+    }
+    // Adicionar outros templates aqui...
+  };
 
   const onConnect = useCallback(
     (c: Connection) => setEdges((eds) => addEdge({ ...c, markerEnd: { type: MarkerType.ArrowClosed } }, eds)),
     [setEdges],
   );
 
-  const addNode = (kind: NodeKind) => {
+  const addNode = (kind: NodeKind, subType?: string) => {
     const id = newId(kind);
-    const defaults: AutomationNodeData =
-      kind === "condition"
-        ? { kind, label: "campo > valor", field: "vasDelta", op: "lt", value: "-2" }
-        : kind === "action"
-          ? { kind, label: "send_email", action: "send_email", paramsJson: '{"to":"","subject":"","message":""}' }
-          : kind === "wait"
-            ? { kind, label: "aguardar", seconds: 3600 }
-            : { kind, label: "Evento" };
+    let defaults: AutomationNodeData = { kind, label: "Novo Bloco" };
+    
+    if (kind === "condition") {
+      defaults = { kind, label: "se campo > valor", field: "vasDelta", op: "lt", value: "-2" };
+    } else if (kind === "action") {
+      if (subType === "whatsapp") {
+        defaults = { kind, label: "Enviar WhatsApp", action: "whatsapp_send", paramsJson: '{"message": ""}' };
+      } else if (subType === "email") {
+        defaults = { kind, label: "Enviar Email", action: "send_email", paramsJson: '{"to":"","subject":"","message":""}' };
+      } else {
+        defaults = { kind, label: "Executar Ação", action: "log_event", paramsJson: "{}" };
+      }
+    } else if (kind === "wait") {
+      defaults = { kind, label: "Aguardar 1h", seconds: 3600 };
+    }
+
     setNodes((nds) => [
       ...nds,
-      { id, type: "flow", position: { x: 120 + Math.random() * 240, y: 160 + nds.length * 30 }, data: defaults },
+      { id, type: "flow", position: { x: 400, y: 150 + nds.length * 40 }, data: defaults },
     ]);
   };
 
-  const selected = nodes.find((n) => n.id === selectedId) ?? null;
+  const selectedNode = nodes.find((n) => n.id === selectedId) ?? null;
   const patchSelected = (patch: Partial<AutomationNodeData>) =>
     setNodes((nds) => nds.map((n) => (n.id === selectedId ? { ...n, data: { ...n.data, ...patch } } : n)));
 
@@ -129,130 +203,157 @@ export default function AutomationBuilderPage() {
     })),
   });
 
-  const runSimulate = async () => {
-    setBusy(true);
-    setMsg(null);
-    try {
-      const res = await automationApi.simulate(toDefinition(), { vasDelta: -3, organizationId: "preview" });
-      setTrace(res.trace);
-    } catch (e) {
-      setMsg(`Falha ao simular: ${(e as Error).message}`);
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const save = async () => {
     setBusy(true);
-    setMsg(null);
     try {
-      await automationApi.create({ name, triggerEvent, enabled: false, definition: toDefinition() });
-      setMsg("Automação salva (desativada). Ative quando estiver pronta.");
+      if (id && id !== "new") {
+        await automationApi.update(id, { name, triggerEvent, enabled: true, definition: toDefinition() });
+      } else {
+        await automationApi.create({ name, triggerEvent, enabled: false, definition: toDefinition() });
+      }
+      toast.success("Automação salva com sucesso!");
+      navigate("/automacoes");
     } catch (e) {
-      setMsg(`Falha ao salvar: ${(e as Error).message}`);
+      toast.error("Erro ao salvar automação");
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col bg-slate-50 font-[Nunito,sans-serif]">
-      {/* Top bar */}
-      <div className="flex flex-wrap items-center gap-3 border-b bg-white px-5 py-3">
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="min-w-[220px] flex-1 rounded-lg border border-slate-200 px-3 py-2 text-base font-bold text-slate-800 focus:border-blue-400 focus:outline-none"
-          aria-label="Nome da automação"
-        />
-        <label className="flex items-center gap-2 text-sm text-slate-600">
-          Gatilho
-          <select
-            value={triggerEvent}
-            onChange={(e) => setTriggerEvent(e.target.value)}
-            className="rounded-lg border border-slate-200 px-2 py-2 text-sm focus:border-blue-400 focus:outline-none"
-          >
-            <option value="evolution.updated">Evolução atualizada</option>
-            <option value="appointment.created">Consulta criada</option>
-            <option value="appointment.completed">Consulta concluída</option>
-            <option value="patient.inactive">Paciente inativo</option>
-          </select>
-        </label>
-        <button
-          onClick={runSimulate}
-          disabled={busy}
-          className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50"
-        >
-          <Play className="h-4 w-4" /> Simular
-        </button>
-        <button
-          onClick={save}
-          disabled={busy}
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          <Save className="h-4 w-4" /> Salvar
-        </button>
-      </div>
+    <div className="flex h-screen flex-col bg-slate-50 overflow-hidden">
+      {/* Top Bar */}
+      <header className="flex h-14 items-center justify-between border-b bg-white px-4 shadow-sm z-10">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/automacoes")}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="bg-transparent text-lg font-bold text-slate-800 focus:outline-none"
+            />
+          </div>
+        </div>
 
-      {msg && <div className="bg-blue-50 px-5 py-2 text-sm text-blue-800">{msg}</div>}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5">
+            <Zap className="h-4 w-4 text-blue-500" />
+            <select
+              value={triggerEvent}
+              onChange={(e) => setTriggerEvent(e.target.value)}
+              className="bg-transparent text-sm font-medium focus:outline-none"
+            >
+              <option value="evolution.updated">Evolução atualizada</option>
+              <option value="patient.created">Paciente cadastrado</option>
+              <option value="appointment.scheduled">Agendamento criado</option>
+              <option value="payment.overdue">Pagamento vencido</option>
+            </select>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setTrace([])}>
+            <Play className="mr-2 h-4 w-4" /> Simular
+          </Button>
+          <Button size="sm" onClick={save} disabled={busy}>
+            <Save className="mr-2 h-4 w-4" /> Salvar
+          </Button>
+        </div>
+      </header>
 
-      <div className="flex min-h-0 flex-1">
-        {/* Palette */}
-        <aside className="w-44 shrink-0 border-r bg-white p-3">
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Adicionar bloco</div>
-          <div className="flex flex-col gap-2">
-            {(["condition", "action", "wait"] as NodeKind[]).map((k) => {
-              const m = KIND_META[k];
-              const Icon = m.icon;
-              return (
-                <button
-                  key={k}
-                  onClick={() => addNode(k)}
-                  className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:border-slate-300 hover:bg-slate-50"
-                >
-                  <span className={`flex h-6 w-6 items-center justify-center rounded-md ${m.chip}`}>
-                    <Icon className="h-3.5 w-3.5" />
-                  </span>
-                  {m.label}
-                  <Plus className="ml-auto h-3.5 w-3.5 text-slate-400" />
-                </button>
-              );
-            })}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Sidebar - Blocks */}
+        <aside className="w-64 border-r bg-white p-4 flex flex-col gap-6 overflow-y-auto">
+          <div>
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Controle</h3>
+            <div className="space-y-2">
+              <SidebarItem icon={GitBranch} label="Condição (If/Else)" color="text-amber-500" onClick={() => addNode("condition")} />
+              <SidebarItem icon={Clock} label="Aguardar Tempo" color="text-slate-500" onClick={() => addNode("wait")} />
+            </div>
+          </div>
+
+          <div>
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Comunicação</h3>
+            <div className="space-y-2">
+              <SidebarItem icon={MessageSquare} label="Enviar WhatsApp" color="text-emerald-500" onClick={() => addNode("action", "whatsapp")} />
+              <SidebarItem icon={Mail} label="Enviar Email" color="text-blue-500" onClick={() => addNode("action", "email")} />
+            </div>
+          </div>
+
+          <div>
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">FisioFlow</h3>
+            <div className="space-y-2">
+              <SidebarItem icon={Calendar} label="Mudar Status Agenda" color="text-indigo-500" onClick={() => addNode("action")} />
+              <SidebarItem icon={DollarSign} label="Gerar Cobrança" color="text-green-500" onClick={() => addNode("action")} />
+            </div>
+          </div>
+
+          <div className="mt-auto p-4 bg-blue-50 rounded-xl border border-blue-100">
+            <div className="flex gap-2 items-start">
+              <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5" />
+              <div>
+                <p className="text-xs font-bold text-blue-700">Dica da IA</p>
+                <p className="text-[10px] text-blue-600 leading-tight mt-1">
+                  Conecte os blocos para criar um fluxo. Use condições para caminhos diferentes.
+                </p>
+              </div>
+            </div>
           </div>
         </aside>
 
         {/* Canvas */}
-        <div className="min-w-0 flex-1">
+        <main className="relative flex-1 bg-[#f8fafc]">
           <ReactFlow
             nodes={nodes}
             edges={edges}
-            nodeTypes={nodeTypes}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
-            onNodeClick={(_, n) => setSelectedId(n.id)}
+            nodeTypes={nodeTypes}
+            onNodeClick={(_, node) => setSelectedId(node.id)}
             onPaneClick={() => setSelectedId(null)}
             fitView
           >
-            <Background color="#cbd5e1" gap={18} />
+            <Background color="#cbd5e1" gap={20} />
             <Controls />
           </ReactFlow>
-        </div>
+        </main>
 
-        {/* Inspector / trace */}
-        <aside className="w-80 shrink-0 overflow-y-auto border-l bg-white p-4">
-          {selected ? (
-            <NodeInspector data={selected.data} onChange={patchSelected} />
-          ) : trace ? (
-            <TracePanel trace={trace} />
+        {/* Right Sidebar - Inspector */}
+        <aside className={`w-80 border-l bg-white p-4 transition-all ${selectedId ? "translate-x-0" : "translate-x-full hidden"}`}>
+          {selectedNode ? (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b pb-4">
+                <h3 className="font-bold text-slate-800">Configurações</h3>
+                <Button variant="ghost" size="icon" className="text-red-500" onClick={() => setNodes(nds => nds.filter(n => n.id !== selectedId))}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <NodeInspector data={selectedNode.data} onChange={patchSelected} />
+            </div>
           ) : (
-            <p className="text-sm text-slate-500">
-              Selecione um bloco para editar, ou clique <strong>Simular</strong> para ver a execução passo a passo.
-            </p>
+            <div className="flex h-full flex-col items-center justify-center text-center text-slate-400">
+              <Zap className="mb-2 h-8 w-8 opacity-20" />
+              <p className="text-sm">Selecione um bloco para editar suas configurações.</p>
+            </div>
           )}
         </aside>
       </div>
     </div>
+  );
+}
+
+function SidebarItem({ icon: Icon, label, color, onClick }: { icon: any, label: string, color: string, onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex w-full items-center gap-3 rounded-lg border border-transparent p-2 text-left transition-all hover:border-slate-200 hover:bg-slate-50 active:scale-95"
+    >
+      <div className={`flex h-8 w-8 items-center justify-center rounded-md bg-white shadow-sm border ${color.replace('text', 'border')}`}>
+        <Icon className={`h-4 w-4 ${color}`} />
+      </div>
+      <span className="text-sm font-medium text-slate-700">{label}</span>
+      <Plus className="ml-auto h-3 w-3 text-slate-300" />
+    </button>
   );
 }
 
@@ -265,49 +366,86 @@ function NodeInspector({
 }) {
   const meta = KIND_META[data.kind];
   return (
-    <div className="space-y-3">
-      <div className={`inline-flex items-center gap-2 rounded-md px-2 py-1 text-xs font-semibold ${meta.chip}`}>
-        {meta.label}
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Nome do Bloco</label>
+        <input
+          value={data.label}
+          onChange={(e) => onChange({ label: e.target.value })}
+          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none font-medium"
+        />
       </div>
+
+      <div className="h-px bg-slate-100" />
+
       {data.kind === "condition" && (
-        <>
-          <Field label="Campo" value={data.field ?? ""} onChange={(v) => onChange({ field: v, label: `${v} ${data.op} ${data.value}` })} />
+        <div className="space-y-4">
+          <Field label="Campo de Dados" value={data.field ?? ""} onChange={(v) => onChange({ field: v })} />
           <SelectField
             label="Operador"
             value={data.op ?? "eq"}
-            options={["eq", "neq", "gt", "gte", "lt", "lte", "contains", "exists"]}
-            onChange={(v) => onChange({ op: v, label: `${data.field} ${v} ${data.value}` })}
+            options={[
+              { label: "Igual a", value: "eq" },
+              { label: "Diferente de", value: "neq" },
+              { label: "Maior que", value: "gt" },
+              { label: "Menor que", value: "lt" },
+              { label: "Contém", value: "contains" }
+            ]}
+            onChange={(v) => onChange({ op: v })}
           />
-          <Field label="Valor" value={data.value ?? ""} onChange={(v) => onChange({ value: v, label: `${data.field} ${data.op} ${v}` })} />
-        </>
+          <Field label="Valor Esperado" value={data.value ?? ""} onChange={(v) => onChange({ value: v })} />
+          
+          <div className="p-3 bg-amber-50 rounded-lg border border-amber-100">
+            <p className="text-[10px] text-amber-700 leading-tight">
+              <strong>Nota:</strong> A saída da esquerda (Vermelha) é executada se a condição for FALSA. A da direita (Verde) se for VERDADEIRA.
+            </p>
+          </div>
+        </div>
       )}
+
       {data.kind === "action" && (
-        <>
+        <div className="space-y-4">
           <SelectField
-            label="Ação"
-            value={data.action ?? "send_email"}
-            options={["send_email", "log_event"]}
-            onChange={(v) => onChange({ action: v, label: v })}
+            label="Tipo de Ação"
+            value={data.action ?? "whatsapp_send"}
+            options={[
+              { label: "Enviar WhatsApp", value: "whatsapp_send" },
+              { label: "Enviar Email", value: "send_email" },
+              { label: "Mudar Status Agenda", value: "appointment_status" },
+              { label: "Notificar Equipe", value: "internal_notify" }
+            ]}
+            onChange={(v) => onChange({ action: v })}
           />
-          <label className="block text-sm">
-            <span className="mb-1 block font-semibold text-slate-600">Parâmetros (JSON)</span>
+          <div className="space-y-1">
+            <span className="mb-1 block text-sm font-semibold text-slate-600">Configuração (JSON)</span>
             <textarea
               value={data.paramsJson ?? "{}"}
               onChange={(e) => onChange({ paramsJson: e.target.value })}
-              rows={5}
-              className="w-full rounded-lg border border-slate-200 p-2 font-mono text-xs focus:border-blue-400 focus:outline-none"
+              rows={8}
+              className="w-full rounded-lg border border-slate-200 p-3 font-mono text-xs focus:border-blue-400 focus:outline-none bg-slate-50"
+              placeholder='{"message": "Olá..."}'
             />
-          </label>
-        </>
+          </div>
+        </div>
       )}
+
       {data.kind === "wait" && (
-        <Field
-          label="Segundos"
-          value={String(data.seconds ?? 0)}
-          onChange={(v) => onChange({ seconds: Number(v) || 0, label: `aguardar ${v}s` })}
-        />
+        <div className="space-y-4">
+          <Field
+            label="Tempo de Espera (segundos)"
+            value={String(data.seconds ?? 0)}
+            onChange={(v) => onChange({ seconds: Number(v) || 0, label: `Aguardar ${v}s` })}
+          />
+          <p className="text-[10px] text-slate-400 italic">Dica: 3600 segundos = 1 hora</p>
+        </div>
       )}
-      {data.kind === "trigger" && <p className="text-sm text-slate-500">O gatilho é definido pelo evento na barra superior.</p>}
+
+      {data.kind === "trigger" && (
+        <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 text-center">
+          <Zap className="w-6 h-6 text-blue-500 mx-auto mb-2" />
+          <p className="text-xs text-blue-700">Este é o ponto de partida. Ele é disparado pelo evento selecionado no topo da tela.</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -319,7 +457,7 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-slate-200 px-2 py-2 text-sm focus:border-blue-400 focus:outline-none"
+        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none"
       />
     </label>
   );
@@ -333,7 +471,7 @@ function SelectField({
 }: {
   label: string;
   value: string;
-  options: string[];
+  options: Array<{ label: string, value: string }>;
   onChange: (v: string) => void;
 }) {
   return (
@@ -342,39 +480,14 @@ function SelectField({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-slate-200 px-2 py-2 text-sm focus:border-blue-400 focus:outline-none"
+        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none bg-white"
       >
         {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
+          <option key={o.value} value={o.value}>
+            {o.label}
           </option>
         ))}
       </select>
     </label>
-  );
-}
-
-function TracePanel({ trace }: { trace: Array<Record<string, unknown>> }) {
-  return (
-    <div>
-      <div className="mb-3 text-sm font-bold text-slate-800">Execução simulada</div>
-      <ol className="relative space-y-3 border-l-2 border-slate-200 pl-4">
-        {trace.map((t, i) => {
-          const kind = String(t.type) as NodeKind;
-          const meta = KIND_META[kind] ?? KIND_META.action;
-          return (
-            <li key={i} className="relative">
-              <span className={`absolute -left-[21px] top-1 h-3 w-3 rounded-full ${meta.dot}`} />
-              <div className="text-sm font-semibold text-slate-700">{meta.label}</div>
-              <div className="text-xs text-slate-500">
-                {kind === "condition" && `resultado: ${t.passed ? "verdadeiro" : "falso"}`}
-                {kind === "action" && String(t.action ?? "")}
-                {kind === "wait" && `${t.seconds}s`}
-              </div>
-            </li>
-          );
-        })}
-      </ol>
-    </div>
   );
 }
