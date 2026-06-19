@@ -3,7 +3,8 @@ import { createDb } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 import { businessMetrics, patientAdherencePredictions, patients } from "@fisioflow/db";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
+import { createPool } from "../lib/db";
 import { AdherencePredictor } from "../lib/ai/adherencePredictor";
 import { isUuid } from "../lib/validators";
 
@@ -138,59 +139,65 @@ app.get("/wiki-gaps", async (c) => {
  */
 app.get("/dashboard", async (c) => {
   const user = c.get("user");
-  const db = createDb(c.env);
+  const pool = createPool(c.env);
 
   try {
     const period = c.req.query("period") || "month";
-    let dateFilterSql: ReturnType<typeof sql>;
-    let truncPeriod: "day" | "week" | "month" = "month";
+    let dateFilter = "";
+    let truncPeriod = "month";
 
     switch (period) {
       case "today":
-        dateFilterSql = sql`AND a.date = CURRENT_DATE`;
+        dateFilter = "AND a.date = CURRENT_DATE";
         truncPeriod = "day";
         break;
       case "week":
-        dateFilterSql = sql`AND a.date >= date_trunc('week', CURRENT_DATE) AND a.date < date_trunc('week', CURRENT_DATE) + interval '1 week'`;
+        dateFilter =
+          "AND a.date >= date_trunc('week', CURRENT_DATE) AND a.date < date_trunc('week', CURRENT_DATE) + interval '1 week'";
         truncPeriod = "week";
         break;
       case "month":
       default:
-        dateFilterSql = sql`AND a.date >= date_trunc('month', CURRENT_DATE) AND a.date < date_trunc('month', CURRENT_DATE) + interval '1 month'`;
+        dateFilter =
+          "AND a.date >= date_trunc('month', CURRENT_DATE) AND a.date < date_trunc('month', CURRENT_DATE) + interval '1 month'";
         truncPeriod = "month";
         break;
     }
 
     // Agendamentos no período
-    const appointmentsRes = await db.execute(sql`
-      SELECT 
-        COUNT(*)::int as total,
-        COUNT(*) filter (where status IN ('completed', 'realizado'))::int as completed,
-        COUNT(*) filter (where status = 'no_show')::int as no_shows,
-        COUNT(*) filter (where status IN ('confirmed', 'scheduled'))::int as upcoming
+    const appointmentsRes = await pool.query(
+      `SELECT 
+        COUNT(*) as total,
+        COUNT(*) filter (where status IN ('completed', 'realizado')) as completed,
+        COUNT(*) filter (where status = 'no_show') as no_shows,
+        COUNT(*) filter (where status IN ('confirmed', 'scheduled', 'agendado')) as upcoming
       FROM appointments a
-      WHERE a.organization_id = ${user.organizationId} ${dateFilterSql}
-    `);
+      WHERE a.organization_id = $1 ${dateFilter}`,
+      [user.organizationId],
+    );
 
-    // Receita no período
-    const revenueRes = await db.execute(sql`
-      SELECT 
-        COALESCE(SUM(amount), 0)::float as total_revenue,
-        COUNT(*)::int as total_payments,
-        AVG(amount)::float as avg_ticket
+    // Receita no período (payments usa amount_cents)
+    const revenueRes = await pool.query(
+      `SELECT 
+        COALESCE(SUM(amount_cents), 0) as total_revenue_cents,
+        COUNT(*) as total_payments,
+        AVG(amount_cents) as avg_ticket_cents
       FROM payments
-      WHERE organization_id = ${user.organizationId}
-        AND created_at >= date_trunc(${sql.raw(truncPeriod)}, CURRENT_DATE)
-    `);
+      WHERE organization_id = $1
+        AND status = 'completed'
+        AND created_at >= date_trunc('${truncPeriod}', CURRENT_DATE)`,
+      [user.organizationId],
+    );
 
     // Novos pacientes no período
-    const newPatientsRes = await db.execute(sql`
-      SELECT COUNT(*)::int as count
+    const newPatientsRes = await pool.query(
+      `SELECT COUNT(*) as count
       FROM patients
-      WHERE organization_id = ${user.organizationId}
-        AND created_at >= date_trunc(${sql.raw(truncPeriod)}, CURRENT_DATE)
-        AND deleted_at IS NULL
-    `);
+      WHERE organization_id = $1
+        AND created_at >= date_trunc('${truncPeriod}', CURRENT_DATE)
+        AND deleted_at IS NULL`,
+      [user.organizationId],
+    );
 
     return c.json({
       data: {
@@ -202,9 +209,11 @@ app.get("/dashboard", async (c) => {
           upcoming: Number(appointmentsRes.rows[0]?.upcoming || 0),
         },
         financial: {
-          total_revenue: Number(revenueRes.rows[0]?.total_revenue || 0),
+          total_revenue_cents: Number(revenueRes.rows[0]?.total_revenue_cents || 0),
+          total_revenue_reais: (Number(revenueRes.rows[0]?.total_revenue_cents || 0) / 100).toFixed(2),
           total_payments: Number(revenueRes.rows[0]?.total_payments || 0),
-          avg_ticket: Number(revenueRes.rows[0]?.avg_ticket || 0),
+          avg_ticket_cents: Number(revenueRes.rows[0]?.avg_ticket_cents || 0),
+          avg_ticket_reais: (Number(revenueRes.rows[0]?.avg_ticket_cents || 0) / 100).toFixed(2),
         },
         new_patients: Number(newPatientsRes.rows[0]?.count || 0),
       },
