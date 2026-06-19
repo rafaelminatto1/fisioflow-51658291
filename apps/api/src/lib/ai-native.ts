@@ -29,6 +29,23 @@ function buildGateway(opts: GatewayOpts = {}) {
   };
 }
 
+/**
+ * Lê o texto gerado de uma resposta de Workers AI em ambos os formatos:
+ * `.response` (modelos clássicos) OU `choices[0].message.content` (modelos `-fast`/vLLM, formato OpenAI).
+ * Use sempre isto em vez de ler `.response` direto — os modelos `-fast` NÃO populam `.response`.
+ */
+export function readAiText(resp: unknown): string {
+  const r = resp as {
+    response?: unknown;
+    choices?: Array<{ message?: { content?: unknown } }>;
+  };
+  if (typeof r?.response === "string") return r.response;
+  const c = r?.choices?.[0]?.message?.content;
+  if (typeof c === "string") return c;
+  if (r?.response && typeof r.response === "object") return JSON.stringify(r.response);
+  return "";
+}
+
 /** Executa qualquer modelo Workers AI com gateway routing */
 export async function runAi(env: Env, model: string, input: unknown, opts: GatewayOpts = {}) {
   if (!env.AI) throw new Error("Workers AI binding (env.AI) not found.");
@@ -121,7 +138,7 @@ export async function summarizeClinicalNote(
     },
     { cache: false, sessionId }, // registros clínicos nunca cacheados
   );
-  return ((response as any).response as string) ?? "";
+  return readAiText(response);
 }
 
 /**
@@ -156,7 +173,7 @@ Sem markdown, sem explicações adicionais.`,
     { cache: false, sessionId },
   );
 
-  const raw = ((response as any).response as string) ?? "{}";
+  const raw = readAiText(response) || "{}";
   try {
     // Extrai JSON mesmo se o modelo adicionar texto extra
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
@@ -194,7 +211,7 @@ export async function analyzeClinicImage(
     },
     { cache: false },
   );
-  return ((response as any).response as string) ?? "";
+  return readAiText(response);
 }
 
 /**
@@ -212,7 +229,7 @@ export async function moderateContent(env: Env, text: string): Promise<boolean> 
       },
       { cache: true, cacheTtl: 300 },
     );
-    const result = ((response as any).response as string) ?? "safe";
+    const result = readAiText(response) || "safe";
     return result.toLowerCase().includes("safe");
   } catch {
     return true; // Fail open para não bloquear mensagens legítimas
@@ -289,7 +306,7 @@ export async function runThinkingModel(
     { cache: false },
   );
 
-  const content = ((response as any).response as string) ?? "";
+  const content = readAiText(response);
   return { content, text: content, model: modelId };
 }
 

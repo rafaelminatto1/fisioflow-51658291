@@ -6,7 +6,7 @@ import {
   type AIProvider,
 } from "./modelRegistry";
 import { zaiChat, zaiVision, zaiTranscribe, type ZAIChatResult } from "./providers/zai";
-import { runAi } from "../ai-native";
+import { runAi, readAiText } from "../ai-native";
 import { neon } from "@neondatabase/serverless";
 
 export type AITask =
@@ -298,9 +298,8 @@ async function executeProvider(
         { messages: opts.messages, max_tokens: opts.maxTokens ?? 1024 },
         { cache: !!opts.cacheKey, cacheTtl: opts.cacheTtl ?? 3600 },
       );
-      const result = response as { response?: string };
       return {
-        content: result.response ?? "",
+        content: readAiText(response),
         usage: { inputTokens: 0, outputTokens: 0, cachedTokens: 0 },
         model: modelId,
       };
