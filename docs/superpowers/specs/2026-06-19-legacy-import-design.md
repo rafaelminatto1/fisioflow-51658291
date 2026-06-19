@@ -173,6 +173,7 @@ If the current auth model does not expose `owner`, implementation should use the
 1. Authenticate user, derive `organizationId`, and enforce destructive-import role gating.
 2. Parse and validate payload with Zod.
 3. Resolve therapist fallback viability before any write.
+   Validate any UUID-shaped therapist identifier against `profiles.id` within the authenticated organization.
 4. If `dryRun === true`, return the projected report without mutating the database.
 5. In `dryRun`, validate cleanup scope syntactically but do not execute deletions.
 6. If `replaceExisting !== true`, reject with `400`.
@@ -214,6 +215,8 @@ Initial required scope:
 - `patient_session_metrics`
 - `generated_reports`
 - `prescribed_exercises`
+- `package_usage`
+- `patient_packages`
 - `patient_goals`
 - `patient_pathologies`
 - `medical_records`
@@ -288,13 +291,14 @@ Therapist attribution is clinically sensitive.
 
 Approved bootstrap behavior for this migration:
 
-- if payload `therapistId` is a valid UUID, use it
-- else if authenticated `profileId` is a valid UUID, use it as fallback
+- if payload `therapistId` is a valid UUID and resolves to `profiles.id` in the authenticated organization, use it
+- else if authenticated `profileId` is a valid UUID and resolves to `profiles.id` in the authenticated organization, use it as fallback
 - else fail that patient record
 
 Audit requirement:
 
 - when fallback to authenticated `profileId` happens, append a warning in the patient result
+- when payload `therapistId` is UUID-shaped but does not resolve to a local profile, append a warning that the source therapist could not be matched
 - the warning text must clearly indicate that historical authorship was reassigned during migration
 - the route should log the fallback event with organization, patient index, and imported session count
 
@@ -379,6 +383,7 @@ Implementation should include:
 - route test showing partial success when one patient fails and another succeeds
 - route test proving cleanup is scoped to the authenticated organization
 - route test proving duplicate full names are imported as separate patients
+- route test rejecting UUID-shaped `therapistId` values that do not resolve to `profiles.id` in the authenticated organization
 - route test for therapist fallback to authenticated `profileId`
 - route test for therapist failure when neither payload nor auth provides a valid UUID
 - route test for missing evolution date fallback
