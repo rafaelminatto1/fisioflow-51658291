@@ -16,12 +16,24 @@ export interface CrmStageMeta {
 export interface CrmConversationViewModel {
   id: string;
   name: string;
+  initials: string;
+  phone: string;
+  patientId?: string;
   avatarUrl: string | null;
+  presenceLabel: string;
   lastMessage: string;
   lastMessageAt: string | null;
   unreadCount: number;
   tags: { id: string; name: string; color: string }[];
   stage: CrmStageMeta;
+  sourceLabel: string;
+  campaignLabel: string;
+  insuranceLabel: string;
+  interestLabel: string;
+  firstContactLabel: string;
+  ownerLabel: string;
+  nextActionTitle: string;
+  nextActionBody: string;
   metadata: Record<string, unknown> | undefined;
 }
 
@@ -76,12 +88,99 @@ function resolveStage(conversation: Conversation): CrmStage {
   return "lead";
 }
 
+function readStringMetadata(metadata: Record<string, unknown> | undefined, keys: string[]) {
+  if (!metadata) return undefined;
+  for (const key of keys) {
+    const value = metadata[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return undefined;
+}
+
+function formatInitials(name: string) {
+  const parts = name
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return "??";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) return "Não informado";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Não informado";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function formatPresenceLabel(conversation: Conversation) {
+  const lastMessageAt = conversation.lastMessageAt ? new Date(conversation.lastMessageAt) : null;
+  if (lastMessageAt && !Number.isNaN(lastMessageAt.getTime())) {
+    const elapsedMinutes = (Date.now() - lastMessageAt.getTime()) / 60000;
+    if (elapsedMinutes <= 15) return "Ativo agora";
+    return `Atualizado em ${formatDateTime(conversation.lastMessageAt)}`;
+  }
+
+  if (conversation.status === "resolved" || conversation.status === "closed") {
+    return "Conversa encerrada";
+  }
+
+  return "Sem atividade recente";
+}
+
+function formatLabel(value: unknown, fallback: string) {
+  if (typeof value !== "string") return fallback;
+  const normalized = value.trim();
+  return normalized || fallback;
+}
+
 export function toCrmConversationViewModel(conversation: Conversation): CrmConversationViewModel {
   const stage = resolveStage(conversation);
+  const metadata = conversation.metadata ?? undefined;
+  const source = readStringMetadata(metadata, ["source", "leadSource", "origin"]);
+  const campaign = readStringMetadata(metadata, ["campaign", "campaignName", "utm_campaign"]);
+  const insurance = readStringMetadata(metadata, ["insurance", "convenio", "healthPlan"]);
+  const interest = readStringMetadata(metadata, ["interest", "complaint", "serviceInterest"]);
+  const nextAction = readStringMetadata(metadata, ["nextAction", "next_action"]);
+  const patientId = conversation.patientId ?? undefined;
+  const name = conversation.contactName ?? conversation.patientName ?? conversation.id;
+  const phone = conversation.contactPhone || "";
+
+  const derivedNextActionTitle =
+    stage.key === "lead"
+      ? "Pendente"
+      : stage.key === "contact"
+        ? "Aguardando resposta"
+        : stage.key === "evaluation"
+          ? "Confirmar avaliação"
+          : "Acompanhar tratamento";
+
+  const derivedNextActionBody =
+    nextAction ??
+    (stage.key === "lead"
+      ? "Qualificar lead e responder a primeira mensagem."
+      : stage.key === "contact"
+        ? "Oferecer horários e conduzir para agendamento."
+        : stage.key === "evaluation"
+          ? patientId
+            ? "Confirmar a avaliação e preparar o primeiro atendimento."
+            : "Vincular paciente e confirmar horário da avaliação."
+          : "Acompanhar a evolução e a próxima sessão.");
+
   return {
     id: conversation.id,
-    name: conversation.contactName ?? conversation.id,
+    name,
+    initials: formatInitials(name),
+    phone,
+    patientId,
     avatarUrl: null,
+    presenceLabel: formatPresenceLabel(conversation),
     lastMessage: conversation.lastMessage ?? "",
     lastMessageAt: conversation.lastMessageAt ?? null,
     unreadCount: conversation.unreadCount ?? 0,
@@ -91,7 +190,15 @@ export function toCrmConversationViewModel(conversation: Conversation): CrmConve
       color: tag.color ?? "#6b7280",
     })),
     stage: STAGE_META[stage],
-    metadata: conversation.metadata ?? undefined,
+    sourceLabel: formatLabel(source, "Não informado"),
+    campaignLabel: formatLabel(campaign, "Não informado"),
+    insuranceLabel: formatLabel(insurance, "Não informado"),
+    interestLabel: formatLabel(interest, "Não informado"),
+    firstContactLabel: formatDateTime(conversation.createdAt),
+    ownerLabel: conversation.assignedToName ?? "Não atribuído",
+    nextActionTitle: nextAction ? "Próxima ação" : derivedNextActionTitle,
+    nextActionBody: derivedNextActionBody,
+    metadata,
   };
 }
 

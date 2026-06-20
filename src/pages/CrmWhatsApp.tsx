@@ -72,15 +72,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function readStringMetadata(metadata: Record<string, unknown> | undefined, keys: string[]) {
-  if (!metadata) return undefined;
-  for (const key of keys) {
-    const value = metadata[key];
-    if (typeof value === "string" && value.trim()) return value.trim();
-  }
-  return undefined;
-}
-
 function getMessageText(content: unknown): string {
   if (typeof content === "string") return content;
   if (isRecord(content)) {
@@ -170,16 +161,6 @@ export default function CrmWhatsApp() {
       treatment: conversationCards.filter((item) => item.stage.key === "treatment").length,
     } satisfies Record<PipelineFilter, number>;
   }, [conversationCards]);
-
-  const crmMetadata = useMemo(() => {
-    const metadata = isRecord(conversation?.metadata) ? conversation.metadata : undefined;
-    return {
-      source: readStringMetadata(metadata, ["source", "leadSource", "origin"]),
-      campaign: readStringMetadata(metadata, ["campaign", "campaignName", "utm_campaign"]),
-      insurance: readStringMetadata(metadata, ["insurance", "convenio", "healthPlan"]),
-      interest: readStringMetadata(metadata, ["interest", "complaint", "serviceInterest"]),
-    };
-  }, [conversation?.metadata]);
 
   const handleSend = async () => {
     if (!selectedId || !composer.trim() || sending) return;
@@ -665,20 +646,20 @@ export default function CrmWhatsApp() {
                           <span className="font-semibold text-muted-foreground">Origem</span>
                           <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(142_60%_92%)] px-2 py-0.5 font-bold text-[hsl(142_55%_28%)]">
                             <Camera className="h-[11px] w-[11px]" />
-                            {crmMetadata.source || selectedConversationVm.sourceLabel}
+                            {selectedConversationVm.sourceLabel}
                           </span>
                         </div>
                         <div className="flex items-center justify-between border-b border-border/50 py-1.5">
                           <span className="font-semibold text-muted-foreground">Campanha</span>
-                          <span className="font-bold">{crmMetadata.campaign || selectedConversationVm.campaignLabel}</span>
+                          <span className="font-bold">{selectedConversationVm.campaignLabel}</span>
                         </div>
                         <div className="flex items-center justify-between border-b border-border/50 py-1.5">
                           <span className="font-semibold text-muted-foreground">Convênio</span>
-                          <span className="font-bold">{crmMetadata.insurance || selectedConversationVm.insuranceLabel}</span>
+                          <span className="font-bold">{selectedConversationVm.insuranceLabel}</span>
                         </div>
                         <div className="flex items-center justify-between border-b border-border/50 py-1.5">
                           <span className="font-semibold text-muted-foreground">Interesse</span>
-                          <span className="font-bold">{crmMetadata.interest || selectedConversationVm.interestLabel}</span>
+                          <span className="font-bold">{selectedConversationVm.interestLabel}</span>
                         </div>
                         <div className="flex items-center justify-between border-b border-border/50 py-1.5">
                           <span className="font-semibold text-muted-foreground">Primeiro contato</span>
