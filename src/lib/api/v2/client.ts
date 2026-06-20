@@ -34,6 +34,13 @@ class ApiClient {
     try {
       const response = await fetch(url, config);
 
+      if (response.status === 401 || response.status === 403) {
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
+        throw new Error("Sessão expirada. Redirecionando para login...");
+      }
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
