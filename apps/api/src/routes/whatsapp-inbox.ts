@@ -62,6 +62,23 @@ function deriveCrmStage(row: Record<string, unknown>, metadata: Record<string, u
     normalizeCrmStage(metadata.pipelineStage);
   if (explicitStage) return explicitStage;
 
+  const lifecycleStage = String(row.crm_lifecycle_stage ?? "").toLowerCase();
+  const leadStage = String(row.crm_lead_stage ?? "").toLowerCase();
+
+  if (leadStage === "avaliacao_agendada" || leadStage === "avaliacao_realizada") {
+    return "evaluation";
+  }
+  if (leadStage === "efetivado") {
+    return "treatment";
+  }
+  if (leadStage === "em_contato") {
+    return "contact";
+  }
+
+  if (lifecycleStage === "customer") return "treatment";
+  if (lifecycleStage === "sql" || lifecycleStage === "opportunity") return "evaluation";
+  if (lifecycleStage === "mql") return "contact";
+
   const patientId = row.patient_id || row.wc_patient_id || row.p_patient_id;
   const status = String(row.status ?? "").toLowerCase();
   const tagNames = Array.isArray(row.tags)
@@ -91,9 +108,37 @@ function deriveCrmStage(row: Record<string, unknown>, metadata: Record<string, u
   return "lead";
 }
 
+function deriveNextAction(stage: CrmStage, row: Record<string, unknown>): string {
+  const status = String(row.status ?? "").toLowerCase();
+  const unreadCount = Number(row.unread_count ?? 0);
+
+  if (status === "resolved" || status === "closed") {
+    return "Revisar conversa encerrada e reabrir se houver novo contato";
+  }
+  if (unreadCount > 0) {
+    return "Responder mensagens pendentes no WhatsApp";
+  }
+
+  switch (stage) {
+    case "lead":
+      return "Qualificar lead e confirmar interesse principal";
+    case "contact":
+      return "Oferecer horarios e conduzir para agendamento";
+    case "evaluation":
+      return row.patient_id
+        ? "Confirmar avaliacao e preparar primeiro atendimento"
+        : "Vincular paciente e confirmar horario da avaliacao";
+    case "treatment":
+      return "Acompanhar tratamento e proxima sessao";
+    default:
+      return "Atualizar contexto do CRM";
+  }
+}
+
 function mapConversationRow(row: any) {
   const metadata = row.metadata && typeof row.metadata === "object" ? row.metadata : {};
   const stage = deriveCrmStage(row, metadata);
+  const nextAction = deriveNextAction(stage, row);
   const lastMessageType = row.last_message_type || row.message_type;
   const lastMessageContent = row.last_message ?? undefined;
   const lastMessage =
@@ -129,6 +174,29 @@ function mapConversationRow(row: any) {
     metadata: {
       ...metadata,
       stage,
+      leadStage:
+        typeof row.crm_lead_stage === "string" && row.crm_lead_stage
+          ? row.crm_lead_stage
+          : metadata.leadStage,
+      lifecycleStage:
+        typeof row.crm_lifecycle_stage === "string" && row.crm_lifecycle_stage
+          ? row.crm_lifecycle_stage
+          : metadata.lifecycleStage,
+      source:
+        typeof row.crm_origin === "string" && row.crm_origin ? row.crm_origin : metadata.source,
+      campaign:
+        typeof row.crm_campaign_id === "string" && row.crm_campaign_id
+          ? row.crm_campaign_id
+          : metadata.campaign,
+      interest:
+        typeof row.crm_interest === "string" && row.crm_interest
+          ? row.crm_interest
+          : metadata.interest,
+      scoreTemperature:
+        typeof row.crm_score_temperature === "string" && row.crm_score_temperature
+          ? row.crm_score_temperature
+          : metadata.scoreTemperature,
+      nextAction,
     },
     createdAt: row.created_at,
     updatedAt: row.updated_at,

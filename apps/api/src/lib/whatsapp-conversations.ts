@@ -244,6 +244,8 @@ export async function getConversationWithMessages(
     const convResult = await pool.query(
       `SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.bsuid, wc.patient_id,
 			        p.full_name AS patient_name,
+			        crm.crm_contact_id, crm.crm_lifecycle_stage, crm.crm_lead_stage, crm.crm_origin,
+			        crm.crm_campaign_id, crm.crm_interest, crm.crm_score_temperature,
 			        c.assigned_team AS team,
 			        COALESCE(assignee.full_name, assignee.email, c.assigned_to::text) AS assigned_to_name,
 			        COALESCE((
@@ -255,6 +257,38 @@ export async function getConversationWithMessages(
 	       FROM wa_conversations c
 	       LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
 	       LEFT JOIN patients p ON p.id = c.patient_id
+	       LEFT JOIN LATERAL (
+	         SELECT
+	           ct.id AS crm_contact_id,
+	           ct.lifecycle_stage AS crm_lifecycle_stage,
+	           ct.source_campaign_id::text AS crm_campaign_id,
+	           COALESCE(ld.estagio, NULL) AS crm_lead_stage,
+	           COALESCE(ld.origem, ct.origem_first_touch, ct.origem_last_touch) AS crm_origin,
+	           ld.interesse AS crm_interest,
+	           ct.score_temperature AS crm_score_temperature
+	         FROM contacts ct
+	         LEFT JOIN leads ld
+	           ON ld.contact_id = ct.id
+	          AND ld.organization_id = c.organization_id
+	         WHERE ct.organization_id = c.organization_id
+	           AND ct.deleted_at IS NULL
+	           AND (
+	             (c.patient_id IS NOT NULL AND ct.primary_patient_id = c.patient_id)
+	             OR (p.contact_id IS NOT NULL AND ct.id = p.contact_id)
+	             OR (wc.patient_id IS NOT NULL AND ct.primary_patient_id = wc.patient_id)
+	             OR (wc.wa_id IS NOT NULL AND ct.telefone = regexp_replace(wc.wa_id, '[^0-9]', '', 'g'))
+	           )
+	         ORDER BY
+	           CASE
+	             WHEN c.patient_id IS NOT NULL AND ct.primary_patient_id = c.patient_id THEN 0
+	             WHEN p.contact_id IS NOT NULL AND ct.id = p.contact_id THEN 1
+	             WHEN wc.patient_id IS NOT NULL AND ct.primary_patient_id = wc.patient_id THEN 2
+	             ELSE 3
+	           END,
+	           ld.updated_at DESC NULLS LAST,
+	           ct.updated_at DESC
+	         LIMIT 1
+	       ) crm ON true
 	       LEFT JOIN profiles assignee ON assignee.id = c.assigned_to OR assignee.user_id = c.assigned_to::text
 	       WHERE c.id = $1${orgId ? " AND c.organization_id = $2" : ""}`,
       convParams,
@@ -730,6 +764,8 @@ export async function getInboxConversations(
 			        c.channel, c.assigned_to, c.assigned_team, c.created_at, c.updated_at, c.snoozed_until,
 			        c.metadata,
 			        wc.wa_id, wc.display_name, wc.username, wc.bsuid, p.full_name AS patient_name,
+			        crm.crm_contact_id, crm.crm_lifecycle_stage, crm.crm_lead_stage, crm.crm_origin,
+			        crm.crm_campaign_id, crm.crm_interest, crm.crm_score_temperature,
 			        c.assigned_team AS team,
 			        COALESCE(assignee.full_name, assignee.email, c.assigned_to::text) AS assigned_to_name,
 		              (SELECT m.content FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message,
@@ -745,6 +781,38 @@ export async function getInboxConversations(
 	       FROM wa_conversations c
 	       LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
 	       LEFT JOIN patients p ON p.id = c.patient_id
+	       LEFT JOIN LATERAL (
+	         SELECT
+	           ct.id AS crm_contact_id,
+	           ct.lifecycle_stage AS crm_lifecycle_stage,
+	           ct.source_campaign_id::text AS crm_campaign_id,
+	           COALESCE(ld.estagio, NULL) AS crm_lead_stage,
+	           COALESCE(ld.origem, ct.origem_first_touch, ct.origem_last_touch) AS crm_origin,
+	           ld.interesse AS crm_interest,
+	           ct.score_temperature AS crm_score_temperature
+	         FROM contacts ct
+	         LEFT JOIN leads ld
+	           ON ld.contact_id = ct.id
+	          AND ld.organization_id = c.organization_id
+	         WHERE ct.organization_id = c.organization_id
+	           AND ct.deleted_at IS NULL
+	           AND (
+	             (c.patient_id IS NOT NULL AND ct.primary_patient_id = c.patient_id)
+	             OR (p.contact_id IS NOT NULL AND ct.id = p.contact_id)
+	             OR (wc.patient_id IS NOT NULL AND ct.primary_patient_id = wc.patient_id)
+	             OR (wc.wa_id IS NOT NULL AND ct.telefone = regexp_replace(wc.wa_id, '[^0-9]', '', 'g'))
+	           )
+	         ORDER BY
+	           CASE
+	             WHEN c.patient_id IS NOT NULL AND ct.primary_patient_id = c.patient_id THEN 0
+	             WHEN p.contact_id IS NOT NULL AND ct.id = p.contact_id THEN 1
+	             WHEN wc.patient_id IS NOT NULL AND ct.primary_patient_id = wc.patient_id THEN 2
+	             ELSE 3
+	           END,
+	           ld.updated_at DESC NULLS LAST,
+	           ct.updated_at DESC
+	         LIMIT 1
+	       ) crm ON true
 	       LEFT JOIN profiles assignee ON assignee.id = c.assigned_to OR assignee.user_id = c.assigned_to::text
 	       ${where}
        ORDER BY c.updated_at DESC
