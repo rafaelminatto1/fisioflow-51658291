@@ -525,6 +525,7 @@ function UploadPhotoModal({
   const [photoType, setPhotoType] = useState<PatientPhoto["photo_type"]>("clinical");
   const [bodyRegion, setBodyRegion] = useState("");
   const [notes, setNotes] = useState("");
+  const [comparisonGroupTitle, setComparisonGroupTitle] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const upload = useUploadPatientPhoto(patientId);
 
@@ -538,13 +539,19 @@ function UploadPhotoModal({
     await upload.mutateAsync({
       file,
       photoType,
-      metadata: { body_region: bodyRegion || null, notes: notes || null },
+      metadata: {
+        body_region: bodyRegion || null,
+        notes: notes || null,
+        comparison_group_title:
+          photoType === "before" || photoType === "after" ? comparisonGroupTitle || null : null,
+      },
     });
     onOpenChange(false);
     setFile(null);
     setPreview(null);
     setBodyRegion("");
     setNotes("");
+    setComparisonGroupTitle("");
   };
 
   return (
@@ -613,6 +620,17 @@ function UploadPhotoModal({
               rows={2}
             />
           </div>
+
+          {(photoType === "before" || photoType === "after") && (
+            <div className="space-y-1">
+              <Label>Rótulo da Comparação</Label>
+              <Input
+                placeholder="Ex: Avaliação inicial joelho direito"
+                value={comparisonGroupTitle}
+                onChange={(e) => setComparisonGroupTitle(e.target.value)}
+              />
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -620,6 +638,139 @@ function UploadPhotoModal({
           </Button>
           <Button onClick={handleSubmit} disabled={!file || upload.isPending}>
             {upload.isPending ? "Enviando..." : "Salvar"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function UploadComparisonPhotosModal({
+  patientId,
+  open,
+  onOpenChange,
+}: {
+  patientId: string;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const [beforeFile, setBeforeFile] = useState<File | null>(null);
+  const [afterFile, setAfterFile] = useState<File | null>(null);
+  const [bodyRegion, setBodyRegion] = useState("");
+  const [comparisonGroupTitle, setComparisonGroupTitle] = useState("");
+  const [notes, setNotes] = useState("");
+  const upload = useUploadPatientPhoto(patientId);
+
+  const reset = () => {
+    setBeforeFile(null);
+    setAfterFile(null);
+    setBodyRegion("");
+    setComparisonGroupTitle("");
+    setNotes("");
+  };
+
+  const handleSubmit = async () => {
+    if (!beforeFile || !afterFile) return;
+    const seriesId = crypto.randomUUID();
+    const sharedMeta = {
+      body_region: bodyRegion || null,
+      notes: notes || null,
+      series_id: seriesId,
+      comparison_group_title: comparisonGroupTitle || null,
+    };
+
+    await upload.mutateAsync({
+      file: beforeFile,
+      photoType: "before",
+      metadata: { ...sharedMeta, series_order: 1 },
+    });
+    await upload.mutateAsync({
+      file: afterFile,
+      photoType: "after",
+      metadata: { ...sharedMeta, series_order: 2 },
+    });
+
+    onOpenChange(false);
+    reset();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Adicionar Comparação Antes × Depois</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div
+              className="border-2 border-dashed rounded-lg h-36 flex items-center justify-center cursor-pointer hover:bg-muted/50 px-3 text-center"
+              onClick={() => document.getElementById("compare-before-file-input")?.click()}
+            >
+              <div className="text-sm text-muted-foreground">
+                {beforeFile ? beforeFile.name : "Selecionar foto Antes"}
+              </div>
+              <input
+                id="compare-before-file-input"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && setBeforeFile(e.target.files[0])}
+              />
+            </div>
+            <div
+              className="border-2 border-dashed rounded-lg h-36 flex items-center justify-center cursor-pointer hover:bg-muted/50 px-3 text-center"
+              onClick={() => document.getElementById("compare-after-file-input")?.click()}
+            >
+              <div className="text-sm text-muted-foreground">
+                {afterFile ? afterFile.name : "Selecionar foto Depois"}
+              </div>
+              <input
+                id="compare-after-file-input"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && setAfterFile(e.target.files[0])}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label>Rótulo Clínico</Label>
+            <Input
+              placeholder="Ex: Pós 8 sessões de lombalgia"
+              value={comparisonGroupTitle}
+              onChange={(e) => setComparisonGroupTitle(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label>Região do Corpo</Label>
+            <Input
+              placeholder="Ex: Ombro direito"
+              value={bodyRegion}
+              onChange={(e) => setBodyRegion(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label>Observações</Label>
+            <Textarea
+              placeholder="Notas adicionais do comparativo"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={!beforeFile || !afterFile || upload.isPending}
+          >
+            {upload.isPending ? "Enviando..." : "Salvar par"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -876,6 +1027,7 @@ interface PatientMediaGalleryProps {
 export function PatientMediaGallery({ patientId }: PatientMediaGalleryProps) {
   const [activeSection, setActiveSection] = useState("photos");
   const [uploadPhotoOpen, setUploadPhotoOpen] = useState(false);
+  const [uploadComparisonOpen, setUploadComparisonOpen] = useState(false);
   const [uploadVideoOpen, setUploadVideoOpen] = useState(false);
   const [createRequestOpen, setCreateRequestOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
@@ -931,6 +1083,9 @@ export function PatientMediaGallery({ patientId }: PatientMediaGalleryProps) {
                     <SplitSquareHorizontal className="w-4 h-4 mr-1" /> Comparar
                   </Button>
                 )}
+              <Button size="sm" variant="outline" onClick={() => setUploadComparisonOpen(true)}>
+                <SplitSquareHorizontal className="w-4 h-4 mr-1" /> Antes/Depois
+              </Button>
               <Button size="sm" onClick={() => setUploadPhotoOpen(true)}>
                 <Plus className="w-4 h-4 mr-1" /> Foto
               </Button>
@@ -1037,6 +1192,11 @@ export function PatientMediaGallery({ patientId }: PatientMediaGalleryProps) {
         open={uploadPhotoOpen}
         onOpenChange={setUploadPhotoOpen}
       />
+      <UploadComparisonPhotosModal
+        patientId={patientId}
+        open={uploadComparisonOpen}
+        onOpenChange={setUploadComparisonOpen}
+      />
       <UploadVideoModal
         patientId={patientId}
         open={uploadVideoOpen}
@@ -1050,10 +1210,31 @@ export function PatientMediaGallery({ patientId }: PatientMediaGalleryProps) {
 
       {/* Before/After comparison dialog */}
       {(() => {
+        const photoSeries = new Map<
+          string,
+          { before?: PatientPhoto; after?: PatientPhoto; title?: string | null }
+        >();
+        for (const photo of photos) {
+          if (!photo.series_id) continue;
+          const current = photoSeries.get(photo.series_id) ?? {
+            title: photo.comparison_group_title,
+          };
+          if (photo.photo_type === "before") current.before = photo;
+          if (photo.photo_type === "after") current.after = photo;
+          if (!current.title && photo.comparison_group_title) {
+            current.title = photo.comparison_group_title;
+          }
+          photoSeries.set(photo.series_id, current);
+        }
+
+        const latestSeriesPair = Array.from(photoSeries.values()).find(
+          (series) => series.before && series.after,
+        );
+
         const beforePhotos = photos.filter((p) => p.photo_type === "before");
         const afterPhotos = photos.filter((p) => p.photo_type === "after");
-        const before = beforePhotos[beforePhotos.length - 1];
-        const after = afterPhotos[afterPhotos.length - 1];
+        const before = latestSeriesPair?.before ?? beforePhotos[beforePhotos.length - 1];
+        const after = latestSeriesPair?.after ?? afterPhotos[afterPhotos.length - 1];
         if (!before || !after) return null;
         return (
           <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
@@ -1064,6 +1245,9 @@ export function PatientMediaGallery({ patientId }: PatientMediaGalleryProps) {
                   Comparação Antes / Depois
                 </DialogTitle>
               </DialogHeader>
+              {latestSeriesPair?.title ? (
+                <p className="text-sm font-medium text-slate-600">{latestSeriesPair.title}</p>
+              ) : null}
               <BeforeAfterSlider
                 beforeUrl={getImageServeUrl(before.r2_key, { w: 1000, fit: "contain", q: 90 })}
                 afterUrl={getImageServeUrl(after.r2_key, { w: 1000, fit: "contain", q: 90 })}

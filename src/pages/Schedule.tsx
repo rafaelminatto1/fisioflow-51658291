@@ -75,20 +75,7 @@ export default function Schedule() {
   const { appointments, therapists, patients, birthdaysToday, staffBirthdaysToday, tarefas } = data;
   const currentDate = parseLocalDate(dateParam);
 
-  const uniquePatientIds = useMemo(() => {
-    return Array.from(
-      new Set(appointments.map((a: any) => a.patient_id || a.patientId).filter(Boolean)),
-    ) as string[];
-  }, [appointments]);
-
-  // TODO: Mover a flag de has_high_pain_alert para o backend (payload do appointment)
-  // Para evitar N+1 requests (ex: 50 pacientes = 50 requests) ao carregar a agenda.
-  const enrichedAppointments = useMemo(() => {
-    return appointments.map((a: any) => ({
-      ...a,
-      has_high_pain_alert: false,
-    }));
-  }, [appointments]);
+  const enrichedAppointments = useMemo(() => appointments, [appointments]);
 
   const viewType = viewParam;
   const patientFilter = patientParam || "";

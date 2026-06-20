@@ -168,6 +168,7 @@ export const clinicalTestTemplates = pgTable("clinical_test_templates", {
   finalPositionImageUrl: text("final_position_image_url"),
   mediaUrls: text("media_urls").array().default([]),
   isCustom: boolean("is_custom").default(false),
+  wikiPageId: uuid("wiki_page_id"),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

@@ -283,8 +283,9 @@ app.post("/:patientId/photos", requireAuth, async (c) => {
   const res = await pool.query(
     `INSERT INTO patient_photos
        (patient_id, organization_id, professional_id, photo_type, r2_key, file_name,
-        file_size, mime_type, session_id, body_region, side, notes, tags, series_id, series_order)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+        file_size, mime_type, session_id, body_region, side, notes, tags, series_id, series_order,
+        comparison_group_title)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
      RETURNING *`,
     [
       patientId,
@@ -302,6 +303,7 @@ app.post("/:patientId/photos", requireAuth, async (c) => {
       body.tags ?? [],
       body.series_id ?? null,
       body.series_order ?? 1,
+      body.comparison_group_title ?? null,
     ],
   );
   return c.json({ data: res.rows[0] }, 201);

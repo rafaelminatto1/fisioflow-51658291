@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { z } from "zod";
 import type { AuthVariables } from "../../lib/auth";
 import type { Env } from "../../types/env";
 
@@ -12,9 +13,15 @@ import {
 import { AssessmentRecordingService } from "../../services/ai/AssessmentRecordingService";
 import { isUuid } from "../../lib/validators";
 import { logToAxiom } from "../../lib/axiom";
-import { ClinicalReportSchema } from "../../schemas/ai-schemas";
+import { ClinicalReportSchema, SoapSummarySchema } from "../../schemas/ai-schemas";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
+
+const soapSummaryRequestSchema = z.object({
+  patientId: z.string().uuid(),
+  currentObservation: z.string().trim().optional(),
+  limit: z.number().int().min(1).max(10).optional().default(5),
+});
 
 // ==========================================================================
 // Patient 360° — Long Context + Context Caching (Gemini Pro 1M+ tokens)
@@ -547,6 +554,129 @@ app.post("/summarize-patient", async (c) => {
   } catch (error: any) {
     console.error("[ai/summarize-patient]", error);
     return c.json({ error: "Falha ao gerar resumo", details: error.message }, 500);
+  }
+});
+
+app.post("/summarize-patient-soap", async (c) => {
+  const user = c.get("user");
+  const parsed = soapSummaryRequestSchema.safeParse(await c.req.json().catch(() => ({})));
+
+  if (!parsed.success) {
+    return c.json(
+      {
+        error: "Payload inválido",
+        details: parsed.error.flatten(),
+      },
+      400,
+    );
+  }
+
+  const { patientId, currentObservation, limit } = parsed.data;
+
+  try {
+    const url = c.env.NEON_URL || c.env.HYPERDRIVE?.connectionString;
+    if (!url) return c.json({ error: "DB unavailable" }, 503);
+
+    const { neon } = await import("@neondatabase/serverless");
+    const sql = neon(url);
+
+    const patientRows = await sql`
+      SELECT full_name, diagnosis, condition
+      FROM patients
+      WHERE id = ${patientId}
+        AND organization_id = ${user.organizationId}
+        AND deleted_at IS NULL
+      LIMIT 1
+    `;
+
+    if (!patientRows.length) {
+      return c.json({ error: "Paciente não encontrado" }, 404);
+    }
+
+    const sessionRows = await sql`
+      SELECT
+        date,
+        observacao,
+        pain_scale,
+        procedures,
+        exercises,
+        status
+      FROM sessions
+      WHERE patient_id = ${patientId}
+        AND organization_id = ${user.organizationId}
+        AND deleted_at IS NULL
+      ORDER BY date DESC, created_at DESC
+      LIMIT ${limit}
+    `;
+
+    const timeline = sessionRows
+      .map((row: any, index: number) => {
+        const parts = [
+          `[${String(row.date ?? "").slice(0, 10) || `sessão ${index + 1}`}]`,
+          row.status ? `status=${row.status}` : "",
+          row.pain_scale != null ? `EVA ${row.pain_scale}/10` : "",
+          row.observacao ? `observação: ${String(row.observacao).trim()}` : "",
+        ].filter(Boolean);
+        return parts.join(" | ");
+      })
+      .filter(Boolean);
+
+    if (currentObservation?.trim()) {
+      timeline.unshift(`[sessão atual em edição] observação: ${currentObservation.trim()}`);
+    }
+
+    if (timeline.length === 0) {
+      return c.json({ error: "Dados clínicos insuficientes para resumo SOAP" }, 422);
+    }
+
+    const patient = patientRows[0] as Record<string, unknown>;
+    const patientHeader = [
+      `Paciente: ${String(patient.full_name ?? "Sem nome")}`,
+      patient.diagnosis ? `Diagnóstico: ${String(patient.diagnosis)}` : "",
+      patient.condition ? `Condição principal: ${String(patient.condition)}` : "",
+      `Total de registros analisados: ${timeline.length}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const prompt = `
+Gere um resumo SOAP clínico consolidado a partir das evoluções abaixo.
+
+Regras:
+- Responda em português brasileiro.
+- Seja objetivo, técnico e fiel ao contexto fornecido.
+- Não invente exames, medições ou condutas não citadas.
+- Se algum bloco tiver pouco contexto, assuma essa limitação explicitamente.
+- O conteúdo deve servir para rápida continuidade do atendimento na próxima sessão.
+
+${patientHeader}
+
+EVOLUÇÕES RECENTES:
+${timeline.join("\n\n")}
+    `.trim();
+
+    const data = await unifiedStructured(c.env, {
+      schema: SoapSummarySchema,
+      prompt,
+      model: "gemini-3-flash-preview",
+      thinkingLevel: "MEDIUM",
+      temperature: 0.2,
+      maxOutputTokens: 1200,
+      systemInstruction:
+        "Você é um fisioterapeuta sênior sintetizando evolução clínica em formato SOAP com base apenas no histórico fornecido.",
+    });
+
+    return c.json({
+      success: true,
+      data,
+      meta: {
+        analyzedEntries: timeline.length,
+        includesCurrentDraft: Boolean(currentObservation?.trim()),
+      },
+    });
+  } catch (error: any) {
+    console.error("[ai/summarize-patient-soap]", error);
+    return c.json({ error: "Falha ao gerar resumo SOAP", details: error.message }, 500);
   }
 });
 

@@ -30,6 +30,7 @@ export interface AppointmentBase {
   installments?: number;
   room?: string;
   session_package_id?: string;
+  risk_of_no_show?: boolean;
   is_recurring?: boolean;
   recurring_until?: Date;
   isOverbooked?: boolean;

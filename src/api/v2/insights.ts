@@ -89,6 +89,26 @@ export const aiApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  summarizePatientSoap: (payload: {
+    patientId: string;
+    currentObservation?: string;
+    limit?: number;
+  }) =>
+    request<{
+      data: {
+        subjective: string;
+        objective: string;
+        assessment: string;
+        plan: string;
+      };
+      meta?: {
+        analyzedEntries: number;
+        includesCurrentDraft: boolean;
+      };
+    }>("/api/ai/summarize-patient-soap", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   transcribeAudio: (params: { audio: string; mimeType: string }) =>
     request<{ data: { transcription: string } }>("/api/ai/transcribe-audio", {
       method: "POST",

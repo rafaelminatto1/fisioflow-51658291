@@ -19,6 +19,7 @@ export interface PatientPhoto {
   tags: string[];
   series_id: string | null;
   series_order: number;
+  comparison_group_title: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -16,6 +16,7 @@ export interface ScheduleEventContentProps {
   colors: ScheduleEventColors;
   isSelected: boolean;
   hasHighPain?: boolean;
+  hasNoShowRisk?: boolean;
 }
 
 /**
@@ -38,6 +39,7 @@ export function ScheduleEventContent({
   colors,
   isSelected,
   hasHighPain,
+  hasNoShowRisk,
 }: ScheduleEventContentProps) {
   const safeColors = colors || {
     background: "transparent",
@@ -82,9 +84,18 @@ export function ScheduleEventContent({
           aria-hidden
         />
         <span className="min-w-0 truncate">{metaLabel}</span>
-        {hasHighPain && (
+        {hasNoShowRisk && (
           <span
             className="ml-auto flex shrink-0 items-center gap-0.5 rounded bg-red-100 px-1 text-red-700 dark:bg-red-900/40 dark:text-red-400"
+            title="Paciente faltou nas duas últimas sessões registradas"
+          >
+            <AlertTriangle className="h-2.5 w-2.5" />
+            Falta
+          </span>
+        )}
+        {hasHighPain && (
+          <span
+            className="flex shrink-0 items-center gap-0.5 rounded bg-red-100 px-1 text-red-700 dark:bg-red-900/40 dark:text-red-400"
             title="Paciente relatou dor alta recentemente (>7)"
           >
             <AlertTriangle className="h-2.5 w-2.5" />

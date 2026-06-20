@@ -119,6 +119,7 @@ import { clinicMetricsRoutes } from "./routes/clinicMetrics";
 import { enterpriseRoutes } from "./routes/enterprise-bi";
 import { aiInsightsRoutes } from "./routes/ai-insights";
 import { lgpdRoutes } from "./routes/lgpd";
+import { importRoutes } from "./routes/import";
 import { verifyToken } from "./lib/auth";
 import { getRawSql } from "./lib/db";
 import { routeAgentRequest } from "agents";
@@ -286,6 +287,7 @@ const apiRoutes = [
   ["/api/media", mediaRoutes],
   ["/api/patients", patientsRoutes],
   ["/api/appointments", appointmentsRoutes],
+  ["/api/import", importRoutes],
   ["/api/documents", documentsRoutes],
   ["/api/exams", examsRoutes],
   ["/api/medical-requests", medicalRequestsRoutes],

@@ -78,6 +78,22 @@ export const ClinicalReportSchema = z.object({
 });
 export type ClinicalReport = z.infer<typeof ClinicalReportSchema>;
 
+export const SoapSummarySchema = z.object({
+  subjective: z
+    .string()
+    .describe("Resumo subjetivo com queixas, evolução percebida e resposta relatada pelo paciente."),
+  objective: z
+    .string()
+    .describe("Resumo objetivo com achados observáveis, medições, testes e resposta ao tratamento."),
+  assessment: z
+    .string()
+    .describe("Síntese do raciocínio clínico, progressão e hipóteses funcionais mais prováveis."),
+  plan: z
+    .string()
+    .describe("Próximos passos clínicos, condutas sugeridas, monitoramento e orientações."),
+});
+export type SoapSummary = z.infer<typeof SoapSummarySchema>;
+
 export const FormSuggestionSchema = z.object({
   suggestions: z
     .array(

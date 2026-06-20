@@ -659,6 +659,7 @@ export interface AppointmentRow {
   created_at: string;
   updated_at: string;
   patient_name?: string;
+  risk_of_no_show?: boolean;
 }
 
 export interface AppointmentsLastUpdated {
@@ -880,6 +881,7 @@ export interface ClinicalTestTemplateRecord {
   aliases_pt?: string[] | null;
   aliases_en?: string[] | null;
   dictionary_id?: string | null;
+  wiki_page_id?: string | null;
   created_at: string;
   updated_at: string;
 }

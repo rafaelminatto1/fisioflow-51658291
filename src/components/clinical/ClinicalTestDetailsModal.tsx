@@ -15,8 +15,12 @@ import {
   Trash2,
   X,
   ZoomIn,
+  BookOpen,
+  Settings,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import {
   CustomModal,
@@ -32,6 +36,11 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { diagnosticClusters } from "@/data/clinicalClusters";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useAuth } from "@/hooks/useAuth";
+import { wikiService } from "@/lib/services/wikiService";
+import { clinicalTestsApi } from "@/api/v2/clinical";
+import { WikiPageCombobox } from "@/components/ui/WikiPageCombobox";
 
 interface ClinicalTestDetailsModalProps {
   test: ClinicalTestCatalogRecord | null;
@@ -62,8 +71,44 @@ export function ClinicalTestDetailsModal({
   onNavigateToTest,
 }: ClinicalTestDetailsModalProps) {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const { organizationId } = useAuth();
+  const queryClient = useQueryClient();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageLoaded, setImageLoaded] = useState<Record<string, boolean>>({});
+
+  // Buscar páginas da wiki para achar a vinculada
+  const { data: wikiPages = [] } = useQuery({
+    queryKey: ["wiki-pages-details", organizationId],
+    queryFn: async () => {
+      if (!organizationId) return [];
+      return await wikiService.listPages(organizationId);
+    },
+    enabled: !!organizationId && isOpen,
+  });
+
+  const wikiPage = wikiPages.find(
+    (p) => p.id === test?.wiki_page_id || p.slug === test?.wiki_page_id,
+  );
+
+  // Mutation para salvar associação da wiki direto do modal de detalhes
+  const linkMutation = useMutation({
+    mutationFn: async (wikiPageId: string | null) => {
+      if (!test?.id) return;
+      return await clinicalTestsApi.update(test.id, {
+        wiki_page_id: wikiPageId,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Associação com a Wiki atualizada!");
+      queryClient.invalidateQueries({ queryKey: ["clinical-tests-library"] });
+      queryClient.invalidateQueries({ queryKey: ["test-templates"] });
+    },
+    onError: (error) => {
+      logger.error("Error linking wiki page", error, "ClinicalTestDetailsModal");
+      toast.error("Erro ao atualizar associação com a Wiki.");
+    },
+  });
 
   // Lógica de Clusters
   const currentCluster = diagnosticClusters.find((c) => c.id === test?.cluster_id);
@@ -394,6 +439,79 @@ export function ClinicalTestDetailsModal({
                 </p>
               </div>
             ) : null}
+
+            {/* Wiki Page Association */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                  <BookOpen className="h-3.5 w-3.5" />
+                  Wiki Clínica
+                </h3>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs font-bold text-teal-600 hover:text-teal-700 hover:bg-teal-50 px-2 rounded-lg gap-1"
+                    >
+                      <Settings className="h-3 w-3" />
+                      {test.wiki_page_id ? "Alterar vínculo" : "Vincular à Wiki"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[380px] p-4 shadow-xl border-slate-200 rounded-xl" align="end">
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-slate-700">Vincular a este teste</p>
+                        <p className="text-[10px] text-slate-500 leading-normal">
+                          Selecione uma página da Wiki para atrelar a este teste. Profissionais poderão acessá-la com um clique.
+                        </p>
+                      </div>
+                      <WikiPageCombobox
+                        value={test.wiki_page_id || undefined}
+                        onValueChange={(val) => {
+                          linkMutation.mutate(val || null);
+                        }}
+                        placeholder="Pesquisar página da Wiki..."
+                      />
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {wikiPage ? (
+                <div className="group relative flex items-center justify-between gap-4 rounded-2xl border border-teal-100 bg-teal-50/40 p-4 transition-all duration-300 hover:bg-teal-50/70 hover:border-teal-200">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-teal-600 mb-1">
+                      Página da Wiki Atrelada
+                    </p>
+                    <p className="font-bold text-slate-800 text-sm truncate">{wikiPage.title}</p>
+                    {wikiPage.category && (
+                      <p className="mt-0.5 text-xs text-slate-500 font-medium">
+                        Categoria: {wikiPage.category}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    size="sm"
+                    className="shrink-0 bg-slate-900 text-white hover:bg-slate-800 rounded-xl font-semibold text-xs h-9 shadow-md transition-all hover:scale-105 active:scale-95 gap-1.5"
+                    onClick={() => {
+                      onClose(); // fecha o modal de detalhes
+                      navigate(`/wiki/${wikiPage.slug}`);
+                    }}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Acessar
+                  </Button>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-200 p-4 text-center">
+                  <p className="text-xs font-medium text-slate-400">
+                    Nenhuma documentação da Wiki atrelada a este teste.
+                  </p>
+                </div>
+              )}
+            </div>
 
             {evidenceResources.length > 0 ? (
               <div className="mt-auto">

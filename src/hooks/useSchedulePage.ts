@@ -97,6 +97,7 @@ const mapAppointmentRowToCalendarAppointment = (row: ScheduleAppointmentRow): Ap
   payment_method: row.payment_method || undefined,
   room: row.room_id || undefined,
   session_package_id: row.session_package_id || undefined,
+  risk_of_no_show: Boolean(row.risk_of_no_show),
   createdAt: new Date(row.created_at),
   updatedAt: new Date(row.updated_at),
 });

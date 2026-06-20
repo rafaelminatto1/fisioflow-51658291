@@ -18,6 +18,7 @@ import {
   Mic,
   History,
   Check,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -62,6 +63,7 @@ interface EvolutionHeaderV3Props {
   onShowAIScribe: () => void;
   sessionNumber?: number;
   onOpenHistoryDrawer?: () => void;
+  onShowAISummary?: () => void;
 }
 
 function getPatientInitials(patient: Patient): string {
@@ -92,6 +94,7 @@ export const EvolutionHeaderV3 = memo(
     onShowAIScribe,
     sessionNumber = 1,
     onOpenHistoryDrawer,
+    onShowAISummary,
   }: EvolutionHeaderV3Props) => {
     const navigate = useNavigate();
 
@@ -234,6 +237,15 @@ export const EvolutionHeaderV3 = memo(
             <History className="w-[13px] h-[13px]" /> HISTÓRICO
           </button>
 
+          {onShowAISummary ? (
+            <button
+              onClick={onShowAISummary}
+              className="hidden sm:inline-flex items-center gap-1.5 h-[30px] px-3 rounded-full border border-[#D7E8FF] bg-white text-[#1D4ED8] text-[10px] font-extrabold tracking-wider cursor-pointer transition-colors hover:bg-[#F7FAFF]"
+            >
+              <Sparkles className="w-[13px] h-[13px]" /> RESUMO IA
+            </button>
+          ) : null}
+
           {renderSaveStatus()}
 
           <DropdownMenu>
@@ -258,6 +270,12 @@ export const EvolutionHeaderV3 = memo(
                 <Keyboard className="h-4 w-4 mr-2" />
                 Atalhos de teclado
               </DropdownMenuItem>
+              {onShowAISummary ? (
+                <DropdownMenuItem onClick={onShowAISummary}>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Gerar resumo com IA
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuSeparator />
               <DropdownMenuCheckboxItem
                 checked={autoSaveEnabled}

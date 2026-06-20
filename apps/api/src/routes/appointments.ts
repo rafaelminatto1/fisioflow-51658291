@@ -31,6 +31,14 @@ import { createPool } from "../lib/db";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables & CustomVariables }>();
 
+const NO_SHOW_STATUSES = new Set([
+  "faltou",
+  "faltou_com_aviso",
+  "faltou_sem_aviso",
+  "nao_atendido",
+  "nao_atendido_sem_cobranca",
+]);
+
 function normalizeAppointmentRow(row: any) {
   return {
     ...row,
@@ -51,6 +59,7 @@ function normalizeAppointmentRow(row: any) {
     is_group: row.isGroup,
     is_unlimited: row.isUnlimited,
     additional_names: row.additionalNames,
+    risk_of_no_show: Boolean(row.risk_of_no_show),
   };
 }
 
@@ -132,7 +141,57 @@ app.get("/", requireAuth, async (c) => {
       .orderBy(desc(appointments.date), desc(appointments.startTime))
       .limit(limitNum);
 
-    const sanitizedRows = result.map(normalizeAppointmentRow);
+    const patientIds = Array.from(
+      new Set(result.map((row) => row.patientId).filter((value): value is string => Boolean(value))),
+    );
+
+    let noShowRiskByPatient = new Map<string, boolean>();
+    if (patientIds.length > 0) {
+      const pool = createPool(c.env);
+      const riskRows = await pool.query<
+        { patient_id: string; status: string; rn: number } & Record<string, unknown>
+      >(
+        `
+          SELECT patient_id, status, rn
+          FROM (
+            SELECT
+              patient_id,
+              status,
+              ROW_NUMBER() OVER (
+                PARTITION BY patient_id
+                ORDER BY date DESC, start_time DESC, created_at DESC
+              ) AS rn
+            FROM appointments
+            WHERE organization_id = $1
+              AND patient_id = ANY($2::uuid[])
+              AND deleted_at IS NULL
+          ) ranked
+          WHERE rn <= 2
+        `,
+        [organizationId, patientIds],
+      );
+
+      const grouped = new Map<string, string[]>();
+      for (const row of riskRows.rows) {
+        const current = grouped.get(row.patient_id) ?? [];
+        current.push(String(row.status ?? ""));
+        grouped.set(row.patient_id, current);
+      }
+
+      noShowRiskByPatient = new Map(
+        Array.from(grouped.entries()).map(([patientId, statuses]) => [
+          patientId,
+          statuses.length >= 2 && statuses.slice(0, 2).every((status) => NO_SHOW_STATUSES.has(status)),
+        ]),
+      );
+    }
+
+    const sanitizedRows = result.map((row) =>
+      normalizeAppointmentRow({
+        ...row,
+        risk_of_no_show: noShowRiskByPatient.get(row.patientId) ?? false,
+      }),
+    );
 
     c.header("Cache-Control", "no-store");
     return c.json({ data: sanitizedRows });

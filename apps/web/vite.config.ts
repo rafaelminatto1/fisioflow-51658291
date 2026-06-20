@@ -77,7 +77,7 @@ export default defineConfig(({ mode }) => {
     },
     devtools: !isProduction,
     experimental: {
-      bundledDev: true,
+      bundledDev: false,
     },
     plugins: [
       tailwindcss(),

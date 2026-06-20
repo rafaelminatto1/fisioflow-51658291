@@ -40,6 +40,7 @@ import { ExerciseVideoUpload } from "@/components/exercises/ExerciseVideoUpload"
 import { ExerciseMedia } from "@/services/exerciseVideos";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { UploadCloud, FolderOpen } from "lucide-react";
+import { WikiPageCombobox } from "@/components/ui/WikiPageCombobox";
 
 interface ClinicalTest extends Omit<ClinicalTestTemplateRecord, "fields_definition"> {
   id?: string;
@@ -176,6 +177,7 @@ export function ClinicalTestFormModal({
         initial_position_image_url: test.initial_position_image_url ?? "",
         final_position_image_url: test.final_position_image_url ?? "",
         media_urls: Array.isArray(test.media_urls) ? test.media_urls : [],
+        wiki_page_id: test.wiki_page_id ?? null,
       });
       setTagsInput((test.tags || []).join(", "));
     } else if (mode === "create") {
@@ -198,6 +200,7 @@ export function ClinicalTestFormModal({
         initial_position_image_url: "",
         final_position_image_url: "",
         media_urls: [],
+        wiki_page_id: null,
       });
       setTagsInput("");
     }
@@ -227,6 +230,7 @@ export function ClinicalTestFormModal({
         organization_id: organizationId,
         created_by: user?.uid,
         is_custom: true,
+        wiki_page_id: data.wiki_page_id || null,
       };
 
       if (mode === "edit" && data.id) {
@@ -506,6 +510,21 @@ export function ClinicalTestFormModal({
                     className="h-12 bg-card border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
                   />
                 </div>
+              </div>
+
+              {/* Wiki Page Association */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="wiki_page_id"
+                  className="text-xs font-black uppercase tracking-wider text-slate-500 ml-1"
+                >
+                  Página da Wiki Relacionada
+                </Label>
+                <WikiPageCombobox
+                  value={formData.wiki_page_id || undefined}
+                  onValueChange={(value) => setFormData({ ...formData, wiki_page_id: value })}
+                  placeholder="Selecione uma página da wiki para atrelar a este teste..."
+                />
               </div>
 
               {/* Tags */}

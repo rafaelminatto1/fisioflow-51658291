@@ -57,6 +57,7 @@ import { EvolutionHeaderV3 } from "@/components/evolution/EvolutionHeaderV3";
 import { EvolutionTabsBar } from "@/components/evolution/EvolutionTabsBar";
 import { EvolutionNoScrollPanel } from "@/components/evolution/v2-improved/EvolutionNoScrollPanel";
 import { AIScribeModal } from "@/components/evolution/clinical-scribe/AIScribeModal";
+import { AISoapSummaryDialog } from "@/components/evolution/AISoapSummaryDialog";
 import { FloatingActionBar } from "@/components/evolution/FloatingActionBar";
 import { EvolutionKeyboardShortcuts } from "@/components/evolution/EvolutionKeyboardShortcuts";
 import { EvolutionAlerts } from "@/components/evolution/EvolutionAlerts";
@@ -184,6 +185,7 @@ const PatientEvolution = () => {
 	const [medicalReturnModalOpen, setMedicalReturnModalOpen] = useState(false);
 	const [surgeryModalOpen, setSurgeryModalOpen] = useState(false);
 	const [goalModalOpen, setGoalModalOpen] = useState(false);
+	const [soapSummaryOpen, setSoapSummaryOpen] = useState(false);
 	const [evolutionBlocks, setEvolutionBlocks] = useState<EvolutionBlock[]>([]);
 	const blocksSeededRef = useRef<string | undefined>(undefined);
 	const blocksSaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -898,6 +900,7 @@ const PatientEvolution = () => {
 						onShowTemplateModal={() => state.setShowApplyTemplate(true)}
 						onShowKeyboardHelp={() => state.setShowKeyboardHelp(true)}
 						onShowAIScribe={() => state.setShowAIScribe(true)}
+						onShowAISummary={() => setSoapSummaryOpen(true)}
 					/>
 
 					<EvolutionTabsBar
@@ -1147,6 +1150,15 @@ const PatientEvolution = () => {
 							}));
 						}}
 					/>
+					{state.patientId && state.patient ? (
+						<AISoapSummaryDialog
+							open={soapSummaryOpen}
+							onOpenChange={setSoapSummaryOpen}
+							patientId={state.patientId}
+							patientName={PatientHelpers.getName(state.patient as any)}
+							currentObservation={stripHtml(state.evolutionData.observacao || "")}
+						/>
+					) : null}
 				</div>
 			</ComponentErrorBoundary>
 		</PageLayout>

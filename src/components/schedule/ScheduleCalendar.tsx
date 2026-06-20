@@ -83,6 +83,7 @@ export interface RawAppointment {
   currentParticipants?: number;
   current_participants?: number;
   has_high_pain_alert?: boolean;
+  risk_of_no_show?: boolean;
   [k: string]: unknown;
 }
 
@@ -274,6 +275,7 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
           isGroup,
           groupCount: Number(a.currentParticipants ?? a.current_participants ?? 0),
           hasHighPain: Boolean(a.has_high_pain_alert),
+          hasNoShowRisk: Boolean(a.risk_of_no_show),
         },
       });
     }
@@ -416,6 +418,7 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
       isGroup?: boolean;
       groupCount?: number;
       hasHighPain?: boolean;
+      hasNoShowRisk?: boolean;
     };
 
     const kind = props._kind;
@@ -455,6 +458,7 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
         colors={colors}
         isSelected={selectionOn && !!selectedIds?.has(arg.event.id)}
         hasHighPain={props.hasHighPain}
+        hasNoShowRisk={props.hasNoShowRisk}
       />
     );
   };

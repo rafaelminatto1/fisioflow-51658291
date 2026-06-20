@@ -43,6 +43,7 @@ function normalizeClinicalTestTemplateRow(row: Record<string, any>) {
     final_position_image_url: row.final_position_image_url ?? row.finalPositionImageUrl ?? null,
     media_urls: normalizeTextArray(row.media_urls ?? row.mediaUrls),
     is_custom: row.is_custom ?? row.isCustom ?? Boolean(organizationId),
+    wiki_page_id: row.wiki_page_id ?? row.wikiPageId ?? null,
     created_at: row.created_at ?? row.createdAt ?? null,
     updated_at: row.updated_at ?? row.updatedAt ?? null,
   };
@@ -250,6 +251,7 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
         finalPositionImageUrl: body.final_position_image_url ?? null,
         mediaUrls: Array.isArray(body.media_urls) ? body.media_urls : [],
         isCustom: body.is_custom === true,
+        wikiPageId: body.wiki_page_id ?? null,
       })
       .returning();
 
@@ -303,6 +305,8 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
               : []
             : undefined,
         isCustom: body.is_custom !== undefined ? body.is_custom === true : undefined,
+        wikiPageId:
+          body.wiki_page_id !== undefined ? body.wiki_page_id || null : undefined,
         updatedAt: new Date(),
       })
       .where(
