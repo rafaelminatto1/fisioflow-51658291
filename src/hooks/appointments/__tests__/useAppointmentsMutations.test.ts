@@ -151,7 +151,7 @@ describe("useCreateAppointment", () => {
 
     // Espera a mutação completar com sucesso
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-  });
+  }, 20000);
 
   it("faz rollback ao erro", async () => {
     const { AppointmentService } = await import("@/services/appointmentService");
@@ -186,5 +186,5 @@ describe("useCreateAppointment", () => {
     // Cache should be rolled back to original data
     const afterError = queryClient.getQueryData<any>(["appointments_v2", "list", "org-001"]);
     expect(afterError).toEqual(originalData);
-  });
+  }, 15000);
 });

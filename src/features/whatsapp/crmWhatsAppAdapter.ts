@@ -153,21 +153,21 @@ export function toCrmConversationViewModel(conversation: Conversation): CrmConve
   const phone = conversation.contactPhone || "";
 
   const derivedNextActionTitle =
-    stage.key === "lead"
+    stage === "lead"
       ? "Pendente"
-      : stage.key === "contact"
+      : stage === "contact"
         ? "Aguardando resposta"
-        : stage.key === "evaluation"
+        : stage === "evaluation"
           ? "Confirmar avaliação"
           : "Acompanhar tratamento";
 
   const derivedNextActionBody =
     nextAction ??
-    (stage.key === "lead"
+    (stage === "lead"
       ? "Qualificar lead e responder a primeira mensagem."
-      : stage.key === "contact"
+      : stage === "contact"
         ? "Oferecer horários e conduzir para agendamento."
-        : stage.key === "evaluation"
+        : stage === "evaluation"
           ? patientId
             ? "Confirmar a avaliação e preparar o primeiro atendimento."
             : "Vincular paciente e confirmar horário da avaliação."

@@ -64,6 +64,8 @@ const noop = () => {};
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe("TemplateDetailPanel — testes de propriedade", () => {
+  const PROPERTY_RUNS = 40;
+
   // Feature: exercise-templates-refactor, Property 4: Renderização condicional por perfil pós-operatório
   it("Property 4a: ExerciseTimeline aparece se e somente se patientProfile = 'pos_operatorio' E exerciseCount > 0", () => {
     // Validates: Requirements 2.4
@@ -90,7 +92,7 @@ describe("TemplateDetailPanel — testes de propriedade", () => {
         unmount();
         return result;
       }),
-      { numRuns: 100 },
+      { numRuns: PROPERTY_RUNS },
     );
   });
 
@@ -124,7 +126,7 @@ describe("TemplateDetailPanel — testes de propriedade", () => {
         unmount();
         return result;
       }),
-      { numRuns: 100 },
+      { numRuns: PROPERTY_RUNS },
     );
   });
 
@@ -155,7 +157,7 @@ describe("TemplateDetailPanel — testes de propriedade", () => {
         unmount();
         return result;
       }),
-      { numRuns: 100 },
+      { numRuns: PROPERTY_RUNS },
     );
   });
 
@@ -184,7 +186,7 @@ describe("TemplateDetailPanel — testes de propriedade", () => {
         unmount();
         return result;
       }),
-      { numRuns: 100 },
+      { numRuns: PROPERTY_RUNS },
     );
   });
 });

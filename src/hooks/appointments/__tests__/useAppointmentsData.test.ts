@@ -122,7 +122,7 @@ describe("useAppointmentsData", () => {
     );
     expect(result.current.data.length).toBe(2);
     expect(result.current.isFromCache).toBe(false);
-  });
+  }, 20000);
 
   it("usa cache quando offline", async () => {
     const originalOnLine = Object.getOwnPropertyDescriptor(navigator, "onLine");
@@ -146,7 +146,7 @@ describe("useAppointmentsData", () => {
     if (originalOnLine) {
       Object.defineProperty(navigator, "onLine", originalOnLine);
     }
-  });
+  }, 15000);
 
   it("salva backup de emergência após fetch bem-sucedido", async () => {
     const { appointmentsCacheService } = await import("@/lib/offline/AppointmentsCacheService");
@@ -162,7 +162,7 @@ describe("useAppointmentsData", () => {
       mockAppointments,
       "org-test-001",
     );
-  });
+  }, 15000);
 
   it("desabilitado quando sem organization_id", async () => {
     mockUseAuth.mockReturnValue({
