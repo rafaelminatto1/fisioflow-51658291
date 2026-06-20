@@ -19,7 +19,7 @@ const AUTH_USER_CACHE_TTL_MS = 10 * 60_000;
 const AUTH_PROFILE_LOOKUP_TIMEOUT_MS = 12_000;
 const AUTH_SESSION_LOOKUP_TIMEOUT_MS = 20_000;
 const AUTH_GET_SESSION_TIMEOUT_MS = 5_000;
-const DEFAULT_AUTH_ORIGIN = "https://www.moocafisio.com.br";
+const DEFAULT_AUTH_ORIGIN = "https://moocafisio.com.br";
 
 /** ID da Organização Padrão (Clínica Única) */
 export const DEFAULT_ORG_ID = "00000000-0000-0000-0000-000000000001";
@@ -301,8 +301,8 @@ function getPreferredAuthOrigin(env: Env): string {
     .filter(Boolean);
 
   const preferred =
-    rawOrigins.find((origin) => origin === "https://www.moocafisio.com.br") ||
     rawOrigins.find((origin) => origin === "https://moocafisio.com.br") ||
+    rawOrigins.find((origin) => origin === "https://www.moocafisio.com.br") ||
     rawOrigins.find((origin) => origin.startsWith("https://") && !origin.includes("localhost")) ||
     rawOrigins[0];
 

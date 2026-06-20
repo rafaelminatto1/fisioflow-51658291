@@ -726,6 +726,7 @@ export async function getInboxConversations(
     const result = await pool.query(
       `SELECT c.id, c.organization_id, c.contact_id, c.patient_id, c.status, c.priority,
 			        c.channel, c.assigned_to, c.assigned_team, c.created_at, c.updated_at, c.snoozed_until,
+			        c.metadata,
 			        wc.wa_id, wc.display_name, wc.username, wc.bsuid,
 			        c.assigned_team AS team,
 			        COALESCE(assignee.full_name, assignee.email, c.assigned_to::text) AS assigned_to_name,

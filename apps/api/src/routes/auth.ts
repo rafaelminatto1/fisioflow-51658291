@@ -6,7 +6,7 @@ import { turnstileVerify } from "../middleware/turnstile";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env }>();
-const DEFAULT_AUTH_ORIGIN = "https://www.moocafisio.com.br";
+const DEFAULT_AUTH_ORIGIN = "https://moocafisio.com.br";
 
 // 10 tentativas de login por IP por 15 minutos
 const loginRateLimit = rateLimit({
@@ -102,8 +102,8 @@ function getPreferredAuthOrigin(env: Env): string {
     .filter(Boolean);
 
   return (
-    origins.find((origin) => origin === "https://www.moocafisio.com.br") ||
     origins.find((origin) => origin === "https://moocafisio.com.br") ||
+    origins.find((origin) => origin === "https://www.moocafisio.com.br") ||
     origins.find((origin) => origin.startsWith("https://") && !origin.includes("localhost")) ||
     origins[0] ||
     DEFAULT_AUTH_ORIGIN
