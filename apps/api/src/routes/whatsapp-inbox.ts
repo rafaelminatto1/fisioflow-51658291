@@ -46,8 +46,54 @@ const VALID_CONVERSATION_STATUSES = ["open", "pending", "assigned", "resolved", 
 
 const VALID_CONVERSATION_PRIORITIES = ["normal", "low", "medium", "high", "urgent"];
 
+const CRM_STAGE_ORDER = ["lead", "contact", "evaluation", "treatment"] as const;
+type CrmStage = (typeof CRM_STAGE_ORDER)[number];
+
+function normalizeCrmStage(value: unknown): CrmStage | null {
+  if (typeof value !== "string") return null;
+  const stage = value.trim().toLowerCase();
+  return CRM_STAGE_ORDER.includes(stage as CrmStage) ? (stage as CrmStage) : null;
+}
+
+function deriveCrmStage(row: Record<string, unknown>, metadata: Record<string, unknown>): CrmStage {
+  const explicitStage =
+    normalizeCrmStage(metadata.stage) ||
+    normalizeCrmStage(metadata.leadStage) ||
+    normalizeCrmStage(metadata.pipelineStage);
+  if (explicitStage) return explicitStage;
+
+  const patientId = row.patient_id || row.wc_patient_id || row.p_patient_id;
+  const status = String(row.status ?? "").toLowerCase();
+  const tagNames = Array.isArray(row.tags)
+    ? row.tags
+        .map((tag) => (tag && typeof tag === "object" ? String((tag as { name?: unknown }).name ?? "").toLowerCase() : ""))
+        .filter(Boolean)
+    : [];
+
+  if (tagNames.some((tag) => tag.includes("tratamento") || tag.includes("alta"))) {
+    return "treatment";
+  }
+  if (tagNames.some((tag) => tag.includes("avali") || tag.includes("avalia"))) {
+    return "evaluation";
+  }
+  if (tagNames.some((tag) => tag.includes("contato") || tag.includes("agend"))) {
+    return "contact";
+  }
+
+  if (patientId) {
+    return status === "closed" || status === "resolved" ? "treatment" : "evaluation";
+  }
+
+  if (status === "assigned" || status === "pending") {
+    return "contact";
+  }
+
+  return "lead";
+}
+
 function mapConversationRow(row: any) {
   const metadata = row.metadata && typeof row.metadata === "object" ? row.metadata : {};
+  const stage = deriveCrmStage(row, metadata);
   const lastMessageType = row.last_message_type || row.message_type;
   const lastMessageContent = row.last_message ?? undefined;
   const lastMessage =
@@ -62,8 +108,8 @@ function mapConversationRow(row: any) {
     contactId: row.contact_id,
     contactName: row.display_name || row.username || row.wa_id || "Desconhecido",
     contactPhone: row.wa_id || "",
-    patientId: row.patient_id || undefined,
-    patientName: undefined,
+    patientId: row.patient_id || row.wc_patient_id || row.p_patient_id || undefined,
+    patientName: row.patient_name || row.patient_full_name || undefined,
     status: row.status,
     assignedTo: row.assigned_to || undefined,
     assignedToName: row.assigned_to_name || undefined,
@@ -80,7 +126,10 @@ function mapConversationRow(row: any) {
     slaBreached: row.sla_breached || false,
     deletedAt: metadata.deleted_at || undefined,
     deletedBy: metadata.deleted_by || undefined,
-    metadata,
+    metadata: {
+      ...metadata,
+      stage,
+    },
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -293,9 +342,10 @@ app.post("/conversations", requireAuth, async (c) => {
     );
 
     const conversationResult = await pool.query(
-      `SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.bsuid, wc.patient_id
+      `SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.bsuid, wc.patient_id, p.full_name AS patient_name
        FROM wa_conversations c
        LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
+       LEFT JOIN patients p ON p.id = c.patient_id
        WHERE c.id = $1 AND c.organization_id = $2
        LIMIT 1`,
       [conversation.id, user.organizationId],
@@ -603,9 +653,10 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
 
   try {
     const convResult = await pool.query(
-      `SELECT c.*, wc.wa_id, wc.bsuid
+      `SELECT c.*, wc.wa_id, wc.bsuid, p.full_name AS patient_name
 			 FROM wa_conversations c
 			 LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
+			 LEFT JOIN patients p ON p.id = c.patient_id
 			 WHERE c.id = $1 AND c.organization_id = $2`,
       [id, user.organizationId],
     );
@@ -973,7 +1024,11 @@ app.post("/conversations/:id/interactive", requireAuth, async (c) => {
 
   try {
     const convResult = await pool.query(
-      `SELECT c.*, wc.wa_id, wc.bsuid FROM wa_conversations c LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id WHERE c.id = $1`,
+      `SELECT c.*, wc.wa_id, wc.bsuid, p.full_name AS patient_name
+       FROM wa_conversations c
+       LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
+       LEFT JOIN patients p ON p.id = c.patient_id
+       WHERE c.id = $1`,
       [id],
     );
     if (convResult.rows.length === 0) {

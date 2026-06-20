@@ -243,6 +243,7 @@ export async function getConversationWithMessages(
     const convParams = orgId ? [conversationId, orgId] : [conversationId];
     const convResult = await pool.query(
       `SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.bsuid, wc.patient_id,
+			        p.full_name AS patient_name,
 			        c.assigned_team AS team,
 			        COALESCE(assignee.full_name, assignee.email, c.assigned_to::text) AS assigned_to_name,
 			        COALESCE((
@@ -253,6 +254,7 @@ export async function getConversationWithMessages(
 			        ), '[]'::json) AS tags
 	       FROM wa_conversations c
 	       LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
+	       LEFT JOIN patients p ON p.id = c.patient_id
 	       LEFT JOIN profiles assignee ON assignee.id = c.assigned_to OR assignee.user_id = c.assigned_to::text
 	       WHERE c.id = $1${orgId ? " AND c.organization_id = $2" : ""}`,
       convParams,
@@ -727,21 +729,22 @@ export async function getInboxConversations(
       `SELECT c.id, c.organization_id, c.contact_id, c.patient_id, c.status, c.priority,
 			        c.channel, c.assigned_to, c.assigned_team, c.created_at, c.updated_at, c.snoozed_until,
 			        c.metadata,
-			        wc.wa_id, wc.display_name, wc.username, wc.bsuid,
+			        wc.wa_id, wc.display_name, wc.username, wc.bsuid, p.full_name AS patient_name,
 			        c.assigned_team AS team,
 			        COALESCE(assignee.full_name, assignee.email, c.assigned_to::text) AS assigned_to_name,
-	              (SELECT m.content FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message,
-	              (SELECT m.message_type FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message_type,
-	              (SELECT m.created_at FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message_at,
-	              (SELECT m.direction FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message_direction,
-	              COALESCE((
-	                SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color) ORDER BY t.name)
-	                FROM wa_conversation_tags wct
-	                JOIN wa_tags t ON t.id = wct.tag_id
-	                WHERE wct.conversation_id = c.id
-	              ), '[]'::json) AS tags
+		              (SELECT m.content FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message,
+		              (SELECT m.message_type FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message_type,
+		              (SELECT m.created_at FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message_at,
+		              (SELECT m.direction FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message_direction,
+		              COALESCE((
+		                SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color) ORDER BY t.name)
+		                FROM wa_conversation_tags wct
+		                JOIN wa_tags t ON t.id = wct.tag_id
+		                WHERE wct.conversation_id = c.id
+		              ), '[]'::json) AS tags
 	       FROM wa_conversations c
 	       LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
+	       LEFT JOIN patients p ON p.id = c.patient_id
 	       LEFT JOIN profiles assignee ON assignee.id = c.assigned_to OR assignee.user_id = c.assigned_to::text
 	       ${where}
        ORDER BY c.updated_at DESC
