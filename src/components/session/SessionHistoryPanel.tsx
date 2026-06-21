@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Copy, Calendar, Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { format, isValid, parse, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatClinicalText } from "@/lib/evolution/formatters";
 import {
@@ -15,8 +15,20 @@ import {
 
 function formatSessionTimestamp(value?: string, fallback = "Data inválida") {
   if (!value) return fallback;
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return fallback;
+
+  const raw = value.trim();
+  const candidates = [
+    new Date(raw),
+    parseISO(raw),
+    parse(raw, "dd/MM/yyyy HH:mm", new Date()),
+    parse(raw, "dd/MM/yyyy", new Date()),
+    parse(raw, "yyyy-MM-dd HH:mm:ss", new Date()),
+    parse(raw, "yyyy-MM-dd HH:mm", new Date()),
+  ];
+
+  const parsed = candidates.find((date) => isValid(date));
+  if (!parsed) return fallback;
+
   return format(parsed, "dd 'de' MMM, HH:mm", { locale: ptBR });
 }
 

@@ -72,12 +72,12 @@ export function PatientClinicalHistoryTab({ patientId }: PatientClinicalHistoryT
     () =>
       records.map((record) => ({
         id: record.id,
-        session_date: record.recordDate,
+        session_date: record.record_date,
         subjective: record.subjective,
         objective: record.objective,
         assessment: record.assessment,
         plan: record.plan,
-        created_at: record.createdAt || record.recordDate,
+        created_at: record.created_at || record.record_date,
         pain_level_after: 0,
       })),
     [records],
