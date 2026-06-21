@@ -290,7 +290,7 @@ export const EvolutionNoScrollPanel = memo(
               placeholder="Digite a evolução clínica aqui…"
               showToolbar
               externalValueRevision={revisionRef.current}
-              className="h-full [&_.ProseMirror]:min-h-[800px]"
+              className="h-full [&_.ProseMirror]:min-h-[60vh]"
             />
           </div>
         </div>
@@ -365,15 +365,15 @@ export const EvolutionNoScrollPanel = memo(
                   max={10}
                   step={1}
                   value={[arrival ?? 0]}
-                  onValueChange={([value]) => setArrival(Number(value))}
+                  onValueChange={([value]) => setArrival(value)}
                   aria-label="Nível de dor na chegada"
                   className="h-4"
                 />
                 {arrival !== null && (
-                  <div className="flex justify-between text-[10px] text-muted-foreground mt-1 h-8 items-start">
-                    <span className="leading-tight text-left max-w-[30%]">Sem Dor</span>
-                    <span className="leading-tight text-center max-w-[40%]">{painLabel(arrival)}</span>
-                    <span className="leading-tight text-right max-w-[30%]">Dor Máxima</span>
+                  <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                    <span>Sem Dor</span>
+                    <span>{painLabel(arrival)}</span>
+                    <span>Dor Máxima</span>
                   </div>
                 )}
               </div>
@@ -386,15 +386,15 @@ export const EvolutionNoScrollPanel = memo(
                   max={10}
                   step={1}
                   value={[data.painLevelDischarge ?? data.painLevel ?? 0]}
-                  onValueChange={([value]) => setDischarge(Number(value))}
+                  onValueChange={([value]) => setDischarge(value)}
                   aria-label="Nível de dor na saída"
                   className="h-4"
                 />
                 {(data.painLevelDischarge ?? data.painLevel) !== null && (
-                  <div className="flex justify-between text-[10px] text-muted-foreground mt-1 h-8 items-start">
-                    <span className="leading-tight text-left max-w-[30%]">Sem Dor</span>
-                    <span className="leading-tight text-center max-w-[40%]">{painLabel(data.painLevelDischarge ?? data.painLevel)}</span>
-                    <span className="leading-tight text-right max-w-[30%]">Dor Máxima</span>
+                  <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                    <span>Sem Dor</span>
+                    <span>{painLabel(data.painLevelDischarge ?? data.painLevel)}</span>
+                    <span>Dor Máxima</span>
                   </div>
                 )}
               </div>
@@ -640,7 +640,7 @@ export const EvolutionNoScrollPanel = memo(
                     placeholder="Digite a evolução clínica aqui…"
                     showToolbar
                     externalValueRevision={revisionRef.current}
-                    editorClassName="min-h-[800px]"
+                    editorClassName="min-h-[40vh]"
                   />
                 </div>
               )}

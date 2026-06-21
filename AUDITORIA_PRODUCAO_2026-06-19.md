@@ -17,6 +17,27 @@ Após a auditoria, os seguintes itens `P0` foram corrigidos no código local e p
 
 Essas correções ainda não foram validadas em produção nesta auditoria porque dependem de deploy do Worker/API e novo teste ponta a ponta no ambiente publicado.
 
+## Status Após Deploy em Produção
+
+Deploys executados em produção:
+
+- API `fisioflow-api`
+  Versão publicada: `509afeaa-61c2-4d91-9a13-a322d1c02fd5`
+- Web `fisioflow-web`
+  Versão publicada: `e7b2ff67-6e97-4cf6-b6b8-3d732e30942a`
+
+Validações executadas após o deploy:
+
+- `pnpm smoke:production` passou para `https://www.moocafisio.com.br` e `https://api-pro.moocafisio.com.br/api/health`
+- reauditoria completa da sidebar e abas do paciente foi rerodada em produção
+- após um segundo lote de correções, foi feita validação focada em:
+  - `/inteligencia`
+  - `/patients/:id?tab=overview`
+  - `/patients/:id?tab=analytics`
+  - `/patients/:id?tab=clinical`
+
+Resultado final da validação focada pós-deploy: `0` erros capturados (`console`, `pageerror` e `responses >= 400`) nesses fluxos críticos.
+
 ## Resumo Executivo
 
 Foram auditadas todas as páginas principais da sidebar visíveis no ambiente autenticado: `Agenda`, `Pacientes`, `WhatsApp`, `CRM WhatsApp`, `Avaliação Inicial`, `Evolução Clínica`, `Exercícios`, `Busca IA (Exercícios)`, `Curadoria de Exercícios`, `Protocolos`, `Testes Clínicos`, `Avaliações`, `Central de Inteligência AI`, `Copiloto Clínico AI`, `Base de Conhecimento AI`, `Briefing do Dia`, `Automações`, `Monitor de Atividades`, `Eventos`, `Boards`, `Cadastros`, `Wiki Clínica`, `Estoque`, `Telemedicina`, `Comunicação`, `Configurações` e `Configurações da Agenda`.
@@ -93,4 +114,11 @@ Contagem de problemas distintos encontrados:
 - Os `404` de insights não são falhas de dados; são falhas de contrato entre frontend e backend.
 - Os `401` de IA não são problema de permissão do usuário em si; são chamadas frontend sem o mecanismo oficial de autenticação do app.
 - Os `500` de `overdue-payments` e `notification-preferences` precisam ser validados também no deploy atual do Worker, porque o código local já indica intenções de correção, mas a produção ainda responde com erro.
-- As correções principais já foram aplicadas no código local, mas ainda precisam de deploy e rerun da auditoria em produção para fechar o ciclo de validação.
+- As correções principais foram aplicadas, publicadas em produção e revalidadas.
+
+## Status Final Após Deploy
+
+- API em produção validada na versão `509afeaa-61c2-4d91-9a13-a322d1c02fd5`.
+- Web em produção validado na versão `af972f90-3c0a-4ab4-9b36-8188aaf9cf29`.
+- Validação focada pós-deploy nos fluxos críticos de `Inteligência`, `Paciente > Visão Geral`, `Paciente > Analytics & IA`, `Paciente > Histórico Clínico` e `Exercícios` terminou com `0` erros capturados em `console`, `pageerror` e `responses >= 400`.
+- O resíduo final de `404` nas imagens legadas (`leg-raise-lateral.png`, `abducao-de-quadril-em-pe.avif`, `crunch.png`) foi eliminado no frontend ao normalizar aliases conhecidos para os assets locais válidos em [imageUtils.ts](/home/rafael/Documents/fisioflow/fisioflow-51658291/src/lib/imageUtils.ts:7).

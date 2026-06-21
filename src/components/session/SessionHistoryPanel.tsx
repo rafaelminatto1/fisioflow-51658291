@@ -13,6 +13,13 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
+function formatSessionTimestamp(value?: string, fallback = "Data inválida") {
+  if (!value) return fallback;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return fallback;
+  return format(parsed, "dd 'de' MMM, HH:mm", { locale: ptBR });
+}
+
 interface SessionData {
   id: string;
   created_at: string;
@@ -73,9 +80,7 @@ export const SessionHistoryPanel = ({
                       </div>
                       <div>
                         <p className="font-medium text-sm">
-                          {format(new Date(session.created_at), "dd 'de' MMM, HH:mm", {
-                            locale: ptBR,
-                          })}
+                          {formatSessionTimestamp(session.created_at)}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {index === 0 ? "Última Sessão" : "Sessão Anterior"}

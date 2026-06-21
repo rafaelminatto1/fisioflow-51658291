@@ -77,7 +77,7 @@ export function PatientClinicalHistoryTab({ patientId }: PatientClinicalHistoryT
         objective: record.objective,
         assessment: record.assessment,
         plan: record.plan,
-        created_at: record.createdAt,
+        created_at: record.createdAt || record.recordDate,
         pain_level_after: 0,
       })),
     [records],

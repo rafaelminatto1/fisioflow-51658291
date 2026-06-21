@@ -10,12 +10,30 @@
 function getOptimizedImageUrl(url: string | null | undefined): string | null {
   if (!url || typeof url !== "string") return null;
 
-  return url;
+  return getLegacyExerciseFallbackUrl(url) ?? url;
 }
 
 function addUniqueUrl(target: string[], url: string | null | undefined) {
   if (!url || target.includes(url)) return;
   target.push(url);
+}
+
+const LEGACY_EXERCISE_IMAGE_ALIASES: Record<string, string> = {
+  "leg-raise-lateral.png": "/exercises/illustrations/abducao-quadril-deitado.avif",
+  "abducao-de-quadril-em-pe.avif": "/exercises/illustrations/abducao-quadril-em-pe.avif",
+  "crunch.png": "/exercises/illustrations/abdominal-crunch.avif",
+};
+
+function getLegacyExerciseFallbackUrl(url: string): string | null {
+  const normalized = url.trim().toLowerCase();
+
+  for (const [legacyName, fallbackUrl] of Object.entries(LEGACY_EXERCISE_IMAGE_ALIASES)) {
+    if (normalized.includes(`/exercises/illustrations/${legacyName}`)) {
+      return fallbackUrl;
+    }
+  }
+
+  return null;
 }
 
 function getFormatVariantUrls(url: string): string[] {
@@ -26,6 +44,7 @@ function getFormatVariantUrls(url: string): string[] {
     addUniqueUrl(variants, url.replace(/\.(png|jpe?g)(\?.*)?$/i, ".webp$2"));
   }
 
+  addUniqueUrl(variants, getLegacyExerciseFallbackUrl(url));
   addUniqueUrl(variants, url);
 
   return variants;

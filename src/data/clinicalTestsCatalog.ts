@@ -2048,9 +2048,14 @@ export const clinicalTestJointOptions = [
   "Tornozelo",
   "Cervical",
   "Membro Inferior",
+  "Membro Superior",
   "Geral",
   "Coluna",
   "Punho",
+  "Coxa",
+  "Cotovelo",
+  "Pé",
+  "Pescoço",
 ] as const;
 
 export function normalizeClinicalTestName(value: string | null | undefined) {
@@ -2128,7 +2133,15 @@ export function mergeClinicalTestsCatalog(
     });
   }
 
-  return Array.from(merged.values()).sort((left, right) => {
+  // Deduplicate by id — multiple alias keys can point to the same builtin object
+  const seenIds = new Set<string>();
+  const deduped = Array.from(merged.values()).filter((record) => {
+    if (seenIds.has(record.id)) return false;
+    seenIds.add(record.id);
+    return true;
+  });
+
+  return deduped.sort((left, right) => {
     const categoryOrder = {
       Ortopedia: 0,
       Esportiva: 1,

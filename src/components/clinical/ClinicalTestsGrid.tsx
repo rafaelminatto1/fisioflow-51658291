@@ -19,11 +19,11 @@ interface ClinicalTestsGridProps {
 function getBadgeColor(category: string | null) {
   switch (category) {
     case "Esportiva":
-      return "border-orange-100 bg-orange-50 text-orange-700";
+      return "border-orange-200 bg-orange-50 text-orange-700";
     case "Pós-Operatório":
-      return "border-emerald-100 bg-emerald-50 text-emerald-700";
+      return "border-emerald-200 bg-emerald-50 text-emerald-700";
     default:
-      return "border-blue-100 bg-blue-50 text-blue-700";
+      return "border-teal-200 bg-teal-50 text-teal-700";
   }
 }
 
@@ -90,7 +90,7 @@ export function ClinicalTestsGrid({
             key={test.id}
             type="button"
             onClick={() => onSelectTest(test)}
-            className="group overflow-hidden rounded-[28px] border border-slate-200 bg-white text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/8 animate-in fade-in slide-in-from-bottom-4"
+            className="group overflow-hidden rounded-[28px] border border-slate-200 bg-white text-left shadow-sm transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] hover:border-teal-300/60 animate-in fade-in slide-in-from-bottom-4"
             style={{ animationDelay: `${(index % 12) * 50}ms` }}
           >
             <div className="relative h-52 overflow-hidden border-b border-slate-100 bg-slate-50">
@@ -98,7 +98,7 @@ export function ClinicalTestsGrid({
                 <img
                   src={test.image_url || test.media_urls?.[0]}
                   alt={test.name}
-                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                   loading="lazy"
                 />
               ) : (

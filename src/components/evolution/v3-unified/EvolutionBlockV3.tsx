@@ -45,11 +45,11 @@ import { ExerciseViewModal } from "../../exercises/ExerciseViewModal";
 // Category colors for visual distinction
 const CATEGORY_COLORS: Record<string, string> = {
   liberacao_miofascial: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
-  mobilizacao: "bg-blue-500/10 text-blue-700 border-blue-200",
+  mobilizacao: "bg-teal-500/10 text-teal-700 border-teal-200",
   eletroterapia: "bg-yellow-500/10 text-yellow-700 border-yellow-200",
   laser: "bg-red-500/10 text-red-700 border-red-200",
-  ultrassom: "bg-cyan-500/10 text-cyan-700 border-cyan-200",
-  crioterapia: "bg-sky-500/10 text-sky-700 border-sky-200",
+  ultrassom: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
+  crioterapia: "bg-slate-500/10 text-slate-700 border-slate-200",
   termoterapia: "bg-orange-500/10 text-orange-700 border-orange-200",
   bandagem: "bg-pink-500/10 text-pink-700 border-pink-200",
   outro: "bg-gray-500/10 text-gray-700 border-gray-200",
@@ -880,8 +880,8 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                   (type === "unified"
                     ? "bg-primary/10 text-primary"
                     : type === "exercise"
-                      ? "bg-blue-500/10 text-blue-600"
-                      : "bg-emerald-500/10 text-emerald-600"),
+                      ? "bg-emerald-500/10 text-emerald-700"
+                      : "bg-teal-500/10 text-teal-700"),
               )}
             >
               {getIcon()}
@@ -919,8 +919,8 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                       type === "unified"
                         ? "from-primary/80 to-primary"
                         : type === "exercise"
-                          ? "from-blue-500 to-indigo-500"
-                          : "from-emerald-500 to-teal-500",
+                          ? "from-emerald-500 to-teal-500"
+                          : "from-teal-500 to-emerald-500",
                     )}
                     style={{ width: `${progress}%` }}
                   />
@@ -1101,9 +1101,10 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
               createPortal(
                 <motion.div
                   ref={dropdownRef}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
+                  initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 350, damping: 25 }}
                   style={{
                     position: "fixed",
                     top: dropdownRect.top,
@@ -1112,7 +1113,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                   }}
                   // mousedown antes do blur do input para não fechar antes do clique
                   onMouseDown={(e) => e.preventDefault()}
-                  className="z-[100] p-1.5 rounded-2xl border border-border shadow-2xl bg-background max-h-[320px] overflow-y-auto scroll-smooth"
+                  className="z-[100] p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl bg-background max-h-[320px] overflow-y-auto scroll-smooth"
                 >
                   <div className="px-2 py-1.5 mb-1">
                     <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
@@ -1174,7 +1175,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                               }}
                             />
                           ) : (
-                            <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-700 shrink-0">
+                            <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-700 shrink-0">
                               <Dumbbell className="h-3.5 w-3.5" />
                             </div>
                           )}

@@ -14,6 +14,8 @@ import { AssessmentRecordingService } from "../../services/ai/AssessmentRecordin
 import { isUuid } from "../../lib/validators";
 import { logToAxiom } from "../../lib/axiom";
 import { ClinicalReportSchema, SoapSummarySchema } from "../../schemas/ai-schemas";
+import { createPool } from "../../lib/db";
+import { hasTable } from "../analytics/shared";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -460,6 +462,17 @@ app.get("/usage/weekly", async (c) => {
   if (!url) return c.json({ error: "DB unavailable" }, 503);
 
   try {
+    const pool = createPool(c.env);
+    if (!(await hasTable(pool, "ai_usage"))) {
+      return c.json({
+        period: "7d",
+        totalCalls: 0,
+        totalTokens: 0,
+        avgLatencyMs: 0,
+        fallbackCalls: 0,
+      });
+    }
+
     const sql = (await import("@neondatabase/serverless").then((m) => m.neon))(url);
     const rows = await sql`
       SELECT

@@ -34,6 +34,21 @@ function normalizeOptions(value: unknown): unknown[] | null {
   return null;
 }
 
+function countAnsweredResponses(value: unknown): number {
+  if (value == null) return 0;
+  if (Array.isArray(value)) return value.length;
+  if (typeof value === "object") return Object.keys(value as Record<string, unknown>).length;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return countAnsweredResponses(parsed);
+    } catch {
+      return 0;
+    }
+  }
+  return 0;
+}
+
 const evaluationResponseStatuses = new Set(["scheduled", "in_progress", "completed", "cancelled"]);
 
 // Global flag to avoid redundant table verification across requests within the same worker instance
@@ -224,8 +239,7 @@ app.get("/responses", requireAuth, async (c) => {
         ef.nome AS form_nome,
         ef.tipo AS form_tipo,
         ef.descricao AS form_descricao,
-        COUNT(f.id)::int AS fields_count,
-        COALESCE(jsonb_object_length(r.responses), 0)::int AS answered_count
+        COUNT(f.id)::int AS fields_count
       FROM patient_evaluation_responses r
       JOIN evaluation_forms ef
         ON ef.id = r.form_id
@@ -240,7 +254,12 @@ app.get("/responses", requireAuth, async (c) => {
     [user.organizationId, patientId],
   );
 
-  return c.json({ data: result.rows || [] });
+  return c.json({
+    data: (result.rows || []).map((row) => ({
+      ...row,
+      answered_count: countAnsweredResponses(row.responses),
+    })),
+  });
 });
 
 app.get("/responses/:responseId", requireAuth, async (c) => {

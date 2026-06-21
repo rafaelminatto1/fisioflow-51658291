@@ -2,6 +2,7 @@ import React, { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
   Calendar,
@@ -122,8 +123,13 @@ export const EvolutionHeaderV3 = memo(
     const renderSaveStatus = () => {
       const hasPending = (offlineStatus?.pendingActions ?? 0) > 0;
       const isOffline = offlineStatus && !offlineStatus.isOnline;
+      
+      let statusContent = null;
+      let statusKey = "none";
+      
       if (saveError && !isSaving) {
-        return (
+        statusKey = "error";
+        statusContent = (
           <span
             className="flex items-center gap-1.5 text-[11px] font-bold text-rose-600"
             title={saveError.message || "Erro ao salvar"}
@@ -141,17 +147,17 @@ export const EvolutionHeaderV3 = memo(
             )}
           </span>
         );
-      }
-      if (isSaving) {
-        return (
+      } else if (isSaving) {
+        statusKey = "saving";
+        statusContent = (
           <span className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-teal-600" />
             Salvando…
           </span>
         );
-      }
-      if (isOffline || hasPending) {
-        return (
+      } else if (isOffline || hasPending) {
+        statusKey = "offline";
+        statusContent = (
           <span
             className="flex items-center gap-1.5 text-[11px] font-bold text-amber-600"
             title={
@@ -169,16 +175,34 @@ export const EvolutionHeaderV3 = memo(
             )}
           </span>
         );
-      }
-      if (lastSavedAt) {
-        return (
+      } else if (lastSavedAt) {
+        statusKey = "saved";
+        statusContent = (
           <span className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 whitespace-nowrap">
             <CheckCircle2 className="h-3.5 w-3.5" />
             Salvo {format(lastSavedAt, "HH:mm")}
           </span>
         );
       }
-      return null;
+
+      return (
+        <div className="h-[30px] flex items-center justify-center overflow-hidden px-2 border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 rounded-full min-w-[100px]">
+          <AnimatePresence mode="wait">
+            {statusContent && (
+              <motion.div
+                key={statusKey}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="flex items-center justify-center"
+              >
+                {statusContent}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      );
     };
 
     return (
@@ -193,7 +217,7 @@ export const EvolutionHeaderV3 = memo(
         </button>
 
         {/* Avatar Iniciais */}
-        <div className="w-[36px] h-[36px] rounded-full bg-[#E5F0FF] text-[#004A99] flex items-center justify-center font-extrabold text-[13px] shrink-0">
+        <div className="w-[36px] h-[36px] rounded-full bg-teal-50 text-teal-800 border border-teal-200/50 flex items-center justify-center font-extrabold text-[13px] shrink-0">
           {getPatientInitials(patient)}
         </div>
 
@@ -203,7 +227,7 @@ export const EvolutionHeaderV3 = memo(
             <strong className="text-[15px] tracking-tight whitespace-nowrap truncate text-slate-900">
               {PatientHelpers.getName(patient)}
             </strong>
-            <span className="inline-flex px-[9px] py-[2px] rounded-full bg-[#F0F7FF] text-[#0055CC] text-[9.5px] font-extrabold tracking-wider">
+            <span className="inline-flex px-[9px] py-[2px] rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/40 text-[9.5px] font-extrabold tracking-wider">
               SESSÃO #{sessionNumber}
             </span>
           </div>
@@ -225,14 +249,14 @@ export const EvolutionHeaderV3 = memo(
         <div className="ml-auto flex items-center gap-2.5">
           <button
             onClick={onShowAIScribe}
-            className="hidden sm:inline-flex items-center gap-1.5 h-[30px] px-3 rounded-full border border-[#BDE0FF] bg-[#F0F7FF] text-[#005CE6] text-[10px] font-extrabold tracking-wider cursor-pointer transition-colors hover:bg-[#E5F0FF]"
+            className="hidden sm:inline-flex items-center gap-1.5 h-[30px] px-3 rounded-full border border-teal-200 bg-teal-50 text-teal-700 text-[10px] font-extrabold tracking-wider cursor-pointer transition-all hover:bg-teal-100/70 hover:border-teal-300"
           >
             <Mic className="w-[13px] h-[13px]" /> VOICE SCRIBE
           </button>
 
           <button
             onClick={onOpenHistoryDrawer}
-            className="hidden sm:inline-flex items-center gap-1.5 h-[30px] px-3 rounded-full border border-[#BDE0FF] bg-[#F0F7FF] text-[#005CE6] text-[10px] font-extrabold tracking-wider cursor-pointer transition-colors hover:bg-[#E5F0FF]"
+            className="hidden sm:inline-flex items-center gap-1.5 h-[30px] px-3 rounded-full border border-teal-200 bg-teal-50 text-teal-700 text-[10px] font-extrabold tracking-wider cursor-pointer transition-all hover:bg-teal-100/70 hover:border-teal-300"
           >
             <History className="w-[13px] h-[13px]" /> HISTÓRICO
           </button>
@@ -240,7 +264,7 @@ export const EvolutionHeaderV3 = memo(
           {onShowAISummary ? (
             <button
               onClick={onShowAISummary}
-              className="hidden sm:inline-flex items-center gap-1.5 h-[30px] px-3 rounded-full border border-[#D7E8FF] bg-white text-[#1D4ED8] text-[10px] font-extrabold tracking-wider cursor-pointer transition-colors hover:bg-[#F7FAFF]"
+              className="hidden sm:inline-flex items-center gap-1.5 h-[30px] px-3 rounded-full border border-emerald-200 bg-white text-emerald-700 text-[10px] font-extrabold tracking-wider cursor-pointer transition-all hover:bg-emerald-50 hover:border-emerald-300"
             >
               <Sparkles className="w-[13px] h-[13px]" /> RESUMO IA
             </button>
@@ -290,7 +314,7 @@ export const EvolutionHeaderV3 = memo(
           <Button
             onClick={onComplete}
             disabled={isSaving || isCompleting}
-            className="h-[30px] px-4 rounded-[14px] bg-[#0073FF] hover:bg-[#005CE6] text-white font-semibold text-[13px] tracking-wider transition-all"
+            className="h-[30px] px-4 rounded-[14px] bg-teal-600 hover:bg-teal-700 text-white font-semibold text-[13px] tracking-wider transition-all"
           >
             {isCompleting ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
