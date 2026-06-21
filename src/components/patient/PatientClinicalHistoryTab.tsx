@@ -1,15 +1,15 @@
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, lazy, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { useSoapRecordsV2 } from "@/hooks/useSoapRecordsV2";
 import { useCreateSoapRecord } from "@/hooks/useSoapRecords";
 import { usePatientEvaluationResponses } from "@/hooks/useEvaluationForms";
-import { lazy } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CalendarClock, CheckCircle2, Clock3, FileText, PlayCircle, XCircle } from "lucide-react";
+import { formatAnyDate } from "@/lib/date-utils";
 
 const LazySessionHistoryPanel = lazy(() =>
   import("@/components/session/SessionHistoryPanel").then((m) => ({
@@ -55,9 +55,7 @@ const statusConfig = {
 
 function formatEvaluationDate(value?: string | null) {
   if (!value) return "Data não definida";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Data inválida";
-  return evaluationDateFormatter.format(date);
+  return formatAnyDate(value, evaluationDateFormatter.resolvedOptions().dateStyle === "short" ? "dd/MM/yyyy HH:mm" : "dd/MM/yyyy HH:mm", "Data inválida");
 }
 
 export function PatientClinicalHistoryTab({ patientId }: PatientClinicalHistoryTabProps) {

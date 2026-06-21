@@ -2,8 +2,9 @@
  * Utilitários compartilhados da EvolutionTimeline — extraídos do componente
  * monolítico para reuso entre a timeline e o SessionDetailsModal.
  */
-import { format, formatDistanceToNow, isValid, type Locale } from "date-fns";
+import { format, formatDistanceToNow, type Locale } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { parseAnyDate } from "@/lib/date-utils";
 import { Activity, AlertCircle, Bone, FileText, Image as ImageIcon, Target } from "lucide-react";
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,8 +17,8 @@ export const safeFormat = (
   options?: { locale?: Locale },
 ) => {
   if (!date) return "N/A";
-  const d = new Date(date);
-  if (!isValid(d)) return "Data inválida";
+  const d = parseAnyDate(date);
+  if (!(d instanceof Date) || Number.isNaN(d.getTime())) return "Data inválida";
   return format(d, formatStr, options || { locale: ptBR });
 };
 
@@ -26,8 +27,8 @@ export const safeFormatDistance = (
   options?: { locale?: Locale; addSuffix?: boolean },
 ) => {
   if (!date) return "N/A";
-  const d = new Date(date);
-  if (!isValid(d)) return "Data inválida";
+  const d = parseAnyDate(date);
+  if (!(d instanceof Date) || Number.isNaN(d.getTime())) return "Data inválida";
   return formatDistanceToNow(d, options || { locale: ptBR, addSuffix: true });
 };
 

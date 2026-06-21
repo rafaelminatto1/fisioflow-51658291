@@ -31,8 +31,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Brain, Target, Activity, Dumbbell, User, GitBranch, FileText, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format, isValid } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { parseAnyDate } from "@/lib/date-utils";
 
 // ---------------------------------------------------------------------------
 // Tipos públicos
@@ -122,9 +121,9 @@ interface NodeDetailData {
 
 const safeFormatDate = (dateStr: string): string => {
   if (!dateStr) return "N/A";
-  const d = new Date(dateStr);
-  if (!isValid(d)) return "Data inválida";
-  return format(d, "dd/MM/yyyy", { locale: ptBR });
+  const d = parseAnyDate(dateStr);
+  if (Number.isNaN(d.getTime())) return "Data inválida";
+  return d.toLocaleDateString("pt-BR");
 };
 
 const truncate = (text: string | undefined, max = 28): string => {

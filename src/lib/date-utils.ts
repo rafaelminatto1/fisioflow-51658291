@@ -9,6 +9,7 @@
 import {
   format,
   isValid,
+  parse,
   parseISO,
   startOfDay,
   endOfDay,
@@ -154,12 +155,41 @@ export function formatWeekdayDate(ymd: string): string {
 }
 
 /**
- * Format a Date using a date-fns format string with pt-BR locale.
- * Alias used as formatBRT to signal intent (local display, not UTC).
+ * Parse a value into a valid Date using multiple common formats.
+ * Accepts ISO strings, browser Date strings, YYYY-MM-DD and BR date formats.
  */
-export function formatBRT(date: Date, fmt: string): string {
-  if (!date || !isValid(date)) return "";
-  return format(date, fmt, { locale: ptBR });
+export function parseAnyDate(value: string | Date | number | null | undefined): Date {
+  if (value == null || value === "") return new Date(NaN);
+  if (value instanceof Date) return value;
+  if (typeof value === "number") return new Date(value);
+
+  const raw = String(value).trim();
+  if (!raw) return new Date(NaN);
+
+  const candidates = [
+    new Date(raw),
+    parseISO(raw),
+    parse(raw, "yyyy-MM-dd HH:mm:ss", new Date()),
+    parse(raw, "yyyy-MM-dd HH:mm", new Date()),
+    parse(raw, "dd/MM/yyyy HH:mm", new Date()),
+    parse(raw, "dd/MM/yyyy", new Date()),
+  ];
+
+  const parsed = candidates.find((d) => isValid(d));
+  return parsed ?? new Date(NaN);
+}
+
+/**
+ * Format any date-ish input for pt-BR display.
+ */
+export function formatAnyDate(
+  value: string | Date | number | null | undefined,
+  fmt: string,
+  fallback = "Data inválida",
+): string {
+  const d = parseAnyDate(value);
+  if (!isValid(d)) return fallback;
+  return format(d, fmt, { locale: ptBR });
 }
 
 /**
