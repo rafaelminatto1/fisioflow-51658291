@@ -151,6 +151,9 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
   const selectionOn = isSelectionMode ?? selectionMode ?? false;
 
   const calendarRef = useRef<FullCalendar | null>(null);
+  // Set right before a programmatic gotoDate() so the datesSet echo it
+  // triggers does not bounce back into onDateChange (loop prevention).
+  const suppressDatesSetRef = useRef(false);
   const { statusConfig } = useStatusConfig();
   const { cssVariables, slotHeightPx, appearance } = useAgendaAppearancePersistence(viewType);
   const { businessHours: settingsHours, blockedTimes } = useScheduleSettings();
@@ -170,14 +173,27 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
     console.log("[FisioFlow] ScheduleCalendar v1.0 - FullCalendar migration");
   }, []);
 
-  // Sync external date changes to the calendar instance
+  // Sync external date changes to the calendar instance.
+  // Depend on the stable YMD string (not the Date object, which is recreated
+  // every render in the parent) so this effect only runs on real day changes.
+  const currentYmd = formatLocalDate(currentDate);
   useEffect(() => {
     const api = calendarRef.current?.getApi();
     if (!api) return;
     const current = formatLocalDate(api.getDate());
-    const target = formatLocalDate(currentDate);
-    if (current !== target) api.gotoDate(currentDate);
-  }, [currentDate]);
+    if (current === currentYmd) return;
+    // Mark the upcoming datesSet (fired by gotoDate) as a programmatic echo so
+    // handleDatesSet swallows it instead of re-emitting onDateChange.
+    suppressDatesSetRef.current = true;
+    api.gotoDate(currentDate);
+    // Safety net: if gotoDate stays within the same displayed period it won't
+    // fire datesSet, leaving the flag set. Clear it on the next tick so a later
+    // genuine user navigation is never swallowed.
+    queueMicrotask(() => {
+      suppressDatesSetRef.current = false;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentYmd]);
 
   // Sync external view type changes
   useEffect(() => {
@@ -400,14 +416,26 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
 
   const handleDatesSet = (arg: DatesSetArg) => {
     if (!onDateChange) return;
+    // Swallow the datesSet echo triggered by our own programmatic gotoDate.
+    if (suppressDatesSetRef.current) {
+      suppressDatesSetRef.current = false;
+      return;
+    }
     const activeStart = arg.view.currentStart;
     const activeEnd = arg.view.currentEnd;
     if (!activeStart || !activeEnd) return;
-    // Only sync URL when the user-selected date falls outside the displayed
-    // period. Without this guard we'd snap currentDate back to the period
-    // start (e.g. Monday) on every internal datesSet fire — which created an
-    // infinite loop bouncing the URL between two adjacent weeks.
-    if (currentDate >= activeStart && currentDate < activeEnd) return;
+    // Compare on calendar-day (YMD) boundaries, never raw timestamps:
+    // currentDate is LOCAL NOON while currentStart/currentEnd are LOCAL
+    // MIDNIGHT, so a raw `>=`/`<` comparison is off by 12h and can misfire at
+    // the period edges. Only sync the URL when the selected day falls outside
+    // the displayed period; otherwise we'd snap currentDate back to the period
+    // start (e.g. Monday) on every internal fire — an infinite loop bouncing
+    // the URL between two adjacent weeks.
+    const startYmd = formatLocalDate(activeStart);
+    // currentEnd is exclusive (midnight of the day after the last visible day);
+    // shift back one day to get the last visible day for an inclusive compare.
+    const lastVisibleYmd = formatLocalDate(new Date(activeEnd.getTime() - 86400000));
+    if (currentYmd >= startYmd && currentYmd <= lastVisibleYmd) return;
     onDateChange(activeStart);
   };
 
