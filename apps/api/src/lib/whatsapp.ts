@@ -5,7 +5,7 @@ import type { Env } from "../types/env";
  * Centraliza o envio de mensagens via Meta Graph API.
  */
 export class WhatsAppService {
-  private baseUrl = "https://graph.facebook.com/v21.0";
+  private baseUrl = "https://graph.facebook.com/v22.0";
 
   constructor(private env: Env) {}
 

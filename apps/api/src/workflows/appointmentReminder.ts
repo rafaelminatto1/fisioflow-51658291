@@ -155,7 +155,7 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
       }
     }
 
-    await fetch(`https://graph.facebook.com/v21.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
+    await fetch(`https://graph.facebook.com/v22.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
