@@ -107,16 +107,6 @@ type ImportSummary = {
   importedAppointments: number;
 };
 
-type PreparedSessionRow = {
-  date: Date;
-  observacao: string;
-  painScale: number | null;
-  status: ImportSessionStatus;
-  duration: number | null;
-  therapistId: string;
-  sessionNumber: number;
-};
-
 type PreparedAppointmentRow = {
   date: string;
   startTime: string;
@@ -307,7 +297,6 @@ async function preparePatientImport(
   cache: Map<string, string | null>,
 ): Promise<{
   patientValues: Record<string, unknown>;
-  sessionsToInsert: PreparedSessionRow[];
   appointmentsToInsert: PreparedAppointmentRow[];
   warnings: string[];
   errors: string[];
@@ -328,7 +317,6 @@ async function preparePatientImport(
     isActive: true,
   };
 
-  const sessionsToInsert: PreparedSessionRow[] = [];
   const appointmentsToInsert: PreparedAppointmentRow[] = [];
 
   for (const [index, evolution] of patient.evolutions.entries()) {
@@ -376,18 +364,9 @@ async function preparePatientImport(
       sessionNumber: index + 1,
     });
 
-    sessionsToInsert.push({
-      date: parsedDate.date!,
-      observacao: (evolution.observacao ?? "").trim(),
-      painScale: evolution.painScale ?? null,
-      status: normalizedStatus.status,
-      duration: evolution.durationMinutes ?? null,
-      therapistId,
-      sessionNumber: index + 1,
-    });
   }
 
-  return { patientValues, sessionsToInsert, appointmentsToInsert, warnings, errors };
+  return { patientValues, appointmentsToInsert, warnings, errors };
 }
 
 async function wipeOrganizationLegacyImportData(
@@ -577,7 +556,7 @@ app.post("/legacy-data", requireAuth, async (c) => {
                 organizationId: user.organizationId,
                 therapistId: appt.therapistId,
                 appointmentId: createdAppt.id,
-                date: new Date(`${appt.date}T${appt.startTime}:00`),
+                date: new Date(`${appt.date}T${appt.startTime}:00Z`),
                 observacao: appt.sessionObservacao,
                 painScale: appt.painScale,
                 duration: appt.durationMinutes,
