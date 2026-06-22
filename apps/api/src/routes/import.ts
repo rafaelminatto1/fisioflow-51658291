@@ -28,14 +28,37 @@ const SESSION_STATUS_ALIASES: Record<string, ImportSessionStatus> = {
   cancelada: "cancelled",
 };
 
-const legacyEvolutionSchema = z.object({
-  date: z.string().trim().optional(),
-  observacao: z.string().trim().min(1),
-  painScale: z.number().min(0).max(10).optional(),
-  status: z.string().trim().optional(),
-  therapistId: z.string().trim().optional(),
-  durationMinutes: z.number().int().positive().optional(),
-});
+const APPOINTMENT_STATUSES = [
+  "agendado",
+  "atendido",
+  "avaliacao",
+  "cancelado",
+  "faltou",
+  "faltou_com_aviso",
+  "faltou_sem_aviso",
+  "nao_atendido",
+  "nao_atendido_sem_cobranca",
+  "presenca_confirmada",
+  "remarcar",
+] as const;
+
+const legacyEvolutionSchema = z
+  .object({
+    date: z.string().trim().optional(),
+    startTime: z.string().trim().regex(/^\d{2}:\d{2}$/).optional(),
+    observacao: z.string().trim().min(1).optional(),
+    appointmentStatus: z.enum(APPOINTMENT_STATUSES).optional(),
+    appointmentType: z
+      .enum(["evaluation", "session", "reassessment", "group", "return"])
+      .default("session"),
+    painScale: z.number().min(0).max(10).optional(),
+    status: z.string().trim().optional(),
+    therapistId: z.string().trim().optional(),
+    durationMinutes: z.number().int().positive().optional(),
+  })
+  .refine((e) => Boolean(e.observacao) || Boolean(e.appointmentStatus), {
+    message: "Evolução precisa de observacao ou appointmentStatus.",
+  });
 
 const legacyPatientSchema = z.object({
   fullName: z.string().trim().min(1),
@@ -50,7 +73,7 @@ const legacyPatientSchema = z.object({
   evolutions: z.array(legacyEvolutionSchema).min(1),
 });
 
-const legacyImportSchema = z.object({
+export const legacyImportSchema = z.object({
   replaceExisting: z.literal(true),
   dryRun: z.boolean().optional().default(false),
   patients: z.array(legacyPatientSchema).min(1),
@@ -313,7 +336,7 @@ async function preparePatientImport(
 
     sessionsToInsert.push({
       date: parsedDate.date!,
-      observacao: evolution.observacao.trim(),
+      observacao: (evolution.observacao ?? "").trim(),
       painScale: evolution.painScale ?? null,
       status: normalizedStatus.status,
       duration: evolution.durationMinutes ?? null,

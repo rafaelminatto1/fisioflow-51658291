@@ -1,4 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { legacyImportSchema } from "../import";
 import { patients, profiles, sessions } from "@fisioflow/db";
 
 const ORG_ID = "11111111-1111-1111-1111-111111111111";
@@ -120,6 +121,31 @@ describe("legacy import helpers", () => {
     expect(importHelpers.normalizeLegacySessionStatus("concluído")).toEqual({
       status: "finalized",
     });
+  });
+});
+
+describe("legacyImportSchema (estendido)", () => {
+  const base = { replaceExisting: true as const, patients: [] as unknown[] };
+  it("aceita evolução só com appointmentStatus (sem observacao)", () => {
+    const r = legacyImportSchema.safeParse({
+      ...base,
+      patients: [{ fullName: "X", legacyId: "1", evolutions: [{ date: "2024-08-30", appointmentStatus: "faltou", appointmentType: "session" }] }],
+    });
+    expect(r.success).toBe(true);
+  });
+  it("aceita evolução com observacao e status atendido", () => {
+    const r = legacyImportSchema.safeParse({
+      ...base,
+      patients: [{ fullName: "X", legacyId: "1", evolutions: [{ date: "2024-08-30", observacao: "texto", appointmentStatus: "atendido", appointmentType: "session" }] }],
+    });
+    expect(r.success).toBe(true);
+  });
+  it("rejeita evolução sem observacao e sem appointmentStatus", () => {
+    const r = legacyImportSchema.safeParse({
+      ...base,
+      patients: [{ fullName: "X", legacyId: "1", evolutions: [{ date: "2024-08-30", appointmentType: "session" }] }],
+    });
+    expect(r.success).toBe(false);
   });
 });
 
