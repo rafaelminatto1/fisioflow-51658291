@@ -303,7 +303,10 @@ export default function CrmWhatsApp() {
                     {selectedId === item.id && (
                       <span className="absolute inset-y-0 left-0 w-[3px] bg-primary" />
                     )}
-                    <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[hsl(211_100%_60%)] to-[hsl(264_55%_48%)] text-sm font-extrabold text-white">
+                    <div
+                      className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full text-sm font-extrabold text-white"
+                      style={{ backgroundImage: item.avatarGradient }}
+                    >
                       {item.initials}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -350,13 +353,25 @@ export default function CrmWhatsApp() {
               {selectedConversationVm ? (
                 <>
                   <div className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[hsl(211_100%_60%)] to-[hsl(264_55%_48%)] text-sm font-extrabold text-white">
+                    <div
+                      className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-extrabold text-white"
+                      style={{ backgroundImage: selectedConversationVm.avatarGradient }}
+                    >
                       {selectedConversationVm.initials}
                     </div>
                     <div className="min-w-0">
                       <div className="text-sm font-extrabold">{selectedConversationVm.name}</div>
-                      <div className="truncate text-[11px] font-semibold text-muted-foreground">
-                        {selectedConversationVm.presenceLabel}
+                      <div className="flex items-center gap-1.5 truncate text-[11px] font-semibold text-muted-foreground">
+                        {selectedConversationVm.phone ? <span>{selectedConversationVm.phone}</span> : null}
+                        {selectedConversationVm.phone ? <span aria-hidden>·</span> : null}
+                        <span
+                          className={cn(
+                            selectedConversationVm.presenceLabel === "Ativo agora" &&
+                              "font-bold text-[hsl(142_60%_38%)]",
+                          )}
+                        >
+                          {selectedConversationVm.presenceLabel}
+                        </span>
                       </div>
                     </div>
                     <div className="ml-auto flex items-center gap-1">
@@ -528,7 +543,10 @@ export default function CrmWhatsApp() {
               {selectedConversationVm ? (
                 <>
                   <div className="border-b border-border bg-card px-4 pb-4 pt-5 text-center">
-                    <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[hsl(211_100%_60%)] to-[hsl(264_55%_48%)] text-[22px] font-extrabold text-white">
+                    <div
+                      className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full text-[22px] font-extrabold text-white"
+                      style={{ backgroundImage: selectedConversationVm.avatarGradient }}
+                    >
                       {selectedConversationVm.initials}
                     </div>
                     <div className="text-base font-extrabold">{selectedConversationVm.name}</div>

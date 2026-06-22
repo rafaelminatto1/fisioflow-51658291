@@ -20,6 +20,7 @@ export interface CrmConversationViewModel {
   phone: string;
   patientId?: string;
   avatarUrl: string | null;
+  avatarGradient: string;
   presenceLabel: string;
   lastMessage: string;
   lastMessageAt: string | null;
@@ -47,36 +48,55 @@ export interface CrmQuickReplyViewModel {
 const STAGE_META: Record<CrmStage, CrmStageMeta> = {
   lead: {
     key: "lead",
-    label: "Lead",
-    chipClassName: "bg-slate-100 text-slate-700",
-    dotClassName: "bg-slate-400",
+    label: "Novo lead",
+    chipClassName: "bg-[hsl(264_60%_94%)] text-[hsl(264_50%_42%)]",
+    dotClassName: "bg-[hsl(264_50%_50%)]",
     progressIndex: 0,
   },
   contact: {
     key: "contact",
-    label: "Contato",
-    chipClassName: "bg-blue-100 text-blue-700",
-    dotClassName: "bg-blue-400",
+    label: "Aguardando",
+    chipClassName: "bg-[hsl(28_92%_93%)] text-[hsl(25_70%_34%)]",
+    dotClassName: "bg-[hsl(28_70%_48%)]",
     progressIndex: 1,
   },
   evaluation: {
     key: "evaluation",
     label: "Avaliação",
-    chipClassName: "bg-amber-100 text-amber-700",
-    dotClassName: "bg-amber-400",
+    chipClassName: "bg-[hsl(211_100%_93%)] text-[hsl(211_100%_35%)]",
+    dotClassName: "bg-[hsl(211_100%_50%)]",
     progressIndex: 2,
   },
   treatment: {
     key: "treatment",
-    label: "Tratamento",
-    chipClassName: "bg-emerald-100 text-emerald-700",
-    dotClassName: "bg-emerald-400",
+    label: "Em tratamento",
+    chipClassName: "bg-[hsl(142_60%_92%)] text-[hsl(142_55%_28%)]",
+    dotClassName: "bg-[hsl(142_55%_40%)]",
     progressIndex: 3,
   },
 };
 
 export function getStageMeta(stage: CrmStage): CrmStageMeta {
   return STAGE_META[stage];
+}
+
+// Gradientes de avatar (135deg) extraídos do design CRM · WhatsApp.
+const AVATAR_GRADIENTS = [
+  "linear-gradient(135deg,hsl(264 55% 62%),hsl(264 55% 48%))",
+  "linear-gradient(135deg,hsl(211 100% 60%),hsl(211 100% 42%))",
+  "linear-gradient(135deg,hsl(28 85% 58%),hsl(28 85% 46%))",
+  "linear-gradient(135deg,hsl(340 70% 60%),hsl(340 70% 48%))",
+  "linear-gradient(135deg,hsl(180 50% 48%),hsl(180 50% 36%))",
+  "linear-gradient(135deg,hsl(142 50% 50%),hsl(142 50% 38%))",
+  "linear-gradient(135deg,hsl(220 12% 58%),hsl(220 12% 44%))",
+];
+
+export function getAvatarGradient(seed: string): string {
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
+  }
+  return AVATAR_GRADIENTS[hash % AVATAR_GRADIENTS.length];
 }
 
 function resolveStage(conversation: Conversation): CrmStage {
@@ -180,6 +200,7 @@ export function toCrmConversationViewModel(conversation: Conversation): CrmConve
     phone,
     patientId,
     avatarUrl: null,
+    avatarGradient: getAvatarGradient(phone || name || conversation.id),
     presenceLabel: formatPresenceLabel(conversation),
     lastMessage: conversation.lastMessage ?? "",
     lastMessageAt: conversation.lastMessageAt ?? null,

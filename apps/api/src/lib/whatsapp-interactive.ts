@@ -1,6 +1,6 @@
 import type { Env } from "../types/env";
 
-const API_BASE = "https://graph.facebook.com/v21.0";
+const API_BASE = "https://graph.facebook.com/v22.0";
 
 interface ReplyButton {
   id: string;

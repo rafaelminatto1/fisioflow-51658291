@@ -100,7 +100,7 @@ export class PatientWearableActivityWorkflow extends WorkflowEntrypoint<
       console.warn("[RTM Workflow] WhatsApp credentials missing.");
       return;
     }
-    await fetch(`https://graph.facebook.com/v21.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
+    await fetch(`https://graph.facebook.com/v22.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

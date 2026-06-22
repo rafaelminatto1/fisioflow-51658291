@@ -1818,7 +1818,7 @@ app.post("/broadcast", requireAuth, async (c) => {
 
         if (contact.bsuid) (metaPayload as any).recipient = contact.bsuid;
 
-        const metaRes = await fetch(`https://graph.facebook.com/v21.0/${phoneId}/messages`, {
+        const metaRes = await fetch(`https://graph.facebook.com/v22.0/${phoneId}/messages`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
