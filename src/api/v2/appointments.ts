@@ -59,22 +59,3 @@ export const appointmentsApi = {
       body: JSON.stringify({}),
     }),
 };
-
-export const schedulingApi = {
-  checkCapacity: (params: { start: string; end: string; therapistId?: string }) => {
-    const qs = new URLSearchParams(
-      Object.fromEntries(
-        Object.entries(params)
-          .filter(([, v]) => v != null)
-          .map(([k, v]) => [k, String(v)]),
-      ),
-    ).toString();
-    return request<{
-      data: { capacity: number; used: number; available: number };
-    }>(`/api/scheduling/capacity${qs ? `?${qs}` : ""}`);
-  },
-  getIntervalCapacity: (params: { date: string; startTime: string; endTime: string }) => {
-    const qs = new URLSearchParams(params).toString();
-    return request<{ capacity: number }>(`/api/scheduling/interval-capacity?${qs}`);
-  },
-};

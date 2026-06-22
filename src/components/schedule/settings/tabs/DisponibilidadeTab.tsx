@@ -13,8 +13,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { SectionCard } from "@/components/schedule/settings-v2/shared/SectionCard";
-import { EmptyState } from "@/components/schedule/settings-v2/shared/EmptyState";
+import { SectionCard } from "@/components/schedule/settings/shared/SectionCard";
+import { EmptyState } from "@/components/schedule/settings/shared/EmptyState";
 import { useScheduleSettings } from "@/hooks/useScheduleSettings";
 import { useTabDirtyState } from "../useTabDirtyState";
 import { cn } from "@/lib/utils";

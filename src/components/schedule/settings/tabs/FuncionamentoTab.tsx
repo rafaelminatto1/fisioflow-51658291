@@ -21,9 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SectionCard } from "@/components/schedule/settings-v2/shared/SectionCard";
-import { EmptyState } from "@/components/schedule/settings-v2/shared/EmptyState";
-import { Stepper } from "@/components/schedule/settings-v2/shared/Stepper";
+import { SectionCard } from "@/components/schedule/settings/shared/SectionCard";
+import { EmptyState } from "@/components/schedule/settings/shared/EmptyState";
+import { Stepper } from "@/components/schedule/settings/shared/Stepper";
 import { useScheduleSettings, type BusinessHour } from "@/hooks/useScheduleSettings";
 import { useScheduleCapacity, type CapacityGroup } from "@/hooks/useScheduleCapacity";
 import { useAppointmentTypes } from "@/hooks/useAppointmentTypes";

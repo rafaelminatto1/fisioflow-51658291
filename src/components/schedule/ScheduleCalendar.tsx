@@ -444,7 +444,6 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
     // the displayed period; otherwise we'd snap currentDate back to the period
     // start (e.g. Monday) on every internal fire — an infinite loop bouncing
     // the URL between two adjacent weeks.
-    const startYmd = formatLocalDate(activeStart);
     // currentEnd is exclusive (midnight of the day after the last visible day);
     // shift back one day to get the last visible day for an inclusive compare.
     const lastVisibleYmd = formatLocalDate(new Date(activeEnd.getTime() - 86400000));
