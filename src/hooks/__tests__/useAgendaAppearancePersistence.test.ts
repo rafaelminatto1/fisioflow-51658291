@@ -14,7 +14,22 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import * as fc from "fast-check";
-import { mergeAppearanceState } from "@/hooks/useAgendaAppearancePersistence";
+import { renderHook, act } from "@testing-library/react";
+import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { mergeAppearanceState, useAgendaAppearancePersistence } from "@/hooks/useAgendaAppearancePersistence";
+
+vi.mock("@/api/v2/base", () => ({
+  request: vi.fn().mockResolvedValue({ data: null }),
+}));
+
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return ({ children }: { children: React.ReactNode }) =>
+    React.createElement(QueryClientProvider, { client: queryClient }, children);
+}
 
 // ─── Generators ──────────────────────────────────────────────────────────────
 
@@ -368,5 +383,16 @@ describe("Property 9: Debounce agrupa escritas", () => {
       }),
       { numRuns: 100 },
     );
+  });
+});
+
+// ─── display round-trip ───────────────────────────────────────────────────────
+
+describe("display round-trip via persistence hook", () => {
+  it("setDisplay atualiza display e dispara save debounced", async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useAgendaAppearancePersistence("week"), { wrapper });
+    act(() => result.current.setDisplay({ showPhone: true }));
+    expect(result.current.display.showPhone).toBe(true);
   });
 });

@@ -360,6 +360,14 @@ export function useAgendaAppearancePersistence(
     debouncedSave();
   }, [baseHook, debouncedSave]);
 
+  const setDisplay = useCallback(
+    (patch: Parameters<UseAgendaAppearanceResult["setDisplay"]>[0]) => {
+      baseHook.setDisplay(patch);
+      debouncedSave();
+    },
+    [baseHook, debouncedSave],
+  );
+
   const isSyncing = isQueryLoading || mutation.isPending;
 
   return {
@@ -385,6 +393,8 @@ export function useAgendaAppearancePersistence(
     applyToAllViews,
     resetView,
     resetAll,
+    display: baseHook.display,
+    setDisplay,
 
     // Persistence state
     isSyncing,
