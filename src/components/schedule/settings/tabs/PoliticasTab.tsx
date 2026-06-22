@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Bell, Shield, CalendarRange, UserX } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { SectionCard } from "@/components/schedule/settings-v2/shared/SectionCard";
@@ -64,23 +63,6 @@ const DEFAULT_RULES = {
   max_cancellations_month: 3,
   charge_late_cancellation: false,
   late_cancellation_fee: 0,
-};
-
-const DEFAULT_BOOKING: BookingWindowData = {
-  minAdvanceDays: 0,
-  maxAdvanceDays: 60,
-  allowSameDay: true,
-  allowOnlineBooking: true,
-};
-
-const DEFAULT_NOSHOW: NoShowPolicy = {
-  thresholdCount: 3,
-  windowDays: 90,
-  action: "warn",
-  suspendDays: 0,
-  chargeFee: false,
-  feeAmount: 0,
-  notifyAdmin: true,
 };
 
 function buildInitial(
