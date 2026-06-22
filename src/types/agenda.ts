@@ -180,6 +180,21 @@ export interface CardSizeConfig {
 // Calendar view types
 export type CalendarViewType = "day" | "week" | "month";
 
+// Agenda appearance view key (mirrors CalendarViewType)
+export type AgendaView = "day" | "week" | "month";
+
+// Per-view appearance settings stored in useAgendaAppearance
+export interface AgendaViewAppearance {
+  cardSize: CardSize;
+  heightScale: number;
+  fontScale: number;
+  opacity: number;
+  timeFontScale: number;
+  typeFontScale: number;
+  paddingScale: number;
+}
+
+
 // ============================================================================
 // SCHEDULE CONFIGURATION TYPES (Database tables: schedule_*)
 // ============================================================================
