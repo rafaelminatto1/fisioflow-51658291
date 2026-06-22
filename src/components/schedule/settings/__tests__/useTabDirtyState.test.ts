@@ -31,4 +31,13 @@ describe("useTabDirtyState", () => {
     expect(result.current.value).toEqual({ a: 1, b: 9 });
     expect(result.current.isDirty).toBe(false);
   });
+
+  it("reset() sem argumento (descartar) restaura o baseline, não mantém o draft", () => {
+    const { result } = renderHook(() => useTabDirtyState({ a: 1, b: 2 }));
+    act(() => result.current.setValue({ a: 5, b: 6 }));
+    expect(result.current.isDirty).toBe(true);
+    act(() => result.current.reset());
+    expect(result.current.value).toEqual({ a: 1, b: 2 });
+    expect(result.current.isDirty).toBe(false);
+  });
 });

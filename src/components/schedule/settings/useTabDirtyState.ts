@@ -11,13 +11,13 @@ export function useTabDirtyState<T>(initial: T) {
   }, []);
 
   const reset = useCallback((next?: T | ((prev: T) => T)) => {
+    // Sem argumento = descartar: restaura o último baseline (não aceita o draft atual).
+    if (next === undefined) {
+      setValueState(JSON.parse(baselineRef.current) as T);
+      return;
+    }
     setValueState((prev) => {
-      const resolved =
-        next === undefined
-          ? prev
-          : typeof next === "function"
-            ? (next as (p: T) => T)(prev)
-            : next;
+      const resolved = typeof next === "function" ? (next as (p: T) => T)(prev) : next;
       baselineRef.current = JSON.stringify(resolved);
       return resolved;
     });

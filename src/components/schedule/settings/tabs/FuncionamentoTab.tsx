@@ -14,13 +14,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { SectionCard } from "@/components/schedule/settings/shared/SectionCard";
 import { EmptyState } from "@/components/schedule/settings/shared/EmptyState";
 import { Stepper } from "@/components/schedule/settings/shared/Stepper";
@@ -154,6 +147,8 @@ function CoverageBar({ groups, day }: { groups: CapacityGroup[]; day: number }) 
 export function FuncionamentoTab({ registerHandle }: TabComponentProps) {
   const { businessHours, isLoadingHours, upsertBusinessHours, isSavingHours } =
     useScheduleSettings();
+  // mutate é referencialmente estável; o objeto da mutation não é.
+  const upsertHours = upsertBusinessHours.mutate;
   const { value: draft, setValue, isDirty, reset } = useTabDirtyState(emptyDraft());
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
@@ -204,14 +199,14 @@ export function FuncionamentoTab({ registerHandle }: TabComponentProps) {
           break_end: row.hasBreak ? row.break_end : undefined,
         } satisfies Partial<BusinessHour>;
       });
-      upsertBusinessHours.mutate(list, {
+      upsertHours(list, {
         onSuccess: () => {
           reset(draft);
           setLastSavedAt(new Date());
         },
       });
     },
-    [draft, upsertBusinessHours, reset],
+    [draft, upsertHours, reset],
   );
 
   useRegisterTabHandle(registerHandle, {
@@ -644,41 +639,6 @@ export function FuncionamentoTab({ registerHandle }: TabComponentProps) {
                     Máximo de pacientes atendidos simultaneamente nesta faixa
                   </span>
                 </div>
-              </div>
-
-              <div>
-                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Tipo de atendimento
-                </Label>
-                <Select
-                  value={capForm.appointment_type_id ?? "__all__"}
-                  onValueChange={(v) =>
-                    setCapForm((p) => ({ ...p, appointment_type_id: v === "__all__" ? null : v }))
-                  }
-                >
-                  <SelectTrigger className="mt-2 h-9">
-                    <SelectValue placeholder="Todos os tipos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__all__">Todos os tipos (sem filtro)</SelectItem>
-                    {types
-                      .filter((t) => t.isActive)
-                      .map((t) => (
-                        <SelectItem key={t.id} value={t.id}>
-                          <span className="flex items-center gap-2">
-                            <span
-                              className="h-2 w-2 rounded-full"
-                              style={{ backgroundColor: t.color }}
-                            />
-                            {t.name}
-                          </span>
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Vazio = vale para qualquer tipo. Específico = só limita esse tipo (ex.: grupo = 4).
-                </p>
               </div>
 
               {conflicts.hasConflict && !editing && (

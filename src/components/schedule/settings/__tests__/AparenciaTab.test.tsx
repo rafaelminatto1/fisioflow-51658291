@@ -1,24 +1,25 @@
-import type { ReactNode } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { AparenciaTab } from "../tabs/AparenciaTab";
 import type { TabSaveHandle } from "../types";
 
-const setCardSize = vi.fn();
+const applyToAllViews = vi.fn();
+const resetAll = vi.fn();
 
 vi.mock("@/hooks/useAgendaAppearancePersistence", () => ({
   useAgendaAppearancePersistence: () => ({
     appearance: { cardSize: "medium", heightScale: 5 },
-    setCardSize,
-    setHeightScale: vi.fn(),
-    resetView: vi.fn(),
-    resetAll: vi.fn(),
+    applyToAllViews,
+    resetAll,
     isSyncing: false,
     lastSyncedAt: null,
   }),
 }));
 
-beforeEach(() => setCardSize.mockClear());
+beforeEach(() => {
+  applyToAllViews.mockClear();
+  resetAll.mockClear();
+});
 
 describe("AparenciaTab", () => {
   it("renderiza e registra handle não-dirty (auto-save)", () => {
@@ -29,9 +30,15 @@ describe("AparenciaTab", () => {
     expect(last?.isDirty).toBe(false);
   });
 
-  it("escolher densidade chama setCardSize", () => {
+  it("escolher densidade aplica a TODAS as visões (applyToAllViews)", () => {
     render(<AparenciaTab registerHandle={() => {}} />);
     fireEvent.click(screen.getByText("Compacto"));
-    expect(setCardSize).toHaveBeenCalledWith("small");
+    expect(applyToAllViews).toHaveBeenCalledWith({ cardSize: "small" });
+  });
+
+  it("Restaurar padrões chama resetAll", () => {
+    render(<AparenciaTab registerHandle={() => {}} />);
+    fireEvent.click(screen.getByText("Restaurar padrões"));
+    expect(resetAll).toHaveBeenCalledTimes(1);
   });
 });
