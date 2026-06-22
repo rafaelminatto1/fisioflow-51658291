@@ -90,6 +90,7 @@ type ImportPatientResult = {
   fullName: string;
   status: ImportResultStatus;
   patientId?: string;
+  legacyId?: string;
   appointmentsImported: number;
   sessionsImported: number;
   sessionsFailed: number;
@@ -328,7 +329,9 @@ async function preparePatientImport(
     if (parsedDate.warning) warnings.push(parsedDate.warning);
 
     const normalizedStatus = normalizeLegacySessionStatus(evolution.status);
-    if (normalizedStatus.warning) warnings.push(normalizedStatus.warning);
+    if (normalizedStatus.warning && !evolution.appointmentStatus) {
+      warnings.push(normalizedStatus.warning);
+    }
 
     const therapistId = await resolveTherapistId(
       db,
@@ -476,6 +479,7 @@ app.post("/legacy-data", requireAuth, async (c) => {
         index,
         fullName: normalizeImportedName(patient.fullName),
         status: wouldImport ? "wouldImport" : "wouldFail",
+        legacyId: patient.legacyId,
         appointmentsImported: wouldImport ? prepared.appointmentsToInsert.length : 0,
         sessionsImported: wouldImport
           ? prepared.appointmentsToInsert.filter((a) => a.sessionObservacao !== null).length
@@ -517,6 +521,7 @@ app.post("/legacy-data", requireAuth, async (c) => {
           index,
           fullName: normalizeImportedName(patient.fullName),
           status: "failed",
+          legacyId: patient.legacyId,
           appointmentsImported: 0,
           sessionsImported: 0,
           sessionsFailed: patient.evolutions.length,
@@ -575,6 +580,7 @@ app.post("/legacy-data", requireAuth, async (c) => {
           fullName: normalizeImportedName(patient.fullName),
           status: "imported",
           patientId: created.id,
+          legacyId: patient.legacyId,
           appointmentsImported: prepared.appointmentsToInsert.length,
           sessionsImported: sessionsLinked,
           sessionsFailed: 0,
@@ -586,6 +592,7 @@ app.post("/legacy-data", requireAuth, async (c) => {
           index,
           fullName: normalizeImportedName(patient.fullName),
           status: "failed",
+          legacyId: patient.legacyId,
           appointmentsImported: 0,
           sessionsImported: 0,
           sessionsFailed: patient.evolutions.length,

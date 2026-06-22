@@ -223,4 +223,88 @@ describe("POST /api/import/legacy-data", () => {
     expect(json.results[0].status).toBe("imported");
     expect(mockTransaction).toHaveBeenCalledTimes(2);
   });
+
+  it("vincula sessão ao appointmentId correto (evolução mista: com e sem observacao)", async () => {
+    const capturedSessionInserts: any[] = [];
+
+    function createTxCapturing() {
+      let apptCounter = 0;
+      return {
+        execute: mockExecute,
+        insert: (table: unknown) => ({
+          values: (value: any) => {
+            if (table === sessions) {
+              capturedSessionInserts.push(value);
+            }
+            return {
+              returning: async (..._args: unknown[]) => {
+                if (table === patients) {
+                  return [{ id: "patient-mixed-id", ...value }];
+                }
+                if (table === appointments) {
+                  apptCounter++;
+                  return [{ id: `appt-mixed-${apptCounter}`, ...value }];
+                }
+                if (table === sessions) {
+                  return [{ id: `session-mixed-1`, ...value }];
+                }
+                if (table === profiles) {
+                  return [{ id: PROFILE_ID }];
+                }
+                return [];
+              },
+            };
+          },
+        }),
+      };
+    }
+
+    mockTransaction.mockImplementation(async (callback: any) => callback(createTxCapturing()));
+
+    const app = await buildApp();
+    const res = await app.fetch(
+      req({
+        replaceExisting: true,
+        patients: [
+          {
+            fullName: "João Misto",
+            legacyId: "zen-42",
+            evolutions: [
+              {
+                date: "2024-08-30",
+                startTime: "15:00",
+                observacao: "texto clínico",
+                appointmentStatus: "atendido",
+                appointmentType: "session",
+              },
+              {
+                date: "2024-09-13",
+                appointmentStatus: "faltou",
+                appointmentType: "session",
+              },
+            ],
+          },
+        ],
+      }),
+      ENV as any,
+    );
+
+    const json = (await res.json()) as any;
+    expect(res.status).toBe(200);
+    expect(json.success).toBe(true);
+
+    // 2 appointments must have been imported (one per evolution)
+    expect(json.summary.importedAppointments).toBe(2);
+
+    // Only evolution A has observacao → only 1 session
+    expect(json.summary.importedSessions).toBe(1);
+
+    // legacyId surfaces in the result for traceability
+    expect(json.results[0].legacyId).toBe("zen-42");
+
+    // The session insert must carry a truthy appointmentId (linked to the first appointment)
+    expect(capturedSessionInserts).toHaveLength(1);
+    expect(capturedSessionInserts[0].appointmentId).toBeTruthy();
+    expect(capturedSessionInserts[0].appointmentId).toBe("appt-mixed-1");
+  });
 });
