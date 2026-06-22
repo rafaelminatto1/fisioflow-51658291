@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
-import { patients, profiles, sessions } from "@fisioflow/db";
+import { appointments, patients, profiles, sessions } from "@fisioflow/db";
 import { createDb } from "../lib/db";
 import { normalizeRole, requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
@@ -90,6 +90,7 @@ type ImportPatientResult = {
   fullName: string;
   status: ImportResultStatus;
   patientId?: string;
+  appointmentsImported: number;
   sessionsImported: number;
   sessionsFailed: number;
   errors: string[];
@@ -103,6 +104,7 @@ type ImportSummary = {
   totalSessions: number;
   importedSessions: number;
   failedSessions: number;
+  importedAppointments: number;
 };
 
 type PreparedSessionRow = {
@@ -114,6 +116,27 @@ type PreparedSessionRow = {
   therapistId: string;
   sessionNumber: number;
 };
+
+type PreparedAppointmentRow = {
+  date: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  type: string;
+  therapistId: string;
+  durationMinutes: number;
+  sessionObservacao: string | null;
+  painScale: number | null;
+  sessionNumber: number | null;
+};
+
+export function computeEndTime(startTime: string, durationMinutes: number): string {
+  const [h, m] = startTime.split(":").map(Number);
+  const total = (h * 60 + m + durationMinutes) % (24 * 60);
+  const hh = String(Math.floor(total / 60)).padStart(2, "0");
+  const mm = String(total % 60).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
 
 export function normalizeImportedName(value: string): string {
   return value.trim().replace(/\s+/g, " ");
@@ -285,6 +308,7 @@ async function preparePatientImport(
 ): Promise<{
   patientValues: Record<string, unknown>;
   sessionsToInsert: PreparedSessionRow[];
+  appointmentsToInsert: PreparedAppointmentRow[];
   warnings: string[];
   errors: string[];
 }> {
@@ -305,6 +329,7 @@ async function preparePatientImport(
   };
 
   const sessionsToInsert: PreparedSessionRow[] = [];
+  const appointmentsToInsert: PreparedAppointmentRow[] = [];
 
   for (const [index, evolution] of patient.evolutions.entries()) {
     const parsedDate = parseLegacySessionDate(evolution.date, importTimestamp);
@@ -334,6 +359,23 @@ async function preparePatientImport(
       continue;
     }
 
+    const startTime = evolution.startTime ?? "08:00";
+    const durationMinutes = evolution.durationMinutes ?? 60;
+    const apptDate = parsedDate.date!.toISOString().slice(0, 10);
+
+    appointmentsToInsert.push({
+      date: apptDate,
+      startTime,
+      endTime: computeEndTime(startTime, durationMinutes),
+      status: evolution.appointmentStatus ?? "atendido",
+      type: evolution.appointmentType ?? "session",
+      therapistId,
+      durationMinutes,
+      sessionObservacao: evolution.observacao?.trim() ?? null,
+      painScale: evolution.painScale ?? null,
+      sessionNumber: index + 1,
+    });
+
     sessionsToInsert.push({
       date: parsedDate.date!,
       observacao: (evolution.observacao ?? "").trim(),
@@ -345,7 +387,7 @@ async function preparePatientImport(
     });
   }
 
-  return { patientValues, sessionsToInsert, warnings, errors };
+  return { patientValues, sessionsToInsert, appointmentsToInsert, warnings, errors };
 }
 
 async function wipeOrganizationLegacyImportData(
@@ -409,6 +451,7 @@ function buildSummary(payload: LegacyImportPayload, results: ImportPatientResult
     totalSessions: payload.patients.reduce((acc, patient) => acc + patient.evolutions.length, 0),
     importedSessions: results.reduce((acc, result) => acc + result.sessionsImported, 0),
     failedSessions: results.reduce((acc, result) => acc + result.sessionsFailed, 0),
+    importedAppointments: results.reduce((acc, result) => acc + result.appointmentsImported, 0),
   };
 }
 
@@ -454,7 +497,10 @@ app.post("/legacy-data", requireAuth, async (c) => {
         index,
         fullName: normalizeImportedName(patient.fullName),
         status: wouldImport ? "wouldImport" : "wouldFail",
-        sessionsImported: wouldImport ? prepared.sessionsToInsert.length : 0,
+        appointmentsImported: wouldImport ? prepared.appointmentsToInsert.length : 0,
+        sessionsImported: wouldImport
+          ? prepared.appointmentsToInsert.filter((a) => a.sessionObservacao !== null).length
+          : 0,
         sessionsFailed: wouldImport ? 0 : patient.evolutions.length,
         errors: prepared.errors,
         warnings: prepared.warnings,
@@ -492,6 +538,7 @@ app.post("/legacy-data", requireAuth, async (c) => {
           index,
           fullName: normalizeImportedName(patient.fullName),
           status: "failed",
+          appointmentsImported: 0,
           sessionsImported: 0,
           sessionsFailed: patient.evolutions.length,
           errors: prepared.errors,
@@ -501,25 +548,45 @@ app.post("/legacy-data", requireAuth, async (c) => {
       }
 
       try {
+        let sessionsLinked = 0;
         const created = await db.transaction(async (tx) => {
           const [createdPatient] = await tx
             .insert(patients)
             .values(prepared.patientValues as any)
             .returning({ id: patients.id });
 
-          await tx.insert(sessions).values(
-            prepared.sessionsToInsert.map((sessionRow) => ({
-              patientId: createdPatient.id,
-              organizationId: user.organizationId,
-              therapistId: sessionRow.therapistId,
-              date: sessionRow.date,
-              observacao: sessionRow.observacao,
-              painScale: sessionRow.painScale,
-              duration: sessionRow.duration,
-              status: sessionRow.status,
-              sessionNumber: sessionRow.sessionNumber,
-            })) as any,
-          );
+          for (const appt of prepared.appointmentsToInsert) {
+            const [createdAppt] = await tx
+              .insert(appointments)
+              .values({
+                patientId: createdPatient.id,
+                organizationId: user.organizationId,
+                therapistId: appt.therapistId,
+                date: appt.date,
+                startTime: appt.startTime,
+                endTime: appt.endTime,
+                durationMinutes: appt.durationMinutes,
+                status: appt.status,
+                type: appt.type as any,
+              } as any)
+              .returning({ id: appointments.id });
+
+            if (appt.sessionObservacao) {
+              await tx.insert(sessions).values({
+                patientId: createdPatient.id,
+                organizationId: user.organizationId,
+                therapistId: appt.therapistId,
+                appointmentId: createdAppt.id,
+                date: new Date(`${appt.date}T${appt.startTime}:00`),
+                observacao: appt.sessionObservacao,
+                painScale: appt.painScale,
+                duration: appt.durationMinutes,
+                status: "finalized",
+                sessionNumber: appt.sessionNumber,
+              } as any);
+              sessionsLinked++;
+            }
+          }
 
           return createdPatient;
         });
@@ -529,7 +596,8 @@ app.post("/legacy-data", requireAuth, async (c) => {
           fullName: normalizeImportedName(patient.fullName),
           status: "imported",
           patientId: created.id,
-          sessionsImported: prepared.sessionsToInsert.length,
+          appointmentsImported: prepared.appointmentsToInsert.length,
+          sessionsImported: sessionsLinked,
           sessionsFailed: 0,
           errors: [],
           warnings: prepared.warnings,
@@ -539,6 +607,7 @@ app.post("/legacy-data", requireAuth, async (c) => {
           index,
           fullName: normalizeImportedName(patient.fullName),
           status: "failed",
+          appointmentsImported: 0,
           sessionsImported: 0,
           sessionsFailed: patient.evolutions.length,
           errors: [error?.message ?? "Falha ao importar paciente"],

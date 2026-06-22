@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { legacyImportSchema } from "../import";
-import { patients, profiles, sessions } from "@fisioflow/db";
+import { appointments, patients, profiles, sessions } from "@fisioflow/db";
 
 const ORG_ID = "11111111-1111-1111-1111-111111111111";
 const PROFILE_ID = "22222222-2222-2222-2222-222222222222";
@@ -68,6 +68,7 @@ function createSelectChain() {
 }
 
 function createTx() {
+  let apptCounter = 0;
   return {
     execute: mockExecute,
     insert: (table: unknown) => ({
@@ -75,6 +76,10 @@ function createTx() {
         returning: async (..._args: unknown[]) => {
           if (table === patients) {
             return [{ id: "patient-created-id", ...value }];
+          }
+          if (table === appointments) {
+            apptCounter++;
+            return [{ id: `appointment-${apptCounter}`, ...value }];
           }
           if (table === sessions) {
             return Array.isArray(value)
