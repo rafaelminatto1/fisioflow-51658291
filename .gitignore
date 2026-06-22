@@ -298,6 +298,7 @@ e2e/.auth/session.json
 scripts/zenfisio-scraper/data/
 Pacientes*.csv
 *.pii.csv
+scripts/zenfisio-scraper/payload.json
 
 # Scratch / prompts locais
 claudehermes.md
