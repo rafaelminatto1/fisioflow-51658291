@@ -256,7 +256,7 @@ async function processWhatsAppMessage(payload: WhatsAppQueuePayload, env: Env): 
   }
 
   const metaRes = await fetch(
-    `https://graph.facebook.com/v22.0/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+    `https://graph.facebook.com/v25.0/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
     {
       method: "POST",
       headers: {
