@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { CalendarOff, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ import { SectionCard } from "@/components/schedule/settings/shared/SectionCard";
 import { EmptyState } from "@/components/schedule/settings/shared/EmptyState";
 import { useScheduleSettings } from "@/hooks/useScheduleSettings";
 import { useTabDirtyState } from "../useTabDirtyState";
+import { useRegisterTabHandle } from "../useRegisterTabHandle";
 import { cn } from "@/lib/utils";
 import type { TabComponentProps } from "../types";
 
@@ -108,19 +109,16 @@ export function DisponibilidadeTab({ registerHandle }: TabComponentProps) {
     [form, createBlockedTime, reset],
   );
 
-  useEffect(() => {
-    registerHandle({
-      isDirty,
-      isSaving: isCreatingBlocked,
-      lastSavedAt,
-      save,
-      discard: () => {
-        reset(EMPTY_FORM);
-        setDialogOpen(false);
-      },
-    });
-    return () => registerHandle(null);
-  }, [isDirty, isCreatingBlocked, lastSavedAt, save, reset, registerHandle]);
+  useRegisterTabHandle(registerHandle, {
+    isDirty,
+    isSaving: isCreatingBlocked,
+    lastSavedAt,
+    save,
+    discard: () => {
+      reset(EMPTY_FORM);
+      setDialogOpen(false);
+    },
+  });
 
   return (
     <SectionCard

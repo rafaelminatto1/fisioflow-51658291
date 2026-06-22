@@ -28,6 +28,7 @@ import { useScheduleSettings, type BusinessHour } from "@/hooks/useScheduleSetti
 import { useScheduleCapacity, type CapacityGroup } from "@/hooks/useScheduleCapacity";
 import { useAppointmentTypes } from "@/hooks/useAppointmentTypes";
 import { useTabDirtyState } from "../useTabDirtyState";
+import { useRegisterTabHandle } from "../useRegisterTabHandle";
 import { cn } from "@/lib/utils";
 import type { TabComponentProps } from "../types";
 
@@ -213,10 +214,13 @@ export function FuncionamentoTab({ registerHandle }: TabComponentProps) {
     [draft, upsertBusinessHours, reset],
   );
 
-  useEffect(() => {
-    registerHandle({ isDirty, isSaving: isSavingHours, lastSavedAt, save, discard: () => reset() });
-    return () => registerHandle(null);
-  }, [isDirty, isSavingHours, lastSavedAt, save, reset, registerHandle]);
+  useRegisterTabHandle(registerHandle, {
+    isDirty,
+    isSaving: isSavingHours,
+    lastSavedAt,
+    save,
+    discard: () => reset(),
+  });
 
   const {
     capacityGroups,

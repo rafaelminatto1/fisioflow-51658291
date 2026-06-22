@@ -8,6 +8,7 @@ import { useScheduleSettings } from "@/hooks/useScheduleSettings";
 import { useBookingWindow, type BookingWindowData } from "@/hooks/useBookingWindow";
 import { useNoShowPolicy, type NoShowPolicy, type NoShowAction } from "@/hooks/useNoShowPolicy";
 import { useTabDirtyState } from "../useTabDirtyState";
+import { useRegisterTabHandle } from "../useRegisterTabHandle";
 import { cn } from "@/lib/utils";
 import type { TabComponentProps } from "../types";
 
@@ -175,10 +176,13 @@ export function PoliticasTab({ registerHandle }: TabComponentProps) {
     [value, upsertNotificationSettings, upsertCancellationRules, saveBookingMutate, saveNoShowMutate, reset],
   );
 
-  useEffect(() => {
-    registerHandle({ isDirty, isSaving, lastSavedAt, save, discard: () => reset() });
-    return () => registerHandle(null);
-  }, [isDirty, isSaving, lastSavedAt, save, reset, registerHandle]);
+  useRegisterTabHandle(registerHandle, {
+    isDirty,
+    isSaving,
+    lastSavedAt,
+    save,
+    discard: () => reset(),
+  });
 
   const updateNotif = <K extends keyof PolicyState["notif"]>(k: K, v: PolicyState["notif"][K]) => {
     setValue((p) => ({ ...p, notif: { ...p.notif, [k]: v } }));
