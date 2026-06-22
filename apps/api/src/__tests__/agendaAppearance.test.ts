@@ -260,6 +260,39 @@ describe("PUT /api/v1/user/agenda-appearance", () => {
     expect(mockQuery).not.toHaveBeenCalled();
   });
 
+  it("persiste o bloco display e devolve no GET", async () => {
+    const updatedAt = "2026-04-27T10:30:00.000Z";
+    mockQuery.mockResolvedValueOnce({
+      rows: [{ updated_at: updatedAt }],
+      rowCount: 1,
+      fields: [],
+      command: "INSERT",
+    });
+
+    const body = {
+      global: { cardSize: "medium" as const, heightScale: 5, fontScale: 5, opacity: 100 },
+      display: { showPhone: true, hideSunday: false },
+    };
+
+    const app = buildTestApp();
+    const put = await app.request("/api/v1/user/agenda-appearance", {
+      method: "PUT",
+      headers: {
+        Authorization: "Bearer fake-token",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    expect(put.status).toBe(200);
+
+    expect(mockQuery).toHaveBeenCalledOnce();
+    const [_sql, params] = mockQuery.mock.calls[0];
+    const persistedData = JSON.parse(params[2]);
+    expect(persistedData.display.showPhone).toBe(true);
+    expect(persistedData.display.hideSunday).toBe(false);
+  });
+
   it("uses profileId from user context as the DB key", async () => {
     const updatedAt = "2026-04-27T10:30:00.000Z";
     mockQuery.mockResolvedValueOnce({

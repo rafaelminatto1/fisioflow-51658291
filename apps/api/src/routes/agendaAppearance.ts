@@ -37,11 +37,23 @@ const AgendaViewAppearanceSchema = z.object({
 
 const PartialAgendaViewAppearanceSchema = AgendaViewAppearanceSchema.partial();
 
+const AgendaDisplaySchema = z
+  .object({
+    showDuration: z.boolean(),
+    showType: z.boolean(),
+    showPhone: z.boolean(),
+    nowIndicator: z.boolean(),
+    businessHours: z.boolean(),
+    hideSunday: z.boolean(),
+  })
+  .partial();
+
 export const AgendaAppearanceStateSchema = z.object({
   global: AgendaViewAppearanceSchema,
   day: PartialAgendaViewAppearanceSchema.optional(),
   week: PartialAgendaViewAppearanceSchema.optional(),
   month: PartialAgendaViewAppearanceSchema.optional(),
+  display: AgendaDisplaySchema.optional(),
 });
 
 export type AgendaAppearanceState = z.infer<typeof AgendaAppearanceStateSchema>;
@@ -101,6 +113,7 @@ function clampAppearanceState(state: AgendaAppearanceState): AgendaAppearanceSta
     day: state.day ? clampViewAppearance(state.day) : undefined,
     week: state.week ? clampViewAppearance(state.week) : undefined,
     month: state.month ? clampViewAppearance(state.month) : undefined,
+    display: state.display,
   };
 }
 
