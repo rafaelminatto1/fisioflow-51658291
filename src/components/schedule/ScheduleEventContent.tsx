@@ -47,7 +47,8 @@ export function ScheduleEventContent({
     text: "inherit",
   };
 
-  const typeLabel = isTask ? "Tarefa" : isGroup ? "Grupo" : "Consulta";
+  const startTime = timeText ? timeText.split(/[-–]/)[0].trim() : "";
+  const typeLabel = isTask ? "Tarefa" : isGroup ? "Grupo" : startTime || "Consulta";
   const metaLabel = isGroup ? `${typeLabel} · ${groupCount}` : typeLabel;
 
   return (
@@ -61,7 +62,7 @@ export function ScheduleEventContent({
         opacity: isSelected ? 0.9 : 1,
       }}
     >
-      {/* Linha 1: nome dominante + horário leve */}
+      {/* Linha 1: nome dominante */}
       <div className="flex items-start justify-between gap-1.5">
         <p
           className="fc-event-patient-name min-w-0 text-[12px] font-extrabold leading-tight text-slate-900 dark:text-white"
@@ -69,11 +70,6 @@ export function ScheduleEventContent({
         >
           {title}
         </p>
-        {!isAllDay && (
-          <span className="shrink-0 text-[10px] font-semibold tabular-nums opacity-60">
-            {timeText}
-          </span>
-        )}
       </div>
 
       {/* Linha 2: dot de status + tipo + alerta de dor */}

@@ -288,14 +288,42 @@
           return Object.values(failedAttempts).some(count => count >= MAX_ATTEMPTS);
         }
 
-        // Função para forçar reload com cache bypass
+        // Função para forçar reload com cache bypass limpando o Service Worker
         function forceReload() {
-          console.log('[Asset Recovery] Forçando reload devido a falha de asset');
+          console.log('[Asset Recovery] Iniciando recuperação de assets...');
           const currentCount = parseInt(sessionStorage.getItem(RECOVERY_KEY) || '0', 10);
           sessionStorage.setItem(RECOVERY_KEY, (currentCount + 1).toString());
           
           lastAttemptTime = Date.now();
-          window.location.reload(); // Deixa o SW lidar com a rede
+
+          // Promessa para limpar cache do Service Worker
+          const clearCaches = window.caches 
+            ? caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key))))
+            : Promise.resolve();
+
+          // Promessa para desregistrar Service Workers
+          const unregisterSW = navigator.serviceWorker 
+            ? navigator.serviceWorker.getRegistrations().then(registrations => 
+                Promise.all(registrations.map(reg => reg.unregister()))
+              )
+            : Promise.resolve();
+
+          // Executa ambas as limpezas e depois recarrega a página com query param cache-buster
+          Promise.all([clearCaches, unregisterSW])
+            .catch(err => console.error('[Asset Recovery] Erro na limpeza:', err))
+            .finally(() => {
+              const url = new URL(window.location.href);
+              url.searchParams.set('_cb', Date.now().toString());
+              console.log('[Asset Recovery] Redirecionando para:', url.toString());
+              window.location.href = url.toString();
+            });
+
+          // Fallback de segurança caso as promises fiquem presas
+          setTimeout(() => {
+            const url = new URL(window.location.href);
+            url.searchParams.set('_cb', Date.now().toString());
+            window.location.href = url.toString();
+          }, 800);
         }
 
         // Limpar contador se a página carregou com sucesso (após 5 segundos)

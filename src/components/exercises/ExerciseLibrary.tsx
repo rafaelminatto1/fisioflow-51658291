@@ -62,7 +62,7 @@ import { MergeExercisesModal } from "./MergeExercisesModal";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CreateTemplateFromSelectionModal } from "./CreateTemplateFromSelectionModal";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
-import { getBestImageUrl } from "@/lib/imageUtils";
+import { getBestImageUrl, getImageUrlCandidates } from "@/lib/imageUtils";
 
 import { useDebounce } from "@/hooks/performance/useDebounce";
 import { fisioLogger as logger } from "@/lib/errors/logger";
@@ -150,6 +150,7 @@ const ExerciseCard = React.memo(function ExerciseCard({
     : "";
   // Usar o melhor URL de imagem disponível (thumbnail > image > youtube thumbnail)
   const thumbSrc = getBestImageUrl(exercise);
+  const fallbackCandidates = getImageUrlCandidates(exercise);
 
   return (
     <Card
@@ -173,6 +174,7 @@ const ExerciseCard = React.memo(function ExerciseCard({
             fallback="/placeholder.svg"
             priority={imagePriority}
             style={{ objectFit: "contain" }}
+            fallbackSrcs={fallbackCandidates}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
@@ -411,6 +413,7 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
     : "";
   // Usar o melhor URL de imagem disponível (thumbnail > image > youtube thumbnail)
   const thumbSrc = getBestImageUrl(exercise);
+  const fallbackCandidates = getImageUrlCandidates(exercise);
 
   return (
     <Card
@@ -427,6 +430,7 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
               className="w-full h-full object-cover"
               aspectRatio="1:1"
               fallback="/placeholder.svg"
+              fallbackSrcs={fallbackCandidates}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
@@ -556,6 +560,7 @@ const ExerciseCompactCard = React.memo(function ExerciseCompactCard({
   isSelectionMode: boolean;
 }) {
   const thumbSrc = getBestImageUrl(exercise);
+  const fallbackCandidates = getImageUrlCandidates(exercise);
 
   return (
     <Card
@@ -583,6 +588,7 @@ const ExerciseCompactCard = React.memo(function ExerciseCompactCard({
             className="w-full h-full object-cover"
             aspectRatio="1:1"
             fallback="/placeholder.svg"
+            fallbackSrcs={fallbackCandidates}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">

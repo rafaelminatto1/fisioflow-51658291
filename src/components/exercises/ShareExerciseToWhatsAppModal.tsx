@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { usePatients } from "@/hooks/patients/usePatients";
 import type { Exercise } from "@/hooks/useExercises";
 import { useToast } from "@/hooks/use-toast";
-import { getBestImageUrl } from "@/lib/imageUtils";
+import { getBestImageUrl, getImageUrlCandidates } from "@/lib/imageUtils";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { resolveContact, findOrCreateConversation, sendMessage } from "@/services/whatsapp-api";
 
@@ -199,6 +199,7 @@ export function ShareExerciseToWhatsAppModal({
                           alt={exercise.name}
                           className="w-full h-full object-cover"
                           sizes="96px"
+                          fallbackSrcs={getImageUrlCandidates(exercise)}
                         />
                       </div>
                     )}

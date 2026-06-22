@@ -39,7 +39,7 @@ import { COMMON_PROCEDURES } from "../v2-improved/types";
 import { useExercises, type Exercise } from "@/hooks/useExercises";
 import { accentIncludes } from "@/lib/utils/bilingualSearch";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
-import { getBestImageUrl } from "@/lib/imageUtils";
+import { getBestImageUrl, getImageUrlCandidates } from "@/lib/imageUtils";
 import { ExerciseViewModal } from "../../exercises/ExerciseViewModal";
 
 // Category colors for visual distinction
@@ -1472,6 +1472,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                             alt={ex.name}
                             className="h-full w-full object-cover"
                             aspectRatio="1:1"
+                            fallbackSrcs={getImageUrlCandidates(ex)}
                           />
                         ) : (
                           <div className="h-full w-full flex items-center justify-center">

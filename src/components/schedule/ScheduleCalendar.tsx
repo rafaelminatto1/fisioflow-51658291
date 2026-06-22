@@ -154,6 +154,8 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
   // Set right before a programmatic gotoDate() so the datesSet echo it
   // triggers does not bounce back into onDateChange (loop prevention).
   const suppressDatesSetRef = useRef(false);
+  // Track the last seen active start date of the calendar to detect actual navigation.
+  const lastActiveStartRef = useRef<string | null>(null);
   const { statusConfig } = useStatusConfig();
   const { cssVariables, slotHeightPx, appearance } = useAgendaAppearancePersistence(viewType);
   const { businessHours: settingsHours, blockedTimes } = useScheduleSettings();
@@ -416,14 +418,25 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
 
   const handleDatesSet = (arg: DatesSetArg) => {
     if (!onDateChange) return;
+    const activeStart = arg.view.currentStart;
+    const activeEnd = arg.view.currentEnd;
+    if (!activeStart || !activeEnd) return;
+
+    const startYmd = formatLocalDate(activeStart);
+
+    // If the calendar's displayed period start date has not changed, this datesSet
+    // event was likely triggered by a re-render or option update, not navigation.
+    // Skip to prevent infinite loops of reverting programmatic date changes.
+    if (lastActiveStartRef.current === startYmd) {
+      return;
+    }
+    lastActiveStartRef.current = startYmd;
+
     // Swallow the datesSet echo triggered by our own programmatic gotoDate.
     if (suppressDatesSetRef.current) {
       suppressDatesSetRef.current = false;
       return;
     }
-    const activeStart = arg.view.currentStart;
-    const activeEnd = arg.view.currentEnd;
-    if (!activeStart || !activeEnd) return;
     // Compare on calendar-day (YMD) boundaries, never raw timestamps:
     // currentDate is LOCAL NOON while currentStart/currentEnd are LOCAL
     // MIDNIGHT, so a raw `>=`/`<` comparison is off by 12h and can misfire at

@@ -1,0 +1,978 @@
+ ▐▛███▜▌   Claude Code v2.1.185
+▝▜█████▛▘  Opus 4.8 · Claude Pro
+  ▘▘ ▝▝    ~/Documents/fisioflow/fisioflow-51658291
+
+
+❯ # Prompt para Claude Code - Implementação e Evolução do FisioFlow             
+                                                                                
+  Você é um Engenheiro de Software Sênior trabalhando no projeto **FisioFlow**  
+  (um sistema de gestão para clínicas de fisioterapia). Sua missão é            
+  implementar novas funcionalidades e melhorias na base de código atual,        
+  focando na importação de dados e na adição de features inspiradas nos         
+  melhores concorrentes do mercado.                                             
+                                                                                
+  ## Contexto do Projeto                                                        
+  - **Repositório:** Monorepo Turborepo (apps/api, apps/web, packages/db)       
+  - **Stack Backend:** Cloudflare Workers (Hono/Express-like), Drizzle ORM,     
+  NeonDB (PostgreSQL)                                                           
+  - **Stack Frontend:** React, TailwindCSS, Radix UI                            
+  - **Estado Atual:** O sistema possui módulos de Agenda, Pacientes, Evolução   
+  Clínica, etc. Estamos migrando de um sistema legado (ZenFisio) e precisamos   
+  criar a infraestrutura para receber os dados históricos e adicionar           
+  diferenciais competitivos.                                                    
+                                                                                
+  ## Tarefas de Implementação                                                   
+                                                                                
+  ### 1. API de Importação em Lote (Bulk Import)                                
+  O usuário fará a extração de dados do sistema legado via RPA. Precisamos de   
+  um endpoint otimizado para receber e salvar esses dados.                      
+  - **Arquivo Alvo:** `apps/api/src/routes/patients.ts` ou nova rota            
+  `import.ts`                                                                   
+  - **Ação:** Crie um endpoint `POST /api/import/legacy-data` que aceite um     
+  array de pacientes contendo o histórico de evoluções.                         
+  - **Requisitos:**                                                             
+    - Validação de schema (Zod) para o payload de importação.                   
+    - Inserção transacional usando Drizzle: Criar/Atualizar o paciente na       
+  tabela `patients` e, em seguida, inserir o array de evoluções na tabela       
+  `sessions`.                                                                   
+    - O campo `observacao` da tabela `sessions` deve receber o texto livre      
+  legado.                                                                       
+    - Retornar um relatório de sucesso/falha por registro.                      
+                                                                                
+  ### 2. Implementação de Insights Competitivos (Diferenciais)                  
+  Baseado na análise de mercado (iClinic, Hit Clinic, UseCore, Amplimed),       
+  implemente as seguintes melhorias na interface e banco de dados:              
+                                                                                
+  #### A. Prontuário com Resumo Inteligente (IA)                                
+  - **Ação:** Na tela de Evolução Clínica                                       
+  (`apps/web/src/pages/ClinicalEvolution.tsx` ou similar), adicione um botão    
+  "Gerar Resumo com IA".                                                        
+  - **Backend:** Crie um endpoint que receba as últimas N evoluções do paciente 
+  e retorne um resumo SOAP (Subjetivo, Objetivo, Avaliação, Plano) gerado por   
+  IA (você pode deixar o serviço de IA mockado ou usar a integração existente   
+  no projeto).                                                                  
+                                                                                
+  #### B. Documentos Inteligentes (Antes × Depois)                              
+  - **Ação:** Atualize o schema do banco (`packages/db/src/schema/clinical.ts`) 
+  para suportar a anexação de imagens comparativas nas avaliações.              
+  - **Frontend:** Crie um componente visual que permita ao fisioterapeuta fazer 
+  upload de duas fotos (Antes e Depois) e exibi-las lado a lado com um slider   
+  interativo.                                                                   
+                                                                                
+  #### C. Alerta Preditivo de Faltas                                            
+  - **Ação:** No endpoint que retorna os agendamentos do dia                    
+  (`apps/api/src/routes/appointments.ts`), adicione uma lógica (ou flag no      
+  schema) para calcular o "risco de falta" baseado no histórico do paciente     
+  (ex: se o paciente faltou nas últimas 2 sessões, `risk_of_no_show = true`).   
+  - **Frontend:** Na Agenda (`apps/web/src/pages/Agenda.tsx`), adicione um      
+  badge ou ícone de alerta vermelho nos cards de agendamento que possuem alto   
+  risco de falta.                                                               
+                                                                                
+  ## Regras de Código                                                           
+  - Use **TypeScript** estrito.                                                 
+  - Mantenha a arquitetura limpa e a separação de responsabilidades do          
+  Turborepo.                                                                    
+  - Para alterações no banco de dados, sempre crie e rode as migrations do      
+  Drizzle.                                                                      
+  - Siga os padrões de UI/UX existentes no projeto (Tailwind + componentes      
+  baseados em Radix).                                                           
+                                                                                
+  ## Como Começar                                                               
+  1. Analise o schema atual em `packages/db/src/schema/`.                       
+  2. Verifique os controllers/routes existentes em `apps/api/src/routes/`.      
+  3. Comece pela implementação da API de importação (Tarefa 1), pois ela        
+  bloqueia a migração de dados. Em seguida, avance para os diferenciais de      
+  UI/UX (Tarefa 2).                                                             
+   veja o quwe gflata fazer disso ou melhor                                     
+
+● Skill(superpowers:brainstorming)
+  ⎿  Successfully loaded skill
+
+● I'll explore the actual project structure to ground my assessment, since the
+  prompt makes assumptions about file paths that may not match this repo.
+
+  Listed 1 directory (ctrl+o to expand)
+
+● The prompt's paths are off. Let me check the real schema location and a few
+  key existing files.
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Key finding: much of what the prompt asks for already exists. Let me check the
+  existing import.ts, the scraper output, and the CSV to understand the real
+  state.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● The bulk import endpoint already exists, fully built. Let me check the status
+  of the other two tasks (before/after media, no-show risk) and whether the
+  migration data is ready.
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; echo "===
+      before/after slider component ===" && grep -rliE
+      "before.?after|antes.?depois|comparison.?slid…)
+  ⎿  === before/after slider component ===
+     src/components/ui/virtualized-list.tsx
+     src/components/evolution/SessionImageUpload.tsx
+     … +20 lines (ctrl+o to expand)
+
+● Investiguei o repositório real contra o que o prompt pede. Conclusão
+  importante: quase tudo que esse prompt manda construir já está construído. O
+  prompt foi gerado assumindo uma estrutura genérica de Turborepo que não bate
+  com a sua. Veja o cruzamento:
+
+  O que o prompt pede × o que já existe
+
+  Tarefa do prompt: 1. POST /api/import/legacy-data (Zod, transacional,
+  relatório
+     por registro)
+  Estado real no repo: ✅ Já existe — apps/api/src/routes/import.ts (548
+  linhas):
+    legacyImportSchema, insert transacional em patients+sessions, relatório
+    sucesso/falha por paciente, e  até modo dry-run. Falta só o frontend de
+    upload.
+  ────────────────────────────────────────
+  Tarefa do prompt: 2A. Resumo SOAP com IA
+  Estado real no repo: ✅ Já existe — ai-clinical.ts: summarizeClinicalNote() +
+    rotas /summarize-patient-soap. Falta confirmar o botão na tela.
+  ────────────────────────────────────────
+  Tarefa do prompt: 2B. Fotos Antes × Depois
+  Estado real no repo: ✅ Schema já existe — patientPhotos com
+    comparisonGroupTitle (packages/db/src/schema/patient-media.ts); UI em
+    BeforeAfterWizard.tsx, PatientMediaGallery.tsx,
+    src/pages/marketing/BeforeAfter.tsx. Falta confirmar o slider interativo
+  lado
+     a lado.
+  ────────────────────────────────────────
+  Tarefa do prompt: 2C. Alerta preditivo de faltas
+  Estado real no repo: ✅ Já existe — appointments.ts:148-192 calcula
+    risk_of_no_show (faltou nas 2 últimas sessões), e a coluna está em
+    appointments.ts schema. Falta o badge vermelho na  agenda.
+
+  Além disso: os caminhos do prompt estão errados
+  (packages/db/src/schema/clinical.ts, apps/web/src/pages/ClinicalEvolution.tsx,
+  Agenda.tsx não existem assim — a tela viva é src/pages/PatientEvolution.tsx e
+  a agenda é FullCalendar).
+
+  O que de fato está em aberto
+
+  O verdadeiro trabalho parado não é código de API — é a migração real. Tem
+  dados crus não commitados esperando:
+  - scripts/zenfisio-scraper/data/zenfisio-export-20260620-v2/ (output do RPA,
+  atualizado hoje 04:02)
+  - CSV Pacientes - Activity Fisioterapia (1.035 linhas) na raiz
+  - E nenhum frontend chama /import/legacy-data ainda (grep por legacy-data no
+  front = vazio)
+
+  Ou seja: o endpoint existe, mas ninguém rodou a importação de verdade nem
+  validou se o output do scraper bate com o legacyImportSchema.
+
+  ---
+  Antes de eu sair codando algo redundante, qual é o objetivo real?
+
+● User answered Claude's questions:
+  ⎿  · O backend dessas 3 tarefas já existe. Qual é a prioridade real agora? → 
+     Rodar a migração ZenFisio, Completar o frontend, Auditar/validar o que 
+     existe, Implementar features novas
+
+● Você marcou tudo — então vou sequenciar pela ordem que faz sentido (o próprio
+  prompt diz: começar pela importação, que destrava o resto). A ordem será: 1) 
+  migração ZenFisio (o bloqueador real) → 2) auditar o que já existe enquanto 
+  migro → 3) frontend dos 3 diferenciais → 4) brainstorm de features novas.
+
+  Mas antes de qualquer código, preciso ver se o output do scraper realmente
+  encaixa no legacyImportSchema. Esse é o risco número 1. Deixa eu inspecionar
+  os dois lados.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; echo "===
+      legacyImportSchema (linhas 31-60) ==="; sed -n '31,60p'
+      apps/api/src/routes/import.ts; echo; e…)
+  ⎿  === legacyImportSchema (linhas 31-60) ===
+     const legacyEvolutionSchema = z.object({
+       date: z.string().trim().optional(),
+     … +37 lines (ctrl+o to expand)
+
+● 980 arquivos de paciente. Vamos ver a estrutura real de um deles e o índice.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291/scripts/zenfisio-s
+      craper/data/zenfisio-export-20260620-v2; echo "=== estrutura de um
+      paciente (chaves top…)
+  ⎿  === estrutura de um paciente (chaves top-level) ===
+     arquivo: paciente_2658699_yasmin-barros.json
+     top keys: ['paciente_nome', 'paciente_id', 'slug', 'total_registros',
+     … +38 lines (ctrl+o to expand)
+
+● Agora o mapeamento ficou claro. O scraper tem as evoluções (historico[]) mas
+  falta demografia (telefone, email, nascimento, gênero) — que deve vir do CSV.
+  A migração real é um join dos dois. Deixa eu confirmar o CSV e a qualidade dos
+  dados do scraper.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; echo "=== CSV
+      header + 2 linhas ==="; head -3 "Pacientes - Activity Fisioterapia -
+      6a35aff1a2cd6.csv"; e…)
+  ⎿  === CSV header + 2 linhas ===
+     "Código";"Nome";"Data de cadastro";"Data de nascimento";"Sexo";"Docume
+     nto";"RG";"Estado civil";"CEP";"Estado";"Cidade";"Endereço";"Bairro";"
+     … +15 lines (ctrl+o to expand)
+
+● Encontrei os pontos críticos que exigem decisão sua antes de escrever qualquer
+  transform. A migração não é trivial:
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; python3 -c "
+      import csv…)  ⎿  CSV linhas: 1034
+     CSV nomes únicos: 1011 | duplicados: 23
+       Data de nascimento: 13/1034 preenchidos
+     … +4 lines (ctrl+o to expand)
+
+● Correção importante de uma suspeita minha: o join é limpo — paciente_id do
+  scraper bate com Código do CSV em 976/976. Mas o CSV é quase vazio em
+  demografia (nascimento 13/1034, celular 23/1034, email 1/1034). Ou seja, o
+  valor real está 100% nas evoluções do scraper; o CSV mal acrescenta dados.
+
+  Quadro real da migração
+
+  976 pacientes, 13.897 registros. O tipo no scraper não é "evolução" — é o
+  status do atendimento:
+
+  ┌──────────────────────────────┬────────┬─────────────────────────────────┐
+  │             tipo             │  qtde  │           observação            │
+  ├──────────────────────────────┼────────┼─────────────────────────────────┤
+  │ Evolução                     │ 11.044 │ tem texto clínico → vira        │
+  │                              │        │ session com observacao          │
+  ├──────────────────────────────┼────────┼─────────────────────────────────┤
+  │ Faltou                       │ 1.927  │ sem texto — mas é ouro para o   │
+  │                              │        │ "risco de falta"                │
+  ├──────────────────────────────┼────────┼─────────────────────────────────┤
+  │ Avaliação                    │ 522    │ avaliação inicial               │
+  ├──────────────────────────────┼────────┼─────────────────────────────────┤
+  │ Não atendido / Agendado /    │ ~400   │ ruído                           │
+  │ Cancelado / etc              │        │                                 │
+  └──────────────────────────────┴────────┴─────────────────────────────────┘
+
+  O conflito: legacyEvolutionSchema.observacao exige min(1) e o import trata
+  tudo como sessão atendida. Mas 2.889 registros têm conteudo_texto vazio (a
+  maioria são os Faltou/Cancelado). Se eu jogar os dados crus no endpoint atual,
+  esses 2.889 são rejeitados — e aí você perde justamente o histórico de faltas
+  que alimenta a Tarefa 2C (alerta preditivo).
+
+  Isso é a decisão que muda tudo:
+
+● User answered Claude's questions:
+  ⎿  · Como tratar os registros de status (Faltou/Cancelado/Avaliação) que não 
+     têm texto clínico? Isso define se preciso estender o import.ts. → Importar 
+     tudo c/ status
+     · O CSV de demografia está ~99% vazio (só nome+código úteis). Vale o 
+     esforço de cruzar? → Cruzar mesmo assim
+
+● API Error: 529 Overloaded. This is a server-side issue, usually 
+  temporary — try again in a moment. If it persists, check 
+  https://status.claude.com.
+
+✻ Sautéed for 7m 26s
+
+❯ continue                                                                      
+
+● API Error: 529 Overloaded. This is a server-side issue, usually 
+  temporary — try again in a moment. If it persists, check 
+  https://status.claude.com.
+
+✻ Worked for 3m 25s
+
+❯ continue                                                                      
+
+● Decisões registradas: (1) estender o import.ts para preservar status (faltas
+  inclusive), (2) cruzar o CSV mesmo assim. Antes de fechar o design preciso
+  checar duas coisas no código que afetam segurança e mapeamento.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; echo "===
+      normalizeLegacySessionStatus (mapa de status) ==="; sed -n '165,260p'
+      apps/api/src/routes/impo…)
+  ⎿  === normalizeLegacySessionStatus (mapa de status) ===
+     export function normalizeLegacySessionStatus(
+       value: string | undefined,
+     … +99 lines (ctrl+o to expand)
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; echo "===
+      sessionStatusEnum completo ==="; sed -n '35,45p'
+      packages/db/src/schema/sessions.ts; echo "===…)
+  ⎿  === sessionStatusEnum completo ===
+     export const sessionStatusEnum = pgEnum("session_status", [
+       "draft", // Auto-saved, not finalized
+     … +69 lines (ctrl+o to expand)
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; echo "===
+      appointment status enum ==="; sed -n
+      '/appointmentStatusEnum\|status.*Enum\|pgEnum/,/]/p' pack…)
+  ⎿  === appointment status enum ===
+       pgEnum,
+       numeric,
+     … +29 lines (ctrl+o to expand)
+
+● Investigação fechada. Encontrei a peça que muda a arquitetura da migração —
+  vou te mostrar antes de escrever o spec.
+
+  Descoberta crítica: faltas vão em appointments, não sessions
+
+  - sessionStatusEnum só tem draft / under_review / finalized / cancelled — não 
+  existe "faltou". Então importar faltas como sessions não serviria para nada.
+  - O appointmentStatusEnum tem exatamente os tipos do scraper: agendado, 
+  atendido, avaliacao, cancelado, faltou, faltou_com/sem_aviso, nao_atendido, 
+  presenca_confirmada, remarcar. Mapa quase 1:1 com o tipo.
+  - O alerta de falta (appointments.ts) lê o histórico de appointments — e hoje
+  o import.ts só insere patients + sessions, nunca appointments (e o
+  replaceExisting ainda apaga os appointments). Ou seja, do jeito atual a Tarefa
+  2C nasceria sem dados, não importa o que você escolha.
+
+  Conclusão de design: para "importar tudo c/ status" funcionar de verdade, cada
+  um dos 13.897 registros vira um appointment (status = tipo); e quando tem
+  texto clínico (Evolução/Avaliação), vira também uma session (finalized,
+  observacao = conteudo_texto) ligada a ele.
+
+  ---
+  Design da migração (Sub-projeto 1 — o bloqueador)
+
+  Decomposição geral (você marcou os 4): faço cada um como ciclo próprio. Ordem:
+  1) Migração (agora) → 2) Auditoria/testes (junto) → 3) Frontend dos
+  diferenciais → 4) Brainstorm de features novas (ciclo separado).
+
+  Fluxo da migração:
+  1. Script de transform scripts/zenfisio-scraper/build-import-payload.ts — lê
+  os 976 JSONs + CSV, junta por paciente_id=Código, mapeia tipo→status, emite um
+  JSON no formato legacyImportSchema. Sem rede; só transforma e valida.
+  2. Estender import.ts: (a) observacao vira opcional quando há status; (b)
+  inserir appointments por registro; (c) ligar a session ao appointment quando
+  há texto; (d) appointmentStatus no schema de evolução; (e) trazer demografia
+  do CSV (birthDate/gender/phone).
+  3. Testes do transform (mapa de status, datas dd/MM, dedupe) + do mapeamento
+  no import.
+  4. Dry-run (dryRun:true) → relatório → só então import real.
+
+  Risco de segurança que preciso confirmar com você: o endpoint usa
+  replaceExisting: literal(true) que dá DELETE FROM em patients, sessions, 
+  appointments, medical_records, gamification… da organização inteira. Isso é
+  irreversível em produção.
+
+● User answered Claude's questions:
+  ⎿  · O import roda com replaceExisting que APAGA todos os dados da org 
+     (patients/sessions/appointments/prontuários). Onde validar primeiro? → 
+     Direto no prod
+
+● Decisões completas. Vou registrar o spec. Como estou na main, crio o branch de
+  feature antes de commitar o design.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; git checkout -b
+      feat/zenfisio-migration-import 2>&1 | tail -1; mkdir -p
+      docs/superpowers/specs; echo "br…)
+  ⎿  Switched to a new branch 'feat/zenfisio-migration-import'
+     branch criado, dir ok
+
+● Write(docs/superpowers/specs/2026-06-21-zenfisio-migration-import-design.md)
+  ⎿  Wrote 91 lines to
+     docs/superpowers/specs/2026-06-21-zenfisio-migration-import-design.md
+       2 # Design — Migração ZenFisio (Sub-projeto 1)
+       3 Data: 2026-06-21
+       4 Branch: `feat/zenfisio-migration-import`
+       5 
+       6 ## Contexto
+       8 O prompt original pedia para *construir* a API de import em lote
+          e 3 diferenciais
+       9 (resumo IA, antes×depois, alerta de falta). Auditoria do repo mo
+         strou que o backend
+      10 desses itens **já existe**:
+     … +121 lines (ctrl+o to expand)
+
+● Spec self-review: sem placeholders, escopo focado só na migração, mapeamento
+  consistente. Um detalhe que o plano de implementação vai resolver (não o
+  design): appointmentType (evaluation/session) derivado do tipo, e horário
+  vindo do data_completa. Commito e te passo para revisão.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; git add
+      docs/superpowers/specs/2026-06-21-zenfisio-migration-import-design.md &&
+      git commit -q -m "docs:…)
+  ⎿  $ oxlint --max-warnings=200
+     scripts/zenfisio-scraper/auto_extract.js:34:18: warning eslint(no-unus
+     ed-vars): Function 'fetchEventDetail' is declared but never used. help
+     … +22 lines (ctrl+o to expand)
+
+● O spec está escrito e commitado em
+  docs/superpowers/specs/2026-06-21-zenfisio-migration-import-design.md (o
+  pre-commit hook só emitiu warnings de lint pré-existentes em outros arquivos —
+  o commit passou).
+
+  Resumo do que ficou decidido:
+  - Backend das 3 tarefas do prompt já existe — o trabalho real é rodar a
+  migração.
+  - Cada um dos 13.897 registros → um appointment (status = mapa do tipo); com
+  texto clínico → também uma session ligada. Isso é o que faz o alerta de falta
+  funcionar com dados reais.
+  - Transform local → dry-run → import direto em prod.
+  - Frontend dos diferenciais e features novas = ciclos seguintes.
+
+  Por favor revise o spec e me diga se quer ajustar algo (mapeamento de status,
+  escopo, ordem) antes de eu escrever o plano de implementação detalhado. Se
+  estiver bom, eu sigo para o writing-plans.
+
+✻ Churned for 2m 21s
+
+❯ ok                                                                            
+
+● Skill(superpowers:writing-plans)  ⎿  Successfully loaded skill
+
+● I'm using the writing-plans skill to create the implementation plan.
+
+  Let me check a couple of exact details I need for accurate code in the plan —
+  the sessions table columns and how the import currently builds session rows.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; echo "===
+      PreparedSessionRow + session insert (260-330) ==="; sed -n '260,330p'
+      apps/api/src/routes/impo…)
+  ⎿  === PreparedSessionRow + session insert (260-330) ===
+       importTimestamp: Date,
+       cache: Map<string, string | null>,
+     … +69 lines (ctrl+o to expand)
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; echo "=== session
+      insert mapping (480-525) ==="; sed -n '480,525p'
+      apps/api/src/routes/import.ts; echo "…)
+  ⎿  === session insert mapping (480-525) ===
+           try {
+             const created = await db.transaction(async (tx) => {
+     … +99 lines (ctrl+o to expand)
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; echo "===
+      sessions columns (appointmentId? sessionNumber? date type?) ==="; grep -nE
+      "appointmentId|appo…)
+  ⎿  === sessions columns (appointmentId? sessionNumber? date type?) ===
+     6: * - Estruturados ao lado: pain_scale (EVA 0-10), procedures, exerci
+     ses,
+     … +17 lines (ctrl+o to expand)
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; echo "=== tsx
+      anywhere? ==="; ls node_modules/.bin/tsx 2>/dev/null && echo "tsx OK" ||
+      echo "no tsx"; ls…)
+  ⎿  === tsx anywhere? ===
+     node_modules/.bin/tsx
+     tsx OK
+     … +16 lines (ctrl+o to expand)
+
+● I have all the details I need: sessions.appointmentId exists (FK), tsx and
+  vitest are available, appointment columns confirmed (therapistId notNull,
+  date/startTime/endTime/status/type). Writing the plan now.
+
+● Write(docs/superpowers/plans/2026-06-21-zenfisio-migration-import.md)
+  ⎿  Wrote 668 lines to
+     docs/superpowers/plans/2026-06-21-zenfisio-migration-import.md
+      2 # ZenFisio Migration Import — Implementation Plan
+        bagent-driven-development (recommended) or superpowers:executing-
+        plans to implement this plan task-by-task. Steps use checkbox (`-
+      4  [ ]`) syntax for tracking.
+      5 **Goal:** Importar 976 pacientes / 13.897 registros do export Zen
+        ndo faltas) como `appointments` e o texto clínico como `sessions`
+      6 .
+      7 **Architecture:** Um script de transform puro converte os JSONs d
+         endpoint `POST /import/legacy-data` é estendido para inserir `ap
+        pointments` (status = 
+     … +823 lines (ctrl+o to expand)
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; git add
+      docs/superpowers/plans/2026-06-21-zenfisio-migration-import.md && git
+      commit -q -m "docs: plano…)
+  ⎿  scripts/zenfisio-scraper/auto_extract.js:34:18: warning eslint(no-unus
+     ed-vars): Function 'fetchEventDetail' is declared but never used. help
+     : Consider removing this declaration.
+     ok
+
+● Plano completo e salvo em
+  docs/superpowers/plans/2026-06-21-zenfisio-migration-import.md (commitado; os
+  warnings de lint são pré-existentes em arquivos do scraper, não bloqueiam).
+
+  6 tarefas, TDD em cada uma:
+  1. Funções puras de transform (status/tipo/data) + testes
+  2. Builders de paciente + parser do CSV de demografia + testes
+  3. CLI build-import-payload.ts (scraper+CSV → payload.json)
+  4. Estender schema do endpoint (observacao opcional + appointmentStatus/type)
+  + testes
+  5. Inserir appointments por registro + ligar sessions via appointmentId +
+  testes
+  6. Dry-run → import real em produção → verificar risco de falta
+
+  As Tasks 1-5 são código testável e seguro; a Task 6 é a operação destrutiva em
+  prod (com gate de dry-run obrigatório).
+
+  Duas opções de execução:
+
+  1. Subagent-Driven (recomendado) — eu disparo um subagente novo por tarefa,
+  reviso entre cada uma, iteração rápida e isolada.
+
+  2. Inline Execution — executo as tarefas nesta sessão, em lote com checkpoints
+  de revisão.
+
+  Qual você prefere?
+
+✻ Churned for 3m 4s
+
+❯ 1                                                                             
+
+● Skill(superpowers:subagent-driven-development)
+  ⎿  Successfully loaded skill
+
+● I'm using Subagent-Driven Development to execute the plan. Already on branch
+  feat/zenfisio-migration-import (isolated). Let me check for a progress ledger
+  and locate the skill's helper scripts.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; cat "$(git
+      rev-parse --show-toplevel)/.superpowers/sdd/progress.md" 2>/dev/null ||
+      echo "NO LEDGER — fre…)
+  ⎿  NO LEDGER — fresh start
+     ---
+     review-package
+     … +4 lines (ctrl+o to expand)
+
+● Fresh start, scan of the plan is clean. Let me initialize the ledger and
+  generate the Task 1 brief.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291;
+      SK=/home/rafael/.claude/plugins/cache/claude-plugins-official/superpowers/
+      6.0.3/skills/subagent-driven-d…)
+  ⎿  ledger created
+     === task-brief Task 1 ===
+     wrote /home/rafael/Documents/fisioflow/fisioflow-51658291/.superpowers
+     /sdd/task-1-brief.md: 128 lines
+
+● Let me read the implementer prompt template, then dispatch Task 1 (mechanical
+  transcription — cheap model).
+
+  Read 1 file (ctrl+o to expand)
+
+● Dispatching Task 1 implementer (mechanical transcription, full code in brief →
+  cheap model).
+
+● Agent(Implement Task 1: transform pure fns) Haiku 4.5
+  ⎿  Done (18 tool uses · 40.4k tokens · 1m 53s)
+  (ctrl+o to expand)
+● Task 1 done. Generating review package and dispatching the task reviewer.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291;
+      SK=/home/rafael/.claude/plugins/cache/claude-plugins-official/superpowers/
+      6.0.3/skills/subagent-driven-d…)
+  ⎿  wrote /home/rafael/Documents/fisioflow/fisioflow-51658291/.superpowers
+     /sdd/review-74aae9b87..7d2d9193e.diff: 1 commit(s), 4850 bytes
+
+  Read 1 file (ctrl+o to expand)
+
+● Agent(Review Task 1 (spec + quality)) Sonnet 4.6
+  ⎿  Done (3 tool uses · 35.6k tokens · 41s)
+  (ctrl+o to expand)
+
+● Task 1 approved with two Important correctness findings (regex end-anchor,
+  invalid calendar dates like 30/02). Both align with the spec's stated intent
+  ("invalid inputs return null"), so I'll fix them now rather than carry them.
+  Minor findings (union type, split test) go to the ledger for final review.
+  Dispatching a fix subagent.
+
+● Agent(Fix Task 1 date validation) Haiku 4.5
+  ⎿  Done (21 tool uses · 45.3k tokens · 2m 6s)
+  (ctrl+o to expand)
+
+● Fix verified (16/16 passing, tests assert the corrected behavior). Marking
+  Task 1 complete and recording the Minor findings for the final review.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; LED="$(git
+      rev-parse --show-toplevel)/.superpowers/sdd/progress.md"; cat >> "$LED"
+      <<'EOF'
+      Task 1: compl…)
+  ⎿  === Task 2 brief ===
+     wrote /home/rafael/Documents/fisioflow/fisioflow-51658291/.superpowers
+     /sdd/task-2-brief.md: 162 lines
+     … +2 lines (ctrl+o to expand)
+
+● Task 2 builds on Task 1's functions (transcription with full code in brief →
+  cheap model). Dispatching.
+
+● Agent(Implement Task 2: patient builders + CSV) Haiku 4.5
+  ⎿  Done (22 tool uses · 47.2k tokens · 2m 31s)
+  (ctrl+o to expand)
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291;
+      SK=/home/rafael/.claude/plugins/cache/claude-plugins-official/superpowers/
+      6.0.3/skills/subagent-driven-d…)
+  ⎿  wrote /home/rafael/Documents/fisioflow/fisioflow-51658291/.superpowers
+     /sdd/review-eac2e5c1f..3c7bfdbd5.diff: 2 commit(s), 101503 bytes
+
+● 2 commits and 101KB is larger than expected for Task 2 — let me verify nothing
+  stray got committed.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; echo "=== commits
+      eac2e5c1f..HEAD ==="; git log --oneline eac2e5c1f..HEAD; echo "=== stat
+      ==="; git diff…)
+  ⎿  === commits eac2e5c1f..HEAD ===
+     3c7bfdbd5 feat(import): builders de paciente legado + parser CSV demog
+     rafia
+     … +15 lines (ctrl+o to expand)
+
+● The Task 2 implementer swept in an extra commit (feb5a1685) bundling the
+  previously-untracked scraper Python scripts, a .gitignore, and a
+  lib/vitest.config.ts — beyond the brief's "stage only transform.ts/test.ts".
+  Critical check: did any patient PII get committed?
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; echo "=== any
+      data/PII or CSV committed in range? ==="; git diff --name-only
+      eac2e5c1f..HEAD | grep -iE…)
+  ⎿  === any data/PII or CSV committed in range? ===
+     NONE — no PII committed (good)
+     === .gitignore additions ===
+     … +26 lines (ctrl+o to expand)
+
+● No PII committed — and the extra commit actually adds valuable LGPD
+  protection: scripts/zenfisio-scraper/data/ and Pacientes*.csv are now
+  gitignored (confirmed). The scope deviation is net-positive (RPA tooling
+  tracked + PII protected), so I'll accept it and note it. Now reviewing the
+  actual Task 2 logic.
+
+● Agent(Review Task 2 (spec + quality)) Sonnet 4.6
+  ⎿  Done (4 tool uses · 56.1k tokens · 40s)
+  (ctrl+o to expand)
+
+● Task 2 approved (Minor findings only — recorded for final review). Moving to
+  Task 3 (the CLI script that runs against the real 976 files).
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; LED="$(git
+      rev-parse --show-toplevel)/.superpowers/sdd/progress.md"; cat >> "$LED"
+      <<'EOF'
+      Task 2: compl…)
+  ⎿  === Task 3 brief ===
+     wrote /home/rafael/Documents/fisioflow/fisioflow-51658291/.superpowers
+     /sdd/task-3-brief.md: 65 lines
+
+● Agent(Implement Task 3: build-import-payload CLI) Haiku 4.5
+  ⎿  Done (14 tool uses · 36.0k tokens · 1m 20s)
+  (ctrl+o to expand)
+
+● Real counts match the analysis exactly (976 / 13,897 / 1,927 faltas) — the
+  whole transform pipeline is validated against real data. Let me verify no
+  duplicate gitignore line and review.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; echo "===
+      payload.json occurrences in .gitignore ==="; grep -c "payload.json"
+      .gitignore; echo "=== rang…)  ⎿  === payload.json occurrences in .gitignore ===
+     1
+     === range 3c7bfdbd5..HEAD ===
+     … +8 lines (ctrl+o to expand)
+
+● Clean: single commit, no duplicate gitignore line, only the script + one
+  gitignore line. Dispatching the Task 3 reviewer.
+
+● Agent(Review Task 3 (spec + quality)) Sonnet 4.6
+  ⎿  Done (3 tool uses · 33.4k tokens · 34s)
+  (ctrl+o to expand)
+
+● Task 3 approved (Minors only — recorded). Now Task 4 modifies the existing API
+  route (import.ts) with Zod schema changes — more integration-sensitive, so
+  standard model for the implementer.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; LED="$(git
+      rev-parse --show-toplevel)/.superpowers/sdd/progress.md"; cat >> "$LED"
+      <<'EOF'
+      Task 3: compl…)
+  ⎿  === Task 4 brief ===
+     wrote /home/rafael/Documents/fisioflow/fisioflow-51658291/.superpowers
+     /sdd/task-4-brief.md: 96 lines
+     … +2 lines (ctrl+o to expand)
+
+● Agent(Implement Task 4: extend import schema) Sonnet 4.6
+  ⎿  Done (18 tool uses · 41.5k tokens · 2m 24s)
+  (ctrl+o to expand)
+
+● Task 4 done (10/10 tests, type-check clean; legacyPatientSchema already had
+  the demographic fields). The implementer correctly flagged the interim
+  empty-observacao state that Task 5 will replace. Reviewing.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; git log --oneline
+      3b7e8bf05..HEAD;
+      SK=/home/rafael/.claude/plugins/cache/claude-plugins-official/superpo…)
+  ⎿  08d1b8edd feat(import): observacao opcional + appointmentStatus/type n
+     o schema legado
+     wrote /home/rafael/Documents/fisioflow/fisioflow-51658291/.superpowers
+     /sdd/review-3b7e8bf05..08d1b8edd.diff: 1 commit(s), 6469 bytes
+
+● Agent(Review Task 4 (spec + quality)) Sonnet 4.6
+  ⎿  Done (3 tool uses · 35.0k tokens · 36s)
+  (ctrl+o to expand)
+
+● Task 4 approved (cosmetic Minors only). Now Task 5 — the core change:
+  inserting appointments per record and linking sessions. Most integration-heavy
+  task; standard model with the detailed brief.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; LED="$(git
+      rev-parse --show-toplevel)/.superpowers/sdd/progress.md"; cat >> "$LED"
+      <<'EOF'
+      Task 4: compl…)
+  ⎿  === Task 5 brief ===
+     wrote /home/rafael/Documents/fisioflow/fisioflow-51658291/.superpowers
+     /sdd/task-5-brief.md: 136 lines
+     … +2 lines (ctrl+o to expand)
+
+● Agent(Implement Task 5: appointments + linked sessions) Sonnet 4.6
+  ⎿  Done (29 tool uses · 59.0k tokens · 3m 9s)
+  (ctrl+o to expand)
+
+● Task 5 done — 387 tests pass, type-check clean. This is the highest-risk task
+  (production data mutation), so I'll review it with the most capable model.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; git log --oneline
+      08d1b8edd..HEAD;
+      SK=/home/rafael/.claude/plugins/cache/claude-plugins-official/superpo…)
+  ⎿  26367f7a8 feat(import): inserir appointments por registro + sessions l
+     igadas via appointmentId
+     wrote /home/rafael/Documents/fisioflow/fisioflow-51658291/.superpowers
+     /sdd/review-08d1b8edd..26367f7a8.diff: 1 commit(s), 14999 bytes
+
+● Agent(Review Task 5 (spec + quality))
+  ⎿  Done (7 tool uses · 56.7k tokens · 51s)
+  (ctrl+o to expand)
+
+● Opus approved Task 5 with two Minor findings. Given this entire feature's
+  history is about date off-by-one bugs, the implicit-local-TZ session date
+  (missing Z) is exactly the class of bug worth eliminating now — plus removing
+  the vestigial sessionsToInsert dead code. Dispatching one fix subagent for
+  both.
+
+● Agent(Fix Task 5 minors: UTC date + dead code) Sonnet 4.6
+  ⎿  Done (14 tool uses · 43.0k tokens · 1m 35s)
+  (ctrl+o to expand)
+
+● Both fixes verified (387 tests, type-check clean). All 5 code tasks complete.
+  Task 6 is the destructive production import — that requires a JWT and your
+  explicit go-ahead, so I'll stop short of it. First, the final whole-branch
+  review.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; LED="$(git
+      rev-parse --show-toplevel)/.superpowers/sdd/progress.md"; cat >> "$LED"
+      <<'EOF'
+      Task 5: compl…)
+  ⎿  merge-base: 212e87f2f7702b859f37eaa1abed78ef52c91286
+     === branch commits ===
+     wrote /home/rafael/Documents/fisioflow/fisioflow-51658291/.superpowers
+     /sdd/review-212e87f2f..212e87f2f.diff: 0 commit(s), 104 bytes
+
+● merge-base returned HEAD itself, which is odd — let me check where main
+  actually points.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; echo "main:"; git
+      rev-parse --short main; echo "HEAD:"; git rev-parse --short HEAD; echo
+      "=== all commit…)  ⎿  main:
+     212e87f2f
+     HEAD:
+     … +21 lines (ctrl+o to expand)
+
+● main has advanced to equal HEAD — my feature work may have landed on main
+  instead of staying isolated, and there's an unexpected commit 8ef3c30dc 
+  feat(clinical) (the pre-existing clinical file edits). Let me diagnose what
+  happened.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; echo "=== current
+      branch ==="; git branch --show-current; echo "=== branches pointing at
+      HEAD ==="; git…)
+  ⎿  === current branch ===
+     main
+     === branches pointing at HEAD ===
+     … +28 lines (ctrl+o to expand)
+
+● This needs to stop and surface to you — the git state diverged from what we
+  intended. Let me confirm the production-safety facts before explaining.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; echo "=== local
+      main vs origin/main ==="; git rev-parse --short main origin/main
+      2>/dev/null; echo "===…)
+  ⎿  === local main vs origin/main ===
+     === ahead/behind ===
+     0  5
+     … +21 lines (ctrl+o to expand)
+
+● This is important and I'm stopping to surface it rather than touch anything.
+  Something automated (the reflog shows a checkout to main + cherry-pick + a
+  push I never instructed) has been manipulating git during the session. Let me
+  confirm whether there's an auto-commit/push hook and whether any PII reached
+  the remote.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; echo "=== git
+      hooks present ==="; ls -1 .git/hooks/ | grep -v sample; echo "=== .claude
+      settings hooks (…)
+  ⎿  === git hooks present ===
+     pre-commit
+     === .claude settings hooks (auto-commit/push?) ===
+     … +10 lines (ctrl+o to expand)
+
+● I'm stopping here to surface a git situation that needs your call — I won't
+  rewrite history, reset, or push anything without your say-so. Here's exactly
+  what I found:
+
+  Situação do git (fatos verificados)
+
+  O código está completo e verde — as 5 tarefas de implementação passaram (387
+  testes, type-check 0 erros, revisão multi-agente incluindo Opus na tarefa
+  crítica). O problema é topológico, não de código:
+
+  1. Estou no branch main, não no feat/zenfisio-migration-import que criei. Em
+  algum momento, algo automatizado (o reflog mostra um checkout para main + um
+  cherry-pick que eu não instruí) trocou o branch. Não há hook de auto-push
+  visível no .claude/settings nem no husky — só um pre-commit de lint. Suspeito
+  de um hook global de Stop ou processo concorrente.
+  2. Todo o meu trabalho de import foi parar na main local (8 commits), junto
+  com 2 commits que não são meus: 8ef3c30dc (suas edições pendentes em
+  ClinicalTestsGrid/Modal, que estavam como M no início) e um cherry-pick
+  919c4e2fb (fix da agenda).
+  3. origin/main foi empurrado até feb5a1685 (Tarefas 1-2 + os scripts do
+  scraper + as edições clínicas). Como push na main faz deploy automático em 
+  produção, isso provavelmente deployou: os arquivos .py do scraper (inertes) +
+  as edições de UI clínica. O import.ts ainda NÃO tinha mudado nesse ponto —
+  então a lógica perigosa de import não foi deployada.
+  4. ✅ Nenhum PII foi para o remoto — confirmei: origin/main não tem data/, nem
+  o CSV, nem payload.json, nem arquivos paciente_*. O .gitignore funcionou.
+  5. As 5 tarefas com a lógica de verdade (insert de appointments, schema) são 
+  locais, NÃO foram pushadas.
+  6. O ref feat/zenfisio-migration-import foi contaminado — aponta para o
+  cherry-pick da agenda, não para meu trabalho.
+
+  Resumindo: código bom, mas (a) caiu na main em vez do branch isolado, (b)
+  metade já foi pra produção por um push que não fiz, (c) 2 commits alheios se
+  misturaram. Como prosseguir é decisão sua:
+
+● User answered Claude's questions:
+  ⎿  · Meu trabalho de import caiu na main local (parte já em origin/main e 
+     deployada). Como reorganizar o git? Não vou tocar em nada até você decidir.
+     → Manter na main, finalizar
+
+● Keeping it on main and finalizing. Running the final whole-branch review now
+  (most capable model). The session delta on main also includes the 2 foreign
+  commits, so I'll scope the reviewer to the import feature files.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291;
+      SK=/home/rafael/.claude/plugins/cache/claude-plugins-official/superpowers/
+      6.0.3/skills/subagent-driven-d…)
+  ⎿  === import-feature files changed since pre-session c361e9a57 ===
+      apps/api/src/routes/__tests__/import.test.ts       |  33 +-
+      .../api/src/routes/__tests__/importPrepare.test.ts |  10 +
+     … +16 lines (ctrl+o to expand)
+
+  Read 1 file (ctrl+o to expand)
+
+● Agent(Final whole-branch review)
+  ⎿  Done (14 tool uses · 107.4k tokens · 1m 32s)
+  (ctrl+o to expand)
+
+● Strong final review — verdict "With fixes." Three Important issues, all valid.
+  Before dispatching fixes, let me check whether the patients schema even has a
+  column to persist legacyId (Issue 1), since that determines whether it's a
+  code fix or needs a migration.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; echo "===
+      patients legacy/firestore columns ==="; grep -nE
+      "firestore|legacy|legacyId|legacy_id|cpf|emai…)
+  ⎿  === patients legacy/firestore columns ===
+     55:    cpf: varchar("cpf", { length: 14 }).unique(), // With mask: 000
+     .000.000-00
+     … +14 lines (ctrl+o to expand)
+
+● No legacy_id column exists on patients (only cpf, email, legacyDateOfBirth),
+  so full traceability would need a migration. Given you want to finalize, I'll
+  take the reviewer's lighter alternative: carry the legacyId → patientId
+  mapping in the import response (audit trail without a schema change).
+  Dispatching one fix subagent for Issues 1, 3, and 4. Issue 2 (the non-atomic 
+  wipe + Worker-timeout risk on 13,897 inserts) I'm NOT auto-fixing — it's the 
+  prod-run decision I'll hand to you.
+
+● Agent(Fix final-review issues 1,3,4) Sonnet 4.6
+  ⎿  Done (19 tool uses · 49.7k tokens · 2m 37s)
+  (ctrl+o to expand)
+
+● All three fixes landed (388 tests, type-check clean; the new test asserts the
+  exact appointment/session linkage). Let me independently verify the suite is
+  green before I claim completion, and update the ledger.
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291/apps/api; echo
+      "=== import tests ==="; pnpm vitest run
+      src/routes/__tests__/import.test.ts src/routes/__t…)
+  ⎿  === import tests ===
+
+      RUN  v4.1.8 /home/rafael/Documents/fisioflow/fisioflow-51658291/apps/
+     … +8 lines (ctrl+o to expand)
+
+● Bash(cd /home/rafael/Documents/fisioflow/fisioflow-51658291; LED="$(git
+      rev-parse --show-toplevel)/.superpowers/sdd/progress.md"; cat >> "$LED"
+      <<'EOF'…)
+  ⎿  ledger updated
+     === local commits NOT yet on origin/main ===
+     730907c92 fix(import): traceability legacyId no relatório, suprime war
+     … +11 lines (ctrl+o to expand)
+
+● The migration import feature is complete, reviewed, and verified. Here's where
+  things stand.
+
+  ✅ Entregue (código pronto, testado, revisado)
+
+  6 commits locais na main (ainda não pushados), todos com TDD e revisão
+  multi-agente (Opus na tarefa crítica + revisão final):
+
+  ┌─────┬────────────────────────────────────────┬──────────────────────────┐
+  │  #  │                 O quê                  │       Verificação        │
+  ├─────┼────────────────────────────────────────┼──────────────────────────┤
+  │ 1-2 │ Funções puras de transform             │ 19 testes, datas         │
+  │     │ (status/tipo/data dd-MM, join CSV)     │ inválidas rejeitadas     │
+  ├─────┼────────────────────────────────────────┼──────────────────────────┤
+  │     │                                        │ validado em dados reais: │
+  │ 3   │ CLI build-import-payload.ts            │  976 pacientes, 13.897   │
+  │     │                                        │ atendimentos, 1.927      │
+  │     │                                        │ faltas                   │
+  ├─────┼────────────────────────────────────────┼──────────────────────────┤
+  │ 4   │ Schema do endpoint: observacao         │ 388 testes verdes        │
+  │     │ opcional + appointmentStatus/type      │                          │
+  ├─────┼────────────────────────────────────────┼──────────────────────────┤
+  │     │ Core: cada registro → appointment      │                          │
+  │ 5   │ (status legado) + session ligada via   │ type-check 0 erros       │
+  │     │ appointmentId quando há texto          │                          │
+  ├─────┼────────────────────────────────────────┼──────────────────────────┤
+  │     │ Data UTC explícita, dead code          │                          │
+  │ fix │ removido, traceability legacyId no     │ suíte completa verde     │
+  │     │ relatório, teste de linkagem           │                          │
+  │     │ appt/session                           │                          │
+  └─────┴────────────────────────────────────────┴──────────────────────────┘
+
+  A descoberta-chave que salvou a Tarefa 2C: faltas vão em appointments, não 
+  sessions (o enum de session nem tem "faltou", e o preditor de falta lê
+  appointments) — agora as 1.927 faltas alimentam o alerta de risco de verdade.
+
+  ⚠️ Duas decisões suas antes de produção
+
+  1. Risco operacional do import real (Issue #2 da revisão final — NÃO corrigi 
+  sozinho):
+  - O wipe destrutivo e os inserts não são atômicos, e são 13.897 inserts 
+  sequenciais num Worker. Há risco real de estourar o limite de CPU/wall-clock 
+  do Cloudflare Worker no meio, deixando a org apagada e parcialmente populada, 
+  sem rollback.
+  - Recomendação forte: tirar um snapshot Neon (PITR/branch) antes do run real,
+  e considerar rodar em lotes. Você escolheu "direto em prod" — o snapshot é a
+  única rede de segurança.
+
+  2. Git: os 6 commits estão na main local. Push na main = deploy automático em 
+  produção. O endpoint deployado é inerte até ser chamado, então deployar o
+  código é seguro; rodar o import (Task 6) é o passo destrutivo.
+
+  O que falta (Task 6, não executei — precisa de você)
+
+  Gerar o payload.json → dry-run com seu JWT → revisar relatório → (snapshot) →
+  import real.
+
+  Quer que eu: (a) prepare o runbook do Task 6 (comandos curl prontos + como
+  pegar o JWT), (b) investigue o push/cherry-pick automático que mexeu no git,
+  ou (c) pare aqui? Não vou pushar nem rodar o import sem seu OK.
+
+  Vou registrar isso na memória do projeto, já que é trabalho relevante com
+  gotchas:
+  Recalled 1 memory, wrote 1 memory (ctrl+o to expand)
+  ⎿  You've hit your monthly spend limit.
+     /usage-credits to adjust your monthly spend limit.
+
+✻ Crunched for 34m 45s

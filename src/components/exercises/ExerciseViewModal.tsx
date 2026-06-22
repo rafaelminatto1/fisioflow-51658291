@@ -32,7 +32,7 @@ import { cn } from "@/lib/utils";
 import { useExerciseFavorites } from "@/hooks/useExerciseFavorites";
 import { useToast } from "@/hooks/use-toast";
 import type { Exercise } from "@/hooks/useExercises";
-import { getBestImageUrl } from "@/lib/imageUtils";
+import { getBestImageUrl, getImageUrlCandidates } from "@/lib/imageUtils";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { ShareExerciseToWhatsAppModal } from "./ShareExerciseToWhatsAppModal";
 import "@/styles/print.css";
@@ -304,6 +304,7 @@ export function ExerciseViewModal({
                           priority={true}
                           sizes="(max-width: 768px) 100vw, (max-width: 1280px) 64vw, 68vw"
                           style={{ objectFit: "contain" }}
+                          fallbackSrcs={getImageUrlCandidates(exercise)}
                         />
                       </div>
                     ) : (
