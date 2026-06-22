@@ -29,6 +29,8 @@ vi.mock("../../lib/db", () => ({
   createDb: vi.fn(() => ({
     select: mockSelect,
     transaction: mockTransaction,
+    insert: createTx().insert,
+    execute: mockExecute,
   })),
 }));
 
@@ -169,7 +171,7 @@ describe("POST /api/import/legacy-data", () => {
     expect(res.status).toBe(403);
   });
 
-  it("retorna 400 para payload sem replaceExisting true", async () => {
+  it("permite append sem limpar a organização quando replaceExisting=false", async () => {
     const app = await buildApp();
     const res = await app.fetch(
       req({
@@ -179,7 +181,12 @@ describe("POST /api/import/legacy-data", () => {
       ENV as any,
     );
 
-    expect(res.status).toBe(400);
+    const json = (await res.json()) as any;
+    expect(res.status).toBe(200);
+    expect(json.success).toBe(true);
+    expect(json.replaceExisting).toBe(false);
+    expect(json.summary.importedPatients).toBe(1);
+    expect(mockTransaction).toHaveBeenCalledTimes(1);
   });
 
   it("faz dryRun sem gravar no banco", async () => {
@@ -222,6 +229,34 @@ describe("POST /api/import/legacy-data", () => {
     expect(json.summary.importedSessions).toBe(1);
     expect(json.results[0].status).toBe("imported");
     expect(mockTransaction).toHaveBeenCalledTimes(2);
+  });
+
+  it("faz fallback quando o driver não suporta transaction()", async () => {
+    mockTransaction
+      .mockRejectedValueOnce(new Error("No transactions support in neon-http driver"))
+      .mockRejectedValueOnce(new Error("No transactions support in neon-http driver"));
+
+    const app = await buildApp();
+    const res = await app.fetch(
+      req({
+        replaceExisting: true,
+        patients: [
+          {
+            fullName: "Maria Fallback",
+            evolutions: [{ observacao: "Paciente evoluindo bem", appointmentStatus: "atendido" }],
+          },
+        ],
+      }),
+      ENV as any,
+    );
+
+    const json = (await res.json()) as any;
+    expect(res.status).toBe(200);
+    expect(json.success).toBe(true);
+    expect(json.summary.importedPatients).toBe(1);
+    expect(json.summary.importedAppointments).toBe(1);
+    expect(json.summary.importedSessions).toBe(1);
+    expect(json.results[0].status).toBe("imported");
   });
 
   it("vincula sessão ao appointmentId correto (evolução mista: com e sem observacao)", async () => {
