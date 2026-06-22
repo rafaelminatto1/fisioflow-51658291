@@ -21,11 +21,6 @@ interface PatientClinicalHistoryTabProps {
   patientId: string;
 }
 
-const evaluationDateFormatter = new Intl.DateTimeFormat("pt-BR", {
-  dateStyle: "short",
-  timeStyle: "short",
-});
-
 const statusConfig = {
   scheduled: {
     label: "Agendada",
@@ -55,7 +50,7 @@ const statusConfig = {
 
 function formatEvaluationDate(value?: string | null) {
   if (!value) return "Data não definida";
-  return formatAnyDate(value, evaluationDateFormatter.resolvedOptions().dateStyle === "short" ? "dd/MM/yyyy HH:mm" : "dd/MM/yyyy HH:mm", "Data inválida");
+  return formatAnyDate(value, "dd/MM/yyyy HH:mm", "Data inválida");
 }
 
 export function PatientClinicalHistoryTab({ patientId }: PatientClinicalHistoryTabProps) {

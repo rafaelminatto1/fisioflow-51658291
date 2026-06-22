@@ -296,11 +296,15 @@ async function main() {
             if (rows.length > 0) {
               const sessionValues = [];
               const placeholders = [];
+              const COLS = 10;
               rows.forEach((row, i) => {
-                const base = i * 8;
+                const base = i * COLS;
                 placeholders.push(
-                  `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8})`,
+                  `(${Array.from({ length: COLS }, (_, k) => `$${base + k + 1}`).join(', ')})`,
                 );
+                // created_at/updated_at follow the historical session date so that
+                // clinical views keyed off created_at (e.g. SessionHistoryPanel)
+                // show when the session actually happened, not the import time.
                 sessionValues.push(
                   patientId,
                   therapistId,
@@ -310,6 +314,8 @@ async function main() {
                   row.painScale,
                   row.sessionNumber,
                   'finalized',
+                  row.date,
+                  row.date,
                 );
               });
 
@@ -323,7 +329,9 @@ async function main() {
                     observacao,
                     pain_scale,
                     session_number,
-                    status
+                    status,
+                    created_at,
+                    updated_at
                   ) VALUES ${placeholders.join(', ')}
                 `,
                 sessionValues,

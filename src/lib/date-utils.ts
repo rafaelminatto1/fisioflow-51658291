@@ -166,13 +166,26 @@ export function parseAnyDate(value: string | Date | number | null | undefined): 
   const raw = String(value).trim();
   if (!raw) return new Date(NaN);
 
+  // Calendar-only dates must be built in local time, never via `new Date(raw)`
+  // which treats them as UTC midnight and shifts back a day in BRT (UTC-3).
+  // Covers bare "YYYY-MM-DD" and the exact-UTC-midnight serialization that a
+  // Postgres DATE column produces from a UTC Worker (e.g. "2026-05-10T00:00:00.000Z").
+  const calendarMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:T00:00:00(?:\.000)?Z)?$/);
+  if (calendarMatch) {
+    return parseLocalDate(`${calendarMatch[1]}-${calendarMatch[2]}-${calendarMatch[3]}`);
+  }
+
+  // Explicit ISO/BR parsers must run before the loose `new Date(raw)` fallback:
+  // `new Date("10/05/2026")` is read as US MM/dd/yyyy (Oct 5), so the dd/MM/yyyy
+  // parser has to win first. date-fns returns Invalid for non-matching patterns,
+  // so each candidate only succeeds when it genuinely matches.
   const candidates = [
-    new Date(raw),
     parseISO(raw),
     parse(raw, "yyyy-MM-dd HH:mm:ss", new Date()),
     parse(raw, "yyyy-MM-dd HH:mm", new Date()),
     parse(raw, "dd/MM/yyyy HH:mm", new Date()),
     parse(raw, "dd/MM/yyyy", new Date()),
+    new Date(raw),
   ];
 
   const parsed = candidates.find((d) => isValid(d));
