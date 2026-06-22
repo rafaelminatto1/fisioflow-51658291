@@ -126,3 +126,5 @@ export function slotHeightPxFromScale(scale: number): number {
     return Math.round(12 + ((scale - 5) / 5) * 16);
   }
 }
+
+export type UseAgendaAppearanceResult = ReturnType<typeof useAgendaAppearance>;

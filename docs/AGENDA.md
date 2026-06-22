@@ -8,7 +8,9 @@
 > **Se o sintoma for "salvei e o card voltou ao lugar/status antigo" → vá direto
 > para a §4.1 (cache do Hyperdrive). Não mude código antes disso.**
 
-Última atualização: 16/jun/2026.
+Última atualização: 22/jun/2026.
+
+> **Configurações da Agenda (`/agenda/settings`)?** → vá para a **§8**.
 
 ---
 
@@ -207,3 +209,62 @@ reload) logo após desativar o cache do Hyperdrive.
 - `docs/operations/RUNBOOK_INCIDENTS.md` — Cenário 3b (agenda reverte alterações).
 - `docs/PERF_PLAN_2026.md` — T11 (não usar cache do Hyperdrive como alavanca de perf).
 - Memória do projeto: `project_infra_config.md` e `project_agenda_fullcalendar_jun2026.md`.
+
+---
+
+## 8. Configurações da Agenda (`/agenda/settings`)
+
+Página separada da agenda viva. Redesenhada em jun/2026 (PRs #211/#212): **8 abas → 5**
++ faixa de visão geral, com salvamento unificado. Spec/plano em
+`docs/superpowers/specs/2026-06-22-agenda-settings-redesign-design.md` e
+`docs/superpowers/plans/2026-06-22-agenda-settings-redesign.md`.
+
+### 8.1. Estrutura e arquivos
+| Item | Arquivo | Papel |
+|---|---|---|
+| Página (rota `/agenda/settings`) | `src/pages/ScheduleSettings.tsx` | Shell: faixa de visão geral + nav de 5 abas + SaveBar + guarda de navegação. |
+| Navegação + redirects | `src/components/schedule/settings/SettingsNav.tsx`, `tabRedirects.ts` | 5 abas; `resolveTab()` redireciona URLs legadas (`?tab=horarios/status/visual/...`). |
+| Faixa de visão geral | `src/components/schedule/settings/OverviewStrip.tsx` | Cards de contagem (dias abertos, regras, tipos, bloqueios). |
+| Contrato de save | `types.ts` (`TabSaveHandle`), `useTabDirtyState.ts`, `useRegisterTabHandle.ts`, `SettingsSaveBar.tsx` | Cada aba expõe `{isDirty,isSaving,lastSavedAt,save,discard}`; SaveBar sticky única por aba. |
+| Abas | `settings/tabs/{Funcionamento,Atendimentos,Disponibilidade,Politicas,Aparencia}Tab.tsx` | Funcionamento=horários+capacidade; Atendimentos=tipos+status; Disponibilidade=bloqueios; Políticas=cancelamento+no-show+notificações+janela; Aparência=densidade (client-side). |
+| Hooks de dados | `useScheduleSettings`, `useScheduleCapacity`, `useStatusConfig`, `useAppointmentTypes`, `useAgendaAppearancePersistence` | Reaproveitados; não reescrever assinatura. |
+| Backend | `apps/api/src/routes/scheduling-settings.ts` (montado em `/api/scheduling`) | Upserts `business-hours`, `cancellation-rules`, `notification-settings`, `capacity-config`, `statuses`, `booking-window`, `slot-config`, `no-show-policy`. |
+
+### 8.2. Padrão de salvamento (não regredir)
+- Uma SaveBar por aba, controlada por `useRegisterTabHandle` + `useTabDirtyState`.
+- O handle deve ser registrado com deps **só de primitivos** (`isDirty/isSaving/lastSavedAt`);
+  `save`/`discard` vão por `ref`. Registrar `save` (instável) direto num `useEffect`
+  causa **loop infinito de render** ("Maximum update depth exceeded") — testes unitários
+  com `registerHandle` mockado NÃO pegam isso; só valida rodando o app logado.
+- `discard` = `reset()` sem argumento → **restaura o baseline** (não mantém o draft).
+
+### 8.3. Aparência: configuração por-visão (Semana/Dia/Mês)
+`useAgendaAppearance` guarda estado **por-visão** (`global` + overrides `day/week/month`);
+só **month** tem preset default (`extra_small`). `effectiveForView` resolve a aparência de
+cada visão na ordem `DEFAULT_GLOBAL → global → preset-da-visão → override-do-usuário`.
+
+A `AparenciaTab` tem um **seletor de visão** (Semana/Dia/Mês, default **Semana** — a mais
+usada). Cada visão é editada de forma **independente** via setters por-visão
+(`setCardSize`/`setHeightScale` ligados à visão ativa por `useAgendaAppearancePersistence(view)`).
+O `ScheduleCalendar` consome `useAgendaAppearancePersistence(viewType)`, então **cada visão da
+agenda reflete só a sua própria config** — validado em produção (override `day:{cardSize}`
+muda o Dia sem afetar Semana/Mês). Botão **"Aplicar a todas"** copia a config atual para as 3
+visões (`applyToAllViews`, escreve `global` + limpa overrides); link **"Herdar global"**
+(`resetView`) remove o override da visão. Sync ao vivo entre a aba e o calendário via
+`StorageEvent` que o `save` do hook-base dispara e o hook escuta.
+
+> ⚠️ **Não-óbvio:** `ViewControls`/`ViewTabButton` recebem `key={activeView}` e cada um chama
+> `useAgendaAppearancePersistence(view)` com uma view **fixa** — não condicionar a chamada do
+> hook, senão a contagem de hooks muda ao trocar de visão.
+
+### 8.4. "Não salva" → constraint UNIQUE obrigatória
+Upsert com `INSERT ... ON CONFLICT (organization_id)` **exige** uma constraint UNIQUE na
+coluna do conflito; sem ela o Postgres lança erro e a rota devolve **500 silencioso**
+(toda gravação falha). Foi a causa raiz do bug "não salva" em `cancellation_rules` e
+`scheduling_notification_settings` (migration 0121 nunca aplicada → corrigido pela **0125**).
+Ao criar novo upsert de settings, garanta a constraint UNIQUE correspondente.
+
+### 8.5. Capacidade é "todos os tipos" (backend)
+`getIntervalCapacity` (`appointmentHelpers.ts`) faz `MIN(max_patients)` sobre todas as
+regras que se sobrepõem, **ignorando `appointment_type_id`**. Por isso a UI de capacidade
+não oferece filtro por tipo — não reintroduzir sem antes enforçar por tipo no backend.
