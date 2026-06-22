@@ -293,3 +293,11 @@ playwright_output.txt
 up-leg-certificate.pfx
 *.pem
 e2e/.auth/session.json
+
+# Dados de pacientes (PII/PHI — LGPD): nunca versionar
+scripts/zenfisio-scraper/data/
+Pacientes*.csv
+*.pii.csv
+
+# Scratch / prompts locais
+claudehermes.md

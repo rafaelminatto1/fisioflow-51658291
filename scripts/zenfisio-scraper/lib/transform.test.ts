@@ -3,6 +3,8 @@ import {
   mapTipoToAppointmentStatus,
   mapTipoToAppointmentType,
   parseZenfisioDateTime,
+  parseCsvDemographics,
+  buildLegacyPatient,
 } from "./transform";
 
 describe("mapTipoToAppointmentStatus", () => {
