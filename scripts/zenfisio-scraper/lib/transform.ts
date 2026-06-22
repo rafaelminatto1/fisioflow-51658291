@@ -51,3 +51,80 @@ export function parseZenfisioDateTime(
     startTime: hh && min ? `${hh}:${min}` : null,
   };
 }
+
+export type ScraperRecord = {
+  data?: string;
+  data_completa?: string;
+  tipo: string;
+  conteudo_texto?: string;
+  appointment_id?: string;
+};
+export type ScraperPatient = { paciente_nome: string; paciente_id: string; historico: ScraperRecord[] };
+
+export type LegacyEvolutionPayload = {
+  date: string;
+  startTime?: string;
+  observacao?: string;
+  appointmentStatus: string;
+  appointmentType: "evaluation" | "session";
+};
+export type LegacyPatientPayload = {
+  fullName: string;
+  legacyId: string;
+  birthDate?: string;
+  gender?: string;
+  phone?: string;
+  evolutions: LegacyEvolutionPayload[];
+};
+
+function splitCsvLine(line: string): string[] {
+  return line.split(";").map((cell) => cell.replace(/^"|"$/g, "").trim());
+}
+
+export function parseCsvDemographics(csvText: string): Map<string, { birthDate?: string; gender?: string; phone?: string }> {
+  const lines = csvText.replace(/^﻿/, "").split(/\r?\n/).filter((l) => l.trim());
+  const header = splitCsvLine(lines[0]);
+  const idx = (name: string) => header.indexOf(name);
+  const iCode = idx("Código"), iBirth = idx("Data de nascimento"), iSexo = idx("Sexo"), iCel = idx("Celular");
+  const map = new Map<string, { birthDate?: string; gender?: string; phone?: string }>();
+  for (const line of lines.slice(1)) {
+    const cells = splitCsvLine(line);
+    const code = cells[iCode];
+    if (!code) continue;
+    map.set(code, {
+      birthDate: cells[iBirth] || undefined,
+      gender: cells[iSexo] || undefined,
+      phone: cells[iCel] || undefined,
+    });
+  }
+  return map;
+}
+
+export function buildLegacyPatient(
+  p: ScraperPatient,
+  demo?: { birthDate?: string; gender?: string; phone?: string },
+): LegacyPatientPayload | null {
+  const evolutions: LegacyEvolutionPayload[] = [];
+  for (const rec of p.historico ?? []) {
+    const dt = parseZenfisioDateTime(rec.data_completa, rec.data);
+    if (!dt) continue;
+    const { status, createsSession } = mapTipoToAppointmentStatus(rec.tipo);
+    const text = (rec.conteudo_texto ?? "").trim();
+    evolutions.push({
+      date: dt.date,
+      startTime: dt.startTime ?? undefined,
+      observacao: createsSession && text ? text : undefined,
+      appointmentStatus: status,
+      appointmentType: mapTipoToAppointmentType(rec.tipo),
+    });
+  }
+  if (evolutions.length === 0) return null;
+  return {
+    fullName: p.paciente_nome.trim(),
+    legacyId: p.paciente_id,
+    birthDate: demo?.birthDate,
+    gender: demo?.gender,
+    phone: demo?.phone,
+    evolutions,
+  };
+}

@@ -64,3 +64,41 @@ describe("parseZenfisioDateTime", () => {
     expect(parseZenfisioDateTime("29/02/2024", undefined)).toEqual({ date: "2024-02-29", startTime: null });
   });
 });
+
+describe("parseCsvDemographics", () => {
+  const csv = `﻿"Código";"Nome";"Data de nascimento";"Sexo";"Celular"
+"2658699";"Yasmin Barros";"15/05/1990";"Feminino";"11999998888"
+"2658706";"Andre Luiz";"";"";""`;
+  it("indexa por Código e extrai campos preenchidos", () => {
+    const demo = parseCsvDemographics(csv);
+    expect(demo.get("2658699")).toEqual({ birthDate: "15/05/1990", gender: "Feminino", phone: "11999998888" });
+    expect(demo.get("2658706")).toEqual({ birthDate: undefined, gender: undefined, phone: undefined });
+  });
+});
+
+describe("buildLegacyPatient", () => {
+  const patient = {
+    paciente_nome: "Yasmin Barros",
+    paciente_id: "2658699",
+    historico: [
+      { data_completa: "30/08/2024 15:00", tipo: "Evolução", conteudo_texto: "texto clínico" },
+      { data_completa: "13/09/2024 14:00", tipo: "Faltou", conteudo_texto: "" },
+    ],
+  };
+  it("monta paciente com 2 evoluções (1 com sessão, 1 falta sem texto)", () => {
+    const result = buildLegacyPatient(patient, { birthDate: "15/05/1990", gender: "Feminino", phone: "11999998888" })!;
+    expect(result.fullName).toBe("Yasmin Barros");
+    expect(result.legacyId).toBe("2658699");
+    expect(result.birthDate).toBe("15/05/1990");
+    expect(result.evolutions).toHaveLength(2);
+    expect(result.evolutions[0]).toMatchObject({
+      date: "2024-08-30", startTime: "15:00", observacao: "texto clínico",
+      appointmentStatus: "atendido", appointmentType: "session",
+    });
+    expect(result.evolutions[1]).toMatchObject({ appointmentStatus: "faltou", appointmentType: "session" });
+    expect(result.evolutions[1].observacao).toBeUndefined();
+  });
+  it("retorna null quando nenhuma data é parseável", () => {
+    expect(buildLegacyPatient({ paciente_nome: "X", paciente_id: "1", historico: [{ tipo: "Faltou" }] })).toBeNull();
+  });
+});
