@@ -178,7 +178,7 @@ export async function executeAction(
       const phoneId = env.WHATSAPP_PHONE_NUMBER_ID;
       const token = env.WHATSAPP_ACCESS_TOKEN;
       if (phoneId && token) {
-        await fetch(`https://graph.facebook.com/v22.0/${phoneId}/messages`, {
+        await fetch(`https://graph.facebook.com/v25.0/${phoneId}/messages`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -217,7 +217,7 @@ export async function executeAction(
       const phoneId = env.WHATSAPP_PHONE_NUMBER_ID;
       const token = env.WHATSAPP_ACCESS_TOKEN;
       if (phoneId && token) {
-        await fetch(`https://graph.facebook.com/v22.0/${phoneId}/messages`, {
+        await fetch(`https://graph.facebook.com/v25.0/${phoneId}/messages`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,

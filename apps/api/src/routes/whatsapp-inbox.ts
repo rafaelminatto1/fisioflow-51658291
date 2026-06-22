@@ -823,7 +823,7 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
           `[WhatsApp] Sending message to ${to.replace(/\D/g, "")} via PhoneID ${phoneId}`,
         );
 
-        const metaRes = await fetch(`https://graph.facebook.com/v22.0/${phoneId}/messages`, {
+        const metaRes = await fetch(`https://graph.facebook.com/v25.0/${phoneId}/messages`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1818,7 +1818,7 @@ app.post("/broadcast", requireAuth, async (c) => {
 
         if (contact.bsuid) (metaPayload as any).recipient = contact.bsuid;
 
-        const metaRes = await fetch(`https://graph.facebook.com/v22.0/${phoneId}/messages`, {
+        const metaRes = await fetch(`https://graph.facebook.com/v25.0/${phoneId}/messages`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

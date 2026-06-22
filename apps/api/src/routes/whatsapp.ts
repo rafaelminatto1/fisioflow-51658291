@@ -560,7 +560,7 @@ app.post("/send-template", requireAuth, async (c) => {
 
   if (phoneId && token) {
     try {
-      const metaRes = await fetch(`https://graph.facebook.com/v22.0/${phoneId}/messages`, {
+      const metaRes = await fetch(`https://graph.facebook.com/v25.0/${phoneId}/messages`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -910,7 +910,7 @@ app.post("/templates", requireAuth, async (c) => {
 
     const targetId = wabaId || phoneId;
 
-    const metaRes = await fetch(`https://graph.facebook.com/v22.0/${targetId}/message_templates`, {
+    const metaRes = await fetch(`https://graph.facebook.com/v25.0/${targetId}/message_templates`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -963,7 +963,7 @@ app.post("/templates/sync", requireAuth, async (c) => {
     const wabaId = settings.whatsapp_business_account_id as string | undefined;
     const targetId = wabaId || phoneId;
 
-    const metaRes = await fetch(`https://graph.facebook.com/v22.0/${targetId}/message_templates`, {
+    const metaRes = await fetch(`https://graph.facebook.com/v25.0/${targetId}/message_templates`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
