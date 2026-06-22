@@ -238,13 +238,24 @@ Página separada da agenda viva. Redesenhada em jun/2026 (PRs #211/#212): **8 ab
   com `registerHandle` mockado NÃO pegam isso; só valida rodando o app logado.
 - `discard` = `reset()` sem argumento → **restaura o baseline** (não mantém o draft).
 
-### 8.3. Aparência aplica a TODAS as visões (gotcha)
+### 8.3. Aparência: configuração por-visão (Semana/Dia/Mês)
 `useAgendaAppearance` guarda estado **por-visão** (`global` + overrides `day/week/month`);
-só **month** tem preset (`extra_small`). A `AparenciaTab` usa **`applyToAllViews`** (escreve
-`global` + limpa overrides), igual ao legado `useCardSize` — assim a densidade/altura vale
-para Dia/Semana/Mês. **NÃO** voltar a usar setters por-visão: a mudança não refletiria em
-visões diferentes da editada. Sync ao vivo entre a aba e o calendário já funciona via
+só **month** tem preset default (`extra_small`). `effectiveForView` resolve a aparência de
+cada visão na ordem `DEFAULT_GLOBAL → global → preset-da-visão → override-do-usuário`.
+
+A `AparenciaTab` tem um **seletor de visão** (Semana/Dia/Mês, default **Semana** — a mais
+usada). Cada visão é editada de forma **independente** via setters por-visão
+(`setCardSize`/`setHeightScale` ligados à visão ativa por `useAgendaAppearancePersistence(view)`).
+O `ScheduleCalendar` consome `useAgendaAppearancePersistence(viewType)`, então **cada visão da
+agenda reflete só a sua própria config** — validado em produção (override `day:{cardSize}`
+muda o Dia sem afetar Semana/Mês). Botão **"Aplicar a todas"** copia a config atual para as 3
+visões (`applyToAllViews`, escreve `global` + limpa overrides); link **"Herdar global"**
+(`resetView`) remove o override da visão. Sync ao vivo entre a aba e o calendário via
 `StorageEvent` que o `save` do hook-base dispara e o hook escuta.
+
+> ⚠️ **Não-óbvio:** `ViewControls`/`ViewTabButton` recebem `key={activeView}` e cada um chama
+> `useAgendaAppearancePersistence(view)` com uma view **fixa** — não condicionar a chamada do
+> hook, senão a contagem de hooks muda ao trocar de visão.
 
 ### 8.4. "Não salva" → constraint UNIQUE obrigatória
 Upsert com `INSERT ... ON CONFLICT (organization_id)` **exige** uma constraint UNIQUE na
