@@ -24,4 +24,11 @@ describe("useTabDirtyState", () => {
     act(() => result.current.setValue({ a: 1 }));
     expect(result.current.isDirty).toBe(false);
   });
+
+  it("reset com updater funcional mescla e redefine baseline", () => {
+    const { result } = renderHook(() => useTabDirtyState({ a: 1, b: 2 }));
+    act(() => result.current.reset((prev) => ({ ...prev, b: 9 })));
+    expect(result.current.value).toEqual({ a: 1, b: 9 });
+    expect(result.current.isDirty).toBe(false);
+  });
 });

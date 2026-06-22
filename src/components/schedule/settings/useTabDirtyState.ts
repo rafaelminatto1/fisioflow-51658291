@@ -10,9 +10,14 @@ export function useTabDirtyState<T>(initial: T) {
     );
   }, []);
 
-  const reset = useCallback((next?: T) => {
+  const reset = useCallback((next?: T | ((prev: T) => T)) => {
     setValueState((prev) => {
-      const resolved = next ?? prev;
+      const resolved =
+        next === undefined
+          ? prev
+          : typeof next === "function"
+            ? (next as (p: T) => T)(prev)
+            : next;
       baselineRef.current = JSON.stringify(resolved);
       return resolved;
     });
