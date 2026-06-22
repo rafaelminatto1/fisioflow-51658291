@@ -31,19 +31,39 @@ function wrap(ui: React.ReactNode) {
 }
 
 describe("DisponibilidadeTab", () => {
-  it("preencher título + data marca dirty e save chama a mutação", () => {
+  it("apenas título não dispara a mutação (data obrigatória)", () => {
     const handles: any[] = [];
     wrap(<DisponibilidadeTab registerHandle={(h) => handles.push(h)} />);
 
     fireEvent.click(screen.getByText("Novo bloqueio"));
-
-    const titleInput = screen.getByPlaceholderText("Feriado nacional");
-    fireEvent.change(titleInput, { target: { value: "Natal" } });
+    fireEvent.change(screen.getByPlaceholderText("Feriado nacional"), {
+      target: { value: "Natal" },
+    });
 
     const last = handles.filter(Boolean).pop();
     expect(last?.isDirty).toBe(true);
 
     last?.save();
     expect(createBlockedTime.mutate).not.toHaveBeenCalled();
+  });
+
+  it("título + data preenchidos: save chama createBlockedTime.mutate", () => {
+    const handles: any[] = [];
+    wrap(<DisponibilidadeTab registerHandle={(h) => handles.push(h)} />);
+
+    fireEvent.click(screen.getByText("Novo bloqueio"));
+    fireEvent.change(screen.getByPlaceholderText("Feriado nacional"), {
+      target: { value: "Natal" },
+    });
+    const startDate = document.querySelector('input[type="date"]') as HTMLInputElement;
+    fireEvent.change(startDate, { target: { value: "2026-12-25" } });
+
+    const last = handles.filter(Boolean).pop();
+    last?.save();
+    expect(createBlockedTime.mutate).toHaveBeenCalledTimes(1);
+    expect(createBlockedTime.mutate).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "Natal", start_date: "2026-12-25" }),
+      expect.anything(),
+    );
   });
 });

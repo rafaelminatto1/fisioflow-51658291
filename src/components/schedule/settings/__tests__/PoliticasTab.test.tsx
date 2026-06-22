@@ -77,6 +77,11 @@ describe("PoliticasTab", () => {
     expect(last?.isDirty).toBe(true);
 
     last?.save();
-    expect(typeof last?.save).toBe("function");
+    expect(upsertCancellationRules.mutate).toHaveBeenCalledTimes(1);
+    expect(upsertCancellationRules.mutate).toHaveBeenCalledWith(
+      expect.objectContaining({ min_hours_before: 48 }),
+      expect.anything(),
+    );
+    expect(upsertNotificationSettings.mutate).toHaveBeenCalledTimes(1);
   });
 });
