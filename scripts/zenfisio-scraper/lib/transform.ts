@@ -29,11 +29,23 @@ export function parseZenfisioDateTime(
 ): { date: string; startTime: string | null } | null {
   const source = (dataCompleta ?? dataFallback ?? "").trim();
   if (!source) return null;
-  const match = source.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?/);
+  const match = source.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?\s*$/);
   if (!match) return null;
   const [, dd, mm, yyyy, hh, min] = match;
-  const day = Number(dd), month = Number(mm);
+  const day = Number(dd), month = Number(mm), year = Number(yyyy);
+
   if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+
+  if (hh && min) {
+    const hour = Number(hh), minute = Number(min);
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+  }
+
+  const d = new Date(year, month - 1, day);
+  if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) {
+    return null;
+  }
+
   return {
     date: `${yyyy}-${mm}-${dd}`,
     startTime: hh && min ? `${hh}:${min}` : null,

@@ -43,4 +43,22 @@ describe("parseZenfisioDateTime", () => {
     expect(parseZenfisioDateTime(undefined, undefined)).toBeNull();
     expect(parseZenfisioDateTime("data-ruim", undefined)).toBeNull();
   });
+  it("rejeita lixo após data e hora válida", () => {
+    expect(parseZenfisioDateTime("30/08/2024 15:00 GARBAGE", undefined)).toBeNull();
+  });
+  it("rejeita data inválida 30/02/2024 (fevereiro não tem 30 dias)", () => {
+    expect(parseZenfisioDateTime("30/02/2024", undefined)).toBeNull();
+  });
+  it("rejeita data inválida 31/04/2024 (abril tem 30 dias)", () => {
+    expect(parseZenfisioDateTime("31/04/2024", undefined)).toBeNull();
+  });
+  it("rejeita hora inválida 25:00", () => {
+    expect(parseZenfisioDateTime("15/05/1990 25:00", undefined)).toBeNull();
+  });
+  it("rejeita minutos inválidos 60", () => {
+    expect(parseZenfisioDateTime("15/05/1990 15:60", undefined)).toBeNull();
+  });
+  it("aceita leap day válido 29/02/2024", () => {
+    expect(parseZenfisioDateTime("29/02/2024", undefined)).toEqual({ date: "2024-02-29", startTime: null });
+  });
 });
