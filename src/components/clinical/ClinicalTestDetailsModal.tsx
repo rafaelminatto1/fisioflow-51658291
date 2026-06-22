@@ -17,6 +17,7 @@ import {
   ZoomIn,
   BookOpen,
   Settings,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -503,6 +504,31 @@ export function ClinicalTestDetailsModal({
                     <ExternalLink className="h-3.5 w-3.5" />
                     Acessar
                   </Button>
+                </div>
+              ) : test.wiki_page_id ? (
+                <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50/50 p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-amber-700 uppercase tracking-wider">
+                        Artigo não encontrado
+                      </p>
+                      <p className="text-xs text-amber-600 leading-relaxed mt-0.5">
+                        O artigo anteriormente vinculado a este teste clínico foi removido ou não está acessível.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 border-amber-200 text-amber-700 hover:bg-amber-100/50 rounded-xl text-xs font-bold transition-all"
+                      onClick={() => linkMutation.mutate(null)}
+                      disabled={linkMutation.isPending}
+                    >
+                      {linkMutation.isPending ? "Limpando..." : "Desvincular Artigo"}
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="rounded-2xl border border-dashed border-slate-200 p-4 text-center">

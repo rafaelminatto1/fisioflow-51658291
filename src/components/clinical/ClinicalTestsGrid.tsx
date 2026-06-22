@@ -3,7 +3,7 @@
 // Consulte o guia detalhado em: docs/clinical-tests.md antes de alterar este arquivo.
 // ============================================================================
 
-import { ArrowRight, FileText, Image as ImageIcon, Search, Sparkles } from "lucide-react";
+import { ArrowRight, FileText, Image as ImageIcon, Search, Sparkles, BookOpen } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -161,15 +161,26 @@ export function ClinicalTestsGrid({
               </div>
 
               <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 text-sm">
-                <div>
-                  <p className="font-medium text-slate-700">
-                    {test.evidence_label || "Base clínica"}
-                  </p>
-                  <p className="text-slate-500">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-slate-700 truncate">
+                      {test.evidence_label || "Base clínica"}
+                    </p>
+                    {test.wiki_page_id && (
+                      <span className="inline-flex items-center gap-1 rounded bg-teal-50 border border-teal-200/50 px-1.5 py-0.5 text-[9px] font-bold text-teal-700 uppercase tracking-wider">
+                        Wiki
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-slate-500 text-xs">
                     {resourceCount > 0 ? `${resourceCount} materiais de apoio` : "Sem anexo local"}
                   </p>
                 </div>
-                <FileText className="h-5 w-5 text-teal-600" />
+                {test.wiki_page_id ? (
+                  <BookOpen className="h-5 w-5 text-teal-600 shrink-0" />
+                ) : (
+                  <FileText className="h-5 w-5 text-slate-400 shrink-0" />
+                )}
               </div>
             </div>
           </button>
