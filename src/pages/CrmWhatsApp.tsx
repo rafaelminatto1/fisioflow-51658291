@@ -9,6 +9,9 @@ import {
   ChevronDown,
   Clock3,
   Filter,
+  Globe,
+  Instagram,
+  MessageCircle,
   Mic,
   MoreVertical,
   Paperclip,
@@ -151,6 +154,36 @@ function buildQuickReplies(allQuickReplies: QuickReply[]): CrmQuickReplyViewMode
   }));
 
   return [...mapped, ...fallbacks].slice(0, 4);
+}
+
+const CHANNEL_META: Record<
+  "whatsapp" | "instagram" | "webchat",
+  { icon: typeof MessageCircle; className: string; label: string }
+> = {
+  whatsapp: { icon: MessageCircle, className: "bg-[hsl(142_70%_42%)]", label: "WhatsApp" },
+  instagram: {
+    icon: Instagram,
+    className: "bg-gradient-to-br from-[hsl(330_75%_55%)] to-[hsl(28_85%_55%)]",
+    label: "Instagram",
+  },
+  webchat: { icon: Globe, className: "bg-[hsl(211_100%_50%)]", label: "Chat do site" },
+};
+
+function ChannelBadge({ channel }: { channel: "whatsapp" | "instagram" | "webchat" }) {
+  const meta = CHANNEL_META[channel] ?? CHANNEL_META.whatsapp;
+  const Icon = meta.icon;
+  return (
+    <span
+      className={cn(
+        "absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full ring-2 ring-card",
+        meta.className,
+      )}
+      title={meta.label}
+      aria-label={meta.label}
+    >
+      <Icon className="h-2.5 w-2.5 text-white" />
+    </span>
+  );
 }
 
 export default function CrmWhatsApp() {
@@ -386,11 +419,14 @@ export default function CrmWhatsApp() {
                     {selectedId === item.id && (
                       <span className="absolute inset-y-0 left-0 w-[3px] bg-primary" />
                     )}
-                    <div
-                      className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full text-sm font-extrabold text-white"
-                      style={{ backgroundImage: item.avatarGradient }}
-                    >
-                      {item.initials}
+                    <div className="relative shrink-0">
+                      <div
+                        className="flex h-[42px] w-[42px] items-center justify-center rounded-full text-sm font-extrabold text-white"
+                        style={{ backgroundImage: item.avatarGradient }}
+                      >
+                        {item.initials}
+                      </div>
+                      <ChannelBadge channel={item.channel} />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">

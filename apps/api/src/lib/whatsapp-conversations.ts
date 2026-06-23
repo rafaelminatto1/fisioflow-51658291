@@ -54,7 +54,12 @@ export async function resolveProfileUuid(
   return result.rows[0]?.id || null;
 }
 
-export async function findOrCreateConversation(pool: Pool, orgId: string, contactId: string) {
+export async function findOrCreateConversation(
+  pool: Pool,
+  orgId: string,
+  contactId: string,
+  channel: "whatsapp" | "instagram" | "webchat" = "whatsapp",
+) {
   try {
     const existing = await pool.query(
       `SELECT * FROM wa_conversations
@@ -68,10 +73,10 @@ export async function findOrCreateConversation(pool: Pool, orgId: string, contac
     }
 
     const created = await pool.query(
-      `INSERT INTO wa_conversations (organization_id, contact_id, status, priority)
-       VALUES ($1, $2, 'open', 'normal')
+      `INSERT INTO wa_conversations (organization_id, contact_id, status, priority, channel)
+       VALUES ($1, $2, 'open', 'normal', $3)
        RETURNING *`,
-      [orgId, contactId],
+      [orgId, contactId, channel],
     );
 
     return created.rows[0];

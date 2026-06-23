@@ -18,9 +18,12 @@ export interface ConversationFilters {
   tagId?: string;
 }
 
+export type ConversationChannel = "whatsapp" | "instagram" | "webchat";
+
 export interface Conversation {
   id: string;
   contactId: string;
+  channel?: ConversationChannel;
   contactName: string;
   contactPhone: string;
   patientId?: string;

@@ -186,6 +186,7 @@ function mapConversationRow(row: any) {
   return {
     id: row.id,
     contactId: row.contact_id,
+    channel: row.channel || "whatsapp",
     contactName: row.display_name || row.username || row.wa_id || "Desconhecido",
     contactPhone: row.wa_id || "",
     patientId: row.patient_id || row.wc_patient_id || row.p_patient_id || undefined,
