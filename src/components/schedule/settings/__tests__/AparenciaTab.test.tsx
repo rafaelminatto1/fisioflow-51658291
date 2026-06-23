@@ -5,12 +5,26 @@ import type { TabSaveHandle } from "../types";
 
 const applyToAllViews = vi.fn();
 const resetAll = vi.fn();
+const setCardSize = vi.fn();
+const setDisplay = vi.fn();
+
+const DEFAULT_DISPLAY = {
+  showDuration: true,
+  showType: true,
+  showPhone: false,
+  nowIndicator: true,
+  businessHours: true,
+  hideSunday: true,
+};
 
 vi.mock("@/hooks/useAgendaAppearancePersistence", () => ({
   useAgendaAppearancePersistence: () => ({
-    appearance: { cardSize: "medium", heightScale: 5 },
+    appearance: { cardSize: "medium", heightScale: 5, fontScale: 5, paddingScale: 5, opacity: 100 },
     applyToAllViews,
     resetAll,
+    setCardSize,
+    setDisplay,
+    display: DEFAULT_DISPLAY,
     isSyncing: false,
     lastSyncedAt: null,
   }),
@@ -19,6 +33,8 @@ vi.mock("@/hooks/useAgendaAppearancePersistence", () => ({
 beforeEach(() => {
   applyToAllViews.mockClear();
   resetAll.mockClear();
+  setCardSize.mockClear();
+  setDisplay.mockClear();
 });
 
 describe("AparenciaTab", () => {
@@ -30,10 +46,10 @@ describe("AparenciaTab", () => {
     expect(last?.isDirty).toBe(false);
   });
 
-  it("escolher densidade aplica a TODAS as visões (applyToAllViews)", () => {
+  it("escolher densidade aplica na visão ativa (setCardSize) — modelo por-visão", () => {
     render(<AparenciaTab registerHandle={() => {}} />);
     fireEvent.click(screen.getByText("Compacto"));
-    expect(applyToAllViews).toHaveBeenCalledWith({ cardSize: "small" });
+    expect(setCardSize).toHaveBeenCalledWith("small");
   });
 
   it("Restaurar padrões chama resetAll", () => {
