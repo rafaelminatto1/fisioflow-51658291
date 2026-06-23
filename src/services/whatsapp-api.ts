@@ -728,3 +728,110 @@ export async function fetchAgentsWorkload() {
   }>(`${BASE}/agents/workload`);
   return (res as { data: unknown } | unknown).data ?? [];
 }
+
+// ─── Configurações do CRM·WhatsApp ───
+export interface CrmConnectionInfo {
+  phoneNumberId: string | null;
+  businessAccountId: string | null;
+  phoneNumber: string | null;
+  displayName: string | null;
+  webhookUrl: string;
+  connected: boolean;
+}
+
+export type ConciergeIntent = "scheduling" | "information" | "urgent" | "other";
+
+export interface ConciergeConfig {
+  enabled: boolean;
+  autoReplyNewLeads: boolean;
+  approvalIntents: ConciergeIntent[];
+  greetingTone: "acolhedor" | "direto" | "formal";
+}
+
+export interface FunnelStage {
+  key: string;
+  label: string;
+  color: string;
+}
+
+export interface CrmSettings {
+  connection: CrmConnectionInfo;
+  concierge: ConciergeConfig;
+  funnel: FunnelStage[];
+  intents: ConciergeIntent[];
+}
+
+export interface QuickReplyRow {
+  id: string;
+  title: string;
+  content: string;
+  team?: string | null;
+  category?: string | null;
+}
+
+export async function fetchCrmSettings() {
+  const res = await request<{ data: CrmSettings } | CrmSettings>(`${BASE}/crm-settings`);
+  return unwrapData(res) as CrmSettings;
+}
+
+export async function updateCrmSettings(patch: {
+  concierge?: Partial<ConciergeConfig>;
+  funnel?: FunnelStage[];
+}) {
+  const res = await request<{ data: { concierge: ConciergeConfig; funnel: FunnelStage[] } }>(
+    `${BASE}/crm-settings`,
+    { method: "PATCH", body: JSON.stringify(patch) },
+  );
+  return unwrapData(res);
+}
+
+export async function sendTestMessage(
+  to: string,
+  opts?: { templateName?: string; language?: string },
+) {
+  const res = await request<{ data: { accepted: boolean; raw: unknown } }>(
+    `${BASE}/crm-settings/test`,
+    { method: "POST", body: JSON.stringify({ to, ...opts }) },
+  );
+  return unwrapData(res);
+}
+
+export async function createQuickReplyRow(data: {
+  title: string;
+  content: string;
+  team?: string | null;
+  category?: string | null;
+}) {
+  const res = await request<{ data: QuickReplyRow } | QuickReplyRow>(`${BASE}/quick-replies`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  return unwrapData(res) as QuickReplyRow;
+}
+
+export async function updateQuickReply(
+  id: string,
+  data: Partial<Pick<QuickReplyRow, "title" | "content" | "team" | "category">>,
+) {
+  const res = await request<{ data: QuickReplyRow } | QuickReplyRow>(`${BASE}/quick-replies/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+  return unwrapData(res);
+}
+
+export async function deleteQuickReply(id: string) {
+  return request<void>(`${BASE}/quick-replies/${id}`, { method: "DELETE" });
+}
+
+export async function updateTag(id: string, data: { name?: string; color?: string }) {
+  const res = await request<{ data: Tag } | Tag>(`${BASE}/tags/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+  return unwrapData(res);
+}
+
+export async function deleteTag(id: string) {
+  return request<void>(`${BASE}/tags/${id}`, { method: "DELETE" });
+}

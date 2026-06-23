@@ -17,6 +17,9 @@ const WhatsAppTemplatesPage = lazy(
 const CrmWhatsAppPage = lazy(
   () => import(/* webpackChunkName: "crm-whatsapp" */ "@/pages/CrmWhatsApp"),
 );
+const CrmWhatsAppSettingsPage = lazy(
+  () => import(/* webpackChunkName: "crm-whatsapp-settings" */ "@/pages/CrmWhatsAppSettings"),
+);
 
 export const whatsappRoutes = (
   <>
@@ -25,6 +28,14 @@ export const whatsappRoutes = (
       element={
         <ProtectedRoute>
           <CrmWhatsAppPage />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/crm-whatsapp/configuracoes"
+      element={
+        <ProtectedRoute>
+          <CrmWhatsAppSettingsPage />
         </ProtectedRoute>
       }
     />

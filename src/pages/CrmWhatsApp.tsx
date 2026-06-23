@@ -14,6 +14,7 @@ import {
   Phone,
   Search,
   Send,
+  Settings,
   Smile,
   StickyNote,
   UserPlus,
@@ -269,6 +270,14 @@ export default function CrmWhatsApp() {
               </button>
               <button type="button" className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary">
                 <Bell className="h-[18px] w-[18px]" />
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/crm-whatsapp/configuracoes")}
+                aria-label="Configurações do CRM·WhatsApp"
+                className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary"
+              >
+                <Settings className="h-[18px] w-[18px]" />
               </button>
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[hsl(211_100%_92%)] text-xs font-extrabold text-[hsl(211_100%_30%)]">
                 RM
