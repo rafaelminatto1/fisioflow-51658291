@@ -775,6 +775,7 @@ export interface ReminderConfig {
   bands: ReminderBand[];
   sendAddressOnlyFirstVisit: boolean;
   addressText: string;
+  useButtons: boolean;
 }
 
 export interface CrmSettings {

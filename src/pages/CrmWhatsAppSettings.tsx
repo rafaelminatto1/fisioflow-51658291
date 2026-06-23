@@ -790,6 +790,24 @@ export default function CrmWhatsAppSettings() {
                     />
                   </div>
 
+                  <div className="rounded-xl border border-border bg-card p-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-bold">
+                          Lembrete com botões (Confirmar / Remarcar)
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Usa o template <code>lembrete_consulta_botoes</code>. Ative só depois que a
+                          Meta aprovar o template (senão o envio falha).
+                        </p>
+                      </div>
+                      <Switch
+                        checked={reminders.useButtons}
+                        onCheckedChange={(v) => setReminders({ ...reminders, useButtons: v })}
+                      />
+                    </div>
+                  </div>
+
                   <div className="rounded-xl border border-border bg-muted/40 p-5">
                     <h3 className="mb-3 text-sm font-bold">Pré-visualização (quando o lembrete sai)</h3>
                     <div className="space-y-1.5 text-sm">
