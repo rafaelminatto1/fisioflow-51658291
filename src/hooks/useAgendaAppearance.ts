@@ -83,7 +83,7 @@ export function useAgendaAppearance(view: AgendaView) {
   }, [state, view]);
 
   const display: AgendaDisplayOptions = useMemo(
-    () => ({ ...DEFAULT_DISPLAY, ...(state.display ?? {}) }),
+    () => ({ ...DEFAULT_DISPLAY, ...state.display }),
     [state.display],
   );
 
