@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -26,7 +27,16 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { addTags, fetchQuickReplies, fetchTags, removeTag, type QuickReply, type Tag } from "@/services/whatsapp-api";
+import {
+  addTags,
+  fetchCrmSettings,
+  fetchQuickReplies,
+  fetchTags,
+  removeTag,
+  type FunnelStage,
+  type QuickReply,
+  type Tag,
+} from "@/services/whatsapp-api";
 import { useWhatsAppConversation, useWhatsAppInbox } from "@/hooks/useWhatsApp";
 import {
   CRM_PIPELINE_ORDER,
@@ -35,12 +45,13 @@ import {
   toCrmQuickReplies,
   type CrmQuickReplyViewModel,
   type CrmStage,
+  type CrmStageMeta,
 } from "@/features/whatsapp/crmWhatsAppAdapter";
 import { cn } from "@/lib/utils";
 
 type PipelineFilter = "all" | "lead" | "contact" | "evaluation" | "treatment";
 
-const PIPELINE_LABELS: Record<PipelineFilter, string> = {
+const PIPELINE_DEFAULT_LABELS: Record<PipelineFilter, string> = {
   all: "Todos",
   lead: "Novos leads",
   contact: "Aguardando",
@@ -48,7 +59,50 @@ const PIPELINE_LABELS: Record<PipelineFilter, string> = {
   treatment: "Em tratamento",
 };
 
-const PROGRESS_LABELS = ["Lead", "Contato", "Avaliação", "Tratamento", "Alta"];
+const PROGRESS_DEFAULT_LABELS = ["Lead", "Contato", "Avaliação", "Tratamento", "Alta"];
+const PROGRESS_STAGE_KEYS = ["lead", "contact", "evaluation", "treatment", "alta"] as const;
+
+// Resolve rótulo + estilo de um estágio a partir da config do funil (organizations.settings.crm_whatsapp.funnel).
+// Sem override → usa as classes Tailwind padrão do STAGE_META.
+type StageView = {
+  label: string;
+  chipClassName?: string;
+  dotClassName?: string;
+  chipStyle?: CSSProperties;
+  dotStyle?: CSSProperties;
+};
+
+function resolveStageView(meta: CrmStageMeta, funnelMap: Map<string, FunnelStage>): StageView {
+  const override = funnelMap.get(meta.key);
+  if (override?.color) {
+    return {
+      label: override.label || meta.label,
+      chipStyle: { backgroundColor: `hsl(${override.color} / 0.16)`, color: `hsl(${override.color})` },
+      dotStyle: { backgroundColor: `hsl(${override.color})` },
+    };
+  }
+  return { label: override?.label || meta.label, chipClassName: meta.chipClassName, dotClassName: meta.dotClassName };
+}
+
+function StageChip({
+  view,
+  uppercase,
+  className,
+}: {
+  view: StageView;
+  uppercase?: boolean;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn("inline-flex items-center gap-1 rounded-full", view.chipClassName, className)}
+      style={view.chipStyle}
+    >
+      <span className={cn("h-1.5 w-1.5 rounded-full", view.dotClassName)} style={view.dotStyle} />
+      {uppercase ? view.label.toUpperCase() : view.label}
+    </span>
+  );
+}
 
 const QUICK_REPLY_FALLBACKS: Array<{ label: string; content: string }> = [
   {
@@ -107,6 +161,7 @@ export default function CrmWhatsApp() {
   const [composer, setComposer] = useState("");
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>([]);
+  const [funnel, setFunnel] = useState<FunnelStage[]>([]);
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -130,7 +185,26 @@ export default function CrmWhatsApp() {
   useEffect(() => {
     fetchTags().then(setAvailableTags).catch(() => {});
     fetchQuickReplies().then(setQuickReplies).catch(() => {});
+    fetchCrmSettings().then((cfg) => setFunnel(cfg.funnel)).catch(() => {});
   }, []);
+
+  const funnelMap = useMemo(() => new Map(funnel.map((stage) => [stage.key, stage])), [funnel]);
+
+  const pipelineLabels = useMemo<Record<PipelineFilter, string>>(
+    () => ({
+      all: PIPELINE_DEFAULT_LABELS.all,
+      lead: funnelMap.get("lead")?.label || PIPELINE_DEFAULT_LABELS.lead,
+      contact: funnelMap.get("contact")?.label || PIPELINE_DEFAULT_LABELS.contact,
+      evaluation: funnelMap.get("evaluation")?.label || PIPELINE_DEFAULT_LABELS.evaluation,
+      treatment: funnelMap.get("treatment")?.label || PIPELINE_DEFAULT_LABELS.treatment,
+    }),
+    [funnelMap],
+  );
+
+  const progressLabels = useMemo(
+    () => PROGRESS_STAGE_KEYS.map((key, index) => funnelMap.get(key)?.label || PROGRESS_DEFAULT_LABELS[index]),
+    [funnelMap],
+  );
 
   const conversationCards = useMemo(
     () => conversations.map(toCrmConversationViewModel),
@@ -240,7 +314,7 @@ export default function CrmWhatsApp() {
               </span>
             </h1>
             <div className="ml-3 flex flex-1 flex-wrap gap-2">
-              {(Object.keys(PIPELINE_LABELS) as PipelineFilter[]).map((key) => (
+              {(Object.keys(pipelineLabels) as PipelineFilter[]).map((key) => (
                 <button
                   key={key}
                   type="button"
@@ -252,7 +326,7 @@ export default function CrmWhatsApp() {
                       : "border-border bg-card text-muted-foreground hover:bg-secondary",
                   )}
                 >
-                  {PIPELINE_LABELS[key]}
+                  {pipelineLabels[key]}
                   <span
                     className={cn(
                       "rounded-full px-1.5 py-0.5 text-[10px] font-extrabold tabular-nums",
@@ -337,10 +411,11 @@ export default function CrmWhatsApp() {
                         <span className="truncate">{item.preview}</span>
                       </div>
                       <div className="mt-1.5 flex items-center gap-2">
-                        <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-extrabold tracking-[0.03em]", item.stage.chipClassName)}>
-                          <span className={cn("h-1.5 w-1.5 rounded-full", item.stage.dotClassName)} />
-                          {item.stage.label.toUpperCase()}
-                        </span>
+                        <StageChip
+                          view={resolveStageView(item.stage, funnelMap)}
+                          uppercase
+                          className="px-2 py-0.5 text-[9px] font-extrabold tracking-[0.03em]"
+                        />
                       </div>
                     </div>
                     {item.unreadCount > 0 && (
@@ -616,10 +691,10 @@ export default function CrmWhatsApp() {
                             className="flex w-full items-center justify-between rounded-[10px] border border-border bg-card px-3 py-2.5 text-left"
                           >
                             <span className="flex items-center gap-2">
-                              <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-extrabold", selectedConversationVm.stage.chipClassName)}>
-                                <span className={cn("h-1.5 w-1.5 rounded-full", selectedConversationVm.stage.dotClassName)} />
-                                {selectedConversationVm.stage.label}
-                              </span>
+                              <StageChip
+                                view={resolveStageView(selectedConversationVm.stage, funnelMap)}
+                                className="px-2.5 py-1 text-[11px] font-extrabold"
+                              />
                             </span>
                             <ChevronDown className="h-4 w-4 text-muted-foreground" />
                           </button>
@@ -629,19 +704,19 @@ export default function CrmWhatsApp() {
                             const meta = getStageMeta(stage);
                             return (
                               <DropdownMenuItem key={stage} onClick={() => void handleStageChange(stage)}>
-                                <span className={cn("inline-flex items-center gap-2 rounded-full px-2 py-1 text-[11px] font-bold", meta.chipClassName)}>
-                                  <span className={cn("h-1.5 w-1.5 rounded-full", meta.dotClassName)} />
-                                  {meta.label}
-                                </span>
+                                <StageChip
+                                  view={resolveStageView(meta, funnelMap)}
+                                  className="gap-2 px-2 py-1 text-[11px] font-bold"
+                                />
                               </DropdownMenuItem>
                             );
                           })}
                         </DropdownMenuContent>
                       </DropdownMenu>
                       <div className="mt-3 flex gap-1">
-                        {PROGRESS_LABELS.map((label, index) => (
+                        {progressLabels.map((label, index) => (
                           <div
-                            key={label}
+                            key={`${label}-${index}`}
                             className={cn(
                               "h-[5px] flex-1 rounded-full bg-secondary",
                               index <= selectedConversationVm.stage.progressIndex && "bg-primary",
@@ -650,9 +725,9 @@ export default function CrmWhatsApp() {
                         ))}
                       </div>
                       <div className="mt-2 flex justify-between text-[9px] font-bold text-muted-foreground">
-                        {PROGRESS_LABELS.map((label, index) => (
+                        {progressLabels.map((label, index) => (
                           <span
-                            key={label}
+                            key={`${label}-${index}`}
                             className={cn(index === selectedConversationVm.stage.progressIndex && "text-primary")}
                           >
                             {label}

@@ -259,7 +259,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
             tabIndex={-1}
             aria-label="Conteúdo principal"
             className={cn(
-              "flex-1 relative z-10",
+              "flex-1 relative z-10 flex flex-col min-h-0",
               noPadding
                 ? "pt-[60px] md:pt-0 pb-24 md:pb-0"
                 : compactPadding
@@ -269,7 +269,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           >
             <div
               className={cn(
-                "mx-auto transition-all duration-300 w-full",
+                "mx-auto transition-all duration-300 w-full flex-1 flex flex-col min-h-0",
                 fullWidth && "px-0",
                 maxWidth === "sm" && "max-w-sm",
                 maxWidth === "md" && "max-w-md",
@@ -281,7 +281,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                 !fullWidth && !maxWidth && "max-w-full",
               )}
             >
-              <div key={location.pathname} className="w-full">
+              <div key={location.pathname} className="w-full flex-1 flex flex-col min-h-0">
                 {children}
               </div>
             </div>
