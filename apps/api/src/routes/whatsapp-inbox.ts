@@ -29,6 +29,7 @@ import { resolveOrCreateContact, linkContactToPatient } from "../lib/whatsapp-id
 import { isUuid } from "../lib/validators";
 import { WhatsAppService } from "../lib/whatsapp";
 import { DEFAULT_REMINDER_CONFIG, resolveReminderConfig } from "../lib/reminderScheduling";
+import { sendInstagramText } from "./instagram-webhook";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
@@ -802,7 +803,41 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
       cause?: ReturnType<typeof serializeError>;
     } | null = null;
 
-    if (!to) {
+    const channel = (conv.channel as string) || "whatsapp";
+
+    if (channel === "webchat") {
+      // Chat do site: sem envio externo — o visitante recebe a resposta via polling.
+      metaMessageId = `web_${crypto.randomUUID()}`;
+    } else if (channel === "instagram") {
+      // Instagram Direct: envia via Graph API do Instagram (janela de 24h).
+      const igRes = await pool.query(
+        `SELECT settings->>'instagram_business_account_id' AS ig FROM organizations WHERE id = $1`,
+        [conv.organization_id],
+      );
+      const igId = igRes.rows[0]?.ig;
+      if (!to) {
+        sendError = { kind: "missing_recipient", message: "Conversa do Instagram sem destinatário" };
+      } else if (!igId || !c.env.IG_ACCESS_TOKEN) {
+        sendError = { kind: "missing_credentials", message: "Instagram não configurado" };
+      } else {
+        try {
+          const r = (await sendInstagramText(c.env, String(igId), to, body.content || "")) as any;
+          metaMessageId = r?.message_id ?? null;
+          if (r?.error) {
+            sendError = {
+              kind: "instagram_api_error",
+              message: r.error?.message || JSON.stringify(r.error),
+            };
+          }
+        } catch (error) {
+          sendError = {
+            kind: "network_or_runtime_error",
+            message: error instanceof Error ? error.message : "Erro desconhecido",
+            cause: serializeError(error),
+          };
+        }
+      }
+    } else if (!to) {
       sendError = {
         kind: "missing_recipient",
         message: "Contato sem numero de WhatsApp cadastrado",

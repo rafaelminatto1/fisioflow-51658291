@@ -59,7 +59,7 @@ Hoje o `/crm-whatsapp` já tem inbox + pipeline + painel. A ideia é torná-lo *
 |---|---|---|---|
 | **0 — Quick wins** | Botão click-to-WhatsApp no site (Elementor) + captura de origem CTWA (insight #6) | Baixo (1-2 dias) | — |
 | **1 — Instagram Direct** | Coluna `channel` + integração IG no inbox unificado | Médio | **iniciar App Review já** + IG Business + Página FB |
-| **2 — Chat do site nativo** | Widget próprio → inbox unificado (`webchat`) | Médio/alto | domínio/CORS |
+| **2 — Chat do site nativo** | ✅ Widget próprio → inbox unificado (`webchat`); envio do atendente channel-aware; CORS do site liberado | Entregue | — |
 | **3 — Comércio no chat** | Pix/Payment Links pós-confirmação + avaliar Meta Business Agent | Alto | gateway/Meta Premium |
 
 ## 6. Recomendação imediata

@@ -53,6 +53,7 @@ import { timeEntriesRoutes } from "./routes/timeEntries";
 import { whatsappRoutes } from "./routes/whatsapp";
 import { whatsappWebhookRoutes } from "./routes/whatsapp-webhook";
 import { instagramWebhookRoutes } from "./routes/instagram-webhook";
+import { webchatRoutes } from "./routes/webchat";
 import { whatsappInboxRoutes } from "./routes/whatsapp-inbox";
 import { precadastroRoutes } from "./routes/precadastro";
 import { telemedicineRoutes } from "./routes/telemedicine";
@@ -326,6 +327,7 @@ const apiRoutes = [
   ["/api/whatsapp", whatsappRoutes],
   ["/api/whatsapp/webhook", whatsappWebhookRoutes],
   ["/api/instagram/webhook", instagramWebhookRoutes],
+  ["/api/webchat", webchatRoutes],
   ["/api/whatsapp/inbox", whatsappInboxRoutes],
   ["/api/precadastro", precadastroRoutes],
   ["/api/autocomplete", autocompleteRoutes],
