@@ -30,6 +30,8 @@ export interface ReminderConfig {
   bands: ReminderBand[];
   sendAddressOnlyFirstVisit: boolean;
   addressText: string;
+  // #3 — usar template com botões Confirmar/Remarcar (requer `lembrete_consulta_botoes` aprovado).
+  useButtons: boolean;
 }
 
 export const DEFAULT_REMINDER_CONFIG: ReminderConfig = {
@@ -43,6 +45,7 @@ export const DEFAULT_REMINDER_CONFIG: ReminderConfig = {
   ],
   sendAddressOnlyFirstVisit: true,
   addressText: "",
+  useButtons: false,
 };
 
 /** Mescla config persistida sobre os defaults (tolerante a campos ausentes). */
@@ -69,6 +72,7 @@ export function resolveReminderConfig(raw: unknown): ReminderConfig {
         : DEFAULT_REMINDER_CONFIG.bands,
     sendAddressOnlyFirstVisit: r.sendAddressOnlyFirstVisit !== false,
     addressText: typeof r.addressText === "string" ? r.addressText : "",
+    useButtons: r.useButtons === true,
   };
 }
 

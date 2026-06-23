@@ -437,18 +437,32 @@ async function dispatchScheduledReminders(pool: any, env: Env) {
 
       const timeStr = row.time_str as string;
       const therapistStr = row.therapist_name || "Fisioterapeuta";
+      const firstName = (row.patient_name || "paciente").split(" ")[0];
 
       if (env.BACKGROUND_QUEUE) {
+        // #3 — com botões (Confirmar/Remarcar) se configurado e template aprovado; senão o simples.
+        const payload = cfg.useButtons
+          ? {
+              templateName: "lembrete_consulta_botoes",
+              bodyParameters: [
+                { type: "text", text: firstName },
+                { type: "text", text: timeStr },
+                { type: "text", text: therapistStr },
+              ],
+            }
+          : {
+              templateName: "lembrete_sessao",
+              bodyParameters: [
+                { type: "text", text: timeStr },
+                { type: "text", text: therapistStr },
+              ],
+            };
         await env.BACKGROUND_QUEUE.send({
           type: "SEND_WHATSAPP",
           payload: {
             to: row.patient_phone,
-            templateName: "lembrete_sessao",
             languageCode: "pt_BR",
-            bodyParameters: [
-              { type: "text", text: timeStr },
-              { type: "text", text: therapistStr },
-            ],
+            ...payload,
             organizationId: row.organization_id,
             patientId: row.patient_id,
             messageText: `Lembrete: sua sessão é às ${timeStr} com ${therapistStr}.`,

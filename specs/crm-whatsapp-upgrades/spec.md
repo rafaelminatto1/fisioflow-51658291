@@ -8,10 +8,10 @@ Baseado em pesquisa (changelog Meta + players de saúde/fisio 2025-2026) cruzada
 |---|---|---|
 | 0 | **Motor de lembretes configurável** (regra 5h + exceções por horário) + **endereço só na 1ª sessão** + **painel** | ✅ Entregue |
 | 1 | Speed-to-lead: SLA + escalonamento se humano não assume | ✅ Entregue (cron */5 + config) |
-| 2 | Mensagens interativas (reply buttons / list / **Flows** de agendamento) | ⏳ Próximo |
-| 3 | Lembrete acionável 3 camadas (Confirmar/Remarcar) + reoferta de slot | ⏳ (base pronta no motor de lembretes) |
+| 2 | Mensagens interativas (reply buttons / list / **Flows** de agendamento) | 🟡 Botões: templates submetidos + handler de clique pronto; aguarda aprovação Meta. Flows = futuro |
+| 3 | Lembrete acionável Confirmar/Remarcar + reoferta de slot | 🟡 Lembrete com botões pronto (config `useButtons`); Confirmar/Remarcar tratados; aguarda template aprovado. Reoferta de slot = futuro |
 | 4 | Janela de evasão "sessão 3" + tratamento como série | ⏳ |
-| 5 | Loop de adesão ao HEP com "✅ feito" em 1 toque | ⏳ |
+| 5 | Loop de adesão ao HEP com "feito" em 1 toque | 🟡 Handler de botão pronto (`maybeHandleExerciseAdherence`) + template submetido; aguarda aprovação Meta |
 | 6 | Captura de origem CTWA (`referral`) + Welcome Sequence | ⏳ |
 | 7 | Pagamento no chat (Pix) — diferencial Brasil | ⏳ |
 | 8 | Score de no-show/dormência + "próxima melhor ação" por IA | 🟡 Parcial: temperatura heurística no card (quente/morno/frio); score IA = futuro |

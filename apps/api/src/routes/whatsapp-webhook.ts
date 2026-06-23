@@ -312,7 +312,18 @@ async function handleMessage(
     // AGUARDADOS aqui — processWebhook roda dentro de c.executionCtx.waitUntil, então o await
     // mantém o Worker vivo até o envio concluir. Em fire-and-forget o Worker congela antes
     // da resposta automática sair (lead novo nunca recebia a saudação do Concierge).
-    if (messageType === "text" && content.length > 2 && contact?.id) {
+    // Texto efetivo p/ intents: mensagens de texto OU o título do botão/lista clicado.
+    // Isso faz os botões dos templates (Confirmar/Remarcar/Fiz hoje/Ver horários) funcionarem.
+    let effectiveText = "";
+    if (messageType === "text") {
+      effectiveText = content;
+    } else if (msg.type === "interactive" && msg.interactive?.type === "button_reply") {
+      effectiveText = msg.interactive.button_reply?.title ?? "";
+    } else if (msg.type === "interactive" && msg.interactive?.type === "list_reply") {
+      effectiveText = msg.interactive.list_reply?.title ?? "";
+    }
+
+    if (effectiveText && effectiveText.length > 1 && contact?.id) {
       const contactCtx = {
         id: String(contact.id),
         display_name: (contact.display_name as string | null) ?? null,
@@ -321,15 +332,37 @@ async function handleMessage(
       };
 
       try {
-        if (contactCtx.patient_id) {
-          // Known patient — handle appointment intents first, then task creation
-          const handled = await maybeHandleAppointmentIntent(pool, env, orgId, contactCtx, content);
-          if (!handled) {
-            await maybeCreateTaskFromIntent(pool, orgId, contactCtx, content);
+        // #5 — adesão ao HEP via botão ("Fiz hoje" / "Ainda vou fazer")
+        const adherenceHandled = await maybeHandleExerciseAdherence(
+          env,
+          orgId,
+          contactCtx,
+          effectiveText,
+        );
+        if (!adherenceHandled) {
+          if (contactCtx.patient_id) {
+            // Known patient — handle appointment intents first, then task creation
+            const handled = await maybeHandleAppointmentIntent(
+              pool,
+              env,
+              orgId,
+              contactCtx,
+              effectiveText,
+            );
+            if (!handled) {
+              await maybeCreateTaskFromIntent(pool, orgId, contactCtx, effectiveText);
+            }
+          } else {
+            // Unknown contact — AI Concierge greeting for new potential patients
+            await maybeSendConciergeGreeting(
+              pool,
+              env,
+              orgId,
+              contactCtx,
+              conversation.id,
+              effectiveText,
+            );
           }
-        } else {
-          // Unknown contact — AI Concierge greeting for new potential patients
-          await maybeSendConciergeGreeting(pool, env, orgId, contactCtx, conversation.id, content);
         }
       } catch (err) {
         console.error("[WhatsApp Webhook] intent/concierge handler error:", err);
@@ -624,6 +657,42 @@ async function maybeHandleAppointmentIntent(
   }
 
   return false;
+}
+
+// #5 — Adesão ao HEP via botão/texto ("Fiz hoje" / "Ainda vou fazer").
+const HEP_DONE_PATTERN = /^(fiz hoje|j[áa] fiz|feito|fiz os exerc)/i;
+const HEP_LATER_PATTERN = /^(ainda vou fazer|vou fazer mais tarde)/i;
+
+async function maybeHandleExerciseAdherence(
+  env: Env,
+  orgId: string,
+  contact: { display_name?: string | null; wa_id: string },
+  text: string,
+): Promise<boolean> {
+  const done = HEP_DONE_PATTERN.test(text.trim());
+  const later = HEP_LATER_PATTERN.test(text.trim());
+  if (!done && !later) return false;
+
+  const whatsapp = new WhatsAppService(env);
+  const name = contact.display_name ? `, ${contact.display_name.split(" ")[0]}` : "";
+  if (done) {
+    await whatsapp
+      .sendTextMessage(
+        contact.wa_id,
+        `Boa${name}! 💪 Excelente constância — manter os exercícios em dia acelera sua recuperação.`,
+      )
+      .catch(() => null);
+    writeEvent(env, { orgId, event: "hep_adherence_confirmed" });
+  } else {
+    await whatsapp
+      .sendTextMessage(
+        contact.wa_id,
+        `Combinado${name}! Te lembro mais tarde. Capricha nos exercícios 😉`,
+      )
+      .catch(() => null);
+    writeEvent(env, { orgId, event: "hep_adherence_later" });
+  }
+  return true;
 }
 
 // Tracks which wa_ids already got the concierge greeting (in-memory, per worker instance)
