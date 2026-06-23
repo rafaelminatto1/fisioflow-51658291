@@ -26,6 +26,7 @@ import {
   type UseAgendaAppearanceResult,
   type AgendaViewAppearance,
 } from "@/hooks/useAgendaAppearance";
+import type { AgendaDisplayOptions } from "@/types/agenda";
 import { request } from "@/api/v2/base";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -35,6 +36,7 @@ interface AgendaAppearanceState {
   day?: Partial<AgendaViewAppearance>;
   week?: Partial<AgendaViewAppearance>;
   month?: Partial<AgendaViewAppearance>;
+  display?: Partial<AgendaDisplayOptions>;
 }
 
 interface GetAppearanceResponse {
@@ -91,6 +93,10 @@ export function mergeAppearanceState(
       safeServer.month !== undefined
         ? { ...safeLocal.month, ...safeServer.month }
         : safeLocal.month,
+    display:
+      safeServer.display !== undefined
+        ? { ...safeLocal.display, ...safeServer.display }
+        : safeLocal.display,
   };
 }
 
