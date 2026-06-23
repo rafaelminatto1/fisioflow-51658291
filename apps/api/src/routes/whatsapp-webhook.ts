@@ -245,6 +245,33 @@ async function handleMessage(
     const conversation = await findOrCreateConversation(pool, orgId, contact.id);
     if (!conversation) return;
 
+    // Captura de origem de anúncio Click-to-WhatsApp (CTWA) — preenche origem/campanha no CRM.
+    if (msg.referral && typeof msg.referral === "object") {
+      try {
+        const ref = msg.referral as Record<string, any>;
+        const srcUrl: string = ref.source_url ?? "";
+        const source = /instagram/i.test(srcUrl)
+          ? "Instagram Ads"
+          : /facebook|fb\.com/i.test(srcUrl)
+            ? "Facebook Ads"
+            : "Anúncio (CTWA)";
+        const campaign = ref.headline || ref.body || ref.source_id || null;
+        await pool.query(
+          `UPDATE wa_conversations
+           SET metadata = COALESCE(metadata, '{}'::jsonb) || jsonb_build_object(
+                 'source', $2::text,
+                 'campaign', $3::text,
+                 'ctwa', to_jsonb($4::json)
+               )
+           WHERE id = $1
+             AND (metadata->>'source') IS NULL`,
+          [conversation.id, source, campaign, JSON.stringify(ref)],
+        );
+      } catch (e) {
+        console.warn("[WhatsApp Webhook] CTWA referral capture failed:", e);
+      }
+    }
+
     const savedMsg = await addMessage(
       pool,
       conversation.id,

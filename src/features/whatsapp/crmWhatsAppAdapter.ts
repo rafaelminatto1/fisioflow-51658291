@@ -15,6 +15,7 @@ export interface CrmStageMeta {
 
 export interface CrmConversationViewModel {
   id: string;
+  channel: "whatsapp" | "instagram" | "webchat";
   name: string;
   initials: string;
   phone: string;
@@ -195,6 +196,7 @@ export function toCrmConversationViewModel(conversation: Conversation): CrmConve
 
   return {
     id: conversation.id,
+    channel: conversation.channel ?? "whatsapp",
     name,
     initials: formatInitials(name),
     phone,

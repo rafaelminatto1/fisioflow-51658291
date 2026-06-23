@@ -265,6 +265,10 @@ export interface Env {
   WHATSAPP_VERIFY_TOKEN?: string;
   WHATSAPP_APP_SECRET?: string; // App Secret para validação HMAC dos webhooks
 
+  // Instagram Direct (Messaging API) — mesmo Meta App do WhatsApp
+  IG_ACCESS_TOKEN?: string; // token da conta IG/Página (System User)
+  IG_VERIFY_TOKEN?: string; // verify token do webhook do Instagram
+
   // LiveKit Telehealth
   LIVEKIT_API_KEY?: string;
   LIVEKIT_API_SECRET?: string;
