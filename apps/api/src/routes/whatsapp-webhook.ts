@@ -280,7 +280,11 @@ async function handleMessage(
       route: `type:${messageType}`,
     });
 
-    // Intent handlers — appointment actions come first; fallback to concierge/task creation
+    // Intent handlers — appointment actions come first; fallback to concierge/task creation.
+    // IMPORTANTE: estes handlers fazem chamadas de IA/HTTP que levam segundos. Precisam ser
+    // AGUARDADOS aqui — processWebhook roda dentro de c.executionCtx.waitUntil, então o await
+    // mantém o Worker vivo até o envio concluir. Em fire-and-forget o Worker congela antes
+    // da resposta automática sair (lead novo nunca recebia a saudação do Concierge).
     if (messageType === "text" && content.length > 2 && contact?.id) {
       const contactCtx = {
         id: String(contact.id),
@@ -289,20 +293,19 @@ async function handleMessage(
         wa_id: contact.wa_id as string,
       };
 
-      if (contactCtx.patient_id) {
-        // Known patient — handle appointment intents first, then task creation
-        maybeHandleAppointmentIntent(pool, env, orgId, contactCtx, content)
-          .then((handled) => {
-            if (!handled) {
-              return maybeCreateTaskFromIntent(pool, orgId, contactCtx, content);
-            }
-          })
-          .catch(() => null);
-      } else {
-        // Unknown contact — AI Concierge greeting for new potential patients
-        maybeSendConciergeGreeting(pool, env, orgId, contactCtx, conversation.id, content).catch(
-          () => null,
-        );
+      try {
+        if (contactCtx.patient_id) {
+          // Known patient — handle appointment intents first, then task creation
+          const handled = await maybeHandleAppointmentIntent(pool, env, orgId, contactCtx, content);
+          if (!handled) {
+            await maybeCreateTaskFromIntent(pool, orgId, contactCtx, content);
+          }
+        } else {
+          // Unknown contact — AI Concierge greeting for new potential patients
+          await maybeSendConciergeGreeting(pool, env, orgId, contactCtx, conversation.id, content);
+        }
+      } catch (err) {
+        console.error("[WhatsApp Webhook] intent/concierge handler error:", err);
       }
     }
   } catch (err) {
