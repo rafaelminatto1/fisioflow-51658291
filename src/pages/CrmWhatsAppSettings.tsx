@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft,
+  BellRing,
   Bot,
   CheckCircle2,
   Hash,
@@ -44,9 +45,37 @@ import {
   type CrmSettings,
   type FunnelStage,
   type QuickReplyRow,
+  type ReminderConfig,
   type Tag,
 } from "@/services/whatsapp-api";
 import { cn } from "@/lib/utils";
+
+// Espelho client-side de computeReminderSendAt (apenas para o preview da aba Lembretes).
+function previewReminderSendAt(apptDateStr: string, apptTimeStr: string, cfg: ReminderConfig): Date {
+  const apptHour = Number(apptTimeStr.slice(0, 2));
+  const apptMinute = Number(apptTimeStr.slice(3, 5)) || 0;
+  const localToUtc = (dateStr: string, h: number, m: number) =>
+    Date.parse(`${dateStr}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00Z`) -
+    cfg.tzOffsetMinutes * 60_000;
+  const band = cfg.bands.find((b) => apptHour >= b.fromHour && apptHour <= b.toHour);
+  if (band) {
+    const ms = Date.parse(`${apptDateStr}T00:00:00Z`) + band.sendDayOffset * 86_400_000;
+    const d = new Date(ms).toISOString().slice(0, 10);
+    return new Date(localToUtc(d, band.sendHour, band.sendMinute));
+  }
+  return new Date(localToUtc(apptDateStr, apptHour, apptMinute) - cfg.defaultHoursBefore * 3_600_000);
+}
+
+function fmtSendAt(d: Date, tzOffsetMinutes: number): string {
+  // Renderiza no fuso da clínica
+  const shifted = new Date(d.getTime() + tzOffsetMinutes * 60_000);
+  const wd = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"][shifted.getUTCDay()];
+  const dd = String(shifted.getUTCDate()).padStart(2, "0");
+  const mm = String(shifted.getUTCMonth() + 1).padStart(2, "0");
+  const hh = String(shifted.getUTCHours()).padStart(2, "0");
+  const mi = String(shifted.getUTCMinutes()).padStart(2, "0");
+  return `${wd} ${dd}/${mm} às ${hh}:${mi}`;
+}
 
 const INTENT_LABELS: Record<ConciergeIntent, string> = {
   scheduling: "Agendamento",
@@ -78,6 +107,7 @@ export default function CrmWhatsAppSettings() {
 
   const [concierge, setConcierge] = useState<ConciergeConfig | null>(null);
   const [funnel, setFunnel] = useState<FunnelStage[]>([]);
+  const [reminders, setReminders] = useState<ReminderConfig | null>(null);
 
   const [testNumber, setTestNumber] = useState("");
   const [testing, setTesting] = useState(false);
@@ -98,6 +128,7 @@ export default function CrmWhatsAppSettings() {
         setSettings(cfg);
         setConcierge(cfg.concierge);
         setFunnel(cfg.funnel);
+        setReminders(cfg.reminders);
         setQuickReplies((qrs as unknown as QuickReplyRow[]) ?? []);
         setTags((tgs as Tag[]) ?? []);
       })
@@ -112,16 +143,22 @@ export default function CrmWhatsAppSettings() {
     if (!settings || !concierge) return false;
     return (
       JSON.stringify(concierge) !== JSON.stringify(settings.concierge) ||
-      JSON.stringify(funnel) !== JSON.stringify(settings.funnel)
+      JSON.stringify(funnel) !== JSON.stringify(settings.funnel) ||
+      JSON.stringify(reminders) !== JSON.stringify(settings.reminders)
     );
-  }, [settings, concierge, funnel]);
+  }, [settings, concierge, funnel, reminders]);
 
   const handleSave = async () => {
     if (!concierge || !dirty) return;
     setSaving(true);
     try {
-      const saved = await updateCrmSettings({ concierge, funnel });
-      setSettings((prev) => (prev ? { ...prev, concierge: saved.concierge, funnel: saved.funnel } : prev));
+      const saved = await updateCrmSettings({ concierge, funnel, reminders: reminders ?? undefined });
+      setSettings((prev) =>
+        prev
+          ? { ...prev, concierge: saved.concierge, funnel: saved.funnel, reminders: saved.reminders }
+          : prev,
+      );
+      setReminders(saved.reminders);
       toast({ title: "Configurações salvas" });
     } catch {
       toast({ title: "Erro ao salvar", variant: "destructive" });
@@ -252,6 +289,9 @@ export default function CrmWhatsAppSettings() {
               </TabsTrigger>
               <TabsTrigger value="funil" className="gap-1.5">
                 <Hash className="h-4 w-4" /> Funil + Etiquetas
+              </TabsTrigger>
+              <TabsTrigger value="lembretes" className="gap-1.5">
+                <BellRing className="h-4 w-4" /> Lembretes
               </TabsTrigger>
             </TabsList>
 
@@ -536,6 +576,214 @@ export default function CrmWhatsAppSettings() {
                 </div>
               </div>
             </TabsContent>
+
+            {/* ── Lembretes ── */}
+            <TabsContent value="lembretes">
+              {reminders && (
+                <div className="max-w-3xl space-y-6">
+                  <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-bold">Lembretes de sessão ativos</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Dispara automaticamente o lembrete de cada sessão pelo WhatsApp.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={reminders.enabled}
+                        onCheckedChange={(v) => setReminders({ ...reminders, enabled: v })}
+                      />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Label className="text-sm font-bold">Padrão: enviar</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={48}
+                        value={reminders.defaultHoursBefore}
+                        onChange={(e) =>
+                          setReminders({ ...reminders, defaultHoursBefore: Number(e.target.value) || 1 })
+                        }
+                        className="w-20"
+                      />
+                      <span className="text-sm text-muted-foreground">horas antes da sessão</span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-border bg-card p-5">
+                    <h3 className="text-sm font-bold">Exceções por horário da sessão</h3>
+                    <p className="mb-3 text-xs text-muted-foreground">
+                      Para sessões nessas faixas, ignore a regra das {reminders.defaultHoursBefore}h e
+                      envie no horário definido (evita disparo de madrugada).
+                    </p>
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-[1fr_1fr_auto_1fr_1fr] items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                        <span>Sessão das</span>
+                        <span>até</span>
+                        <span className="text-center">enviar</span>
+                        <span>hora</span>
+                        <span>min</span>
+                      </div>
+                      {reminders.bands.map((band, index) => (
+                        <div key={index} className="grid grid-cols-[1fr_1fr_auto_1fr_1fr] items-center gap-2">
+                          <Input
+                            type="number"
+                            min={0}
+                            max={23}
+                            value={band.fromHour}
+                            onChange={(e) =>
+                              setReminders({
+                                ...reminders,
+                                bands: reminders.bands.map((b, i) =>
+                                  i === index ? { ...b, fromHour: Number(e.target.value) } : b,
+                                ),
+                              })
+                            }
+                          />
+                          <Input
+                            type="number"
+                            min={0}
+                            max={23}
+                            value={band.toHour}
+                            onChange={(e) =>
+                              setReminders({
+                                ...reminders,
+                                bands: reminders.bands.map((b, i) =>
+                                  i === index ? { ...b, toHour: Number(e.target.value) } : b,
+                                ),
+                              })
+                            }
+                          />
+                          <Select
+                            value={String(band.sendDayOffset)}
+                            onValueChange={(v) =>
+                              setReminders({
+                                ...reminders,
+                                bands: reminders.bands.map((b, i) =>
+                                  i === index ? { ...b, sendDayOffset: Number(v) } : b,
+                                ),
+                              })
+                            }
+                          >
+                            <SelectTrigger className="w-28">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="-1">véspera</SelectItem>
+                              <SelectItem value="0">mesmo dia</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            type="number"
+                            min={0}
+                            max={23}
+                            value={band.sendHour}
+                            onChange={(e) =>
+                              setReminders({
+                                ...reminders,
+                                bands: reminders.bands.map((b, i) =>
+                                  i === index ? { ...b, sendHour: Number(e.target.value) } : b,
+                                ),
+                              })
+                            }
+                          />
+                          <div className="flex items-center gap-1">
+                            <Input
+                              type="number"
+                              min={0}
+                              max={59}
+                              value={band.sendMinute}
+                              onChange={(e) =>
+                                setReminders({
+                                  ...reminders,
+                                  bands: reminders.bands.map((b, i) =>
+                                    i === index ? { ...b, sendMinute: Number(e.target.value) } : b,
+                                  ),
+                                })
+                              }
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setReminders({
+                                  ...reminders,
+                                  bands: reminders.bands.filter((_, i) => i !== index),
+                                })
+                              }
+                              className="text-muted-foreground hover:text-destructive"
+                              aria-label="Remover faixa"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="mt-3"
+                      onClick={() =>
+                        setReminders({
+                          ...reminders,
+                          bands: [
+                            ...reminders.bands,
+                            { fromHour: 13, toHour: 13, sendDayOffset: 0, sendHour: 8, sendMinute: 0 },
+                          ],
+                        })
+                      }
+                    >
+                      <Plus className="mr-1.5 h-4 w-4" /> Adicionar faixa
+                    </Button>
+                  </div>
+
+                  <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-bold">Enviar endereço só na 1ª sessão/avaliação</Label>
+                        <p className="text-xs text-muted-foreground">
+                          O endereço acompanha o lembrete apenas no primeiro atendimento do paciente.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={reminders.sendAddressOnlyFirstVisit}
+                        onCheckedChange={(v) =>
+                          setReminders({ ...reminders, sendAddressOnlyFirstVisit: v })
+                        }
+                      />
+                    </div>
+                    <Textarea
+                      value={reminders.addressText}
+                      onChange={(e) => setReminders({ ...reminders, addressText: e.target.value })}
+                      rows={2}
+                      placeholder="Endereço da clínica (ex.: Rua tal, 123 — Mooca, São Paulo. Ref.: ...)"
+                    />
+                  </div>
+
+                  <div className="rounded-xl border border-border bg-muted/40 p-5">
+                    <h3 className="mb-3 text-sm font-bold">Pré-visualização (quando o lembrete sai)</h3>
+                    <div className="space-y-1.5 text-sm">
+                      {["07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "14:00", "18:00"].map(
+                        (t) => (
+                          <div key={t} className="flex items-center justify-between border-b border-border/50 py-1">
+                            <span className="text-muted-foreground">Sessão às {t}</span>
+                            <span className="font-semibold">
+                              {fmtSendAt(
+                                previewReminderSendAt("2026-07-15", t, reminders),
+                                reminders.tzOffsetMinutes,
+                              )}
+                            </span>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                    <p className="mt-2 text-[11px] text-muted-foreground">
+                      Exemplo para uma sessão em qua 15/07. O scheduler roda a cada 15 min.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
           </Tabs>
         )}
 
@@ -549,6 +797,7 @@ export default function CrmWhatsAppSettings() {
                 if (settings) {
                   setConcierge(settings.concierge);
                   setFunnel(settings.funnel);
+                  setReminders(settings.reminders);
                 }
               }}
             >

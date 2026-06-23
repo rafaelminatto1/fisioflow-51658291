@@ -28,6 +28,7 @@ import { sendReplyButtons, sendListMessage, sendFlowMessage } from "../lib/whats
 import { resolveOrCreateContact, linkContactToPatient } from "../lib/whatsapp-identity";
 import { isUuid } from "../lib/validators";
 import { WhatsAppService } from "../lib/whatsapp";
+import { DEFAULT_REMINDER_CONFIG, resolveReminderConfig } from "../lib/reminderScheduling";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
@@ -61,7 +62,8 @@ function readCrmConfig(settings: Record<string, unknown>) {
   const crm = (settings.crm_whatsapp as Record<string, unknown>) ?? {};
   const concierge = { ...DEFAULT_CONCIERGE_CONFIG, ...((crm.concierge as object) ?? {}) };
   const funnel = Array.isArray(crm.funnel) && crm.funnel.length ? crm.funnel : DEFAULT_FUNNEL_STAGES;
-  return { concierge, funnel };
+  const reminders = resolveReminderConfig(crm.reminders);
+  return { concierge, funnel, reminders };
 }
 
 const DEFAULT_WHATSAPP_TAGS = [
@@ -1822,7 +1824,7 @@ app.get("/crm-settings", requireAuth, async (c) => {
   const pool = await createPool(c.env);
   try {
     const settings = await loadOrgSettings(pool, user.organizationId);
-    const { concierge, funnel } = readCrmConfig(settings);
+    const { concierge, funnel, reminders } = readCrmConfig(settings);
     const connection = {
       phoneNumberId: (settings.whatsapp_phone_number_id as string) ?? null,
       businessAccountId: (settings.whatsapp_business_account_id as string) ?? null,
@@ -1831,7 +1833,7 @@ app.get("/crm-settings", requireAuth, async (c) => {
       webhookUrl: `${new URL(c.req.url).origin}/api/whatsapp/webhook`,
       connected: Boolean(settings.whatsapp_phone_number_id),
     };
-    return c.json({ data: { connection, concierge, funnel, intents: CONCIERGE_INTENTS } });
+    return c.json({ data: { connection, concierge, funnel, reminders, intents: CONCIERGE_INTENTS } });
   } catch (err) {
     console.error("[WhatsApp Inbox] GET /crm-settings error:", err);
     return c.json({ error: "Failed to load settings" }, 500);
@@ -1844,6 +1846,7 @@ app.patch("/crm-settings", requireAuth, async (c) => {
   const body = (await c.req.json()) as {
     concierge?: Partial<typeof DEFAULT_CONCIERGE_CONFIG>;
     funnel?: Array<{ key: string; label: string; color: string }>;
+    reminders?: Partial<typeof DEFAULT_REMINDER_CONFIG>;
   };
   try {
     const settings = await loadOrgSettings(pool, user.organizationId);
@@ -1852,13 +1855,18 @@ app.patch("/crm-settings", requireAuth, async (c) => {
       ...((settings.crm_whatsapp as object) ?? {}),
       concierge: body.concierge ? { ...current.concierge, ...body.concierge } : current.concierge,
       funnel: body.funnel ?? current.funnel,
+      reminders: body.reminders
+        ? resolveReminderConfig({ ...current.reminders, ...body.reminders })
+        : current.reminders,
     };
     const nextSettings = { ...settings, crm_whatsapp: nextCrm };
     await pool.query(
       `UPDATE organizations SET settings = $1::jsonb, updated_at = NOW() WHERE id = $2`,
       [JSON.stringify(nextSettings), user.organizationId],
     );
-    return c.json({ data: { concierge: nextCrm.concierge, funnel: nextCrm.funnel } });
+    return c.json({
+      data: { concierge: nextCrm.concierge, funnel: nextCrm.funnel, reminders: nextCrm.reminders },
+    });
   } catch (err) {
     console.error("[WhatsApp Inbox] PATCH /crm-settings error:", err);
     return c.json({ error: "Failed to save settings" }, 500);

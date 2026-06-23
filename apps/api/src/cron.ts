@@ -50,6 +50,13 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         } catch (err) {
           console.warn("[Cron] CRM scan failed:", err);
         }
+        // Lembretes de sessão configuráveis (regra 5h + exceções por horário)
+        try {
+          const pool = createPool(env);
+          await dispatchScheduledReminders(pool, env);
+        } catch (err) {
+          console.warn("[Cron] Scheduled reminders failed:", err);
+        }
         break;
       }
 
@@ -314,6 +321,104 @@ async function processInactivePatients(db: any, env: Env, ctx: ExecutionContext)
   }
 }
 
+/**
+ * Lembretes de sessão configuráveis por organização.
+ * Roda a cada 15 min; calcula o instante de envio por agendamento
+ * (regra das 5h + exceções por faixa de horário) e dispara quando a janela bate.
+ * Dedup atômico via tabela appointment_reminder_log.
+ */
+async function dispatchScheduledReminders(pool: any, env: Env) {
+  const { resolveReminderConfig, computeReminderSendAt } = await import("./lib/reminderScheduling");
+  const { WhatsAppService } = await import("./lib/whatsapp");
+
+  const res = await pool.query(`
+    SELECT a.id, a.organization_id, a.patient_id,
+           to_char(a.date, 'YYYY-MM-DD') AS date_str,
+           substr(a.start_time::text, 1, 5) AS time_str,
+           p.full_name AS patient_name, p.phone AS patient_phone,
+           prof.full_name AS therapist_name,
+           o.settings->'crm_whatsapp'->'reminders' AS rcfg
+    FROM appointments a
+    JOIN patients p ON p.id = a.patient_id
+    LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::uuid
+    JOIN organizations o ON o.id = a.organization_id
+    WHERE a.date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '1 day'
+      AND a.status NOT IN ('cancelado', 'faltou', 'cancelled', 'no_show', 'completed', 'concluido')
+      AND p.phone IS NOT NULL
+  `);
+
+  const now = Date.now();
+  const WINDOW_MS = 20 * 60 * 1000; // tolera atraso/jitter do cron (15min)
+  let sent = 0;
+
+  for (const row of res.rows) {
+    try {
+      const cfg = resolveReminderConfig(row.rcfg);
+      if (!cfg.enabled || !row.time_str) continue;
+
+      const sendAt = computeReminderSendAt(row.date_str, row.time_str, cfg).getTime();
+      if (!(sendAt <= now && sendAt > now - WINDOW_MS)) continue;
+
+      // Dedup atômico: só envia se a linha foi inserida agora.
+      const dedup = await pool.query(
+        `INSERT INTO appointment_reminder_log (appointment_id, kind)
+         VALUES ($1::uuid, 'session')
+         ON CONFLICT (appointment_id, kind) DO NOTHING RETURNING 1`,
+        [row.id],
+      );
+      if (dedup.rows.length === 0) continue;
+
+      const timeStr = row.time_str as string;
+      const therapistStr = row.therapist_name || "Fisioterapeuta";
+
+      if (env.BACKGROUND_QUEUE) {
+        await env.BACKGROUND_QUEUE.send({
+          type: "SEND_WHATSAPP",
+          payload: {
+            to: row.patient_phone,
+            templateName: "lembrete_sessao",
+            languageCode: "pt_BR",
+            bodyParameters: [
+              { type: "text", text: timeStr },
+              { type: "text", text: therapistStr },
+            ],
+            organizationId: row.organization_id,
+            patientId: row.patient_id,
+            messageText: `Lembrete: sua sessão é às ${timeStr} com ${therapistStr}.`,
+            appointmentId: row.id,
+          },
+        });
+      }
+
+      // Endereço apenas na primeira sessão/avaliação (best-effort via texto).
+      if (cfg.sendAddressOnlyFirstVisit && cfg.addressText.trim()) {
+        const prior = await pool.query(
+          `SELECT 1 FROM appointments
+           WHERE patient_id = $1 AND organization_id = $2
+             AND status NOT IN ('cancelado', 'faltou', 'cancelled', 'no_show')
+             AND (date < $3::date OR (date = $3::date AND substr(start_time::text, 1, 5) < $4))
+           LIMIT 1`,
+          [row.patient_id, row.organization_id, row.date_str, timeStr],
+        );
+        if (prior.rows.length === 0) {
+          try {
+            await new WhatsAppService(env).sendTextMessage(
+              row.patient_phone,
+              `📍 Endereço da clínica:\n${cfg.addressText.trim()}`,
+            );
+          } catch (e) {
+            console.warn("[Reminder] address send failed:", e);
+          }
+        }
+      }
+      sent++;
+    } catch (e) {
+      console.warn("[Reminder] row failed:", e);
+    }
+  }
+  if (sent) console.log(`[Cron] Scheduled reminders sent=${sent}`);
+}
+
 async function sendAppointmentReminders(pool: any, env: Env, _ctx: ExecutionContext) {
   console.log("[Cron] Sending appointment reminders (Email & WhatsApp)...");
   const result = await pool.query(`
@@ -353,26 +458,36 @@ async function sendAppointmentReminders(pool: any, env: Env, _ctx: ExecutionCont
       }
     }
 
-    // 2. WhatsApp Reminder — enqueue for async processing with automatic retry
+    // 2. WhatsApp Reminder — enqueue for async processing with automatic retry.
+    //    Compartilha o dedup com dispatchScheduledReminders (kind='session') para
+    //    nunca enviar o lembrete de WhatsApp duas vezes para o mesmo agendamento.
     if (row.patient_phone && env.BACKGROUND_QUEUE) {
       try {
-        const timeStr = row.time?.substring(0, 5) ?? "";
-        const therapistStr = row.therapist_name || "Fisioterapeuta";
-        const queuePayload: WhatsAppQueuePayload = {
-          to: row.patient_phone,
-          templateName: "lembrete_sessao",
-          languageCode: "pt_BR",
-          bodyParameters: [
-            { type: "text", text: timeStr },
-            { type: "text", text: therapistStr },
-          ],
-          organizationId: row.organization_id,
-          patientId: row.patient_id,
-          messageText: `Lembrete automático: sua sessão será às ${timeStr} com ${therapistStr}.`,
-          appointmentId: row.id,
-        };
-        await env.BACKGROUND_QUEUE.send({ type: "SEND_WHATSAPP", payload: queuePayload });
-        whatsappSent++;
+        const dedup = await pool.query(
+          `INSERT INTO appointment_reminder_log (appointment_id, kind)
+           VALUES ($1::uuid, 'session')
+           ON CONFLICT (appointment_id, kind) DO NOTHING RETURNING 1`,
+          [row.id],
+        );
+        if (dedup.rows.length > 0) {
+          const timeStr = row.time?.substring(0, 5) ?? "";
+          const therapistStr = row.therapist_name || "Fisioterapeuta";
+          const queuePayload: WhatsAppQueuePayload = {
+            to: row.patient_phone,
+            templateName: "lembrete_sessao",
+            languageCode: "pt_BR",
+            bodyParameters: [
+              { type: "text", text: timeStr },
+              { type: "text", text: therapistStr },
+            ],
+            organizationId: row.organization_id,
+            patientId: row.patient_id,
+            messageText: `Lembrete automático: sua sessão será às ${timeStr} com ${therapistStr}.`,
+            appointmentId: row.id,
+          };
+          await env.BACKGROUND_QUEUE.send({ type: "SEND_WHATSAPP", payload: queuePayload });
+          whatsappSent++;
+        }
       } catch (err) {
         console.error(`[Cron] Failed to enqueue WhatsApp for ${row.patient_phone}:`, err);
       }
