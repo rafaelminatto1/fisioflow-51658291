@@ -9,6 +9,7 @@ import {
   ChevronDown,
   Clock3,
   Filter,
+  Flame,
   Globe,
   MessageCircle,
   Mic,
@@ -428,8 +429,14 @@ export default function CrmWhatsApp() {
                       <ChannelBadge channel={item.channel} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         <span className="truncate text-[13px] font-bold">{item.name}</span>
+                        {item.temperature === "quente" && (
+                          <Flame
+                            className="h-3 w-3 shrink-0 text-orange-500"
+                            aria-label="Lead quente"
+                          />
+                        )}
                         <span className="ml-auto shrink-0 text-[10px] font-semibold text-muted-foreground">
                           {item.displayTime}
                         </span>

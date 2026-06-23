@@ -7,14 +7,14 @@ Baseado em pesquisa (changelog Meta + players de saúde/fisio 2025-2026) cruzada
 | # | Feature | Status |
 |---|---|---|
 | 0 | **Motor de lembretes configurável** (regra 5h + exceções por horário) + **endereço só na 1ª sessão** + **painel** | ✅ Entregue |
-| 1 | Speed-to-lead: SLA + escalonamento se humano não assume | ⏳ Próximo |
+| 1 | Speed-to-lead: SLA + escalonamento se humano não assume | ✅ Entregue (cron */5 + config) |
 | 2 | Mensagens interativas (reply buttons / list / **Flows** de agendamento) | ⏳ Próximo |
 | 3 | Lembrete acionável 3 camadas (Confirmar/Remarcar) + reoferta de slot | ⏳ (base pronta no motor de lembretes) |
 | 4 | Janela de evasão "sessão 3" + tratamento como série | ⏳ |
 | 5 | Loop de adesão ao HEP com "✅ feito" em 1 toque | ⏳ |
 | 6 | Captura de origem CTWA (`referral`) + Welcome Sequence | ⏳ |
 | 7 | Pagamento no chat (Pix) — diferencial Brasil | ⏳ |
-| 8 | Score de no-show/dormência + "próxima melhor ação" por IA | ⏳ |
+| 8 | Score de no-show/dormência + "próxima melhor ação" por IA | 🟡 Parcial: temperatura heurística no card (quente/morno/frio); score IA = futuro |
 
 ## P1 — Lembretes (ENTREGUE)
 

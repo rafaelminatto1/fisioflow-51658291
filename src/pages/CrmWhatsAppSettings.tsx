@@ -401,6 +401,36 @@ export default function CrmWhatsAppSettings() {
                   </div>
                 </div>
 
+                <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-bold">Alerta de lead sem resposta (SLA)</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Avisa a equipe quando um lead aguarda resposta humana há muito tempo.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={concierge.slaEnabled}
+                      onCheckedChange={(v) => setConcierge({ ...concierge, slaEnabled: v })}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Label className="text-sm">Alertar após</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={120}
+                      value={concierge.slaMinutes}
+                      disabled={!concierge.slaEnabled}
+                      onChange={(e) =>
+                        setConcierge({ ...concierge, slaMinutes: Number(e.target.value) || 1 })
+                      }
+                      className="w-20"
+                    />
+                    <span className="text-sm text-muted-foreground">minutos sem resposta</span>
+                  </div>
+                </div>
+
                 <div className="rounded-xl border border-border bg-card p-5">
                   <h3 className="text-sm font-bold">Exigir aprovação humana</h3>
                   <p className="mb-3 text-xs text-muted-foreground">
