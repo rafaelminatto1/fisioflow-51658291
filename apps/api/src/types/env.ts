@@ -268,6 +268,7 @@ export interface Env {
   // Instagram Direct (Messaging API) — mesmo Meta App do WhatsApp
   IG_ACCESS_TOKEN?: string; // token da conta IG/Página (System User)
   IG_VERIFY_TOKEN?: string; // verify token do webhook do Instagram
+  IG_APP_SECRET?: string; // secret do app Instagram p/ validar assinatura (opcional; endurecimento)
 
   // LiveKit Telehealth
   LIVEKIT_API_KEY?: string;

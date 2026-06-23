@@ -19,7 +19,8 @@ import type { Env } from "../types/env";
  */
 const app = new Hono<{ Bindings: Env }>();
 
-const GRAPH = "https://graph.facebook.com/v25.0";
+// Instagram API with Instagram Login usa graph.instagram.com.
+const IG_GRAPH = "https://graph.instagram.com/v23.0";
 
 app.get("/", (c) => {
   const mode = c.req.query("hub.mode");
@@ -35,7 +36,9 @@ app.get("/", (c) => {
 app.post("/", async (c) => {
   const rawBody = await c.req.text();
   const signature = c.req.header("x-hub-signature-256");
-  const appSecret = c.env.WHATSAPP_APP_SECRET; // mesmo Meta App
+  // Assinatura do IG usa o secret DO APP INSTAGRAM (≠ WhatsApp). Só valida se IG_APP_SECRET
+  // estiver definido; caso contrário pula (não rejeita), pois o secret do WhatsApp não confere.
+  const appSecret = c.env.IG_APP_SECRET;
   if (appSecret) {
     const valid = await verifyMetaSignature(appSecret, rawBody, signature);
     if (!valid) return c.json({ error: "Assinatura inválida" }, 401);
@@ -139,13 +142,14 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
 /** Envia uma mensagem de texto via Instagram Direct (janela de 24h). */
 export async function sendInstagramText(
   env: Env,
-  igAccountId: string,
+  _igAccountId: string,
   recipientIgsid: string,
   text: string,
 ): Promise<unknown> {
   const token = env.IG_ACCESS_TOKEN;
   if (!token) return { error: "IG_ACCESS_TOKEN ausente" };
-  const res = await fetch(`${GRAPH}/${igAccountId}/messages`, {
+  // Instagram API with Instagram Login: POST graph.instagram.com/{version}/me/messages
+  const res = await fetch(`${IG_GRAPH}/me/messages`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({ recipient: { id: recipientIgsid }, message: { text } }),
