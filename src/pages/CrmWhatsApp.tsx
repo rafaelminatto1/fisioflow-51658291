@@ -10,7 +10,6 @@ import {
   Clock3,
   Filter,
   Globe,
-  Instagram,
   MessageCircle,
   Mic,
   MoreVertical,
@@ -162,7 +161,7 @@ const CHANNEL_META: Record<
 > = {
   whatsapp: { icon: MessageCircle, className: "bg-[hsl(142_70%_42%)]", label: "WhatsApp" },
   instagram: {
-    icon: Instagram,
+    icon: Camera,
     className: "bg-gradient-to-br from-[hsl(330_75%_55%)] to-[hsl(28_85%_55%)]",
     label: "Instagram",
   },
