@@ -91,6 +91,9 @@ export const ExpandedAppointmentCard: React.FC<ExpandedAppointmentCardProps> = (
         )}
       />
 
+      {/* Right Edge White Border */}
+      <div className="absolute right-0 top-0 bottom-0 w-px bg-white/30 dark:bg-white/8 z-20 pointer-events-none transition-opacity duration-500 group-hover:bg-white/60 dark:group-hover:bg-white/20" />
+
       {/* Decorative Glow */}
       <div
         className={cn(

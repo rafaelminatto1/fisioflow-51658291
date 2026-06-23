@@ -152,6 +152,7 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
   const selectionOn = isSelectionMode ?? selectionMode ?? false;
 
   const calendarRef = useRef<FullCalendar | null>(null);
+  const fcContainerRef = useRef<HTMLDivElement>(null);
   // Set right before a programmatic gotoDate() so the datesSet echo it
   // triggers does not bounce back into onDateChange (loop prevention).
   const suppressDatesSetRef = useRef(false);
@@ -168,14 +169,20 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
   // Sync calendar size when density/height variables change
   useEffect(() => {
     const api = calendarRef.current?.getApi();
-    if (api) {
-      api.updateSize();
+    if (!api) return;
+
+    // Directly inject the CSS custom property onto the FC container so that
+    // .fc-timegrid-slot { height: var(--agenda-slot-height) } reflows immediately.
+    // React's style prop on the outer div also carries this variable, but the
+    // FullCalendar DOM may not reflow without an explicit setProperty trigger.
+    const container = fcContainerRef.current;
+    if (container) {
+      container.style.setProperty("--agenda-slot-height", `${slotHeightPx}px`);
     }
+
+    api.updateSize();
   }, [slotHeightPx, appearance.cardSize]);
 
-  useEffect(() => {
-    console.log("[FisioFlow] ScheduleCalendar v1.0 - FullCalendar migration");
-  }, []);
 
   // Sync external date changes to the calendar instance.
   // Depend on the stable YMD string (not the Date object, which is recreated
@@ -557,7 +564,10 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
       />
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="relative flex min-h-0 w-full flex-1 overflow-hidden border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 [&>.fc]:flex-1 [&>.fc]:min-h-0">
+        <div
+          ref={fcContainerRef}
+          className="relative flex min-h-0 w-full flex-1 overflow-hidden border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 [&>.fc]:flex-1 [&>.fc]:min-h-0"
+        >
           <FullCalendar
             ref={calendarRef}
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -589,7 +599,6 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
             snapDuration="00:15:00"
             longPressDelay={250}
             height="100%"
-            expandRows
             events={events}
             eventContent={renderEventContent}
             dateClick={handleDateClick}
