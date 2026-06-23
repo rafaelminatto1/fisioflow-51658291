@@ -754,10 +754,28 @@ export interface FunnelStage {
   color: string;
 }
 
+export interface ReminderBand {
+  fromHour: number;
+  toHour: number;
+  sendDayOffset: number;
+  sendHour: number;
+  sendMinute: number;
+}
+
+export interface ReminderConfig {
+  enabled: boolean;
+  defaultHoursBefore: number;
+  tzOffsetMinutes: number;
+  bands: ReminderBand[];
+  sendAddressOnlyFirstVisit: boolean;
+  addressText: string;
+}
+
 export interface CrmSettings {
   connection: CrmConnectionInfo;
   concierge: ConciergeConfig;
   funnel: FunnelStage[];
+  reminders: ReminderConfig;
   intents: ConciergeIntent[];
 }
 
@@ -777,11 +795,11 @@ export async function fetchCrmSettings() {
 export async function updateCrmSettings(patch: {
   concierge?: Partial<ConciergeConfig>;
   funnel?: FunnelStage[];
+  reminders?: Partial<ReminderConfig>;
 }) {
-  const res = await request<{ data: { concierge: ConciergeConfig; funnel: FunnelStage[] } }>(
-    `${BASE}/crm-settings`,
-    { method: "PATCH", body: JSON.stringify(patch) },
-  );
+  const res = await request<{
+    data: { concierge: ConciergeConfig; funnel: FunnelStage[]; reminders: ReminderConfig };
+  }>(`${BASE}/crm-settings`, { method: "PATCH", body: JSON.stringify(patch) });
   return unwrapData(res);
 }
 
