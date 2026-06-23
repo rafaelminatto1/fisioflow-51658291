@@ -42,6 +42,9 @@ const DEFAULT_CONCIERGE_CONFIG = {
   autoReplyNewLeads: true,
   approvalIntents: ["urgent"] as string[],
   greetingTone: "acolhedor" as "acolhedor" | "direto" | "formal",
+  // SLA de resposta humana (#1 speed-to-lead): alerta se um lead aguarda há X min.
+  slaEnabled: true,
+  slaMinutes: 10,
 };
 
 const DEFAULT_FUNNEL_STAGES = [
@@ -171,6 +174,24 @@ function deriveNextAction(stage: CrmStage, row: Record<string, unknown>): string
   }
 }
 
+// #8 — Temperatura do lead (heurística; score IA completo é evolução futura).
+// quente = aguardando + atividade recente em estágio inicial; frio = sem atividade há dias.
+function deriveTemperature(
+  stage: CrmStage,
+  row: Record<string, unknown>,
+): "quente" | "morno" | "frio" {
+  const unread = Number(row.unread_count ?? 0);
+  const lastAt = row.last_message_at ? new Date(String(row.last_message_at)).getTime() : 0;
+  const ageH = lastAt ? (Date.now() - lastAt) / 3_600_000 : Infinity;
+  const lastDir = String(row.last_message_direction ?? "");
+  const early = stage === "lead" || stage === "contact";
+
+  if (ageH > 24 * 7) return "frio";
+  if ((unread > 0 || lastDir === "inbound") && ageH <= 6 && early) return "quente";
+  if (ageH <= 48) return "morno";
+  return "frio";
+}
+
 function mapConversationRow(row: any) {
   const metadata = row.metadata && typeof row.metadata === "object" ? row.metadata : {};
   const stage = deriveCrmStage(row, metadata);
@@ -188,6 +209,7 @@ function mapConversationRow(row: any) {
     id: row.id,
     contactId: row.contact_id,
     channel: row.channel || "whatsapp",
+    temperature: deriveTemperature(stage, row),
     contactName: row.display_name || row.username || row.wa_id || "Desconhecido",
     contactPhone: row.wa_id || "",
     patientId: row.patient_id || row.wc_patient_id || row.p_patient_id || undefined,

@@ -24,6 +24,7 @@ export interface Conversation {
   id: string;
   contactId: string;
   channel?: ConversationChannel;
+  temperature?: "quente" | "morno" | "frio";
   contactName: string;
   contactPhone: string;
   patientId?: string;
@@ -749,6 +750,8 @@ export interface ConciergeConfig {
   autoReplyNewLeads: boolean;
   approvalIntents: ConciergeIntent[];
   greetingTone: "acolhedor" | "direto" | "formal";
+  slaEnabled: boolean;
+  slaMinutes: number;
 }
 
 export interface FunnelStage {

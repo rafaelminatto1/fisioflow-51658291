@@ -25,6 +25,12 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
     switch (cron) {
       case "*/5 * * * *": // A cada 5 minutos — Health monitor leve, sem acordar Neon
         await runHealthMonitor(env);
+        try {
+          const pool = createPool(env);
+          await dispatchLeadSlaEscalations(pool, env);
+        } catch (err) {
+          console.warn("[Cron] Lead SLA escalation failed:", err);
+        }
         break;
 
       case "0 6 * * *": {
@@ -319,6 +325,67 @@ async function processInactivePatients(db: any, env: Env, ctx: ExecutionContext)
       }).catch((err) => console.error(`[Cron] Workflow Reengagement failed for ${row.id}:`, err));
     }
   }
+}
+
+/**
+ * #1 Speed-to-lead — alerta a equipe quando um lead aguarda resposta humana há mais
+ * que o SLA configurado (organizations.settings.crm_whatsapp.concierge.slaMinutes).
+ * Dedup por metadata.sla_escalated = timestamp do último inbound já escalado.
+ */
+async function dispatchLeadSlaEscalations(pool: any, env: Env) {
+  const { notifyOrganization } = await import("./lib/push");
+  const res = await pool.query(`
+    SELECT c.id, c.organization_id, c.metadata,
+           lm.created_at AS last_at,
+           wc.display_name, wc.wa_id,
+           o.settings->'crm_whatsapp'->'concierge' AS concierge
+    FROM wa_conversations c
+    JOIN whatsapp_contacts wc ON wc.id = c.contact_id
+    JOIN organizations o ON o.id = c.organization_id
+    JOIN LATERAL (
+      SELECT direction, created_at FROM wa_messages m
+      WHERE m.conversation_id = c.id AND m.direction <> 'internal'
+      ORDER BY created_at DESC LIMIT 1
+    ) lm ON true
+    WHERE c.status IN ('open', 'pending')
+      AND lm.direction = 'inbound'
+      AND lm.created_at > now() - interval '24 hours'
+      AND c.patient_id IS NULL
+  `);
+
+  const now = Date.now();
+  let escalated = 0;
+  for (const row of res.rows) {
+    try {
+      const cfg = (typeof row.concierge === "string" ? JSON.parse(row.concierge) : row.concierge) ?? {};
+      const slaEnabled = cfg.slaEnabled !== false;
+      const slaMinutes = typeof cfg.slaMinutes === "number" ? cfg.slaMinutes : 10;
+      if (!slaEnabled) continue;
+
+      const lastIso = new Date(row.last_at).toISOString();
+      const ageMin = (now - new Date(row.last_at).getTime()) / 60000;
+      if (ageMin < slaMinutes) continue;
+
+      const meta = row.metadata && typeof row.metadata === "object" ? row.metadata : {};
+      if (meta.sla_escalated === lastIso) continue; // já escalado para este inbound
+
+      await notifyOrganization(env, pool, row.organization_id, {
+        title: "⏱️ Lead aguardando resposta",
+        body: `${row.display_name || row.wa_id} está há ${Math.round(ageMin)} min sem resposta.`,
+      }).catch(() => {});
+
+      await pool.query(
+        `UPDATE wa_conversations
+         SET metadata = COALESCE(metadata, '{}'::jsonb) || jsonb_build_object('sla_escalated', $2::text)
+         WHERE id = $1`,
+        [row.id, lastIso],
+      );
+      escalated++;
+    } catch (e) {
+      console.warn("[SLA] row failed:", e);
+    }
+  }
+  if (escalated) console.log(`[Cron] Lead SLA escalations=${escalated}`);
 }
 
 /**
