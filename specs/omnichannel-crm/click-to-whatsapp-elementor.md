@@ -31,7 +31,20 @@ para aparecer em "Origem" no painel do lead.
 - **CTWA (anúncio):** se o lead vier de um anúncio Click-to-WhatsApp, a origem/campanha já é
   capturada automaticamente pelo backend (ver captura de `referral` no webhook).
 
-## Próximo nível (Fase 2 — widget nativo no site)
-Em vez de abrir o app do WhatsApp, um widget de chat **dentro do site** que envia para
-endpoints `/api/webchat/*` e aparece no inbox unificado com o selo "Chat do site".
-Requer: build do widget + CORS para `activityfisioterapia.com.br` + rate limiting.
+## Fase 2 — Widget de chat nativo (IMPLEMENTADO)
+Chat **dentro do site** (não abre o WhatsApp); as mensagens caem no inbox unificado com o
+selo "Chat do site" (canal `webchat`). O atendente responde pelo CRM e o visitante recebe ali mesmo.
+
+### Instalar (Elementor → Custom Code → `</body>`)
+```html
+<script src="https://api-pro.moocafisio.com.br/api/webchat/widget.js"
+        data-org="00000000-0000-0000-0000-000000000001"
+        data-title="Fale com a Activity Fisioterapia"
+        defer></script>
+```
+- `data-org` = id da organização (já preenchido com o da clínica).
+- O domínio `activityfisioterapia.com.br` já está liberado no CORS da API.
+- O widget gera um `visitorId` (localStorage), posta em `POST /api/webchat/message`
+  e busca respostas via `GET /api/webchat/poll` (a cada 4s).
+
+> Endurecimento futuro: rate limiting por IP nas rotas públicas do webchat.
