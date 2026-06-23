@@ -17,6 +17,10 @@ export interface ScheduleEventContentProps {
   isSelected: boolean;
   hasHighPain?: boolean;
   hasNoShowRisk?: boolean;
+  durationLabel?: string;
+  typeLabel?: string;
+  phone?: string;
+  show?: { duration: boolean; type: boolean; phone: boolean };
 }
 
 /**
@@ -40,6 +44,10 @@ export function ScheduleEventContent({
   isSelected,
   hasHighPain,
   hasNoShowRisk,
+  durationLabel,
+  typeLabel,
+  phone,
+  show = { duration: true, type: true, phone: false },
 }: ScheduleEventContentProps) {
   const safeColors = colors || {
     background: "transparent",
@@ -48,8 +56,8 @@ export function ScheduleEventContent({
   };
 
   const startTime = timeText ? timeText.split(/[-–]/)[0].trim() : "";
-  const typeLabel = isTask ? "Tarefa" : isGroup ? "Grupo" : startTime || "Consulta";
-  const metaLabel = isGroup ? `${typeLabel} · ${groupCount}` : typeLabel;
+  const baseLabel = isTask ? "Tarefa" : isGroup ? "Grupo" : startTime || "Consulta";
+  const metaLabel = isGroup ? `${baseLabel} · ${groupCount}` : baseLabel;
 
   return (
     <div
@@ -80,6 +88,15 @@ export function ScheduleEventContent({
           aria-hidden
         />
         <span className="min-w-0 truncate">{metaLabel}</span>
+        {show.duration && durationLabel && (
+          <span className="shrink-0 opacity-80">· {durationLabel}</span>
+        )}
+        {show.type && typeLabel && (
+          <span className="min-w-0 truncate opacity-80">· {typeLabel}</span>
+        )}
+        {show.phone && phone && (
+          <span className="shrink-0 tabular-nums opacity-70">· {phone}</span>
+        )}
         {hasNoShowRisk && (
           <span
             className="ml-auto flex shrink-0 items-center gap-0.5 rounded bg-red-100 px-1 text-red-700 dark:bg-red-900/40 dark:text-red-400"
