@@ -194,6 +194,15 @@ export interface AgendaViewAppearance {
   paddingScale: number;
 }
 
+export interface AgendaDisplayOptions {
+  showDuration: boolean;
+  showType: boolean;
+  showPhone: boolean;
+  nowIndicator: boolean;
+  businessHours: boolean;
+  hideSunday: boolean;
+}
+
 
 // ============================================================================
 // SCHEDULE CONFIGURATION TYPES (Database tables: schedule_*)

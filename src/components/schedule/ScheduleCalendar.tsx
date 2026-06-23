@@ -47,6 +47,7 @@ import { normalizeStatus } from "./shared/appointment-status";
 import { AppointmentQuickView } from "./AppointmentQuickView";
 import { ScheduleToolbar } from "./ScheduleToolbar";
 import { ScheduleEventContent } from "./ScheduleEventContent";
+import { deriveCalendarBehavior } from "./scheduleBehavior";
 import { parseLocalDT } from "@/lib/date-utils";
 
 type ViewType = "day" | "week" | "month";
@@ -157,7 +158,8 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
   // Track the last seen active start date of the calendar to detect actual navigation.
   const lastActiveStartRef = useRef<string | null>(null);
   const { statusConfig } = useStatusConfig();
-  const { cssVariables, slotHeightPx, appearance } = useAgendaAppearancePersistence(viewType);
+  const { cssVariables, slotHeightPx, appearance, display } =
+    useAgendaAppearancePersistence(viewType);
   const { businessHours: settingsHours, blockedTimes } = useScheduleSettings();
 
   const [quickViewAppointment, setQuickViewAppointment] = useState<RawAppointment | null>(null);
@@ -216,6 +218,11 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
         endTime: h.close_time,
       }));
   }, [settingsHours]);
+
+  const behavior = useMemo(
+    () => deriveCalendarBehavior(display, fcBusinessHours),
+    [display, fcBusinessHours],
+  );
 
   // Derive slotMin/slotMax from the widest open window across days
   const { slotMin, slotMax } = useMemo(() => {
@@ -459,6 +466,7 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
       groupCount?: number;
       hasHighPain?: boolean;
       hasNoShowRisk?: boolean;
+      original?: RawAppointment;
     };
 
     const kind = props._kind;
@@ -487,6 +495,17 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
     const isGroup = !!props.isGroup;
     const groupCount = props.groupCount || 0;
 
+    const original = props.original;
+    const durationLabel = original?.duration ? `${original.duration}min` : undefined;
+    const typeLabel =
+      (original?.appointment_type_name as string | undefined) ||
+      (original?.type as string | undefined) ||
+      undefined;
+    const phone =
+      (original?.patient_phone as string | undefined) ||
+      (original?.phone as string | undefined) ||
+      undefined;
+
     return (
       <ScheduleEventContent
         title={arg.event.title}
@@ -499,6 +518,14 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
         isSelected={selectionOn && !!selectedIds?.has(arg.event.id)}
         hasHighPain={props.hasHighPain}
         hasNoShowRisk={props.hasNoShowRisk}
+        durationLabel={durationLabel}
+        typeLabel={typeLabel}
+        phone={phone}
+        show={{
+          duration: display.showDuration,
+          type: display.showType,
+          phone: display.showPhone,
+        }}
       />
     );
   };
@@ -538,7 +565,7 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
             initialDate={currentDate}
             locale={ptBrLocale}
             firstDay={1}
-            hiddenDays={[0]}
+            hiddenDays={behavior.hiddenDays}
             headerToolbar={false}
             slotMinTime={slotMin}
             slotMaxTime={slotMax}
@@ -551,8 +578,8 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
               meridiem: false,
             }}
             scrollTime="07:00:00"
-            businessHours={fcBusinessHours}
-            nowIndicator
+            businessHours={behavior.businessHours}
+            nowIndicator={behavior.nowIndicator}
             allDaySlot={false}
             dayMaxEvents={3}
             slotEventOverlap={false}

@@ -257,6 +257,9 @@ visões (`applyToAllViews`, escreve `global` + limpa overrides); link **"Herdar 
 > `useAgendaAppearancePersistence(view)` com uma view **fixa** — não condicionar a chamada do
 > hook, senão a contagem de hooks muda ao trocar de visão.
 
+Os **ajustes finos** (fonte/espaçamento/opacidade) são **por-visão**; já **conteúdo do card**
+e **comportamento da grade** são **globais** (bloco `display`, ver §8.6).
+
 ### 8.4. "Não salva" → constraint UNIQUE obrigatória
 Upsert com `INSERT ... ON CONFLICT (organization_id)` **exige** uma constraint UNIQUE na
 coluna do conflito; sem ela o Postgres lança erro e a rota devolve **500 silencioso**
@@ -268,3 +271,32 @@ Ao criar novo upsert de settings, garanta a constraint UNIQUE correspondente.
 `getIntervalCapacity` (`appointmentHelpers.ts`) faz `MIN(max_patients)` sobre todas as
 regras que se sobrepõem, **ignorando `appointment_type_id`**. Por isso a UI de capacidade
 não oferece filtro por tipo — não reintroduzir sem antes enforçar por tipo no backend.
+
+### 8.6. Aparência v2: presets + bloco `display`
+A `AparenciaTab` tem 3 zonas: **Presets** (Denso/Confortável/Apresentação — aplicam
+`cardSize/heightScale/fontScale/paddingScale` na visão ativa via `setAll`), **Por-visão**
+(densidade/altura + "Ajustes finos" recolhível: Fonte/Espaçamento/Opacidade) e **Agenda toda**
+(bloco global `display`).
+
+`display: AgendaDisplayOptions` (`src/types/agenda.ts`) é **global** (irmão de
+`global/day/week/month` no state): conteúdo do card (`showDuration`/`showType`/`showPhone`) e
+comportamento da grade (`nowIndicator`/`businessHours`/`hideSunday`). `DEFAULT_DISPLAY` =
+tudo `true` exceto `showPhone:false`. State salvo **sem** `display` (usuários antigos) cai no
+default — retrocompatível.
+
+- **Gap de CSS fechado:** `cssVariables` do hook já emitia `--agenda-font-scale`,
+  `--agenda-card-padding`, `--agenda-card-opacity`, mas **nenhum CSS os consumia**.
+  `src/styles/schedule.css` §8 agora aplica esses vars nos cards do FullCalendar (fonte do
+  nome/meta, padding do harness, opacidade do `.fc-v-event`).
+- **Grade (D):** `deriveCalendarBehavior(display, fcBusinessHours)`
+  (`src/components/schedule/scheduleBehavior.ts`) deriva `hiddenDays`/`businessHours`/
+  `nowIndicator`; `ScheduleCalendar` passa essas props ao `<FullCalendar>` (antes hardcoded).
+- **Conteúdo (C):** `ScheduleEventContent` ganhou `durationLabel`/`typeLabel`/`phone`/`show`
+  e renderiza cada um conforme `display`. Telefone só aparece se houver dado real no evento
+  (lido defensivamente de `original` — `RawAppointment` tem index signature).
+
+> ⚠️ **Backend:** o PUT usa `zValidator` → **chaves fora do schema são descartadas**.
+> `AgendaAppearanceStateSchema` (`apps/api/src/routes/agendaAppearance.ts`) **precisa** listar
+> `display` (booleans opcionais), senão o bloco é perdido silenciosamente. Storage é `jsonb`
+> (`user_agenda_appearance.appearance_data`) — sem migração. `mergeAppearanceState`
+> (`useAgendaAppearancePersistence`) também round-trippa `display` no merge servidor↔local.

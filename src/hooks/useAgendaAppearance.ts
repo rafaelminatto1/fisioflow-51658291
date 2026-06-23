@@ -1,12 +1,22 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { AgendaView, AgendaViewAppearance } from "@/types/agenda";
+import { AgendaView, AgendaViewAppearance, AgendaDisplayOptions } from "@/types/agenda";
 
 interface AgendaAppearanceState {
   global: AgendaViewAppearance;
   day?: Partial<AgendaViewAppearance>;
   week?: Partial<AgendaViewAppearance>;
   month?: Partial<AgendaViewAppearance>;
+  display?: Partial<AgendaDisplayOptions>;
 }
+
+const DEFAULT_DISPLAY: AgendaDisplayOptions = {
+  showDuration: true,
+  showType: true,
+  showPhone: false,
+  nowIndicator: true,
+  businessHours: true,
+  hideSunday: true,
+};
 
 const DEFAULT_GLOBAL: AgendaViewAppearance = {
   cardSize: "medium",
@@ -72,6 +82,11 @@ export function useAgendaAppearance(view: AgendaView) {
     };
   }, [state, view]);
 
+  const display: AgendaDisplayOptions = useMemo(
+    () => ({ ...DEFAULT_DISPLAY, ...state.display }),
+    [state.display],
+  );
+
   const slotHeightPx = slotHeightPxFromScale(effectiveForView.heightScale);
   const fontPercentage = 70 + (effectiveForView.fontScale - 1) * 5;
 
@@ -90,6 +105,9 @@ export function useAgendaAppearance(view: AgendaView) {
       "--agenda-type-font-scale": `${0.6 + (Math.max(0, Math.min(10, effectiveForView.typeFontScale ?? 5)) / 10) * 0.8}`,
       "--agenda-card-padding": `${0.25 + (Math.max(0, Math.min(10, effectiveForView.paddingScale ?? 5)) / 10) * 0.75}rem`,
     } as React.CSSProperties,
+    display,
+    setDisplay: (patch: Partial<AgendaDisplayOptions>) =>
+      save({ ...state, display: { ...state.display, ...patch } }),
     setCardSize: (val: any) => save({ ...state, [view]: { ...state[view], cardSize: val } }),
     setHeightScale: (val: number) =>
       save({ ...state, [view]: { ...state[view], heightScale: val } }),

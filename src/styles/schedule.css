@@ -134,3 +134,20 @@
 .fc .fc-day-today {
   background: hsl(var(--primary) / 0.04) !important;
 }
+
+/* 8. Ajustes finos por-visão (fonte/espaçamento/opacidade) — CSS vars do hook */
+.fc .fc-event-patient-name {
+  font-size: calc(12px * var(--agenda-font-scale, 1)) !important;
+}
+
+.fc .fc-event-main .mt-auto {
+  font-size: calc(10px * var(--agenda-font-scale, 1)) !important;
+}
+
+.fc .fc-timegrid-event-harness {
+  padding: var(--agenda-card-padding, 2px) 4px !important;
+}
+
+.fc .fc-v-event {
+  opacity: var(--agenda-card-opacity, 1) !important;
+}

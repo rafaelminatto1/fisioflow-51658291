@@ -20,6 +20,32 @@ const DENSITY_OPTIONS: Array<{ value: CardSize; label: string; description: stri
   { value: "large", label: "Espaçoso", description: "Mais respiro visual" },
 ];
 
+const APPEARANCE_PRESETS: Array<{
+  key: string;
+  label: string;
+  hint: string;
+  patch: { cardSize: CardSize; heightScale: number; fontScale: number; paddingScale: number };
+}> = [
+  {
+    key: "denso",
+    label: "Denso",
+    hint: "Muitos pacientes/dia",
+    patch: { cardSize: "small", heightScale: 2, fontScale: 4, paddingScale: 2 },
+  },
+  {
+    key: "confortavel",
+    label: "Confortável",
+    hint: "Padrão",
+    patch: { cardSize: "medium", heightScale: 5, fontScale: 5, paddingScale: 5 },
+  },
+  {
+    key: "apresentacao",
+    label: "Apresentação",
+    hint: "Tela grande",
+    patch: { cardSize: "large", heightScale: 9, fontScale: 9, paddingScale: 8 },
+  },
+];
+
 // Altura/fonte aproximada do card por densidade, só para o preview.
 const PREVIEW_BY_SIZE: Record<CardSize, { minHeight: number; fontSize: number }> = {
   extra_small: { minHeight: 26, fontSize: 10 },
@@ -54,18 +80,28 @@ function ViewControls({
   view,
   onDensity,
   onHeightScale,
+  onFontScale,
+  onPaddingScale,
+  onOpacity,
   onApplyToAll,
   onResetView,
 }: {
   view: AgendaView;
   onDensity: (size: CardSize) => void;
   onHeightScale: (val: number) => void;
+  onFontScale: (val: number) => void;
+  onPaddingScale: (val: number) => void;
+  onOpacity: (val: number) => void;
   onApplyToAll: () => void;
   onResetView: () => void;
 }) {
   const { appearance, hasOverrideForView } = useAgendaAppearancePersistence(view);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const cardSize = (appearance.cardSize ?? "medium") as CardSize;
   const heightScale = appearance.heightScale ?? 5;
+  const fontScale = appearance.fontScale ?? 5;
+  const paddingScale = appearance.paddingScale ?? 5;
+  const opacity = appearance.opacity ?? 100;
   const preview = PREVIEW_BY_SIZE[cardSize];
 
   return (
@@ -135,6 +171,66 @@ function ViewControls({
           }
         />
 
+        {/* Ajustes finos (recolhível) */}
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground"
+          >
+            {showAdvanced ? "▾" : "▸"} Ajustes finos
+          </button>
+          {showAdvanced && (
+            <div className="mt-3 space-y-3">
+              <FieldRow
+                label="Fonte"
+                description="Tamanho do texto dos cards"
+                control={
+                  <input
+                    type="range"
+                    min={1}
+                    max={10}
+                    value={fontScale}
+                    onChange={(e) => onFontScale(Number(e.target.value))}
+                    className="w-48 accent-blue-600"
+                    aria-label="Fonte"
+                  />
+                }
+              />
+              <FieldRow
+                label="Espaçamento"
+                description="Respiro interno dos cards"
+                control={
+                  <input
+                    type="range"
+                    min={1}
+                    max={10}
+                    value={paddingScale}
+                    onChange={(e) => onPaddingScale(Number(e.target.value))}
+                    className="w-48 accent-blue-600"
+                    aria-label="Espaçamento"
+                  />
+                }
+              />
+              <FieldRow
+                label="Opacidade"
+                description="Transparência dos cards"
+                control={
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={opacity}
+                    onChange={(e) => onOpacity(Number(e.target.value))}
+                    className="w-48 accent-blue-600"
+                    aria-label="Opacidade"
+                  />
+                }
+              />
+            </div>
+          )}
+        </div>
+
         {/* Apply to all views */}
         <div className="flex items-center justify-between rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/40">
           <div>
@@ -151,7 +247,11 @@ function ViewControls({
       </div>
 
       {/* Preview */}
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/40">
+      <div
+        data-testid="aparencia-preview"
+        className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/40"
+        style={{ opacity: opacity / 100 }}
+      >
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           Pré-visualização
         </p>
@@ -159,8 +259,12 @@ function ViewControls({
           {PREVIEW_CARDS.map((c) => (
             <div
               key={c.name}
-              className="flex flex-col justify-center rounded-md border border-blue-200 bg-blue-50 px-2 text-blue-900 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100"
-              style={{ minHeight: preview.minHeight, fontSize: preview.fontSize }}
+              className="flex flex-col justify-center rounded-md border border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100"
+              style={{
+                minHeight: preview.minHeight,
+                fontSize: preview.fontSize * (fontScale / 5),
+                padding: `${2 * (paddingScale / 5)}px 8px`,
+              }}
             >
               <span className="truncate font-semibold leading-tight">{c.name}</span>
               <span className="opacity-70" style={{ fontSize: preview.fontSize - 1 }}>
@@ -181,13 +285,16 @@ export function AparenciaTab({ registerHandle }: TabComponentProps) {
     return localStorage.getItem(AUTO_ADJUST_KEY) !== "false";
   });
 
-  // Para operações globais (auto-adjust, reset all) usamos "week" como visão canônica
+  // Para operações globais (auto-adjust, reset all) usamos "week" como visão canônica.
+  // display é global (não por-visão) — qualquer hook serve como fonte.
   const {
     appearance: weekAppearance,
     applyToAllViews,
     resetAll,
     isSyncing,
     lastSyncedAt,
+    display,
+    setDisplay,
   } = useAgendaAppearancePersistence("week");
 
   // Hook da visão ativa — usado pelos handlers específicos
@@ -256,6 +363,41 @@ export function AparenciaTab({ registerHandle }: TabComponentProps) {
       }
     >
       <div className="space-y-5">
+        {/* Presets de 1 clique */}
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Presets
+          </p>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {APPEARANCE_PRESETS.map((p) => {
+              const active =
+                activeHook.appearance.cardSize === p.patch.cardSize &&
+                (activeHook.appearance.heightScale ?? 5) === p.patch.heightScale;
+              return (
+                <button
+                  key={p.key}
+                  type="button"
+                  onClick={() => {
+                    setAutoAdjust(false);
+                    if (typeof window !== "undefined")
+                      localStorage.setItem(AUTO_ADJUST_KEY, "false");
+                    activeHook.setAll(p.patch);
+                  }}
+                  className={cn(
+                    "rounded-lg border p-3 text-left transition",
+                    active
+                      ? "border-blue-600 bg-blue-50 text-blue-900 dark:bg-blue-950/40 dark:text-blue-100"
+                      : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/50 dark:border-slate-700 dark:bg-slate-900",
+                  )}
+                >
+                  <p className="text-sm font-semibold">{p.label}</p>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">{p.hint}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Auto adjust toggle */}
         <FieldRow
           label="Ajuste automático de densidade"
@@ -294,9 +436,96 @@ export function AparenciaTab({ registerHandle }: TabComponentProps) {
           view={activeView}
           onDensity={handleDensity}
           onHeightScale={handleHeightScale}
+          onFontScale={(v) => activeHook.setFontScale(v)}
+          onPaddingScale={(v) => activeHook.setPaddingScale(v)}
+          onOpacity={(v) => activeHook.setOpacity(v)}
           onApplyToAll={handleApplyToAll}
           onResetView={handleResetView}
         />
+
+        {/* Seção global — conteúdo do card + comportamento da grade */}
+        <div className="space-y-4 border-t border-slate-200 pt-5 dark:border-slate-800">
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Conteúdo do card · agenda toda
+            </p>
+            <div className="space-y-2">
+              <FieldRow
+                label="Mostrar duração"
+                description="Tempo de cada atendimento no card"
+                control={
+                  <Switch
+                    checked={display.showDuration}
+                    onCheckedChange={(v) => setDisplay({ showDuration: v })}
+                    aria-label="Mostrar duração"
+                  />
+                }
+              />
+              <FieldRow
+                label="Mostrar tipo"
+                description="Tipo de atendimento no card"
+                control={
+                  <Switch
+                    checked={display.showType}
+                    onCheckedChange={(v) => setDisplay({ showType: v })}
+                    aria-label="Mostrar tipo"
+                  />
+                }
+              />
+              <FieldRow
+                label="Mostrar telefone"
+                description="Telefone do paciente no card"
+                control={
+                  <Switch
+                    checked={display.showPhone}
+                    onCheckedChange={(v) => setDisplay({ showPhone: v })}
+                    aria-label="Mostrar telefone"
+                  />
+                }
+              />
+            </div>
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Comportamento da grade · agenda toda
+            </p>
+            <div className="space-y-2">
+              <FieldRow
+                label="Destacar hora atual"
+                description="Linha do horário atual"
+                control={
+                  <Switch
+                    checked={display.nowIndicator}
+                    onCheckedChange={(v) => setDisplay({ nowIndicator: v })}
+                    aria-label="Destacar hora atual"
+                  />
+                }
+              />
+              <FieldRow
+                label="Sombrear fora do expediente"
+                description="Realça horários de funcionamento"
+                control={
+                  <Switch
+                    checked={display.businessHours}
+                    onCheckedChange={(v) => setDisplay({ businessHours: v })}
+                    aria-label="Sombrear fora do expediente"
+                  />
+                }
+              />
+              <FieldRow
+                label="Ocultar domingo"
+                description="Esconde a coluna de domingo"
+                control={
+                  <Switch
+                    checked={display.hideSunday}
+                    onCheckedChange={(v) => setDisplay({ hideSunday: v })}
+                    aria-label="Ocultar domingo"
+                  />
+                }
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </SectionCard>
   );
