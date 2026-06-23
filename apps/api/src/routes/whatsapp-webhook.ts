@@ -602,6 +602,30 @@ async function maybeHandleAppointmentIntent(
 // Tracks which wa_ids already got the concierge greeting (in-memory, per worker instance)
 const conciergeGreetedThisSession = new Set<string>();
 
+// Lê a config do Concierge de organizations.settings.crm_whatsapp.concierge
+async function loadConciergeConfig(
+  pool: any,
+  orgId: string,
+): Promise<{ enabled: boolean; autoReplyNewLeads: boolean; approvalIntents: string[] }> {
+  const defaults = { enabled: true, autoReplyNewLeads: true, approvalIntents: ["urgent"] };
+  try {
+    const res = await pool.query(
+      `SELECT settings->'crm_whatsapp'->'concierge' AS concierge FROM organizations WHERE id = $1 LIMIT 1`,
+      [orgId],
+    );
+    const raw = res.rows[0]?.concierge;
+    const cfg = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!cfg || typeof cfg !== "object") return defaults;
+    return {
+      enabled: cfg.enabled !== false,
+      autoReplyNewLeads: cfg.autoReplyNewLeads !== false,
+      approvalIntents: Array.isArray(cfg.approvalIntents) ? cfg.approvalIntents : defaults.approvalIntents,
+    };
+  } catch {
+    return defaults;
+  }
+}
+
 const _CONCIERGE_SCHEDULE_PATTERN =
   /\b(agendar|agendamento|consulta|marcar|avalia[çc][ãa]o|sessão|sessao|horário|horario|atendimento)\b/i;
 const _CONCIERGE_INFO_PATTERN =
@@ -618,6 +642,10 @@ async function maybeSendConciergeGreeting(
   text: string,
 ): Promise<void> {
   const waId = contact.wa_id;
+
+  // Respeita a config do CRM·WhatsApp (pode desligar a resposta automática)
+  const conciergeCfg = await loadConciergeConfig(pool, orgId);
+  if (!conciergeCfg.enabled || !conciergeCfg.autoReplyNewLeads) return;
 
   // Only send greeting once per session per contact to avoid spam
   if (conciergeGreetedThisSession.has(waId)) return;
@@ -652,8 +680,9 @@ async function maybeSendConciergeGreeting(
 
   const whatsapp = new WhatsAppService(env);
 
-  // HITL: resposta sensível vai para a fila de aprovação em vez de envio direto
-  if (needsHumanApproval(concierge.intent, text)) {
+  // HITL: resposta sensível (ou intenção marcada como "exige aprovação" na config)
+  // vai para a fila de aprovação em vez de envio direto
+  if (needsHumanApproval(concierge.intent, text) || conciergeCfg.approvalIntents.includes(concierge.intent)) {
     await pool.query(
       `INSERT INTO whatsapp_pending_replies
          (organization_id, wa_id, conversation_id, original_message, suggested_reply, intent)

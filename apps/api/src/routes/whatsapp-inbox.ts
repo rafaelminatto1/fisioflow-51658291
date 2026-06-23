@@ -27,9 +27,42 @@ import {
 import { sendReplyButtons, sendListMessage, sendFlowMessage } from "../lib/whatsapp-interactive";
 import { resolveOrCreateContact, linkContactToPatient } from "../lib/whatsapp-identity";
 import { isUuid } from "../lib/validators";
+import { WhatsAppService } from "../lib/whatsapp";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
+
+// ─── Config do CRM·WhatsApp (armazenada em organizations.settings.crm_whatsapp) ───
+export const CONCIERGE_INTENTS = ["scheduling", "information", "urgent", "other"] as const;
+
+const DEFAULT_CONCIERGE_CONFIG = {
+  enabled: true,
+  autoReplyNewLeads: true,
+  approvalIntents: ["urgent"] as string[],
+  greetingTone: "acolhedor" as "acolhedor" | "direto" | "formal",
+};
+
+const DEFAULT_FUNNEL_STAGES = [
+  { key: "lead", label: "Novo lead", color: "264 50% 50%" },
+  { key: "contact", label: "Aguardando", color: "28 70% 48%" },
+  { key: "evaluation", label: "Avaliação", color: "211 100% 50%" },
+  { key: "treatment", label: "Em tratamento", color: "142 55% 40%" },
+  { key: "alta", label: "Alta", color: "220 9% 50%" },
+];
+
+async function loadOrgSettings(pool: any, orgId: string): Promise<Record<string, unknown>> {
+  const res = await pool.query(`SELECT settings FROM organizations WHERE id = $1 LIMIT 1`, [orgId]);
+  const raw = res.rows[0]?.settings;
+  if (!raw) return {};
+  return typeof raw === "string" ? JSON.parse(raw) : raw;
+}
+
+function readCrmConfig(settings: Record<string, unknown>) {
+  const crm = (settings.crm_whatsapp as Record<string, unknown>) ?? {};
+  const concierge = { ...DEFAULT_CONCIERGE_CONFIG, ...((crm.concierge as object) ?? {}) };
+  const funnel = Array.isArray(crm.funnel) && crm.funnel.length ? crm.funnel : DEFAULT_FUNNEL_STAGES;
+  return { concierge, funnel };
+}
 
 const DEFAULT_WHATSAPP_TAGS = [
   { name: "Agendamento", color: "#0A84FF" },
@@ -1668,6 +1701,193 @@ app.post("/quick-replies", requireAuth, async (c) => {
   } catch (err) {
     console.error("[WhatsApp Inbox] POST /quick-replies error:", err);
     return c.json({ error: "Failed to create quick reply" }, 500);
+  }
+});
+
+// ─── PUT/DELETE respostas rápidas ───
+app.put("/quick-replies/:id", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { id } = c.req.param();
+  const pool = await createPool(c.env);
+  const body = (await c.req.json()) as {
+    title?: string;
+    content?: string;
+    team?: string | null;
+    category?: string | null;
+  };
+
+  const sets: string[] = [];
+  const params: any[] = [];
+  let idx = 1;
+  for (const [col, val] of [
+    ["title", body.title],
+    ["content", body.content],
+    ["team", body.team],
+    ["category", body.category],
+  ] as const) {
+    if (val !== undefined) {
+      sets.push(`${col} = $${idx++}`);
+      params.push(val);
+    }
+  }
+  if (sets.length === 0) return c.json({ error: "Nenhum campo para atualizar" }, 400);
+
+  params.push(id, user.organizationId);
+  try {
+    const result = await pool.query(
+      `UPDATE wa_quick_replies SET ${sets.join(", ")} WHERE id = $${idx++} AND organization_id = $${idx} RETURNING *`,
+      params,
+    );
+    if (result.rows.length === 0) return c.json({ error: "Resposta rápida não encontrada" }, 404);
+    return c.json({ data: result.rows[0] });
+  } catch (err) {
+    console.error("[WhatsApp Inbox] PUT /quick-replies/:id error:", err);
+    return c.json({ error: "Failed to update quick reply" }, 500);
+  }
+});
+
+app.delete("/quick-replies/:id", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { id } = c.req.param();
+  const pool = await createPool(c.env);
+  try {
+    await pool.query(`DELETE FROM wa_quick_replies WHERE id = $1 AND organization_id = $2`, [
+      id,
+      user.organizationId,
+    ]);
+    return c.json({ data: { removed: true } });
+  } catch (err) {
+    console.error("[WhatsApp Inbox] DELETE /quick-replies/:id error:", err);
+    return c.json({ error: "Failed to delete quick reply" }, 500);
+  }
+});
+
+// ─── PUT/DELETE etiquetas ───
+app.put("/tags/:id", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { id } = c.req.param();
+  const pool = await createPool(c.env);
+  const body = (await c.req.json()) as { name?: string; color?: string };
+
+  const sets: string[] = [];
+  const params: any[] = [];
+  let idx = 1;
+  if (body.name !== undefined) {
+    sets.push(`name = $${idx++}`);
+    params.push(body.name);
+  }
+  if (body.color !== undefined) {
+    sets.push(`color = $${idx++}`);
+    params.push(body.color);
+  }
+  if (sets.length === 0) return c.json({ error: "Nenhum campo para atualizar" }, 400);
+
+  params.push(id, user.organizationId);
+  try {
+    const result = await pool.query(
+      `UPDATE wa_tags SET ${sets.join(", ")} WHERE id = $${idx++} AND organization_id = $${idx} RETURNING *`,
+      params,
+    );
+    if (result.rows.length === 0) return c.json({ error: "Etiqueta não encontrada" }, 404);
+    return c.json({ data: result.rows[0] });
+  } catch (err) {
+    console.error("[WhatsApp Inbox] PUT /tags/:id error:", err);
+    return c.json({ error: "Failed to update tag" }, 500);
+  }
+});
+
+app.delete("/tags/:id", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { id } = c.req.param();
+  const pool = await createPool(c.env);
+  try {
+    await pool.query(`DELETE FROM wa_conversation_tags WHERE tag_id = $1 AND organization_id = $2`, [
+      id,
+      user.organizationId,
+    ]);
+    await pool.query(`DELETE FROM wa_tags WHERE id = $1 AND organization_id = $2`, [
+      id,
+      user.organizationId,
+    ]);
+    return c.json({ data: { removed: true } });
+  } catch (err) {
+    console.error("[WhatsApp Inbox] DELETE /tags/:id error:", err);
+    return c.json({ error: "Failed to delete tag" }, 500);
+  }
+});
+
+// ─── Configurações do CRM·WhatsApp ───
+app.get("/crm-settings", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  try {
+    const settings = await loadOrgSettings(pool, user.organizationId);
+    const { concierge, funnel } = readCrmConfig(settings);
+    const connection = {
+      phoneNumberId: (settings.whatsapp_phone_number_id as string) ?? null,
+      businessAccountId: (settings.whatsapp_business_account_id as string) ?? null,
+      phoneNumber: (settings.whatsapp_phone_number as string) ?? null,
+      displayName: (settings.whatsapp_display_name as string) ?? null,
+      webhookUrl: `${new URL(c.req.url).origin}/api/whatsapp/webhook`,
+      connected: Boolean(settings.whatsapp_phone_number_id),
+    };
+    return c.json({ data: { connection, concierge, funnel, intents: CONCIERGE_INTENTS } });
+  } catch (err) {
+    console.error("[WhatsApp Inbox] GET /crm-settings error:", err);
+    return c.json({ error: "Failed to load settings" }, 500);
+  }
+});
+
+app.patch("/crm-settings", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  const body = (await c.req.json()) as {
+    concierge?: Partial<typeof DEFAULT_CONCIERGE_CONFIG>;
+    funnel?: Array<{ key: string; label: string; color: string }>;
+  };
+  try {
+    const settings = await loadOrgSettings(pool, user.organizationId);
+    const current = readCrmConfig(settings);
+    const nextCrm = {
+      ...((settings.crm_whatsapp as object) ?? {}),
+      concierge: body.concierge ? { ...current.concierge, ...body.concierge } : current.concierge,
+      funnel: body.funnel ?? current.funnel,
+    };
+    const nextSettings = { ...settings, crm_whatsapp: nextCrm };
+    await pool.query(
+      `UPDATE organizations SET settings = $1::jsonb, updated_at = NOW() WHERE id = $2`,
+      [JSON.stringify(nextSettings), user.organizationId],
+    );
+    return c.json({ data: { concierge: nextCrm.concierge, funnel: nextCrm.funnel } });
+  } catch (err) {
+    console.error("[WhatsApp Inbox] PATCH /crm-settings error:", err);
+    return c.json({ error: "Failed to save settings" }, 500);
+  }
+});
+
+app.post("/crm-settings/test", requireAuth, async (c) => {
+  const user = c.get("user");
+  const body = (await c.req.json()) as {
+    to?: string;
+    templateName?: string;
+    language?: string;
+  };
+  const to = (body.to ?? "").replace(/\D/g, "");
+  if (to.length < 10) return c.json({ error: "Número de destino inválido" }, 400);
+  void user;
+  try {
+    const whatsapp = new WhatsAppService(c.env);
+    const result = await whatsapp.sendTemplateMessage(
+      to,
+      body.templateName ?? "hello_world",
+      body.language ?? "en_US",
+      [],
+    );
+    const accepted = Boolean((result as any)?.messages?.[0]?.id);
+    return c.json({ data: { accepted, raw: result } }, accepted ? 200 : 502);
+  } catch (err) {
+    console.error("[WhatsApp Inbox] POST /crm-settings/test error:", err);
+    return c.json({ error: "Falha ao enviar mensagem de teste" }, 500);
   }
 });
 
