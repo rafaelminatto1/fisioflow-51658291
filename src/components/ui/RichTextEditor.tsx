@@ -88,7 +88,7 @@ import { WebsocketProvider } from "y-websocket";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
 import { getWorkersApiUrl } from "@/lib/api/config";
-import { shouldApplyExternalValue, normalizeEditorHtml } from "./richTextSync";
+import { shouldApplyExternalValue, normalizeEditorHtml, normalizeIncomingEditorHtml } from "./richTextSync";
 import "./rich-text-editor.css";
 
 const lowlight = createLowlight(common);
@@ -161,7 +161,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 }) => {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingValue = useRef<string | null>(null);
-  const lastSentValue = useRef(value);
+  const lastSentValue = useRef(normalizeIncomingEditorHtml(value));
   const lastExternalValueRevision = useRef(externalValueRevision);
   const isUpdatingFromProp = useRef(false);
   const onValueChangeRef = useRef(onValueChange);
@@ -380,7 +380,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   const editor = useEditor({
     extensions,
-    content: value || "",
+    content: normalizeIncomingEditorHtml(value || ""),
     editable: !disabled,
     onUpdate: ({ editor: ed }) => {
       if (isUpdatingFromProp.current) return;
@@ -520,7 +520,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       return;
     }
 
-    const incoming = value || "";
+    const incoming = normalizeIncomingEditorHtml(value || "");
     if (
       shouldApplyExternalValue({
         incoming,

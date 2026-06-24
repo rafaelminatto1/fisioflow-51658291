@@ -50,3 +50,40 @@ export function shouldApplyExternalValue({
 export function normalizeEditorHtml(html: string): string {
   return html === "<p></p>" ? "" : html;
 }
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function looksLikeHtml(value: string): boolean {
+  return /<\/?(?:p|br|h[1-6]|ul|ol|li|strong|em|u|s|a|span|div|blockquote|pre|code|table|thead|tbody|tr|th|td|img)\b[\s\S]*>/i.test(value);
+}
+
+/**
+ * Converte observações legadas em texto puro para HTML antes de entregar ao TipTap.
+ * Sem isso, quebras de linha importadas do ZenFisio são interpretadas como espaços
+ * dentro de um único parágrafo.
+ */
+export function normalizeIncomingEditorHtml(value: string): string {
+  if (!value) return "";
+  if (looksLikeHtml(value)) return value;
+
+  const normalized = value.replace(/\r\n?/g, "\n");
+  if (!normalized.includes("\n")) return escapeHtml(normalized);
+
+  return normalized
+    .split(/\n{2,}/)
+    .map((paragraph) => {
+      const html = paragraph
+        .split("\n")
+        .map((line) => escapeHtml(line))
+        .join("<br>");
+      return `<p>${html || "<br>"}</p>`;
+    })
+    .join("");
+}
