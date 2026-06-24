@@ -25,18 +25,6 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
     switch (cron) {
       case "*/5 * * * *": // A cada 5 minutos — Health monitor leve, sem acordar Neon
         await runHealthMonitor(env);
-        try {
-          const pool = createPool(env);
-          await dispatchLeadSlaEscalations(pool, env);
-        } catch (err) {
-          console.warn("[Cron] Lead SLA escalation failed:", err);
-        }
-        try {
-          const pool = createPool(env);
-          await dispatchInstagramConcierge(pool, env);
-        } catch (err) {
-          console.warn("[Cron] Instagram concierge failed:", err);
-        }
         break;
 
       case "0 6 * * *": {
@@ -68,6 +56,20 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
           await dispatchScheduledReminders(pool, env);
         } catch (err) {
           console.warn("[Cron] Scheduled reminders failed:", err);
+        }
+        // SLA de leads + auto-reply do Concierge no Instagram (movidos do tick */5
+        // para não acordar o Neon a cada 5 min — scale-to-zero).
+        try {
+          const pool = createPool(env);
+          await dispatchLeadSlaEscalations(pool, env);
+        } catch (err) {
+          console.warn("[Cron] Lead SLA escalation failed:", err);
+        }
+        try {
+          const pool = createPool(env);
+          await dispatchInstagramConcierge(pool, env);
+        } catch (err) {
+          console.warn("[Cron] Instagram concierge failed:", err);
         }
         break;
       }
