@@ -14,6 +14,7 @@ export async function resolveOrCreateContact(
   try {
     let contact =
       (await findContactByBsuid(pool, orgId, bsuid)) ??
+      (await findContactByWaId(pool, orgId, waId)) ??
       (await findContactByPhone(pool, orgId, waId));
 
     if (contact) {
@@ -106,6 +107,20 @@ export async function linkContactToPatient(pool: Pool, contactId: string, patien
   } catch (error) {
     console.error("[whatsapp-identity] linkContactToPatient error:", error);
     throw error;
+  }
+}
+
+/** Busca por wa_id EXATO (sem remover não-dígitos) — essencial p/ webchat ("web:uuid"). */
+export async function findContactByWaId(pool: Pool, orgId: string, waId: string) {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM whatsapp_contacts WHERE organization_id = $1 AND wa_id = $2 LIMIT 1`,
+      [orgId, waId],
+    );
+    return result.rows[0] ?? null;
+  } catch (error) {
+    console.error("[whatsapp-identity] findContactByWaId error:", error);
+    return null;
   }
 }
 
