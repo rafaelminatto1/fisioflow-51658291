@@ -752,6 +752,8 @@ export interface ConciergeConfig {
   greetingTone: "acolhedor" | "direto" | "formal";
   slaEnabled: boolean;
   slaMinutes: number;
+  instagramAutoReply: boolean;
+  instagramReplyDelayMinutes: number;
 }
 
 export interface FunnelStage {

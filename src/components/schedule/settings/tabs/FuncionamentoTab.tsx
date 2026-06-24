@@ -626,6 +626,34 @@ export function FuncionamentoTab({ registerHandle }: TabComponentProps) {
 
               <div>
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Tipo de atendimento (opcional)
+                </Label>
+                <select
+                  value={capForm.appointment_type_id ?? ""}
+                  onChange={(e) =>
+                    setCapForm((p) => ({
+                      ...p,
+                      appointment_type_id: e.target.value || null,
+                    }))
+                  }
+                  className="mt-2 h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                >
+                  <option value="">Todos os tipos</option>
+                  {types
+                    .filter((t) => t.isActive)
+                    .map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                </select>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Deixe em branco para aplicar a todos os tipos de atendimento.
+                </p>
+              </div>
+
+              <div>
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Pacientes por horário
                 </Label>
                 <div className="mt-2 flex items-center gap-4">

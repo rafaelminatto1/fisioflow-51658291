@@ -671,9 +671,12 @@ export const EvolutionNoScrollPanel = memo(
               <SessionTimelineStrip
                 patientId={patientId}
                 excludeId={evolutionId}
-                onSeeAll={() => {}}
+                onSeeAll={() => {
+                  setHistoryOpen(false);
+                  onNavigateToTab?.("historico");
+                }}
                 onReplicate={handleReplicate}
-                maxItems={8}
+                maxItems={20}
               />
             </div>
           </SheetContent>

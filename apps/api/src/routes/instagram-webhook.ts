@@ -145,8 +145,10 @@ export async function sendInstagramText(
   _igAccountId: string,
   recipientIgsid: string,
   text: string,
+  tokenOverride?: string,
 ): Promise<unknown> {
-  const token = env.IG_ACCESS_TOKEN;
+  // Prefere o token renovável (settings) passado pelo chamador; senão o secret do env.
+  const token = tokenOverride || env.IG_ACCESS_TOKEN;
   if (!token) return { error: "IG_ACCESS_TOKEN ausente" };
   // Instagram API with Instagram Login: POST graph.instagram.com/{version}/me/messages
   const res = await fetch(`${IG_GRAPH}/me/messages`, {

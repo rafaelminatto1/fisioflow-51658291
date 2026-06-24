@@ -343,6 +343,11 @@ export function AparenciaTab({ registerHandle }: TabComponentProps) {
     applyToAllViews({
       cardSize: curr.cardSize,
       heightScale: curr.heightScale,
+      fontScale: curr.fontScale,
+      paddingScale: curr.paddingScale,
+      opacity: curr.opacity,
+      timeFontScale: curr.timeFontScale,
+      typeFontScale: curr.typeFontScale,
     });
   };
 

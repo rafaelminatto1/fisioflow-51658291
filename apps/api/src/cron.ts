@@ -31,6 +31,12 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         } catch (err) {
           console.warn("[Cron] Lead SLA escalation failed:", err);
         }
+        try {
+          const pool = createPool(env);
+          await dispatchInstagramConcierge(pool, env);
+        } catch (err) {
+          console.warn("[Cron] Instagram concierge failed:", err);
+        }
         break;
 
       case "0 6 * * *": {
@@ -75,6 +81,11 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         await processBirthdays(pool, env, ctx);
         await processInactivePatients(pool, env, ctx);
         await processRecallCampaigns(pool, env, ctx);
+        try {
+          await dispatchSessionDropoutReengagement(pool, env, ctx);
+        } catch (e) {
+          console.warn("[Cron] Session-3 dropout failed:", e);
+        }
         try {
           const sent = await dispatchMorningBriefing(env);
           if (sent) console.log("[Cron] Morning briefing dispatched");
@@ -325,6 +336,212 @@ async function processInactivePatients(db: any, env: Env, ctx: ExecutionContext)
       }).catch((err) => console.error(`[Cron] Workflow Reengagement failed for ${row.id}:`, err));
     }
   }
+}
+
+/**
+ * #4 — Evasão da "sessão 3": paciente no meio do tratamento (2-5 sessões feitas) que
+ * parou na janela crítica (7-21 dias) sem próxima sessão marcada. Cria tarefa de
+ * reativação no CRM e dispara o workflow de reengajamento. Dedup: não recria se já
+ * houver tarefa de reativação para o paciente nos últimos 30 dias.
+ */
+async function dispatchSessionDropoutReengagement(pool: any, env: Env, ctx: ExecutionContext) {
+  const DONE = "('confirmed','completed','realizado','concluido','presenca_confirmada')";
+  const res = await pool.query(`
+    SELECT p.id, p.full_name, p.phone, p.organization_id,
+           (SELECT count(*) FROM appointments a2
+              WHERE a2.patient_id = p.id AND a2.organization_id = p.organization_id
+                AND a2.status IN ${DONE}) AS done_count,
+           (SELECT max(a3.date) FROM appointments a3
+              WHERE a3.patient_id = p.id AND a3.organization_id = p.organization_id
+                AND a3.status IN ${DONE}) AS last_done
+    FROM patients p
+    WHERE p.is_active = true AND p.organization_id IS NOT NULL AND p.phone IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM appointments af
+        WHERE af.patient_id = p.id AND af.organization_id = p.organization_id
+          AND af.date >= CURRENT_DATE
+          AND af.status NOT IN ('cancelado','faltou','cancelled','no_show')
+      )
+  `);
+
+  const today = Date.now();
+  let flagged = 0;
+  for (const row of res.rows) {
+    try {
+      const done = Number(row.done_count);
+      if (done < 2 || done > 5) continue;
+      if (!row.last_done) continue;
+      const daysSince = (today - new Date(row.last_done).getTime()) / 86_400_000;
+      if (daysSince < 7 || daysSince > 21) continue;
+
+      // dedup: já existe tarefa de reativação recente?
+      const dup = await pool.query(
+        `SELECT 1 FROM tarefas
+         WHERE organization_id = $1 AND linked_entity_id = $2
+           AND titulo ILIKE 'Reativar pacote%' AND created_at > now() - interval '30 days' LIMIT 1`,
+        [row.organization_id, row.id],
+      );
+      if (dup.rows.length > 0) continue;
+
+      await pool.query(
+        `INSERT INTO tarefas (organization_id, created_by, titulo, descricao, status, prioridade, tipo,
+           order_index, tags, label_ids, checklists, attachments, task_references, dependencies,
+           requires_acknowledgment, acknowledgments, linked_entity_type, linked_entity_id)
+         VALUES ($1, 'system', $2, $3, 'A_FAZER', 'ALTA', 'TAREFA',
+           0, '{}', '{}', '[]', '[]', '[]', '[]', false, '[]', 'patient', $4)`,
+        [
+          row.organization_id,
+          `Reativar pacote — risco de evasão (sessão ${done}) — ${row.full_name}`,
+          `Paciente fez ${done} sessões e parou há ${Math.round(daysSince)} dias, sem próxima sessão marcada (janela crítica de evasão). Entrar em contato para reagendar e dar continuidade ao tratamento.`,
+          row.id,
+        ],
+      );
+
+      if (env.WORKFLOW_REENGAGEMENT) {
+        await env.WORKFLOW_REENGAGEMENT.create({
+          id: `dropout-${row.id}-${new Date().toISOString().slice(0, 10)}`,
+          params: {
+            patientId: row.id,
+            patientName: row.full_name,
+            patientPhone: row.phone,
+            organizationId: row.organization_id,
+            therapistName: "seu fisioterapeuta",
+            daysSinceLastAppointment: Math.round(daysSince),
+          },
+        }).catch(() => {});
+      }
+      flagged++;
+    } catch (e) {
+      console.warn("[SessionDropout] row failed:", e);
+    }
+  }
+  void ctx;
+  if (flagged) console.log(`[Cron] Session-3 dropout reactivations=${flagged}`);
+}
+
+/**
+ * Auto-reply do Concierge no Instagram (modo com atraso).
+ * Roda a cada 5 min: se uma DM do Instagram fica sem resposta humana por mais que
+ * `instagramReplyDelayMinutes`, a IA responde automaticamente via Instagram Direct.
+ * Dedup natural: só responde se NÃO houver nenhuma saída na conversa nas últimas 24h
+ * (se um humano respondeu, há saída → pula).
+ */
+/**
+ * Renova os tokens de longa duração do Instagram (validade ~60 dias). Cada chamada a
+ * `refresh_access_token` reinicia a validade para 60 dias a partir de agora, então rodar
+ * periodicamente garante que o token nunca expire. Grava o token renovado em
+ * organizations.settings.instagram_access_token (preferido pelo caminho de envio sobre o env).
+ */
+async function refreshInstagramTokens(pool: any, env: Env) {
+  const res = await pool.query(`
+    SELECT id,
+           settings->>'instagram_access_token' AS ig_token,
+           settings->>'instagram_business_account_id' AS ig_account_id
+    FROM organizations
+    WHERE settings->>'instagram_business_account_id' IS NOT NULL
+  `);
+  for (const row of res.rows) {
+    const current = row.ig_token || env.IG_ACCESS_TOKEN;
+    if (!current) continue;
+    try {
+      const url = `https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=${encodeURIComponent(current)}`;
+      const r = await fetch(url);
+      const data = (await r.json()) as { access_token?: string; expires_in?: number; error?: unknown };
+      if (!data.access_token) {
+        console.warn(`[IG Refresh] org=${row.id} sem access_token:`, JSON.stringify(data.error ?? data));
+        continue;
+      }
+      const expiresAt = new Date(Date.now() + (data.expires_in ?? 5_184_000) * 1000).toISOString();
+      await pool.query(
+        `UPDATE organizations
+         SET settings = jsonb_set(
+               jsonb_set(COALESCE(settings, '{}'::jsonb), '{instagram_access_token}', to_jsonb($2::text)),
+               '{instagram_token_expires}', to_jsonb($3::text))
+         WHERE id = $1`,
+        [row.id, data.access_token, expiresAt],
+      );
+      console.log(`[IG Refresh] org=${row.id} token renovado, expira ${expiresAt}`);
+    } catch (e) {
+      console.warn(`[IG Refresh] org=${row.id} falhou:`, e);
+    }
+  }
+}
+
+async function dispatchInstagramConcierge(pool: any, env: Env) {
+  const { AIConciergeService } = await import("./services/ai-concierge");
+  const { sendInstagramText } = await import("./routes/instagram-webhook");
+  const { needsHumanApproval } = await import("./lib/whatsappApproval");
+
+  const res = await pool.query(`
+    SELECT c.id, c.organization_id, c.contact_id, wc.wa_id AS igsid,
+           lm.created_at AS last_at, lm.content::text AS last_content,
+           o.settings->'crm_whatsapp'->'concierge' AS concierge,
+           o.settings->>'instagram_business_account_id' AS ig_account_id,
+           o.settings->>'instagram_access_token' AS ig_token,
+           (SELECT count(*) FROM wa_messages mo
+              WHERE mo.conversation_id = c.id AND mo.direction = 'outbound'
+                AND mo.created_at > now() - interval '24 hours') AS recent_out
+    FROM wa_conversations c
+    JOIN whatsapp_contacts wc ON wc.id = c.contact_id
+    JOIN organizations o ON o.id = c.organization_id
+    JOIN LATERAL (
+      SELECT direction, created_at, content FROM wa_messages m
+      WHERE m.conversation_id = c.id AND m.direction <> 'internal'
+      ORDER BY created_at DESC LIMIT 1
+    ) lm ON true
+    WHERE c.channel = 'instagram' AND c.status IN ('open', 'pending')
+      AND lm.direction = 'inbound'
+      AND lm.created_at > now() - interval '24 hours'
+  `);
+
+  const now = Date.now();
+  let sent = 0;
+  for (const row of res.rows) {
+    try {
+      const cfg = (typeof row.concierge === "string" ? JSON.parse(row.concierge) : row.concierge) ?? {};
+      if (cfg.instagramAutoReply !== true) continue;
+      if (Number(row.recent_out) > 0) continue; // humano (ou IA) já respondeu
+      if (!row.ig_account_id || !(row.ig_token || env.IG_ACCESS_TOKEN)) continue;
+
+      const delayMin = typeof cfg.instagramReplyDelayMinutes === "number" ? cfg.instagramReplyDelayMinutes : 3;
+      const ageMin = (now - new Date(row.last_at).getTime()) / 60000;
+      if (ageMin < delayMin) continue;
+
+      const text = (() => {
+        const c = row.last_content;
+        if (typeof c !== "string") return "";
+        const t = c.trim();
+        return t.startsWith('"') && t.endsWith('"') ? JSON.parse(t) : t;
+      })();
+      if (!text || text.length < 2) continue;
+
+      const concierge = await AIConciergeService.processMessage(env, row.organization_id, text, []);
+      // Urgências/sensíveis não são auto-respondidas — ficam para o humano.
+      if (needsHumanApproval(concierge.intent, text)) continue;
+
+      const r = (await sendInstagramText(env, String(row.ig_account_id), row.igsid, concierge.reply, row.ig_token || undefined)) as any;
+      if (r?.message_id) {
+        await import("./lib/whatsapp-conversations").then(({ addMessage }) =>
+          addMessage(
+            pool,
+            row.id,
+            row.organization_id,
+            row.contact_id,
+            "outbound",
+            "system",
+            "ai_concierge",
+            "text",
+            concierge.reply,
+            r.message_id,
+          ).catch(() => {}),
+        );
+        sent++;
+      }
+    } catch (e) {
+      console.warn("[IG Concierge] row failed:", e);
+    }
+  }
+  if (sent) console.log(`[Cron] Instagram concierge replies=${sent}`);
 }
 
 /**

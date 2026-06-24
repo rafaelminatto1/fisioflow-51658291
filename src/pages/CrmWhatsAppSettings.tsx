@@ -431,6 +431,41 @@ export default function CrmWhatsAppSettings() {
                   </div>
                 </div>
 
+                <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-bold">Auto-resposta no Instagram</Label>
+                      <p className="text-xs text-muted-foreground">
+                        A IA responde DMs do Instagram automaticamente se ninguém atender no prazo.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={concierge.instagramAutoReply}
+                      onCheckedChange={(v) => setConcierge({ ...concierge, instagramAutoReply: v })}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Label className="text-sm">Responder após</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={120}
+                      value={concierge.instagramReplyDelayMinutes}
+                      disabled={!concierge.instagramAutoReply}
+                      onChange={(e) =>
+                        setConcierge({
+                          ...concierge,
+                          instagramReplyDelayMinutes: Number(e.target.value) || 0,
+                        })
+                      }
+                      className="w-20"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      min sem resposta humana (0 = imediato)
+                    </span>
+                  </div>
+                </div>
+
                 <div className="rounded-xl border border-border bg-card p-5">
                   <h3 className="text-sm font-bold">Exigir aprovação humana</h3>
                   <p className="mb-3 text-xs text-muted-foreground">

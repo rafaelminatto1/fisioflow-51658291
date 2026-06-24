@@ -45,6 +45,9 @@ const DEFAULT_CONCIERGE_CONFIG = {
   // SLA de resposta humana (#1 speed-to-lead): alerta se um lead aguarda há X min.
   slaEnabled: true,
   slaMinutes: 10,
+  // Auto-reply do Concierge no Instagram (com atraso: dá chance do humano atender primeiro).
+  instagramAutoReply: false,
+  instagramReplyDelayMinutes: 3,
 };
 
 const DEFAULT_FUNNEL_STAGES = [
@@ -833,17 +836,20 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
     } else if (channel === "instagram") {
       // Instagram Direct: envia via Graph API do Instagram (janela de 24h).
       const igRes = await pool.query(
-        `SELECT settings->>'instagram_business_account_id' AS ig FROM organizations WHERE id = $1`,
+        `SELECT settings->>'instagram_business_account_id' AS ig,
+                settings->>'instagram_access_token' AS ig_token
+         FROM organizations WHERE id = $1`,
         [conv.organization_id],
       );
       const igId = igRes.rows[0]?.ig;
+      const igToken = igRes.rows[0]?.ig_token || undefined;
       if (!to) {
         sendError = { kind: "missing_recipient", message: "Conversa do Instagram sem destinatário" };
-      } else if (!igId || !c.env.IG_ACCESS_TOKEN) {
+      } else if (!igId || !(igToken || c.env.IG_ACCESS_TOKEN)) {
         sendError = { kind: "missing_credentials", message: "Instagram não configurado" };
       } else {
         try {
-          const r = (await sendInstagramText(c.env, String(igId), to, body.content || "")) as any;
+          const r = (await sendInstagramText(c.env, String(igId), to, body.content || "", igToken)) as any;
           metaMessageId = r?.message_id ?? null;
           if (r?.error) {
             sendError = {

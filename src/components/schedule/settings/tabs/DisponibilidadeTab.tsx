@@ -164,6 +164,15 @@ export function DisponibilidadeTab({ registerHandle }: TabComponentProps) {
                       Semanal
                     </Badge>
                   )}
+                  {b.is_recurring && (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] border-amber-400 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-400"
+                      title="Bloqueios recorrentes ainda não aparecem na grade do calendário"
+                    >
+                      ⚠ Não exibido no calendário
+                    </Badge>
+                  )}
                 </div>
                 <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">
                   {b.start_date}

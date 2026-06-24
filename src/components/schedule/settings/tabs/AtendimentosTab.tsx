@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Stethoscope, Plus, Trash2, Copy, Star, Palette, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { SectionCard } from "@/components/schedule/settings/shared/SectionCard";
 import { EmptyState } from "@/components/schedule/settings/shared/EmptyState";
 import { SortableList } from "@/components/schedule/settings/shared/SortableList";
@@ -13,11 +21,21 @@ import { useAppointmentTypes } from "@/hooks/useAppointmentTypes";
 import { useStatusConfig } from "@/hooks/useStatusConfig";
 import type { TabComponentProps } from "../types";
 
+interface NewStatusForm {
+  label: string;
+  color: string;
+}
+
+const EMPTY_STATUS_FORM: NewStatusForm = { label: "", color: "#2563eb" };
+
 export function AtendimentosTab({ registerHandle }: TabComponentProps) {
   const { types, isLoading: isLoadingTypes, addType, updateType, removeType, toggleActive, duplicateType } =
     useAppointmentTypes();
   const { allStatusRows, updateStatus, deleteStatus, createStatus, isLoading: isLoadingStatus, isSaving } =
     useStatusConfig();
+
+  const [newStatusDialog, setNewStatusDialog] = useState(false);
+  const [newStatusForm, setNewStatusForm] = useState<NewStatusForm>(EMPTY_STATUS_FORM);
 
   useEffect(() => {
     registerHandle({
@@ -38,23 +56,30 @@ export function AtendimentosTab({ registerHandle }: TabComponentProps) {
     });
   };
 
-  const handleAddStatus = () => {
-    const label = window.prompt("Nome do novo status:");
-    if (!label) return;
-    const key = label
+  const openNewStatusDialog = () => {
+    setNewStatusForm(EMPTY_STATUS_FORM);
+    setNewStatusDialog(true);
+  };
+
+  const handleCreateStatus = () => {
+    if (!newStatusForm.label.trim()) return;
+    const key = newStatusForm.label
       .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "_")
       .replace(/^_+|_+$/g, "");
     createStatus({
       key,
-      label,
-      color: "#2563eb",
-      bgColor: "#dbeafe",
-      borderColor: "#2563eb",
+      label: newStatusForm.label.trim(),
+      color: newStatusForm.color,
+      bgColor: `${newStatusForm.color}26`,
+      borderColor: newStatusForm.color,
       allowedActions: [],
       isActive: true,
       countsTowardCapacity: true,
     });
+    setNewStatusDialog(false);
   };
 
   const handleReorderStatus = (next: typeof allStatusRows) => {
@@ -222,7 +247,7 @@ export function AtendimentosTab({ registerHandle }: TabComponentProps) {
         action={
           <Button
             size="sm"
-            onClick={handleAddStatus}
+            onClick={openNewStatusDialog}
             className="bg-blue-600 hover:bg-blue-700"
             disabled={isSaving}
           >
@@ -321,6 +346,58 @@ export function AtendimentosTab({ registerHandle }: TabComponentProps) {
           />
         )}
       </SectionCard>
+
+      {/* Dialog para criar novo status — substitui window.prompt() */}
+      <Dialog open={newStatusDialog} onOpenChange={setNewStatusDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Novo status</DialogTitle>
+            <DialogDescription>
+              Defina o nome e a cor principal do novo status de atendimento.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-xs">Nome do status</Label>
+              <Input
+                autoFocus
+                value={newStatusForm.label}
+                onChange={(e) => setNewStatusForm((p) => ({ ...p, label: e.target.value }))}
+                onKeyDown={(e) => e.key === "Enter" && handleCreateStatus()}
+                placeholder="Ex: Em espera, Confirmado…"
+                className="mt-1 h-9"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Cor</Label>
+              <div className="mt-1 flex items-center gap-3">
+                <label className="relative h-9 w-9 cursor-pointer overflow-hidden rounded-md border border-slate-200 dark:border-slate-700">
+                  <span className="block h-full w-full" style={{ backgroundColor: newStatusForm.color }} />
+                  <input
+                    type="color"
+                    value={newStatusForm.color}
+                    onChange={(e) => setNewStatusForm((p) => ({ ...p, color: e.target.value }))}
+                    className="absolute inset-0 cursor-pointer opacity-0"
+                  />
+                </label>
+                <span className="font-mono text-sm text-muted-foreground">{newStatusForm.color}</span>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setNewStatusDialog(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleCreateStatus}
+              disabled={!newStatusForm.label.trim() || isSaving}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isSaving ? "Criando…" : "Criar status"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

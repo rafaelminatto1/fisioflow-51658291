@@ -1,3 +1,4 @@
+import React from "react";
 import { AlertTriangle } from "lucide-react";
 
 export interface ScheduleEventColors {
@@ -61,19 +62,23 @@ export function ScheduleEventContent({
 
   return (
     <div
-      className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-l-4 border-border/40 px-2 py-1 shadow-sm transition-shadow duration-200 hover:shadow-md"
+      className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-l-4 border-white shadow-sm transition-shadow duration-200 hover:shadow-md"
       style={{
         borderLeftColor: safeColors.accent,
         backgroundColor:
           safeColors.background !== "transparent" ? safeColors.background : "hsl(var(--card))",
         color: safeColors.text,
-        opacity: isSelected ? 0.9 : 1,
-      }}
+        // CSS vars injetadas pelo useAgendaAppearance — refletem os sliders
+        // de Fonte, Espaçamento e Opacidade na aba de Aparência.
+        opacity: isSelected ? 0.9 : "var(--agenda-card-opacity, 1)" as unknown as number,
+        fontSize: "calc(12px * var(--agenda-font-scale, 1))" as unknown as number,
+        padding: "var(--agenda-card-padding, 0.25rem 0.5rem)",
+      } as React.CSSProperties}
     >
       {/* Linha 1: nome dominante */}
       <div className="flex items-start justify-between gap-1.5">
         <p
-          className="fc-event-patient-name min-w-0 text-[12px] font-extrabold leading-tight text-slate-900 dark:text-white"
+          className="fc-event-patient-name min-w-0 font-extrabold leading-tight text-slate-900 dark:text-white"
           style={{ fontFamily: "var(--font-display, Nunito, sans-serif)" }}
         >
           {title}
