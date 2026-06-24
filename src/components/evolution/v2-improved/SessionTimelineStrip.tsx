@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import DOMPurify from "dompurify";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -25,6 +26,7 @@ import { useSoapRecords, type SoapRecord } from "@/hooks/useSoapRecords";
 import { usePendingSyncIds } from "@/hooks/usePendingSyncIds";
 import { stripHtml } from "@/lib/utils/stripHtml";
 import { cn } from "@/lib/utils";
+import { normalizeIncomingEditorHtml } from "@/components/ui/richTextSync";
 
 /* ─── Props ────────────────────────────────────────────────────────────── */
 interface SessionTimelineStripProps {
@@ -89,13 +91,14 @@ function SessionSummaryModal({
 }) {
   const navigate = useNavigate();
   const date = new Date(record.record_date);
-  const obs = stripHtml(record.observacao || "");
+  const obsText = stripHtml(record.observacao || "");
+  const obsHtml = DOMPurify.sanitize(normalizeIncomingEditorHtml(record.observacao || ""));
   const procedures = record.procedures ?? [];
   const exercises = record.exercises ?? [];
   const homeExercises = (record as any).home_exercises ?? [];
   const measurements = record.measurements ?? [];
   const isEmpty =
-    !obs &&
+    !obsText &&
     procedures.length === 0 &&
     exercises.length === 0 &&
     homeExercises.length === 0 &&
@@ -176,14 +179,13 @@ function SessionSummaryModal({
           )}
 
           {/* Observações */}
-          {obs && (
+          {obsText && (
             <section>
               <SectionTitle icon={FileText} label="Observações clínicas" />
-              <div className="rounded-xl bg-muted/40 border border-border p-3">
-                <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">
-                  {obs}
-                </p>
-              </div>
+              <div
+                className="rounded-xl bg-muted/40 border border-border p-3 text-sm text-foreground leading-relaxed [&_p]:mb-2 [&_p:last-child]:mb-0 [&_ul]:ml-5 [&_ul]:list-disc [&_ol]:ml-5 [&_ol]:list-decimal"
+                dangerouslySetInnerHTML={{ __html: obsHtml }}
+              />
             </section>
           )}
 
