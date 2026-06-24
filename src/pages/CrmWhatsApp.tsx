@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -35,6 +36,7 @@ import {
   fetchCrmSettings,
   fetchQuickReplies,
   fetchTags,
+  markConversationRead,
   removeTag,
   type FunnelStage,
   type QuickReply,
@@ -190,6 +192,7 @@ export default function CrmWhatsApp() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [pipelineFilter, setPipelineFilter] = useState<PipelineFilter>("all");
+  const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [composer, setComposer] = useState("");
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
@@ -259,6 +262,15 @@ export default function CrmWhatsApp() {
       setSelectedId(filteredConversations[0].id);
     }
   }, [filteredConversations, selectedId]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    markConversationRead(selectedId)
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ["whatsapp", "unread-count"] });
+      })
+      .catch(() => {});
+  }, [selectedId, queryClient]);
 
   const pipelineCounts = useMemo(() => {
     return {

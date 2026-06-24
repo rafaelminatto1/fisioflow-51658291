@@ -777,6 +777,37 @@ app.post("/conversations/:id/restore", requireAuth, async (c) => {
   }
 });
 
+app.post("/conversations/:id/read", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { id } = c.req.param();
+  const pool = await createPool(c.env);
+
+  try {
+    const result = await pool.query(
+      `UPDATE wa_conversations
+          SET last_read_at = now()
+        WHERE id = $1 AND organization_id = $2
+        RETURNING last_read_at`,
+      [id, user.organizationId],
+    );
+
+    if (result.rows.length === 0) {
+      return c.json({ error: "Conversation not found" }, 404);
+    }
+
+    await broadcastToOrg(c.env, user.organizationId, {
+      type: "whatsapp_read",
+      conversationId: id,
+      readBy: user.uid,
+    });
+
+    return c.json({ data: { lastReadAt: result.rows[0].last_read_at } });
+  } catch (err) {
+    console.error("[WhatsApp Inbox] POST /conversations/:id/read error:", err);
+    return c.json({ error: "Failed to mark conversation as read" }, 500);
+  }
+});
+
 app.post("/conversations/:id/messages", requireAuth, async (c) => {
   const requestId = crypto.randomUUID();
   const user = c.get("user");
