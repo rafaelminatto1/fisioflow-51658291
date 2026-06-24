@@ -1,10 +1,7 @@
 import { lazy } from "react";
-import { Route } from "react-router-dom";
+import { Navigate, Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
-const WhatsAppInboxPage = lazy(
-  () => import(/* webpackChunkName: "whatsapp-inbox" */ "@/pages/WhatsAppInbox"),
-);
 const WhatsAppDashboardPage = lazy(
   () => import(/* webpackChunkName: "whatsapp-dashboard" */ "@/pages/WhatsAppDashboard"),
 );
@@ -39,14 +36,7 @@ export const whatsappRoutes = (
         </ProtectedRoute>
       }
     />
-    <Route
-      path="/whatsapp/inbox"
-      element={
-        <ProtectedRoute>
-          <WhatsAppInboxPage />
-        </ProtectedRoute>
-      }
-    />
+    <Route path="/whatsapp/inbox" element={<Navigate to="/crm-whatsapp" replace />} />
     <Route
       path="/whatsapp/dashboard"
       element={

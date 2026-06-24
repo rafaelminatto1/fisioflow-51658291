@@ -1611,6 +1611,26 @@ app.get("/metrics", requireAuth, async (c) => {
   }
 });
 
+app.get("/unread-count", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+
+  try {
+    const result = await pool.query(
+      `SELECT COALESCE(SUM(unread_count), 0)::int AS unread
+       FROM wa_conversations
+       WHERE organization_id = $1
+         AND (metadata->>'deleted_at') IS NULL
+         AND status <> 'closed'`,
+      [user.organizationId],
+    );
+    return c.json({ data: { unread: result.rows[0]?.unread ?? 0 } });
+  } catch (err) {
+    console.error("[WhatsApp Inbox] GET /unread-count error:", err);
+    return c.json({ error: "Failed to fetch unread count" }, 500);
+  }
+});
+
 app.get("/tags", requireAuth, async (c) => {
   const user = c.get("user");
   const pool = await createPool(c.env);
