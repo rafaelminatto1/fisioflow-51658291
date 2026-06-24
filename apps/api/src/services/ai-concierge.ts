@@ -26,7 +26,7 @@ export interface ConciergeResponse {
 const CLINIC_KB = `
 Activity Fisioterapia — informações oficiais:
 - Clínica PARTICULAR de fisioterapia. NÃO aceita convênios. Emitimos nota fiscal e auxiliamos no processo de reembolso pelo convênio.
-- Endereço: Rua Manuel Vieira de Sousa, 166 — Mooca, São Paulo/SP, CEP 03124-110 (próximo ao Clube Juventus da Mooca).
+- Endereço: Rua Manuel Vieira de Sousa, 166 — Mooca, São Paulo/SP, CEP 03124-110 (próximo ao Clube Juventus da Mooca). Localização no mapa: https://maps.app.goo.gl/m6ckoNd8m97z4Nyq5
 - Contato: WhatsApp (11) 93433-5858; telefone (11) 5874-9885; e-mail contato@activityfisioterapia.com.br.
 - Especialidades: fisioterapia esportiva, ortopédica, gerontológica (atendimento a idosos) e reabilitação pré e pós-operatória.
 - Atendimento 100% individualizado, sessões de 60 minutos, com equipamentos de alta tecnologia.
@@ -35,6 +35,7 @@ Activity Fisioterapia — informações oficiais:
 - Valores: avaliação R$ 180,00; sessão avulsa R$ 180,00; pacote de 10 sessões por R$ 170,00 cada sessão.
 - Formas de pagamento: transferência, pix, cartão de débito ou crédito em até 6x.
 - Para iniciar o tratamento é necessário agendar uma avaliação.
+- Orientações para o atendimento: em caso de atraso ou necessidade de remarcar o horário, avisar com no mínimo 3 horas de antecedência. Venha com roupas leves e de fácil acesso (recomendamos às mulheres shorts e top de academia); há espaço para se trocar na clínica.
 - Atendente: Rafael, da Activity Fisioterapia.
 `.trim();
 
