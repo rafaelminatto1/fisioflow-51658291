@@ -77,13 +77,7 @@ export function normalizeIncomingEditorHtml(value: string): string {
   if (!normalized.includes("\n")) return escapeHtml(normalized);
 
   return normalized
-    .split(/\n{2,}/)
-    .map((paragraph) => {
-      const html = paragraph
-        .split("\n")
-        .map((line) => escapeHtml(line))
-        .join("<br>");
-      return `<p>${html || "<br>"}</p>`;
-    })
+    .split("\n")
+    .map((line) => `<p>${escapeHtml(line) || "<br>"}</p>`)
     .join("");
 }

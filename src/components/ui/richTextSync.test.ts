@@ -4,7 +4,7 @@ import { normalizeIncomingEditorHtml } from "./richTextSync";
 describe("normalizeIncomingEditorHtml", () => {
   it("preserva quebras de linha de observações legadas em texto puro", () => {
     expect(normalizeIncomingEditorHtml("15/06/2025\nPaciente relatou dor\nExercício 3x10")).toBe(
-      "<p>15/06/2025<br>Paciente relatou dor<br>Exercício 3x10</p>",
+      "<p>15/06/2025</p><p>Paciente relatou dor</p><p>Exercício 3x10</p>",
     );
   });
 
@@ -14,7 +14,7 @@ describe("normalizeIncomingEditorHtml", () => {
 
   it("escapa texto puro antes de inserir no editor", () => {
     expect(normalizeIncomingEditorHtml("Paciente <alerta>\nA & B")).toBe(
-      "<p>Paciente &lt;alerta&gt;<br>A &amp; B</p>",
+      "<p>Paciente &lt;alerta&gt;</p><p>A &amp; B</p>",
     );
   });
 });
