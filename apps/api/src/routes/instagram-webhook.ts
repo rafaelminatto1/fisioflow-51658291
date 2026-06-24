@@ -36,22 +36,23 @@ app.get("/", (c) => {
 app.post("/", async (c) => {
   const rawBody = await c.req.text();
   const signature = c.req.header("x-hub-signature-256");
-  // WhatsApp e Instagram estão no MESMO Meta App (Activity Fisioterapia, 2479744142426362),
-  // então o X-Hub-Signature-256 é assinado com o mesmo app secret. Valida contra os secrets
-  // configurados (IG_APP_SECRET primeiro, depois WHATSAPP_APP_SECRET como fallback) e aceita
-  // se QUALQUER um conferir. Só rejeita se nenhum bater (e houver ao menos um configurado).
-  const candidateSecrets = [c.env.IG_APP_SECRET, c.env.WHATSAPP_APP_SECRET].filter(
-    (s): s is string => typeof s === "string" && s.length > 0,
-  );
-  if (candidateSecrets.length > 0) {
-    let valid = false;
-    for (const secret of candidateSecrets) {
+  // Validação de assinatura em modo DIAGNÓSTICO (não-bloqueante): o Instagram com Login do
+  // Instagram pode assinar o X-Hub-Signature-256 com um secret diferente do WhatsApp mesmo
+  // sendo o mesmo Meta App. Para NÃO derrubar o recebimento de DMs reais, apenas registramos
+  // se alguma das chaves confere; quando soubermos qual confere, voltamos a rejeitar (401).
+  const candidateSecrets: Array<[string, string]> = [
+    ["IG_APP_SECRET", c.env.IG_APP_SECRET ?? ""],
+    ["WHATSAPP_APP_SECRET", c.env.WHATSAPP_APP_SECRET ?? ""],
+  ].filter(([, v]) => v.length > 0) as Array<[string, string]>;
+  if (candidateSecrets.length > 0 && signature) {
+    let matched: string | null = null;
+    for (const [name, secret] of candidateSecrets) {
       if (await verifyMetaSignature(secret, rawBody, signature)) {
-        valid = true;
+        matched = name;
         break;
       }
     }
-    if (!valid) return c.json({ error: "Assinatura inválida" }, 401);
+    console.log(`[IG Webhook] signature check: matched=${matched ?? "NONE"} (tried ${candidateSecrets.map(([n]) => n).join(",")})`);
   }
 
   let body: Record<string, unknown>;
