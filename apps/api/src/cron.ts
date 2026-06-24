@@ -241,6 +241,12 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
           `[Cron] sloBiweekly requests=${result.requests} uptimePct=${result.uptimePct} p95=${result.p95_ms} adminsNotified=${result.adminsNotified}`,
         );
         if (result.error) console.error("[Cron] sloBiweekly error:", result.error);
+        try {
+          const pool = createPool(env);
+          await refreshInstagramTokens(pool, env);
+        } catch (e) {
+          console.warn("[Cron] IG token refresh failed:", e);
+        }
         break;
       }
 
