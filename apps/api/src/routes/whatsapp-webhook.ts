@@ -776,9 +776,15 @@ async function maybeSendConciergeGreeting(
 
   const whatsapp = new WhatsAppService(env);
 
-  // HITL: resposta sensível (ou intenção marcada como "exige aprovação" na config)
-  // vai para a fila de aprovação em vez de envio direto
-  if (needsHumanApproval(concierge.intent, text) || conciergeCfg.approvalIntents.includes(concierge.intent)) {
+  // HITL: resposta sensível, intenção marcada como "exige aprovação" na config, OU
+  // pergunta fora das informações oficiais (answerable=false) → fila de aprovação
+  // humana em vez de envio direto. Nunca enviamos resposta inventada.
+  if (
+    !concierge.answerable ||
+    !concierge.reply ||
+    needsHumanApproval(concierge.intent, text) ||
+    conciergeCfg.approvalIntents.includes(concierge.intent)
+  ) {
     await pool.query(
       `INSERT INTO whatsapp_pending_replies
          (organization_id, wa_id, conversation_id, original_message, suggested_reply, intent)

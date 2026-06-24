@@ -488,7 +488,7 @@ async function dispatchInstagramConcierge(pool: any, env: Env) {
            o.settings->>'instagram_access_token' AS ig_token,
            (SELECT count(*) FROM wa_messages mo
               WHERE mo.conversation_id = c.id AND mo.direction = 'outbound'
-                AND mo.created_at > now() - interval '24 hours') AS recent_out
+                AND mo.created_at > now() - interval '5 minutes') AS recent_out
     FROM wa_conversations c
     JOIN whatsapp_contacts wc ON wc.id = c.contact_id
     JOIN organizations o ON o.id = c.organization_id
@@ -508,7 +508,10 @@ async function dispatchInstagramConcierge(pool: any, env: Env) {
     try {
       const cfg = (typeof row.concierge === "string" ? JSON.parse(row.concierge) : row.concierge) ?? {};
       if (cfg.instagramAutoReply !== true) continue;
-      if (Number(row.recent_out) > 0) continue; // humano (ou IA) já respondeu
+      // Só segura se um humano respondeu nos últimos 5 min (está atendendo agora).
+      // Respostas humanas mais antigas não bloqueiam: o bot cobre o "gap" da última
+      // pergunta não respondida (a query garante que a última mensagem é inbound).
+      if (Number(row.recent_out) > 0) continue;
       if (!row.ig_account_id || !(row.ig_token || env.IG_ACCESS_TOKEN)) continue;
 
       const delayMin = typeof cfg.instagramReplyDelayMinutes === "number" ? cfg.instagramReplyDelayMinutes : 3;
@@ -524,6 +527,8 @@ async function dispatchInstagramConcierge(pool: any, env: Env) {
       if (!text || text.length < 2) continue;
 
       const concierge = await AIConciergeService.processMessage(env, row.organization_id, text, []);
+      // Só responde o que está coberto pelas informações oficiais; nunca inventa.
+      if (!concierge.answerable || !concierge.reply) continue;
       // Urgências/sensíveis não são auto-respondidas — ficam para o humano.
       if (needsHumanApproval(concierge.intent, text)) continue;
 

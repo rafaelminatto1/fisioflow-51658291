@@ -1,11 +1,16 @@
 import { Env } from "../types/env";
 import { runAi } from "../lib/ai-native";
 import { WORKERS_AI_MODELS } from "../lib/workersAi";
-import { searchAiSearch } from "../lib/cloudflareAiSearch";
 
 export interface ConciergeResponse {
   reply: string;
   intent: "scheduling" | "information" | "urgent" | "other";
+  /**
+   * true apenas quando a resposta está 100% coberta pelas informações oficiais
+   * da clínica. Quando false, NÃO se deve enviar nada automaticamente — um
+   * humano assume (evita respostas inventadas).
+   */
+  answerable: boolean;
   patientData?: {
     name?: string;
     condition?: string;
@@ -14,57 +19,51 @@ export interface ConciergeResponse {
 }
 
 /**
- * AI Concierge Service — 24/7 Intelligent WhatsApp Triage
+ * Base de conhecimento OFICIAL da clínica — única fonte de verdade.
+ * O modelo só pode responder com o que está aqui; qualquer pergunta fora disto
+ * deve cair em answerable=false (humano responde). Não inventar nada.
+ */
+const CLINIC_KB = `
+Activity Fisioterapia — informações oficiais:
+- Clínica PARTICULAR de fisioterapia. NÃO aceita convênios. Emitimos nota fiscal e auxiliamos no processo de reembolso pelo convênio.
+- Especialidades: fisioterapia esportiva, ortopédica e pós-operatória.
+- Atendimento individual e humanizado, sessões de 60 minutos.
+- Tratamentos: Laser Terapia, Ultrassom, Liberação Miofascial, Eletroestimulação, Crioterapia, entre outros.
+- Horário de funcionamento: segunda a sexta das 07h às 21h; sábado das 07h às 13h. Não atende aos domingos.
+- Valores: avaliação R$ 180,00; sessão avulsa R$ 180,00; pacote de 10 sessões por R$ 170,00 cada sessão.
+- Formas de pagamento: transferência, pix, cartão de débito ou crédito em até 6x.
+- Para iniciar o tratamento é necessário agendar uma avaliação.
+- Atendente: Rafael, da Activity Fisioterapia.
+`.trim();
+
+/**
+ * AI Concierge Service — triagem 24/7 (WhatsApp + Instagram).
+ * Aterrado SOMENTE nas informações oficiais da clínica; nunca inventa dados.
  */
 export class AIConciergeService {
-  /**
-   * Processes an incoming message from a new lead and generates an intelligent response
-   */
   static async processMessage(
     env: Env,
-    orgId: string,
+    _orgId: string,
     message: string,
     history: any[] = [],
   ): Promise<ConciergeResponse> {
-    let clinicalContext = "";
-    try {
-      if (env.AI_SEARCH) {
-        const aiResults = await searchAiSearch(env, {
-          messages: [
-            { role: "system", content: "You are a physiotherapy knowledge assistant." },
-            { role: "user", content: message },
-          ],
-          maxNumResults: 2,
-          filters: { source: "wiki" },
-        });
-        clinicalContext = aiResults.sources.map((s) => `${s.filename}: ${s.content}`).join("\n\n");
-      }
-    } catch (e) {
-      console.warn("[AI Concierge] Wiki search failed:", e);
-    }
-
-    // 2. LLM Triage & Response Generation
     const systemPrompt = `
-      Você é o AI Concierge da clínica de fisioterapia Mooca Fisio.
-      Seu objetivo é realizar a triagem de novos pacientes via WhatsApp 24/7.
-      
-      CONTEXTO DA CLÍNICA (WIKI):
-      ${clinicalContext || "Clínica especializada em Traumato-Ortopedia, Pilates e Reabilitação Funcional."}
-      
-      DIRETRIZES:
-      - Seja extremamente acolhedor, profissional e ágil.
-      - Se o paciente quiser agendar, tente extrair: Nome, Queixa Principal e se tem Plano de Saúde.
-      - Se for uma urgência (dor muito forte), priorize avisar que a equipe humana entrará em contato IMEDIATAMENTE.
-      - Use o contexto da Wiki para responder dúvidas sobre horários, valores ou tipos de tratamento.
-      - Responda em Português Brasileiro, de forma concisa para WhatsApp.
-      
-      Retorne APENAS um JSON válido neste formato:
-      {
-        "reply": "sua resposta aqui",
-        "intent": "scheduling" | "information" | "urgent" | "other",
-        "patientData": { "name": "...", "condition": "...", "insurance": "..." }
-      }
-    `.trim();
+Você é o atendente virtual da Activity Fisioterapia (assine como "Rafael" quando fizer sentido).
+Atende leads e pacientes via WhatsApp e Instagram.
+
+REGRAS ABSOLUTAS:
+1. Use EXCLUSIVAMENTE as informações oficiais abaixo. NUNCA invente preços, horários, endereço, telefone, nomes de profissionais, disponibilidade de agenda, promoções, prazos ou qualquer dado que não esteja listado.
+2. Se a pergunta NÃO puder ser totalmente respondida com as informações oficiais (ex.: endereço, telefone, disponibilidade de um horário específico, reagendamento, dúvida clínica sobre um caso, qualquer assunto não listado), defina "answerable": false e deixe "reply" vazio. Um humano responderá.
+3. Saudações e perguntas básicas cobertas pelas informações (valores, formas de pagamento, horário de funcionamento, se aceita convênio, especialidades, tratamentos oferecidos, como agendar uma avaliação) → responda de forma acolhedora e concisa e defina "answerable": true.
+4. Se houver sinal de urgência, dor forte ou queixa clínica, defina "answerable": false e "intent": "urgent" (um humano assume imediatamente).
+5. Responda em português do Brasil, tom acolhedor e profissional, conciso para chat. Sem excesso de emojis.
+
+INFORMAÇÕES OFICIAIS (única fonte permitida):
+${CLINIC_KB}
+
+Retorne APENAS um JSON válido neste formato, sem texto fora do JSON:
+{"reply": "string", "intent": "scheduling" | "information" | "urgent" | "other", "answerable": true | false}
+`.trim();
 
     try {
       const response = await runAi(
@@ -77,22 +76,29 @@ export class AIConciergeService {
             { role: "user", content: message },
           ],
           response_format: { type: "json_object" },
+          temperature: 0.2,
         },
         { cache: false },
       );
 
       const raw = (response as any).response as string;
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
-      const result = JSON.parse(jsonMatch?.[0] ?? "{}") as ConciergeResponse;
+      const parsed = JSON.parse(jsonMatch?.[0] ?? "{}") as Partial<ConciergeResponse>;
 
-      return result;
+      const answerable = parsed.answerable === true;
+      const reply = typeof parsed.reply === "string" ? parsed.reply.trim() : "";
+      const intent = parsed.intent ?? "other";
+
+      return {
+        // Garante que nada é enviado quando não há resposta segura.
+        reply: answerable ? reply : "",
+        intent,
+        answerable: answerable && reply.length >= 2,
+      };
     } catch (error) {
       console.error("[AI Concierge] LLM Error:", error);
-      return {
-        reply:
-          "Olá! Recebemos sua mensagem. Um de nossos especialistas vai te retornar em instantes para te ajudar. 😊",
-        intent: "other",
-      };
+      // Em caso de falha NÃO inventamos resposta — deixa para o humano.
+      return { reply: "", intent: "other", answerable: false };
     }
   }
 }
