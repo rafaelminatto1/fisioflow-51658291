@@ -586,9 +586,32 @@ app.get("/conversations/:id", requireAuth, async (c) => {
       return c.json({ error: "Conversation not found" }, 404);
     }
 
+    // Marca a conversa como lida (last_read_at = agora) e broadcasta o evento.
+    await pool.query(
+      `UPDATE wa_conversations SET last_read_at = NOW(), updated_at = NOW()
+       WHERE id = $1 AND organization_id = $2
+         AND (last_read_at IS NULL OR last_read_at < NOW())`,
+      [id, user.organizationId],
+    );
+
+    await broadcastToOrg(c.env, user.organizationId, {
+      type: "whatsapp_read",
+      conversationId: id,
+      readBy: user.uid,
+    });
+
+    // Refetch para retornar o unread_count atualizado (0 após marcar lido).
+    const refreshed = await getConversationWithMessages(
+      pool,
+      id,
+      user.organizationId,
+      Math.min(100, parseInt(limit) || 50),
+      beforeId ?? undefined,
+    );
+
     return c.json({
-      conversation: mapConversationRow(result),
-      messages: (result.messages || []).map(mapMessageRow),
+      conversation: mapConversationRow(refreshed ?? result),
+      messages: ((refreshed ?? result).messages || []).map(mapMessageRow),
     });
   } catch (err) {
     console.error("[WhatsApp Inbox] GET /conversations/:id error:", err);
@@ -1617,11 +1640,14 @@ app.get("/unread-count", requireAuth, async (c) => {
 
   try {
     const result = await pool.query(
-      `SELECT COALESCE(SUM(unread_count), 0)::int AS unread
-       FROM wa_conversations
-       WHERE organization_id = $1
-         AND (metadata->>'deleted_at') IS NULL
-         AND status <> 'closed'`,
+      `SELECT COUNT(*)::int AS unread
+       FROM wa_messages m
+       JOIN wa_conversations c ON c.id = m.conversation_id
+       WHERE c.organization_id = $1
+         AND (c.metadata->>'deleted_at') IS NULL
+         AND c.status <> 'closed'
+         AND m.direction = 'inbound'
+         AND (c.last_read_at IS NULL OR m.created_at > c.last_read_at)`,
       [user.organizationId],
     );
     return c.json({ data: { unread: result.rows[0]?.unread ?? 0 } });

@@ -253,6 +253,12 @@ export async function getConversationWithMessages(
 			        crm.crm_campaign_id, crm.crm_interest, crm.crm_score_temperature,
 			        c.assigned_team AS team,
 			        COALESCE(assignee.full_name, assignee.email, c.assigned_to::text) AS assigned_to_name,
+			        (SELECT COUNT(*)::int
+			         FROM wa_messages m
+			         WHERE m.conversation_id = c.id
+			           AND m.direction = 'inbound'
+			           AND (c.last_read_at IS NULL OR m.created_at > c.last_read_at)
+			        ) AS unread_count,
 			        COALESCE((
 			          SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color) ORDER BY t.name)
 			          FROM wa_conversation_tags wct
@@ -773,6 +779,12 @@ export async function getInboxConversations(
 			        crm.crm_campaign_id, crm.crm_interest, crm.crm_score_temperature,
 			        c.assigned_team AS team,
 			        COALESCE(assignee.full_name, assignee.email, c.assigned_to::text) AS assigned_to_name,
+			        (SELECT COUNT(*)::int
+			         FROM wa_messages m
+			         WHERE m.conversation_id = c.id
+			           AND m.direction = 'inbound'
+			           AND (c.last_read_at IS NULL OR m.created_at > c.last_read_at)
+			        ) AS unread_count,
 		              (SELECT m.content FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message,
 		              (SELECT m.message_type FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message_type,
 		              (SELECT m.created_at FROM wa_messages m WHERE m.conversation_id = c.id AND m.direction != 'internal' ORDER BY m.created_at DESC LIMIT 1) AS last_message_at,

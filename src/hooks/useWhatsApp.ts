@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   fetchConversations,
   fetchConversation,
@@ -78,6 +79,7 @@ export function useWhatsAppConversation(id: string | null) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -90,6 +92,8 @@ export function useWhatsAppConversation(id: string | null) {
       });
       setConversation(result.conversation);
       setMessages(result.messages);
+      // Invalida o badge de não lidas após carregar a conversa (backend já marcou como lido).
+      queryClient.invalidateQueries({ queryKey: ["whatsapp", "unread-count"] });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to load conversation";
       const isAuthError =
