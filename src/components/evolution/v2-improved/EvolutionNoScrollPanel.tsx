@@ -290,7 +290,7 @@ export const EvolutionNoScrollPanel = memo(
               placeholder="Digite a evolução clínica aqui…"
               showToolbar
               externalValueRevision={revisionRef.current}
-              className="h-full [&_.ProseMirror]:min-h-[60vh]"
+              className="clinical-observations-editor h-full [&_.ProseMirror]:min-h-[60vh]"
             />
           </div>
         </div>
@@ -640,7 +640,7 @@ export const EvolutionNoScrollPanel = memo(
                     placeholder="Digite a evolução clínica aqui…"
                     showToolbar
                     externalValueRevision={revisionRef.current}
-                    editorClassName="min-h-[40vh]"
+                    editorClassName="clinical-observations-editor min-h-[40vh]"
                   />
                 </div>
               )}

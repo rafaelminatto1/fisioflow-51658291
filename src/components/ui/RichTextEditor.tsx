@@ -93,6 +93,15 @@ import "./rich-text-editor.css";
 
 const lowlight = createLowlight(common);
 
+const FONT_SIZE_OPTIONS = [
+  { label: "14", value: "14px" },
+  { label: "16", value: "16px" },
+  { label: "18", value: "18px" },
+  { label: "20", value: "20px" },
+  { label: "24", value: "24px" },
+  { label: "28", value: "28px" },
+] as const;
+
 const ForceListContinue = Extension.create({
   name: "forceListContinue",
   priority: 1000,
@@ -114,6 +123,28 @@ const ForceListContinue = Extension.create({
         return commands.splitListItem("listItem");
       },
     };
+  },
+});
+
+const FontSize = Extension.create({
+  name: "fontSize",
+
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["textStyle"],
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (element) => element.style.fontSize?.replace(/["']/g, "") || null,
+            renderHTML: (attributes) => {
+              if (!attributes.fontSize) return {};
+              return { style: `font-size: ${attributes.fontSize}` };
+            },
+          },
+        },
+      },
+    ];
   },
 });
 
@@ -303,6 +334,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Highlight.configure({ multicolor: true }),
       TextStyle,
+      FontSize,
       Color,
       Subscript,
       Superscript,
@@ -659,6 +691,30 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       />
       {showToolbar && editor && (
         <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border border-slate-200 bg-slate-50/80 rounded-t-lg sticky top-0 z-10">
+          <select
+            title="Tamanho da fonte"
+            aria-label="Tamanho da fonte"
+            disabled={disabled}
+            value={String(editor.getAttributes("textStyle").fontSize ?? "")}
+            onMouseDown={(e) => e.stopPropagation()}
+            onChange={(e) => {
+              const fontSize = e.target.value;
+              const chain = editor.chain().focus();
+              if (fontSize) {
+                chain.setMark("textStyle", { fontSize }).run();
+              } else {
+                chain.unsetMark("textStyle").run();
+              }
+            }}
+            className="mr-1 h-7 rounded-md border border-slate-300 bg-white px-2 text-[11px] font-semibold text-slate-700 outline-none transition-colors hover:bg-slate-100 focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <option value="">Fonte</option>
+            {FONT_SIZE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
           {[
             {
               icon: BoldIcon,

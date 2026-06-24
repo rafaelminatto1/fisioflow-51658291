@@ -74,6 +74,12 @@
   color: hsl(var(--foreground));
 }
 
+/* Observações clínicas: leitura principal, fonte maior por padrão. */
+.rich-text-editor.clinical-observations-editor .ProseMirror {
+  font-size: 16px;
+  line-height: 1.75;
+}
+
 /* Variante alta — usada na caixa principal de Observações clínicas */
 .rich-text-editor.rte-tall .ProseMirror {
   min-height: 800px;
