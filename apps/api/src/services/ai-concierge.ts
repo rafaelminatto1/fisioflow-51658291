@@ -51,6 +51,18 @@ export class AIConciergeService {
     message: string,
     history: any[] = [],
   ): Promise<ConciergeResponse> {
+    // Bloqueio determinístico: menções em stories, compartilhamentos, mídia sem
+    // texto ou rótulos entre colchetes NÃO são respondidos (não dependemos do LLM).
+    const trimmed = (message || "").trim();
+    if (
+      !trimmed ||
+      /^\[.*\]$/.test(trimmed) ||
+      /^(📲|📎|🎥|🖼|🎙|🎤|📷)/.test(trimmed) ||
+      /Stories do Instagram|Compartilhou uma publica/i.test(trimmed)
+    ) {
+      return { reply: "", intent: "other", answerable: false };
+    }
+
     // Saudação conforme o horário de Brasília (UTC-3).
     const brtHour = (new Date().getUTCHours() - 3 + 24) % 24;
     const saudacao = brtHour >= 5 && brtHour < 12 ? "Bom dia" : brtHour < 18 ? "Boa tarde" : "Boa noite";
