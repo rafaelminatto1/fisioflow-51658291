@@ -1,5 +1,5 @@
 import { Env } from "../types/env";
-import { runAi } from "../lib/ai-native";
+import { runAi, readAiText } from "../lib/ai-native";
 import { WORKERS_AI_MODELS } from "../lib/workersAi";
 
 export interface ConciergeResponse {
@@ -81,7 +81,8 @@ Retorne APENAS um JSON válido neste formato, sem texto fora do JSON:
         { cache: false },
       );
 
-      const raw = (response as any).response as string;
+      // Modelos -fast (vLLM/OpenAI) populam choices[].message.content, não .response.
+      const raw = readAiText(response);
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
       const parsed = JSON.parse(jsonMatch?.[0] ?? "{}") as Partial<ConciergeResponse>;
 
