@@ -65,9 +65,19 @@ app.post("/message", async (c) => {
 
   try {
     const waId = `web:${visitorId}`;
-    const displayName = body.name?.toString().slice(0, 120) || "Visitante do site";
-    const contact = await resolveOrCreateContact(pool, orgId, waId, null, null, null, displayName);
+    // Só define o nome quando o visitante informa (1ª resposta). NUNCA sobrescreve
+    // um nome já capturado com o default em mensagens seguintes.
+    const providedName = body.name?.toString().slice(0, 120).trim() || null;
+    const contact = await resolveOrCreateContact(pool, orgId, waId, null, null, null, providedName);
     if (!contact) return c.json({ error: "Falha ao criar contato" }, 500);
+    // Fallback de exibição apenas se o contato ainda não tem nome.
+    if (!contact.display_name) {
+      await pool
+        .query(`UPDATE whatsapp_contacts SET display_name = 'Visitante do site' WHERE id = $1`, [
+          contact.id,
+        ])
+        .catch(() => {});
+    }
 
     // telefone informado pelo visitante → tenta vincular paciente / guarda no contato
     if (body.phone) {
