@@ -356,6 +356,16 @@ export async function restoreConversation(conversationId: string) {
   return unwrapData(res);
 }
 
+export async function markConversationRead(conversationId: string) {
+  const res = await request<{ data: { lastReadAt: string | null } } | { lastReadAt: string | null }>(
+    `${BASE}/conversations/${conversationId}/read`,
+    {
+      method: "POST",
+    },
+  );
+  return unwrapData(res);
+}
+
 export async function sendMessage(
   conversationId: string,
   content: string,

@@ -239,6 +239,16 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             });
           } else if (data.type === "NOTIFICATION_RECEIVED") {
             queryClient.invalidateQueries({ queryKey: ["notifications"] });
+          } else if (
+            data.type === "whatsapp_message" ||
+            data.type === "whatsapp_read" ||
+            data.type === "whatsapp_assignment" ||
+            data.type === "whatsapp_transfer" ||
+            data.type === "whatsapp_status_update"
+          ) {
+            // Invalida o badge de não lidas e a lista do inbox em tempo real.
+            queryClient.invalidateQueries({ queryKey: ["whatsapp", "unread-count"] });
+            queryClient.invalidateQueries({ queryKey: ["whatsapp", "inbox"] });
           } else if (data.type === "PRESENCE_UPDATE") {
             setOnlineUsers((prev) => {
               const next = new Map(prev);
