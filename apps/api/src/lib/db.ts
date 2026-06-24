@@ -142,11 +142,11 @@ export function createDb(env: Env, _mode: "read" | "write" = "write"): FisioDb {
         queryOpts?: Record<string, unknown>,
       ) => {
         const pgClient = createPgClient(env, _mode);
+        const orgId = getOrgContext();
         try {
           await pgClient.connect();
-          const orgId = getOrgContext();
           if (orgId) {
-            await pgClient.query(`SELECT set_config('app.org_id', $1, true)`, [orgId]);
+            await pgClient.query(`SELECT set_config('app.org_id', $1, false)`, [orgId]);
           }
 
           const result = (await pgClient.query({
@@ -161,8 +161,30 @@ export function createDb(env: Env, _mode: "read" | "write" = "write"): FisioDb {
             fields: result.fields,
             command: result.command,
           };
+        } catch (dbErr: any) {
+          const errorMsg = `Database Error: ${dbErr.message}${dbErr.detail ? ` (${dbErr.detail})` : ""}${dbErr.constraint ? ` [constraint: ${dbErr.constraint}]` : ""}${dbErr.code ? ` [code: ${dbErr.code}]` : ""}`;
+          console.error(`[DB/PG] Query Error: ${errorMsg}`, {
+            queryText: queryText?.substring(0, 300),
+            queryParams: JSON.stringify(queryParams)?.substring(0, 300),
+            orgId,
+            errorCode: dbErr.code,
+            constraint: dbErr.constraint,
+          });
+
+          const enhancedError = new Error(errorMsg);
+          (enhancedError as any).code = dbErr.code;
+          (enhancedError as any).detail = dbErr.detail;
+          (enhancedError as any).hint = dbErr.hint;
+          (enhancedError as any).constraint = dbErr.constraint;
+          (enhancedError as any).query = queryText;
+          (enhancedError as any).params = queryParams;
+          throw enhancedError;
         } finally {
-          await pgClient.end().catch(() => {});
+          try {
+            await pgClient.end();
+          } catch {
+            // Hyperdrive/pg can throw synchronously while closing an already-closed socket.
+          }
         }
       },
     } as const;
@@ -237,10 +259,14 @@ export async function withRls<T>(
     const client = createPgClient(env, mode);
     try {
       await client.connect();
-      await client.query(`SELECT set_config('app.org_id', $1, true)`, [organizationId]);
+      await client.query(`SELECT set_config('app.org_id', $1, false)`, [organizationId]);
       return await fn(client);
     } finally {
-      await client.end().catch(() => {});
+      try {
+        await client.end();
+      } catch {
+        // Hyperdrive/pg can throw synchronously while closing an already-closed socket.
+      }
     }
   }
 

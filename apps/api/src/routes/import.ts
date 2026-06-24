@@ -122,20 +122,31 @@ type PreparedAppointmentRow = {
 };
 
 function isUnsupportedTransactionError(error: unknown): boolean {
-  const message = error instanceof Error ? error.message : String(error ?? "");
+  const message = error instanceof Error ? error.message : String(error);
   return message.toLowerCase().includes("no transactions support");
+}
+
+function formatImportError(error: any): string {
+  const parts: string[] = [];
+  let current = error;
+
+  for (let depth = 0; current && depth < 4; depth++) {
+    const message = current?.message ? String(current.message) : String(current);
+    const code = current?.code ? ` [code: ${current.code}]` : "";
+    const constraint = current?.constraint ? ` [constraint: ${current.constraint}]` : "";
+    const detail = current?.detail ? ` (${current.detail})` : "";
+    parts.push(`${message}${detail}${constraint}${code}`);
+    current = current?.cause;
+  }
+
+  return parts.join(" | caused by: ") || "Falha ao importar paciente";
 }
 
 async function runImportStepWithFallback<T>(
   db: ReturnType<typeof createDb>,
   operation: (executor: ReturnType<typeof createDb>) => Promise<T>,
 ): Promise<T> {
-  try {
-    return await db.transaction(async (tx) => operation(tx as ReturnType<typeof createDb>));
-  } catch (error) {
-    if (!isUnsupportedTransactionError(error)) throw error;
-    return operation(db);
-  }
+  return operation(db);
 }
 
 export function computeEndTime(startTime: string, durationMinutes: number): string {
@@ -397,6 +408,8 @@ async function wipeOrganizationLegacyImportData(
     await executor.execute(sql`DELETE FROM clinical_embeddings WHERE organization_id = ${organizationId}`);
     await executor.execute(sql`DELETE FROM clinical_reasoning_logs WHERE organization_id = ${organizationId}`);
     await executor.execute(sql`DELETE FROM clinical_scribe_logs WHERE organization_id = ${organizationId}`);
+    await executor.execute(sql`DELETE FROM clinical_access_logs WHERE organization_id = ${organizationId}`);
+    await executor.execute(sql`DELETE FROM ai_peer_reviews WHERE organization_id = ${organizationId}`);
     await executor.execute(sql`DELETE FROM session_attachments WHERE organization_id = ${organizationId}`);
     await executor.execute(sql`DELETE FROM pain_map_points WHERE pain_map_id IN (SELECT id FROM pain_maps WHERE organization_id = ${organizationId})`);
     await executor.execute(sql`DELETE FROM package_usage WHERE organization_id = ${organizationId}`);
@@ -432,8 +445,8 @@ async function wipeOrganizationLegacyImportData(
     await executor.execute(sql`DELETE FROM patient_longitudinal_summary WHERE organization_id = ${organizationId}`);
     await executor.execute(sql`DELETE FROM patient_streaks WHERE patient_id IN (SELECT id FROM patients WHERE organization_id = ${organizationId})`);
     await executor.execute(sql`DELETE FROM patient_packages WHERE organization_id = ${organizationId}`);
-    await executor.execute(sql`DELETE FROM appointments WHERE organization_id = ${organizationId}`);
     await executor.execute(sql`DELETE FROM sessions WHERE organization_id = ${organizationId}`);
+    await executor.execute(sql`DELETE FROM appointments WHERE organization_id = ${organizationId}`);
     await executor.execute(sql`DELETE FROM patients WHERE organization_id = ${organizationId}`);
   });
 }
@@ -475,13 +488,13 @@ app.post("/legacy-data", requireAuth, async (c) => {
 
   const payload = parsed.data;
   const importTimestamp = new Date();
-  const db = createDb(c.env, "write");
   const therapistCache = new Map<string, string | null>();
   const results: ImportPatientResult[] = [];
   const topLevelWarnings: string[] = [];
 
   if (payload.dryRun) {
     for (const [index, patient] of payload.patients.entries()) {
+      const db = createDb(c.env, "write");
       const prepared = await preparePatientImport(
         db,
         patient,
@@ -509,6 +522,7 @@ app.post("/legacy-data", requireAuth, async (c) => {
   } else {
     if (payload.replaceExisting) {
       try {
+        const db = createDb(c.env, "write");
         await wipeOrganizationLegacyImportData(db, user.organizationId);
       } catch (error: any) {
         return c.json(
@@ -526,6 +540,7 @@ app.post("/legacy-data", requireAuth, async (c) => {
     }
 
     for (const [index, patient] of payload.patients.entries()) {
+      const db = createDb(c.env, "write");
       const prepared = await preparePatientImport(
         db,
         patient,
@@ -615,7 +630,7 @@ app.post("/legacy-data", requireAuth, async (c) => {
           appointmentsImported: 0,
           sessionsImported: 0,
           sessionsFailed: patient.evolutions.length,
-          errors: [error?.message ?? "Falha ao importar paciente"],
+          errors: [formatImportError(error)],
           warnings: prepared.warnings,
         });
       }

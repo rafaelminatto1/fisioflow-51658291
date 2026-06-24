@@ -10,6 +10,9 @@ let mockProfileLookupIds = new Set<string>([PROFILE_ID]);
 const mockTransaction = vi.fn();
 const mockSelect = vi.fn();
 const mockExecute = vi.fn();
+const { mockCreateDb } = vi.hoisted(() => ({
+  mockCreateDb: vi.fn(),
+}));
 
 vi.mock("../../lib/auth", () => ({
   requireAuth: vi.fn(async (c: any, next: any) => {
@@ -26,12 +29,7 @@ vi.mock("../../lib/auth", () => ({
 }));
 
 vi.mock("../../lib/db", () => ({
-  createDb: vi.fn(() => ({
-    select: mockSelect,
-    transaction: mockTransaction,
-    insert: createTx().insert,
-    execute: mockExecute,
-  })),
+  createDb: mockCreateDb,
 }));
 
 async function buildApp() {
@@ -104,6 +102,12 @@ beforeEach(() => {
   mockProfileLookupIds = new Set([PROFILE_ID]);
   mockSelect.mockImplementation(() => createSelectChain());
   mockTransaction.mockImplementation(async (callback: any) => callback(createTx()));
+  mockCreateDb.mockImplementation(() => ({
+    select: mockSelect,
+    transaction: mockTransaction,
+    insert: createTx().insert,
+    execute: mockExecute,
+  }));
 });
 
 beforeAll(async () => {
@@ -186,7 +190,7 @@ describe("POST /api/import/legacy-data", () => {
     expect(json.success).toBe(true);
     expect(json.replaceExisting).toBe(false);
     expect(json.summary.importedPatients).toBe(1);
-    expect(mockTransaction).toHaveBeenCalledTimes(1);
+    expect(mockTransaction).not.toHaveBeenCalled();
   });
 
   it("faz dryRun sem gravar no banco", async () => {
@@ -228,7 +232,7 @@ describe("POST /api/import/legacy-data", () => {
     expect(json.summary.importedPatients).toBe(1);
     expect(json.summary.importedSessions).toBe(1);
     expect(json.results[0].status).toBe("imported");
-    expect(mockTransaction).toHaveBeenCalledTimes(2);
+    expect(mockTransaction).not.toHaveBeenCalled();
   });
 
   it("faz fallback quando o driver não suporta transaction()", async () => {
@@ -294,7 +298,12 @@ describe("POST /api/import/legacy-data", () => {
       };
     }
 
-    mockTransaction.mockImplementation(async (callback: any) => callback(createTxCapturing()));
+    mockCreateDb.mockImplementation(() => ({
+      select: mockSelect,
+      transaction: mockTransaction,
+      insert: createTxCapturing().insert,
+      execute: mockExecute,
+    }));
 
     const app = await buildApp();
     const res = await app.fetch(
@@ -342,4 +351,5 @@ describe("POST /api/import/legacy-data", () => {
     expect(capturedSessionInserts[0].appointmentId).toBeTruthy();
     expect(capturedSessionInserts[0].appointmentId).toBe("appt-mixed-1");
   });
+
 });
