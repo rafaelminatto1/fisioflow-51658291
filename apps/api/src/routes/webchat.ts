@@ -159,10 +159,11 @@ app.get("/widget.js", (c) => {
   var API=(s&&s.getAttribute('data-api'))||'https://api-pro.moocafisio.com.br';
   var TITLE=(s&&s.getAttribute('data-title'))||'Fale com a Activity Fisioterapia';
   if(!ORG){console.warn('[FisioFlow webchat] data-org ausente');return;}
+  var POS=(s&&s.getAttribute('data-position'))==='left'?'left:20px':'right:20px';
   var VID=localStorage.getItem('ff_webchat_vid')||(crypto.randomUUID?crypto.randomUUID():String(Date.now()));
   localStorage.setItem('ff_webchat_vid',VID);
   var last='1970-01-01T00:00:00Z',open=false,started=false,timer=null;
-  var c=document.createElement('div');c.style.cssText='position:fixed;right:20px;bottom:20px;z-index:99999;font-family:system-ui,sans-serif';
+  var c=document.createElement('div');c.id='fisioflow-webchat';c.style.cssText='position:fixed;'+POS+';bottom:20px;z-index:99999;font-family:system-ui,sans-serif';
   c.innerHTML='<button id=ffb style="width:56px;height:56px;border:none;border-radius:50%;background:#1f7aec;color:#fff;font-size:24px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.25)">💬</button>'+
   '<div id=ffp style="display:none;flex-direction:column;width:330px;height:440px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.3)">'+
   '<div style="background:#1f7aec;color:#fff;padding:12px 14px;font-weight:700">'+TITLE+'</div>'+
