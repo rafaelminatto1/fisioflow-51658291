@@ -83,7 +83,6 @@ export const useDraftSoapRecordByAppointment = (
       const res = await sessionsApi.list({
         patientId,
         appointmentId,
-        status: "draft",
         limit: 1,
       });
       return (res.data[0] as SoapRecord) ?? null;
