@@ -79,7 +79,7 @@ instance_name = "fisioflow-rag-paciente"
 # ===== PIPELINES =====
 [[pipelines]]
 binding = "EVENTS_PIPELINE"
-pipeline = "701aff68d26e4c45a29f090389bcd4f2"
+stream = "701aff68d26e4c45a29f090389bcd4f2"
 
 # ===== WORKFLOWS =====
 [[workflows]]
@@ -315,7 +315,7 @@ instance_name = "fisioflow-rag-paciente"
 
 [[env.production.pipelines]]
 binding = "EVENTS_PIPELINE"
-pipeline = "701aff68d26e4c45a29f090389bcd4f2"
+stream = "701aff68d26e4c45a29f090389bcd4f2"
 
 [[env.production.mtls_certificates]]
 binding = "NFSE_SP_CERT"
