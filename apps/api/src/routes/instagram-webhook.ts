@@ -36,11 +36,21 @@ app.get("/", (c) => {
 app.post("/", async (c) => {
   const rawBody = await c.req.text();
   const signature = c.req.header("x-hub-signature-256");
-  // Assinatura do IG usa o secret DO APP INSTAGRAM (≠ WhatsApp). Só valida se IG_APP_SECRET
-  // estiver definido; caso contrário pula (não rejeita), pois o secret do WhatsApp não confere.
-  const appSecret = c.env.IG_APP_SECRET;
-  if (appSecret) {
-    const valid = await verifyMetaSignature(appSecret, rawBody, signature);
+  // WhatsApp e Instagram estão no MESMO Meta App (Activity Fisioterapia, 2479744142426362),
+  // então o X-Hub-Signature-256 é assinado com o mesmo app secret. Valida contra os secrets
+  // configurados (IG_APP_SECRET primeiro, depois WHATSAPP_APP_SECRET como fallback) e aceita
+  // se QUALQUER um conferir. Só rejeita se nenhum bater (e houver ao menos um configurado).
+  const candidateSecrets = [c.env.IG_APP_SECRET, c.env.WHATSAPP_APP_SECRET].filter(
+    (s): s is string => typeof s === "string" && s.length > 0,
+  );
+  if (candidateSecrets.length > 0) {
+    let valid = false;
+    for (const secret of candidateSecrets) {
+      if (await verifyMetaSignature(secret, rawBody, signature)) {
+        valid = true;
+        break;
+      }
+    }
     if (!valid) return c.json({ error: "Assinatura inválida" }, 401);
   }
 
