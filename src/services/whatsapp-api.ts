@@ -540,6 +540,14 @@ export async function fetchMetrics() {
   return unwrapData(res);
 }
 
+export async function fetchUnreadCount() {
+  const res = await request<{ data: { unread: number } } | { unread: number }>(
+    `${BASE}/unread-count`,
+  );
+  const data = unwrapData(res) as { unread?: number };
+  return typeof data?.unread === "number" ? data.unread : 0;
+}
+
 export async function fetchTags() {
   const res = await request<{ data: Tag[] } | Tag[]>(`${BASE}/tags`);
   return Array.isArray(res) ? res : unwrapData(res);

@@ -50,8 +50,8 @@ export default [
       route("exercises", "pages/Exercises.tsx"),
       route("protocols", "pages/Protocols.tsx"),
 
-      // WhatsApp Inbox
-      route("whatsapp/inbox", "pages/WhatsAppInbox.tsx"),
+      // WhatsApp Inbox — /whatsapp/inbox unificado em /crm-whatsapp (CrmWhatsApp.tsx)
+      route("crm-whatsapp", "pages/CrmWhatsApp.tsx"),
       route("whatsapp/dashboard", "pages/WhatsAppDashboard.tsx"),
       route("whatsapp/automations", "pages/WhatsAppAutomations.tsx"),
       route("whatsapp/templates", "pages/WhatsAppTemplates.tsx"),

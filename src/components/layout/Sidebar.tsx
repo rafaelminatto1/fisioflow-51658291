@@ -53,6 +53,7 @@ import { Badge } from "@/components/ui/badge";
 import { GlobalCommandPalette } from "@/components/evolution/search/GlobalCommandPalette";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { APP_ROUTES } from "@/lib/routing/appRoutes";
+import { useWhatsAppUnreadCount } from "@/hooks/useWhatsAppUnreadCount";
 
 const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
   const { profile: authProfile } = useAuth();
@@ -115,7 +116,6 @@ const mainMenuItems = [
     href: APP_ROUTES.AGENDA,
   },
   { icon: Users, label: "Pacientes", href: APP_ROUTES.PATIENTS },
-  { icon: MessageCircle, label: "WhatsApp", href: "/whatsapp/inbox" },
   { icon: MessageSquare, label: "CRM · WhatsApp", href: "/crm-whatsapp" },
 ];
 
@@ -175,7 +175,7 @@ const operacionalMenuItems = [
   { icon: Package, label: "Estoque", href: "/inventory" },
   { icon: Video, label: "Telemedicina", href: "/telemedicine" },
   { icon: MessageSquare, label: "Comunicação", href: "/communications" },
-  { icon: MessageCircle, label: "WhatsApp", href: "/whatsapp/inbox" },
+  { icon: MessageCircle, label: "WhatsApp", href: "/crm-whatsapp" },
 ];
 
 const adminSubmenu = [
@@ -260,6 +260,7 @@ export function Sidebar() {
       (sidebarProfile as any).roles.includes("admin"));
 
   const { preloadRoute } = useNavPreload();
+  const whatsappUnread = useWhatsAppUnreadCount();
 
   const isAdminActive = location.pathname.startsWith("/admin");
   const isBiomecanicaActive =
@@ -291,6 +292,8 @@ export function Sidebar() {
     const isActive =
       location.pathname === item.href ||
       (item.href !== "/" && location.pathname.startsWith(`${item.href}/`));
+    const unread = item.href === "/crm-whatsapp" ? whatsappUnread : 0;
+    const unreadLabel = unread > 99 ? "99+" : String(unread);
 
     return (
       <Link
@@ -305,19 +308,32 @@ export function Sidebar() {
             : "text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-white",
         )}
       >
-        <Icon
-          className={cn(
-            "h-5 w-5 transition-all duration-500 flex-shrink-0",
-            isActive ? "scale-110" : "group-hover:scale-110 group-hover:text-primary",
+        <div className="relative flex-shrink-0">
+          <Icon
+            className={cn(
+              "h-5 w-5 transition-all duration-500",
+              isActive ? "scale-110" : "group-hover:scale-110 group-hover:text-primary",
+            )}
+          />
+          {collapsed && unread > 0 && (
+            <span className="absolute -right-1.5 -top-1.5 min-w-[16px] h-4 px-1 rounded-full bg-red-600 text-white text-[9px] font-black flex items-center justify-center leading-none shadow-sm">
+              {unreadLabel}
+            </span>
           )}
-        />
+        </div>
         {!collapsed && (
           <div className="flex items-center justify-between flex-1">
             <span className="text-xs font-bold uppercase tracking-widest">{item.label}</span>
-            {item.badge && (
-              <Badge className="bg-primary/10 text-primary border-0 text-[9px] h-4 px-1.5 font-black uppercase">
-                {item.badge}
-              </Badge>
+            {unread > 0 ? (
+              <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center leading-none shadow-sm">
+                {unreadLabel}
+              </span>
+            ) : (
+              item.badge && (
+                <Badge className="bg-primary/10 text-primary border-0 text-[9px] h-4 px-1.5 font-black uppercase">
+                  {item.badge}
+                </Badge>
+              )
             )}
           </div>
         )}
