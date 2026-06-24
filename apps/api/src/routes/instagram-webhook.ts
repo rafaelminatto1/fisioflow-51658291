@@ -67,6 +67,29 @@ app.post("/", async (c) => {
   return c.json({ status: "ok" });
 });
 
+/**
+ * Busca o perfil público do remetente no Instagram (nome + @username) a partir
+ * do IGSID. Disponível para contatos que iniciaram conversa com a conta.
+ */
+async function fetchInstagramProfile(
+  igsid: string,
+  token: string | undefined,
+): Promise<{ username: string | null; name: string | null } | null> {
+  if (!token) return null;
+  try {
+    const res = await fetch(
+      `${IG_GRAPH}/${encodeURIComponent(igsid)}?fields=name,username&access_token=${encodeURIComponent(token)}`,
+    );
+    const data = (await res.json()) as { name?: string; username?: string; error?: unknown };
+    if (data && (data.name || data.username)) {
+      return { name: data.name ?? null, username: data.username ?? null };
+    }
+  } catch (e) {
+    console.warn("[IG Webhook] fetchInstagramProfile falhou:", e);
+  }
+  return null;
+}
+
 async function resolveOrgIdByIg(pool: any, igAccountId: string): Promise<string | null> {
   try {
     const res = await pool.query(
@@ -92,6 +115,14 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
         continue;
       }
 
+      // Token da org (renovável em settings) para consultar o perfil do remetente.
+      const tokRes = await pool.query(
+        `SELECT settings->>'instagram_access_token' AS t FROM organizations WHERE id = $1`,
+        [orgId],
+      );
+      const igToken: string | undefined = tokRes.rows[0]?.t || env.IG_ACCESS_TOKEN || undefined;
+      const profileCache = new Map<string, { username: string | null; name: string | null } | null>();
+
       const events = (entry.messaging as any[]) ?? [];
       for (const ev of events) {
         const message = ev.message;
@@ -100,12 +131,39 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
         const senderId = String(ev.sender?.id ?? "");
         if (!senderId) continue;
 
-        const text: string =
-          message.text ??
-          (Array.isArray(message.attachments) && message.attachments.length
-            ? `[${message.attachments[0].type ?? "mídia"}]`
-            : "");
-        const messageType = message.text ? "text" : "attachment";
+        // Texto da mensagem; menção em Stories ganha rótulo amigável.
+        const att = Array.isArray(message.attachments) ? message.attachments[0] : null;
+        const attType: string | undefined = att?.type;
+        let text: string;
+        let messageType: string;
+        if (typeof message.text === "string" && message.text.length) {
+          text = message.text;
+          messageType = "text";
+        } else if (attType === "story_mention") {
+          text = "📲 Mencionou a Activity Fisioterapia nos Stories do Instagram.";
+          messageType = "story_mention";
+        } else if (attType === "share" || attType === "ig_reel") {
+          text = "📎 Compartilhou uma publicação do Instagram.";
+          messageType = "attachment";
+        } else if (attType) {
+          text = `[${attType}]`;
+          messageType = "attachment";
+        } else {
+          text = "";
+          messageType = "attachment";
+        }
+
+        // Busca o perfil (@username + nome) do remetente — uma vez por IGSID.
+        let prof = profileCache.get(senderId);
+        if (prof === undefined) {
+          prof = await fetchInstagramProfile(senderId, igToken);
+          profileCache.set(senderId, prof);
+        }
+        const username = prof?.username ?? null;
+        const displayName =
+          prof?.name && prof?.username
+            ? `${prof.name} (@${prof.username})`
+            : prof?.name || (prof?.username ? `@${prof.username}` : null);
 
         const contact = await resolveOrCreateContact(
           pool,
@@ -113,8 +171,8 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
           senderId, // IGSID como identificador do contato
           null,
           null,
-          null,
-          null,
+          username,
+          displayName,
         );
         if (!contact) continue;
 
