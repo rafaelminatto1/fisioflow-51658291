@@ -73,6 +73,10 @@ const INTENSITY_LABELS: Record<string, string> = {
   high: "Alta",
 };
 
+type ProcedureSuggestion = { selectType: "procedure" } & (typeof COMMON_PROCEDURES)[0];
+type ExerciseSuggestion = { selectType: "exercise" } & Exercise;
+type CombinedSuggestion = ProcedureSuggestion | ExerciseSuggestion;
+
 function formatItemDetail(item: EvolutionItemV3) {
   if (item.type === "exercise") {
     return [
@@ -125,6 +129,7 @@ interface EvolutionItemRowProps {
   handleToggleItem: (id: string) => void;
   handleRemoveItem: (id: string) => void;
   handleUpdateItem: (id: string, updates: Partial<EvolutionItemV3>) => void;
+  onOpenExercise?: (exercise: Exercise) => void;
   type: EvolutionItemType | "unified";
 }
 
@@ -135,6 +140,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
   handleToggleItem,
   handleRemoveItem,
   handleUpdateItem,
+  onOpenExercise,
   type,
 }) => {
   const { exercises: libraryExercises } = useExercises();
@@ -151,7 +157,12 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
     return libraryExercises?.find(ex => ex.id === item.exerciseId);
   }, [item.exerciseId, item.type, libraryExercises]);
 
-  const thumbSrc = item.thumbnail_url || item.image_url || exerciseFromLibrary?.thumbnail_url || exerciseFromLibrary?.image_url;
+  const thumbSrc =
+    item.thumbnail_url ||
+    item.image_url ||
+    (exerciseFromLibrary ? getBestImageUrl(exerciseFromLibrary) : null);
+  const previewFallbackSrcs = exerciseFromLibrary ? getImageUrlCandidates(exerciseFromLibrary) : [];
+  const canOpenExerciseModal = item.type === "exercise" && !!exerciseFromLibrary && !!onOpenExercise;
 
   useEffect(() => {
     const hasNotes = !!(item.notes?.trim() || item.intensity?.trim());
@@ -361,42 +372,102 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                 >
                   <div className="px-10 pb-4 pt-1 space-y-4">
                     {item.type === "exercise" ? (
-                      <>
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-1.5 px-1">
-                            <Dumbbell className="h-3 w-3 text-emerald-500" />
-                            <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
-                              Prescrição (Séries, Repetições, Carga)
-                            </label>
+                      <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
+                        {(thumbSrc || canOpenExerciseModal) && (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-1.5 px-1">
+                              <Eye className="h-3 w-3 text-emerald-500" />
+                              <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
+                                Visual do Exercício
+                              </label>
+                            </div>
+
+                            {canOpenExerciseModal ? (
+                              <button
+                                type="button"
+                                onClick={() => onOpenExercise?.(exerciseFromLibrary)}
+                                className="group relative flex h-[160px] w-full overflow-hidden rounded-2xl border border-emerald-200/60 bg-emerald-50/40 text-left transition-all hover:border-emerald-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30"
+                              >
+                                {thumbSrc ? (
+                                  <>
+                                    <OptimizedImage
+                                      src={thumbSrc}
+                                      alt={item.name}
+                                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                                      aspectRatio="1:1"
+                                      fallbackSrcs={previewFallbackSrcs}
+                                    />
+                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/75 via-slate-950/20 to-transparent p-3">
+                                      <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 text-[10px] font-bold text-emerald-700 shadow-sm">
+                                        <Eye className="h-3 w-3" />
+                                        Abrir detalhes
+                                      </span>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-emerald-50 to-teal-50 px-4 text-center">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-emerald-600 shadow-sm">
+                                      <Dumbbell className="h-6 w-6" />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <p className="text-sm font-semibold text-slate-800">Abrir exercício</p>
+                                      <p className="text-xs text-muted-foreground">
+                                        Ver vídeo, descrição e instruções
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                              </button>
+                            ) : thumbSrc ? (
+                              <div className="relative flex h-[160px] w-full overflow-hidden rounded-2xl border border-slate-200/70 bg-slate-50">
+                                <OptimizedImage
+                                  src={thumbSrc}
+                                  alt={item.name}
+                                  className="h-full w-full object-cover"
+                                  aspectRatio="1:1"
+                                />
+                              </div>
+                            ) : null}
                           </div>
-                          <Input
-                            value={item.prescription || ""}
-                            onChange={(e) =>
-                              handleUpdateItem(item.id, { prescription: e.target.value })
-                            }
-                            placeholder="Ex: 3x12 - 5kg - 30s descanso"
-                            className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-emerald-500/20 text-sm"
-                            disabled={disabled}
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-1.5 px-1">
-                            <MessageSquare className="h-3 w-3 text-teal-500" />
-                            <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
-                              Feedback do Paciente
-                            </label>
+                        )}
+
+                        <div className="space-y-4">
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-1.5 px-1">
+                              <Dumbbell className="h-3 w-3 text-emerald-500" />
+                              <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
+                                Prescrição (Séries, Repetições, Carga)
+                              </label>
+                            </div>
+                            <Input
+                              value={item.prescription || ""}
+                              onChange={(e) =>
+                                handleUpdateItem(item.id, { prescription: e.target.value })
+                              }
+                              placeholder="Ex: 3x12 - 5kg - 30s descanso"
+                              className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-emerald-500/20 text-sm"
+                              disabled={disabled}
+                            />
                           </div>
-                          <Input
-                            value={item.patientFeedback || ""}
-                            onChange={(e) =>
-                              handleUpdateItem(item.id, { patientFeedback: e.target.value })
-                            }
-                            placeholder="Como o paciente se sentiu? Dor? Facilidade?"
-                            className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-teal-500/20 text-sm"
-                            disabled={disabled}
-                          />
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-1.5 px-1">
+                              <MessageSquare className="h-3 w-3 text-teal-500" />
+                              <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
+                                Feedback do Paciente
+                              </label>
+                            </div>
+                            <Input
+                              value={item.patientFeedback || ""}
+                              onChange={(e) =>
+                                handleUpdateItem(item.id, { patientFeedback: e.target.value })
+                              }
+                              placeholder="Como o paciente se sentiu? Dor? Facilidade?"
+                              className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-teal-500/20 text-sm"
+                              disabled={disabled}
+                            />
+                          </div>
                         </div>
-                      </>
+                      </div>
                     ) : (
                       <div className="flex gap-2">
                         <div className="flex-1 space-y-1.5">
@@ -688,10 +759,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
   }, [libraryExercises, newItemName, trimmedQuery, showExerciseSlot]);
 
   const combinedSuggestions = useMemo(() => {
-    const list: Array<
-      | ({ selectType: "procedure" } & (typeof COMMON_PROCEDURES)[0])
-      | ({ selectType: "exercise" } & (typeof libraryExercises)[0])
-    > = [];
+    const list: CombinedSuggestion[] = [];
 
     procedureSuggestions.forEach((p) => {
       list.push({ ...p, selectType: "procedure" as const });
@@ -706,6 +774,9 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
 
   const hasSuggestions = combinedSuggestions.length > 0;
   const shouldShowSuggestions = hasSuggestions && !forceHideSuggestions && (isInputFocused || trimmedQuery.length > 0);
+
+  const isProcedureSuggestion = (suggestion: CombinedSuggestion): suggestion is ProcedureSuggestion =>
+    suggestion.selectType === "procedure";
 
   // Posiciona o dropdown via portal (escapa de containers com overflow).
   const updateDropdownRect = React.useCallback(() => {
@@ -810,25 +881,25 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
          // Otherwise, use the active index if it's valid, or select the first one if activeIndex is invalid
          if (combinedSuggestions.length === 1) {
            const selected = combinedSuggestions[0];
-           if (selected.selectType === "procedure") {
-             handleSelectProcedureSuggestion(selected as any);
+           if (isProcedureSuggestion(selected)) {
+             handleSelectProcedureSuggestion(selected);
            } else {
-             handleSelectExerciseSuggestion(selected as any);
+             handleSelectExerciseSuggestion(selected);
            }
          } else if (activeIndex >= 0 && activeIndex < combinedSuggestions.length) {
            const selected = combinedSuggestions[activeIndex];
-           if (selected.selectType === "procedure") {
-             handleSelectProcedureSuggestion(selected as any);
+           if (isProcedureSuggestion(selected)) {
+             handleSelectProcedureSuggestion(selected);
            } else {
-             handleSelectExerciseSuggestion(selected as any);
+             handleSelectExerciseSuggestion(selected);
            }
          } else {
            // Fallback: select first suggestion if no active index
            const selected = combinedSuggestions[0];
-           if (selected.selectType === "procedure") {
-             handleSelectProcedureSuggestion(selected as any);
+           if (isProcedureSuggestion(selected)) {
+             handleSelectProcedureSuggestion(selected);
            } else {
-             handleSelectExerciseSuggestion(selected as any);
+             handleSelectExerciseSuggestion(selected);
            }
          }
          setActiveIndex(-1);
@@ -1270,6 +1341,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                       handleToggleItem={handleToggleItem}
                       handleRemoveItem={handleRemoveItem}
                       handleUpdateItem={handleUpdateItem}
+                      onOpenExercise={setViewExercise}
                     />
                   ))
                 )}

@@ -1159,6 +1159,26 @@ const PatientEvolution = () => {
 							currentObservation={stripHtml(state.evolutionData.observacao || "")}
 						/>
 					) : null}
+					{state.patientId ? (
+						<>
+							<MedicalReturnFormModal
+								open={medicalReturnModalOpen}
+								onOpenChange={setMedicalReturnModalOpen}
+								patientId={state.patientId}
+								onSuccess={() => state.invalidateData("all")}
+							/>
+							<SurgeryFormModal
+								open={surgeryModalOpen}
+								onOpenChange={setSurgeryModalOpen}
+								patientId={state.patientId}
+							/>
+							<MetaFormModal
+								open={goalModalOpen}
+								onOpenChange={setGoalModalOpen}
+								patientId={state.patientId}
+							/>
+						</>
+					) : null}
 				</div>
 			</ComponentErrorBoundary>
 		</PageLayout>
