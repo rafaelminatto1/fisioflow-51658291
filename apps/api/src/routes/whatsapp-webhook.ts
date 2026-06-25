@@ -12,6 +12,54 @@ import { AIConciergeService } from "../services/ai-concierge";
 import { needsHumanApproval } from "../lib/whatsappApproval";
 import { notifyOrganization } from "../lib/push";
 
+type RawEventState =
+  | "received"
+  | "signature_failed"
+  | "payload_invalid"
+  | "org_unresolved"
+  | "processed"
+  | "processing_error";
+
+function extractProviderEventId(body: Record<string, unknown>): string | null {
+  return (
+    (body as any).entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.id ??
+    (body as any).entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.id ??
+    null
+  );
+}
+
+function buildRawEventKey(
+  eventType: string,
+  phoneNumberId: string | null,
+  entryId: string,
+  providerEventId: string | null,
+) {
+  return [eventType, phoneNumberId ?? "no-phone", entryId || "no-entry", providerEventId || "no-provider"]
+    .join(":")
+    .replace(/\s+/g, "_");
+}
+
+interface RawEventParams {
+  organizationId: string | null;
+  eventType: string;
+  rawBody: string;
+  phoneNumberId: string | null;
+  providerEventId: string | null;
+  signatureValid: boolean;
+  processingState: RawEventState;
+  failureReason: string | null;
+  requestPath: string;
+}
+
+
+function safeWaitUntil(c: any, promise: Promise<unknown>): void {
+  if (c?.executionCtx?.waitUntil) {
+    c.executionCtx.waitUntil(promise);
+  } else {
+    promise.catch(() => {});
+  }
+}
+
 const app = new Hono<{ Bindings: Env }>();
 
 app.get("/", async (c) => {
@@ -33,11 +81,26 @@ app.post("/", async (c) => {
   const appSecret = c.env.WHATSAPP_APP_SECRET;
 
   if (!appSecret) {
+    console.error("[WhatsApp Webhook] missing WHATSAPP_APP_SECRET");
     return c.json({ error: "App secret not configured" }, 500);
   }
 
   const valid = await verifyMetaSignature(appSecret, rawBody, signature);
   if (!valid) {
+    const phoneNumberId = JSON.parse(rawBody || "{}").entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id ?? null;
+    safeWaitUntil(c,
+      writeWebhookAudit(c.env, {
+        organizationId: null,
+        eventType: "unknown",
+        rawBody,
+        phoneNumberId,
+        providerEventId: null,
+        signatureValid: false,
+        processingState: "signature_failed",
+        failureReason: "invalid_signature",
+        requestPath: "/api/whatsapp/webhook",
+      }),
+    );
     return c.json({ error: "Assinatura invalida" }, 401);
   }
 
@@ -45,10 +108,23 @@ app.post("/", async (c) => {
   try {
     body = JSON.parse(rawBody);
   } catch {
+    safeWaitUntil(c,
+      writeWebhookAudit(c.env, {
+        organizationId: null,
+        eventType: "unknown",
+        rawBody,
+        phoneNumberId: null,
+        providerEventId: null,
+        signatureValid: true,
+        processingState: "payload_invalid",
+        failureReason: "invalid_json",
+        requestPath: "/api/whatsapp/webhook",
+      }),
+    );
     return c.json({ error: "Payload invalido" }, 400);
   }
 
-  c.executionCtx.waitUntil(processWebhook(body, c.env, rawBody));
+  safeWaitUntil(c, processWebhook(body, c.env, rawBody));
 
   return c.json({ status: "ok" });
 });
@@ -68,25 +144,64 @@ async function processWebhook(
         const value = change?.value;
         if (!value) continue;
 
-        const orgId = await resolveOrgId(pool, value.metadata?.phone_number_id);
-        if (!orgId) continue;
+        const phoneNumberId = value.metadata?.phone_number_id ?? null;
+        const eventType = value.messages?.length ? "message" : value.statuses?.length ? "status" : value.system ? "system" : "unknown";
+        const providerEventId = extractProviderEventId(body);
 
-        await storeRawEvent(pool, orgId, body, rawBody);
-
-        if (value.messages?.length) {
-          for (const msg of value.messages) {
-            await handleMessage(pool, env, orgId, msg, value.contacts);
-          }
+        const orgId = await resolveOrgId(pool, phoneNumberId ?? undefined);
+        if (!orgId) {
+          await storeRawEvent(pool, {
+            organizationId: null,
+            eventType,
+            rawBody,
+            phoneNumberId,
+            providerEventId,
+            signatureValid: true,
+            processingState: "org_unresolved",
+            failureReason: "phone_number_id_not_mapped",
+            requestPath: "/api/whatsapp/webhook",
+          });
+          continue;
         }
 
-        if (value.statuses?.length) {
-          for (const status of value.statuses) {
-            await handleStatus(pool, env, orgId, status);
-          }
-        }
+        const rawEventId = await storeRawEvent(pool, {
+          organizationId: orgId,
+          eventType,
+          rawBody,
+          phoneNumberId,
+          providerEventId,
+          signatureValid: true,
+          processingState: "received",
+          failureReason: null,
+          requestPath: "/api/whatsapp/webhook",
+        });
 
-        if (value.system) {
-          await handleSystem(pool, orgId, value.system);
+        try {
+          if (value.messages?.length) {
+            for (const msg of value.messages) {
+              await handleMessage(pool, env, orgId, msg, value.contacts);
+            }
+          }
+
+          if (value.statuses?.length) {
+            for (const status of value.statuses) {
+              await handleStatus(pool, env, orgId, status);
+            }
+          }
+
+          if (value.system) {
+            await handleSystem(pool, orgId, value.system);
+          }
+
+          await updateRawEventState(pool, rawEventId, "processed", null);
+        } catch (error) {
+          await updateRawEventState(
+            pool,
+            rawEventId,
+            "processing_error",
+            error instanceof Error ? error.message : "unknown_processing_error",
+          );
+          throw error;
         }
       }
     }
@@ -112,30 +227,65 @@ async function resolveOrgId(pool: any, phoneNumberId: string | undefined): Promi
   }
 }
 
-async function storeRawEvent(
-  pool: any,
-  orgId: string,
-  body: Record<string, unknown>,
-  rawBody: string,
-): Promise<void> {
-  try {
-    // id é o business account id e será sempre o mesmo, então não use apenas ele.
-    const entryId = (body as any).entry?.[0]?.id ?? "";
-    const wamid =
-      (body as any).entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.id ??
-      (body as any).entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.id ??
-      `ts_${Date.now()}`;
-    const idempotencyKey = `evt_${entryId}_${wamid}_${crypto.randomUUID().substring(0, 8)}`;
+async function storeRawEvent(pool: any, params: RawEventParams): Promise<string> {
+  const parsed = JSON.parse(params.rawBody || "{}");
+  const entryId = parsed?.entry?.[0]?.id ?? "";
+  const idempotencyKey = buildRawEventKey(
+    params.eventType,
+    params.phoneNumberId,
+    entryId,
+    params.providerEventId,
+  );
 
-    await pool.query(
-      `INSERT INTO wa_raw_events (organization_id, raw_payload, idempotency_key, created_at)
-       VALUES ($1::uuid, $2, $3, now())
-       ON CONFLICT (idempotency_key) DO NOTHING`,
-      [orgId, rawBody, idempotencyKey],
-    );
+  const result = await pool.query(
+    `INSERT INTO wa_raw_events (
+       organization_id, event_type, meta_message_id, phone_number_id, raw_payload,
+       processed, processing_state, failure_reason, provider_event_id,
+       signature_valid, request_path, idempotency_key, created_at
+     ) VALUES ($1::uuid, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11, $12, now())
+     ON CONFLICT (idempotency_key)
+     DO UPDATE SET raw_payload = EXCLUDED.raw_payload
+     RETURNING id`,
+    [
+      params.organizationId,
+      params.eventType,
+      params.providerEventId,
+      params.phoneNumberId,
+      params.rawBody,
+      params.processingState === "processed",
+      params.processingState,
+      params.failureReason,
+      params.providerEventId,
+      params.signatureValid,
+      params.requestPath,
+      idempotencyKey,
+    ],
+  );
+
+  return result.rows[0].id;
+}
+
+async function writeWebhookAudit(env: Env, params: RawEventParams): Promise<void> {
+  try {
+    const pool = await createPool(env);
+    await storeRawEvent(pool, params);
   } catch (err) {
-    console.error("[WhatsApp Webhook] storeRawEvent error:", err);
+    console.error("[WhatsApp Webhook] writeWebhookAudit error:", err);
   }
+}
+
+async function updateRawEventState(
+  pool: any,
+  rawEventId: string,
+  state: RawEventState,
+  failureReason: string | null,
+): Promise<void> {
+  await pool.query(
+    `UPDATE wa_raw_events
+     SET processing_state = $1, failure_reason = $2, processed = $3, processed_at = CASE WHEN $3 THEN now() ELSE processed_at END
+     WHERE id = $4::uuid`,
+    [state, failureReason, state === "processed", rawEventId],
+  );
 }
 
 async function handleMessage(

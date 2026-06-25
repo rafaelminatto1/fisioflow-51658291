@@ -169,19 +169,9 @@ describe("POST /api/whatsapp/webhook", () => {
 
   it("returns 401 for invalid signatures", async () => {
     mockVerifyMetaSignature.mockResolvedValue(false);
+    mockQuery.mockResolvedValue({ rows: [{ id: "raw-audit-1" }] });
 
-    const app = await buildApp();
-    const res = await app.fetch(
-      new Request("http://localhost/api/whatsapp/webhook", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-hub-signature-256": "bad",
-        },
-        body: JSON.stringify({ entry: [] }),
-      }),
-      ENV,
-    );
+    const res = await postWebhook({ entry: [] });
 
     expect(res.status).toBe(401);
   });
