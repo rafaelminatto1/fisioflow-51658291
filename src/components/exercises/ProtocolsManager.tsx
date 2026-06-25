@@ -1,4 +1,4 @@
-import { useState, useMemo, memo } from "react";
+import { Suspense, lazy, useState, useMemo, memo } from "react";
 import { useExerciseProtocols, type ExerciseProtocol } from "@/hooks/useExerciseProtocols";
 import { useDebounce } from "@/hooks/performance/useDebounce";
 import { Button } from "@/components/ui/button";
@@ -28,8 +28,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { motion, AnimatePresence } from "framer-motion";
-import { NewProtocolModal } from "@/components/modals/NewProtocolModal";
-import ProtocolDetailView from "./ProtocolDetailView";
+const NewProtocolModal = lazy(() =>
+  import("@/components/modals/NewProtocolModal").then((m) => ({ default: m.NewProtocolModal })),
+);
+const ProtocolDetailView = lazy(() => import("./ProtocolDetailView"));
 
 export const ProtocolsManager = memo(function ProtocolsManager() {
   const [activeTab, setActiveTab] = useState<"patologia" | "pos_operatorio">("pos_operatorio");
@@ -323,11 +325,13 @@ export const ProtocolsManager = memo(function ProtocolsManager() {
       {/* Protocol Details Full View */}
       <AnimatePresence>
         {viewProtocol && (
-          <ProtocolDetailView
-            protocol={viewProtocol}
-            onClose={() => setViewProtocol(null)}
-            onEdit={handleEditProtocol}
-          />
+          <Suspense fallback={null}>
+            <ProtocolDetailView
+              protocol={viewProtocol}
+              onClose={() => setViewProtocol(null)}
+              onEdit={handleEditProtocol}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
 
@@ -360,16 +364,18 @@ export const ProtocolsManager = memo(function ProtocolsManager() {
       </AlertDialog>
 
       {/* Protocol Create/Edit Modal */}
-      <NewProtocolModal
-        open={showModal}
-        onOpenChange={(open: boolean) => {
-          setShowModal(open);
-          if (!open) setEditingProtocol(null);
-        }}
-        onSubmit={handleSubmit}
-        protocol={editingProtocol || undefined}
-        isLoading={isCreating || isUpdating}
-      />
+      <Suspense fallback={null}>
+        <NewProtocolModal
+          open={showModal}
+          onOpenChange={(open: boolean) => {
+            setShowModal(open);
+            if (!open) setEditingProtocol(null);
+          }}
+          onSubmit={handleSubmit}
+          protocol={editingProtocol || undefined}
+          isLoading={isCreating || isUpdating}
+        />
+      </Suspense>
     </div>
   );
 });

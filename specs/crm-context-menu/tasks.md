@@ -2,9 +2,9 @@
 
 ## Fase 1 — Menu de Contexto na Lista de Conversas (Contato)
 
-- [ ] T001 [P] Adicionar estado `conversationMenu` e handler `openConversationMenu` em `src/pages/CrmWhatsApp.tsx`
-- [ ] T002 [P] Adicionar `onContextMenu` no componente `ConversationCard` para abrir o menu de contato
-- [ ] T003 [P] Criar componente `ConversationContextMenu` com ações: Fixar, Silenciar, Marcar como não lida, Excluir
+- [x] T001 [P] Adicionar estado `conversationMenu` e handler `openConversationMenu` em `src/pages/CrmWhatsApp.tsx`
+ - [x] T002 [P] Adicionar `onContextMenu` no componente `ConversationCard` para abrir o menu de contato
+ - [x] T003 [P] Criar componente `ConversationContextMenu` com ações: Fixar, Silenciar, Marcar como não lida, Excluir
 - [ ] T004 Implementar ação "Fixar conversa" (pin) — atualizar `metadata.pinned` em `wa_conversations` via `updateConversationFields`
 - [ ] T005 Implementar ação "Silenciar notificações" — atualizar `metadata.muted_until` em `wa_conversations`
 - [ ] T006 Implementar ação "Marcar como não lida" — resetar `last_read_at` para null em `wa_conversations`
@@ -21,10 +21,10 @@
 
 ## Fase 3 — Funcionalidades Complementares
 
-- [ ] T014 [P] Adicionar atalhos de teclado: `Ctrl+E` arquivar, `Ctrl+Shift+M` mute, `Ctrl+Backspace` deletar
-- [ ] T015 [P] Adicionar busca global `Ctrl+F` (filtrar conversas por conteúdo de mensagens)
-- [ ] T016 Adicionar item "Copiar nome/telefone" no menu de contexto do contato
-- [ ] T017 Adicionar item "Criar/ver paciente" no menu de contexto do contato
+ - [x] T014 [P] Adicionar atalhos de teclado: `Ctrl+E` arquivar, `Ctrl+Shift+M` mute, `Ctrl+Backspace` deletar
+ - [ ] T015 [P] Adicionar busca global `Ctrl+F` (filtrar conversas por conteúdo de mensagens)
+ - [x] T016 Adicionar item "Copiar nome/telefone" no menu de contexto do contato
+ - [ ] T017 Adicionar item "Criar/ver paciente" no menu de contexto do contato
 
 ## Dependências
 

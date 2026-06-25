@@ -1,3 +1,4 @@
+import "@/styles/bundles/create-template-selection-modal.css";
 import { useState } from "react";
 import {
   Dialog,

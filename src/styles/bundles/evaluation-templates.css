@@ -1,7 +1,4 @@
 @reference "../../index.css";
 @import "tailwindcss/utilities.css" layer(utilities) source(none);
 
-@source "../../pages/Exercises.tsx";
-@source "../../pages/Protocols.tsx";
 @source "../../pages/Templates.tsx";
-@source "../../components/exercises/**/*.{ts,tsx,js,jsx}";

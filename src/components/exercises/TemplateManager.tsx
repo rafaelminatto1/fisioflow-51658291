@@ -1,15 +1,22 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { Suspense, lazy, useState, useMemo } from "react";
 import { templatesApi } from "@/api/v2";
 import { useTemplateUIStore } from "@/stores/useTemplateUIStore";
 import { TemplateSidebar } from "./TemplateSidebar";
-import { TemplateDetailPanel } from "./TemplateDetailPanel";
-import { TemplateApplyFlow } from "./TemplateApplyFlow";
-import { TemplateCreateFlow } from "./TemplateCreateFlow";
 import { Button } from "@/components/ui/button";
 import { LayoutTemplate, Sparkles, Plus } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { ExerciseTemplate } from "@/types/workers";
+
+const TemplateDetailPanel = lazy(() =>
+  import("./TemplateDetailPanel").then((m) => ({ default: m.TemplateDetailPanel })),
+);
+const TemplateApplyFlow = lazy(() =>
+  import("./TemplateApplyFlow").then((m) => ({ default: m.TemplateApplyFlow })),
+);
+const TemplateCreateFlow = lazy(() =>
+  import("./TemplateCreateFlow").then((m) => ({ default: m.TemplateCreateFlow })),
+);
 
 // ─── Empty state CTA (shown when org has no custom templates) ─────────────────
 
@@ -168,52 +175,60 @@ export function TemplateManager() {
             </SheetTitle>
           </SheetHeader>
 
-          <TemplateDetailPanel
-            template={selectedTemplate}
-            onApply={handleApply}
-            onCustomize={handleCustomize}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
+          <Suspense fallback={<div className="h-40 rounded-2xl bg-muted/30 animate-pulse" />}>
+            <TemplateDetailPanel
+              template={selectedTemplate}
+              onApply={handleApply}
+              onCustomize={handleCustomize}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </Suspense>
         </SheetContent>
       </Sheet>
 
       {/* ── Overlaid flows ── */}
       {applyFlowOpen && selectedTemplate && (
-        <TemplateApplyFlow
-          template={selectedTemplate}
-          open={applyFlowOpen}
-          onOpenChange={(open) => {
-            if (!open) closeApplyFlow();
-          }}
-          onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ["exercise-plans"] });
-          }}
-        />
+        <Suspense fallback={null}>
+          <TemplateApplyFlow
+            template={selectedTemplate}
+            open={applyFlowOpen}
+            onOpenChange={(open) => {
+              if (!open) closeApplyFlow();
+            }}
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ["exercise-plans"] });
+            }}
+          />
+        </Suspense>
       )}
 
-      <TemplateCreateFlow
-        open={createFlowOpen}
-        onOpenChange={(open) => {
-          if (!open) closeCreateFlow();
-        }}
-        sourceTemplate={createFlowSourceTemplate}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ["templates"] });
-        }}
-      />
+      <Suspense fallback={null}>
+        <TemplateCreateFlow
+          open={createFlowOpen}
+          onOpenChange={(open) => {
+            if (!open) closeCreateFlow();
+          }}
+          sourceTemplate={createFlowSourceTemplate}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["templates"] });
+          }}
+        />
+      </Suspense>
 
-      <TemplateCreateFlow
-        open={editFlowOpen}
-        onOpenChange={(open) => {
-          setEditFlowOpen(open);
-          if (!open) setEditingTemplate(null);
-        }}
-        editTemplate={editingTemplate ?? undefined}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ["templates"] });
-        }}
-      />
+      <Suspense fallback={null}>
+        <TemplateCreateFlow
+          open={editFlowOpen}
+          onOpenChange={(open) => {
+            setEditFlowOpen(open);
+            if (!open) setEditingTemplate(null);
+          }}
+          editTemplate={editingTemplate ?? undefined}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["templates"] });
+          }}
+        />
+      </Suspense>
     </div>
   );
 }

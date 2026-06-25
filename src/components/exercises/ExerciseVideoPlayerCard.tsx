@@ -1,24 +1,7 @@
-import React, { useRef, useState, useEffect, useCallback } from "react";
-import {
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Maximize,
-  Minimize,
-  Keyboard,
-  RotateCcw,
-  RotateCw,
-  Copy,
-} from "lucide-react";
+import React, { Suspense, lazy, useRef, useState, useEffect, useCallback } from "react";
+import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, RotateCcw, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { exerciseVideosService, type ExerciseVideo } from "@/services/exerciseVideos";
 import { fisioLogger as logger } from "@/lib/errors/logger";
@@ -36,6 +19,9 @@ export interface ExerciseVideoPlayerProps {
 }
 
 const SPEED_OPTIONS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+const ExerciseVideoPlayerAdvancedControls = lazy(() =>
+  import("./ExerciseVideoPlayerAdvancedControls"),
+);
 
 export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
   src,
@@ -471,39 +457,15 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
             />
           </div>
 
-          {/* Speed control */}
-          <DropdownMenu open={showSpeedMenu} onOpenChange={setShowSpeedMenu}>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-8 px-2 text-white hover:text-white hover:bg-white/10 text-xs font-mono"
-              >
-                {playbackRate}x
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center">
-              {SPEED_OPTIONS.map((speed) => (
-                <DropdownMenuItem
-                  key={speed}
-                  onClick={() => handleSpeedChange(speed)}
-                  className={cn("justify-center font-mono", playbackRate === speed && "bg-accent")}
-                >
-                  {speed}x
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* PiP */}
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8 shrink-0 text-white hover:text-white hover:bg-white/20"
-            onClick={togglePip}
-            title="Picture-in-Picture (p)"
-          >
-            <Copy className="w-4 h-4" />
-          </Button>
+          <Suspense fallback={null}>
+            <ExerciseVideoPlayerAdvancedControls
+              playbackRate={playbackRate}
+              showSpeedMenu={showSpeedMenu}
+              onSpeedMenuChange={setShowSpeedMenu}
+              onSpeedChange={handleSpeedChange}
+              onTogglePip={togglePip}
+            />
+          </Suspense>
 
           {/* Fullscreen */}
           <Button
@@ -516,17 +478,6 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
             {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
           </Button>
 
-          {/* Keyboard shortcuts hint */}
-          <div className="absolute -top-10 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-6 w-6 text-white/50 hover:text-white/80 hover:bg-white/10"
-              title="Atalhos: Espaço/K=play, M=mudo, F=tela cheia, P=PiP, +/- velocidade, ←/→=seek, -/+ skip 10s"
-            >
-              <Keyboard className="w-3 h-3" />
-            </Button>
-          </div>
         </div>
       </div>
     </div>

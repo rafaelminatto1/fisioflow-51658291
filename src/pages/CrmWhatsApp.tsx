@@ -859,6 +859,32 @@ export default function CrmWhatsApp() {
 
   useEffect(() => () => clearLongPress(), []);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (!selectedId) return;
+      // Ctrl+E – archive (mark as read)
+      if (e.ctrlKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        void handleArchiveConversation(selectedId);
+      }
+      // Ctrl+Shift+M – mute/unmute for 8h
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'm') {
+        e.preventDefault();
+        void handleMuteConversation(selectedId);
+      }
+      // Ctrl+Backspace – delete conversation
+      if (e.ctrlKey && e.key === 'Backspace') {
+        e.preventDefault();
+        if (window.confirm('Excluir conversa?')) {
+          void handleDeleteConversation(selectedId);
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [selectedId]);
+
   return (
     <PageLayout fullWidth noPadding compactHeader hideDefaultHeader showBreadcrumbs={false}>
       <PageContainer maxWidth="full" noPadding className="h-full">

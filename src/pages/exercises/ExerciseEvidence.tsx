@@ -74,7 +74,7 @@ export default function ExerciseEvidence() {
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-6 font-[Nunito,sans-serif]">
-      <Link to="/exercicios/busca-ia" className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-slate-500 hover:text-blue-600">
+      <Link to="/exercises/search-ai" className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-slate-500 hover:text-blue-600">
         <ArrowLeft className="h-4 w-4" /> Voltar
       </Link>
       <header className="mb-6 flex items-center gap-3">

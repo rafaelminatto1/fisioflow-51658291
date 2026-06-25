@@ -132,7 +132,7 @@ export default function SemanticExerciseSearch() {
                   <p className="mt-1 line-clamp-2 text-xs text-slate-500">{r.description}</p>
                 )}
                 <Link
-                  to={`/exercicios/${r.id}/evidencia`}
+                  to={`/exercises/${r.id}/evidence`}
                   className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"
                 >
                   <BookOpen className="h-3.5 w-3.5" /> Evidência

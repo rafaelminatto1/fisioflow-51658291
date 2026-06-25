@@ -1,0 +1,8 @@
+@reference "../../index.css";
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+
+@source "../../pages/Protocols.tsx";
+@source "../../components/exercises/ProtocolsManager.tsx";
+@source "../../components/exercises/ProtocolDetailView.tsx";
+@source "../../components/protocols/**/*.tsx";
+@source "../../components/modals/NewProtocolModal.tsx";

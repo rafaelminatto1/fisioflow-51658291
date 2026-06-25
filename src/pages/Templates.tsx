@@ -1,4 +1,4 @@
-import "@/styles/bundles/exercises.css";
+import "@/styles/bundles/evaluation-templates.css";
 import {
   Activity,
   ClipboardList,

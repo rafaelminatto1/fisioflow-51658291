@@ -1,3 +1,4 @@
+import "@/styles/bundles/merge-exercises-modal.css";
 import React, { useState } from "react";
 import {
   Dialog,

@@ -47,7 +47,26 @@ export default [
       route("schedule/settings", "pages/ScheduleSettings.tsx"),
 
       // Exercises & Protocols
-      route("exercises", "pages/Exercises.tsx"),
+      route("exercises", "pages/Exercises.tsx", [
+        index("pages/exercises/ExercisesLibraryPage.tsx"),
+        route("videos", "pages/exercises/ExerciseVideosPage.tsx"),
+        route("templates", "pages/exercises/ExerciseTemplatesPage.tsx"),
+        route("protocols", "pages/exercises/ExerciseProtocolsPage.tsx"),
+        route("ai", "pages/exercises/ExerciseAiPage.tsx"),
+        route("analytics", "pages/exercises/ExerciseAnalyticsPage.tsx"),
+      ]),
+      route("exercises/search-ai", "pages/exercises/SemanticExerciseSearch.tsx"),
+      route("exercises/curation", "pages/exercises/ExerciseCuration.tsx"),
+      route("exercises/:id/evidence", "pages/exercises/ExerciseEvidence.tsx"),
+      route("exercicios", "pages/exercises/ExercisesLegacyRedirect.tsx"),
+      route("exercicios/videos", "pages/exercises/ExercisesLegacyRedirect.tsx"),
+      route("exercicios/templates", "pages/exercises/ExercisesLegacyRedirect.tsx"),
+      route("exercicios/protocolos", "pages/exercises/ExercisesLegacyRedirect.tsx"),
+      route("exercicios/ia", "pages/exercises/ExercisesLegacyRedirect.tsx"),
+      route("exercicios/analytics", "pages/exercises/ExercisesLegacyRedirect.tsx"),
+      route("exercicios/busca-ia", "pages/exercises/ExercisesLegacyRedirect.tsx"),
+      route("exercicios/curadoria", "pages/exercises/ExercisesLegacyRedirect.tsx"),
+      route("exercicios/:id/evidencia", "pages/exercises/ExercisesLegacyRedirect.tsx"),
       route("protocols", "pages/Protocols.tsx"),
 
       // WhatsApp Inbox — /whatsapp/inbox unificado em /crm-whatsapp (CrmWhatsApp.tsx)

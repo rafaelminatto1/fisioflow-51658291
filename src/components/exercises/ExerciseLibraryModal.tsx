@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from "react";
+import "@/styles/bundles/exercises-library.css";
+import React, { Suspense, lazy, useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ExerciseLibrary } from "./ExerciseLibrary";
 import { type Exercise } from "@/hooks/useExercises";
-import { WgerImportModal } from "../modals/WgerImportModal";
+
+const WgerImportModal = lazy(() =>
+  import("../modals/WgerImportModal").then((m) => ({ default: m.WgerImportModal })),
+);
 
 interface ExerciseLibraryModalProps {
   open: boolean;
@@ -76,7 +80,13 @@ export const ExerciseLibraryModal: React.FC<ExerciseLibraryModalProps> = ({
           </div>
         </DialogContent>
       </Dialog>
-      <WgerImportModal open={isWgerOpen} onOpenChange={setIsWgerOpen} onImport={handleWgerImport} />
+      <Suspense fallback={null}>
+        <WgerImportModal
+          open={isWgerOpen}
+          onOpenChange={setIsWgerOpen}
+          onImport={handleWgerImport}
+        />
+      </Suspense>
     </>
   );
 };

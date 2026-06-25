@@ -1,3 +1,4 @@
+import "@/styles/bundles/exercise-view-modal.css";
 import React from "react";
 import {
   Dialog,

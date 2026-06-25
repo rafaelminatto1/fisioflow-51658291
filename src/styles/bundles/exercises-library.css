@@ -1,0 +1,8 @@
+@reference "../../index.css";
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+
+@source "../../components/exercises/ExerciseLibrary.tsx";
+@source "../../components/exercises/ExerciseFiltersPanel.tsx";
+@source "../../components/exercises/DraggableExerciseCard.tsx";
+@source "../../components/exercises/DeleteExerciseDialog.tsx";
+@source "../../components/exercises/ExerciseLibraryModal.tsx";

@@ -62,6 +62,11 @@ const VIEW_MAP: Record<ViewType, string> = {
 /** Safe defaults when useScheduleSettings hasn't loaded yet. */
 const DEFAULT_SLOT_MIN = "07:00:00";
 const DEFAULT_SLOT_MAX = "21:00:00";
+const DEFAULT_EVENT_COLORS = {
+  accent: "#d97706",
+  background: "#fef3c7",
+  text: "#92400e",
+};
 
 /**
  * Raw appointment shape as it comes from useSchedulePageData / Workers API.
@@ -287,7 +292,10 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
       const rawStatus = String(a.status || "agendado");
       const statusKey = statusConfig[rawStatus] ? rawStatus : normalizeStatus(rawStatus);
       const colors =
-        statusConfig[statusKey]?.calendarCardColors ?? statusConfig.agendado.calendarCardColors;
+        statusConfig[statusKey]?.calendarCardColors ??
+        statusConfig[normalizeStatus(rawStatus)]?.calendarCardColors ??
+        statusConfig.agendado?.calendarCardColors ??
+        DEFAULT_EVENT_COLORS;
       const isGroup = Boolean(a.isGroup ?? a.is_group);
 
       apptEvents.push({
@@ -542,7 +550,7 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
 
   return (
     <div
-      className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-slate-50/50 dark:bg-slate-950"
+      className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-slate-50/50 dark:bg-slate-950"
       style={cssVariables}
       data-selection-mode={selectionOn ? "true" : "false"}
       data-agenda-density={appearance.cardSize}
@@ -567,7 +575,7 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
       <div className="flex min-h-0 flex-1 flex-col">
         <div
           ref={fcContainerRef}
-          className="relative flex min-h-0 w-full flex-1 overflow-hidden border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 [&>.fc]:flex-1 [&>.fc]:min-h-0"
+          className="relative flex h-full min-h-0 w-full flex-1 overflow-hidden border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 [&>.fc]:flex-1 [&>.fc]:h-full [&>.fc]:min-h-0 [&>.fc]:w-full [&_.fc-scrollgrid]:h-full [&_.fc-view-harness]:h-full [&_.fc-view-harness-active]:h-full"
         >
           <FullCalendar
             ref={calendarRef}

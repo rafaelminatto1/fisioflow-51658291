@@ -82,7 +82,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { knowledgeBase } from "@/data/knowledgeBase";
 import { exerciseDictionary, ExerciseEntry } from "@/data/exerciseDictionary";
 import { MediaGalleryModal } from "../media/MediaGalleryModal";
-import { WgerImportModal } from "./WgerImportModal";
 import {
   DndContext,
   closestCenter,
@@ -99,6 +98,10 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+
+const WgerImportModal = React.lazy(() =>
+  import("./WgerImportModal").then((m) => ({ default: m.WgerImportModal })),
+);
 
 const exerciseSchema = z.object({
   name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
@@ -1475,39 +1478,46 @@ onKeyDown={(e) => {
   }}
 />
 
-        <WgerImportModal
-          open={isWgerOpen}
-          onOpenChange={setIsWgerOpen}
-          onImport={(enrichedData) => {
-            const diffMap: any = {
-              Iniciante: "Iniciante",
-              Intermediário: "Intermediário",
-              Avançado: "Avançado",
-            };
-            form.setValue("name", enrichedData.name || "");
-            form.setValue("description", enrichedData.description || "");
-            form.setValue("category", enrichedData.category || "");
-            form.setValue("difficulty", diffMap[enrichedData.difficulty] || "Iniciante");
-            form.setValue("instructions", enrichedData.instructions || "");
-            if (enrichedData.aliases_pt) form.setValue("aliases_pt", enrichedData.aliases_pt);
-            if (enrichedData.body_parts) form.setValue("body_parts", enrichedData.body_parts);
-            if (enrichedData.equipment) form.setValue("equipment", enrichedData.equipment);
-            if (enrichedData.precaution_level)
-              form.setValue("precaution_level", enrichedData.precaution_level);
-            if (enrichedData.precaution_notes)
-              form.setValue("precaution_notes", enrichedData.precaution_notes);
-if (enrichedData.scientific_references) replace(enrichedData.scientific_references);
+        <React.Suspense fallback={null}>
+          <WgerImportModal
+            open={isWgerOpen}
+            onOpenChange={setIsWgerOpen}
+            onImport={(enrichedData) => {
+              const diffMap: any = {
+                Iniciante: "Iniciante",
+                Intermediário: "Intermediário",
+                Avançado: "Avançado",
+              };
 
-  if (enrichedData.media) {
-    enrichedData.media.forEach((m: any, i: number) => {
-      appendMedia({
-        ...m,
-        orderIndex: mediaFields.length + i,
-      });
-    });
-  }
-          }}
-        />
+              form.setValue("name", enrichedData.name || "");
+              form.setValue("description", enrichedData.description || "");
+              form.setValue("category", enrichedData.category || "");
+              form.setValue("difficulty", diffMap[enrichedData.difficulty] || "Iniciante");
+              form.setValue("instructions", enrichedData.instructions || "");
+
+              if (enrichedData.aliases_pt) form.setValue("aliases_pt", enrichedData.aliases_pt);
+              if (enrichedData.body_parts) form.setValue("body_parts", enrichedData.body_parts);
+              if (enrichedData.equipment) form.setValue("equipment", enrichedData.equipment);
+              if (enrichedData.precaution_level) {
+                form.setValue("precaution_level", enrichedData.precaution_level);
+              }
+              if (enrichedData.precaution_notes) {
+                form.setValue("precaution_notes", enrichedData.precaution_notes);
+              }
+              if (enrichedData.scientific_references) {
+                replace(enrichedData.scientific_references);
+              }
+              if (enrichedData.media) {
+                enrichedData.media.forEach((m: any, i: number) => {
+                  appendMedia({
+                    ...m,
+                    orderIndex: mediaFields.length + i,
+                  });
+                });
+              }
+            }}
+          />
+        </React.Suspense>
       </DialogContent>
     </Dialog>
   );
