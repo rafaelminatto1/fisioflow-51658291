@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -9,14 +8,18 @@ import {
   CheckCheck,
   ChevronDown,
   Clock3,
+  Copy,
   Filter,
   Flame,
   Globe,
+  ListTodo,
   MessageCircle,
   Mic,
   MoreVertical,
   Paperclip,
   Phone,
+  RefreshCw,
+  Reply,
   Search,
   Send,
   Settings,
@@ -25,14 +28,20 @@ import {
   UserPlus,
   Zap,
 } from "lucide-react";
+import { toast } from "sonner";
 import { PageLayout, PageContainer } from "@/components/layout/PageLayout";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { TaskQuickCreateModal } from "@/components/tarefas/v2/TaskQuickCreateModal";
 import {
   addTags,
+  backfillInstagramProfiles,
   fetchCrmSettings,
   fetchQuickReplies,
   fetchTags,
@@ -41,6 +50,8 @@ import {
   type FunnelStage,
   type QuickReply,
   type Tag,
+  type Message,
+  type InstagramProfileSyncSummary,
 } from "@/services/whatsapp-api";
 import { useWhatsAppConversation, useWhatsAppInbox } from "@/hooks/useWhatsApp";
 import {
@@ -141,6 +152,108 @@ function getMessageText(content: unknown): string {
   return "";
 }
 
+function getMessageMediaUrl(message: Message): string | null {
+  if (typeof message.mediaUrl === "string" && message.mediaUrl.trim()) return message.mediaUrl;
+  if (isRecord(message.metadata) && typeof message.metadata.mediaUrl === "string" && message.metadata.mediaUrl.trim()) {
+    return message.metadata.mediaUrl;
+  }
+  if (isRecord(message.content)) {
+    if (typeof message.content.url === "string" && message.content.url.trim()) return message.content.url;
+    if (typeof message.content.link === "string" && message.content.link.trim()) return message.content.link;
+  }
+  return null;
+}
+
+function getMessageTimeLabel(timestamp?: string) {
+  if (!timestamp) return "";
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+
+function buildQuotedMessageText(message: Message) {
+  const text = getMessageText(message.content).trim();
+  const time = getMessageTimeLabel(message.timestamp);
+  return [time ? `Mensagem ${time}:` : "Mensagem:", text ? `"${text}"` : "[mensagem sem texto]"].join("\n");
+}
+
+function formatSyncTimestamp(value: string | null | undefined) {
+  if (!value) return "Nunca sincronizado";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Nunca sincronizado";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function formatSyncAge(value: string | null | undefined) {
+  if (!value) return "Nunca sincronizado";
+  const timestamp = new Date(value).getTime();
+  if (Number.isNaN(timestamp)) return "Nunca sincronizado";
+
+  const diffMinutes = Math.floor((Date.now() - timestamp) / 60000);
+  if (diffMinutes < 1) return "há menos de 1 min";
+  if (diffMinutes < 60) return `há ${diffMinutes} min`;
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `há ${diffHours}h`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  return `há ${diffDays}d`;
+}
+
+function getSyncStatusMeta(status: "synced" | "partial" | "error" | undefined) {
+  switch (status) {
+    case "partial":
+      return {
+        label: "Parcial",
+        className: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-300",
+      };
+    case "error":
+      return {
+        label: "Erro",
+        className: "border-red-200 bg-red-50 text-red-700 dark:border-red-800/60 dark:bg-red-950/30 dark:text-red-300",
+      };
+    case "synced":
+    default:
+      return {
+        label: "OK",
+        className: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-300",
+      };
+  }
+}
+
+const ContactAvatar = memo(function ContactAvatar({
+  name,
+  avatarUrl,
+  avatarGradient,
+  initials,
+  className,
+  fallbackClassName,
+}: {
+  name: string;
+  avatarUrl?: string | null;
+  avatarGradient: string;
+  initials: string;
+  className?: string;
+  fallbackClassName?: string;
+}) {
+  return (
+    <Avatar className={className}>
+      {avatarUrl ? <AvatarImage src={avatarUrl} alt={name} className="object-cover" /> : null}
+      <AvatarFallback
+        className={cn("text-white", fallbackClassName)}
+        style={{ backgroundImage: avatarGradient }}
+      >
+        {initials}
+      </AvatarFallback>
+    </Avatar>
+  );
+});
+
 function buildQuickReplies(allQuickReplies: QuickReply[]): CrmQuickReplyViewModel[] {
   const mapped = toCrmQuickReplies(allQuickReplies);
   if (mapped.length === 4) return mapped;
@@ -171,7 +284,11 @@ const CHANNEL_META: Record<
   webchat: { icon: Globe, className: "bg-[hsl(211_100%_50%)]", label: "Chat do site" },
 };
 
-function ChannelBadge({ channel }: { channel: "whatsapp" | "instagram" | "webchat" }) {
+const ChannelBadge = memo(function ChannelBadge({
+  channel,
+}: {
+  channel: "whatsapp" | "instagram" | "webchat";
+}) {
   const meta = CHANNEL_META[channel] ?? CHANNEL_META.whatsapp;
   const Icon = meta.icon;
   return (
@@ -186,22 +303,198 @@ function ChannelBadge({ channel }: { channel: "whatsapp" | "instagram" | "webcha
       <Icon className="h-2.5 w-2.5 text-white" />
     </span>
   );
+});
+
+type CrmConversationViewModel = ReturnType<typeof toCrmConversationViewModel>;
+
+const ConversationCard = memo(function ConversationCard({
+  item,
+  isSelected,
+  funnelMap,
+  onSelect,
+}: {
+  item: CrmConversationViewModel;
+  isSelected: boolean;
+  funnelMap: Map<string, FunnelStage>;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(item.id)}
+      className={cn(
+        "relative flex w-full gap-3 border-b border-border/60 px-3.5 py-3 text-left transition-colors hover:bg-muted/40",
+        isSelected && "bg-primary/[0.07]",
+      )}
+    >
+      {isSelected && (
+        <span className="absolute inset-y-0 left-0 w-[3px] bg-primary" />
+      )}
+      <div className="relative shrink-0">
+        <ContactAvatar
+          name={item.name}
+          avatarUrl={item.channel !== "webchat" ? item.avatarUrl : null}
+          avatarGradient={item.avatarGradient}
+          initials={item.initials}
+          className="h-[42px] w-[42px]"
+          fallbackClassName="text-sm font-extrabold"
+        />
+        <ChannelBadge channel={item.channel} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          <span className="truncate text-[13px] font-bold">{item.name}</span>
+          {item.temperature === "quente" && (
+            <Flame className="h-3 w-3 shrink-0 text-orange-500" aria-label="Lead quente" />
+          )}
+          <span className="ml-auto shrink-0 text-[10px] font-semibold text-muted-foreground">
+            {item.displayTime}
+          </span>
+        </div>
+        <div
+          className={cn(
+            "mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground",
+            item.unreadCount > 0 && "font-semibold text-foreground",
+          )}
+        >
+          {item.previewDirection === "outbound" && (
+            <CheckCheck className="h-[13px] w-[13px] shrink-0 text-sky-500" />
+          )}
+          <span className="truncate">{item.preview}</span>
+        </div>
+        <div className="mt-1.5 flex items-center gap-2">
+          <StageChip
+            view={resolveStageView(item.stage, funnelMap)}
+            uppercase
+            className="px-2 py-0.5 text-[9px] font-extrabold tracking-[0.03em]"
+          />
+        </div>
+      </div>
+      {item.unreadCount > 0 && (
+        <div className="self-center rounded-full bg-[hsl(142_70%_42%)] px-1.5 py-0.5 text-[10px] font-extrabold text-white">
+          {item.unreadCount}
+        </div>
+      )}
+    </button>
+  );
+});
+
+function MessageBubble({
+  message,
+  isOutbound,
+  isTemplate,
+  isImage,
+  mediaUrl,
+  text,
+  timeLabel,
+  isReplying,
+  onContextMenu,
+  onPointerDown,
+  onPointerUp,
+  onPointerCancel,
+  onPointerLeave,
+}: {
+  message: Message;
+  isOutbound: boolean;
+  isTemplate: boolean;
+  isImage: boolean;
+  mediaUrl: string | null;
+  text: string;
+  timeLabel: string;
+  isReplying: boolean;
+  onContextMenu: (e: React.MouseEvent) => void;
+  onPointerDown: (e: React.PointerEvent) => void;
+  onPointerUp: () => void;
+  onPointerCancel: () => void;
+  onPointerLeave: () => void;
+}) {
+  return (
+    <div
+      onContextMenu={onContextMenu}
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
+      onPointerLeave={onPointerLeave}
+      className={cn(
+        "relative max-w-[64%] rounded-xl px-3 py-2 text-[13px] leading-[1.45] shadow-[0_1px_1px_rgba(0,0,0,0.06)]",
+        isOutbound
+          ? isTemplate
+            ? "ml-auto rounded-tr-[3px] border border-[hsl(142_50%_75%)] bg-white"
+            : "ml-auto rounded-tr-[3px] bg-[hsl(142_65%_88%)]"
+          : "rounded-tl-[3px] bg-white",
+        isReplying && "ring-2 ring-primary/35",
+      )}
+    >
+      {isTemplate && (
+        <div className="mb-1 flex items-center gap-1 text-[9px] font-extrabold tracking-[0.04em] text-[hsl(142_55%_32%)]">
+          <Zap className="h-[11px] w-[11px]" />
+          RESPOSTA RÁPIDA
+          {message.templateName ? ` · ${message.templateName}` : ""}
+        </div>
+      )}
+      {isImage && mediaUrl ? (
+        <div className="space-y-2">
+          <img
+            src={mediaUrl}
+            alt={text || "Imagem recebida"}
+            className="max-h-[280px] w-full rounded-lg object-cover"
+            loading="lazy"
+          />
+          {text ? <div>{text}</div> : null}
+        </div>
+      ) : isImage ? (
+        <div className="space-y-2">
+          <div className="rounded-lg border border-dashed border-border/70 bg-muted/35 px-3 py-6 text-center text-xs font-semibold text-muted-foreground">
+            Imagem recebida
+          </div>
+          {text ? <div>{text}</div> : null}
+        </div>
+      ) : (
+        <div>{text || "[mensagem sem texto]"}</div>
+      )}
+      <div
+        className={cn(
+          "mt-1 flex items-center justify-end gap-1 text-[9px] text-muted-foreground",
+          isOutbound && "text-[hsl(142_40%_38%)]",
+        )}
+      >
+        {timeLabel}
+        {isOutbound && message.status !== "failed" && (
+          <CheckCheck className="h-[13px] w-[13px] text-sky-500" />
+        )}
+      </div>
+    </div>
+  );
 }
+
+const MemoMessageBubble = memo(MessageBubble);
 
 export default function CrmWhatsApp() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [pipelineFilter, setPipelineFilter] = useState<PipelineFilter>("all");
-  const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [composer, setComposer] = useState("");
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>([]);
   const [funnel, setFunnel] = useState<FunnelStage[]>([]);
+  const [instagramSyncSummary, setInstagramSyncSummary] = useState<InstagramProfileSyncSummary["syncState"] | null>(null);
+  const [instagramPendingCount, setInstagramPendingCount] = useState<number | null>(null);
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [savingStage, setSavingStage] = useState(false);
+  const [syncingInstagramProfiles, setSyncingInstagramProfiles] = useState(false);
+  const [replyMessage, setReplyMessage] = useState<Message | null>(null);
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [taskInitialData, setTaskInitialData] = useState<{ titulo: string; descricao: string } | null>(null);
+  const [messageMenu, setMessageMenu] = useState<{
+    message: Message;
+    x: number;
+    y: number;
+  } | null>(null);
+  const _isFetching = isFetching;
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { conversations, loading, refetch } = useWhatsAppInbox({
     search: search || undefined,
@@ -211,6 +504,7 @@ export default function CrmWhatsApp() {
     conversation,
     messages,
     loading: loadingConversation,
+    isFetching,
     sendMessage,
     addNote,
     updateStatus,
@@ -221,7 +515,13 @@ export default function CrmWhatsApp() {
   useEffect(() => {
     fetchTags().then(setAvailableTags).catch(() => {});
     fetchQuickReplies().then(setQuickReplies).catch(() => {});
-    fetchCrmSettings().then((cfg) => setFunnel(cfg.funnel)).catch(() => {});
+    fetchCrmSettings()
+      .then((cfg) => {
+        setFunnel(cfg.funnel);
+        setInstagramSyncSummary(cfg.instagramProfileSync ?? null);
+        setInstagramPendingCount(cfg.instagramProfilePendingCount ?? null);
+      })
+      .catch(() => {});
   }, []);
 
   const funnelMap = useMemo(() => new Map(funnel.map((stage) => [stage.key, stage])), [funnel]);
@@ -265,12 +565,8 @@ export default function CrmWhatsApp() {
 
   useEffect(() => {
     if (!selectedId) return;
-    markConversationRead(selectedId)
-      .then(() => {
-        queryClient.invalidateQueries({ queryKey: ["whatsapp", "unread-count"] });
-      })
-      .catch(() => {});
-  }, [selectedId, queryClient]);
+    markConversationRead(selectedId).catch(() => {});
+  }, [selectedId]);
 
   const pipelineCounts = useMemo(() => {
     return {
@@ -288,6 +584,7 @@ export default function CrmWhatsApp() {
     try {
       await sendMessage(composer.trim());
       setComposer("");
+      setReplyMessage(null);
       await Promise.all([refetch(), refetchConversation()]);
     } finally {
       setSending(false);
@@ -327,6 +624,79 @@ export default function CrmWhatsApp() {
     setComposer(quickReply.content);
   };
 
+  const handleBackfillInstagramProfiles = async () => {
+    if (syncingInstagramProfiles) return;
+    setSyncingInstagramProfiles(true);
+    try {
+      const result = await backfillInstagramProfiles({ limit: 100, force: false });
+      setInstagramSyncSummary(result.syncState ?? null);
+      if (typeof result.syncState?.pendingCount === "number") {
+        setInstagramPendingCount(result.syncState.pendingCount);
+      }
+      await Promise.all([
+        refetch(),
+        selectedId ? refetchConversation() : Promise.resolve(),
+      ]);
+      toast.success("Perfis do Instagram sincronizados.", {
+        description: `${result.updated} atualizado(s), ${result.skipped} sem mudança, ${result.failed} falha(s).`,
+      });
+    } catch (error) {
+      toast.error("Não foi possível sincronizar os perfis do Instagram.", {
+        description: error instanceof Error ? error.message : undefined,
+      });
+    } finally {
+      setSyncingInstagramProfiles(false);
+    }
+  };
+
+  const closeMessageMenu = () => {
+    setMessageMenu(null);
+  };
+
+  const openMessageMenu = (message: Message, x: number, y: number) => {
+    setMessageMenu({ message, x, y });
+  };
+
+  const clearLongPress = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const handleCopyMessage = async (message: Message) => {
+    const text = getMessageText(message.content).trim();
+    if (!text) {
+      toast.error("Essa mensagem não possui texto para copiar.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Mensagem copiada.");
+    } catch {
+      toast.error("Não foi possível copiar a mensagem.");
+    }
+  };
+
+  const handleReplyToMessage = (message: Message) => {
+    setReplyMessage(message);
+  };
+
+  const handleOpenNoteFromMessage = (message: Message) => {
+    setNoteDraft(buildQuotedMessageText(message));
+    setNoteOpen(true);
+  };
+
+  const handleOpenTaskFromMessage = (message: Message) => {
+    const text = getMessageText(message.content).trim();
+    const contactName = selectedConversationVm?.name || "contato";
+    setTaskInitialData({
+      titulo: `Retornar ${contactName}`,
+      descricao: buildQuotedMessageText(message) + (text ? "\n\nPróximo passo:\n" : ""),
+    });
+    setTaskModalOpen(true);
+  };
+
   const handleAddTag = async (tagId: string) => {
     if (!conversation) return;
     await addTags(conversation.id, [tagId]);
@@ -345,6 +715,22 @@ export default function CrmWhatsApp() {
     const currentTagIds = new Set(conversation?.tags.map((tag) => tag.id) ?? []);
     return availableTags.filter((tag) => !currentTagIds.has(tag.id));
   }, [availableTags, conversation?.tags]);
+
+  useEffect(() => {
+    if (!messageMenu) return;
+    const handleGlobalPointer = () => closeMessageMenu();
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeMessageMenu();
+    };
+    window.addEventListener("pointerdown", handleGlobalPointer);
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      window.removeEventListener("pointerdown", handleGlobalPointer);
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [messageMenu]);
+
+  useEffect(() => () => clearLongPress(), []);
 
   return (
     <PageLayout fullWidth noPadding compactHeader hideDefaultHeader showBreadcrumbs={false}>
@@ -384,6 +770,17 @@ export default function CrmWhatsApp() {
               ))}
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleBackfillInstagramProfiles}
+                disabled={syncingInstagramProfiles}
+                className="h-9 rounded-[10px] px-3 text-xs font-semibold"
+              >
+                <RefreshCw className={cn("mr-2 h-3.5 w-3.5", syncingInstagramProfiles && "animate-spin")} />
+                Sincronizar Instagram
+              </Button>
               <button type="button" className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary">
                 <Filter className="h-[18px] w-[18px]" />
               </button>
@@ -403,6 +800,44 @@ export default function CrmWhatsApp() {
               </div>
             </div>
           </div>
+          <div className="border-b border-border/70 px-5 py-2 text-[11px] text-muted-foreground">
+            Perfis do Instagram sincronizam automaticamente a cada 15 minutos e também podem ser atualizados manualmente.
+          </div>
+
+          <div className="px-5 pt-4">
+            <Card className="border-dashed border-border/70 bg-card/80 shadow-sm">
+              <CardContent className="grid gap-3 p-4 md:grid-cols-2 md:items-center">
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                    Instagram Sync
+                  </div>
+                  <div className="mt-1 text-sm font-semibold">
+                    Última sincronização: {formatSyncTimestamp(instagramSyncSummary?.lastSyncedAt)}
+                  </div>
+                  <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>{formatSyncAge(instagramSyncSummary?.lastSyncedAt)}</span>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "rounded-full px-2.5 py-0.5 text-[10px] font-semibold",
+                        getSyncStatusMeta(instagramSyncSummary?.lastStatus).className,
+                      )}
+                    >
+                      {getSyncStatusMeta(instagramSyncSummary?.lastStatus).label}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-3 md:justify-end">
+                  <Badge variant="outline" className="rounded-full border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">
+                    {instagramPendingCount === null ? "Carregando..." : `${instagramPendingCount} pendente(s)`}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    Último lote: {instagramSyncSummary?.lastResult?.updated ?? 0} atualizados
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           <div className="grid min-h-0 flex-1 grid-cols-[326px_minmax(0,1fr)_304px]">
             <aside className="flex min-h-0 flex-col border-r border-border">
@@ -419,65 +854,13 @@ export default function CrmWhatsApp() {
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto">
                 {filteredConversations.map((item) => (
-                  <button
+                  <ConversationCard
                     key={item.id}
-                    type="button"
-                    onClick={() => setSelectedId(item.id)}
-                    className={cn(
-                      "relative flex w-full gap-3 border-b border-border/60 px-3.5 py-3 text-left transition-colors hover:bg-muted/40",
-                      selectedId === item.id && "bg-primary/[0.07]",
-                    )}
-                  >
-                    {selectedId === item.id && (
-                      <span className="absolute inset-y-0 left-0 w-[3px] bg-primary" />
-                    )}
-                    <div className="relative shrink-0">
-                      <div
-                        className="flex h-[42px] w-[42px] items-center justify-center rounded-full text-sm font-extrabold text-white"
-                        style={{ backgroundImage: item.avatarGradient }}
-                      >
-                        {item.initials}
-                      </div>
-                      <ChannelBadge channel={item.channel} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <span className="truncate text-[13px] font-bold">{item.name}</span>
-                        {item.temperature === "quente" && (
-                          <Flame
-                            className="h-3 w-3 shrink-0 text-orange-500"
-                            aria-label="Lead quente"
-                          />
-                        )}
-                        <span className="ml-auto shrink-0 text-[10px] font-semibold text-muted-foreground">
-                          {item.displayTime}
-                        </span>
-                      </div>
-                      <div
-                        className={cn(
-                          "mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground",
-                          item.unreadCount > 0 && "font-semibold text-foreground",
-                        )}
-                      >
-                        {item.previewDirection === "outbound" && (
-                          <CheckCheck className="h-[13px] w-[13px] shrink-0 text-sky-500" />
-                        )}
-                        <span className="truncate">{item.preview}</span>
-                      </div>
-                      <div className="mt-1.5 flex items-center gap-2">
-                        <StageChip
-                          view={resolveStageView(item.stage, funnelMap)}
-                          uppercase
-                          className="px-2 py-0.5 text-[9px] font-extrabold tracking-[0.03em]"
-                        />
-                      </div>
-                    </div>
-                    {item.unreadCount > 0 && (
-                      <div className="self-center rounded-full bg-[hsl(142_70%_42%)] px-1.5 py-0.5 text-[10px] font-extrabold text-white">
-                        {item.unreadCount}
-                      </div>
-                    )}
-                  </button>
+                    item={item}
+                    isSelected={selectedId === item.id}
+                    funnelMap={funnelMap}
+                    onSelect={setSelectedId}
+                  />
                 ))}
                 {!loading && filteredConversations.length === 0 && (
                   <div className="p-6 text-center text-sm text-muted-foreground">
@@ -491,12 +874,14 @@ export default function CrmWhatsApp() {
               {selectedConversationVm ? (
                 <>
                   <div className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
-                    <div
-                      className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-extrabold text-white"
-                      style={{ backgroundImage: selectedConversationVm.avatarGradient }}
-                    >
-                      {selectedConversationVm.initials}
-                    </div>
+                    <ContactAvatar
+                      name={selectedConversationVm.name}
+                      avatarUrl={selectedConversationVm.channel !== "webchat" ? selectedConversationVm.avatarUrl : null}
+                      avatarGradient={selectedConversationVm.avatarGradient}
+                      initials={selectedConversationVm.initials}
+                      className="h-10 w-10"
+                      fallbackClassName="text-sm font-extrabold"
+                    />
                     <div className="min-w-0">
                       <div className="text-sm font-extrabold">{selectedConversationVm.name}</div>
                       <div className="flex items-center gap-1.5 truncate text-[11px] font-semibold text-muted-foreground">
@@ -557,7 +942,7 @@ export default function CrmWhatsApp() {
                           </span>
                         </div>
                     <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
-                      {loadingConversation && messages.length === 0 ? (
+                      {loadingConversation ? (
                         <div className="py-10 text-center text-sm text-muted-foreground">
                           Carregando conversa...
                         </div>
@@ -567,6 +952,8 @@ export default function CrmWhatsApp() {
                           const isSystem = message.type === "note";
                           const isTemplate = message.type === "template";
                           const isOutbound = message.direction === "outbound";
+                          const isImage = message.type === "image" || message.mediaType === "image";
+                          const mediaUrl = getMessageMediaUrl(message);
                           if (isSystem) {
                             return (
                               <div
@@ -582,37 +969,32 @@ export default function CrmWhatsApp() {
                           }
 
                           return (
-                            <div
+                            <MemoMessageBubble
                               key={message.id}
-                              className={cn(
-                                "max-w-[64%] rounded-xl px-3 py-2 text-[13px] leading-[1.45] shadow-[0_1px_1px_rgba(0,0,0,0.06)]",
-                                isOutbound
-                                  ? isTemplate
-                                    ? "ml-auto rounded-tr-[3px] border border-[hsl(142_50%_75%)] bg-white"
-                                    : "ml-auto rounded-tr-[3px] bg-[hsl(142_65%_88%)]"
-                                  : "rounded-tl-[3px] bg-white",
-                              )}
-                            >
-                              {isTemplate && (
-                                <div className="mb-1 flex items-center gap-1 text-[9px] font-extrabold tracking-[0.04em] text-[hsl(142_55%_32%)]">
-                                  <Zap className="h-[11px] w-[11px]" />
-                                  RESPOSTA RÁPIDA
-                                  {message.templateName ? ` · ${message.templateName}` : ""}
-                                </div>
-                              )}
-                              <div>{text || "[mensagem sem texto]"}</div>
-                              <div
-                                className={cn(
-                                  "mt-1 flex items-center justify-end gap-1 text-[9px] text-muted-foreground",
-                                  isOutbound && "text-[hsl(142_40%_38%)]",
-                                )}
-                              >
-                                {message.timestamp ? new Date(message.timestamp).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : ""}
-                                {isOutbound && message.status !== "failed" && (
-                                  <CheckCheck className="h-[13px] w-[13px] text-sky-500" />
-                                )}
-                              </div>
-                            </div>
+                              message={message}
+                              isOutbound={isOutbound}
+                              isTemplate={isTemplate}
+                              isImage={isImage}
+                              mediaUrl={mediaUrl}
+                              text={text}
+                              timeLabel={getMessageTimeLabel(message.timestamp)}
+                              isReplying={replyMessage?.id === message.id}
+                              onContextMenu={(event) => {
+                                event.preventDefault();
+                                openMessageMenu(message, event.clientX, event.clientY);
+                              }}
+                              onPointerDown={(event) => {
+                                if (event.pointerType === "mouse") return;
+                                clearLongPress();
+                                longPressTimerRef.current = setTimeout(() => {
+                                  const target = event.currentTarget.getBoundingClientRect();
+                                  openMessageMenu(message, target.left + target.width / 2, target.top + Math.min(target.height, 56));
+                                }, 450);
+                              }}
+                              onPointerUp={() => clearLongPress()}
+                              onPointerCancel={() => clearLongPress()}
+                              onPointerLeave={() => clearLongPress()}
+                            />
                           );
                         })
                       )}
@@ -641,20 +1023,41 @@ export default function CrmWhatsApp() {
                       <button type="button" className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary">
                         <Paperclip className="h-5 w-5" />
                       </button>
-                      <div className="flex flex-1 items-center gap-2 rounded-full bg-muted/60 px-4 py-2.5">
-                        <Smile className="h-[18px] w-[18px] text-muted-foreground" />
-                        <input
-                          value={composer}
-                          onChange={(event) => setComposer(event.target.value)}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter" && !event.shiftKey) {
-                              event.preventDefault();
-                              void handleSend();
-                            }
-                          }}
-                          placeholder="Escreva uma mensagem..."
-                          className="w-full bg-transparent text-[13px] outline-none placeholder:text-muted-foreground"
-                        />
+                      <div className="flex-1 rounded-[22px] bg-muted/60 px-4 py-2.5">
+                        {replyMessage ? (
+                          <div className="mb-2 flex items-start justify-between gap-3 rounded-2xl bg-background/85 px-3 py-2">
+                            <div className="min-w-0">
+                              <div className="text-[10px] font-extrabold uppercase tracking-[0.05em] text-primary">
+                                Respondendo mensagem
+                              </div>
+                              <div className="truncate text-xs text-muted-foreground">
+                                {getMessageText(replyMessage.content) || "[mensagem sem texto]"}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setReplyMessage(null)}
+                              className="text-[11px] font-bold text-muted-foreground transition-colors hover:text-foreground"
+                            >
+                              limpar
+                            </button>
+                          </div>
+                        ) : null}
+                        <div className="flex items-center gap-2">
+                          <Smile className="h-[18px] w-[18px] text-muted-foreground" />
+                          <input
+                            value={composer}
+                            onChange={(event) => setComposer(event.target.value)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter" && !event.shiftKey) {
+                                event.preventDefault();
+                                void handleSend();
+                              }
+                            }}
+                            placeholder="Escreva uma mensagem..."
+                            className="w-full bg-transparent text-[13px] outline-none placeholder:text-muted-foreground"
+                          />
+                        </div>
                       </div>
                       <button type="button" className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary">
                         <Mic className="h-5 w-5" />
@@ -681,12 +1084,14 @@ export default function CrmWhatsApp() {
               {selectedConversationVm ? (
                 <>
                   <div className="border-b border-border bg-card px-4 pb-4 pt-5 text-center">
-                    <div
-                      className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full text-[22px] font-extrabold text-white"
-                      style={{ backgroundImage: selectedConversationVm.avatarGradient }}
-                    >
-                      {selectedConversationVm.initials}
-                    </div>
+                    <ContactAvatar
+                      name={selectedConversationVm.name}
+                      avatarUrl={selectedConversationVm.channel !== "webchat" ? selectedConversationVm.avatarUrl : null}
+                      avatarGradient={selectedConversationVm.avatarGradient}
+                      initials={selectedConversationVm.initials}
+                      className="mx-auto mb-3 h-16 w-16"
+                      fallbackClassName="text-[22px] font-extrabold"
+                    />
                     <div className="text-base font-extrabold">{selectedConversationVm.name}</div>
                     <div className="mt-0.5 text-xs font-semibold text-muted-foreground">
                       {selectedConversationVm.phone}
@@ -724,7 +1129,10 @@ export default function CrmWhatsApp() {
                       <Button
                         variant="secondary"
                         size="sm"
-                        onClick={() => setNoteOpen(true)}
+                        onClick={() => {
+                          setNoteDraft("");
+                          setNoteOpen(true);
+                        }}
                         className="h-auto flex-col gap-1 rounded-xl px-3 py-2 text-[10px] font-bold"
                       >
                         <StickyNote className="h-[18px] w-[18px]" />
@@ -890,6 +1298,62 @@ export default function CrmWhatsApp() {
           </div>
         </div>
 
+        {messageMenu ? (
+          <div
+            className="fixed z-50 min-w-[220px] rounded-2xl border border-border bg-card p-1.5 shadow-2xl"
+            style={{
+              left: Math.min(messageMenu.x, window.innerWidth - 236),
+              top: Math.min(messageMenu.y, window.innerHeight - 220),
+            }}
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                void handleCopyMessage(messageMenu.message);
+                closeMessageMenu();
+              }}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left transition-colors hover:bg-secondary"
+            >
+              <Copy className="h-4 w-4 text-muted-foreground" />
+              Copiar
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                handleReplyToMessage(messageMenu.message);
+                closeMessageMenu();
+              }}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left transition-colors hover:bg-secondary"
+            >
+              <Reply className="h-4 w-4 text-muted-foreground" />
+              Responder
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                handleOpenNoteFromMessage(messageMenu.message);
+                closeMessageMenu();
+              }}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left transition-colors hover:bg-secondary"
+            >
+              <StickyNote className="h-4 w-4 text-muted-foreground" />
+              Adicionar nota
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                handleOpenTaskFromMessage(messageMenu.message);
+                closeMessageMenu();
+              }}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left transition-colors hover:bg-secondary"
+            >
+              <ListTodo className="h-4 w-4 text-muted-foreground" />
+              Criar tarefa
+            </button>
+          </div>
+        ) : null}
+
         <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
           <DialogContent>
             <DialogHeader>
@@ -914,6 +1378,19 @@ export default function CrmWhatsApp() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <TaskQuickCreateModal
+          open={taskModalOpen}
+          onOpenChange={setTaskModalOpen}
+          initialData={
+            taskInitialData
+              ? {
+                  titulo: taskInitialData.titulo,
+                  descricao: taskInitialData.descricao,
+                }
+              : undefined
+          }
+        />
       </PageContainer>
     </PageLayout>
   );

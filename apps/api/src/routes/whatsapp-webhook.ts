@@ -168,6 +168,8 @@ async function handleMessage(
 
     let messageType = "text";
     let content = "";
+    let mediaUrl: string | undefined;
+    let mediaType: string | undefined;
 
     if (msg.type === "text" && msg.text?.body) {
       messageType = "text";
@@ -175,15 +177,20 @@ async function handleMessage(
     } else if (msg.type === "image") {
       messageType = "image";
       content = msg.image?.caption ?? "";
+      mediaType = "image";
+      mediaUrl = await resolveWhatsAppMediaUrl(env, msg.image?.id);
     } else if (msg.type === "audio") {
       messageType = "audio";
       content = msg.audio?.caption ?? "";
+      mediaType = "audio";
     } else if (msg.type === "document") {
       messageType = "document";
       content = msg.document?.caption ?? "";
+      mediaType = "document";
     } else if (msg.type === "video") {
       messageType = "video";
       content = msg.video?.caption ?? "";
+      mediaType = "video";
     } else if (msg.type === "sticker") {
       messageType = "sticker";
       content = "";
@@ -283,6 +290,22 @@ async function handleMessage(
       messageType,
       content,
       metaMessageId,
+      {
+        mediaUrl,
+        mediaType,
+        metadata:
+          messageType !== "text"
+            ? {
+                sourceType: msg.type,
+                mediaId:
+                  msg.image?.id ??
+                  msg.audio?.id ??
+                  msg.document?.id ??
+                  msg.video?.id ??
+                  undefined,
+              }
+            : undefined,
+      },
     );
 
     if (env.DB) {
@@ -373,6 +396,24 @@ async function handleMessage(
     if (env.DB) {
       await markProcessed(env.DB, metaMessageId);
     }
+  }
+}
+
+async function resolveWhatsAppMediaUrl(env: Env, mediaId: string | undefined): Promise<string | undefined> {
+  if (!mediaId || !env.WHATSAPP_ACCESS_TOKEN) return undefined;
+
+  try {
+    const response = await fetch(`https://graph.facebook.com/v25.0/${mediaId}`, {
+      headers: {
+        Authorization: `Bearer ${env.WHATSAPP_ACCESS_TOKEN}`,
+      },
+    });
+    if (!response.ok) return undefined;
+    const payload = (await response.json()) as { url?: unknown };
+    return typeof payload.url === "string" && payload.url.length ? payload.url : undefined;
+  } catch (error) {
+    console.warn("[WhatsApp Webhook] resolveWhatsAppMediaUrl failed:", error);
+    return undefined;
   }
 }
 

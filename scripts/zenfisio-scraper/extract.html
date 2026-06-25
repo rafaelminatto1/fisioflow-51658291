@@ -1,0 +1,139 @@
+cl<!DOCTYPE html>
+<html>
+<head>
+  <title>ZenFisio Export</title>
+</head>
+<body>
+  <h1>ZenFisio Export Tool</h1>
+  <button onclick="startExport()">Iniciar Extração</button>
+  <pre id="log"></pre>
+
+  <script>
+    function log(msg) {
+      document.getElementById('log').textContent += msg + '\n';
+      console.log(msg);
+    }
+
+    async function startExport() {
+      const results = [];
+      let processed = 0;
+      let errors = 0;
+      const dataLimite = '2026-06-20';
+
+      log('Iniciando extração incremental (desde 20/06/2026)...');
+
+      async function fetchPatients(page, perPage) {
+        page = page || 1;
+        perPage = perPage || 50;
+        const resp = await fetch('/api/contacts/patients?page=' + page + '&per_page=' + perPage, {
+          credentials: 'include',
+          headers: { 'Accept': 'application/json' }
+        });
+        if (!resp.ok) throw new Error('Failed to fetch patients page ' + page);
+        return resp.json();
+      }
+
+      async function fetchHistory(slug) {
+        const resp = await fetch('/api/patients/history/' + slug + '/history/2026-06-20/2030-12-31/desc', {
+          credentials: 'include',
+          headers: { 'Accept': 'application/json' }
+        });
+        if (!resp.ok) throw new Error('Failed to fetch history for ' + slug);
+        return resp.json();
+      }
+
+      let page = 1;
+      let allPatients = [];
+      let hasMore = true;
+
+      while (hasMore) {
+        try {
+          const data = await fetchPatients(page, 50);
+          let patients = [];
+          if (data.patients) {
+            patients = data.patients;
+          } else if (Array.isArray(data)) {
+            patients = data;
+          }
+          if (patients.length > 0) {
+            allPatients = allPatients.concat(patients);
+            hasMore = patients.length === 50;
+            log('Página ' + page + ': ' + pacientes.length + ' pacientes encontrados');
+          } else {
+            hasMore = false;
+          }
+          page++;
+        } catch (e) {
+          log('Erro ao buscar pacientes página ' + page + ': ' + e.message);
+          hasMore = false;
+        }
+      }
+
+      log('Total de pacientes: ' + allPatients.length);
+
+      for (const patient of allPatients) {
+        const id = String(patient.id);
+        try {
+          let slug = patient.slug;
+          if (!slug) {
+            slug = patient.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+          }
+          log('Processando ' + patient.name + ' (' + id + ')...');
+
+          const history = await fetchHistory(slug);
+
+          const eventosNovos = [];
+          for (const ev of (history || [])) {
+            const dataStr = ev.date || ev.data || '';
+            if (dataStr >= dataLimite) {
+              eventosNovos.push({
+                data: dataStr,
+                data_completa: ev.data_complete || ev.data_completa || dataStr,
+                tipo: ev.tipo || ev.type || 'Evolução',
+                profissional: ev.professional || ev.profissional || 'Activity Fisioterapia',
+                conteudo_texto: ev.content || ev.conteudo || ev.description || ev.conteudo_texto || '',
+                appointment_id: ev.appointment_id || ev.id || null
+              });
+            }
+          }
+
+          if (eventosNovos.length > 0) {
+            results.push({
+              paciente_nome: patient.name,
+              paciente_id: id,
+              slug: slug,
+              total_registros: eventosNovos.length,
+              historico: eventosNovos
+            });
+            log('  ✓ ' + eventosNovos.length + ' eventos novos');
+          }
+
+          processed++;
+
+        } catch (e) {
+          log('  ✗ Erro: ' + e.message);
+          errors++;
+        }
+      }
+
+      log('\n=== Extração concluída! ===');
+      log('Pacientes processados: ' + processed);
+      log('Pacientes com dados novos: ' + results.length);
+      log('Erros: ' + errors);
+
+      // Download
+      const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'zenfisio-export-20260622.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      log('\nDownload iniciado!');
+    }
+  </script>
+</body>
+</html>

@@ -98,6 +98,20 @@ registerRoute(
   }),
 );
 
+registerRoute(
+  ({ url }) => url.origin === self.location.origin && url.pathname.startsWith("/mediapipe/wasm/"),
+  new StaleWhileRevalidate({
+    cacheName: "mediapipe-wasm",
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 60 * 60 * 24 * 30,
+        purgeOnQuotaError: true,
+      }),
+    ],
+  }),
+);
+
 // Imagens / ícones / fontes — StaleWhileRevalidate
 registerRoute(
   ({ request }) => request.destination === "image" || request.destination === "font",

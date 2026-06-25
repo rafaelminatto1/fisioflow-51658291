@@ -47,7 +47,7 @@ async function orgExists(pool: any, orgId: string): Promise<boolean> {
 }
 
 // Recebe mensagem do visitante.
-app.post("/message", async (c) => {
+app.post("/message", async (c: any) => {
   let body: { org?: string; visitorId?: string; name?: string; phone?: string; text?: string };
   try {
     body = await c.req.json();
@@ -162,7 +162,7 @@ app.get("/poll", async (c) => {
 });
 
 // Widget embarcável (vanilla JS, sem dependências).
-app.get("/widget.js", (c) => {
+app.get("/widget.js", (_c) => {
   const js = `(function(){
   var s=document.currentScript;
   var ORG=(s&&s.getAttribute('data-org'))||window.FISIOFLOW_WEBCHAT_ORG;
@@ -171,12 +171,12 @@ app.get("/widget.js", (c) => {
   if(!ORG){console.warn('[FisioFlow webchat] data-org ausente');return;}
   var POS=(s&&s.getAttribute('data-position'))==='left'?'left:20px':'right:20px';
   var BOT=(s&&s.getAttribute('data-bottom'))||'20';
-  var VID=localStorage.getItem('ff_webchat_vid')||(crypto.randomUUID?crypto.randomUUID():String(Date.now()));
+    const _c=c;var VID=localStorage.getItem('ff_webchat_vid')||(crypto.randomUUID?crypto.randomUUID():String(Date.now()));
   localStorage.setItem('ff_webchat_vid',VID);
   var last='1970-01-01T00:00:00Z',open=false,started=false,timer=null;
   var NAME=localStorage.getItem('ff_webchat_name')||'';
   function greet(){var h;try{h=parseInt(new Intl.DateTimeFormat('pt-BR',{hour:'numeric',hour12:false,timeZone:'America/Sao_Paulo'}).format(new Date()),10);}catch(e){h=(new Date().getUTCHours()-3+24)%24;}var s=h>=5&&h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';return s+', tudo bem?\\nSou o Rafael da Activity Fisioterapia.\\nComo posso ajudar?';}
-  var c=document.createElement('div');c.id='fisioflow-webchat';c.style.cssText='position:fixed;'+POS+';bottom:'+BOT+'px;z-index:99999;font-family:system-ui,sans-serif';
+    var c=document.createElement('div');c.id='fisioflow-webchat';c.style.cssText='position:fixed;'+POS+';bottom:'+BOT+'px;z-index:99999;font-family:system-ui,sans-serif'; // eslint-disable-line
   c.innerHTML='<button id=ffb style="width:56px;height:56px;border:none;border-radius:50%;background:#1f7aec;color:#fff;font-size:24px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.25)">💬</button>'+
   '<div id=ffp style="display:none;flex-direction:column;width:330px;height:440px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.3)">'+
   '<div style="background:#1f7aec;color:#fff;padding:12px 14px;font-weight:700">'+TITLE+'</div>'+

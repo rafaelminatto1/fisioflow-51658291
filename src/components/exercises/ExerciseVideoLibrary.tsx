@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, memo } from "react";
+import React, { Suspense, useState, useCallback, useEffect, memo, lazy } from "react";
 import { useDebounce } from "@/hooks/performance/useDebounce";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -51,32 +51,30 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import {
   useExerciseVideos,
   useDeleteExerciseVideo,
   useUpdateExerciseVideo,
 } from "@/hooks/useExerciseVideos";
-import { ExerciseVideoPlayer } from "./ExerciseVideoPlayerCard";
-import { ExerciseVideoUpload } from "./ExerciseVideoUpload";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-  VIDEO_CATEGORIES,
-  VIDEO_DIFFICULTY,
-  BODY_PARTS,
-  EQUIPMENT_OPTIONS,
-  exerciseVideosService,
-  type ExerciseVideo,
-} from "@/services/exerciseVideos";
+import { VIDEO_CATEGORIES, VIDEO_DIFFICULTY, BODY_PARTS, EQUIPMENT_OPTIONS, exerciseVideosService, type ExerciseVideo } from "@/services/exerciseVideos";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { withImageParams } from "@/lib/storageProxy";
+
+const ExerciseVideoPlayer = lazy(() =>
+  import("./ExerciseVideoPlayerCard").then((m) => ({ default: m.ExerciseVideoPlayer })),
+);
+const ExerciseVideoUpload = lazy(() =>
+  import("./ExerciseVideoUpload").then((m) => ({ default: m.ExerciseVideoUpload })),
+);
+const ExerciseVideoEditModal = lazy(() =>
+  import("./ExerciseVideoEditModal").then((m) => ({ default: m.ExerciseVideoEditModal })),
+);
 
 interface ExerciseVideoLibraryProps {
   onUploadClick?: () => void;
@@ -116,14 +114,6 @@ export function ExerciseVideoLibrary({
   const [playlist, setPlaylist] = useState<ExerciseVideo[]>([]);
   const [currentPlaylistIndex, setCurrentPlaylistIndex] = useState(0);
   const [showPlaylist, setShowPlaylist] = useState(false);
-
-  // Edit form state
-  const [editTitle, setEditTitle] = useState("");
-  const [editDescription, setEditDescription] = useState("");
-  const [editCategory, setEditCategory] = useState("");
-  const [editDifficulty, setEditDifficulty] = useState("");
-  const [editBodyParts, setEditBodyParts] = useState<string[]>([]);
-  const [editEquipment, setEditEquipment] = useState<string[]>([]);
 
   const filteredVideos = React.useMemo(() => {
     if (!videos) return [];
@@ -172,12 +162,6 @@ export function ExerciseVideoLibrary({
   // Open edit modal with video data
   const handleOpenEdit = useCallback((video: ExerciseVideo) => {
     setEditingVideo(video);
-    setEditTitle(video.title);
-    setEditDescription(video.description || "");
-    setEditCategory(video.category);
-    setEditDifficulty(video.difficulty);
-    setEditBodyParts(video.body_parts || []);
-    setEditEquipment(video.equipment || []);
     setShowEdit(true);
   }, []);
 
@@ -185,38 +169,23 @@ export function ExerciseVideoLibrary({
   const handleCloseEdit = useCallback(() => {
     setShowEdit(false);
     setEditingVideo(null);
-    setEditTitle("");
-    setEditDescription("");
-    setEditCategory("");
-    setEditDifficulty("");
-    setEditBodyParts([]);
-    setEditEquipment([]);
   }, []);
 
   // Save video edits
-  const handleSaveEdit = useCallback(async () => {
+  const handleSaveEdit = useCallback(async (updates: {
+    title: string;
+    description: string | null;
+    category: string;
+    difficulty: string;
+    body_parts: string[];
+    equipment: string[];
+  }) => {
     if (!editingVideo) return;
-
-    if (editTitle.trim().length < 3) {
-      toast({
-        title: "Título muito curto",
-        description: "O título deve ter pelo menos 3 caracteres.",
-        variant: "destructive",
-      });
-      return;
-    }
 
     try {
       await updateVideoMutation.mutateAsync({
         id: editingVideo.id,
-        updates: {
-          title: editTitle.trim(),
-          description: editDescription.trim() || null,
-          category: editCategory as string,
-          difficulty: editDifficulty as string,
-          body_parts: editBodyParts,
-          equipment: editEquipment,
-        },
+        updates,
       });
 
       toast({
@@ -230,12 +199,12 @@ export function ExerciseVideoLibrary({
       if (selectedVideo?.id === editingVideo.id) {
         setSelectedVideo({
           ...selectedVideo,
-          title: editTitle.trim(),
-          description: editDescription.trim() || null,
-          category: editCategory as string,
-          difficulty: editDifficulty as string,
-          body_parts: editBodyParts,
-          equipment: editEquipment,
+          title: updates.title,
+          description: updates.description,
+          category: updates.category,
+          difficulty: updates.difficulty,
+          body_parts: updates.body_parts,
+          equipment: updates.equipment,
         });
       }
     } catch {
@@ -247,12 +216,6 @@ export function ExerciseVideoLibrary({
     }
   }, [
     editingVideo,
-    editTitle,
-    editDescription,
-    editCategory,
-    editDifficulty,
-    editBodyParts,
-    editEquipment,
     updateVideoMutation,
     selectedVideo,
     handleCloseEdit,
@@ -274,16 +237,6 @@ export function ExerciseVideoLibrary({
   const exitBulkMode = useCallback(() => {
     setIsBulkMode(false);
     setSelectedIds(new Set());
-  }, []);
-
-  const toggleEditBodyPart = useCallback((part: string) => {
-    setEditBodyParts((prev) =>
-      prev.includes(part) ? prev.filter((p) => p !== part) : [...prev, part],
-    );
-  }, []);
-
-  const toggleEditEquipment = useCallback((eq: string) => {
-    setEditEquipment((prev) => (prev.includes(eq) ? prev.filter((e) => e !== eq) : [...prev, eq]));
   }, []);
 
   const handleDelete = async () => {
@@ -694,12 +647,14 @@ export function ExerciseVideoLibrary({
           {selectedVideo && (
             <div className="space-y-4">
               {selectedVideo.type === "video" ? (
-                <ExerciseVideoPlayer
-                  src={selectedVideo.video_url}
-                  thumbnail={selectedVideo.thumbnail_url}
-                  title={selectedVideo.title}
-                  onEnded={showPlaylist ? playNext : undefined}
-                />
+                <Suspense fallback={<div className="aspect-video w-full rounded-lg bg-muted" />}>
+                  <ExerciseVideoPlayer
+                    src={selectedVideo.video_url}
+                    thumbnail={selectedVideo.thumbnail_url}
+                    title={selectedVideo.title}
+                    onEnded={showPlaylist ? playNext : undefined}
+                  />
+                </Suspense>
               ) : (
                 <div className="aspect-video w-full flex items-center justify-center bg-muted rounded-lg overflow-hidden">
                   <img
@@ -807,155 +762,28 @@ export function ExerciseVideoLibrary({
       </AlertDialog>
 
       {/* Edit Media Modal */}
-      <Dialog open={showEdit} onOpenChange={handleCloseEdit}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Editar Mídia</DialogTitle>
-            <DialogDescription>Atualize as informações da mídia de exercício</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* Title */}
-            <div className="space-y-2">
-              <Label>
-                Título do Exercício <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                placeholder="Ex: Rotação de Ombro com Bastão"
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                maxLength={100}
-              />
-              <p className="text-xs text-muted-foreground text-right">
-                {editTitle.length}/100 caracteres
-              </p>
-            </div>
-
-            {/* Description */}
-            <div className="space-y-2">
-              <Label>Descrição</Label>
-              <Textarea
-                placeholder="Descreva o exercício, objetivo e cuidados importantes..."
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                rows={3}
-                maxLength={500}
-              />
-              <p className="text-xs text-muted-foreground text-right">
-                {editDescription.length}/500 caracteres
-              </p>
-            </div>
-
-            {/* Category and Difficulty */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>
-                  Categoria <span className="text-destructive">*</span>
-                </Label>
-                <Select value={editCategory} onValueChange={setEditCategory}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {VIDEO_CATEGORIES.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>
-                  Dificuldade <span className="text-destructive">*</span>
-                </Label>
-                <Select value={editDifficulty} onValueChange={setEditDifficulty}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {VIDEO_DIFFICULTY.map((diff) => (
-                      <SelectItem key={diff} value={diff}>
-                        {diff.charAt(0).toUpperCase() + diff.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Body Parts */}
-            <div className="space-y-2">
-              <Label>Partes do Corpo</Label>
-              <div className="flex flex-wrap gap-2">
-                {BODY_PARTS.map((part) => (
-                  <Badge
-                    key={part}
-                    variant={editBodyParts.includes(part) ? "default" : "outline"}
-                    className={cn(
-                      "cursor-pointer transition-colors hover:bg-primary/20",
-                      editBodyParts.includes(part) &&
-                        "bg-primary text-primary-foreground hover:bg-primary",
-                    )}
-                    onClick={() => toggleEditBodyPart(part)}
-                  >
-                    {part.charAt(0).toUpperCase() + part.slice(1)}
-                    {editBodyParts.includes(part) && <Check className="h-3 w-3 ml-1" />}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            {/* Equipment */}
-            <div className="space-y-2">
-              <Label>Equipamentos Necessários</Label>
-              <div className="flex flex-wrap gap-2">
-                {EQUIPMENT_OPTIONS.map((eq) => (
-                  <Badge
-                    key={eq}
-                    variant={editEquipment.includes(eq) ? "default" : "outline"}
-                    className={cn(
-                      "cursor-pointer transition-colors hover:bg-primary/20",
-                      editEquipment.includes(eq) &&
-                        "bg-primary text-primary-foreground hover:bg-primary",
-                    )}
-                    onClick={() => toggleEditEquipment(eq)}
-                  >
-                    {eq.charAt(0).toUpperCase() + eq.slice(1)}
-                    {editEquipment.includes(eq) && <Check className="h-3 w-3 ml-1" />}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={handleCloseEdit}
-              disabled={updateVideoMutation.isPending}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSaveEdit}
-              disabled={editTitle.trim().length < 3 || updateVideoMutation.isPending}
-            >
-              {updateVideoMutation.isPending ? "Salvando..." : "Salvar Alterações"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <Suspense fallback={null}>
+        <ExerciseVideoEditModal
+          open={showEdit}
+          onOpenChange={(open) => {
+            if (!open) handleCloseEdit();
+          }}
+          video={editingVideo}
+          onSave={handleSaveEdit}
+          isSaving={updateVideoMutation.isPending}
+        />
+      </Suspense>
 
       {/* Upload Modal */}
-      <ExerciseVideoUpload
-        open={showUpload}
-        onOpenChange={setShowUpload}
-        onSuccess={() => {
-          setShowUpload(false);
-        }}
-      />
+      <Suspense fallback={null}>
+        <ExerciseVideoUpload
+          open={showUpload}
+          onOpenChange={setShowUpload}
+          onSuccess={() => {
+            setShowUpload(false);
+          }}
+        />
+      </Suspense>
     </div>
   );
 }

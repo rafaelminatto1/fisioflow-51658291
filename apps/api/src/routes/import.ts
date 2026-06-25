@@ -121,7 +121,7 @@ type PreparedAppointmentRow = {
   sessionNumber: number | null;
 };
 
-function isUnsupportedTransactionError(error: unknown): boolean {
+function _isUnsupportedTransactionError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
   return message.toLowerCase().includes("no transactions support");
 }

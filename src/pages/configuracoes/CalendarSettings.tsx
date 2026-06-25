@@ -1,3 +1,4 @@
+import "@/styles/bundles/schedule.css";
 import { useState } from "react";
 import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

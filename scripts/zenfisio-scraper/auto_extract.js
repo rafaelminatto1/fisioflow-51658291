@@ -30,15 +30,9 @@
     return resp.json();
   }
   
-  // Função para extrair detalhes de um evento
-  async function fetchEventDetail(appointmentId) {
-    const resp = await fetch(`/api/appointments/details/${appointmentId}`, {
-      credentials: 'include',
-      headers: { 'Accept': 'application/json' }
-    });
-    if (!resp.ok) return null;
-    return resp.json();
-  }
+  // Função para extrair detalhes de um evento (currently unused)
+  // async function fetchEventDetail(appointmentId) { ... }
+  // }
   
   console.log('Iniciando extração automática...');
   console.log('Pacientes já processados:', done.size);

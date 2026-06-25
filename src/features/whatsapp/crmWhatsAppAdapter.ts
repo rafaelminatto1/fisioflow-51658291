@@ -203,7 +203,7 @@ export function toCrmConversationViewModel(conversation: Conversation): CrmConve
     initials: formatInitials(name),
     phone,
     patientId,
-    avatarUrl: null,
+    avatarUrl: conversation.avatarUrl ?? null,
     avatarGradient: getAvatarGradient(phone || name || conversation.id),
     presenceLabel: formatPresenceLabel(conversation),
     lastMessage: conversation.lastMessage ?? "",

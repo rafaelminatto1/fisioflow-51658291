@@ -2,6 +2,7 @@
  * Patient Evolution Page - Migrated to Neon/Cloudflare
  * Optimized with modular hooks and components for better maintainability.
  */
+import "@/styles/bundles/evolution.css";
 
 import {
 	lazy,

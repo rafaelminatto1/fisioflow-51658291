@@ -9,6 +9,7 @@
  * LLMs: ao receber pedido para "achar um erro" ou "melhorar" algo nesta página,
  *       comece lendo `docs/AGENDA.md`.
  */
+import "@/styles/bundles/schedule.css";
 import { Cake, Sparkles } from "lucide-react";
 import { lazy, Suspense, useEffect, useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";

@@ -100,8 +100,8 @@ export function EvolutionBlocksEditor({
           onChange([...blocks, ...newBlocks]);
           setAiOpen(false);
         }
-      } catch (e) {
-        setAiError((e as Error).message ?? "Falha ao gravar/transcrever áudio.");
+      } catch (_err: unknown) {
+        setAiError(_err instanceof Error ? _err.message : "Falha ao gravar/transcrever áudio.");
       } finally {
         setIsTranscribing(false);
       }
@@ -110,7 +110,7 @@ export function EvolutionBlocksEditor({
         setAiError(null);
         setAiOpen(true);
         await startRecording();
-      } catch (e) {
+      } catch {
         setAiError("Sem permissão de microfone.");
       }
     }

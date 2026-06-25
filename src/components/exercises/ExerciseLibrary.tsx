@@ -3,7 +3,7 @@
  * Consulte o arquivo de documentação em 'docs/exercises-page.md' na raiz do projeto
  * antes de fazer qualquer modificação neste arquivo ou em componentes relacionados à biblioteca de exercícios.
  */
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, { Suspense, useEffect, useState, useMemo, useRef, lazy } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -56,17 +56,26 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { ExerciseViewModal } from "./ExerciseViewModal";
 import { ExerciseFiltersPanel, type ExerciseFiltersState } from "./ExerciseFiltersPanel";
-import { MergeExercisesModal } from "./MergeExercisesModal";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CreateTemplateFromSelectionModal } from "./CreateTemplateFromSelectionModal";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { getBestImageUrl, getImageUrlCandidates } from "@/lib/imageUtils";
 
 import { useDebounce } from "@/hooks/performance/useDebounce";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { bilingualFilter } from "@/lib/utils/bilingualSearch";
+
+const ExerciseViewModal = lazy(() =>
+  import("./ExerciseViewModal").then((m) => ({ default: m.ExerciseViewModal })),
+);
+const MergeExercisesModal = lazy(() =>
+  import("./MergeExercisesModal").then((m) => ({ default: m.MergeExercisesModal })),
+);
+const CreateTemplateFromSelectionModal = lazy(() =>
+  import("./CreateTemplateFromSelectionModal").then((m) => ({
+    default: m.CreateTemplateFromSelectionModal,
+  })),
+);
 
 interface ExerciseLibraryProps {
   onSelectExercise?: (exercise: Exercise) => void;
@@ -1266,41 +1275,47 @@ export function ExerciseLibrary({
 
       {/* View Modal */}
       {viewExercise && (
-        <ExerciseViewModal
-          exercise={viewExercise}
-          open={!!viewExercise}
-          onOpenChange={(open) => !open && setViewExercise(null)}
-          onEdit={() => {
-            setViewExercise(null);
-            onEditExercise(viewExercise);
-          }}
-        />
+        <Suspense fallback={null}>
+          <ExerciseViewModal
+            exercise={viewExercise}
+            open={!!viewExercise}
+            onOpenChange={(open) => !open && setViewExercise(null)}
+            onEdit={() => {
+              setViewExercise(null);
+              onEditExercise(viewExercise);
+            }}
+          />
+        </Suspense>
       )}
 
       {/* Create Template Modal */}
-      <CreateTemplateFromSelectionModal
-        open={showCreateTemplateModal}
-        onOpenChange={setShowCreateTemplateModal}
-        selectedExerciseIds={selectedExercises}
-        onSuccess={() => {
-          setShowCreateTemplateModal(false);
-          setIsSelectionMode(false);
-          setSelectedExercises([]);
-        }}
-      />
+      <Suspense fallback={null}>
+        <CreateTemplateFromSelectionModal
+          open={showCreateTemplateModal}
+          onOpenChange={setShowCreateTemplateModal}
+          selectedExerciseIds={selectedExercises}
+          onSuccess={() => {
+            setShowCreateTemplateModal(false);
+            setIsSelectionMode(false);
+            setSelectedExercises([]);
+          }}
+        />
+      </Suspense>
 
       {/* Merge Exercises Modal */}
-      <MergeExercisesModal
-        open={showMergeModal}
-        onOpenChange={setShowMergeModal}
-        exercises={exercises.filter((e) => selectedExercises.includes(e.id))}
-        onMerge={async (keepId, mergeIds) => {
-          await mergeExercises(keepId, mergeIds);
-          setShowMergeModal(false);
-          setIsSelectionMode(false);
-          setSelectedExercises([]);
-        }}
-      />
+      <Suspense fallback={null}>
+        <MergeExercisesModal
+          open={showMergeModal}
+          onOpenChange={setShowMergeModal}
+          exercises={exercises.filter((e) => selectedExercises.includes(e.id))}
+          onMerge={async (keepId, mergeIds) => {
+            await mergeExercises(keepId, mergeIds);
+            setShowMergeModal(false);
+            setIsSelectionMode(false);
+            setSelectedExercises([]);
+          }}
+        />
+      </Suspense>
     </div>
   );
 }

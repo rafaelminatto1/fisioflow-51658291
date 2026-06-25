@@ -47,8 +47,8 @@ export function useFinancialPageData(period: PeriodType = "monthly") {
       try {
         const res = await financialApi.transacoes.list({ limit: 300 });
         return (res?.data ?? res ?? []) as Transaction[];
-      } catch (error) {
-        logger.error("Error loading transactions", { error }, "useFinancialPage");
+      } catch (err: unknown) {
+        logger.error("Error loading transactions", { error: err }, "useFinancialPage");
         return [];
       }
     },
@@ -110,7 +110,7 @@ export function useFinancialPageData(period: PeriodType = "monthly") {
       const res = await financialApi.transacoes.create(data);
       return res?.data ?? res;
     },
-    onMutate: async (newTransaction) => {
+    onMutate: async (_newTransaction) => {
       await queryClient.cancelQueries({ queryKey: ["financial-transactions", organizationId, period] });
       const previous = queryClient.getQueryData(["financial-transactions", organizationId, period]);
       // For create, we might not have a full ID yet, so optimistic insert is tricky.

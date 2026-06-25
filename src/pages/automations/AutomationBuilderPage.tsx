@@ -14,22 +14,20 @@ import ReactFlow, {
   type NodeProps,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { 
-  Zap, 
-  GitBranch, 
-  Mail, 
-  Clock, 
-  Play, 
-  Save, 
-  Plus, 
-  ArrowLeft, 
-  MessageSquare, 
-  Calendar, 
-  UserPlus, 
-  TrendingUp, 
+import {
+  Zap,
+  GitBranch,
+  Mail,
+  Clock,
+  Play,
+  Save,
+  Plus,
+  ArrowLeft,
+  MessageSquare,
+  Calendar,
   DollarSign,
   Trash2,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react";
 import { automationApi } from "@/api/v2";
 import { Button } from "@/components/ui/button";
@@ -108,7 +106,7 @@ export default function AutomationBuilderPage() {
   ]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [trace, setTrace] = useState<Array<Record<string, unknown>> | null>(null);
+  const [_trace, setTrace] = useState<Array<Record<string, unknown>> | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -126,7 +124,7 @@ export default function AutomationBuilderPage() {
       setName(data.name);
       setTriggerEvent(data.trigger_event ?? "evolution.updated");
       // definition parsing logic here if needed
-    } catch (e) {
+    } catch {
       toast.error("Falha ao carregar automação");
     }
   };
@@ -213,7 +211,7 @@ export default function AutomationBuilderPage() {
       }
       toast.success("Automação salva com sucesso!");
       navigate("/automacoes");
-    } catch (e) {
+    } catch {
       toast.error("Erro ao salvar automação");
     } finally {
       setBusy(false);
@@ -364,7 +362,6 @@ function NodeInspector({
   data: AutomationNodeData;
   onChange: (p: Partial<AutomationNodeData>) => void;
 }) {
-  const meta = KIND_META[data.kind];
   return (
     <div className="space-y-4">
       <div className="space-y-1">

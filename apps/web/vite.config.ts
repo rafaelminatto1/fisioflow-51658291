@@ -3,13 +3,25 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import { visualizer } from "rollup-plugin-visualizer";
-import { defineConfig } from "vite";
+import type { PluginOption } from "vite";
+import { defineConfig, normalizePath } from "vite";
 import Icons from "unplugin-icons/vite";
 import Inspect from "vite-plugin-inspect";
 import checker from "vite-plugin-checker";
+import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 import { VitePWA } from "vite-plugin-pwa";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const repoRoot = path.resolve(__dirname, "../..");
+const mediaPipeWasmDir = path.resolve(repoRoot, "node_modules/@mediapipe/tasks-vision/wasm");
+const mediaPipeWasmFiles = [
+  "vision_wasm_internal.js",
+  "vision_wasm_internal.wasm",
+  "vision_wasm_module_internal.js",
+  "vision_wasm_module_internal.wasm",
+  "vision_wasm_nosimd_internal.js",
+  "vision_wasm_nosimd_internal.wasm",
+] as const;
 
 function replaceToken(html: string, token: string, value: string): string {
   return html.replace(new RegExp(token, "g"), () => value);
@@ -25,6 +37,85 @@ function htmlPlugin(appVersion: string, buildTime: string): any {
         "%CACHE_BUSTER%",
         buildTime,
       );
+    },
+  };
+}
+
+function parseBooleanEnv(value: string | undefined, defaultValue: boolean): boolean {
+  if (value == null || value === "") return defaultValue;
+  const normalized = value.trim().toLowerCase();
+  if (["1", "true", "yes", "on"].includes(normalized)) return true;
+  if (["0", "false", "no", "off"].includes(normalized)) return false;
+  return defaultValue;
+}
+
+function pluginEnabled(name: string, defaultValue: boolean): boolean {
+  const envName = `VITE_PLUGIN_${name.toUpperCase()}`;
+  return parseBooleanEnv(process.env[envName], defaultValue);
+}
+
+function wrapBuildPlugin(plugin: PluginOption, label: string, debugBuild: boolean): PluginOption {
+  if (!plugin || Array.isArray(plugin) || typeof plugin === "boolean") {
+    return plugin;
+  }
+
+  const candidate = plugin as Record<string, unknown>;
+  const wrapped = { ...candidate } as Record<string, unknown>;
+  const pluginName = String(candidate.name ?? label);
+
+  const wrapHook = (hookName: "buildStart" | "buildEnd" | "generateBundle" | "closeBundle") => {
+    const original = wrapped[hookName];
+    if (typeof original !== "function") return;
+
+    wrapped[hookName] = async function wrappedHook(this: unknown, ...args: unknown[]) {
+      if (debugBuild) {
+        console.error(`[vite-debug] ${pluginName}.${hookName}:start`);
+      }
+      try {
+        const result = await original.apply(this, args);
+        if (debugBuild) {
+          console.error(`[vite-debug] ${pluginName}.${hookName}:ok`);
+        }
+        return result;
+      } catch (error) {
+        console.error(`[vite-debug] ${pluginName}.${hookName}:error`, error);
+        throw error;
+      }
+    };
+  };
+
+  wrapHook("buildStart");
+  wrapHook("buildEnd");
+  wrapHook("generateBundle");
+  wrapHook("closeBundle");
+
+  return wrapped as PluginOption;
+}
+
+function debugBuildPlugin(enabled: boolean): PluginOption {
+  return {
+    name: "debug-build-lifecycle",
+    apply: "build",
+    configResolved(config) {
+      if (!enabled) return;
+      console.error("[vite-debug] mode=", config.mode);
+      console.error("[vite-debug] command=", config.command);
+      console.error(
+        "[vite-debug] plugins=",
+        config.plugins.map((plugin) => plugin.name),
+      );
+    },
+    buildStart() {
+      if (!enabled) return;
+      console.error("[vite-debug] build pipeline started");
+    },
+    buildEnd(error) {
+      if (!enabled) return;
+      if (error) {
+        console.error("[vite-debug] build pipeline failed", error);
+      } else {
+        console.error("[vite-debug] build pipeline finished");
+      }
     },
   };
 }
@@ -64,10 +155,178 @@ function mockMobileModules() {
 export default defineConfig(({ mode }) => {
   const isProduction = mode === "production";
   const isAnalyze = process.env.ANALYZE === "true";
+  const debugBuild = parseBooleanEnv(process.env.VITE_DEBUG_BUILD, false);
+  const pwaEnabled = pluginEnabled("pwa", true);
+  const staticCopyEnabled = pluginEnabled("static_copy", true);
+  // O otimizador de imagens deste projeto pode travar em closeBundle depois que o
+  // build já gerou todos os artefatos. Mantemos o plugin disponível, mas fora do
+  // caminho crítico de deploy; quando necessário, ele roda de forma explícita.
+  const imageOptimizerEnabled = pluginEnabled("image_optimizer", false);
+  const sentryEnabled = Boolean(isProduction && process.env.SENTRY_AUTH_TOKEN);
   const buildTime = Date.now().toString();
-  const VERSION_SUFFIX = "-v2.6.0-vite8.0.9-tsconfigPaths";
+  const VERSION_SUFFIX = "-v2.6.0-vite8.1.0";
   const appVersion =
     (process.env.GIT_COMMIT_SHA || process.env.VITE_APP_VERSION || buildTime) + VERSION_SUFFIX;
+
+  const plugins: PluginOption[] = [
+    debugBuildPlugin(debugBuild),
+    tailwindcss(),
+    react({
+      babel: {
+        plugins: [["babel-plugin-react-compiler", { target: "19" }]],
+      },
+    }),
+    mockMobileModules(),
+    htmlPlugin(appVersion, buildTime),
+  ];
+
+  if (pwaEnabled) {
+    plugins.push(
+      wrapBuildPlugin(
+        VitePWA({
+          strategies: "injectManifest",
+          srcDir: "src",
+          filename: "service-worker.ts",
+          registerType: "autoUpdate",
+          injectRegister: null,
+          manifest: {
+            name: "FisioFlow - Plataforma de Fisioterapia Digital",
+            short_name: "FisioFlow",
+            description: "Sistema completo de gestão para fisioterapeutas",
+            theme_color: "#0ea5e9",
+            background_color: "#ffffff",
+            display: "standalone",
+            orientation: "portrait-primary",
+            scope: "/",
+            start_url: "/",
+            icons: [
+              {
+                src: "/icons/badge-72x72.svg",
+                sizes: "72x72",
+                type: "image/svg+xml",
+                purpose: "any",
+              },
+              {
+                src: "/icons/icon-192x192.svg",
+                sizes: "192x192",
+                type: "image/svg+xml",
+                purpose: "any",
+              },
+              {
+                src: "/icons/icon-512x512.svg",
+                sizes: "512x512",
+                type: "image/svg+xml",
+                purpose: "any",
+              },
+            ],
+          },
+          injectManifest: {
+            rollupFormat: "iife",
+            globPatterns: ["**/*.{html,ico,woff2}", "assets/index-*.{js,css}"],
+            globIgnores: [
+              "**/*.map",
+              "**/sw.js",
+              "**/service-worker.js",
+              "**/vendor-image-editor-*.js",
+              "**/vendor-pdf-*.js",
+              "**/vendor-tiptap-*.js",
+              "**/vendor-recharts-*.js",
+            ],
+            maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+          },
+          devOptions: {
+            enabled: false,
+            type: "module",
+          },
+        }),
+        "vite-plugin-pwa",
+        debugBuild,
+      ),
+    );
+  }
+
+  if (staticCopyEnabled) {
+    plugins.push(
+      wrapBuildPlugin(
+        viteStaticCopy({
+          targets: mediaPipeWasmFiles.map((fileName) => ({
+            src: normalizePath(path.resolve(mediaPipeWasmDir, fileName)),
+            dest: "mediapipe/wasm",
+            rename: { stripBase: true },
+          })),
+        }),
+        "vite-static-copy",
+        debugBuild,
+      ),
+    );
+  }
+
+  plugins.push(
+    Icons({
+      compiler: "jsx",
+      autoInstall: true,
+    }),
+  );
+
+  if (imageOptimizerEnabled) {
+    plugins.push(
+      wrapBuildPlugin(
+        ViteImageOptimizer({
+          includePublic: true,
+          logStats: true,
+          png: { quality: 80 },
+          jpeg: { quality: 75 },
+          jpg: { quality: 75 },
+          webp: { lossless: false, quality: 80 },
+          avif: { lossless: false, quality: 70 },
+          svg: {
+            multipass: true,
+            plugins: [{ name: "preset-default" }, "sortAttrs"],
+          },
+        }),
+        "vite-image-optimizer",
+        debugBuild,
+      ),
+    );
+  }
+
+  if (!isProduction) {
+    plugins.push(Inspect());
+    plugins.push(
+      checker({
+        typescript: {
+          tsconfigPath: "./tsconfig.json",
+        },
+        overlay: false,
+      }),
+    );
+  }
+
+  if (isAnalyze) {
+    plugins.push(
+      visualizer({
+        filename: "stats.html",
+        template: "treemap",
+        gzipSize: true,
+        brotliSize: true,
+        emitFile: true,
+      }),
+    );
+  }
+
+  if (sentryEnabled) {
+    plugins.push(
+      wrapBuildPlugin(
+        sentryVitePlugin({
+          org: "fisioflow",
+          project: "fisioflow-web",
+          authToken: process.env.SENTRY_AUTH_TOKEN,
+        }),
+        "sentry-vite-plugin",
+        debugBuild,
+      ),
+    );
+  }
 
   return {
     define: {
@@ -79,123 +338,7 @@ export default defineConfig(({ mode }) => {
     experimental: {
       bundledDev: false,
     },
-    plugins: [
-      tailwindcss(),
-      react({
-        babel: {
-          plugins: [["babel-plugin-react-compiler", { target: "19" }]],
-        },
-      }),
-      mockMobileModules(),
-      htmlPlugin(appVersion, buildTime),
-      // PWA — habilitado em Maio 2026 para suportar reload offline.
-      // O SW (src/service-worker.ts) faz precaching do app shell via Workbox,
-      // permitindo que recarregar a aba sem rede ainda sirva o app.
-      VitePWA({
-        strategies: "injectManifest",
-        srcDir: "src",
-        filename: "service-worker.ts",
-        registerType: "autoUpdate",
-        // Registro é feito manualmente em src/lib/pwa/serviceWorkerRegistration.ts
-        injectRegister: null,
-        manifest: {
-          name: "FisioFlow - Plataforma de Fisioterapia Digital",
-          short_name: "FisioFlow",
-          description: "Sistema completo de gestão para fisioterapeutas",
-          theme_color: "#0ea5e9",
-          background_color: "#ffffff",
-          display: "standalone",
-          orientation: "portrait-primary",
-          scope: "/",
-          start_url: "/",
-          icons: [
-            {
-              src: "/icons/badge-72x72.svg",
-              sizes: "72x72",
-              type: "image/svg+xml",
-              purpose: "any",
-            },
-            {
-              src: "/icons/icon-192x192.svg",
-              sizes: "192x192",
-              type: "image/svg+xml",
-              purpose: "any",
-            },
-            {
-              src: "/icons/icon-512x512.svg",
-              sizes: "512x512",
-              type: "image/svg+xml",
-              purpose: "any",
-            },
-          ],
-        },
-        injectManifest: {
-          // vite-plugin-pwa 1.3.0 ainda usa inlineDynamicImports no build "es".
-          // O formato iife evita esse caminho e mantém o SW final clássico.
-          rollupFormat: "iife",
-          // Precache MINIMALISTA — só o shell crítico (~1.3 MiB, 11 entries).
-          // Chunks de feature ficam fora — são cacheados sob demanda via
-          // runtime caching `CacheFirst` em /assets/*.js (ver service-worker.ts).
-          //
-          // Trade-off: features raramente usadas (editor de imagens, PDF,
-          // recharts) só funcionam offline DEPOIS que o usuário as acessou
-          // ao menos uma vez online. Aceitável — primeira visita já cacheia.
-          globPatterns: ["**/*.{html,ico,woff2}", "assets/index-*.{js,css}"],
-          globIgnores: [
-            "**/*.map",
-            "**/sw.js",
-            "**/service-worker.js",
-            // Chunks pesados e raramente usados — runtime cache cobre.
-            "**/vendor-image-editor-*.js", // ~977 KB, editor TipTap
-            "**/vendor-pdf-*.js",
-            "**/vendor-tiptap-*.js",
-            "**/vendor-recharts-*.js",
-          ],
-          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        },
-        devOptions: {
-          enabled: false,
-          type: "module",
-        },
-      }),
-      Icons({
-        compiler: "jsx",
-        autoInstall: true,
-      }),
-      // enableImageOptimizer &&
-      //   ViteImageOptimizer({
-      //     png: { quality: 80 },
-      //     jpeg: { quality: 75 },
-      //     webp: { lossy: true, quality: 80 },
-      //     avif: { lossy: true, quality: 70 },
-      //     svg: {
-      //       plugins: [{ name: "removeViewBox", active: false }, { name: "sortAttrs" }],
-      //     },
-      //   }),
-      !isProduction && Inspect(),
-      !isProduction &&
-        checker({
-          typescript: {
-            tsconfigPath: "./tsconfig.json",
-          },
-          overlay: false,
-        }),
-      isAnalyze &&
-        visualizer({
-          filename: "stats.html",
-          template: "treemap",
-          gzipSize: true,
-          brotliSize: true,
-          emitFile: true,
-        }),
-      isProduction &&
-        process.env.SENTRY_AUTH_TOKEN &&
-        sentryVitePlugin({
-          org: "fisioflow",
-          project: "fisioflow-web",
-          authToken: process.env.SENTRY_AUTH_TOKEN,
-        }),
-    ].filter(Boolean),
+    plugins: plugins.filter(Boolean),
     worker: {
       format: "es",
     },
@@ -256,8 +399,9 @@ export default defineConfig(({ mode }) => {
       rolldownOptions: {
         external: [],
         output: {
-          // Rolldown rc.12 codeSplitting — substitui rollupOptions.manualChunks
-          // que não funciona corretamente com Rolldown (quebra named exports).
+          // Code splitting via Rolldown groups substitui o antigo manualChunks.
+          // Mantemos esta abordagem porque o bundle desta app depende de cortes
+          // finos por feature e por vendor para preservar lazy loading real.
           // Priority: maior = avaliado primeiro (chunk mais específico vence).
           codeSplitting: {
             groups: [

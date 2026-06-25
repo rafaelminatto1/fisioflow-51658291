@@ -12,6 +12,10 @@ import { notifyPatientAppointment } from "./lib/push";
 import { RTMAlertsService } from "./services/rtm-alerts";
 import { syncAutoRAGContent } from "./routes/aiSearch";
 import { sendHepDailyReminders } from "./jobs/hepDailyReminder";
+import {
+  backfillInstagramProfilesForOrganization,
+  persistInstagramProfileSyncState,
+} from "./lib/instagram-profile";
 
 /**
  * Cloudflare Worker Cron Trigger Handler
@@ -70,6 +74,12 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
           await dispatchInstagramConcierge(pool, env);
         } catch (err) {
           console.warn("[Cron] Instagram concierge failed:", err);
+        }
+        try {
+          const pool = createPool(env);
+          await dispatchInstagramProfileBackfill(pool, env, 25);
+        } catch (err) {
+          console.warn("[Cron] Instagram profile backfill failed:", err);
         }
         break;
       }
@@ -483,6 +493,7 @@ async function dispatchInstagramConcierge(pool: any, env: Env) {
   const res = await pool.query(`
     SELECT c.id, c.organization_id, c.contact_id, wc.wa_id AS igsid,
            lm.created_at AS last_at, lm.content::text AS last_content,
+           lm.message_type AS last_message_type, lm.media_url AS last_media_url,
            o.settings->'crm_whatsapp'->'concierge' AS concierge,
            o.settings->>'instagram_business_account_id' AS ig_account_id,
            o.settings->>'instagram_access_token' AS ig_token,
@@ -517,6 +528,10 @@ async function dispatchInstagramConcierge(pool: any, env: Env) {
       const delayMin = typeof cfg.instagramReplyDelayMinutes === "number" ? cfg.instagramReplyDelayMinutes : 3;
       const ageMin = (now - new Date(row.last_at).getTime()) / 60000;
       if (ageMin < delayMin) continue;
+
+      const lastMessageType = typeof row.last_message_type === "string" ? row.last_message_type : "";
+      if (lastMessageType === "story_mention" || lastMessageType === "image") continue;
+      if (row.last_media_url) continue;
 
       const text = (() => {
         const c = row.last_content;
@@ -557,6 +572,71 @@ async function dispatchInstagramConcierge(pool: any, env: Env) {
   if (sent) console.log(`[Cron] Instagram concierge replies=${sent}`);
 }
 
+async function dispatchInstagramProfileBackfill(pool: any, env: Env, batchLimit = 25) {
+  const orgs = await pool.query(`
+    SELECT id, settings->>'instagram_access_token' AS ig_token
+    FROM organizations
+    WHERE is_active = true
+      AND (
+        settings->>'instagram_business_account_id' IS NOT NULL
+        OR settings->>'instagram_access_token' IS NOT NULL
+      )
+      AND EXISTS (
+        SELECT 1
+        FROM whatsapp_contacts wc
+        JOIN wa_conversations c ON c.contact_id = wc.id
+        WHERE wc.organization_id = organizations.id
+          AND c.organization_id = organizations.id
+          AND c.channel = 'instagram'
+          AND wc.wa_id IS NOT NULL
+          AND (
+            wc.username IS NULL
+            OR wc.display_name IS NULL
+            OR wc.avatar_url IS NULL
+          )
+      )
+    ORDER BY updated_at DESC NULLS LAST, created_at DESC NULLS LAST
+    LIMIT 10
+  `);
+
+  for (const org of orgs.rows) {
+    const igToken = String(org.ig_token || env.IG_ACCESS_TOKEN || "");
+    if (!igToken) continue;
+
+    const result = await backfillInstagramProfilesForOrganization(pool, String(org.id), igToken, {
+      limit: batchLimit,
+      force: false,
+    });
+    const pendingRes = await pool.query(
+      `SELECT COUNT(DISTINCT wc.id)::int AS pending
+       FROM whatsapp_contacts wc
+       JOIN wa_conversations c ON c.contact_id = wc.id
+       WHERE wc.organization_id = $1
+         AND c.organization_id = $1
+         AND c.channel = 'instagram'
+         AND wc.wa_id IS NOT NULL
+         AND (
+           wc.username IS NULL
+           OR wc.display_name IS NULL
+           OR wc.avatar_url IS NULL
+         )`,
+      [org.id],
+    );
+    await persistInstagramProfileSyncState(
+      pool,
+      String(org.id),
+      result,
+      Number(pendingRes.rows[0]?.pending ?? 0),
+    );
+
+    if (result.scanned > 0) {
+      console.log(
+        `[Cron] Instagram profile backfill org=${org.id} scanned=${result.scanned} updated=${result.updated} skipped=${result.skipped} failed=${result.failed}`,
+      );
+    }
+  }
+}
+
 /**
  * #1 Speed-to-lead — alerta a equipe quando um lead aguarda resposta humana há mais
  * que o SLA configurado (organizations.settings.crm_whatsapp.concierge.slaMinutes).
@@ -565,7 +645,7 @@ async function dispatchInstagramConcierge(pool: any, env: Env) {
 async function dispatchLeadSlaEscalations(pool: any, env: Env) {
   const { notifyOrganization } = await import("./lib/push");
   const res = await pool.query(`
-    SELECT c.id, c.organization_id, c.metadata,
+    SELECT c.id, c.organization_id, c.channel, c.metadata,
            lm.created_at AS last_at,
            wc.display_name, wc.wa_id,
            o.settings->'crm_whatsapp'->'concierge' AS concierge
@@ -577,7 +657,7 @@ async function dispatchLeadSlaEscalations(pool: any, env: Env) {
       WHERE m.conversation_id = c.id AND m.direction <> 'internal'
       ORDER BY created_at DESC LIMIT 1
     ) lm ON true
-    WHERE c.status IN ('open', 'pending')
+    WHERE c.status IN ('open', 'pending', 'assigned')
       AND lm.direction = 'inbound'
       AND lm.created_at > now() - interval '24 hours'
       AND c.patient_id IS NULL
@@ -589,7 +669,13 @@ async function dispatchLeadSlaEscalations(pool: any, env: Env) {
     try {
       const cfg = (typeof row.concierge === "string" ? JSON.parse(row.concierge) : row.concierge) ?? {};
       const slaEnabled = cfg.slaEnabled !== false;
-      const slaMinutes = typeof cfg.slaMinutes === "number" ? cfg.slaMinutes : 10;
+      const defaultSlaMinutes = row.channel === "webchat" ? 2 : 10;
+      const channelSlaMinutes =
+        row.channel === "webchat" && typeof cfg.webchatSlaMinutes === "number"
+          ? cfg.webchatSlaMinutes
+          : null;
+      const slaMinutes =
+        channelSlaMinutes ?? (typeof cfg.slaMinutes === "number" ? cfg.slaMinutes : defaultSlaMinutes);
       if (!slaEnabled) continue;
 
       const lastIso = new Date(row.last_at).toISOString();

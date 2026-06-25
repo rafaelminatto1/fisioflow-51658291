@@ -10,6 +10,7 @@
  * apenas para back-compat de imports diretos; novos consumidores devem
  * ir direto em `/patient-evolution/:appointmentId`.
  */
+import "@/styles/bundles/evolution.css";
 import React from "react";
 import PatientEvolution from "@/pages/PatientEvolution";
 

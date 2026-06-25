@@ -1,3 +1,4 @@
+import "@/styles/bundles/evolution.css";
 import { Suspense, lazy, useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";

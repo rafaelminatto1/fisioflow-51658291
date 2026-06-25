@@ -10,6 +10,7 @@ export async function resolveOrCreateContact(
   parentBsuid: string | null,
   username: string | null,
   displayName: string | null,
+  avatarUrl: string | null = null,
 ) {
   try {
     let contact =
@@ -38,6 +39,10 @@ export async function resolveOrCreateContact(
         updates.push(`display_name = $${idx++}`);
         params.push(displayName);
       }
+      if (avatarUrl && contact.avatar_url !== avatarUrl) {
+        updates.push(`avatar_url = $${idx++}`);
+        params.push(avatarUrl);
+      }
       if (waId && contact.wa_id !== waId) {
         updates.push(`wa_id = $${idx++}`);
         params.push(waId);
@@ -65,6 +70,11 @@ export async function resolveOrCreateContact(
             old: contact.display_name,
             new: displayName,
           };
+        if (avatarUrl && contact.avatar_url !== avatarUrl)
+          changes.avatar_url = {
+            old: contact.avatar_url,
+            new: avatarUrl,
+          };
         if (waId && contact.wa_id !== waId) changes.wa_id = { old: contact.wa_id, new: waId };
 
         if (Object.keys(changes).length > 0) {
@@ -84,10 +94,10 @@ export async function resolveOrCreateContact(
     }
 
     const insertResult = await pool.query(
-      `INSERT INTO whatsapp_contacts (organization_id, wa_id, bsuid, parent_bsuid, username, display_name)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO whatsapp_contacts (organization_id, wa_id, bsuid, parent_bsuid, username, display_name, avatar_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [orgId, waId, bsuid, parentBsuid, username, displayName],
+      [orgId, waId, bsuid, parentBsuid, username, displayName, avatarUrl],
     );
 
     return insertResult.rows[0];

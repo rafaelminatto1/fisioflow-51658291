@@ -30,6 +30,7 @@ import FullCalendar from "@fullcalendar/react";
 import type { EventResizeDoneArg } from "@fullcalendar/interaction";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
+import "@/styles/fullcalendar.css";
 
 import { useAgendaAppearancePersistence } from "@/hooks/useAgendaAppearancePersistence";
 import { useScheduleSettings } from "@/hooks/useScheduleSettings";

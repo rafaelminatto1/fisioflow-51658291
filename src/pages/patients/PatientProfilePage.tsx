@@ -2,6 +2,7 @@
  * Patient Profile Page - Migrated to Neon/Cloudflare
  * Optimized with usePatientProfileOptimized for better performance
  */
+import "@/styles/bundles/evolution.css";
 
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";

@@ -10,7 +10,7 @@ export interface ScheduleEventColors {
 export interface ScheduleEventContentProps {
   title: string;
   timeText: string;
-  isAllDay: boolean;
+  isAllDay?: boolean;
   isGroup: boolean;
   groupCount?: number;
   isTask: boolean;
@@ -37,7 +37,7 @@ export interface ScheduleEventContentProps {
 export function ScheduleEventContent({
   title,
   timeText,
-  isAllDay,
+  isAllDay: _isAllDay,
   isGroup,
   groupCount,
   isTask,

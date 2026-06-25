@@ -27,6 +27,7 @@ export interface Conversation {
   temperature?: "quente" | "morno" | "frio";
   contactName: string;
   contactPhone: string;
+  avatarUrl?: string;
   patientId?: string;
   patientName?: string;
   status: "open" | "pending" | "resolved" | "closed";
@@ -58,6 +59,8 @@ export interface Message {
   senderName?: string;
   timestamp: string;
   status?: "sent" | "delivered" | "read" | "failed" | "deleted";
+  mediaUrl?: string;
+  mediaType?: string;
   editedAt?: string;
   editedBy?: string;
   deletedAt?: string;
@@ -87,6 +90,26 @@ export interface Contact {
   avatarUrl?: string;
   lastInteraction?: string;
   totalConversations: number;
+}
+
+export interface InstagramProfileBackfillResult {
+  scanned: number;
+  updated: number;
+  skipped: number;
+  failed: number;
+}
+
+export interface InstagramProfileSyncSummary {
+  scanned: number;
+  updated: number;
+  skipped: number;
+  failed: number;
+  syncState?: {
+    lastSyncedAt: string | null;
+    lastStatus: "synced" | "partial" | "error";
+    lastResult: InstagramProfileBackfillResult | null;
+    pendingCount: number | null;
+  };
 }
 
 function mapContact(row: Record<string, unknown>): Contact {
@@ -312,6 +335,19 @@ export async function fetchConversation(
     return { conversation: d, messages: d.messages ?? [] };
   }
   return res;
+}
+
+export async function backfillInstagramProfiles(params?: {
+  limit?: number;
+  force?: boolean;
+}) {
+  return request<{ data: InstagramProfileSyncSummary }>(`${BASE}/instagram/backfill-profiles`, {
+    method: "POST",
+    body: JSON.stringify({
+      limit: params?.limit ?? 100,
+      force: params?.force ?? false,
+    }),
+  }).then(unwrapData);
 }
 
 export async function updateConversation(
@@ -804,6 +840,13 @@ export interface CrmSettings {
   funnel: FunnelStage[];
   reminders: ReminderConfig;
   intents: ConciergeIntent[];
+  instagramProfileSync?: {
+    lastSyncedAt: string | null;
+    lastStatus: "synced" | "partial" | "error";
+    lastResult: InstagramProfileBackfillResult | null;
+    pendingCount: number | null;
+  } | null;
+  instagramProfilePendingCount?: number;
 }
 
 export interface QuickReplyRow {

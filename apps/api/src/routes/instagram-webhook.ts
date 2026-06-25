@@ -3,6 +3,7 @@ import { createPool } from "../lib/db";
 import { broadcastToOrg } from "../lib/realtime";
 import { resolveOrCreateContact } from "../lib/whatsapp-identity";
 import { findOrCreateConversation, addMessage } from "../lib/whatsapp-conversations";
+import { fetchInstagramProfile, formatInstagramDisplayName, IG_GRAPH } from "../lib/instagram-profile";
 import { verifyMetaSignature } from "./whatsapp";
 import { writeEvent } from "../lib/analytics";
 import type { Env } from "../types/env";
@@ -18,9 +19,6 @@ import type { Env } from "../types/env";
  *  - organizations.settings->>'instagram_business_account_id' = IG_ID da clínica.
  */
 const app = new Hono<{ Bindings: Env }>();
-
-// Instagram API with Instagram Login usa graph.instagram.com.
-const IG_GRAPH = "https://graph.instagram.com/v23.0";
 
 app.get("/", (c) => {
   const mode = c.req.query("hub.mode");
@@ -67,29 +65,6 @@ app.post("/", async (c) => {
   return c.json({ status: "ok" });
 });
 
-/**
- * Busca o perfil público do remetente no Instagram (nome + @username) a partir
- * do IGSID. Disponível para contatos que iniciaram conversa com a conta.
- */
-async function fetchInstagramProfile(
-  igsid: string,
-  token: string | undefined,
-): Promise<{ username: string | null; name: string | null } | null> {
-  if (!token) return null;
-  try {
-    const res = await fetch(
-      `${IG_GRAPH}/${encodeURIComponent(igsid)}?fields=name,username&access_token=${encodeURIComponent(token)}`,
-    );
-    const data = (await res.json()) as { name?: string; username?: string; error?: unknown };
-    if (data && (data.name || data.username)) {
-      return { name: data.name ?? null, username: data.username ?? null };
-    }
-  } catch (e) {
-    console.warn("[IG Webhook] fetchInstagramProfile falhou:", e);
-  }
-  return null;
-}
-
 async function resolveOrgIdByIg(pool: any, igAccountId: string): Promise<string | null> {
   try {
     const res = await pool.query(
@@ -121,7 +96,10 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
         [orgId],
       );
       const igToken: string | undefined = tokRes.rows[0]?.t || env.IG_ACCESS_TOKEN || undefined;
-      const profileCache = new Map<string, { username: string | null; name: string | null } | null>();
+      const profileCache = new Map<
+        string,
+        { username: string | null; name: string | null; profilePic: string | null } | null
+      >();
 
       const events = (entry.messaging as any[]) ?? [];
       for (const ev of events) {
@@ -134,6 +112,8 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
         // Texto da mensagem; menção em Stories ganha rótulo amigável.
         const att = Array.isArray(message.attachments) ? message.attachments[0] : null;
         const attType: string | undefined = att?.type;
+        const mediaUrl: string | undefined =
+          typeof att?.payload?.url === "string" && att.payload.url.length ? att.payload.url : undefined;
         let text: string;
         let messageType: string;
         if (typeof message.text === "string" && message.text.length) {
@@ -142,6 +122,9 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
         } else if (attType === "story_mention") {
           text = "📲 Mencionou a Activity Fisioterapia nos Stories do Instagram.";
           messageType = "story_mention";
+        } else if (attType === "image") {
+          text = "";
+          messageType = "image";
         } else if (attType === "share" || attType === "ig_reel") {
           text = "📎 Compartilhou uma publicação do Instagram.";
           messageType = "attachment";
@@ -160,10 +143,11 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
           profileCache.set(senderId, prof);
         }
         const username = prof?.username ?? null;
-        const displayName =
-          prof?.name && prof?.username
-            ? `${prof.name} (@${prof.username})`
-            : prof?.name || (prof?.username ? `@${prof.username}` : null);
+        const avatarUrl = prof?.profilePic ?? null;
+        const displayName = formatInstagramDisplayName({
+          name: prof?.name ?? null,
+          username,
+        });
 
         const contact = await resolveOrCreateContact(
           pool,
@@ -173,6 +157,7 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
           null,
           username,
           displayName,
+          avatarUrl,
         );
         if (!contact) continue;
 
@@ -190,6 +175,16 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
           messageType,
           text,
           message.mid,
+          {
+            mediaUrl,
+            mediaType: messageType === "image" ? "image" : undefined,
+            metadata: attType
+              ? {
+                  attachmentType: attType,
+                  mediaUrl,
+                }
+              : undefined,
+          },
         );
 
         await broadcastToOrg(env, orgId, {

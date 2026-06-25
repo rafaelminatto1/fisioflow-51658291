@@ -1,3 +1,4 @@
+import "@/styles/bundles/exercises.css";
 import {
   Brain,
   Download,

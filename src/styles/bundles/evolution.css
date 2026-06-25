@@ -1,0 +1,12 @@
+@reference "../../index.css";
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+
+@source "../../pages/Patients.tsx";
+@source "../../pages/PatientEvolution.tsx";
+@source "../../pages/PatientEvolutionReport.tsx";
+@source "../../pages/SessionEvolutionPage.tsx";
+@source "../../pages/patients/PainMapHistoryPage.tsx";
+@source "../../pages/patients/PatientProfilePage.tsx";
+@source "../../pages/patients/NewEvaluationPage.tsx";
+@source "../../components/evolution/**/*.{ts,tsx,js,jsx}";
+

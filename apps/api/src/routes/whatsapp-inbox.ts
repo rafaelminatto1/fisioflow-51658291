@@ -29,6 +29,11 @@ import { resolveOrCreateContact, linkContactToPatient } from "../lib/whatsapp-id
 import { isUuid } from "../lib/validators";
 import { WhatsAppService } from "../lib/whatsapp";
 import { DEFAULT_REMINDER_CONFIG, resolveReminderConfig } from "../lib/reminderScheduling";
+import {
+  backfillInstagramProfilesForOrganization,
+  persistInstagramProfileSyncState,
+  readInstagramProfileSyncState,
+} from "../lib/instagram-profile";
 import { sendInstagramText } from "./instagram-webhook";
 import type { Env } from "../types/env";
 
@@ -45,6 +50,7 @@ const DEFAULT_CONCIERGE_CONFIG = {
   // SLA de resposta humana (#1 speed-to-lead): alerta se um lead aguarda há X min.
   slaEnabled: true,
   slaMinutes: 10,
+  webchatSlaMinutes: 2,
   // Auto-reply do Concierge no Instagram (com atraso: dá chance do humano atender primeiro).
   instagramAutoReply: false,
   instagramReplyDelayMinutes: 3,
@@ -66,8 +72,8 @@ async function loadOrgSettings(pool: any, orgId: string): Promise<Record<string,
 }
 
 function readCrmConfig(settings: Record<string, unknown>) {
-  const crm = (settings.crm_whatsapp as Record<string, unknown>) ?? {};
-  const concierge = { ...DEFAULT_CONCIERGE_CONFIG, ...((crm.concierge as object) ?? {}) };
+  const crm = settings.crm_whatsapp as Record<string, unknown>;
+  const concierge = { ...DEFAULT_CONCIERGE_CONFIG, ...(crm.concierge as object) };
   const funnel = Array.isArray(crm.funnel) && crm.funnel.length ? crm.funnel : DEFAULT_FUNNEL_STAGES;
   const reminders = resolveReminderConfig(crm.reminders);
   return { concierge, funnel, reminders };
@@ -177,6 +183,21 @@ function deriveNextAction(stage: CrmStage, row: Record<string, unknown>): string
   }
 }
 
+function formatInstagramContactName(row: Record<string, unknown>): string {
+  const displayName = typeof row.display_name === "string" ? row.display_name.trim() : "";
+  const username = typeof row.username === "string" ? row.username.trim() : "";
+  const waId = typeof row.wa_id === "string" ? row.wa_id.trim() : "";
+  const channel = typeof row.channel === "string" ? row.channel.trim().toLowerCase() : "";
+
+  if (displayName) return displayName;
+  if (channel === "instagram" && username) {
+    return username.startsWith("@") ? username : `@${username}`;
+  }
+  if (username) return username;
+  if (waId) return waId;
+  return "Desconhecido";
+}
+
 // #8 — Temperatura do lead (heurística; score IA completo é evolução futura).
 // quente = aguardando + atividade recente em estágio inicial; frio = sem atividade há dias.
 function deriveTemperature(
@@ -213,8 +234,9 @@ function mapConversationRow(row: any) {
     contactId: row.contact_id,
     channel: row.channel || "whatsapp",
     temperature: deriveTemperature(stage, row),
-    contactName: row.display_name || row.username || row.wa_id || "Desconhecido",
+    contactName: formatInstagramContactName(row),
     contactPhone: row.wa_id || "",
+    avatarUrl: row.avatar_url || undefined,
     patientId: row.patient_id || row.wc_patient_id || row.p_patient_id || undefined,
     patientName: row.patient_name || row.patient_full_name || undefined,
     status: row.status,
@@ -266,7 +288,7 @@ function mapConversationRow(row: any) {
 }
 
 function mapMessageRow(row: any): any {
-  const metadata = row.metadata && typeof row.metadata === "object" ? row.metadata : {};
+  const metadata = typeof row.metadata === "object" && row.metadata !== null ? row.metadata : {};
   const messageType = row.message_type || row.type || "text";
   const timestamp = row.created_at || row.timestamp;
   const isInternalNote =
@@ -303,6 +325,8 @@ function mapMessageRow(row: any): any {
     timestamp,
     createdAt: timestamp,
     status: row.status || undefined,
+    mediaUrl: row.media_url || undefined,
+    mediaType: row.media_type || undefined,
     isInternalNote,
     editedAt: metadata.edited_at || undefined,
     editedBy: metadata.edited_by || undefined,
@@ -323,9 +347,9 @@ function mapMessageRow(row: any): any {
 function mapContactRow(row: any) {
   return {
     id: row.contact_id || row.id || row.patient_id,
-    displayName:
-      row.display_name || row.patient_name || row.username || row.wa_id || "Desconhecido",
+    displayName: row.patient_name || formatInstagramContactName(row),
     phoneE164: row.wa_id || row.patient_phone || row.phone_e164 || "",
+    avatarUrl: row.avatar_url || undefined,
     username: row.username || undefined,
     patientId: row.patient_id || row.wc_patient_id || row.p_patient_id || undefined,
     patientName: row.patient_name || undefined,
@@ -472,7 +496,7 @@ app.post("/conversations", requireAuth, async (c) => {
     );
 
     const conversationResult = await pool.query(
-      `SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.bsuid, wc.patient_id, p.full_name AS patient_name
+      `SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.avatar_url, wc.bsuid, wc.patient_id, p.full_name AS patient_name
        FROM wa_conversations c
        LEFT JOIN whatsapp_contacts wc ON wc.id = c.contact_id
        LEFT JOIN patients p ON p.id = c.patient_id
@@ -1966,6 +1990,23 @@ app.get("/crm-settings", requireAuth, async (c) => {
   try {
     const settings = await loadOrgSettings(pool, user.organizationId);
     const { concierge, funnel, reminders } = readCrmConfig(settings);
+    const pendingRes = await pool.query(
+      `SELECT COUNT(DISTINCT wc.id)::int AS pending
+       FROM whatsapp_contacts wc
+       JOIN wa_conversations c ON c.contact_id = wc.id
+       WHERE wc.organization_id = $1
+         AND c.organization_id = $1
+         AND c.channel = 'instagram'
+         AND wc.wa_id IS NOT NULL
+         AND (
+           wc.username IS NULL
+           OR wc.display_name IS NULL
+           OR wc.avatar_url IS NULL
+         )`,
+      [user.organizationId],
+    );
+    const instagramProfileSync = readInstagramProfileSyncState(settings);
+    const pendingCount = Number(pendingRes.rows[0]?.pending ?? 0);
     const connection = {
       phoneNumberId: (settings.whatsapp_phone_number_id as string) ?? null,
       businessAccountId: (settings.whatsapp_business_account_id as string) ?? null,
@@ -1974,7 +2015,17 @@ app.get("/crm-settings", requireAuth, async (c) => {
       webhookUrl: `${new URL(c.req.url).origin}/api/whatsapp/webhook`,
       connected: Boolean(settings.whatsapp_phone_number_id),
     };
-    return c.json({ data: { connection, concierge, funnel, reminders, intents: CONCIERGE_INTENTS } });
+    return c.json({
+      data: {
+        connection,
+        concierge,
+        funnel,
+        reminders,
+        intents: CONCIERGE_INTENTS,
+        instagramProfileSync,
+        instagramProfilePendingCount: pendingCount,
+      },
+    });
   } catch (err) {
     console.error("[WhatsApp Inbox] GET /crm-settings error:", err);
     return c.json({ error: "Failed to load settings" }, 500);
@@ -1993,7 +2044,7 @@ app.patch("/crm-settings", requireAuth, async (c) => {
     const settings = await loadOrgSettings(pool, user.organizationId);
     const current = readCrmConfig(settings);
     const nextCrm = {
-      ...((settings.crm_whatsapp as object) ?? {}),
+      ...(settings.crm_whatsapp as object),
       concierge: body.concierge ? { ...current.concierge, ...body.concierge } : current.concierge,
       funnel: body.funnel ?? current.funnel,
       reminders: body.reminders
@@ -2326,6 +2377,63 @@ app.get("/conversations/:id/activity", requireAuth, async (c) => {
   } catch (err) {
     console.error("[WhatsApp Inbox] GET /conversations/:id/activity error:", err);
     return c.json({ error: "Failed to fetch activity log" }, 500);
+  }
+});
+
+app.post("/instagram/backfill-profiles", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+
+  const body = (await c.req.json().catch(() => ({}))) as {
+    limit?: number;
+    force?: boolean;
+  };
+
+  const limit = Math.min(Math.max(Number(body.limit ?? 100), 1), 300);
+  const force = body.force === true;
+
+  try {
+    const settings = await loadOrgSettings(pool, user.organizationId);
+    const igToken =
+      (typeof settings.instagram_access_token === "string" && settings.instagram_access_token) ||
+      c.env.IG_ACCESS_TOKEN;
+
+    if (!igToken) {
+      return c.json({ error: "Instagram não configurado para esta organização" }, 400);
+    }
+
+    const result = await backfillInstagramProfilesForOrganization(pool, user.organizationId, igToken, {
+      limit,
+      force,
+    });
+    const pendingRes = await pool.query(
+      `SELECT COUNT(DISTINCT wc.id)::int AS pending
+       FROM whatsapp_contacts wc
+       JOIN wa_conversations c ON c.contact_id = wc.id
+       WHERE wc.organization_id = $1
+         AND c.organization_id = $1
+         AND c.channel = 'instagram'
+         AND wc.wa_id IS NOT NULL
+         AND (
+           wc.username IS NULL
+           OR wc.display_name IS NULL
+           OR wc.avatar_url IS NULL
+         )`,
+      [user.organizationId],
+    );
+    const syncState = await persistInstagramProfileSyncState(
+      pool,
+      user.organizationId,
+      result,
+      Number(pendingRes.rows[0]?.pending ?? 0),
+    );
+
+    return c.json({
+      data: { ...result, syncState },
+    });
+  } catch (err) {
+    console.error("[WhatsApp Inbox] POST /instagram/backfill-profiles error:", err);
+    return c.json({ error: "Failed to backfill Instagram profiles" }, 500);
   }
 });
 

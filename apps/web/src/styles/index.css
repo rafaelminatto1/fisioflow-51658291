@@ -2,9 +2,13 @@
 @import "tailwindcss";
 @import "../../../src/styles/premium-utilities.css";
 @import "../../../src/styles/mobile-utilities.css";
-@import "../../../src/styles/fullcalendar.css";
 @source "../../../src/**/*.{ts,tsx,js,jsx}";
-@source "../../../packages/**/*.{ts,tsx,js,jsx}";
+@source "../../../packages/config/src/**/*.{ts,tsx,js,jsx}";
+@source "../../../packages/core/src/**/*.{ts,tsx,js,jsx}";
+@source "../../../packages/db/src/**/*.{ts,tsx,js,jsx}";
+@source "../../../packages/jules/src/**/*.{ts,tsx,js,jsx}";
+@source "../../../packages/shared-api/src/**/*.{ts,tsx,js,jsx}";
+@source "../../../packages/ui/src/**/*.{ts,tsx,js,jsx}";
 @source "../../**/*.{ts,tsx,js,jsx}";
 @plugin "tailwindcss-animate";
 @custom-variant dark (&:is(.dark *));

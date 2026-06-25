@@ -1,3 +1,4 @@
+import "@/styles/bundles/evolution.css";
 import { Cake, Filter, Users, Plus, Download, LayoutDashboard } from "lucide-react";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";

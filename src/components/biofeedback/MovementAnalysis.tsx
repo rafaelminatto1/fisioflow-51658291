@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Camera, CameraOff, Activity, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { resolveMediaPipeVisionFileset } from "@/lib/ai/mediapipe";
 
 interface MovementMetrics {
   angleAccuracy: number;
@@ -74,16 +75,10 @@ export const MovementAnalysis = () => {
   const loadModel = async () => {
     setIsLoadingModel(true);
     try {
-      // Dynamic import from MediaPipe Tasks Vision CDN
-      const vision = await import(
-        /* @vite-ignore */
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/vision_bundle.mjs"
-      );
+      const vision = await import("@mediapipe/tasks-vision");
       const { PoseLandmarker, FilesetResolver } = vision;
 
-      const filesetResolver = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm",
-      );
+      const filesetResolver = await resolveMediaPipeVisionFileset(FilesetResolver);
 
       poseLandmarkerRef.current = await PoseLandmarker.createFromOptions(filesetResolver, {
         baseOptions: {

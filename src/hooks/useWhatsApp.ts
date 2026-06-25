@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   fetchConversations,
   fetchConversation,
@@ -55,69 +55,54 @@ export function useWhatsAppInbox(filters?: ConversationFilters) {
     void refetch();
   }, [refetch]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchConversations(filters)
-        .then((result) => {
-          setConversations(result.data);
-          setPagination(result.pagination);
-        })
-        .catch((err) => {
-          if (!err.message?.includes("401") && !err.message?.includes("token")) {
-            console.error("[WhatsAppInbox] Poll error:", err);
-          }
-        });
-    }, 15000);
-    return () => clearInterval(interval);
-  }, [filters]);
-
   return { conversations, loading, error, refetch, pagination };
 }
 
+type ConversationResult = {
+  conversation: Conversation;
+  messages: Message[];
+};
+
 export function useWhatsAppConversation(id: string | null) {
-  const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  const load = useCallback(async () => {
-    if (!id) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await fetchConversation(id, {
-        includeMessages: true,
-        messageLimit: 100,
-      });
-      setConversation(result.conversation);
-      setMessages(result.messages);
-      // Invalida o badge de não lidas após carregar a conversa (backend já marcou como lido).
+  const { data, isLoading, isFetching, error } = useQuery<ConversationResult>({
+    queryKey: ["whatsapp", "conversation", id],
+    queryFn: () =>
+      fetchConversation(id!, { includeMessages: true, messageLimit: 100 }),
+    enabled: Boolean(id),
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
+  });
+
+  // Invalidate unread badge when conversation loads.
+  useEffect(() => {
+    if (data?.conversation) {
       queryClient.invalidateQueries({ queryKey: ["whatsapp", "unread-count"] });
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to load conversation";
-      const isAuthError =
-        errorMessage.includes("401") ||
-        errorMessage.includes("token") ||
-        errorMessage.includes("authorized") ||
-        errorMessage.includes("sessao");
-      if (!isAuthError) {
-        setError(errorMessage);
-      }
-    } finally {
-      setLoading(false);
     }
-  }, [id]);
+  }, [data?.conversation?.id, queryClient]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
-
+  // Background polling only when data is stale.
   useEffect(() => {
     if (!id) return;
-    const interval = setInterval(load, 5000);
+    const interval = setInterval(() => {
+      const cached = queryClient.getQueryState<ConversationResult>([
+        "whatsapp",
+        "conversation",
+        id,
+      ]);
+      const updatedAt = cached?.dataUpdatedAt ?? 0;
+      if (Date.now() - updatedAt > 30_000) {
+        queryClient.invalidateQueries({ queryKey: ["whatsapp", "conversation", id] });
+      }
+    }, 15_000);
     return () => clearInterval(interval);
-  }, [id, load]);
+  }, [id, queryClient]);
+
+  const conversation = data?.conversation ?? null;
+  const messages = data?.messages ?? [];
+  // Only show loading when there's no cached data at all.
+  const loading = isLoading && !data;
 
   const sendMessage = useCallback(
     async (
@@ -130,129 +115,165 @@ export function useWhatsAppConversation(id: string | null) {
       },
     ) => {
       if (!id) return;
-      const context = {
-        conversationId: id,
-        messageLength: content.length,
-        messageType: options?.type ?? "text",
-        hasAttachment: Boolean(options?.attachmentUrl),
-      };
-
-      try {
-        const msg = await apiSendMessage(id, content, options);
-        if (msg.status === "failed") {
-          console.error("[WhatsAppConversation] Message returned failed status", {
-            ...context,
-            messageId: msg.id,
-          });
-        }
-        setMessages((prev) => [...prev, msg]);
-        return msg;
-      } catch (err) {
-        console.error("[WhatsAppConversation] Failed to send message", {
-          ...context,
-          error: err,
-        });
-        throw err;
-      }
+      const msg = await apiSendMessage(id, content, options);
+      queryClient.setQueryData<ConversationResult>(
+        ["whatsapp", "conversation", id],
+        (old) =>
+          old ? { ...old, messages: [...old.messages, msg] } : old,
+      );
+      return msg;
     },
-    [id],
+    [id, queryClient],
   );
 
   const sendInteractive = useCallback(
     async (type: string, data: Record<string, unknown>) => {
       if (!id) return;
       const msg = await apiSendInteractive(id, type, data);
-      setMessages((prev) => [...prev, msg]);
+      queryClient.setQueryData<ConversationResult>(
+        ["whatsapp", "conversation", id],
+        (old) =>
+          old ? { ...old, messages: [...old.messages, msg] } : old,
+      );
       return msg;
     },
-    [id],
+    [id, queryClient],
   );
 
   const addNote = useCallback(
     async (content: string) => {
       if (!id) return;
       const msg = await apiAddNote(id, content);
-      setMessages((prev) => [...prev, msg]);
+      queryClient.setQueryData<ConversationResult>(
+        ["whatsapp", "conversation", id],
+        (old) =>
+          old ? { ...old, messages: [...old.messages, msg] } : old,
+      );
       return msg;
     },
-    [id],
+    [id, queryClient],
   );
 
   const updateMessage = useCallback(
     async (messageId: string, content: string | Record<string, unknown>) => {
       if (!id) return;
       const updated = await apiUpdateMessage(id, messageId, content);
-      setMessages((prev) => prev.map((message) => (message.id === messageId ? updated : message)));
+      queryClient.setQueryData<ConversationResult>(
+        ["whatsapp", "conversation", id],
+        (old) =>
+          old
+            ? {
+                ...old,
+                messages: old.messages.map((m) =>
+                  m.id === messageId ? updated : m,
+                ),
+              }
+            : old,
+      );
       return updated;
     },
-    [id],
+    [id, queryClient],
   );
 
   const deleteMessage = useCallback(
-    async (messageId: string, options?: { scope?: "local" | "everyone"; reason?: string }) => {
+    async (
+      messageId: string,
+      options?: { scope?: "local" | "everyone"; reason?: string },
+    ) => {
       if (!id) return;
       const updated = await apiDeleteMessage(id, messageId, options);
-      setMessages((prev) => prev.map((message) => (message.id === messageId ? updated : message)));
+      queryClient.setQueryData<ConversationResult>(
+        ["whatsapp", "conversation", id],
+        (old) =>
+          old
+            ? {
+                ...old,
+                messages: old.messages.map((m) =>
+                  m.id === messageId ? updated : m,
+                ),
+              }
+            : old,
+      );
       return updated;
     },
-    [id],
+    [id, queryClient],
   );
 
   const assign = useCallback(
     async (assignedTo: string, team?: string, reason?: string) => {
       if (!id) return;
       const updated = await apiAssign(id, assignedTo, team, reason);
-      setConversation(updated);
+      queryClient.setQueryData<ConversationResult>(
+        ["whatsapp", "conversation", id],
+        (old) => (old ? { ...old, conversation: updated } : old),
+      );
       return updated;
     },
-    [id],
+    [id, queryClient],
   );
 
   const transfer = useCallback(
     async (newAssignee: string, team?: string, reason?: string) => {
       if (!id) return;
       const updated = await apiTransfer(id, newAssignee, team, reason);
-      setConversation(updated);
+      queryClient.setQueryData<ConversationResult>(
+        ["whatsapp", "conversation", id],
+        (old) => (old ? { ...old, conversation: updated } : old),
+      );
       return updated;
     },
-    [id],
+    [id, queryClient],
   );
 
-  const updateConversationStatus = useCallback(
+  const updateStatus = useCallback(
     async (status: string) => {
       if (!id) return;
       const updated = await apiUpdateStatus(id, status);
-      setConversation(updated);
+      queryClient.setQueryData<ConversationResult>(
+        ["whatsapp", "conversation", id],
+        (old) => (old ? { ...old, conversation: updated } : old),
+      );
       return updated;
     },
-    [id],
+    [id, queryClient],
   );
 
   const updateConversation = useCallback(
     async (data: Partial<Conversation>) => {
       if (!id) return;
       const updated = await apiUpdateConversation(id, data);
-      setConversation(updated);
+      queryClient.setQueryData<ConversationResult>(
+        ["whatsapp", "conversation", id],
+        (old) => (old ? { ...old, conversation: updated } : old),
+      );
       return updated;
     },
-    [id],
+    [id, queryClient],
   );
 
   const deleteConversation = useCallback(
     async (reason?: string) => {
       if (!id) return;
       const deleted = await apiDeleteConversation(id, reason);
-      setConversation(deleted);
+      queryClient.removeQueries({ queryKey: ["whatsapp", "conversation", id] });
       return deleted;
     },
-    [id],
+    [id, queryClient],
   );
+
+  const refetch = useCallback(() => {
+    if (!id) return Promise.resolve();
+    return queryClient.invalidateQueries({
+      queryKey: ["whatsapp", "conversation", id],
+    });
+  }, [id, queryClient]);
 
   return {
     conversation,
     messages,
     loading,
-    error,
+    isFetching,
+    error: error instanceof Error ? error.message : null,
     sendMessage,
     sendInteractive,
     updateMessage,
@@ -260,9 +281,9 @@ export function useWhatsAppConversation(id: string | null) {
     addNote,
     assign,
     transfer,
-    updateStatus: updateConversationStatus,
+    updateStatus,
     updateConversation,
     deleteConversation,
-    refetch: load,
+    refetch,
   };
 }

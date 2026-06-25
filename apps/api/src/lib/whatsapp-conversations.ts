@@ -63,9 +63,12 @@ export async function findOrCreateConversation(
   try {
     const existing = await pool.query(
       `SELECT * FROM wa_conversations
-       WHERE organization_id = $1 AND contact_id = $2 AND status IN ('open', 'pending')
+       WHERE organization_id = $1
+         AND contact_id = $2
+         AND channel = $3
+         AND status IN ('open', 'pending', 'assigned')
        ORDER BY updated_at DESC LIMIT 1`,
-      [orgId, contactId],
+      [orgId, contactId, channel],
     );
 
     if (existing.rows.length > 0) {
@@ -247,7 +250,7 @@ export async function getConversationWithMessages(
   try {
     const convParams = orgId ? [conversationId, orgId] : [conversationId];
     const convResult = await pool.query(
-      `SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.bsuid, wc.patient_id,
+      `SELECT c.*, wc.wa_id, wc.display_name, wc.username, wc.avatar_url, wc.bsuid, wc.patient_id,
 			        p.full_name AS patient_name,
 			        crm.crm_contact_id, crm.crm_lifecycle_stage, crm.crm_lead_stage, crm.crm_origin,
 			        crm.crm_campaign_id, crm.crm_interest, crm.crm_score_temperature,
@@ -774,7 +777,7 @@ export async function getInboxConversations(
       `SELECT c.id, c.organization_id, c.contact_id, c.patient_id, c.status, c.priority,
 			        c.channel, c.assigned_to, c.assigned_team, c.created_at, c.updated_at, c.snoozed_until,
 			        c.metadata,
-			        wc.wa_id, wc.display_name, wc.username, wc.bsuid, p.full_name AS patient_name,
+			        wc.wa_id, wc.display_name, wc.username, wc.avatar_url, wc.bsuid, p.full_name AS patient_name,
 			        crm.crm_contact_id, crm.crm_lifecycle_stage, crm.crm_lead_stage, crm.crm_origin,
 			        crm.crm_campaign_id, crm.crm_interest, crm.crm_score_temperature,
 			        c.assigned_team AS team,

@@ -18,6 +18,7 @@ describe("crmWhatsAppAdapter", () => {
       contactId: "contact-1",
       contactName: "Marina Alves",
       contactPhone: "+55 11 98432-1170",
+      avatarUrl: "https://example.com/avatar.jpg",
       patientId: "patient-1",
       patientName: "Marina Alves",
       status: "open",
@@ -41,6 +42,7 @@ describe("crmWhatsAppAdapter", () => {
     const vm = toCrmConversationViewModel(conversation);
 
     expect(vm.initials).toBe("MA");
+    expect(vm.avatarUrl).toBe("https://example.com/avatar.jpg");
     expect(vm.stage.key).toBe("evaluation");
     expect(vm.sourceLabel).toBe("Instagram Ads");
     expect(vm.campaignLabel).toBe("Dor no joelho");

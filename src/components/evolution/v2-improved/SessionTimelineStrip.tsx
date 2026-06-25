@@ -5,23 +5,18 @@ import { ptBR } from "date-fns/locale";
 import {
   ArrowRight,
   CalendarDays,
-  CheckCircle2,
-  Clock,
+  ChevronDown,
+  ChevronUp,
   CloudOff,
   Copy,
   Dumbbell,
   ExternalLink,
   FileText,
   Home,
-  Loader2,
   Ruler,
-  ScrollText,
   Stethoscope,
-  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useSoapRecords, type SoapRecord } from "@/hooks/useSoapRecords";
 import { usePendingSyncIds } from "@/hooks/usePendingSyncIds";
 import { stripHtml } from "@/lib/utils/stripHtml";
@@ -47,14 +42,6 @@ function painBadgeClasses(pain: number | null | undefined): string {
   return "bg-rose-100 text-rose-700 border-rose-200";
 }
 
-function painLabel(pain: number | null | undefined): string {
-  if (pain == null) return "EVA —";
-  if (pain === 0) return "Sem dor";
-  if (pain <= 3) return `EVA ${pain} · Leve`;
-  if (pain <= 6) return `EVA ${pain} · Mod.`;
-  return `EVA ${pain} · Intensa`;
-}
-
 function SectionTitle({
   icon: Icon,
   label,
@@ -77,245 +64,10 @@ function SectionTitle({
   );
 }
 
-/* ─── Modal de Resumo ───────────────────────────────────────────────────── */
-function SessionSummaryModal({
-  record,
-  sessionIndex,
-  open,
-  onClose,
-}: {
-  record: SoapRecord;
-  sessionIndex: number;
-  open: boolean;
-  onClose: () => void;
-}) {
-  const navigate = useNavigate();
-  const date = new Date(record.record_date);
-  const obsText = stripHtml(record.observacao || "");
-  const obsHtml = DOMPurify.sanitize(normalizeIncomingEditorHtml(record.observacao || ""));
-  const procedures = record.procedures ?? [];
-  const exercises = record.exercises ?? [];
-  const homeExercises = (record as any).home_exercises ?? [];
-  const measurements = record.measurements ?? [];
-  const isEmpty =
-    !obsText &&
-    procedures.length === 0 &&
-    exercises.length === 0 &&
-    homeExercises.length === 0 &&
-    measurements.length === 0;
-
-  return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-[520px] rounded-3xl p-0 overflow-hidden gap-0 shadow-2xl">
-        {/* ── Header ── */}
-        <div className="relative px-5 pt-5 pb-4 border-b border-border bg-gradient-to-br from-primary/5 via-background to-background">
-          {/* Fechar */}
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            aria-label="Fechar"
-          >
-            <X className="h-4 w-4" />
-          </button>
-
-          {/* Número da sessão */}
-          <div className="flex items-center gap-2 mb-1">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-              <ScrollText className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground leading-none mb-0.5">
-                Resumo da sessão
-              </p>
-              <h2 className="text-base font-extrabold text-foreground leading-none">
-                Sessão #{sessionIndex}
-              </h2>
-            </div>
-          </div>
-
-          {/* Data + meta */}
-          <div className="flex flex-wrap items-center gap-2 mt-3">
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-              <CalendarDays className="h-3.5 w-3.5" />
-              {format(date, "EEEE, dd 'de' MMMM 'de' yyyy • HH'h'mm", { locale: ptBR })}
-            </span>
-          </div>
-
-          {/* Chips de status */}
-          <div className="flex flex-wrap gap-2 mt-3">
-            <span
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold",
-                painBadgeClasses(record.pain_scale),
-              )}
-            >
-              {painLabel(record.pain_scale)}
-            </span>
-            {(record as any).duration_minutes && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                {(record as any).duration_minutes} min
-              </span>
-            )}
-            {record.status === "finalized" && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
-                <CheckCircle2 className="h-3 w-3" />
-                Finalizada
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* ── Body ── */}
-        <div className="overflow-y-auto max-h-[55vh] px-5 py-4 flex flex-col gap-5">
-          {isEmpty && (
-            <div className="flex flex-col items-center justify-center py-10 text-center">
-              <FileText className="h-10 w-10 text-muted mb-2" />
-              <p className="text-sm font-semibold text-muted-foreground">
-                Nenhum dado registrado nesta sessão.
-              </p>
-            </div>
-          )}
-
-          {/* Observações */}
-          {obsText && (
-            <section>
-              <SectionTitle icon={FileText} label="Observações clínicas" />
-              <div
-                className="rounded-xl bg-muted/40 border border-border p-3 text-sm text-foreground leading-relaxed [&_p]:mb-2 [&_p:last-child]:mb-0 [&_ul]:ml-5 [&_ul]:list-disc [&_ol]:ml-5 [&_ol]:list-decimal"
-                dangerouslySetInnerHTML={{ __html: obsHtml }}
-              />
-            </section>
-          )}
-
-          {/* Procedimentos */}
-          {procedures.length > 0 && (
-            <section>
-              <SectionTitle icon={Stethoscope} label="Procedimentos" count={procedures.length} />
-              <ul className="flex flex-col gap-1.5">
-                {procedures.map((p: any, i: number) => (
-                  <li
-                    key={i}
-                    className="flex items-center gap-2.5 rounded-xl border border-primary/15 bg-primary/5 px-3 py-2.5"
-                  >
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                    <span className="flex-1 text-sm font-medium text-foreground">{p.name}</span>
-                    {p.quantity && (
-                      <span className="text-xs font-semibold text-muted-foreground bg-background border border-border rounded-full px-2 py-0.5">
-                        {p.quantity}
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {/* Exercícios clínicos */}
-          {exercises.length > 0 && (
-            <section>
-              <SectionTitle icon={Dumbbell} label="Exercícios" count={exercises.length} />
-              <ul className="flex flex-col gap-1.5">
-                {exercises.map((e: any, i: number) => (
-                  <li
-                    key={i}
-                    className="flex items-center gap-2.5 rounded-xl border border-emerald-200/60 bg-emerald-50/50 px-3 py-2.5"
-                  >
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-                    <span className="flex-1 text-sm font-medium text-foreground">{e.name}</span>
-                    {(e.sets || e.reps) && (
-                      <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 rounded-full px-2 py-0.5">
-                        {[e.sets && `${e.sets}×`, e.reps && `${e.reps} reps`]
-                          .filter(Boolean)
-                          .join(" ")}
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {/* Exercícios domiciliares */}
-          {homeExercises.length > 0 && (
-            <section>
-              <SectionTitle
-                icon={Home}
-                label="Exercícios domiciliares"
-                count={homeExercises.length}
-              />
-              <ul className="flex flex-col gap-1.5">
-                {homeExercises.map((h: any, i: number) => (
-                  <li
-                    key={i}
-                    className="flex items-center gap-2.5 rounded-xl border border-orange-200/60 bg-orange-50/50 px-3 py-2.5"
-                  >
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-400" />
-                    <span className="text-sm font-medium text-foreground">
-                      {h.name || h.description}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {/* Medições */}
-          {measurements.length > 0 && (
-            <section>
-              <SectionTitle icon={Ruler} label="Medições" count={measurements.length} />
-              <div className="grid grid-cols-2 gap-2">
-                {measurements.map((m: any, i: number) => (
-                  <div
-                    key={i}
-                    className="rounded-xl border border-border bg-muted/30 px-3 py-2.5 flex flex-col gap-0.5"
-                  >
-                    <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground truncate">
-                      {m.measurement_name || m.measurement_type || "Medição"}
-                    </span>
-                    <span className="text-base font-extrabold text-foreground">
-                      {m.value}
-                      {m.unit ? (
-                        <span className="text-sm font-normal text-muted-foreground ml-1">
-                          {m.unit}
-                        </span>
-                      ) : null}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
-
-        {/* ── Footer ── */}
-        {record.appointment_id && (
-          <div className="px-5 py-3.5 border-t border-border bg-muted/20 flex justify-end">
-            <Button
-              type="button"
-              size="sm"
-              className="h-9 px-4 text-xs font-bold gap-1.5"
-              onClick={() => {
-                onClose();
-                navigate(`/patient-evolution/${record.appointment_id}`);
-              }}
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              Abrir sessão completa
-            </Button>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 /* ─── Card de sessão ────────────────────────────────────────────────────── */
 function SessionCard({
   item,
   isPending,
-  onSummary,
   onNavigate,
   onReplicate,
 }: {
@@ -330,11 +82,25 @@ function SessionCard({
     exerciseCount: number;
   };
   isPending: boolean;
-  onSummary: () => void;
   onNavigate?: () => void;
   onReplicate?: () => void;
 }) {
   const hasAppointment = Boolean(item.record.appointment_id);
+  const [expanded, setExpanded] = useState(true);
+
+  const record = item.record;
+  const obsText = stripHtml(record.observacao || "");
+  const obsHtml = DOMPurify.sanitize(normalizeIncomingEditorHtml(record.observacao || ""));
+  const procedures = record.procedures ?? [];
+  const exercises = record.exercises ?? [];
+  const homeExercises = (record as any).home_exercises ?? [];
+  const measurements = record.measurements ?? [];
+  const hasContent =
+    obsText ||
+    procedures.length > 0 ||
+    exercises.length > 0 ||
+    homeExercises.length > 0 ||
+    measurements.length > 0;
 
   return (
     <article className="group rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200 overflow-hidden">
@@ -412,19 +178,140 @@ function SessionCard({
           </div>
         )}
 
-        {/* ── Botões de ação ── */}
-        <div className="flex gap-2">
-          {/* Resumo */}
-          <button
-            type="button"
-            onClick={onSummary}
-            className="flex-1 flex items-center justify-center gap-1.5 h-8 rounded-xl border border-border bg-background text-[11px] font-bold text-foreground hover:bg-muted hover:border-muted-foreground/30 transition-colors"
-            title="Ver resumo desta sessão"
-          >
-            <ScrollText className="h-3.5 w-3.5" />
-            Resumo
-          </button>
+        {/* ── Conteúdo completo (expansível) ── */}
+        {hasContent && (
+          <div className="border-t border-border pt-3 mt-1">
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className="flex w-full items-center justify-between mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <span>Detalhes da sessão</span>
+              {expanded ? (
+                <ChevronUp className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5" />
+              )}
+            </button>
 
+            {expanded && (
+              <div className="flex flex-col gap-4">
+                {/* Observações clínicas */}
+                {obsText && (
+                  <section>
+                    <SectionTitle icon={FileText} label="Observações clínicas" />
+                    <div
+                      className="rounded-xl bg-muted/40 border border-border p-3 text-sm text-foreground leading-relaxed [&_p]:mb-2 [&_p:last-child]:mb-0 [&_ul]:ml-5 [&_ul]:list-disc [&_ol]:ml-5 [&_ol]:list-decimal"
+                      dangerouslySetInnerHTML={{ __html: obsHtml }}
+                    />
+                  </section>
+                )}
+
+                {/* Procedimentos */}
+                {procedures.length > 0 && (
+                  <section>
+                    <SectionTitle icon={Stethoscope} label="Procedimentos" count={procedures.length} />
+                    <ul className="flex flex-col gap-1.5">
+                      {procedures.map((p: any, i: number) => (
+                        <li
+                          key={i}
+                          className="flex items-center gap-2.5 rounded-xl border border-primary/15 bg-primary/5 px-3 py-2"
+                        >
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                          <span className="flex-1 text-sm font-medium text-foreground">{p.name}</span>
+                          {p.quantity && (
+                            <span className="text-xs font-semibold text-muted-foreground bg-background border border-border rounded-full px-2 py-0.5">
+                              {p.quantity}
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+
+                {/* Exercícios clínicos */}
+                {exercises.length > 0 && (
+                  <section>
+                    <SectionTitle icon={Dumbbell} label="Exercícios" count={exercises.length} />
+                    <ul className="flex flex-col gap-1.5">
+                      {exercises.map((e: any, i: number) => (
+                        <li
+                          key={i}
+                          className="flex items-center gap-2.5 rounded-xl border border-emerald-200/60 bg-emerald-50/50 px-3 py-2"
+                        >
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                          <span className="flex-1 text-sm font-medium text-foreground">{e.name}</span>
+                          {(e.sets || e.reps) && (
+                            <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 rounded-full px-2 py-0.5">
+                              {[e.sets && `${e.sets}×`, e.reps && `${e.reps} reps`]
+                                .filter(Boolean)
+                                .join(" ")}
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+
+                {/* Exercícios domiciliares */}
+                {homeExercises.length > 0 && (
+                  <section>
+                    <SectionTitle
+                      icon={Home}
+                      label="Exercícios domiciliares"
+                      count={homeExercises.length}
+                    />
+                    <ul className="flex flex-col gap-1.5">
+                      {homeExercises.map((h: any, i: number) => (
+                        <li
+                          key={i}
+                          className="flex items-center gap-2.5 rounded-xl border border-orange-200/60 bg-orange-50/50 px-3 py-2"
+                        >
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-400" />
+                          <span className="text-sm font-medium text-foreground">
+                            {h.name || h.description}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+
+                {/* Medições */}
+                {measurements.length > 0 && (
+                  <section>
+                    <SectionTitle icon={Ruler} label="Medições" count={measurements.length} />
+                    <div className="grid grid-cols-2 gap-2">
+                      {measurements.map((m: any, i: number) => (
+                        <div
+                          key={i}
+                          className="rounded-xl border border-border bg-muted/30 px-3 py-2 flex flex-col gap-0.5"
+                        >
+                          <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground truncate">
+                            {m.measurement_name || m.measurement_type || "Medição"}
+                          </span>
+                          <span className="text-base font-extrabold text-foreground">
+                            {m.value}
+                            {m.unit ? (
+                              <span className="text-sm font-normal text-muted-foreground ml-1">
+                                {m.unit}
+                              </span>
+                            ) : null}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Botões de ação ── */}
+        <div className="flex gap-2 mt-3">
           {/* Ver sessão */}
           {hasAppointment && onNavigate && (
             <button
@@ -467,10 +354,6 @@ export function SessionTimelineStrip({
   const navigate = useNavigate();
   const { data: rawRecords = [], isLoading } = useSoapRecords(patientId ?? "", maxItems + 1);
   const pendingSessionIds = usePendingSyncIds("sessions");
-  const [summaryRecord, setSummaryRecord] = useState<{
-    record: SoapRecord;
-    index: number;
-  } | null>(null);
 
   const records = useMemo(
     () =>
@@ -540,7 +423,6 @@ export function SessionTimelineStrip({
             key={item.id}
             item={item}
             isPending={pendingSessionIds.has(item.id)}
-            onSummary={() => setSummaryRecord({ record: item.record, index: item.index })}
             onNavigate={
               item.record.appointment_id
                 ? () => navigate(`/patient-evolution/${item.record.appointment_id}`)
@@ -561,16 +443,6 @@ export function SessionTimelineStrip({
           </button>
         )}
       </div>
-
-      {/* Modal de resumo */}
-      {summaryRecord && (
-        <SessionSummaryModal
-          record={summaryRecord.record}
-          sessionIndex={summaryRecord.index}
-          open
-          onClose={() => setSummaryRecord(null)}
-        />
-      )}
     </>
   );
 }
