@@ -402,6 +402,18 @@ export async function markConversationRead(conversationId: string) {
   return unwrapData(res);
 }
 
+export async function markConversationUnread(conversationId: string) {
+  return updateConversation(conversationId, { metadata: { _forceUnread: true } });
+}
+
+export async function pinConversation(conversationId: string, pinned: boolean) {
+  return updateConversation(conversationId, { metadata: { pinned } });
+}
+
+export async function muteConversation(conversationId: string, mutedUntil: string | null) {
+  return updateConversation(conversationId, { metadata: { mutedUntil } });
+}
+
 export async function sendMessage(
   conversationId: string,
   content: string,

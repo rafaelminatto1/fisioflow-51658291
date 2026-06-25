@@ -3,12 +3,14 @@ import type { CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bell,
+  BellOff,
   CalendarPlus,
   Camera,
   CheckCheck,
   ChevronDown,
   Clock3,
   Copy,
+  Edit3,
   Filter,
   Flame,
   Globe,
@@ -18,6 +20,7 @@ import {
   MoreVertical,
   Paperclip,
   Phone,
+  Pin,
   RefreshCw,
   Reply,
   Search,
@@ -25,6 +28,7 @@ import {
   Settings,
   Smile,
   StickyNote,
+  Trash2,
   UserPlus,
   Zap,
 } from "lucide-react";
@@ -42,11 +46,17 @@ import { TaskQuickCreateModal } from "@/components/tarefas/v2/TaskQuickCreateMod
 import {
   addTags,
   backfillInstagramProfiles,
+  deleteConversation,
+  deleteMessage,
   fetchCrmSettings,
   fetchQuickReplies,
   fetchTags,
   markConversationRead,
+  markConversationUnread,
+  muteConversation,
+  pinConversation,
   removeTag,
+  updateMessage,
   type FunnelStage,
   type QuickReply,
   type Tag,
@@ -312,16 +322,22 @@ const ConversationCard = memo(function ConversationCard({
   isSelected,
   funnelMap,
   onSelect,
+  onContextMenu,
 }: {
   item: CrmConversationViewModel;
   isSelected: boolean;
   funnelMap: Map<string, FunnelStage>;
   onSelect: (id: string) => void;
+  onContextMenu: (e: React.MouseEvent, id: string) => void;
 }) {
   return (
     <button
       type="button"
       onClick={() => onSelect(item.id)}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        onContextMenu(e, item.id);
+      }}
       className={cn(
         "relative flex w-full gap-3 border-b border-border/60 px-3.5 py-3 text-left transition-colors hover:bg-muted/40",
         isSelected && "bg-primary/[0.07]",
@@ -432,6 +448,9 @@ function MessageBubble({
           {message.templateName ? ` · ${message.templateName}` : ""}
         </div>
       )}
+      {message.editedAt && (
+        <div className="mb-1 text-[9px] font-semibold text-muted-foreground/70">editada</div>
+      )}
       {isImage && mediaUrl ? (
         <div className="space-y-2">
           <img
@@ -493,6 +512,13 @@ export default function CrmWhatsApp() {
     x: number;
     y: number;
   } | null>(null);
+  const [conversationMenu, setConversationMenu] = useState<{
+    conversationId: string;
+    x: number;
+    y: number;
+  } | null>(null);
+  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+  const [editDraft, setEditDraft] = useState("");
   const _isFetching = isFetching;
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -709,6 +735,93 @@ export default function CrmWhatsApp() {
     await Promise.all([refetch(), refetchConversation()]);
   };
 
+  // ─── Conversation context menu handlers ───
+  const handlePinConversation = async (conversationId: string) => {
+    const conv = conversationCards.find((c) => c.id === conversationId);
+    const isPinned = isRecord(conv?.metadata) && conv!.metadata.pinned === true;
+    await pinConversation(conversationId, !isPinned);
+    toast.success(isPinned ? "Conversa desafixada" : "Conversa fixada");
+    setConversationMenu(null);
+    await refetch();
+  };
+
+  const handleMuteConversation = async (conversationId: string) => {
+    const conv = conversationCards.find((c) => c.id === conversationId);
+    const mutedUntil = isRecord(conv?.metadata) && typeof conv!.metadata.mutedUntil === "string"
+      ? conv!.metadata.mutedUntil : null;
+    if (mutedUntil) {
+      await muteConversation(conversationId, null);
+      toast.success("Notificações reativadas");
+    } else {
+      const until = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString();
+      await muteConversation(conversationId, until);
+      toast.success("Silenciado por 8 horas");
+    }
+    setConversationMenu(null);
+    await refetch();
+  };
+
+  const handleMarkUnread = async (conversationId: string) => {
+    await markConversationUnread(conversationId);
+    toast.success("Marcada como não lida");
+    setConversationMenu(null);
+    await refetch();
+  };
+
+  const handleDeleteConversation = async (conversationId: string) => {
+    await deleteConversation(conversationId);
+    toast.success("Conversa excluída");
+    setConversationMenu(null);
+    if (selectedId === conversationId) setSelectedId(null);
+    await refetch();
+  };
+
+  const handleCopyContactInfo = async (conversationId: string) => {
+    const conv = conversationCards.find((c) => c.id === conversationId);
+    if (!conv) return;
+    const info = [conv.name, conv.phone].filter(Boolean).join(" · ");
+    try {
+      await navigator.clipboard.writeText(info);
+      toast.success("Contato copiado");
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
+    setConversationMenu(null);
+  };
+
+  // ─── Message edit/delete handlers ───
+  const handleEditMessage = (message: Message) => {
+    setEditingMessage(message);
+    setEditDraft(getMessageText(message.content));
+    setMessageMenu(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingMessage || !editDraft.trim()) return;
+    try {
+      await updateMessage(editingMessage.conversationId, editingMessage.id, {
+        content: editDraft.trim(),
+      });
+      toast.success("Mensagem editada");
+    } catch {
+      toast.error("Erro ao editar mensagem");
+    }
+    setEditingMessage(null);
+    setEditDraft("");
+    await Promise.all([refetch(), refetchConversation()]);
+  };
+
+  const handleDeleteMessage = async (message: Message) => {
+    try {
+      await deleteMessage(message.conversationId, message.id);
+      toast.success("Mensagem excluída");
+    } catch {
+      toast.error("Erro ao excluir mensagem");
+    }
+    setMessageMenu(null);
+    await Promise.all([refetch(), refetchConversation()]);
+  };
+
   const quickReplyItems = useMemo(() => buildQuickReplies(quickReplies), [quickReplies]);
   const selectedConversationVm = selectedCard ?? (conversation ? toCrmConversationViewModel(conversation) : null);
   const availableTagOptions = useMemo(() => {
@@ -729,6 +842,20 @@ export default function CrmWhatsApp() {
       window.removeEventListener("keydown", handleEscape);
     };
   }, [messageMenu]);
+
+  useEffect(() => {
+    if (!conversationMenu) return;
+    const handleGlobalPointer = () => setConversationMenu(null);
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setConversationMenu(null);
+    };
+    window.addEventListener("pointerdown", handleGlobalPointer);
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      window.removeEventListener("pointerdown", handleGlobalPointer);
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [conversationMenu]);
 
   useEffect(() => () => clearLongPress(), []);
 
@@ -860,6 +987,7 @@ export default function CrmWhatsApp() {
                     isSelected={selectedId === item.id}
                     funnelMap={funnelMap}
                     onSelect={setSelectedId}
+                    onContextMenu={(e, id) => setConversationMenu({ conversationId: id, x: e.clientX, y: e.clientY })}
                   />
                 ))}
                 {!loading && filteredConversations.length === 0 && (
@@ -999,6 +1127,29 @@ export default function CrmWhatsApp() {
                         })
                       )}
                     </div>
+
+                    {editingMessage && (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => { setEditingMessage(null); setEditDraft(""); }}>
+                        <div className="w-full max-w-md rounded-2xl bg-card p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                          <div className="mb-2 text-sm font-bold">Editar mensagem</div>
+                          <Textarea
+                            value={editDraft}
+                            onChange={(e) => setEditDraft(e.target.value)}
+                            rows={3}
+                            autoFocus
+                            className="mb-3"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button variant="outline" size="sm" onClick={() => { setEditingMessage(null); setEditDraft(""); }}>
+                              Cancelar
+                            </Button>
+                            <Button size="sm" onClick={() => void handleSaveEdit()} disabled={!editDraft.trim()}>
+                              Salvar
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="mt-3 flex gap-2 overflow-x-auto border-t border-border bg-card px-4 py-2">
                       {quickReplyItems.map((item) => (
@@ -1350,6 +1501,100 @@ export default function CrmWhatsApp() {
             >
               <ListTodo className="h-4 w-4 text-muted-foreground" />
               Criar tarefa
+            </button>
+            {messageMenu.message.direction === "outbound" && (() => {
+              const msgTime = new Date(messageMenu.message.timestamp).getTime();
+              const canEdit = Date.now() - msgTime < 15 * 60 * 1000;
+              const canDelete = messageMenu.message.canDeleteForEveryone !== false;
+              return (
+                <>
+                  <div className="my-1 border-t border-border/60" />
+                  {canEdit && (
+                    <button
+                      type="button"
+                      onClick={() => handleEditMessage(messageMenu.message)}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left transition-colors hover:bg-secondary"
+                    >
+                      <Edit3 className="h-4 w-4 text-muted-foreground" />
+                      Editar
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button
+                      type="button"
+                      onClick={() => void handleDeleteMessage(messageMenu.message)}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left text-destructive transition-colors hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Excluir
+                    </button>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        ) : null}
+
+        {conversationMenu ? (
+          <div
+            className="fixed z-50 min-w-[220px] rounded-2xl border border-border bg-card p-1.5 shadow-2xl"
+            style={{
+              left: Math.min(conversationMenu.x, window.innerWidth - 236),
+              top: Math.min(conversationMenu.y, window.innerHeight - 280),
+            }}
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => void handlePinConversation(conversationMenu.conversationId)}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left transition-colors hover:bg-secondary"
+            >
+              <Pin className="h-4 w-4 text-muted-foreground" />
+              {(() => {
+                const conv = conversationCards.find((c) => c.id === conversationMenu.conversationId);
+                const isPinned = isRecord(conv?.metadata) && conv!.metadata.pinned === true;
+                return isPinned ? "Desafixar" : "Fixar conversa";
+              })()}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleMuteConversation(conversationMenu.conversationId)}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left transition-colors hover:bg-secondary"
+            >
+              {(() => {
+                const conv = conversationCards.find((c) => c.id === conversationMenu.conversationId);
+                const isMuted = isRecord(conv?.metadata) && typeof conv!.metadata.mutedUntil === "string";
+                return isMuted ? (
+                  <><Bell className="h-4 w-4 text-muted-foreground" /> Reativar notificações</>
+                ) : (
+                  <><BellOff className="h-4 w-4 text-muted-foreground" /> Silenciar 8h</>
+                );
+              })()}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleMarkUnread(conversationMenu.conversationId)}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left transition-colors hover:bg-secondary"
+            >
+              <MessageCircle className="h-4 w-4 text-muted-foreground" />
+              Marcar como não lida
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleCopyContactInfo(conversationMenu.conversationId)}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left transition-colors hover:bg-secondary"
+            >
+              <Copy className="h-4 w-4 text-muted-foreground" />
+              Copiar contato
+            </button>
+            <div className="my-1 border-t border-border/60" />
+            <button
+              type="button"
+              onClick={() => void handleDeleteConversation(conversationMenu.conversationId)}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left text-destructive transition-colors hover:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4" />
+              Excluir conversa
             </button>
           </div>
         ) : null}
