@@ -145,7 +145,7 @@ export const waRawEvents = pgTable(
     index("idx_wa_events_phone_number_id").on(table.phoneNumberId),
     index("idx_wa_events_processing_state").on(
       table.processingState,
-      table.createdAt,
+      table.createdAt.desc(),
     ),
     index("idx_wa_events_provider_event_id").on(table.providerEventId),
     uniqueIndex("idx_wa_events_idempotency_key").on(table.idempotencyKey),
