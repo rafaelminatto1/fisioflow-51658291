@@ -172,6 +172,36 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
   const [quickViewAppointment, setQuickViewAppointment] = useState<RawAppointment | null>(null);
   const [popoverAnchorRect, setPopoverAnchorRect] = useState<DOMRect | null>(null);
 
+  useEffect(() => {
+    const api = calendarRef.current?.getApi();
+    const container = fcContainerRef.current;
+    if (!api || !container || typeof ResizeObserver === "undefined") return;
+
+    let frame = 0;
+    const syncCalendarSize = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        api.updateSize();
+      });
+    };
+
+    syncCalendarSize();
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      if (entry.contentRect.width <= 0 || entry.contentRect.height <= 0) return;
+      syncCalendarSize();
+    });
+
+    observer.observe(container);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, []);
+
   // Sync calendar size when density/height variables change
   useEffect(() => {
     const api = calendarRef.current?.getApi();
@@ -188,7 +218,6 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
 
     api.updateSize();
   }, [slotHeightPx, appearance.cardSize]);
-
 
   // Sync external date changes to the calendar instance.
   // Depend on the stable YMD string (not the Date object, which is recreated
@@ -358,6 +387,25 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
 
     return [...apptEvents, ...taskEvents, ...blockedEvents];
   }, [appointments, tarefas, blockedTimes, statusConfig, selectedIds, selectionOn]);
+
+  useEffect(() => {
+    const api = calendarRef.current?.getApi();
+    if (!api) return;
+
+    let frame1 = 0;
+    let frame2 = 0;
+    frame1 = requestAnimationFrame(() => {
+      api.updateSize();
+      frame2 = requestAnimationFrame(() => {
+        api.updateSize();
+      });
+    });
+
+    return () => {
+      cancelAnimationFrame(frame1);
+      cancelAnimationFrame(frame2);
+    };
+  }, [viewType, currentYmd, events.length]);
 
   // --- Handlers ----------------------------------------------------------
 

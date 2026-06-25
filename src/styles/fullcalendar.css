@@ -41,6 +41,9 @@
     font-family: inherit;
     color: hsl(var(--foreground));
     background: hsl(var(--background));
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
   }
 
   .fc .fc-col-header-cell-cushion,
@@ -53,6 +56,19 @@
 
   .fc .fc-timegrid-slot {
     height: var(--fc-event-min-height);
+  }
+
+  /* Month view can occasionally initialize with inline width:0 on the
+     synchronized tables after a hidden/zero-width mount. Force the grid to
+     occupy the available width so the content stays visible. */
+  .fc .fc-daygrid table,
+  .fc .fc-daygrid-body,
+  .fc .fc-daygrid-body table,
+  .fc .fc-col-header,
+  .fc .fc-col-header table,
+  .fc .fc-scrollgrid {
+    width: 100% !important;
+    min-width: 100% !important;
   }
 
   /* Event styling — clean, modern, elevated */

@@ -7,6 +7,7 @@ interface PageContainerProps {
   className?: string;
   noPadding?: boolean;
   disableAnimation?: boolean;
+  style?: React.CSSProperties;
 }
 
 export const PageContainer: React.FC<PageContainerProps> = ({
@@ -15,9 +16,11 @@ export const PageContainer: React.FC<PageContainerProps> = ({
   className,
   noPadding = false,
   disableAnimation = false,
+  style,
 }) => {
   return (
     <div
+      style={style}
       className={cn(
         "mx-auto w-full",
         !disableAnimation && "transition-all duration-500 animate-slide-up",
