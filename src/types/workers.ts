@@ -1248,8 +1248,15 @@ export interface WhatsAppTemplateRecord {
 
 export interface WhatsAppWebhookLog {
   id: string;
+  event_type: string;
+  meta_message_id?: string | null;
+  phone_number_id?: string | null;
+  processing_state?: string | null;
+  failure_reason?: string | null;
+  signature_valid?: boolean | null;
   payload: Record<string, unknown>;
   created_at: string;
+  processed_at?: string | null;
 }
 
 export interface Lead {

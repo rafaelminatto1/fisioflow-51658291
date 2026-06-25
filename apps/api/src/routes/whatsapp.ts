@@ -348,30 +348,40 @@ app.get("/webhook-logs", requireAuth, async (c) => {
 
   const result = await pool.query(
     `
-      SELECT id, patient_id, message, type, status, metadata, created_at
-      FROM whatsapp_messages
-      WHERE organization_id = $1
+      SELECT
+        id,
+        organization_id,
+        event_type,
+        meta_message_id,
+        phone_number_id,
+        processing_state,
+        failure_reason,
+        signature_valid,
+        raw_payload,
+        created_at,
+        processed_at
+      FROM wa_raw_events
+      WHERE organization_id = $1 OR organization_id IS NULL
       ORDER BY created_at DESC
       LIMIT $2
     `,
     [user.organizationId, Number(limit)],
   );
 
-  const rows = result.rows.map((row) => {
-    const metadata = parseMetadata(row.metadata);
-    return {
+  return c.json({
+    data: result.rows.map((row) => ({
       id: row.id,
-      event_type: metadata.event_type ?? row.status ?? "message_updated",
-      phone_number: metadata.to_phone ?? null,
-      message_content: row.message ?? null,
-      processed: metadata.processed ?? true,
-      payload: metadata,
+      event_type: row.event_type ?? "unknown",
+      meta_message_id: row.meta_message_id ?? null,
+      phone_number_id: row.phone_number_id ?? null,
+      processing_state: row.processing_state ?? "received",
+      failure_reason: row.failure_reason ?? null,
+      signature_valid: row.signature_valid ?? null,
+      payload: row.raw_payload ?? {},
       created_at: row.created_at?.toISOString?.() ?? null,
-      patient_id: row.patient_id ?? null,
-    };
+      processed_at: row.processed_at?.toISOString?.() ?? null,
+    })),
   });
-
-  return c.json({ data: rows });
 });
 
 app.post("/messages", requireAuth, async (c) => {
