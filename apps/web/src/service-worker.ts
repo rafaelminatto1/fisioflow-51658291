@@ -15,6 +15,7 @@ cleanupOutdatedCaches();
 
 const APP_CHUNKS_CACHE = "app-chunks";
 const LEGACY_CHUNKS_CACHE = "app-chunks";
+const APP_VERSION_CACHE = "app-version";
 
 function isCacheableAssetResponse(request: Request, response: Response): boolean {
   if (response.status !== 200) return false;
@@ -127,11 +128,49 @@ registerRoute(
   }),
 );
 
+// ============================================================================
+// VERSIONAMENTO — detecta nova versão e limpa caches antigos via Service Worker.
+// Garante que após um deploy, os usuários não ficam com assets stale.
+// ============================================================================
+async function clearOldVersionCaches(): Promise<void> {
+  try {
+    const cache = await caches.open(APP_VERSION_CACHE);
+    const stored = await cache.get("__app_manifest_revision__");
+    // Busca a versão atual do manifest.webmanifest (gerado pelo Vite com hash)
+    let current = "unknown";
+    try {
+      const resp = await fetch("/manifest.json", { cache: "no-store" });
+      if (resp.ok) {
+        const json = await resp.json();
+        current = json.version || json.build || new URL(resp.url).pathname;
+      }
+    } catch { /* fallback abaixo */ }
+    if (current === "unknown") {
+      current = Date.now().toString(); // Força limpeza se não conseguiu ler
+    }
+    if (stored) {
+      const prev = await stored.text();
+      if (prev && prev !== current) {
+        console.log(`[SW] Deploy detectado: ${prev} -> ${current}. Limpando caches antigos...`);
+        const names = await caches.keys();
+        await Promise.all(
+          names.filter(n => n !== APP_CHUNKS_CACHE && n !== APP_VERSION_CACHE && !n.startsWith("workbox-"))
+            .map(n => caches.delete(n))
+        );
+        await caches.delete(APP_CHUNKS_CACHE);
+      }
+    }
+    await cache.put("__app_manifest_revision__", new Response(current));
+  } catch (err) {
+    console.warn("[SW] Verificação de versão falhou:", err);
+  }
+}
+
 self.skipWaiting();
 clientsClaim();
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(caches.delete(LEGACY_CHUNKS_CACHE));
+  event.waitUntil(Promise.all([caches.delete(LEGACY_CHUNKS_CACHE), clearOldVersionCaches()]));
 });
 
 // Listener para Push Notifications (Backend -> SW)
