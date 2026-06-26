@@ -286,11 +286,15 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     const loadingToast = toast.loading("Enviando imagem...");
 
     try {
-      const url = await uploadFile(file, imageUploadFolder || STORAGE_FOLDERS.PATIENTS);
+      const result = await uploadFile(file, {
+        folder: imageUploadFolder || STORAGE_FOLDERS.PATIENTS,
+      });
+      // result is an UploadResult object — extract the URL string
+      const imageUrl = result.publicUrl || result.url;
       editor
         .chain()
         .focus()
-        .setImage({ src: url, align: "center", width: "100%" } as any)
+        .setImage({ src: imageUrl, align: "center", width: "100%" } as any)
         .run();
       toast.dismiss(loadingToast);
       toast.success("Imagem enviada com sucesso!");

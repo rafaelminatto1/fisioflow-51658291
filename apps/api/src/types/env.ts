@@ -256,6 +256,7 @@ export interface Env {
   // Cloudflare REST API (AutoRAG document management via CF REST API)
   CF_API_TOKEN?: string;
   CF_ACCOUNT_ID?: string;
+  WHATSAPP_BUSINESS_ACCOUNT_ID?: string;
 
   // Axiom Logging Configuration
   AXIOM_TOKEN?: string;

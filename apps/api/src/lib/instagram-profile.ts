@@ -20,6 +20,21 @@ export type InstagramProfileSyncState = {
   pendingCount: number | null;
 };
 
+/** Erro categorizado para distinguir falhas fatais de perfil-ausente */
+export class InstagramApiError extends Error {
+  public readonly statusCode: number;
+  public readonly isAuthError: boolean;
+  public readonly isRateLimit: boolean;
+
+  constructor(message: string, statusCode: number) {
+    super(message);
+    this.name = "InstagramApiError";
+    this.statusCode = statusCode;
+    this.isAuthError = statusCode === 401 || statusCode === 403;
+    this.isRateLimit = statusCode === 429;
+  }
+}
+
 type PoolLike = {
   query: (sql: string, params?: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>;
 };
@@ -37,8 +52,25 @@ export function formatInstagramDisplayName(profile: {
 }
 
 /**
+ * Verifica se um token de longa duração do Instagram provavelmente expirou.
+ * Tokens de longa duração são válidos por ~60 dias.
+ */
+export function isTokenLikelyExpired(expiresAt: string | null | undefined): boolean {
+  if (!expiresAt) return false; // sem info de expiração, não assumptions
+  try {
+    return new Date(expiresAt).getTime() < Date.now();
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Busca o perfil público do remetente no Instagram (nome + @username + foto)
  * a partir do IGSID. Disponível para contatos que iniciaram conversa com a conta.
+ *
+ * Lança InstagramApiError para erros fatais (auth, rate limit) para que o
+ * caller possa decidir parar ou continuar. Retorna null para perfis não encontrados
+ * ou respostas malformadas (conta como "skipped").
  */
 export async function fetchInstagramProfile(
   igsid: string,
@@ -50,6 +82,37 @@ export async function fetchInstagramProfile(
     const res = await fetch(
       `${IG_GRAPH}/${encodeURIComponent(igsid)}?fields=name,username,profile_pic&access_token=${encodeURIComponent(token)}`,
     );
+
+    if (res.status === 401 || res.status === 403) {
+      const data = (await res.json().catch(() => ({}))) as { error?: unknown };
+      throw new InstagramApiError(
+        `Instagram API auth falhou (${res.status}): ${JSON.stringify(data.error ?? "unknown")}`,
+        res.status,
+      );
+    }
+
+    if (res.status === 429) {
+      throw new InstagramApiError(
+        "Instagram API rate limit atingido — tentar novamente mais tarde",
+        429,
+      );
+    }
+
+    if (res.status === 404) {
+      // Perfil não existe mais — skip silencioso
+      return null;
+    }
+
+    if (!res.ok) {
+      // Outros erros (5xx do Meta, etc.) — loga mas não aborta o batch inteiro
+      const body = await res.text().catch(() => "");
+      console.warn(
+        `[Instagram Profile] fetchInstagramProfile status=${res.status} igsid=${igsid}:`,
+        body.slice(0, 200),
+      );
+      return null;
+    }
+
     const data = (await res.json()) as {
       name?: string;
       username?: string;
@@ -65,6 +128,8 @@ export async function fetchInstagramProfile(
       };
     }
   } catch (e) {
+    // Re-throw InstagramApiError para que o caller decida
+    if (e instanceof InstagramApiError) throw e;
     console.warn("[Instagram Profile] fetchInstagramProfile falhou:", e);
   }
 
@@ -107,7 +172,37 @@ export async function backfillInstagramProfilesForOrganization(
   let failed = 0;
 
   for (const row of contactsResult.rows) {
-    const profile = await fetchInstagramProfile(String(row.wa_id), igToken);
+    let profile: InstagramProfile | null;
+    try {
+      profile = await fetchInstagramProfile(String(row.wa_id), igToken);
+    } catch (e) {
+      // Erro fatal do Instagram API (auth ou rate limit) — parar o batch
+      if (e instanceof InstagramApiError) {
+        if (e.isAuthError) {
+          console.error(
+            `[Instagram Profile] backfill abortado — token inválido/expirado para org=${orgId}:`,
+            e.message,
+          );
+          // Contatos restantes contam como failed
+          const remaining = contactsResult.rows.length - updated - skipped - failed;
+          failed += remaining;
+          throw e; // Propaga para que o endpoint retorne o erro adequado
+        }
+        if (e.isRateLimit) {
+          console.warn(
+            `[Instagram Profile] backfill interrompido — rate limit atingido após ${updated} updates para org=${orgId}`,
+          );
+          // Rate limit: conta os restantes como skipped (retryable)
+          const remaining = contactsResult.rows.length - updated - skipped - failed;
+          skipped += remaining;
+          break; // Para o loop, mas retorna resultado parcial
+        }
+      }
+      // Outros erros de fetch — skip individual
+      failed += 1;
+      continue;
+    }
+
     if (!profile) {
       skipped += 1;
       continue;
@@ -198,16 +293,29 @@ export async function persistInstagramProfileSyncState(
   result: InstagramProfileBackfillResult,
   pendingCount: number,
 ) {
-  const settingsRes = await pool.query(`SELECT settings FROM organizations WHERE id = $1 LIMIT 1`, [
-    orgId,
-  ]);
+  let settingsRes: { rows: Record<string, unknown>[] };
+  try {
+    settingsRes = await pool.query(`SELECT settings FROM organizations WHERE id = $1 LIMIT 1`, [
+      orgId,
+    ]);
+  } catch (dbErr) {
+    console.error("[Instagram Profile] persistInstagramProfileSyncState: falhou ao ler settings:", dbErr);
+    return null;
+  }
+
   const settings = settingsRes.rows[0]?.settings;
-  const parsed =
-    settings && typeof settings === "object"
-      ? (settings as Record<string, unknown>)
-      : typeof settings === "string"
-        ? (JSON.parse(settings) as Record<string, unknown>)
-        : {};
+  let parsed: Record<string, unknown>;
+  try {
+    parsed =
+      settings && typeof settings === "object"
+        ? (settings as Record<string, unknown>)
+        : typeof settings === "string"
+          ? (JSON.parse(settings) as Record<string, unknown>)
+          : {};
+  } catch (parseErr) {
+    console.error("[Instagram Profile] persistInstagramProfileSyncState: JSON.parse falhou para settings:", parseErr);
+    parsed = {};
+  }
 
   const crm = (parsed.crm_whatsapp as Record<string, unknown>) ?? {};
   const nextCrm = {
@@ -226,10 +334,15 @@ export async function persistInstagramProfileSyncState(
   };
 
   const nextSettings = { ...parsed, crm_whatsapp: nextCrm };
-  await pool.query(`UPDATE organizations SET settings = $1::jsonb, updated_at = NOW() WHERE id = $2`, [
-    JSON.stringify(nextSettings),
-    orgId,
-  ]);
+  try {
+    await pool.query(`UPDATE organizations SET settings = $1::jsonb, updated_at = NOW() WHERE id = $2`, [
+      JSON.stringify(nextSettings),
+      orgId,
+    ]);
+  } catch (updateErr) {
+    console.error("[Instagram Profile] persistInstagramProfileSyncState: falhou ao gravar settings:", updateErr);
+    return null;
+  }
 
   return {
     lastSyncedAt: String(nextCrm.instagram_profile_sync.last_synced_at),

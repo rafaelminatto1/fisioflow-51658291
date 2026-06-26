@@ -113,6 +113,68 @@ app.get("/logs", requireAuth, async (c) => {
   }
 });
 
+app.get("/stats", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+
+  const totals = await pool.query(
+    `SELECT
+       COUNT(*)::int AS total,
+       COUNT(*) FILTER (WHERE enabled = true)::int AS active
+     FROM automations WHERE org_id = $1`,
+    [user.organizationId],
+  );
+
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+
+  const runs = await pool.query(
+    `SELECT
+       COUNT(*)::int AS runs_this_month,
+       COUNT(*) FILTER (WHERE status = 'success')::int AS successes,
+       MAX(started_at) AS last_run_at
+     FROM automation_logs
+     WHERE organization_id = $1 AND started_at >= $2`,
+    [user.organizationId, monthStart],
+  );
+
+  const perAutomation = await pool.query(
+    `SELECT
+       a.id, a.name,
+       COUNT(l.id) FILTER (WHERE l.started_at >= $2)::int AS runs_this_month,
+       COUNT(l.id) FILTER (WHERE l.started_at >= $2 AND l.status <> 'success')::int AS failures,
+       MAX(l.started_at) AS last_run_at
+     FROM automations a
+     LEFT JOIN automation_logs l ON l.automation_id = a.id AND l.organization_id = $1
+     WHERE a.org_id = $1
+     GROUP BY a.id, a.name`,
+    [user.organizationId, monthStart],
+  );
+
+  const t = totals.rows?.[0] ?? { total: 0, active: 0 };
+  const r = runs.rows?.[0] ?? { runs_this_month: 0, successes: 0, last_run_at: null };
+  const runsMonth = Number(r.runs_this_month) || 0;
+  const successes = Number(r.successes) || 0;
+
+  return c.json({
+    data: {
+      total: Number(t.total) || 0,
+      active: Number(t.active) || 0,
+      runsThisMonth: runsMonth,
+      successRate: runsMonth > 0 ? successes / runsMonth : 1,
+      lastRunAt: r.last_run_at ?? null,
+      perAutomation: (perAutomation.rows ?? []).map((row) => ({
+        id: row.id,
+        name: row.name,
+        runsThisMonth: Number(row.runs_this_month) || 0,
+        failures: Number(row.failures) || 0,
+        lastRunAt: row.last_run_at ?? null,
+      })),
+    },
+  });
+});
+
 app.get("/:id", requireAuth, async (c) => {
   const id = c.req.param("id");
   if (!UUID_RE.test(id)) return c.json({ error: "id inválido" }, 400);

@@ -14,6 +14,7 @@ const mockNotifyOrganization = vi.fn();
 const mockNeedsHumanApproval = vi.fn();
 const mockSendTextMessage = vi.fn();
 const mockProcessMessage = vi.fn();
+const mockQueueSendBatch = vi.fn();
 
 vi.mock("../../lib/db", () => ({
   createPool: vi.fn(() => ({ query: mockQuery })),
@@ -83,6 +84,9 @@ const ENV = {
   WHATSAPP_APP_SECRET: "secret",
   WHATSAPP_VERIFY_TOKEN: "verify-token",
   DB: {},
+  WHATSAPP_QUEUE: {
+    sendBatch: (...args: unknown[]) => mockQueueSendBatch(...args),
+  },
 } as any;
 
 function makePayload() {
@@ -165,6 +169,7 @@ describe("POST /api/whatsapp/webhook", () => {
       intent: "other",
       patientData: {},
     });
+    mockQueueSendBatch.mockResolvedValue(undefined);
   });
 
   it("returns 401 for invalid signatures", async () => {
@@ -176,31 +181,38 @@ describe("POST /api/whatsapp/webhook", () => {
     expect(res.status).toBe(401);
   });
 
-  it("persists a raw event even when org resolution fails", async () => {
+  it("enqueues inbound messages to the Cloudflare queue", async () => {
     mockQuery.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [{ id: "raw-evt-1" }] });
 
     const res = await postWebhook(makePayload());
 
     expect(res.status).toBe(200);
-    expect(mockQuery).toHaveBeenCalledWith(
-      expect.stringContaining("INSERT INTO wa_raw_events"),
-      expect.arrayContaining([null, "org_unresolved", "123456"]),
-    );
+    expect(mockQueueSendBatch).toHaveBeenCalledWith([
+      {
+        body: expect.objectContaining({
+          type: "inbound_message",
+          metaMessageId: "wamid.abc",
+          phoneNumberId: "123456",
+          waId: "5511999999999",
+          from: "5511999999999",
+          text: "oi",
+          messageType: "text",
+        }),
+      },
+    ]);
   });
 
-  it("marks the raw event as processed after a successful inbound message", async () => {
-    mockQuery
-      .mockResolvedValueOnce({ rows: [{ id: "org-1" }] })
-      .mockResolvedValueOnce({ rows: [{ id: "raw-evt-1" }] })
-      .mockResolvedValueOnce({ rows: [] });
+  it("returns queue metadata in the webhook response", async () => {
+    mockQuery.mockResolvedValue({ rows: [] });
 
     const res = await postWebhook(makePayload());
+    const payload = await res.json();
 
     expect(res.status).toBe(200);
-    expect(mockAddMessage).toHaveBeenCalled();
-    expect(mockQuery).toHaveBeenCalledWith(
-      expect.stringContaining("UPDATE wa_raw_events"),
-      expect.arrayContaining(["processed", null]),
-    );
+    expect(payload).toEqual({
+      status: "ok",
+      enqueued: 1,
+      phoneNumberId: "123456",
+    });
   });
 });

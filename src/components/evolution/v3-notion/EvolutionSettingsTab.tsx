@@ -37,7 +37,7 @@ export const EvolutionSettingsTab: React.FC = () => {
             <LayoutTemplate size={18} className="text-gray-500" />
             <h3 className="font-medium text-gray-900">Visualização Padrão</h3>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <button
               onClick={() => updateSettings({ defaultView: "notion" })}
               className={`p-4 rounded-xl border text-left transition-all ${
@@ -50,17 +50,6 @@ export const EvolutionSettingsTab: React.FC = () => {
               <p className="text-sm text-gray-500">
                 Editor em blocos com comandos / e templates rápidos.
               </p>
-            </button>
-            <button
-              onClick={() => updateSettings({ defaultView: "classic" })}
-              className={`p-4 rounded-xl border text-left transition-all ${
-                settings.defaultView === "classic"
-                  ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500"
-                  : "border-gray-200 hover:border-gray-300 bg-white"
-              }`}
-            >
-              <div className="font-medium text-gray-900 mb-1">Visualização Clássica</div>
-              <p className="text-sm text-gray-500">Editor de texto tradicional simples e direto.</p>
             </button>
           </div>
         </section>

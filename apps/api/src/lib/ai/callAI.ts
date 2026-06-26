@@ -398,7 +398,7 @@ const WORKERS_MODEL_MAP: Record<string, string> = {
   "workers-llama-3.3-70b": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
   "workers-llama-3.1-8b": "@cf/meta/llama-3.1-8b-instruct-fast",
   "workers-whisper": "@cf/openai/whisper-large-v3-turbo",
-  "workers-nova-3": "@cf/deepgram/nova-3",
+  "workers-whisper-legacy": "@cf/openai/whisper",
   "workers-embeddings": "@cf/baai/bge-base-en-v1.5",
 };
 

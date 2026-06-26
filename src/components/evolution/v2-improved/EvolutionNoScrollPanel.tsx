@@ -104,12 +104,12 @@ function SideCard({
     <div
       onClick={onClick}
       className={cn(
-        "rounded-2xl border border-t-[3px] border-border bg-card p-3 shadow-sm",
+        "rounded-2xl border border-t-[3px] border-border bg-card px-3 py-2.5 shadow-sm",
         accent,
         onClick && "cursor-pointer transition-colors hover:border-slate-300",
       )}
     >
-      <div className="mb-2 flex items-center gap-2">
+      <div className="mb-1.5 flex items-center gap-2">
         <h4 className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
           <Icon className="h-3.5 w-3.5" /> {title}
         </h4>
@@ -315,7 +315,7 @@ export const EvolutionNoScrollPanel = memo(
     const observationsValue = data.evolutionText || data.observations || "";
 
     return (
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden p-4 md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(380px,540px)_minmax(300px,340px)]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden p-4 md:grid-cols-[minmax(0,1.42fr)_minmax(400px,1.05fr)_minmax(300px,0.72fr)] xl:grid-cols-[minmax(0,1.48fr)_minmax(430px,1.08fr)_minmax(320px,0.74fr)]">
         {/* ===================== COLUNA 1 — OBSERVAÇÕES ===================== */}
         <motion.div
           custom={0}
@@ -380,13 +380,14 @@ export const EvolutionNoScrollPanel = memo(
               <Maximize2 className="h-3.5 w-3.5" /> Foco
             </button>
           </div>
-          <div className="custom-scrollbar flex-1 overflow-y-auto p-4">
+          <div className="custom-scrollbar flex flex-1 flex-col overflow-y-auto p-4">
             <EvolutionBlockV3
               items={data.unifiedItems || []}
               onChange={handleUnifiedItemsChange}
               patientId={patientId || ""}
               type="unified"
               variant="embedded"
+              className="h-full"
             />
           </div>
         </motion.div>
@@ -397,13 +398,13 @@ export const EvolutionNoScrollPanel = memo(
           variants={cardVariants}
           initial="hidden"
           animate="visible"
-          className="custom-scrollbar flex min-h-0 flex-col gap-2.5 overflow-y-auto pb-2 pr-1"
+          className="custom-scrollbar flex min-h-0 flex-col gap-1.5 overflow-y-auto pb-2 pr-1"
         >
           {/* nível de dor — EVA */}
-          <div data-pain-section className="rounded-2xl border border-t-[3px] border-border border-t-rose-500 bg-card p-3 shadow-sm">
-            <div className="mb-1 flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
-                <Activity className="h-5 w-5" />
+          <div data-pain-section className="rounded-2xl border border-t-[3px] border-border border-t-rose-500 bg-card px-3 py-2 shadow-sm">
+            <div className="mb-0.5 flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
+                <Activity className="h-4.5 w-4.5" />
               </div>
               <div className="min-w-0">
                 <div className="text-sm font-extrabold text-slate-800">Nível de dor — EVA</div>
@@ -433,7 +434,7 @@ export const EvolutionNoScrollPanel = memo(
 
             <PainGauge value={discharge} arrival={arrival} compact onChange={setDischarge} showDeltaArc showTooltips />
 
-            <div className="mt-2 flex gap-2.5">
+            <div className="mt-1.5 flex gap-2">
               <div className="flex-1 min-w-0">
                 <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1">
                   Chegada
@@ -478,7 +479,7 @@ export const EvolutionNoScrollPanel = memo(
               </div>
             </div>
 
-            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
                 Tipo:
               </span>
@@ -509,7 +510,7 @@ export const EvolutionNoScrollPanel = memo(
               })}
             </div>
 
-            <div className="mt-2 flex items-center gap-2 rounded-xl border border-border bg-slate-50/60 px-3 py-1.5">
+            <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-border bg-slate-50/60 px-3 py-1.5">
               <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
               <input
                 type="text"
@@ -525,30 +526,40 @@ export const EvolutionNoScrollPanel = memo(
           <EvolutionInsightCard
             trendData={trendPoints}
             metaPain={discharge > 3 ? 3 : undefined}
-            comparisonData={{
-              eva: prevRecord?.pain_scale != null ? {
-                from: prevRecord.pain_scale,
-                to: discharge,
-                improved: discharge <= prevRecord.pain_scale,
-              } : undefined,
-              rom: prevRom != null && curRom != null ? {
-                from: prevRom,
-                to: curRom,
-                improved: curRom >= prevRom,
-              } : undefined,
-            }}
+            currentLevel={discharge}
           />
 
-          {/* Botão de histórico */}
-          {prevRecord && (
-            <button
-              type="button"
-              onClick={() => setHistoryOpen(true)}
-              className="inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline"
-            >
-              Ver histórico completo <ArrowRight className="h-3 w-3" />
-            </button>
-          )}
+          <SideCard
+            icon={GitCompare}
+            title="VS. sessão anterior"
+            accent="border-t-violet-500"
+            action={
+              <button
+                type="button"
+                onClick={() => setHistoryOpen(true)}
+                className="text-[10px] font-extrabold uppercase tracking-wider text-primary hover:underline"
+              >
+                Ver histórico
+              </button>
+            }
+          >
+            {prevRecord ? (
+              <div className="space-y-2">
+                <CmpRow label="Dor (EVA)">
+                  {deltaBadge(prevRecord.pain_scale ?? 0, discharge, true)}
+                </CmpRow>
+                {prevRom != null && curRom != null ? (
+                  <CmpRow label="ROM">
+                    {deltaBadge(prevRom, curRom, false)}
+                  </CmpRow>
+                ) : null}
+              </div>
+            ) : (
+              <p className="text-[11px] font-semibold text-muted-foreground">
+                Ainda não há sessão anterior suficiente para comparação.
+              </p>
+            )}
+          </SideCard>
 
           {/* medições */}
           <SideCard

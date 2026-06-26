@@ -133,8 +133,8 @@ const LazyNotionEvolutionPanel = lazy(() =>
 import { preloadEditorChunks } from "@/lib/evolution/preloadEditors";
 import { stripPainDetail } from "@/lib/evolution/painDetail";
 import type { EvolutionV2Data } from "@/components/evolution/v2-improved/types";
-import { EvolutionBlocksEditor } from "@/components/evolution/blocks/EvolutionBlocksEditor";
-import { blocksToText, type EvolutionBlock } from "@/components/evolution/blocks/blockUtils";
+
+
 import { sessionsApi } from "@/api/v2/clinical";
 
 export interface PainScaleData {
@@ -168,56 +168,10 @@ const PatientEvolution = () => {
 	const offline = useOfflineSync();
 	const deviceIdRef = useRef<string>(getOrCreateEvolutionDeviceId());
 
-	// Editor modular de blocos: preferência por usuário (localStorage), default OFF (editor clássico).
-	// Override por ?blocks=1 (testes). Sincroniza blocksToText → observacao (autosave/finalização preservados).
-	const [blocksEditorEnabled, setBlocksEditorEnabled] = useState<boolean>(() => {
-		if (typeof window === "undefined") return false;
-		if (new URLSearchParams(window.location.search).get("blocks") === "1") return true;
-		return localStorage.getItem("ff_blocks_editor") === "1";
-	});
-	const toggleBlocksEditor = useCallback((on: boolean) => {
-		setBlocksEditorEnabled(on);
-		try {
-			localStorage.setItem("ff_blocks_editor", on ? "1" : "0");
-		} catch {
-			/* ignore */
-		}
-	}, []);
 	const [medicalReturnModalOpen, setMedicalReturnModalOpen] = useState(false);
 	const [surgeryModalOpen, setSurgeryModalOpen] = useState(false);
 	const [goalModalOpen, setGoalModalOpen] = useState(false);
 	const [soapSummaryOpen, setSoapSummaryOpen] = useState(false);
-	const [evolutionBlocks, setEvolutionBlocks] = useState<EvolutionBlock[]>([]);
-	const blocksSeededRef = useRef<string | undefined>(undefined);
-	const blocksSaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-
-	// Seed dos blocos a partir da sessão carregada (uma vez por evolução).
-	useEffect(() => {
-		if (!blocksEditorEnabled) return;
-		const id = state.currentSoapRecordId;
-		if (!id || blocksSeededRef.current === id) return;
-		blocksSeededRef.current = id;
-		sessionsApi
-			.get(id)
-			.then((r) => {
-				const b = r.data?.blocks;
-				if (Array.isArray(b) && b.length) setEvolutionBlocks(b as EvolutionBlock[]);
-			})
-			.catch(() => {});
-	}, [blocksEditorEnabled, state.currentSoapRecordId]);
-
-	// Persiste o JSON dos blocos (debounced, best-effort) — separado do autosave de observacao.
-	const persistBlocks = useCallback(
-		(next: EvolutionBlock[]) => {
-			const id = state.currentSoapRecordId;
-			if (!id) return;
-			if (blocksSaveTimer.current) clearTimeout(blocksSaveTimer.current);
-			blocksSaveTimer.current = setTimeout(() => {
-				sessionsApi.update(id, { blocks: next as Array<Record<string, unknown>> }).catch(() => {});
-			}, 800);
-		},
-		[state.currentSoapRecordId],
-	);
 
 	// Persistência local do rascunho (sobrevive a reload/fechar aba)
 	const draft = useEvolutionDraft<EvolutionV2Data>({
@@ -756,46 +710,21 @@ const PatientEvolution = () => {
 		],
 	);
 
-	const mainGridContent = useMemo(() => {
-		if (blocksEditorEnabled) {
-			return (
-				<div className="rounded-2xl border border-slate-200 bg-white p-5">
-					<div className="mb-4">
-						<h2 className="text-lg font-extrabold text-slate-800">Evolução em blocos</h2>
-						<p className="text-sm text-slate-500">
-							Editor modular (beta). O conteúdo é salvo na observação clínica via autosave.
-						</p>
-					</div>
-					<EvolutionBlocksEditor
-						blocks={evolutionBlocks}
-						onChange={(next) => {
-							setEvolutionBlocks(next);
-							handleEvolutionV2Change({
-								...state.evolutionV2Data,
-								evolutionText: blocksToText(next),
-								observations: blocksToText(next),
-							});
-						}}
-					/>
-				</div>
-			);
-		}
-		return (
-			<Suspense fallback={<LoadingSkeleton type="card" />}>
-				<LazyNotionEvolutionPanel
-					data={state.evolutionV2Data}
-					onChange={handleEvolutionV2Change}
-					patientId={state.patientId}
-					evolutionId={state.currentSoapRecordId}
-					collaborationId={undefined}
-					userName={user?.displayName || "Profissional"}
-					userColor="#10b981"
-					lastSaved={lastSavedAt}
-					onNavigateToHistorico={() => state.setActiveTab("historico")}
-				/>
-			</Suspense>
-		);
-	}, [state, autoSaveMutation.isPending, lastSavedAt, blocksEditorEnabled, evolutionBlocks, handleEvolutionV2Change, user]);
+	const mainGridContent = useMemo(() => (
+		<Suspense fallback={<LoadingSkeleton type="card" />}>
+			<LazyNotionEvolutionPanel
+				data={state.evolutionV2Data}
+				onChange={handleEvolutionV2Change}
+				patientId={state.patientId}
+				evolutionId={state.currentSoapRecordId}
+				collaborationId={undefined}
+				userName={user?.displayName || "Profissional"}
+				userColor="#10b981"
+				lastSaved={lastSavedAt}
+				onNavigateToHistorico={() => state.setActiveTab("historico")}
+			/>
+		</Suspense>
+	), [state, autoSaveMutation.isPending, lastSavedAt, handleEvolutionV2Change, user]);
 
 	if (state.dataLoading)
 		return (
@@ -923,54 +852,17 @@ const PatientEvolution = () => {
 							className="flex flex-col min-h-full"
 						>
 							<TabsContent value="evolucao" className="m-0 h-full data-[state=active]:flex flex-col">
-								<div className="mb-3 flex items-center justify-end gap-1 rounded-lg bg-slate-100 p-1 text-xs font-bold w-fit self-end">
-									<button
-										onClick={() => toggleBlocksEditor(false)}
-										className={`rounded-md px-3 py-1.5 ${!blocksEditorEnabled ? "bg-white text-slate-800 shadow-sm" : "text-slate-500"}`}
-									>
-										Clássico
-									</button>
-									<button
-										onClick={() => toggleBlocksEditor(true)}
-										className={`rounded-md px-3 py-1.5 ${blocksEditorEnabled ? "bg-white text-blue-700 shadow-sm" : "text-slate-500"}`}
-									>
-										Blocos (beta)
-									</button>
-								</div>
-								{blocksEditorEnabled ? (
-									<div className="rounded-2xl border border-slate-200 bg-white p-5">
-										<div className="mb-4">
-											<h2 className="text-lg font-extrabold text-slate-800">Evolução em blocos</h2>
-											<p className="text-sm text-slate-500">
-												Editor modular (beta). O conteúdo é salvo na observação clínica via autosave.
-											</p>
-										</div>
-										<EvolutionBlocksEditor
-											blocks={evolutionBlocks}
-											onChange={(next) => {
-												setEvolutionBlocks(next);
-												persistBlocks(next);
-												handleEvolutionV2Change({
-													...state.evolutionV2Data,
-													evolutionText: blocksToText(next),
-													observations: blocksToText(next),
-												});
-											}}
-										/>
-									</div>
-								) : (
-									<Suspense fallback={<LoadingSkeleton />}>
-										<EvolutionNoScrollPanel
-											data={state.evolutionV2Data}
-											onChange={state.setEvolutionV2Data}
-											patientId={state.patientId!}
-											evolutionId={state.currentSoapRecordId!}
-											patient={state.patient}
-											pathologies={state.pathologies}
-											onNavigateToTab={(tab) => state.setActiveTab(tab as EvolutionTab)}
-										/>
-									</Suspense>
-								)}
+								<Suspense fallback={<LoadingSkeleton />}>
+									<EvolutionNoScrollPanel
+										data={state.evolutionV2Data}
+										onChange={state.setEvolutionV2Data}
+										patientId={state.patientId!}
+										evolutionId={state.currentSoapRecordId!}
+										patient={state.patient}
+										pathologies={state.pathologies}
+										onNavigateToTab={(tab) => state.setActiveTab(tab as EvolutionTab)}
+									/>
+								</Suspense>
 							</TabsContent>
 							<TabsContent value="avaliacao">
 								<Suspense fallback={<LoadingSkeleton />}>

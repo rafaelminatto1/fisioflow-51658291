@@ -9,9 +9,11 @@ import { NavLink, Navigate, Outlet, useLocation, useSearchParams } from "react-r
 import {
   Activity,
   BookOpen,
+  ClipboardList,
   Dumbbell,
   FileText,
   Plus,
+  Search,
   Sparkles,
   Target,
   Video,
@@ -44,7 +46,9 @@ const SECTION_NAV = [
   { key: "videos", label: "Mídias", icon: Video, href: "/exercises/videos" },
   { key: "templates", label: "Templates", icon: FileText, href: "/exercises/templates" },
   { key: "protocols", label: "Protocolos", icon: Target, href: "/exercises/protocols" },
-  { key: "ai", label: "IA Assistente", icon: Sparkles, href: "/exercises/ai", badge: "NOVO" },
+  { key: "search-ai", label: "Busca IA", icon: Search, href: "/exercises/search-ai", badge: "IA" },
+  { key: "ai", label: "IA Assistente", icon: Sparkles, href: "/exercises/ai" },
+  { key: "curation", label: "Curadoria", icon: ClipboardList, href: "/exercises/curation" },
   { key: "analytics", label: "Analytics", icon: Activity, href: "/exercises/analytics" },
 ] as const;
 
@@ -53,7 +57,9 @@ const LEGACY_TAB_TO_PATH: Record<string, string> = {
   videos: "/exercises/videos",
   templates: "/exercises/templates",
   protocols: "/exercises/protocols",
+  "search-ai": "/exercises/search-ai",
   ai: "/exercises/ai",
+  curation: "/exercises/curation",
   analytics: "/exercises/analytics",
 };
 
@@ -95,7 +101,9 @@ function resolveActiveSection(pathname: string) {
   if (pathname.startsWith("/exercises/videos")) return "videos";
   if (pathname.startsWith("/exercises/templates")) return "templates";
   if (pathname.startsWith("/exercises/protocols")) return "protocols";
+  if (pathname.startsWith("/exercises/search-ai")) return "search-ai";
   if (pathname.startsWith("/exercises/ai")) return "ai";
+  if (pathname.startsWith("/exercises/curation")) return "curation";
   if (pathname.startsWith("/exercises/analytics")) return "analytics";
   return "library";
 }

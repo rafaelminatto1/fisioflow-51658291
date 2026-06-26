@@ -1,20 +1,37 @@
 import { describe, it, expect } from "vitest";
-import { execSync } from "node:child_process";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { DEPRECATED_MODELS_2026_05_30, WORKERS_AI_MODELS } from "../lib/workersAi";
+
+function listTsFiles(dir: string): string[] {
+  const entries = readdirSync(dir, { withFileTypes: true });
+  const files: string[] = [];
+
+  for (const entry of entries) {
+    const fullPath = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...listTsFiles(fullPath));
+      continue;
+    }
+    if (entry.isFile() && fullPath.endsWith(".ts")) {
+      files.push(fullPath);
+    }
+  }
+
+  return files;
+}
 
 describe("Workers AI model deprecation 2026-05-30", () => {
   it("nenhum modelo deprecado deve ser referenciado em apps/api/src/ (exceto workersAi.ts)", () => {
     // Lista todos os arquivos .ts e procura cada modelo deprecado seguido de
     // boundary não-`-` ou `-` que NÃO inicia `-fast`/`-lora`/`-awq`-only-on-allowed.
     const cwd = process.cwd().endsWith("/apps/api") ? "../.." : ".";
-    const files = execSync(`find apps/api/src -name "*.ts" -type f`, { cwd, encoding: "utf8" })
-      .split("\n")
-      .filter(Boolean);
+    const files = listTsFiles(join(cwd, "apps/api/src")).map((file) => file.replace(`${cwd}/`, ""));
     const offenders: string[] = [];
     for (const file of files) {
       if (file.endsWith("lib/workersAi.ts")) continue;
       if (file.endsWith("__tests__/ai-models.test.ts")) continue;
-      const content = execSync(`cat "${file}"`, { cwd, encoding: "utf8" });
+      const content = readFileSync(join(cwd, file), "utf8");
       const lines = content.split("\n");
       for (const dep of DEPRECATED_MODELS_2026_05_30) {
         // regex: modelo seguido de aspas/whitespace/fim — não pode ser `-fast`/`-lora`

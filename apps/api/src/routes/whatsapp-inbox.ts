@@ -30,7 +30,9 @@ import { isUuid } from "../lib/validators";
 import { WhatsAppService } from "../lib/whatsapp";
 import { DEFAULT_REMINDER_CONFIG, resolveReminderConfig } from "../lib/reminderScheduling";
 import {
+  InstagramApiError,
   backfillInstagramProfilesForOrganization,
+  isTokenLikelyExpired,
   persistInstagramProfileSyncState,
   readInstagramProfileSyncState,
 } from "../lib/instagram-profile";
@@ -65,10 +67,23 @@ const DEFAULT_FUNNEL_STAGES = [
 ];
 
 async function loadOrgSettings(pool: any, orgId: string): Promise<Record<string, unknown>> {
-  const res = await pool.query(`SELECT settings FROM organizations WHERE id = $1 LIMIT 1`, [orgId]);
-  const raw = res.rows[0]?.settings;
-  if (!raw) return {};
-  return typeof raw === "string" ? JSON.parse(raw) : raw;
+  try {
+    const res = await pool.query(`SELECT settings FROM organizations WHERE id = $1 LIMIT 1`, [orgId]);
+    const raw = res.rows[0]?.settings;
+    if (!raw) return {};
+    if (typeof raw === "string") {
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        console.error("[loadOrgSettings] JSON.parse falhou para org", orgId, e);
+        return {};
+      }
+    }
+    return raw;
+  } catch (e) {
+    console.error("[loadOrgSettings] query falhou para org", orgId, e);
+    return {};
+  }
 }
 
 function readCrmConfig(settings: Record<string, unknown>) {
@@ -612,7 +627,7 @@ app.get("/conversations/:id", requireAuth, async (c) => {
 
     // Marca a conversa como lida (last_read_at = agora) e broadcasta o evento.
     await pool.query(
-      `UPDATE wa_conversations SET last_read_at = NOW(), updated_at = NOW()
+      `UPDATE wa_conversations SET last_read_at = NOW()
        WHERE id = $1 AND organization_id = $2
          AND (last_read_at IS NULL OR last_read_at < NOW())`,
       [id, user.organizationId],
@@ -2382,7 +2397,13 @@ app.get("/conversations/:id/activity", requireAuth, async (c) => {
 
 app.post("/instagram/backfill-profiles", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = await createPool(c.env);
+  let pool: Awaited<ReturnType<typeof createPool>>;
+  try {
+    pool = await createPool(c.env);
+  } catch (dbErr) {
+    console.error("[WhatsApp Inbox] POST /instagram/backfill-profiles: createPool falhou:", dbErr);
+    return c.json({ error: "Falha ao conectar ao banco de dados", details: String(dbErr) }, 503);
+  }
 
   const body = (await c.req.json().catch(() => ({}))) as {
     limit?: number;
@@ -2397,43 +2418,107 @@ app.post("/instagram/backfill-profiles", requireAuth, async (c) => {
     const igToken =
       (typeof settings.instagram_access_token === "string" && settings.instagram_access_token) ||
       c.env.IG_ACCESS_TOKEN;
+    const tokenExpires =
+      typeof settings.instagram_token_expires === "string" ? settings.instagram_token_expires : null;
 
     if (!igToken) {
       return c.json({ error: "Instagram não configurado para esta organização" }, 400);
     }
 
-    const result = await backfillInstagramProfilesForOrganization(pool, user.organizationId, igToken, {
-      limit,
-      force,
-    });
-    const pendingRes = await pool.query(
-      `SELECT COUNT(DISTINCT wc.id)::int AS pending
-       FROM whatsapp_contacts wc
-       JOIN wa_conversations c ON c.contact_id = wc.id
-       WHERE wc.organization_id = $1
-         AND c.organization_id = $1
-         AND c.channel = 'instagram'
-         AND wc.wa_id IS NOT NULL
-         AND (
-           wc.username IS NULL
-           OR wc.display_name IS NULL
-           OR wc.avatar_url IS NULL
-         )`,
-      [user.organizationId],
-    );
-    const syncState = await persistInstagramProfileSyncState(
-      pool,
-      user.organizationId,
-      result,
-      Number(pendingRes.rows[0]?.pending ?? 0),
-    );
+    if (isTokenLikelyExpired(tokenExpires)) {
+      console.warn(
+        `[WhatsApp Inbox] Instagram token expirado para org=${user.organizationId} (expires=${tokenExpires})`,
+      );
+      return c.json(
+        {
+          error: "Token do Instagram expirado",
+          hint: "Execute o cron de refresh ou reconfigure o token nas configurações da organização",
+          expiredAt: tokenExpires,
+        },
+        400,
+      );
+    }
+
+    let result;
+    try {
+      result = await backfillInstagramProfilesForOrganization(pool, user.organizationId, igToken, {
+        limit,
+        force,
+      });
+    } catch (igErr) {
+      if (igErr instanceof InstagramApiError) {
+        if (igErr.isAuthError) {
+          return c.json(
+            {
+              error: "Token do Instagram inválido ou expirado",
+              hint: "O token foi rejeitado pela API do Instagram. Reconfigure o token ou aguarde o cron de refresh.",
+              igStatus: igErr.statusCode,
+            },
+            401,
+          );
+        }
+        if (igErr.isRateLimit) {
+          return c.json(
+            {
+              error: "Rate limit do Instagram atingido",
+              hint: "Aguarde alguns minutos antes de tentar novamente",
+            },
+            429,
+          );
+        }
+      }
+      throw igErr; // re-throw para o catch externo
+    }
+
+    // Pending count query — defensivo para não crashar todo o endpoint
+    let pendingCount = 0;
+    try {
+      const pendingRes = await pool.query(
+        `SELECT COUNT(DISTINCT wc.id)::int AS pending
+         FROM whatsapp_contacts wc
+         JOIN wa_conversations c ON c.contact_id = wc.id
+         WHERE wc.organization_id = $1
+           AND c.organization_id = $1
+           AND c.channel = 'instagram'
+           AND wc.wa_id IS NOT NULL
+           AND (
+             wc.username IS NULL
+             OR wc.display_name IS NULL
+             OR wc.avatar_url IS NULL
+           )`,
+        [user.organizationId],
+      );
+      pendingCount = Number(pendingRes.rows[0]?.pending ?? 0);
+    } catch (pendingErr) {
+      console.error("[WhatsApp Inbox] POST /instagram/backfill-profiles: pending count query falhou:", pendingErr);
+    }
+
+    // Persist sync state — defensivo, resultado válido mesmo se persistir falhar
+    let syncState: Awaited<ReturnType<typeof persistInstagramProfileSyncState>> = null;
+    try {
+      syncState = await persistInstagramProfileSyncState(
+        pool,
+        user.organizationId,
+        result,
+        pendingCount,
+      );
+    } catch (persistErr) {
+      console.error("[WhatsApp Inbox] POST /instagram/backfill-profiles: persist sync state falhou:", persistErr);
+    }
 
     return c.json({
       data: { ...result, syncState },
     });
   } catch (err) {
     console.error("[WhatsApp Inbox] POST /instagram/backfill-profiles error:", err);
-    return c.json({ error: "Failed to backfill Instagram profiles" }, 500);
+    const message = err instanceof Error ? err.message : String(err);
+    return c.json(
+      {
+        error: "Failed to backfill Instagram profiles",
+        details: message,
+      },
+      500,
+    );
   }
 });
 

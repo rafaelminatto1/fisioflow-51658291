@@ -110,9 +110,25 @@ type AutomationWrite = {
   definition: unknown;
 };
 
+export type AutomationStats = {
+  total: number;
+  active: number;
+  runsThisMonth: number;
+  successRate: number;
+  lastRunAt: string | null;
+  perAutomation: Array<{
+    id: string;
+    name: string;
+    runsThisMonth: number;
+    failures: number;
+    lastRunAt: string | null;
+  }>;
+};
+
 export const automationApi = {
   logs: (params?: { limit?: number }) =>
     request<{ data: AutomationLogEntry[] }>(withQuery("/api/automation/logs", params)),
+  stats: () => request<{ data: AutomationStats }>("/api/automation/stats"),
   list: () => request<{ data: AutomationRecord[] }>("/api/automation"),
   get: (id: string) => request<{ data: AutomationRecord }>(`/api/automation/${id}`),
   create: (data: AutomationWrite) =>

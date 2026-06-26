@@ -21,10 +21,10 @@ export const WORKERS_AI_MODELS = {
   llama_4_scout: "@cf/meta/llama-4-scout-17b-16e-instruct",
   /** Llama Guard 3 — moderação de saída. */
   llama_guard: "@cf/meta/llama-guard-3-8b",
-  /** Whisper turbo — transcrição PT-BR. */
+  /** Whisper turbo — transcrição PT-BR (primário). */
   whisper: "@cf/openai/whisper-large-v3-turbo",
-  /** Nova-3 — STT alternativa de baixa latência. */
-  nova_3: "@cf/deepgram/nova-3",
+  /** Whisper original — transcrição PT-BR (fallback). */
+  whisper_legacy: "@cf/openai/whisper",
   /** Aura-2 ES — TTS PT-BR (espanhol similar). */
   aura_2: "@cf/deepgram/aura-2-es",
   /** BGE M3 — embeddings 1024d multi-língua. */

@@ -14,7 +14,7 @@ const app = new Hono<{ Bindings: Env }>();
 /**
  * POST /api/ia-studio/scribe/process
  * Processa áudio do escriba e gera texto formatado.
- * Usa Deepgram Nova-3 → Whisper fallback via AI Gateway (runAi).
+ * Usa Whisper Large V3 Turbo → Whisper original fallback via AI Gateway (runAi).
  */
 app.post("/scribe/process", requireAuth, async (c) => {
   const user = c.get("user");

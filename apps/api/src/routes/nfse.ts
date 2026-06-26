@@ -30,29 +30,96 @@ function _escapeXml(s: string): string {
     .replace(/'/g, "&apos;");
 }
 
+type QueryablePool = ReturnType<typeof createPool>;
+
+async function getExistingColumns(pool: QueryablePool, tableName: string): Promise<Set<string>> {
+  const result = await pool.query(
+    `SELECT column_name
+       FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = $1`,
+    [tableName],
+  );
+  return new Set(result.rows.map((row) => String(row.column_name)));
+}
+
+function firstExistingColumn(
+  columns: Set<string>,
+  candidates: Array<{ column: string; expression?: string }>,
+): string | null {
+  const found = candidates.find((candidate) => columns.has(candidate.column));
+  return found ? (found.expression ?? found.column) : null;
+}
+
+function selectExpr(
+  columns: Set<string>,
+  candidates: Array<{ column: string; expression?: string }>,
+  alias: string,
+  fallbackSql: string,
+): string {
+  const expression = firstExistingColumn(columns, candidates) ?? fallbackSql;
+  return `${expression} AS ${alias}`;
+}
+
+function rawSelectExpr(columns: Set<string>, column: string, fallbackSql: string, alias = column): string {
+  return columns.has(column) ? `${column} AS ${alias}` : `${fallbackSql} AS ${alias}`;
+}
+
 app.get("/config", requireAuth, async (c) => {
   const user = c.get("user");
   const pool = createPool(c.env);
+  const columns = await getExistingColumns(pool, "nfse_config");
+
+  const selectList = [
+    rawSelectExpr(columns, "id", "NULL::uuid"),
+    "organization_id",
+    rawSelectExpr(columns, "razao_social", "NULL::text"),
+    selectExpr(
+      columns,
+      [{ column: "cnpj_prestador" }, { column: "cnpj" }, { column: "provider_tax_id" }],
+      "cnpj",
+      "NULL::text",
+    ),
+    selectExpr(
+      columns,
+      [{ column: "inscricao_municipal" }, { column: "city_registration" }],
+      "inscricao_municipal",
+      "NULL::text",
+    ),
+    selectExpr(
+      columns,
+      [{ column: "municipio_codigo" }, { column: "codigo_municipio" }, { column: "city_code" }],
+      "codigo_municipio",
+      "'3550308'::text",
+    ),
+    rawSelectExpr(columns, "regime_tributario", "'simples_nacional'::text"),
+    rawSelectExpr(columns, "optante_simples", "true"),
+    rawSelectExpr(columns, "tp_opcao_simples", "4"),
+    rawSelectExpr(columns, "incentivo_fiscal", "false"),
+    selectExpr(
+      columns,
+      [{ column: "aliquota_iss" }, { column: "aliquota_padrao" }, { column: "iss_rate" }],
+      "aliquota_padrao",
+      "0.02::numeric",
+    ),
+    selectExpr(
+      columns,
+      [{ column: "codigo_servico_padrao" }, { column: "codigo_servico" }],
+      "codigo_servico",
+      "'04391'::text",
+    ),
+    rawSelectExpr(columns, "cnae", "'8650-0/04'::text"),
+    rawSelectExpr(columns, "discriminacao_padrao", "'Serviços de Fisioterapia'::text"),
+    selectExpr(columns, [{ column: "ambiente" }, { column: "environment" }], "ambiente", "'homologacao'::text"),
+    rawSelectExpr(columns, "contabilidade_email", "NULL::text"),
+    rawSelectExpr(columns, "contabilidade_automacao_ativa", "false"),
+    rawSelectExpr(columns, "updated_at", "NULL::timestamptz"),
+  ];
+
   const result = await pool.query(
-    `SELECT
-       id, organization_id,
-       razao_social,
-       cnpj_prestador AS cnpj,
-       inscricao_municipal,
-       municipio_codigo AS codigo_municipio,
-       regime_tributario,
-       optante_simples,
-       tp_opcao_simples,
-       incentivo_fiscal,
-       aliquota_iss AS aliquota_padrao,
-       codigo_servico_padrao AS codigo_servico,
-       cnae,
-       discriminacao_padrao,
-       ambiente,
-       contabilidade_email,
-       contabilidade_automacao_ativa,
-       updated_at
-     FROM nfse_config WHERE organization_id = $1 LIMIT 1`,
+    `SELECT ${selectList.join(",\n             ")}
+       FROM nfse_config
+      WHERE organization_id = $1
+      LIMIT 1`,
     [user.organizationId],
   );
   return c.json({ data: result.rows[0] ?? null });
@@ -63,31 +130,37 @@ app.put("/config", requireAuth, async (c) => {
   const body = (await c.req.json()) as Record<string, unknown>;
   const pool = createPool(c.env);
 
+  const columns = await getExistingColumns(pool, "nfse_config");
+  const resolveColumn = (preferred: string, aliases: string[] = []) =>
+    [preferred, ...aliases].find((column) => columns.has(column));
+
   const fields = [
-    { apiKey: "razao_social", column: "razao_social" },
-    { apiKey: "cnpj", column: "cnpj_prestador" },
-    { apiKey: "inscricao_municipal", column: "inscricao_municipal" },
-    { apiKey: "codigo_municipio", column: "municipio_codigo" },
-    { apiKey: "regime_tributario", column: "regime_tributario" },
-    { apiKey: "optante_simples", column: "optante_simples" },
-    { apiKey: "tp_opcao_simples", column: "tp_opcao_simples" },
-    { apiKey: "incentivo_fiscal", column: "incentivo_fiscal" },
-    { apiKey: "aliquota_padrao", column: "aliquota_iss" },
-    { apiKey: "codigo_servico_padrao", column: "codigo_servico_padrao" },
-    { apiKey: "cnae", column: "cnae" },
-    { apiKey: "discriminacao_padrao", column: "discriminacao_padrao" },
-    { apiKey: "ambiente", column: "ambiente" },
-    { apiKey: "contabilidade_email", column: "contabilidade_email" },
-    { apiKey: "contabilidade_automacao_ativa", column: "contabilidade_automacao_ativa" },
+    { apiKey: "razao_social", column: resolveColumn("razao_social") },
+    { apiKey: "cnpj", column: resolveColumn("cnpj_prestador", ["cnpj", "provider_tax_id"]) },
+    { apiKey: "inscricao_municipal", column: resolveColumn("inscricao_municipal", ["city_registration"]) },
+    { apiKey: "codigo_municipio", column: resolveColumn("municipio_codigo", ["codigo_municipio", "city_code"]) },
+    { apiKey: "regime_tributario", column: resolveColumn("regime_tributario") },
+    { apiKey: "optante_simples", column: resolveColumn("optante_simples") },
+    { apiKey: "tp_opcao_simples", column: resolveColumn("tp_opcao_simples") },
+    { apiKey: "incentivo_fiscal", column: resolveColumn("incentivo_fiscal") },
+    { apiKey: "aliquota_padrao", column: resolveColumn("aliquota_iss", ["aliquota_padrao", "iss_rate"]) },
+    { apiKey: "codigo_servico_padrao", column: resolveColumn("codigo_servico_padrao", ["codigo_servico"]) },
+    { apiKey: "codigo_servico", column: resolveColumn("codigo_servico_padrao", ["codigo_servico"]) },
+    { apiKey: "cnae", column: resolveColumn("cnae") },
+    { apiKey: "discriminacao_padrao", column: resolveColumn("discriminacao_padrao") },
+    { apiKey: "ambiente", column: resolveColumn("ambiente", ["environment"]) },
+    { apiKey: "contabilidade_email", column: resolveColumn("contabilidade_email") },
+    { apiKey: "contabilidade_automacao_ativa", column: resolveColumn("contabilidade_automacao_ativa") },
   ];
 
-  const sets: string[] = ["updated_at = NOW()"];
+  const sets: string[] = columns.has("updated_at") ? ["updated_at = NOW()"] : [];
   const params: unknown[] = [user.organizationId];
   const providedFields: string[] = [];
 
   for (const field of fields) {
+    if (!field.column) continue;
     const value = body[field.apiKey] ?? body[field.column];
-    if (value !== undefined) {
+    if (value !== undefined && !providedFields.includes(field.column)) {
       params.push(value);
       providedFields.push(field.column);
       sets.push(`${field.column} = $${params.length}`);
@@ -138,15 +211,39 @@ app.get("/", requireAuth, async (c) => {
 
   params.push(Math.min(Number(lim) || 50, 200));
 
+  const columns = await getExistingColumns(pool, "nfse_records");
+  const selectList = [
+    "id",
+    rawSelectExpr(columns, "patient_id", "NULL::uuid"),
+    rawSelectExpr(columns, "appointment_id", "NULL::uuid"),
+    rawSelectExpr(columns, "numero_nfse", "NULL::text"),
+    rawSelectExpr(columns, "numero_rps", "NULL::text"),
+    rawSelectExpr(columns, "serie_rps", "'RPS'::text"),
+    rawSelectExpr(columns, "data_emissao", "created_at"),
+    rawSelectExpr(columns, "valor_servico", "0::numeric"),
+    rawSelectExpr(columns, "aliquota_iss", "0.02::numeric"),
+    rawSelectExpr(columns, "valor_iss", "0::numeric"),
+    rawSelectExpr(columns, "status", "'rascunho'::text"),
+    rawSelectExpr(columns, "codigo_verificacao", "NULL::text"),
+    rawSelectExpr(columns, "link_nfse", "NULL::text"),
+    rawSelectExpr(columns, "link_danfse", "NULL::text"),
+    rawSelectExpr(columns, "tomador_nome", "NULL::text"),
+    rawSelectExpr(columns, "tomador_cpf_cnpj", "NULL::text"),
+    rawSelectExpr(columns, "discriminacao", "NULL::text"),
+    rawSelectExpr(columns, "codigo_servico", "NULL::text"),
+    rawSelectExpr(columns, "created_at", "NOW()"),
+    rawSelectExpr(columns, "enviado_contabilidade_at", "NULL::timestamptz"),
+    rawSelectExpr(columns, "tentativas_envio", "0"),
+    rawSelectExpr(columns, "ultimo_erro", "NULL::text"),
+    rawSelectExpr(columns, "workflow_id", "NULL::text"),
+  ];
+
   const result = await pool.query(
-    `SELECT id, patient_id, appointment_id, numero_nfse, numero_rps, serie_rps,
-		        data_emissao, valor_servico, aliquota_iss, valor_iss, status,
-		        codigo_verificacao, link_nfse, link_danfse, tomador_nome, created_at,
-            enviado_contabilidade_at, tentativas_envio, ultimo_erro, workflow_id
-		 FROM nfse_records
-		 WHERE ${conditions.join(" AND ")}
-		 ORDER BY data_emissao DESC
-		 LIMIT $${params.length}`,
+    `SELECT ${selectList.join(",\n            ")}
+       FROM nfse_records
+      WHERE ${conditions.join(" AND ")}
+      ORDER BY data_emissao DESC
+      LIMIT $${params.length}`,
     params,
   );
 
@@ -531,6 +628,13 @@ app.post("/cancel/:id", requireAuth, async (c) => {
   }
 
   return c.json({ data: { id, status: "cancelado" } });
+});
+
+app.post("/:id/cancel", requireAuth, async (c) => {
+  const { id } = c.req.param();
+  const url = new URL(c.req.url);
+  url.pathname = url.pathname.replace(`/${id}/cancel`, `/cancel/${id}`);
+  return app.fetch(new Request(url.toString(), c.req.raw), c.env, c.executionCtx);
 });
 
 // ===== DANFSe PDF (download) =====

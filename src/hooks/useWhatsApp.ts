@@ -18,6 +18,26 @@ import {
   type Message,
 } from "@/services/whatsapp-api";
 
+function getConversationSortTime(conversation: Conversation) {
+  const primaryTimestamp = conversation.lastMessageAt ?? conversation.createdAt;
+  const primaryTime = primaryTimestamp ? new Date(primaryTimestamp).getTime() : 0;
+
+  if (Number.isFinite(primaryTime) && primaryTime > 0) {
+    return primaryTime;
+  }
+
+  const fallbackTime = conversation.createdAt ? new Date(conversation.createdAt).getTime() : 0;
+  return Number.isFinite(fallbackTime) ? fallbackTime : 0;
+}
+
+function sortConversationsByInteraction(conversations: Conversation[]) {
+  return [...conversations].sort((a, b) => {
+    const timeDiff = getConversationSortTime(b) - getConversationSortTime(a);
+    if (timeDiff !== 0) return timeDiff;
+    return b.createdAt.localeCompare(a.createdAt);
+  });
+}
+
 export function useWhatsAppInbox(filters?: ConversationFilters) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +55,7 @@ export function useWhatsAppInbox(filters?: ConversationFilters) {
     setLoading(true);
     try {
       const result = await fetchConversations(filters);
-      setConversations(result.data);
+      setConversations(sortConversationsByInteraction(result.data));
       setPagination(result.pagination);
       setError(null);
     } catch (err) {
@@ -98,12 +118,7 @@ export function useWhatsAppInbox(filters?: ConversationFilters) {
               return conv;
             });
 
-            // Sort by lastMessageAt (most recent first)
-            return updated.sort((a, b) => {
-              const timeA = new Date(a.lastMessageAt || 0).getTime();
-              const timeB = new Date(b.lastMessageAt || 0).getTime();
-              return timeB - timeA;
-            });
+            return sortConversationsByInteraction(updated);
           });
 
           // Also update React Query cache
@@ -120,11 +135,7 @@ export function useWhatsAppInbox(filters?: ConversationFilters) {
               }
               return conv;
             });
-            const sorted = updatedData.sort((a: any, b: any) => {
-              const timeA = new Date(a.lastMessageAt || 0).getTime();
-              const timeB = new Date(b.lastMessageAt || 0).getTime();
-              return timeB - timeA;
-            });
+            const sorted = sortConversationsByInteraction(updatedData);
             return { ...old, data: sorted };
           });
 

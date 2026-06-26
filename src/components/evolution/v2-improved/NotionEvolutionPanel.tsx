@@ -372,19 +372,19 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 
             <div
               className={cn(
-                "grid grid-cols-1 gap-4",
+                "grid grid-cols-1 gap-4 items-start",
                 showClinicalPanel &&
-                  "min-[1180px]:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_420px]",
+                  "min-[1180px]:grid-cols-[minmax(420px,1.25fr)_minmax(360px,0.95fr)_320px] 2xl:grid-cols-[minmax(520px,1.35fr)_minmax(420px,1fr)_340px]",
               )}
             >
-              <main className="min-w-0 space-y-4">
+              <div className="min-w-0">
                 <EvolutionSectionCard
                   accent="amber"
                   icon={StickyNote}
                   title="Observações Clínicas"
                   subtitle={observationsFocus ? "Modo foco" : "Registro principal da sessão"}
                   flushContent
-                  className={cn(observationsFocus ? "min-h-[calc(100vh-16rem)]" : "min-h-[320px]")}
+                  className={cn(observationsFocus ? "min-h-[calc(100vh-16rem)]" : "min-h-[calc(100vh-18rem)]")}
                   actions={
                     <Button
                       type="button"
@@ -405,7 +405,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                   <div
                     className={cn(
                       "flex flex-col",
-                      observationsFocus ? "min-h-[calc(100vh-16rem)]" : "min-h-[320px]",
+                      observationsFocus ? "min-h-[calc(100vh-16rem)]" : "min-h-[calc(100vh-18rem)]",
                     )}
                   >
                     <RichTextBlock
@@ -422,7 +422,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                       externalValueRevision={replicatedContentRevision}
                       className={cn(
                         "border-none bg-transparent shadow-none",
-                        observationsFocus ? "min-h-[calc(100vh-23rem)]" : "min-h-[250px]",
+                        observationsFocus ? "min-h-[calc(100vh-23rem)]" : "min-h-[calc(100vh-25rem)]",
                       )}
                     />
                     <div className="px-5 pb-5 pt-2">
@@ -447,7 +447,9 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                     </div>
                   </div>
                 </EvolutionSectionCard>
+              </div>
 
+              <div className="min-w-0 space-y-4">
                 <EvolutionSectionCard
                   accent="emerald"
                   icon={Activity}
@@ -521,7 +523,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                       }))}
                   />
                 </EvolutionSectionCard>
-              </main>
+              </div>
 
               {showClinicalPanel && (
                 <aside className="min-w-0 space-y-4 min-[1180px]:pr-1">

@@ -26,12 +26,14 @@ app.post("/dictate", requireAuth, async (c) => {
 
   try {
     // 1. Transcrição Base usando Whisper Large V3 Turbo (Direto no Workers AI para baixa latência)
-    // Usamos o modelo nativo conforme solicitado na Fase 4
+    // Formato: base64 string (conforme docs oficiais Cloudflare para whisper-large-v3-turbo)
+    const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
     const transcriptionResponse = await runAi(
       c.env,
       "@cf/openai/whisper-large-v3-turbo",
       {
-        audio: [...new Uint8Array(audioBuffer)],
+        audio: audioBase64,
+        language: "pt-BR",
       },
       { cache: false },
     );

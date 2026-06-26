@@ -603,36 +603,47 @@ async function dispatchInstagramProfileBackfill(pool: any, env: Env, batchLimit 
     const igToken = String(org.ig_token || env.IG_ACCESS_TOKEN || "");
     if (!igToken) continue;
 
-    const result = await backfillInstagramProfilesForOrganization(pool, String(org.id), igToken, {
-      limit: batchLimit,
-      force: false,
-    });
-    const pendingRes = await pool.query(
-      `SELECT COUNT(DISTINCT wc.id)::int AS pending
-       FROM whatsapp_contacts wc
-       JOIN wa_conversations c ON c.contact_id = wc.id
-       WHERE wc.organization_id = $1
-         AND c.organization_id = $1
-         AND c.channel = 'instagram'
-         AND wc.wa_id IS NOT NULL
-         AND (
-           wc.username IS NULL
-           OR wc.display_name IS NULL
-           OR wc.avatar_url IS NULL
-         )`,
-      [org.id],
-    );
-    await persistInstagramProfileSyncState(
-      pool,
-      String(org.id),
-      result,
-      Number(pendingRes.rows[0]?.pending ?? 0),
-    );
-
-    if (result.scanned > 0) {
-      console.log(
-        `[Cron] Instagram profile backfill org=${org.id} scanned=${result.scanned} updated=${result.updated} skipped=${result.skipped} failed=${result.failed}`,
+    try {
+      const result = await backfillInstagramProfilesForOrganization(pool, String(org.id), igToken, {
+        limit: batchLimit,
+        force: false,
+      });
+      let pendingCount = 0;
+      try {
+        const pendingRes = await pool.query(
+          `SELECT COUNT(DISTINCT wc.id)::int AS pending
+           FROM whatsapp_contacts wc
+           JOIN wa_conversations c ON c.contact_id = wc.id
+           WHERE wc.organization_id = $1
+             AND c.organization_id = $1
+             AND c.channel = 'instagram'
+             AND wc.wa_id IS NOT NULL
+             AND (
+               wc.username IS NULL
+               OR wc.display_name IS NULL
+               OR wc.avatar_url IS NULL
+             )`,
+          [org.id],
+        );
+        pendingCount = Number(pendingRes.rows[0]?.pending ?? 0);
+      } catch (pendingErr) {
+        console.error(`[Cron] Instagram profile backfill org=${org.id} pending count query falhou:`, pendingErr);
+      }
+      await persistInstagramProfileSyncState(
+        pool,
+        String(org.id),
+        result,
+        pendingCount,
       );
+
+      if (result.scanned > 0) {
+        console.log(
+          `[Cron] Instagram profile backfill org=${org.id} scanned=${result.scanned} updated=${result.updated} skipped=${result.skipped} failed=${result.failed}`,
+        );
+      }
+    } catch (orgErr) {
+      // InstagramApiError (auth/rate-limit) ou outro erro — log e continua para próxima org
+      console.error(`[Cron] Instagram profile backfill org=${org.id} falhou:`, orgErr instanceof Error ? orgErr.message : orgErr);
     }
   }
 }

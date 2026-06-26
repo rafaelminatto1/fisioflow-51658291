@@ -59,33 +59,36 @@ export async function runAi(env: Env, model: string, input: unknown, opts: Gatew
 }
 
 /**
- * Transcrição de áudio — Deepgram Nova-3 (pt-BR nativo, mais rápido que Whisper).
- * Fallback para Whisper Large V3 Turbo se Nova-3 falhar.
+ * Transcrição de áudio — Whisper Large V3 Turbo (rápido, gratuito, pt-BR).
+ * Fallback para Whisper original se o turbo falhar.
+ *
+ * Formatos corretos conforme docs oficiais Cloudflare:
+ * - whisper-large-v3-turbo: audio como string base64
+ * - whisper (original): audio como array de números (Uint8Array spread)
  */
 export async function transcribeAudio(
   env: Env,
   audioBase64: string,
   language = "pt-BR",
 ): Promise<string> {
-  const audioBuffer = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
-
-  // Deepgram Nova-3: suporte pt-BR nativo, otimizado para voz conversacional
+  // Primary: Whisper Large V3 Turbo — aceita string base64 diretamente
   try {
     const response = await runAi(
       env,
-      "@cf/deepgram/nova-3",
+      "@cf/openai/whisper-large-v3-turbo",
       {
-        audio: [...audioBuffer],
+        audio: audioBase64, // base64 string (formato esperado pelo modelo)
         language,
       },
       { cache: false }, // áudio clínico nunca cacheado
     );
-    return ((response as any).text as string) ?? (response as any).transcript ?? "";
+    return ((response as any).text as string) ?? "";
   } catch {
-    // Fallback: Whisper Large V3 Turbo
+    // Fallback: Whisper original — aceita array de números (Uint8Array)
+    const audioBuffer = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
     const fallback = await runAi(
       env,
-      "@cf/openai/whisper-large-v3-turbo",
+      "@cf/openai/whisper",
       { audio: [...audioBuffer] },
       { cache: false },
     );

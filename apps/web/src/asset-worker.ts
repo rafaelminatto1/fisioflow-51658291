@@ -178,7 +178,18 @@ export default {
       return response;
     }
 
+    // Log SPA fallback for analytics — helps identify routes not recognized by the SPA router
+    // In production, this fires for legitimate deep links (e.g. /patients/123) AND broken routes
     const indexUrl = new URL("/", url.origin);
-    return env.ASSETS.fetch(new Request(indexUrl.toString(), request));
+    const spaResponse = await env.ASSETS.fetch(new Request(indexUrl.toString(), request));
+    // Add header so client can detect fallback happened
+    const respHeaders = new Headers(spaResponse.headers);
+    respHeaders.set("x-fisioflow-spa-fallback", "true");
+    respHeaders.set("x-fisioflow-original-path", url.pathname);
+    return new Response(spaResponse.body, {
+      status: spaResponse.status,
+      statusText: spaResponse.statusText,
+      headers: respHeaders,
+    });
   },
 } satisfies AssetWorker;

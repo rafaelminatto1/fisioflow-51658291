@@ -129,6 +129,8 @@ import { analyticsMiddleware } from "./lib/analytics";
 import { logToAxiom } from "./lib/axiom";
 
 import { cors } from "hono/cors";
+import { handleWhatsAppInboundQueue } from "./queues/whatsapp-inbound";
+import { handleWhatsAppDLQ } from "./queues/whatsapp-dlq";
 
 const app = new Hono<{ Bindings: Env; Variables: CustomVariables }>();
 
@@ -560,7 +562,15 @@ export default {
     return app.fetch(request, env, ctx);
   },
   scheduled: handleScheduled,
-  queue: handleQueue,
+  queue: async (batch: MessageBatch<any>, env: Env, ctx: ExecutionContext) => {
+    if (batch.queue === "fisioflow-whatsapp-inbound") {
+      await handleWhatsAppInboundQueue(batch, env);
+    } else if (batch.queue === "fisioflow-whatsapp-inbound-dlq") {
+      await handleWhatsAppDLQ(batch, env, ctx);
+    } else {
+      await handleQueue(batch, env);
+    }
+  },
 };
 
 /**

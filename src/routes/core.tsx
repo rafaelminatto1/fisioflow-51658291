@@ -18,6 +18,28 @@ const Schedule = lazy(() => import(/* webpackChunkName: "schedule" */ "@/pages/S
 const Index = lazy(() => import(/* webpackChunkName: "dashboard" */ "@/pages/Index"));
 const Patients = lazy(() => import(/* webpackChunkName: "patients" */ "@/pages/Patients"));
 const Exercises = lazy(() => import(/* webpackChunkName: "exercises" */ "@/pages/Exercises"));
+// Exercises sub-pages (children of /exercises layout route via <Outlet/> in Exercises.tsx)
+const ExercisesLibraryPage = lazy(
+  () => import(/* webpackChunkName: "exercises-library" */ "@/pages/exercises/ExercisesLibraryPage"),
+);
+const ExerciseVideosPage = lazy(
+  () => import(/* webpackChunkName: "exercise-videos" */ "@/pages/exercises/ExerciseVideosPage"),
+);
+const ExerciseTemplatesPage = lazy(
+  () => import(/* webpackChunkName: "exercise-templates" */ "@/pages/exercises/ExerciseTemplatesPage"),
+);
+const ExerciseProtocolsPage = lazy(
+  () => import(/* webpackChunkName: "exercise-protocols" */ "@/pages/exercises/ExerciseProtocolsPage"),
+);
+const ExerciseAiPage = lazy(
+  () => import(/* webpackChunkName: "exercise-ai" */ "@/pages/exercises/ExerciseAiPage"),
+);
+const ExerciseAnalyticsPage = lazy(
+  () => import(/* webpackChunkName: "exercise-analytics" */ "@/pages/exercises/ExerciseAnalyticsPage"),
+);
+const ExercisesLegacyRedirect = lazy(() =>
+  import(/* webpackChunkName: "exercises-legacy-redirect" */ "@/pages/exercises/ExercisesLegacyRedirect"),
+);
 const Financial = lazy(() => import(/* webpackChunkName: "financial" */ "@/pages/Financial"));
 const Reports = lazy(() => import(/* webpackChunkName: "reports" */ "@/pages/Reports"));
 const Settings = lazy(() => import(/* webpackChunkName: "settings" */ "@/pages/Settings"));
@@ -55,9 +77,6 @@ const EventMonitor = lazy(
 const BriefingDashboard = lazy(
   () => import(/* webpackChunkName: "briefing-dashboard" */ "@/pages/briefing/BriefingDashboardPage"),
 );
-const BlocksEditorDemo = lazy(
-  () => import(/* webpackChunkName: "blocks-editor-demo" */ "@/pages/evolution/BlocksEditorDemo"),
-);
 const SemanticExerciseSearch = lazy(
   () => import(/* webpackChunkName: "semantic-exercise-search" */ "@/pages/exercises/SemanticExerciseSearch"),
 );
@@ -75,6 +94,36 @@ const EvolucaoClinica = lazy(
 );
 const AvaliacaoInicial = lazy(
   () => import(/* webpackChunkName: "avaliacao-inicial" */ "@/pages/AvaliacaoInicial"),
+);
+
+const semanticExerciseSearchElement = (
+  <RouteErrorBoundary routeName="SemanticExerciseSearch">
+    <ProtectedRoute>
+      <PageLayout noPadding>
+        <SemanticExerciseSearch />
+      </PageLayout>
+    </ProtectedRoute>
+  </RouteErrorBoundary>
+);
+
+const exerciseCurationElement = (
+  <RouteErrorBoundary routeName="ExerciseCuration">
+    <ProtectedRoute>
+      <PageLayout noPadding>
+        <ExerciseCuration />
+      </PageLayout>
+    </ProtectedRoute>
+  </RouteErrorBoundary>
+);
+
+const exerciseEvidenceElement = (
+  <RouteErrorBoundary routeName="ExerciseEvidence">
+    <ProtectedRoute>
+      <PageLayout noPadding>
+        <ExerciseEvidence />
+      </PageLayout>
+    </ProtectedRoute>
+  </RouteErrorBoundary>
 );
 
 export const coreRoutes = (
@@ -131,7 +180,14 @@ export const coreRoutes = (
           </ProtectedRoute>
         </RouteErrorBoundary>
       }
-    />
+    >
+      <Route index element={<ExercisesLibraryPage />} />
+      <Route path="videos" element={<ExerciseVideosPage />} />
+      <Route path="templates" element={<ExerciseTemplatesPage />} />
+      <Route path="protocols" element={<ExerciseProtocolsPage />} />
+      <Route path="ai" element={<ExerciseAiPage />} />
+      <Route path="analytics" element={<ExerciseAnalyticsPage />} />
+    </Route>
     <Route
       path="/automacoes"
       element={
@@ -212,54 +268,19 @@ export const coreRoutes = (
         </RouteErrorBoundary>
       }
     />
-    <Route
-      path="/editor-blocos"
-      element={
-        <RouteErrorBoundary routeName="BlocksEditorDemo">
-          <ProtectedRoute>
-            <PageLayout noPadding>
-              <BlocksEditorDemo />
-            </PageLayout>
-          </ProtectedRoute>
-        </RouteErrorBoundary>
-      }
-    />
-    <Route
-      path="/exercicios/busca-ia"
-      element={
-        <RouteErrorBoundary routeName="SemanticExerciseSearch">
-          <ProtectedRoute>
-            <PageLayout noPadding>
-              <SemanticExerciseSearch />
-            </PageLayout>
-          </ProtectedRoute>
-        </RouteErrorBoundary>
-      }
-    />
-    <Route
-      path="/exercicios/curadoria"
-      element={
-        <RouteErrorBoundary routeName="ExerciseCuration">
-          <ProtectedRoute>
-            <PageLayout noPadding>
-              <ExerciseCuration />
-            </PageLayout>
-          </ProtectedRoute>
-        </RouteErrorBoundary>
-      }
-    />
-    <Route
-      path="/exercicios/:id/evidencia"
-      element={
-        <RouteErrorBoundary routeName="ExerciseEvidence">
-          <ProtectedRoute>
-            <PageLayout noPadding>
-              <ExerciseEvidence />
-            </PageLayout>
-          </ProtectedRoute>
-        </RouteErrorBoundary>
-      }
-    />
+    <Route path="/exercises/search-ai" element={semanticExerciseSearchElement} />
+    <Route path="/exercicios/busca-ia" element={semanticExerciseSearchElement} />
+    <Route path="/exercises/curation" element={exerciseCurationElement} />
+    <Route path="/exercicios/curadoria" element={exerciseCurationElement} />
+    <Route path="/exercises/:id/evidence" element={exerciseEvidenceElement} />
+    <Route path="/exercicios/:id/evidencia" element={exerciseEvidenceElement} />
+    {/* Legacy PT exercise routes — redirect to EN equivalents */}
+    <Route path="/exercicios" element={<ExercisesLegacyRedirect />} />
+    <Route path="/exercicios/videos" element={<ExercisesLegacyRedirect />} />
+    <Route path="/exercicios/templates" element={<ExercisesLegacyRedirect />} />
+    <Route path="/exercicios/protocolos" element={<ExercisesLegacyRedirect />} />
+    <Route path="/exercicios/ia" element={<ExercisesLegacyRedirect />} />
+    <Route path="/exercicios/analytics" element={<ExercisesLegacyRedirect />} />
     <Route
       path="/base-conhecimento"
       element={

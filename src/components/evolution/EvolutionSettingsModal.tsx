@@ -149,20 +149,6 @@ export function EvolutionSettingsModal({
               >
                 Estilo Notion
               </Button>
-              <Button
-                variant={settings.defaultViewVersion === "v2-texto" ? "default" : "outline"}
-                className="justify-start"
-                onClick={() => setSettings({ ...settings, defaultViewVersion: "v2-texto" })}
-              >
-                Blocos de Texto
-              </Button>
-              <Button
-                variant={settings.defaultViewVersion === "v1-soap" ? "default" : "outline"}
-                className="justify-start"
-                onClick={() => setSettings({ ...settings, defaultViewVersion: "v1-soap" })}
-              >
-                SOAP Clássico
-              </Button>
             </div>
           </div>
 

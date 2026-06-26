@@ -197,7 +197,7 @@ async function processConciergeAsync(
         orgId,
         contactId,
         "outbound",
-        "bot",
+        "system",
         contactId,
         "text",
         concierge.reply,
