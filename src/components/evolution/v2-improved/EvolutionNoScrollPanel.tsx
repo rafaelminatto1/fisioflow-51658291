@@ -315,7 +315,7 @@ export const EvolutionNoScrollPanel = memo(
     const observationsValue = data.evolutionText || data.observations || "";
 
     return (
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden p-4 md:grid-cols-[minmax(0,1.42fr)_minmax(400px,1.05fr)_minmax(300px,0.72fr)] xl:grid-cols-[minmax(0,1.48fr)_minmax(430px,1.08fr)_minmax(320px,0.74fr)]">
+      <div className="evolution-main-grid grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden p-4">
         {/* ===================== COLUNA 1 — OBSERVAÇÕES ===================== */}
         <motion.div
           custom={0}
@@ -398,13 +398,13 @@ export const EvolutionNoScrollPanel = memo(
           variants={cardVariants}
           initial="hidden"
           animate="visible"
-          className="custom-scrollbar flex min-h-0 flex-col gap-1.5 overflow-y-auto pb-2 pr-1"
+          className="custom-scrollbar flex min-h-0 flex-col gap-2 overflow-y-auto pb-2 pr-1"
         >
           {/* nível de dor — EVA */}
           <div data-pain-section className="rounded-2xl border border-t-[3px] border-border border-t-rose-500 bg-card px-3 py-2 shadow-sm">
             <div className="mb-0.5 flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
-                <Activity className="h-4.5 w-4.5" />
+              <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
+                <Activity className="h-4 w-4" />
               </div>
               <div className="min-w-0">
                 <div className="text-sm font-extrabold text-slate-800">Nível de dor — EVA</div>
@@ -434,11 +434,16 @@ export const EvolutionNoScrollPanel = memo(
 
             <PainGauge value={discharge} arrival={arrival} compact onChange={setDischarge} showDeltaArc showTooltips />
 
-            <div className="mt-1.5 flex gap-2">
+            <div className="mt-1 flex gap-2">
               <div className="flex-1 min-w-0">
-                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1">
-                  Chegada
-                </label>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                    Chegada
+                  </label>
+                  <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-extrabold text-violet-700">
+                    {(arrival ?? 0)}/10
+                  </span>
+                </div>
                 <Slider
                   min={0}
                   max={10}
@@ -457,9 +462,14 @@ export const EvolutionNoScrollPanel = memo(
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1">
-                  Saída
-                </label>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                    Saída
+                  </label>
+                  <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-extrabold text-violet-700">
+                    {discharge}/10
+                  </span>
+                </div>
                 <Slider
                   min={0}
                   max={10}
@@ -479,7 +489,7 @@ export const EvolutionNoScrollPanel = memo(
               </div>
             </div>
 
-            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
                 Tipo:
               </span>
@@ -510,7 +520,7 @@ export const EvolutionNoScrollPanel = memo(
               })}
             </div>
 
-            <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-border bg-slate-50/60 px-3 py-1.5">
+            <div className="mt-2 flex items-center gap-2 rounded-xl border border-border bg-slate-50/60 px-3 py-1.5">
               <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
               <input
                 type="text"
