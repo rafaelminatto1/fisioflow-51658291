@@ -34,7 +34,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageLayout, PageContainer } from "@/components/layout/PageLayout";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -475,10 +474,9 @@ export default function CrmWhatsApp() {
   const [newConversationPhone, setNewConversationPhone] = useState("");
   const [newConversationName, setNewConversationName] = useState("");
   const [startingConversation, setStartingConversation] = useState(false);
-  const _isFetching = isFetching;
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { conversations, loading, refetch } = useWhatsAppInbox({
+  const { conversations, loading, refetch, newMessageIds } = useWhatsAppInbox({
     search: search || undefined,
     limit: 100,
   });
@@ -627,6 +625,13 @@ export default function CrmWhatsApp() {
   const handleStatusAction = async (status: "pending" | "resolved" | "closed") => {
     await updateStatus(status);
     await Promise.all([refetch(), refetchConversation()]);
+  };
+
+  const handleArchiveConversation = async (conversationId: string) => {
+    await markConversationRead(conversationId);
+    toast.success("Conversa arquivada.");
+    setConversationMenu(null);
+    await Promise.all([refetch(), selectedId === conversationId ? refetchConversation() : Promise.resolve()]);
   };
 
   const handleQuickReply = (quickReply: CrmQuickReplyViewModel) => {
@@ -915,7 +920,6 @@ export default function CrmWhatsApp() {
                 <div className="flex items-center gap-2 rounded-[10px] bg-muted/60 px-3 py-2.5">
                   <Search className="h-[15px] w-[15px] text-muted-foreground" />
                   <Input
-                    ref={searchInputRef}
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="Buscar conversa ou paciente..."
