@@ -8,6 +8,12 @@ assets = { directory = "./apps/web/dist", binding = "ASSETS" }
 [observability]
 enabled = true
 
+# Custom domain routes — ensures the Worker handles all traffic for moocafisio.com.br
+routes = [
+  { pattern = "www.moocafisio.com.br", custom_domain = true },
+  { pattern = "moocafisio.com.br", custom_domain = true },
+]
+
 # Staging Environment
 [env.staging]
 name = "fisioflow-web-staging"
@@ -17,3 +23,7 @@ assets = { directory = "./apps/web/dist", binding = "ASSETS" }
 [env.production]
 name = "fisioflow-web"
 assets = { directory = "./apps/web/dist", binding = "ASSETS" }
+routes = [
+  { pattern = "www.moocafisio.com.br", custom_domain = true },
+  { pattern = "moocafisio.com.br", custom_domain = true },
+]
