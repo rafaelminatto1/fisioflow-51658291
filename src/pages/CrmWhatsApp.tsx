@@ -35,7 +35,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageLayout, PageContainer } from "@/components/layout/PageLayout";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -62,10 +61,9 @@ import {
   resolveContact,
   updateMessage,
   type FunnelStage,
+  type Message,
   type QuickReply,
   type Tag,
-  type Message,
-  type InstagramProfileSyncSummary,
 } from "@/services/whatsapp-api";
 import { useWhatsAppConversation, useWhatsAppInbox } from "@/hooks/useWhatsApp";
 import {
@@ -190,55 +188,6 @@ function buildQuotedMessageText(message: Message) {
   const text = getMessageText(message.content).trim();
   const time = getMessageTimeLabel(message.timestamp);
   return [time ? `Mensagem ${time}:` : "Mensagem:", text ? `"${text}"` : "[mensagem sem texto]"].join("\n");
-}
-
-function formatSyncTimestamp(value: string | null | undefined) {
-  if (!value) return "Nunca sincronizado";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Nunca sincronizado";
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}
-
-function formatSyncAge(value: string | null | undefined) {
-  if (!value) return "Nunca sincronizado";
-  const timestamp = new Date(value).getTime();
-  if (Number.isNaN(timestamp)) return "Nunca sincronizado";
-
-  const diffMinutes = Math.floor((Date.now() - timestamp) / 60000);
-  if (diffMinutes < 1) return "há menos de 1 min";
-  if (diffMinutes < 60) return `há ${diffMinutes} min`;
-
-  const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `há ${diffHours}h`;
-
-  const diffDays = Math.floor(diffHours / 24);
-  return `há ${diffDays}d`;
-}
-
-function getSyncStatusMeta(status: "synced" | "partial" | "error" | undefined) {
-  switch (status) {
-    case "partial":
-      return {
-        label: "Parcial",
-        className: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-300",
-      };
-    case "error":
-      return {
-        label: "Erro",
-        className: "border-red-200 bg-red-50 text-red-700 dark:border-red-800/60 dark:bg-red-950/30 dark:text-red-300",
-      };
-    case "synced":
-    default:
-      return {
-        label: "OK",
-        className: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-300",
-      };
-  }
 }
 
 const ContactAvatar = memo(function ContactAvatar({
@@ -505,8 +454,6 @@ export default function CrmWhatsApp() {
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>([]);
   const [funnel, setFunnel] = useState<FunnelStage[]>([]);
-  const [instagramSyncSummary, setInstagramSyncSummary] = useState<InstagramProfileSyncSummary["syncState"] | null>(null);
-  const [instagramPendingCount, setInstagramPendingCount] = useState<number | null>(null);
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -556,8 +503,6 @@ export default function CrmWhatsApp() {
     fetchCrmSettings()
       .then((cfg) => {
         setFunnel(cfg.funnel);
-        setInstagramSyncSummary(cfg.instagramProfileSync ?? null);
-        setInstagramPendingCount(cfg.instagramProfilePendingCount ?? null);
       })
       .catch(() => {});
   }, []);
@@ -692,10 +637,6 @@ export default function CrmWhatsApp() {
     setSyncingInstagramProfiles(true);
     try {
       const result = await backfillInstagramProfiles({ limit: 100, force: false });
-      setInstagramSyncSummary(result.syncState ?? null);
-      if (typeof result.syncState?.pendingCount === "number") {
-        setInstagramPendingCount(result.syncState.pendingCount);
-      }
       await Promise.all([
         refetch(),
         selectedId ? refetchConversation() : Promise.resolve(),
@@ -1001,41 +942,6 @@ export default function CrmWhatsApp() {
           </div>
           <div className="border-b border-border/70 px-5 py-2 text-[11px] text-muted-foreground">
             Perfis do Instagram sincronizam automaticamente a cada 15 minutos e também podem ser atualizados manualmente.
-          </div>
-
-          <div className="px-5 pt-4">
-            <Card className="border-dashed border-border/70 bg-card/80 shadow-sm">
-              <CardContent className="grid gap-3 p-4 md:grid-cols-2 md:items-center">
-                <div>
-                  <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-                    Instagram Sync
-                  </div>
-                  <div className="mt-1 text-sm font-semibold">
-                    Última sincronização: {formatSyncTimestamp(instagramSyncSummary?.lastSyncedAt)}
-                  </div>
-                  <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{formatSyncAge(instagramSyncSummary?.lastSyncedAt)}</span>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "rounded-full px-2.5 py-0.5 text-[10px] font-semibold",
-                        getSyncStatusMeta(instagramSyncSummary?.lastStatus).className,
-                      )}
-                    >
-                      {getSyncStatusMeta(instagramSyncSummary?.lastStatus).label}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-3 md:justify-end">
-                  <Badge variant="outline" className="rounded-full border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">
-                    {instagramPendingCount === null ? "Carregando..." : `${instagramPendingCount} pendente(s)`}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    Último lote: {instagramSyncSummary?.lastResult?.updated ?? 0} atualizados
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           <div className="grid min-h-0 flex-1 grid-cols-[326px_minmax(0,1fr)_304px]">
