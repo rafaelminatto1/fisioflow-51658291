@@ -401,10 +401,10 @@ export const EvolutionNoScrollPanel = memo(
           className="custom-scrollbar flex min-h-0 flex-col gap-2 overflow-y-auto pb-2 pr-1"
         >
           {/* nível de dor — EVA */}
-          <div data-pain-section className="rounded-2xl border border-t-[3px] border-border border-t-rose-500 bg-card px-3 py-2.5 shadow-sm">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
-                <Activity className="h-5 w-5" />
+          <div data-pain-section className="rounded-2xl border border-t-[3px] border-border border-t-rose-500 bg-card px-3 py-2 shadow-sm">
+            <div className="mb-0.5 flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
+                <Activity className="h-4 w-4" />
               </div>
               <div className="min-w-0">
                 <div className="text-sm font-extrabold text-slate-800">Nível de dor — EVA</div>
@@ -434,11 +434,16 @@ export const EvolutionNoScrollPanel = memo(
 
             <PainGauge value={discharge} arrival={arrival} compact onChange={setDischarge} showDeltaArc showTooltips />
 
-            <div className="mt-2 flex gap-2.5">
+            <div className="mt-1 flex gap-2">
               <div className="flex-1 min-w-0">
-                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1">
-                  Chegada
-                </label>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                    Chegada
+                  </label>
+                  <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-extrabold text-violet-700">
+                    {(arrival ?? 0)}/10
+                  </span>
+                </div>
                 <Slider
                   min={0}
                   max={10}
@@ -457,9 +462,14 @@ export const EvolutionNoScrollPanel = memo(
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1">
-                  Saída
-                </label>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                    Saída
+                  </label>
+                  <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-extrabold text-violet-700">
+                    {discharge}/10
+                  </span>
+                </div>
                 <Slider
                   min={0}
                   max={10}

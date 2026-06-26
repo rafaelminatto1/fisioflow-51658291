@@ -84,7 +84,7 @@ export const PainGauge = memo(({ value, arrival, compact, onChange, showDeltaArc
   );
 
   return (
-    <div className={cn("relative mx-auto max-w-full", compact ? "w-[176px]" : "w-[260px]")}>
+    <div className={cn("relative mx-auto max-w-full", compact ? "w-[156px]" : "w-[260px]")}>
       <svg
         ref={svgRef}
         viewBox="0 0 260 158"
@@ -169,23 +169,23 @@ export const PainGauge = memo(({ value, arrival, compact, onChange, showDeltaArc
           <circle cx={saida.x} cy={saida.y} r={9} fill={painColor(v)} stroke="#fff" strokeWidth={3} />
         </g>
       </svg>
-      <div className="pointer-events-none absolute inset-x-0 bottom-0.5 text-center">
+      <div className={cn("pointer-events-none absolute inset-x-0 text-center", compact ? "bottom-1.5" : "bottom-0.5")}>
         <div
           className={cn(
             "font-extrabold leading-none tracking-tight tabular-nums",
-            compact ? "text-[34px]" : "text-[52px]",
+            compact ? "text-[28px]" : "text-[52px]",
           )}
           style={{ color: painColor(v) }}
         >
           {v}
           <span
-            className={cn("font-bold text-muted-foreground", compact ? "text-[14px]" : "text-[20px]")}
+            className={cn("font-bold text-muted-foreground", compact ? "text-[12px]" : "text-[20px]")}
           >
             /10
           </span>
         </div>
         <div
-          className={cn("font-extrabold", compact ? "text-[10px]" : "mt-0.5 text-xs")}
+          className={cn("font-extrabold", compact ? "text-[9px]" : "mt-0.5 text-xs")}
           style={{ color: painColor(v) }}
         >
           {painLabel(v)}
