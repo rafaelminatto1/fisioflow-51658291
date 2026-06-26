@@ -1392,7 +1392,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
 
       {/* Procedure Library Modal */}
       <Dialog open={procedureLibraryOpen} onOpenChange={setProcedureLibraryOpen}>
-        <DialogContent className="max-w-3xl rounded-3xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
+        <DialogContent className="w-[95vw] max-w-6xl rounded-3xl max-h-[92vh] flex flex-col p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800/80">
             <DialogTitle className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
               <BookOpen className="h-5 w-5" />
@@ -1432,7 +1432,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                     </span>
                     <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800" />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {procs.map((proc) => {
                       const isSelected = tempSelectedProcedures.includes(proc.name);
                       return (
@@ -1449,7 +1449,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                             "flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition-all duration-200 select-none",
                             isSelected
                               ? "bg-orange-500/5 border-orange-500/30 text-orange-950 dark:text-orange-200"
-                              : "bg-background border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-900/30"
+                              : "bg-background border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-900/30 hover:shadow-md hover:-translate-y-0.5"
                           )}
                         >
                           <Checkbox
@@ -1480,7 +1480,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
 
       {/* Exercise Library Modal */}
       <Dialog open={exerciseLibraryOpen} onOpenChange={setExerciseLibraryOpen}>
-        <DialogContent className="max-w-3xl rounded-3xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
+        <DialogContent className="w-[95vw] max-w-6xl rounded-3xl max-h-[92vh] flex flex-col p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800/80">
             <DialogTitle className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
               <BookOpen className="h-5 w-5" />
@@ -1509,7 +1509,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                 Nenhum exercício encontrado
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredExercises.map((ex) => {
                   const isSelected = tempSelectedExercises.includes(ex.id);
                   const thumbSrc = getBestImageUrl(ex);
@@ -1524,10 +1524,10 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                         }
                       }}
                       className={cn(
-                        "group flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition-all duration-200 select-none",
+                        "group flex items-center gap-4 p-4 rounded-2xl border cursor-pointer transition-all duration-200 select-none",
                         isSelected
                           ? "bg-emerald-500/5 border-emerald-500/30 text-emerald-950 dark:text-emerald-200"
-                          : "bg-background border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-900/30"
+                          : "bg-background border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-900/30 hover:shadow-md hover:-translate-y-0.5"
                       )}
                     >
                       <Checkbox
@@ -1537,7 +1537,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                       />
                       
                       {/* Thumbnail */}
-                      <div className="h-10 w-10 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0 border border-slate-200/50">
+                      <div className="h-16 w-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0 border border-slate-200/50">
                         {thumbSrc ? (
                           <OptimizedImage
                             src={thumbSrc}
@@ -1548,15 +1548,15 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                           />
                         ) : (
                           <div className="h-full w-full flex items-center justify-center">
-                            <Dumbbell className="h-4 w-4 text-slate-300" />
+                            <Dumbbell className="h-6 w-6 text-slate-300" />
                           </div>
                         )}
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <span className="block text-xs font-semibold leading-none truncate">{ex.name}</span>
+                        <span className="block text-sm font-semibold leading-tight truncate">{ex.name}</span>
                         {ex.category && (
-                          <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[8px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500">
+                          <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-500">
                             {ex.category}
                           </span>
                         )}
