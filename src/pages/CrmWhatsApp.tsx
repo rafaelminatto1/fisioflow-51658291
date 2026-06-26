@@ -16,6 +16,7 @@ import {
   Globe,
   ListTodo,
   MessageCircle,
+  MessageSquarePlus,
   Mic,
   MoreVertical,
   Paperclip,
@@ -41,6 +42,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TaskQuickCreateModal } from "@/components/tarefas/v2/TaskQuickCreateModal";
 import {
@@ -51,11 +53,13 @@ import {
   fetchCrmSettings,
   fetchQuickReplies,
   fetchTags,
+  findOrCreateConversation,
   markConversationRead,
   markConversationUnread,
   muteConversation,
   pinConversation,
   removeTag,
+  resolveContact,
   updateMessage,
   type FunnelStage,
   type QuickReply,
@@ -74,6 +78,7 @@ import {
   type CrmStageMeta,
 } from "@/features/whatsapp/crmWhatsAppAdapter";
 import { cn } from "@/lib/utils";
+import { formatPhoneInput } from "@/utils/formatInputs";
 
 type PipelineFilter = "all" | "lead" | "contact" | "evaluation" | "treatment";
 
@@ -320,12 +325,14 @@ type CrmConversationViewModel = ReturnType<typeof toCrmConversationViewModel>;
 const ConversationCard = memo(function ConversationCard({
   item,
   isSelected,
+  isNew,
   funnelMap,
   onSelect,
   onContextMenu,
 }: {
   item: CrmConversationViewModel;
   isSelected: boolean;
+  isNew?: boolean;
   funnelMap: Map<string, FunnelStage>;
   onSelect: (id: string) => void;
   onContextMenu: (e: React.MouseEvent, id: string) => void;
@@ -341,6 +348,7 @@ const ConversationCard = memo(function ConversationCard({
       className={cn(
         "relative flex w-full gap-3 border-b border-border/60 px-3.5 py-3 text-left transition-colors hover:bg-muted/40",
         isSelected && "bg-primary/[0.07]",
+        isNew && "animate-pulse bg-green-500/5",
       )}
     >
       {isSelected && (
@@ -519,6 +527,10 @@ export default function CrmWhatsApp() {
   } | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [editDraft, setEditDraft] = useState("");
+  const [newConversationOpen, setNewConversationOpen] = useState(false);
+  const [newConversationPhone, setNewConversationPhone] = useState("");
+  const [newConversationName, setNewConversationName] = useState("");
+  const [startingConversation, setStartingConversation] = useState(false);
   const _isFetching = isFetching;
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -623,6 +635,31 @@ export default function CrmWhatsApp() {
     setNoteDraft("");
     setNoteOpen(false);
     await Promise.all([refetch(), refetchConversation()]);
+  };
+
+  const handleStartNewConversation = async () => {
+    const phone = newConversationPhone.replace(/\D/g, "");
+    if (phone.length < 10 || startingConversation) return;
+    setStartingConversation(true);
+    try {
+      const contact = await resolveContact({
+        phone,
+        displayName: newConversationName.trim() || undefined,
+      });
+      const conversation = await findOrCreateConversation(contact.id);
+      setNewConversationOpen(false);
+      setNewConversationPhone("");
+      setNewConversationName("");
+      setSelectedId(conversation.id);
+      await refetch();
+      toast.success("Conversa iniciada.");
+    } catch (error) {
+      toast.error("Não foi possível iniciar a conversa.", {
+        description: error instanceof Error ? error.message : undefined,
+      });
+    } finally {
+      setStartingConversation(false);
+    }
   };
 
   const handleStageChange = async (stage: CrmStage) => {
@@ -925,6 +962,15 @@ export default function CrmWhatsApp() {
             <div className="flex items-center gap-2">
               <Button
                 type="button"
+                size="sm"
+                onClick={() => setNewConversationOpen(true)}
+                className="h-9 rounded-[10px] bg-[hsl(142_70%_42%)] px-3 text-xs font-semibold text-white hover:bg-[hsl(142_70%_38%)]"
+              >
+                <MessageSquarePlus className="mr-2 h-4 w-4" />
+                Nova conversa
+              </Button>
+              <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={handleBackfillInstagramProfiles}
@@ -1011,6 +1057,7 @@ export default function CrmWhatsApp() {
                     key={item.id}
                     item={item}
                     isSelected={selectedId === item.id}
+                    isNew={newMessageIds.has(item.id)}
                     funnelMap={funnelMap}
                     onSelect={setSelectedId}
                     onContextMenu={(e, id) => setConversationMenu({ conversationId: id, x: e.clientX, y: e.clientY })}
@@ -1624,6 +1671,79 @@ export default function CrmWhatsApp() {
             </button>
           </div>
         ) : null}
+
+        <Dialog
+          open={newConversationOpen}
+          onOpenChange={(open) => {
+            setNewConversationOpen(open);
+            if (!open) {
+              setNewConversationPhone("");
+              setNewConversationName("");
+            }
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Nova conversa</DialogTitle>
+              <DialogDescription>
+                Informe o WhatsApp do destinatário para iniciar uma nova conversa.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="new-conversation-phone">WhatsApp</Label>
+                <Input
+                  id="new-conversation-phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="(11) 98765-4321"
+                  value={newConversationPhone}
+                  onChange={(event) =>
+                    setNewConversationPhone(formatPhoneInput(event.target.value))
+                  }
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void handleStartNewConversation();
+                    }
+                  }}
+                  autoFocus
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="new-conversation-name">Nome (opcional)</Label>
+                <Input
+                  id="new-conversation-name"
+                  placeholder="Como deseja identificar o contato"
+                  value={newConversationName}
+                  onChange={(event) => setNewConversationName(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void handleStartNewConversation();
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setNewConversationOpen(false)}
+                disabled={startingConversation}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={() => void handleStartNewConversation()}
+                disabled={newConversationPhone.replace(/\D/g, "").length < 10 || startingConversation}
+              >
+                {startingConversation ? "Iniciando..." : "Iniciar conversa"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
           <DialogContent>

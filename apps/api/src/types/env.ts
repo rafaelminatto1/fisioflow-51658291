@@ -244,6 +244,12 @@ export interface Env {
   // Queues
   BACKGROUND_QUEUE: Queue;
 
+  /** WhatsApp inbound queue — decouples webhook receipt from heavy processing (AI, DB writes, etc.) */
+  WHATSAPP_QUEUE: Queue;
+
+  /** WhatsApp Dead Letter Queue — stores failed messages for manual review */
+  WHATSAPP_DLQ: Queue;
+
   // Cloudflare Stream Webhook Secret — para validar POST /api/exercise-videos/stream-webhook
   STREAM_WEBHOOK_SECRET?: string;
 

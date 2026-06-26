@@ -1,4 +1,4 @@
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Check, AlertTriangle, Clock } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -67,12 +67,26 @@ export function ConversationListItem({
   bulkMode,
   isSelectedBulk,
 }: ConversationListItemProps) {
-  const timeAgo = conversation.lastMessageAt
-    ? formatDistanceToNow(new Date(conversation.lastMessageAt), {
-        addSuffix: false,
-        locale: ptBR,
-      })
-    : "";
+  const formatMessageTime = (dateStr?: string): string => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) return "";
+
+    if (isToday(date)) {
+      return format(date, "HH:mm"); // "14:30"
+    }
+    if (isYesterday(date)) {
+      return "Ontem";
+    }
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays < 7) {
+      return format(date, "EEE", { locale: ptBR }); // "seg", "ter", etc.
+    }
+    return format(date, "dd/MM"); // "24/06"
+  };
+
+  const timeAgo = formatMessageTime(conversation.lastMessageAt);
 
   const sla = getSlaLabel(conversation.slaDeadline, conversation.slaBreached);
 

@@ -240,6 +240,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           } else if (data.type === "NOTIFICATION_RECEIVED") {
             queryClient.invalidateQueries({ queryKey: ["notifications"] });
           } else if (
+            data.type === "whatsapp_new_message" ||
             data.type === "whatsapp_message" ||
             data.type === "whatsapp_read" ||
             data.type === "whatsapp_assignment" ||
@@ -249,6 +250,11 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             // Invalida o badge de não lidas e a lista do inbox em tempo real.
             queryClient.invalidateQueries({ queryKey: ["whatsapp", "unread-count"] });
             queryClient.invalidateQueries({ queryKey: ["whatsapp", "inbox"] });
+
+            // Dispatch custom event for hooks to listen (real-time updates)
+            window.dispatchEvent(
+              new CustomEvent("websocket_message", { detail: data })
+            );
           } else if (data.type === "PRESENCE_UPDATE") {
             setOnlineUsers((prev) => {
               const next = new Map(prev);

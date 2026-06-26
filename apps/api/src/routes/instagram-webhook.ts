@@ -7,6 +7,7 @@ import { fetchInstagramProfile, formatInstagramDisplayName, IG_GRAPH } from "../
 import { verifyMetaSignature } from "./whatsapp";
 import { writeEvent } from "../lib/analytics";
 import type { Env } from "../types/env";
+import type { WhatsAppInboundMessage } from "../lib/whatsapp-queue";
 
 /**
  * Webhook do Instagram Direct (Instagram Messaging API com Instagram Login).
@@ -34,10 +35,6 @@ app.get("/", (c) => {
 app.post("/", async (c) => {
   const rawBody = await c.req.text();
   const signature = c.req.header("x-hub-signature-256");
-  // O Instagram com Login do Instagram assina o X-Hub-Signature-256 com o SECRET PRÓPRIO do
-  // app do Instagram (IG_APP_SECRET, ≠ app secret do Facebook/WhatsApp). Validamos contra
-  // IG_APP_SECRET (e WHATSAPP_APP_SECRET como fallback de robustez); aceita se qualquer um
-  // conferir, rejeita (401) se nenhum bater — desde que haja ao menos um secret configurado.
   const candidateSecrets = [c.env.IG_APP_SECRET, c.env.WHATSAPP_APP_SECRET].filter(
     (s): s is string => typeof s === "string" && s.length > 0,
   );
@@ -61,8 +58,41 @@ app.post("/", async (c) => {
 
   if (body.object !== "instagram") return c.json({ status: "ignored" });
 
-  c.executionCtx.waitUntil(processInstagram(body, c.env));
-  return c.json({ status: "ok" });
+  // Extract messages and enqueue to Cloudflare Queue
+  const entriesToEnqueue: WhatsAppInboundMessage[] = [];
+  const entries = (body.entry as any[]) ?? [];
+  
+  for (const entry of entries) {
+    const changes = entry?.changes ?? [];
+    for (const change of changes) {
+      const value = change?.value;
+      if (!value?.messages?.length) continue;
+      
+      for (const msg of value.messages) {
+        const message: WhatsAppInboundMessage = {
+          type: "inbound_message",
+          metaMessageId: msg.id,
+          waId: value.recipients?.[0]?.id ?? msg.from?.id ?? "",
+          from: msg.from?.id ?? "",
+          text: msg.text,
+          messageType: "text",
+          rawPayload: body as Record<string, unknown>,
+          organizationId: null,
+          phoneNumberId: entry.id ?? "",
+          timestamp: new Date().toISOString(),
+        };
+        entriesToEnqueue.push(message);
+      }
+    }
+  }
+
+  if (entriesToEnqueue.length > 0) {
+    const batch = entriesToEnqueue.map((msg) => ({ body: msg }));
+    await c.env.WHATSAPP_QUEUE.sendBatch(batch);
+    console.log(`[IG Webhook] Enqueued ${entriesToEnqueue.length} messages`);
+  }
+
+  return c.json({ status: "ok", enqueued: entriesToEnqueue.length });
 });
 
 async function resolveOrgIdByIg(pool: any, igAccountId: string): Promise<string | null> {

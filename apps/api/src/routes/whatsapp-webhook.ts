@@ -11,6 +11,7 @@ import { writeEvent } from "../lib/analytics";
 import { AIConciergeService } from "../services/ai-concierge";
 import { needsHumanApproval } from "../lib/whatsappApproval";
 import { notifyOrganization } from "../lib/push";
+import type { WhatsAppInboundMessage } from "../lib/whatsapp-queue";
 
 type RawEventState =
   | "received"
@@ -88,19 +89,17 @@ app.post("/", async (c) => {
   const valid = await verifyMetaSignature(appSecret, rawBody, signature);
   if (!valid) {
     const phoneNumberId = JSON.parse(rawBody || "{}").entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id ?? null;
-    safeWaitUntil(c,
-      writeWebhookAudit(c.env, {
-        organizationId: null,
-        eventType: "unknown",
-        rawBody,
-        phoneNumberId,
-        providerEventId: null,
-        signatureValid: false,
-        processingState: "signature_failed",
-        failureReason: "invalid_signature",
-        requestPath: "/api/whatsapp/webhook",
-      }),
-    );
+    await writeWebhookAudit(c.env, {
+      organizationId: null,
+      eventType: "unknown",
+      rawBody,
+      phoneNumberId,
+      providerEventId: null,
+      signatureValid: false,
+      processingState: "signature_failed",
+      failureReason: "invalid_signature",
+      requestPath: "/api/whatsapp/webhook",
+    });
     return c.json({ error: "Assinatura invalida" }, 401);
   }
 
@@ -108,26 +107,75 @@ app.post("/", async (c) => {
   try {
     body = JSON.parse(rawBody);
   } catch {
-    safeWaitUntil(c,
-      writeWebhookAudit(c.env, {
-        organizationId: null,
-        eventType: "unknown",
-        rawBody,
-        phoneNumberId: null,
-        providerEventId: null,
-        signatureValid: true,
-        processingState: "payload_invalid",
-        failureReason: "invalid_json",
-        requestPath: "/api/whatsapp/webhook",
-      }),
-    );
+    await writeWebhookAudit(c.env, {
+      organizationId: null,
+      eventType: "unknown",
+      rawBody,
+      phoneNumberId: null,
+      providerEventId: null,
+      signatureValid: true,
+      processingState: "payload_invalid",
+      failureReason: "invalid_json",
+      requestPath: "/api/whatsapp/webhook",
+    });
     return c.json({ error: "Payload invalido" }, 400);
   }
 
-  safeWaitUntil(c, processWebhook(body, c.env, rawBody));
+  // Extract messages and enqueue to Cloudflare Queue
+  const { entriesToEnqueue, phoneNumberId } = await extractAndEnqueueMessages(body, c);
 
-  return c.json({ status: "ok" });
+  return c.json({ status: "ok", enqueued: entriesToEnqueue.length, phoneNumberId });
 });
+
+/**
+ * Extract messages from webhook payload and enqueue to Cloudflare Queue.
+ * Returns the number of messages enqueued and the phone number ID.
+ */
+async function extractAndEnqueueMessages(
+  body: Record<string, unknown>,
+  c: any,
+): Promise<{ entriesToEnqueue: WhatsAppInboundMessage[]; phoneNumberId: string | null }> {
+  const entries = (body.entry as any[]) ?? [];
+  const entriesToEnqueue: WhatsAppInboundMessage[] = [];
+  let phoneNumberId: string | null = null;
+
+  for (const entry of entries) {
+    const changes = entry?.changes ?? [];
+    for (const change of changes) {
+      const value = change?.value;
+      if (!value) continue;
+
+      phoneNumberId = value.metadata?.phone_number_id ?? phoneNumberId;
+
+      if (value.messages?.length) {
+        for (const msg of value.messages) {
+          const message: WhatsAppInboundMessage = {
+            type: "inbound_message",
+            metaMessageId: msg.id,
+            waId: value.contacts?.[0]?.wa_id ?? msg.from,
+            from: msg.from,
+            text: msg.text?.body,
+            messageType: msg.type,
+            rawPayload: body as Record<string, unknown>,
+            organizationId: null, // Will be resolved by consumer
+            phoneNumberId: phoneNumberId ?? "",
+            timestamp: new Date().toISOString(),
+          };
+          entriesToEnqueue.push(message);
+        }
+      }
+    }
+  }
+
+  if (entriesToEnqueue.length > 0) {
+    // Enqueue messages to Cloudflare Queue for reliable processing
+    const batch = entriesToEnqueue.map((msg) => ({ body: msg }));
+    await c.env.WHATSAPP_QUEUE.sendBatch(batch);
+    console.log(`[WhatsApp Webhook] Enqueued ${entriesToEnqueue.length} messages`);
+  }
+
+  return { entriesToEnqueue, phoneNumberId };
+}
 
 async function processWebhook(
   body: Record<string, unknown>,

@@ -1091,4 +1091,164 @@ app.post("/pending-replies/:id/reject", requireAuth, async (c) => {
   return c.json({ ok: true });
 });
 
+// ===== WEBHOOK MANAGEMENT =====
+
+/**
+ * Verify and register WhatsApp webhook with Meta.
+ * This endpoint uses the WHATSAPP_ACCESS_TOKEN to register the webhook
+ * with the Meta Graph API.
+ */
+app.get("/admin/webhook-register", async (c) => {
+  const user = c.get("user");
+  const env = c.env;
+  
+  const accessToken = env.WHATSAPP_ACCESS_TOKEN;
+  const verifyToken = env.WHATSAPP_VERIFY_TOKEN ?? "fisioflow_webhook_token";
+  const businessAccountId = env.WHATSAPP_BUSINESS_ACCOUNT_ID;
+  
+  if (!accessToken) {
+    return c.json({ error: "WHATSAPP_ACCESS_TOKEN not configured" }, 500);
+  }
+  if (!businessAccountId) {
+    return c.json({ error: "WHATSAPP_BUSINESS_ACCOUNT_ID not configured" }, 500);
+  }
+
+  const callbackUrl = `${env.API_BASE_URL ?? "https://api-pro.moocafisio.com.br"}/api/whatsapp/webhook`;
+  
+  try {
+    // Step 1: Check current subscriptions
+    const subscriptionsUrl = `https://graph.facebook.com/v18.0/${businessAccountId}/subscriptions?access_token=${accessToken}`;
+    const subRes = await fetch(subscriptionsUrl);
+    const subData = await subRes.json() as any;
+    
+    // Step 2: Register webhook if not already registered
+    const registerUrl = `https://graph.facebook.com/v18.0/${businessAccountId}/subscriptions`;
+    const registerRes = await fetch(registerUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        access_token: accessToken,
+        object: "whatsapp_business_account",
+        callback_url: callbackUrl,
+        fields: JSON.stringify(["messages", "message_template_status_update"]),
+        verify_token: verifyToken,
+      }),
+    });
+    const registerData = await registerRes.json() as any;
+    
+    return c.json({
+      success: true,
+      callbackUrl,
+      verifyToken,
+      businessAccountId,
+      previousSubscriptions: subData,
+      registration: registerData,
+    });
+  } catch (err) {
+    console.error("[WhatsApp] Webhook registration error:", err);
+    return c.json({
+      error: "Failed to register webhook",
+      message: err instanceof Error ? err.message : String(err),
+    }, 500);
+  }
+});
+
+/**
+ * Get current webhook status from Meta.
+ */
+app.get("/admin/webhook-status", async (c) => {
+  const env = c.env;
+  const accessToken = env.WHATSAPP_ACCESS_TOKEN;
+  const businessAccountId = env.WHATSAPP_BUSINESS_ACCOUNT_ID;
+  const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
+  
+  if (!accessToken) {
+    return c.json({ error: "WHATSAPP_ACCESS_TOKEN not configured" }, 500);
+  }
+
+  const callbackUrl = `${env.API_BASE_URL ?? "https://api-pro.moocafisio.com.br"}/api/whatsapp/webhook`;
+
+  try {
+    const phoneUrl = `https://graph.facebook.com/v18.0/${phoneNumberId}?fields=id,display_phone_number,verified_name,webhook_configuration&access_token=${accessToken}`;
+    const phoneRes = await fetch(phoneUrl);
+    const phoneData = await phoneRes.json() as any;
+    
+    const bizUrl = `https://graph.facebook.com/v18.0/${businessAccountId}?fields=id,name,webhook_configuration&access_token=${accessToken}`;
+    const bizRes = await fetch(bizUrl);
+    const bizData = await bizRes.json() as any;
+    
+    return c.json({
+      success: true,
+      callbackUrl,
+      phoneNumberId,
+      businessAccountId,
+      phoneData,
+      bizData,
+    });
+  } catch (err) {
+    return c.json({
+      error: "Failed to get webhook status",
+      message: err instanceof Error ? err.message : String(err),
+    }, 500);
+  }
+});
+
+/**
+ * Send a test message via WhatsApp Business API.
+ * This helps verify the API connection and triggers webhook on reply.
+ */
+app.post("/admin/test-send", async (c) => {
+  const env = c.env;
+  const accessToken = env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID;
+  
+  if (!accessToken || !phoneNumberId) {
+    return c.json({ error: "WhatsApp not configured" }, 500);
+  }
+
+  let body: { to?: string; text?: string };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "Invalid JSON" }, 400);
+  }
+
+  const to = body.to?.trim();
+  const text = body.text?.trim() || "Teste de webhook";
+  
+  if (!to) {
+    return c.json({ error: "Phone number required" }, 400);
+  }
+
+  try {
+    const res = await fetch(`https://graph.facebook.com/v18.0/${phoneNumberId}/messages`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to,
+        type: "text",
+        text: { body: text },
+      }),
+    });
+    
+    const data = await res.json() as any;
+    
+    return c.json({
+      success: res.ok,
+      status: res.status,
+      data,
+      message: "Message sent. When the recipient replies, the webhook should fire.",
+    });
+  } catch (err) {
+    return c.json({
+      error: "Failed to send message",
+      message: err instanceof Error ? err.message : String(err),
+    }, 500);
+  }
+});
+
 export { app as whatsappRoutes };

@@ -238,6 +238,29 @@ max_batch_timeout = 30
 max_retries = 3
 dead_letter_queue = "fisioflow-tasks-dlq"
 
+# WhatsApp inbound message queue — decouples webhook receipt from processing
+[[queues.producers]]
+queue = "fisioflow-whatsapp-inbound"
+binding = "WHATSAPP_QUEUE"
+
+[[queues.consumers]]
+queue = "fisioflow-whatsapp-inbound"
+max_batch_size = 5
+max_batch_timeout = 15
+max_retries = 5
+dead_letter_queue = "fisioflow-whatsapp-inbound-dlq"
+
+# WhatsApp DLQ — stores failed messages for manual review
+[[queues.producers]]
+queue = "fisioflow-whatsapp-inbound-dlq"
+binding = "WHATSAPP_DLQ"
+
+[[queues.consumers]]
+queue = "fisioflow-whatsapp-inbound-dlq"
+max_batch_size = 1
+max_batch_timeout = 60
+max_retries = 0
+
 # ===== VARIÁVEIS DE AMBIENTE =====
 [vars]
 ENVIRONMENT = "production"
@@ -444,6 +467,27 @@ max_batch_size = 10
 max_batch_timeout = 30
 max_retries = 3
 dead_letter_queue = "fisioflow-tasks-dlq"
+
+[[env.production.queues.producers]]
+queue = "fisioflow-whatsapp-inbound"
+binding = "WHATSAPP_QUEUE"
+
+[[env.production.queues.consumers]]
+queue = "fisioflow-whatsapp-inbound"
+max_batch_size = 5
+max_batch_timeout = 15
+max_retries = 5
+dead_letter_queue = "fisioflow-whatsapp-inbound-dlq"
+
+[[env.production.queues.producers]]
+queue = "fisioflow-whatsapp-inbound-dlq"
+binding = "WHATSAPP_DLQ"
+
+[[env.production.queues.consumers]]
+queue = "fisioflow-whatsapp-inbound-dlq"
+max_batch_size = 1
+max_batch_timeout = 60
+max_retries = 0
 
 # ===== CRON TRIGGERS =====
 [triggers]

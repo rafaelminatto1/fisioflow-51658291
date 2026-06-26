@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   fetchConversations,
@@ -28,6 +28,8 @@ export function useWhatsAppInbox(filters?: ConversationFilters) {
     total: 0,
     totalPages: 0,
   });
+  const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
+  const queryClient = useQueryClient();
 
   const refetch = useCallback(async () => {
     setLoading(true);
@@ -51,11 +53,106 @@ export function useWhatsAppInbox(filters?: ConversationFilters) {
     }
   }, [filters]);
 
+  // Fetch on mount and when filters change
   useEffect(() => {
     void refetch();
   }, [refetch]);
 
-  return { conversations, loading, error, refetch, pagination };
+  // Poll every 15 seconds as fallback
+  useEffect(() => {
+    const interval = setInterval(() => {
+      void refetch();
+    }, 15_000);
+    return () => clearInterval(interval);
+  }, [refetch]);
+
+  // Listen for real-time WhatsApp new messages via WebSocket
+  useEffect(() => {
+    const handleNewMessage = (event: MessageEvent) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "whatsapp_new_message" && data.conversationId) {
+          // Track new message for animation
+          setNewMessageIds((prev) => new Set(prev).add(data.conversationId));
+          
+          // Remove "new" status after 5 seconds
+          setTimeout(() => {
+            setNewMessageIds((prev) => {
+              const next = new Set(prev);
+              next.delete(data.conversationId);
+              return next;
+            });
+          }, 5000);
+
+          // Update conversation in local state immediately
+          setConversations((prev) => {
+            const updated = prev.map((conv) => {
+              if (conv.id === data.conversationId) {
+                return {
+                  ...conv,
+                  lastMessage: data.message?.content || conv.lastMessage,
+                  lastMessageAt: data.message?.createdAt || new Date().toISOString(),
+                  unreadCount: (conv.unreadCount || 0) + 1,
+                };
+              }
+              return conv;
+            });
+
+            // Sort by lastMessageAt (most recent first)
+            return updated.sort((a, b) => {
+              const timeA = new Date(a.lastMessageAt || 0).getTime();
+              const timeB = new Date(b.lastMessageAt || 0).getTime();
+              return timeB - timeA;
+            });
+          });
+
+          // Also update React Query cache
+          queryClient.setQueryData(["whatsapp", "inbox"], (old: any) => {
+            if (!old?.data) return old;
+            const updatedData = old.data.map((conv: any) => {
+              if (conv.id === data.conversationId) {
+                return {
+                  ...conv,
+                  lastMessage: data.message?.content || conv.lastMessage,
+                  lastMessageAt: data.message?.createdAt || new Date().toISOString(),
+                  unreadCount: (conv.unreadCount || 0) + 1,
+                };
+              }
+              return conv;
+            });
+            const sorted = updatedData.sort((a: any, b: any) => {
+              const timeA = new Date(a.lastMessageAt || 0).getTime();
+              const timeB = new Date(b.lastMessageAt || 0).getTime();
+              return timeB - timeA;
+            });
+            return { ...old, data: sorted };
+          });
+
+          // Invalidate unread count
+          queryClient.invalidateQueries({ queryKey: ["whatsapp", "unread-count"] });
+        }
+      } catch {
+        // Ignore non-JSON messages
+      }
+    };
+
+    // Listen on window for WebSocket messages from RealtimeContext
+    window.addEventListener("websocket_message", handleNewMessage);
+    
+    return () => {
+      window.removeEventListener("websocket_message", handleNewMessage);
+    };
+  }, [queryClient]);
+
+  return { 
+    conversations, 
+    loading, 
+    error, 
+    refetch, 
+    pagination,
+    newMessageIds,
+    hasNewMessages: newMessageIds.size > 0,
+  };
 }
 
 type ConversationResult = {

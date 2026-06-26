@@ -835,7 +835,7 @@ export async function getInboxConversations(
 	       ) crm ON true
 	       LEFT JOIN profiles assignee ON assignee.id = c.assigned_to OR assignee.user_id = c.assigned_to::text
 	       ${where}
-       ORDER BY c.updated_at DESC
+       ORDER BY c.last_message_at DESC NULLS LAST, c.created_at DESC
        LIMIT $${idx++} OFFSET $${idx++}`,
       params,
     );
@@ -895,9 +895,15 @@ export async function addMessage(
       ],
     );
 
-    await pool.query(`UPDATE wa_conversations SET updated_at = now() WHERE id = $1`, [
-      conversationId,
-    ]);
+    await pool.query(
+      `UPDATE wa_conversations
+       SET updated_at = now(),
+           last_message_at = CASE WHEN $2 = 'inbound' OR $2 = 'outbound' THEN now() ELSE last_message_at END,
+           last_message_in_at = CASE WHEN $2 = 'inbound' THEN now() ELSE last_message_in_at END,
+           last_message_out_at = CASE WHEN $2 = 'outbound' THEN now() ELSE last_message_out_at END
+       WHERE id = $1`,
+      [conversationId, direction],
+    );
 
     return result.rows[0];
   } catch (error) {
