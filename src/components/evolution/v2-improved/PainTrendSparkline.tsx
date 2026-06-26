@@ -46,10 +46,17 @@ export const PainTrendSparkline = memo(({ data, meta, heightClass = "h-24" }: Pa
   return (
     <div>
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className={`${heightClass} w-full`}>
+        {/* Linhas de referência: Leve (2), Moderada (5), Intensa (8) */}
         <g stroke="hsl(220 13% 91%)" strokeWidth={1}>
-          <line x1={0} y1={20} x2={W} y2={20} />
-          <line x1={0} y1={50} x2={W} y2={50} />
-          <line x1={0} y1={80} x2={W} y2={80} />
+          <line x1={0} y1={y(2)} x2={W} y2={y(2)} stroke="hsl(142 71% 90%)" strokeWidth={1.5} />
+          <line x1={0} y1={y(5)} x2={W} y2={y(5)} stroke="hsl(38 92% 90%)" strokeWidth={1.5} />
+          <line x1={0} y1={y(8)} x2={W} y2={y(8)} stroke="hsl(0 84% 90%)" strokeWidth={1.5} />
+        </g>
+        {/* Labels de referência */}
+        <g fontSize="7" fill="hsl(220 14% 60%)" fontWeight="bold">
+          <text x={2} y={y(2) - 2}>Leve</text>
+          <text x={2} y={y(5) - 2}>Moderada</text>
+          <text x={2} y={y(8) - 2}>Intensa</text>
         </g>
         <path d={area} fill="hsl(var(--primary) / 0.08)" stroke="none" />
         <path

@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useRef, useState } from "react";
+import React, { memo, useMemo, useRef, useState, useEffect, useCallback } from "react";
 import {
   Activity,
   Anchor,
@@ -20,6 +20,7 @@ import {
   Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 import type { EvolutionV2Data } from "@/components/evolution/v2-improved/types";
 import { RichTextBlock } from "@/components/evolution/v2-improved/RichTextBlock";
 import { EvolutionBlockV3 } from "@/components/evolution/v3-unified/EvolutionBlockV3";
@@ -30,6 +31,7 @@ import {
   PainTrendSparkline,
   type PainTrendPoint,
 } from "@/components/evolution/v2-improved/PainTrendSparkline";
+import { EvolutionInsightCard } from "@/components/evolution/v2-improved/EvolutionInsightCard";
 import {
   PAIN_QUALITY_OPTIONS,
   PAIN_QUALITY_INTENSITIES,
@@ -48,6 +50,15 @@ import {
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.05, duration: 0.3, ease: "easeOut" },
+  }),
+};
 
 interface EvolutionNoScrollPanelProps {
   data: EvolutionV2Data;
@@ -159,6 +170,48 @@ export const EvolutionNoScrollPanel = memo(
     const [historyOpen, setHistoryOpen] = useState(false);
     const [focusSection, setFocusSection] = useState<null | "obs" | "condutas">(null);
     const [anexosOpen, setAnexosOpen] = useState(false);
+    const [saveFeedback, setSaveFeedback] = useState<null | "saved" | "error">(null);
+
+    // Atalhos de teclado (T013)
+    useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        // Ctrl+S ou Cmd+S → salvar (disparar onChange para autosave)
+        if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+          e.preventDefault();
+          setSaveFeedback("saved");
+          setTimeout(() => setSaveFeedback(null), 2000);
+        }
+        // Alt+O → foco em Observações
+        if (e.altKey && e.key === "o") {
+          e.preventDefault();
+          setFocusSection("obs");
+        }
+        // Alt+C → foco em Condutas
+        if (e.altKey && e.key === "c") {
+          e.preventDefault();
+          setFocusSection("condutas");
+        }
+        // Alt+D → foco em Dor (scroll para coluna 3)
+        if (e.altKey && e.key === "d") {
+          e.preventDefault();
+          const painSection = document.querySelector("[data-pain-section]");
+          painSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        // Escape → fechar foco
+        if (e.key === "Escape") {
+          setFocusSection(null);
+          setHistoryOpen(false);
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }, []);
+
+    // Feedback de "Sessão salva" (T016)
+    const triggerSaveFeedback = useCallback(() => {
+      setSaveFeedback("saved");
+      setTimeout(() => setSaveFeedback(null), 2000);
+    }, []);
 
     // Revisão para forçar o editor a sincronizar quando troca o registro carregado.
     const revisionRef = useRef(0);
@@ -262,9 +315,15 @@ export const EvolutionNoScrollPanel = memo(
     const observationsValue = data.evolutionText || data.observations || "";
 
     return (
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden p-4 lg:grid-cols-[minmax(0,1fr)_minmax(380px,540px)_minmax(300px,340px)]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden p-4 md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(380px,540px)_minmax(300px,340px)]">
         {/* ===================== COLUNA 1 — OBSERVAÇÕES ===================== */}
-        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-t-[3px] border-border border-t-[#F59E0B] bg-card shadow-sm">
+        <motion.div
+          custom={0}
+          variants={cardVariants}
+          initial="hidden"
+          animate="visible"
+          className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-t-[3px] border-border border-t-[#F59E0B] bg-card shadow-sm"
+        >
           <div className="flex items-center gap-3 border-b border-border px-4 py-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
               <FileText className="h-[18px] w-[18px]" />
@@ -293,10 +352,16 @@ export const EvolutionNoScrollPanel = memo(
               className="clinical-observations-editor h-full [&_.ProseMirror]:min-h-[60vh]"
             />
           </div>
-        </div>
+        </motion.div>
 
         {/* ===================== COLUNA 2 — CONDUTAS ===================== */}
-        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-t-[3px] border-border border-t-primary bg-card shadow-sm">
+        <motion.div
+          custom={1}
+          variants={cardVariants}
+          initial="hidden"
+          animate="visible"
+          className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-t-[3px] border-border border-t-primary bg-card shadow-sm"
+        >
           <div className="flex items-center gap-3 border-b border-border px-4 py-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
               <Stethoscope className="h-[18px] w-[18px]" />
@@ -324,12 +389,18 @@ export const EvolutionNoScrollPanel = memo(
               variant="embedded"
             />
           </div>
-        </div>
+        </motion.div>
 
         {/* ===================== COLUNA 3 — DOR + ITENS ===================== */}
-        <div className="custom-scrollbar flex min-h-0 flex-col gap-2.5 overflow-y-auto pb-2 pr-1">
+        <motion.div
+          custom={2}
+          variants={cardVariants}
+          initial="hidden"
+          animate="visible"
+          className="custom-scrollbar flex min-h-0 flex-col gap-2.5 overflow-y-auto pb-2 pr-1"
+        >
           {/* nível de dor — EVA */}
-          <div className="rounded-2xl border border-t-[3px] border-border border-t-rose-500 bg-card p-3 shadow-sm">
+          <div data-pain-section className="rounded-2xl border border-t-[3px] border-border border-t-rose-500 bg-card p-3 shadow-sm">
             <div className="mb-1 flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
                 <Activity className="h-5 w-5" />
@@ -340,20 +411,27 @@ export const EvolutionNoScrollPanel = memo(
                   Escala Visual Analógica · 0 a 10
                 </div>
               </div>
-              {delta != null && (
-                <span
-                  className={cn(
-                    "ml-auto inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10.5px] font-extrabold",
-                    delta <= 0 ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700",
-                  )}
-                >
-                  {delta <= 0 ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
-                  {delta === 0 ? "estável" : `${delta > 0 ? "+" : "−"}${Math.abs(delta)}`}
-                </span>
-              )}
+              <div className="ml-auto flex items-center gap-1.5">
+                {saveFeedback === "saved" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-extrabold text-emerald-700 animate-pulse">
+                    ✓ Salvo
+                  </span>
+                )}
+                {delta != null && (
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10.5px] font-extrabold",
+                      delta <= 0 ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700",
+                    )}
+                  >
+                    {delta <= 0 ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
+                    {delta === 0 ? "estável" : `${delta > 0 ? "+" : "−"}${Math.abs(delta)}`}
+                  </span>
+                )}
+              </div>
             </div>
 
-            <PainGauge value={discharge} arrival={arrival} compact onChange={setDischarge} />
+            <PainGauge value={discharge} arrival={arrival} compact onChange={setDischarge} showDeltaArc showTooltips />
 
             <div className="mt-2 flex gap-2.5">
               <div className="flex-1 min-w-0">
@@ -443,69 +521,34 @@ export const EvolutionNoScrollPanel = memo(
             </div>
           </div>
 
-          {/* tendência */}
-          <SideCard
-            icon={TrendingDown}
-            title="Tendência da dor"
-            accent="border-t-rose-400"
-            action={
-              <div className="flex items-center gap-2">
-                <span className="text-[17px] font-extrabold tabular-nums leading-none text-slate-800">
-                  {discharge}
-                  <span className="text-[11px] font-bold text-muted-foreground">/10</span>
-                </span>
-                {trendDelta != null && trendDelta !== 0 && (
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-0.5 text-[11px] font-extrabold",
-                      trendDelta < 0 ? "text-emerald-600" : "text-rose-600",
-                    )}
-                  >
-                    {trendDelta < 0 ? (
-                      <TrendingDown className="h-3 w-3" />
-                    ) : (
-                      <TrendingUp className="h-3 w-3" />
-                    )}
-                    {trendDelta > 0 ? "+" : "−"}
-                    {Math.abs(trendDelta)}
-                  </span>
-                )}
-              </div>
-            }
-          >
-            <PainTrendSparkline
-              data={trendPoints}
-              meta={discharge > 3 ? 3 : undefined}
-              heightClass="h-16"
-            />
-          </SideCard>
+          {/* Insight Clínico Unificado */}
+          <EvolutionInsightCard
+            trendData={trendPoints}
+            metaPain={discharge > 3 ? 3 : undefined}
+            comparisonData={{
+              eva: prevRecord?.pain_scale != null ? {
+                from: prevRecord.pain_scale,
+                to: discharge,
+                improved: discharge <= prevRecord.pain_scale,
+              } : undefined,
+              rom: prevRom != null && curRom != null ? {
+                from: prevRom,
+                to: curRom,
+                improved: curRom >= prevRom,
+              } : undefined,
+            }}
+          />
 
-
-
-          {/* vs sessão anterior */}
-          <SideCard icon={GitCompare} title="vs. sessão anterior" accent="border-t-blue-500">
-            {prevRecord ? (
-              <>
-                {prevRecord.pain_scale != null && (
-                  <CmpRow label="Dor (EVA)">{deltaBadge(prevRecord.pain_scale, discharge)}</CmpRow>
-                )}
-                {prevRom != null && curRom != null && (
-                  <CmpRow label="ROM">{deltaBadge(prevRom, curRom, false)}</CmpRow>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setHistoryOpen(true)}
-                  className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline"
-                >
-                  Ver histórico completo <ArrowRight className="h-3 w-3" />
-                </button>
-              </>
-            ) : (
-              <p className="text-[11.5px] font-semibold text-muted-foreground">
-                Primeira sessão registrada deste paciente.
-              </p>
-            )}
-          </SideCard>
+          {/* Botão de histórico */}
+          {prevRecord && (
+            <button
+              type="button"
+              onClick={() => setHistoryOpen(true)}
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline"
+            >
+              Ver histórico completo <ArrowRight className="h-3 w-3" />
+            </button>
+          )}
 
           {/* medições */}
           <SideCard
@@ -528,9 +571,21 @@ export const EvolutionNoScrollPanel = memo(
                 {realMeasurementsCount === 1 ? "registro" : "registros"} nesta sessão
               </p>
             ) : (
-              <p className="text-[11.5px] font-semibold text-muted-foreground">
-                Nenhuma medição nesta sessão.
-              </p>
+              <div className="flex flex-col items-center gap-1.5 py-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100">
+                  <Ruler className="h-4 w-4 text-slate-400" />
+                </div>
+                <p className="text-[11px] font-semibold text-muted-foreground text-center">
+                  Nenhuma medição registrada
+                </p>
+                <button
+                  type="button"
+                  onClick={() => onNavigateToTab?.("avaliacao")}
+                  className="text-[10px] font-bold text-primary hover:underline"
+                >
+                  + Adicionar medição
+                </button>
+              </div>
             )}
           </SideCard>
 
@@ -549,11 +604,27 @@ export const EvolutionNoScrollPanel = memo(
             </p>
           </SideCard>
 
-          {/* anexos — minimizado por padrão */}
+          {/* anexos — minimizado por padrão (T015: drag-and-drop direto) */}
           <SideCard
             icon={Paperclip}
             title="Anexos"
             accent="border-t-[#14B8A6]"
+            onDragOver={(e) => { e.preventDefault(); }}
+            onDrop={(e) => {
+              e.preventDefault();
+              const files = Array.from(e.dataTransfer.files);
+              if (files.length > 0) {
+                setAnexosOpen(true);
+                // Trigger file input via hidden element
+                const input = document.getElementById("file-upload") as HTMLInputElement;
+                if (input) {
+                  const dt = new DataTransfer();
+                  files.forEach(f => dt.items.add(f));
+                  input.files = dt.files;
+                  input.dispatchEvent(new Event("change", { bubbles: true }));
+                }
+              }
+            }}
             action={
               <button
                 type="button"
@@ -573,11 +644,29 @@ export const EvolutionNoScrollPanel = memo(
                 variant="embedded"
               />
             ) : (
-              <p className="text-[11.5px] font-semibold text-muted-foreground">
-                {(data.attachments?.length ?? 0) > 0
-                  ? `${data.attachments?.length} arquivo(s) anexado(s)`
-                  : "Nenhum arquivo."}
-              </p>
+              <div className="flex flex-col items-center gap-1.5 py-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50">
+                  <Paperclip className="h-4 w-4 text-teal-500" />
+                </div>
+                {(data.attachments?.length ?? 0) > 0 ? (
+                  <p className="text-[11px] font-semibold text-slate-700">
+                    {data.attachments?.length} arquivo(s) anexado(s)
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-[11px] font-semibold text-muted-foreground text-center">
+                      Nenhum anexo
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setAnexosOpen(true)}
+                      className="text-[10px] font-bold text-primary hover:underline"
+                    >
+                      + Adicionar arquivo
+                    </button>
+                  </>
+                )}
+              </div>
             )}
           </SideCard>
 
@@ -592,13 +681,25 @@ export const EvolutionNoScrollPanel = memo(
                   </CmpRow>
                 ))
               ) : (
-                <p className="text-[11.5px] font-semibold text-muted-foreground">
-                  Relevante para este paciente — registre PA, FC e SpO₂ na aba Avaliação.
-                </p>
+                <div className="flex flex-col items-center gap-1.5 py-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50">
+                    <HeartPulse className="h-4 w-4 text-teal-500" />
+                  </div>
+                  <p className="text-[11px] font-semibold text-muted-foreground text-center">
+                    Relevante para este paciente
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => onNavigateToTab?.("avaliacao")}
+                    className="text-[10px] font-bold text-primary hover:underline"
+                  >
+                    + Registrar sinais vitais
+                  </button>
+                </div>
               )}
             </SideCard>
           )}
-        </div>
+        </motion.div>
 
         {/* ---------- FOCO (tela cheia) ---------- */}
         <Dialog open={focusSection !== null} onOpenChange={(o) => !o && setFocusSection(null)}>

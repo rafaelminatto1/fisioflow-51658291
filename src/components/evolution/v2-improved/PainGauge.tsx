@@ -41,10 +41,14 @@ interface PainGaugeProps {
   compact?: boolean;
   /** Quando informado, o medidor vira clicável/arrastável e atualiza a saída. */
   onChange?: (value: number) => void;
+  /** Mostra arco de conexão entre chegada e saída com cor dinâmica. */
+  showDeltaArc?: boolean;
+  /** Tooltip com valores exatos ao passar o mouse nos marcadores. */
+  showTooltips?: boolean;
 }
 
 /** Medidor radial da EVA (Layout E — dor-cêntrico). */
-export const PainGauge = memo(({ value, arrival, compact, onChange }: PainGaugeProps) => {
+export const PainGauge = memo(({ value, arrival, compact, onChange, showDeltaArc = true, showTooltips = true }: PainGaugeProps) => {
   const v = Math.max(0, Math.min(10, value));
   const f = v / 10;
   const dash = `${(ARC_LEN * f).toFixed(1)} ${ARC_LEN.toFixed(1)}`;
@@ -115,19 +119,55 @@ export const PainGauge = memo(({ value, arrival, compact, onChange }: PainGaugeP
           strokeDasharray={dash}
           style={{ transition: "stroke-dasharray .35s ease, stroke .35s ease" }}
         />
-        {/* marcador chegada (fantasma, colorido pelo próprio nível) */}
-        {chegada && arrival != null && (
-          <circle
-            cx={chegada.x}
-            cy={chegada.y}
-            r={9}
-            fill="#fff"
-            stroke={painColor(arrival)}
-            strokeWidth={3}
+        {/* Arco de conexão Chegada → Saída (T009, T010) */}
+        {showDeltaArc && chegada && arrival != null && arrival !== v && (
+          <path
+            d={`M ${chegada.x} ${chegada.y} Q ${(chegada.x + saida.x) / 2} ${(chegada.y + saida.y) / 2 - 20} ${saida.x} ${saida.y}`}
+            fill="none"
+            stroke={v <= arrival ? "hsl(142 71% 45%)" : "hsl(0 84% 60%)"}
+            strokeWidth={4}
+            strokeLinecap="round"
+            strokeDasharray="6 3"
+            opacity={0.7}
+            style={{ transition: "stroke .35s ease" }}
           />
         )}
+        {/* marcador chegada (fantasma, colorido pelo próprio nível) */}
+        {chegada && arrival != null && (
+          <g>
+            {showTooltips && (
+              <title>Chegada: {arrival}/10 ({painLabel(arrival)})</title>
+            )}
+            <circle
+              cx={chegada.x}
+              cy={chegada.y}
+              r={9}
+              fill="#fff"
+              stroke={painColor(arrival)}
+              strokeWidth={3}
+            />
+            {arrival !== v && (
+              <text
+                x={chegada.x}
+                y={chegada.y + 1}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize="7"
+                fontWeight="bold"
+                fill={painColor(arrival)}
+              >
+                {arrival}
+              </text>
+            )}
+          </g>
+        )}
         {/* marcador saída */}
-        <circle cx={saida.x} cy={saida.y} r={9} fill={painColor(v)} stroke="#fff" strokeWidth={3} />
+        <g>
+          {showTooltips && (
+            <title>Saída: {v}/10 ({painLabel(v)})</title>
+          )}
+          <circle cx={saida.x} cy={saida.y} r={9} fill={painColor(v)} stroke="#fff" strokeWidth={3} />
+        </g>
       </svg>
       <div className="pointer-events-none absolute inset-x-0 bottom-0.5 text-center">
         <div
