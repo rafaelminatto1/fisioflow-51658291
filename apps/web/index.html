@@ -12,6 +12,28 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
+    <script>
+      // Cache Busting: detecta nova versão via app-version meta e força reload
+      (function() {
+        var meta = document.querySelector('meta[name="app-version"]');
+        if (!meta) return;
+        var currentVersion = meta.getAttribute('content');
+        var storedVersion = sessionStorage.getItem('__ff_app_version__');
+        if (storedVersion && storedVersion !== currentVersion) {
+          console.log('[Cache Bust] Nova versão detectada:', storedVersion, '->', currentVersion);
+          sessionStorage.setItem('__ff_app_version__', currentVersion);
+          // Force reload once to get fresh assets
+          if (!sessionStorage.getItem('__ff_reloaded__')) {
+            sessionStorage.setItem('__ff_reloaded__', '1');
+            window.location.reload(true);
+          }
+        } else if (!storedVersion) {
+          sessionStorage.setItem('__ff_app_version__', currentVersion);
+        }
+        // Clear reload flag after 30 seconds
+        setTimeout(function() { sessionStorage.removeItem('__ff_reloaded__'); }, 30000);
+      })();
+    </script>
 
     <title>FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia</title>
     <meta
