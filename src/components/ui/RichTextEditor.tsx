@@ -83,6 +83,7 @@ import { uploadFile, STORAGE_FOLDERS } from "@/lib/storage/upload";
 import { toast } from "sonner";
 import { ImageEditDialog } from "@/components/ui/rich-text/ImageEditDialog";
 import { ResizableImage } from "@/components/ui/rich-text/ResizableImageExtension";
+import { buildClinicalMediaNode } from "@/components/ui/rich-text/clinicalMedia";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import Collaboration from "@tiptap/extension-collaboration";
@@ -289,12 +290,18 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       const result = await uploadFile(file, {
         folder: imageUploadFolder || STORAGE_FOLDERS.PATIENTS,
       });
-      // result is an UploadResult object — extract the URL string
       const imageUrl = result.publicUrl || result.url;
       editor
         .chain()
         .focus()
-        .setImage({ src: imageUrl, align: "center", width: "100%" } as any)
+        .insertContent(
+          buildClinicalMediaNode({
+            src: imageUrl,
+            alt: file.name,
+            width: "100%",
+            align: "center",
+          }),
+        )
         .run();
       toast.dismiss(loadingToast);
       toast.success("Imagem enviada com sucesso!");
@@ -615,7 +622,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       });
 
       editingExistingImage.updateAttributes({
-        src: result.url,
+        src: result.publicUrl || result.url,
         alt: file.name,
         title: editingExistingImage.title,
       });

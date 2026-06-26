@@ -232,24 +232,75 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
   }
 }
 
+export type InstagramSendApiError = {
+  message?: string;
+  type?: string;
+  code?: number;
+  error_subcode?: number;
+  error_user_title?: string;
+  error_user_msg?: string;
+  fbtrace_id?: string;
+};
+
+export type InstagramSendResponse = {
+  recipient_id?: string;
+  message_id?: string;
+  error?: InstagramSendApiError | string;
+  status?: number;
+};
+
+export function getInstagramSendError(response: unknown): InstagramSendApiError | undefined {
+  if (!response || typeof response !== "object") return undefined;
+  const error = (response as { error?: unknown }).error;
+  if (!error || typeof error !== "object") return undefined;
+  return error as InstagramSendApiError;
+}
+
+export function isInstagramOutsideWindowError(error: unknown): boolean {
+  const metaError =
+    error && typeof error === "object" && !Array.isArray(error)
+      ? (error as InstagramSendApiError)
+      : undefined;
+  const message = String(metaError?.message ?? error ?? "").toLowerCase();
+  return (
+    metaError?.error_subcode === 2534022 ||
+    message.includes("outside the allowed window") ||
+    message.includes("outside of allowed window") ||
+    message.includes("outside the 24 hour") ||
+    message.includes("outside the 24-hour")
+  );
+}
+
 /** Envia uma mensagem de texto via Instagram Direct (janela de 24h). */
 export async function sendInstagramText(
   env: Env,
-  _igAccountId: string,
+  igAccountId: string,
   recipientIgsid: string,
   text: string,
   tokenOverride?: string,
-): Promise<unknown> {
+  options?: { humanAgentTag?: boolean },
+): Promise<InstagramSendResponse> {
   // Prefere o token renovável (settings) passado pelo chamador; senão o secret do env.
   const token = tokenOverride || env.IG_ACCESS_TOKEN;
-  if (!token) return { error: "IG_ACCESS_TOKEN ausente" };
-  // Instagram API with Instagram Login: POST graph.instagram.com/{version}/me/messages
-  const res = await fetch(`${IG_GRAPH}/me/messages`, {
+  if (!token) return { error: "IG_ACCESS_TOKEN ausente", status: 500 };
+
+  const payload: Record<string, unknown> = {
+    recipient: { id: recipientIgsid },
+    message: { text },
+  };
+
+  if (options?.humanAgentTag) {
+    payload.messaging_type = "MESSAGE_TAG";
+    payload.tag = "HUMAN_AGENT";
+  }
+
+  const res = await fetch(`${IG_GRAPH}/${igAccountId}/messages`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ recipient: { id: recipientIgsid }, message: { text } }),
+    body: JSON.stringify(payload),
   });
-  return res.json();
+  const data = (await res.json().catch(() => ({ error: res.statusText }))) as InstagramSendResponse;
+  return { ...data, status: res.status };
 }
 
 export { app as instagramWebhookRoutes };

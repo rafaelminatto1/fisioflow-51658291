@@ -12,6 +12,12 @@ describe("normalizeIncomingEditorHtml", () => {
     expect(normalizeIncomingEditorHtml("<p>Paciente</p>")).toBe("<p>Paciente</p>");
   });
 
+  it("reconhece figure e figcaption como HTML salvo do editor", () => {
+    const html =
+      '<figure data-type="clinical-media"><img src="/paciente.png" /><figcaption>Legenda</figcaption></figure>';
+    expect(normalizeIncomingEditorHtml(html)).toBe(html);
+  });
+
   it("escapa texto puro antes de inserir no editor", () => {
     expect(normalizeIncomingEditorHtml("Paciente <alerta>\nA & B")).toBe(
       "<p>Paciente &lt;alerta&gt;</p><p>A &amp; B</p>",

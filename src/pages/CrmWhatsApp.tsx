@@ -22,7 +22,6 @@ import {
   Paperclip,
   Phone,
   Pin,
-  RefreshCw,
   Reply,
   Search,
   Send,
@@ -46,7 +45,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { TaskQuickCreateModal } from "@/components/tarefas/v2/TaskQuickCreateModal";
 import {
   addTags,
-  backfillInstagramProfiles,
   deleteConversation,
   deleteMessage,
   fetchCrmSettings,
@@ -458,7 +456,6 @@ export default function CrmWhatsApp() {
   const [noteDraft, setNoteDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [savingStage, setSavingStage] = useState(false);
-  const [syncingInstagramProfiles, setSyncingInstagramProfiles] = useState(false);
   const [replyMessage, setReplyMessage] = useState<Message | null>(null);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [taskInitialData, setTaskInitialData] = useState<{ titulo: string; descricao: string } | null>(null);
@@ -569,6 +566,10 @@ export default function CrmWhatsApp() {
       setComposer("");
       setReplyMessage(null);
       await Promise.all([refetch(), refetchConversation()]);
+    } catch (error) {
+      toast.error("Não foi possível enviar a mensagem.", {
+        description: error instanceof Error ? error.message : "Tente novamente em alguns instantes.",
+      });
     } finally {
       setSending(false);
     }
@@ -630,27 +631,6 @@ export default function CrmWhatsApp() {
 
   const handleQuickReply = (quickReply: CrmQuickReplyViewModel) => {
     setComposer(quickReply.content);
-  };
-
-  const handleBackfillInstagramProfiles = async () => {
-    if (syncingInstagramProfiles) return;
-    setSyncingInstagramProfiles(true);
-    try {
-      const result = await backfillInstagramProfiles({ limit: 100, force: false });
-      await Promise.all([
-        refetch(),
-        selectedId ? refetchConversation() : Promise.resolve(),
-      ]);
-      toast.success("Perfis do Instagram sincronizados.", {
-        description: `${result.updated} atualizado(s), ${result.skipped} sem mudança, ${result.failed} falha(s).`,
-      });
-    } catch (error) {
-      toast.error("Não foi possível sincronizar os perfis do Instagram.", {
-        description: error instanceof Error ? error.message : undefined,
-      });
-    } finally {
-      setSyncingInstagramProfiles(false);
-    }
   };
 
   const closeMessageMenu = () => {
@@ -910,17 +890,6 @@ export default function CrmWhatsApp() {
                 <MessageSquarePlus className="mr-2 h-4 w-4" />
                 Nova conversa
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleBackfillInstagramProfiles}
-                disabled={syncingInstagramProfiles}
-                className="h-9 rounded-[10px] px-3 text-xs font-semibold"
-              >
-                <RefreshCw className={cn("mr-2 h-3.5 w-3.5", syncingInstagramProfiles && "animate-spin")} />
-                Sincronizar Instagram
-              </Button>
               <button type="button" className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary">
                 <Filter className="h-[18px] w-[18px]" />
               </button>
@@ -940,16 +909,13 @@ export default function CrmWhatsApp() {
               </div>
             </div>
           </div>
-          <div className="border-b border-border/70 px-5 py-2 text-[11px] text-muted-foreground">
-            Perfis do Instagram sincronizam automaticamente a cada 15 minutos e também podem ser atualizados manualmente.
-          </div>
-
           <div className="grid min-h-0 flex-1 grid-cols-[326px_minmax(0,1fr)_304px]">
             <aside className="flex min-h-0 flex-col border-r border-border">
               <div className="border-b border-border p-3.5">
                 <div className="flex items-center gap-2 rounded-[10px] bg-muted/60 px-3 py-2.5">
                   <Search className="h-[15px] w-[15px] text-muted-foreground" />
                   <Input
+                    ref={searchInputRef}
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="Buscar conversa ou paciente..."
@@ -1565,6 +1531,23 @@ export default function CrmWhatsApp() {
             >
               <Copy className="h-4 w-4 text-muted-foreground" />
               Copiar contato
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const conv = conversationCards.find((c) => c.id === conversationMenu.conversationId);
+                if (conv?.patientId) {
+                  void navigate(`/patients/${conv.patientId}`);
+                } else {
+                  // Redirect to new patient page with contact prefill (if supported)
+                  void navigate(`/patients/new?contactId=${conv?.id ?? ''}`);
+                }
+                setConversationMenu(null);
+              }}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left transition-colors hover:bg-secondary"
+            >
+              <UserPlus className="h-4 w-4 text-muted-foreground" />
+              Criar/ver paciente
             </button>
             <div className="my-1 border-t border-border/60" />
             <button

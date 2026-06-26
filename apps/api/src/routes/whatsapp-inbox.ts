@@ -36,7 +36,7 @@ import {
   persistInstagramProfileSyncState,
   readInstagramProfileSyncState,
 } from "../lib/instagram-profile";
-import { sendInstagramText } from "./instagram-webhook";
+import { getInstagramSendError, isInstagramOutsideWindowError, sendInstagramText } from "./instagram-webhook";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
@@ -397,6 +397,25 @@ function getMetaError(metaData: any) {
     message: metaError.message,
     traceId: metaError.fbtrace_id,
   };
+}
+
+function getChannelSendErrorLabel(channel: string) {
+  if (channel === "instagram") return "Mensagem nao enviada no Instagram";
+  if (channel === "webchat") return "Mensagem nao enviada no chat";
+  return "Mensagem nao enviada pelo WhatsApp";
+}
+
+function getChannelSendErrorStatus(
+  channel: string,
+  sendError: { kind: string; message?: string; metaError?: { message?: string } },
+) {
+  if (channel === "instagram" && isInstagramOutsideWindowError(sendError.metaError ?? sendError.message)) {
+    return 422;
+  }
+  if (sendError.kind === "missing_recipient" || sendError.kind === "missing_credentials") {
+    return 400;
+  }
+  return 502;
 }
 
 function logWhatsAppInboxEvent(
@@ -942,12 +961,33 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
         sendError = { kind: "missing_credentials", message: "Instagram não configurado" };
       } else {
         try {
-          const r = (await sendInstagramText(c.env, String(igId), to, body.content || "", igToken)) as any;
+          let r = (await sendInstagramText(c.env, String(igId), to, body.content || "", igToken)) as any;
           metaMessageId = r?.message_id ?? null;
-          if (r?.error) {
+          const initialInstagramError = getInstagramSendError(r);
+
+          if (initialInstagramError && isInstagramOutsideWindowError(initialInstagramError)) {
+            r = (await sendInstagramText(c.env, String(igId), to, body.content || "", igToken, {
+              humanAgentTag: true,
+            })) as any;
+            metaMessageId = r?.message_id ?? metaMessageId;
+          }
+
+          const instagramError = getInstagramSendError(r);
+          if (instagramError) {
+            const outsideWindow = isInstagramOutsideWindowError(instagramError);
             sendError = {
-              kind: "instagram_api_error",
-              message: r.error?.message || JSON.stringify(r.error),
+              kind: outsideWindow ? "instagram_outside_window" : "instagram_api_error",
+              message: outsideWindow
+                ? "A conversa do Instagram está fora da janela permitida. Se o recurso Human Agent não estiver liberado ou a última mensagem do cliente tiver mais de 7 dias, o Instagram bloqueia a resposta."
+                : instagramError.message || JSON.stringify(instagramError),
+              statusCode: r?.status,
+              metaError: {
+                type: instagramError.type,
+                code: instagramError.code,
+                errorSubcode: instagramError.error_subcode,
+                message: instagramError.message,
+                traceId: instagramError.fbtrace_id,
+              },
             };
           }
         } catch (error) {
@@ -1098,11 +1138,12 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
       return c.json(
         {
           ...mapMessageRow(savedMsg),
-          error: "Mensagem nao enviada pelo WhatsApp",
+          error: getChannelSendErrorLabel(channel),
           details: sendError.message,
+          channel,
           requestId,
         },
-        502,
+        getChannelSendErrorStatus(channel, sendError),
       );
     }
 

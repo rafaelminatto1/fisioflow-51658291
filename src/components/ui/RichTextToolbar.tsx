@@ -61,6 +61,7 @@ import {
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ImageEditDialog } from "@/components/ui/rich-text/ImageEditDialog";
+import { buildClinicalMediaNode } from "@/components/ui/rich-text/clinicalMedia";
 import "./rich-text-editor.css";
 
 interface ToolbarButtonProps {
@@ -162,7 +163,13 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({
       editor
         .chain()
         .focus()
-        .setImage({ src: url, width: "100%", align: "center" } as any)
+        .insertContent(
+          buildClinicalMediaNode({
+            src: url,
+            width: "100%",
+            align: "center",
+          }),
+        )
         .run();
     }
   };
@@ -519,12 +526,14 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({
       editor
         .chain()
         .focus()
-        .setImage({
-          src: result.url,
-          alt: processedFile.name,
-          width: "100%",
-          align: "center",
-        } as any)
+        .insertContent(
+          buildClinicalMediaNode({
+            src: result.publicUrl || result.url,
+            alt: processedFile.name,
+            width: "100%",
+            align: "center",
+          }),
+        )
         .run();
       toast.success("Imagem inserida.");
       handleClosePreview();

@@ -884,11 +884,11 @@ body.high-contrast *:focus-visible {
   margin-right: 0;
 }
 
-.rich-text-image-node {
+.clinical-media-node {
   position: relative;
   max-width: 100%;
   margin: 14px auto;
-  line-height: 0;
+  line-height: 1.5;
   border-radius: 8px;
   outline: 1px solid transparent;
   transition:
@@ -896,107 +896,190 @@ body.high-contrast *:focus-visible {
     box-shadow 0.15s ease;
 }
 
-.rich-text-image-node.is-aligned-left {
+.clinical-media-node.is-aligned-left {
   margin-left: 0;
   margin-right: auto;
 }
 
-.rich-text-image-node.is-aligned-center {
+.clinical-media-node.is-aligned-center {
   margin-left: auto;
   margin-right: auto;
 }
 
-.rich-text-image-node.is-aligned-right {
+.clinical-media-node.is-aligned-right {
   margin-left: auto;
   margin-right: 0;
 }
 
-.rich-text-image-node img {
+.clinical-media-shell {
+  position: relative;
+}
+
+.clinical-media-frame {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / 0.7);
+  box-shadow: 0 8px 28px hsl(var(--foreground) / 0.05);
+}
+
+.clinical-media-node.is-selected .clinical-media-frame {
+  border-color: hsl(var(--primary) / 0.55);
+  box-shadow:
+    0 0 0 2px hsl(var(--primary) / 0.16),
+    0 12px 30px hsl(var(--primary) / 0.12);
+}
+
+.clinical-media-image {
   width: 100%;
   max-width: 100%;
   height: auto;
   margin: 0 !important;
-  border-radius: 8px !important;
   display: block;
+  border-radius: 0 !important;
 }
 
-.rich-text-image-node:hover,
-.rich-text-image-node.is-selected {
-  outline-color: #2383e2;
-  box-shadow: 0 0 0 3px rgba(35, 131, 226, 0.12);
-}
-
-.rich-text-image-menu {
+.clinical-media-toolbar {
   position: absolute;
-  left: 8px;
-  top: 8px;
-  z-index: 5;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
   display: flex;
-  max-width: calc(100% - 16px);
   flex-wrap: wrap;
-  gap: 4px;
-  padding: 5px;
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+  gap: 6px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 10px;
+  background: hsl(var(--background) / 0.94);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 24px hsl(var(--foreground) / 0.14);
   opacity: 0;
+  transform: translateY(6px);
   pointer-events: none;
-  transform: translateY(-2px);
   transition:
     opacity 0.15s ease,
     transform 0.15s ease;
-  line-height: 1;
 }
 
-.rich-text-image-node:hover .rich-text-image-menu,
-.rich-text-image-node.is-selected .rich-text-image-menu {
+.clinical-media-node:hover .clinical-media-toolbar,
+.clinical-media-node.is-selected .clinical-media-toolbar,
+.clinical-media-toolbar:focus-within {
   opacity: 1;
-  pointer-events: auto;
   transform: translateY(0);
+  pointer-events: auto;
 }
 
-.rich-text-image-menu button {
-  height: 26px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  background: white;
-  color: #334155;
-  font-size: 11px;
+.clinical-media-toolbar button,
+.clinical-media-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  border: 1px solid hsl(var(--border) / 0.8);
+  border-radius: 8px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: 12px;
   font-weight: 600;
-  padding: 0 8px;
+  padding: 0 10px;
   cursor: pointer;
-  white-space: nowrap;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
-.rich-text-image-menu button:hover {
-  background: #f8fafc;
-  color: #0f172a;
+.clinical-media-toolbar button:hover,
+.clinical-media-drag-handle:hover {
+  background: hsl(var(--muted));
+  border-color: hsl(var(--primary) / 0.35);
 }
 
-.rich-text-image-menu button.is-danger {
-  color: #dc2626;
+.clinical-media-toolbar button.is-danger:hover {
+  background: hsl(0 100% 97%);
+  border-color: hsl(0 72% 70%);
+  color: hsl(0 70% 45%);
 }
 
-.rich-text-image-resize-handle {
+.clinical-media-drag-handle {
   position: absolute;
-  right: -7px;
-  bottom: -7px;
-  z-index: 6;
-  width: 16px;
-  height: 16px;
-  border: 2px solid white;
-  border-radius: 6px;
-  background: #2383e2;
-  box-shadow: 0 4px 14px -6px rgba(15, 23, 42, 0.8);
-  cursor: nwse-resize;
-  opacity: 0;
-  transition: opacity 0.15s ease;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  padding: 0;
+  width: 30px;
 }
 
-.rich-text-image-node:hover .rich-text-image-resize-handle,
-.rich-text-image-node.is-selected .rich-text-image-resize-handle {
-  opacity: 1;
+.clinical-media-resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    transparent 45%,
+    hsl(var(--primary) / 0.72) 45%,
+    hsl(var(--primary) / 0.72) 55%,
+    transparent 55%,
+    transparent 100%
+  );
+  cursor: nwse-resize;
+}
+
+.clinical-media-caption-shell {
+  position: relative;
+  margin-top: 10px;
+  min-height: 32px;
+  padding: 0 4px;
+}
+
+.clinical-media-caption-shell[data-empty="true"]::before {
+  content: attr(data-placeholder);
+  position: absolute;
+  top: 0;
+  left: 4px;
+  color: hsl(var(--muted-foreground) / 0.7);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.clinical-media-caption {
+  min-height: 24px;
+  color: hsl(var(--muted-foreground));
+  font-size: 13px;
+  line-height: 1.6;
+  outline: none;
+}
+
+.clinical-media-caption p {
+  margin: 0;
+}
+
+.clinical-media-caption p + p {
+  margin-top: 4px;
+}
+
+@media (max-width: 768px) {
+  .clinical-media-toolbar {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    gap: 4px;
+    padding: 6px;
+  }
+
+  .clinical-media-toolbar button,
+  .clinical-media-drag-handle {
+    min-width: 28px;
+    height: 28px;
+    font-size: 11px;
+    padding: 0 8px;
+  }
 }
 
 .rich-text-editor .ProseMirror iframe {

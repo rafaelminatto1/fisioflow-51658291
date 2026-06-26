@@ -61,7 +61,9 @@ function escapeHtml(value: string): string {
 }
 
 function looksLikeHtml(value: string): boolean {
-  return /<\/?(?:p|br|h[1-6]|ul|ol|li|strong|em|u|s|a|span|div|blockquote|pre|code|table|thead|tbody|tr|th|td|img)\b[\s\S]*>/i.test(value);
+  return /<\/?(?:p|br|h[1-6]|ul|ol|li|strong|em|u|s|a|span|div|blockquote|pre|code|table|thead|tbody|tr|th|td|img|figure|figcaption)\b[\s\S]*>/i.test(
+    value,
+  );
 }
 
 /**
