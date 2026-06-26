@@ -935,7 +935,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
       className={cn(
         "group relative flex flex-col gap-3 transition-all duration-300",
         isEmbedded
-          ? "bg-transparent"
+          ? "h-full bg-transparent"
           : "p-5 rounded-3xl border border-border/50 bg-card/50 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20",
         className,
       )}
@@ -1271,7 +1271,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
       )}
 
       {/* Items List with DND and Animations */}
-      <div className="mt-2">
+      <div className={cn("mt-2", isEmbedded && "flex min-h-0 flex-1 flex-col")}>
         {isEmbedded && totalCount > 0 && (
           <div className="flex items-center justify-between px-1.5 py-2 mb-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-100 dark:border-slate-800/80">
             <span className="text-[10px] font-extrabold text-muted-foreground/80 uppercase tracking-wider">
@@ -1294,14 +1294,14 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
               <div
                 {...provided.droppableProps}
                 ref={provided.innerRef}
-                className="space-y-1.5 droppable-container"
+                className={cn("space-y-1.5 droppable-container", isEmbedded && "flex min-h-0 flex-1 flex-col")}
               >
                 {items.length === 0 ? (
                   <div
                     className={cn(
-                      "flex flex-col items-center justify-center py-10 px-4 transition-all duration-300",
+                      "flex flex-col items-center justify-center px-4 py-10 transition-all duration-300",
                       isEmbedded
-                        ? "rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/30"
+                        ? "min-h-[300px] flex-1 rounded-2xl border border-dashed border-slate-200 bg-slate-50/30 dark:border-slate-800"
                         : "rounded-2xl border border-dashed border-border/60 bg-muted/10",
                     )}
                   >
