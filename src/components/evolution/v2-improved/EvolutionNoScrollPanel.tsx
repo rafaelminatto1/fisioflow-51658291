@@ -315,7 +315,7 @@ export const EvolutionNoScrollPanel = memo(
     const observationsValue = data.evolutionText || data.observations || "";
 
     return (
-      <div className="evolution-main-grid grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden p-4">
+      <div className="evolution-main-grid">
         {/* ===================== COLUNA 1 — OBSERVAÇÕES ===================== */}
         <motion.div
           custom={0}
