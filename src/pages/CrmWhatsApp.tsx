@@ -73,6 +73,12 @@ import {
   type CrmStageMeta,
 } from "@/features/whatsapp/crmWhatsAppAdapter";
 import { cn } from "@/lib/utils";
+import {
+  isWhatsAppWindowOpen,
+  REENGAGEMENT_TEMPLATE_NAME,
+  REENGAGEMENT_TEMPLATE_LANGUAGE,
+  REENGAGEMENT_TEMPLATE_TEXT,
+} from "@/lib/whatsappWindow";
 import { formatPhoneInput } from "@/utils/formatInputs";
 
 type PipelineFilter = "all" | "lead" | "contact" | "evaluation" | "treatment";
@@ -526,10 +532,22 @@ export default function CrmWhatsApp() {
   );
 
   const filteredConversations = useMemo(() => {
-    if (pipelineFilter === "all") return conversationCards;
-    return conversationCards.filter((item) => item.stage.key === pipelineFilter);
-  }, [conversationCards, pipelineFilter]);
+    let list = pipelineFilter === "all"
+      ? conversationCards
+      : conversationCards.filter((item) => item.stage.key === pipelineFilter);
 
+    if (search.trim()) {
+      const term = search.trim().toLowerCase();
+      list = list.filter((item) => {
+        // Busca por nome, telefone ou preview da última mensagem
+        const nameMatch = item.name?.toLowerCase().includes(term);
+        const phoneMatch = item.phone?.toLowerCase().includes(term);
+        const previewMatch = item.preview?.toLowerCase().includes(term);
+        return nameMatch || phoneMatch || previewMatch;
+      });
+    }
+    return list;
+  }, [conversationCards, pipelineFilter, search]);
   const selectedCard = useMemo(
     () => filteredConversations.find((item) => item.id === selectedId) ?? conversationCards.find((item) => item.id === selectedId) ?? null,
     [conversationCards, filteredConversations, selectedId],
@@ -558,6 +576,38 @@ export default function CrmWhatsApp() {
 
   const handleSend = async () => {
     if (!selectedId || !composer.trim() || sending) return;
+
+    // WhatsApp: texto livre fora da janela de 24h é aceito pela Meta mas não é
+    // entregue (erro 131047). Oferece enviar o template de reengajamento aprovado.
+    const channel = selectedConversationVm?.channel ?? "whatsapp";
+    if (channel === "whatsapp" && !isWhatsAppWindowOpen(messages)) {
+      const useTemplate = window.confirm(
+        "A janela de 24h do WhatsApp está fechada — texto livre não será entregue (erro 131047).\n\n" +
+          "Deseja enviar o modelo de reengajamento aprovado pela Meta?\n\n" +
+          "OK = enviar modelo · Cancelar = não enviar",
+      );
+      if (!useTemplate) return;
+      setSending(true);
+      try {
+        await sendMessage(REENGAGEMENT_TEMPLATE_TEXT, {
+          type: "template",
+          templateName: REENGAGEMENT_TEMPLATE_NAME,
+          templateLanguage: REENGAGEMENT_TEMPLATE_LANGUAGE,
+        });
+        setComposer("");
+        setReplyMessage(null);
+        await Promise.all([refetch(), refetchConversation()]);
+      } catch (error) {
+        toast.error("Não foi possível enviar o modelo de reengajamento.", {
+          description:
+            error instanceof Error ? error.message : "Verifique se o template está aprovado na Meta.",
+        });
+      } finally {
+        setSending(false);
+      }
+      return;
+    }
+
     setSending(true);
     try {
       await sendMessage(composer.trim());
@@ -776,6 +826,9 @@ export default function CrmWhatsApp() {
   };
 
   const handleDeleteMessage = async (message: Message) => {
+    if (!window.confirm("Excluir mensagem? Esta ação não pode ser desfeita.")) {
+      return;
+    }
     try {
       await deleteMessage(message.conversationId, message.id);
       toast.success("Mensagem excluída");

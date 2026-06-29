@@ -7,7 +7,6 @@ import { fetchInstagramProfile, formatInstagramDisplayName, IG_GRAPH } from "../
 import { verifyMetaSignature } from "./whatsapp";
 import { writeEvent } from "../lib/analytics";
 import type { Env } from "../types/env";
-import type { WhatsAppInboundMessage } from "../lib/whatsapp-queue";
 
 /**
  * Webhook do Instagram Direct (Instagram Messaging API com Instagram Login).
@@ -58,41 +57,19 @@ app.post("/", async (c) => {
 
   if (body.object !== "instagram") return c.json({ status: "ignored" });
 
-  // Extract messages and enqueue to Cloudflare Queue
-  const entriesToEnqueue: WhatsAppInboundMessage[] = [];
-  const entries = (body.entry as any[]) ?? [];
-  
-  for (const entry of entries) {
-    const changes = entry?.changes ?? [];
-    for (const change of changes) {
-      const value = change?.value;
-      if (!value?.messages?.length) continue;
-      
-      for (const msg of value.messages) {
-        const message: WhatsAppInboundMessage = {
-          type: "inbound_message",
-          metaMessageId: msg.id,
-          waId: value.recipients?.[0]?.id ?? msg.from?.id ?? "",
-          from: msg.from?.id ?? "",
-          text: msg.text,
-          messageType: "text",
-          rawPayload: body as Record<string, unknown>,
-          organizationId: null,
-          phoneNumberId: entry.id ?? "",
-          timestamp: new Date().toISOString(),
-        };
-        entriesToEnqueue.push(message);
-      }
-    }
+  // Instagram Direct (Instagram API w/ Instagram Login) delivers DMs in
+  // entry[].messaging[] — NOT the WhatsApp changes[].value.messages shape.
+  // processInstagram() reads the correct shape, fetches the sender profile and
+  // persists the message as an "instagram" conversation. Run it inline (not via
+  // the WhatsApp queue, which hardcodes channel="whatsapp").
+  const work = processInstagram(body, c.env);
+  if (c.executionCtx?.waitUntil) {
+    c.executionCtx.waitUntil(work);
+  } else {
+    await work;
   }
 
-  if (entriesToEnqueue.length > 0) {
-    const batch = entriesToEnqueue.map((msg) => ({ body: msg }));
-    await c.env.WHATSAPP_QUEUE.sendBatch(batch);
-    console.log(`[IG Webhook] Enqueued ${entriesToEnqueue.length} messages`);
-  }
-
-  return c.json({ status: "ok", enqueued: entriesToEnqueue.length });
+  return c.json({ status: "ok" });
 });
 
 async function resolveOrgIdByIg(pool: any, igAccountId: string): Promise<string | null> {
@@ -249,6 +226,22 @@ export type InstagramSendResponse = {
   status?: number;
 };
 
+export type InstagramAttachmentType = "image" | "audio" | "video" | "file";
+
+type InstagramSendMessageInput =
+  | {
+      recipientIgsid: string;
+      text: string;
+      attachmentUrl?: undefined;
+      attachmentType?: undefined;
+    }
+  | {
+      recipientIgsid: string;
+      text?: string;
+      attachmentUrl: string;
+      attachmentType: InstagramAttachmentType;
+    };
+
 export function getInstagramSendError(response: unknown): InstagramSendApiError | undefined {
   if (!response || typeof response !== "object") return undefined;
   const error = (response as { error?: unknown }).error;
@@ -271,12 +264,10 @@ export function isInstagramOutsideWindowError(error: unknown): boolean {
   );
 }
 
-/** Envia uma mensagem de texto via Instagram Direct (janela de 24h). */
-export async function sendInstagramText(
+export async function sendInstagramMessage(
   env: Env,
   igAccountId: string,
-  recipientIgsid: string,
-  text: string,
+  input: InstagramSendMessageInput,
   tokenOverride?: string,
   options?: { humanAgentTag?: boolean },
 ): Promise<InstagramSendResponse> {
@@ -284,9 +275,27 @@ export async function sendInstagramText(
   const token = tokenOverride || env.IG_ACCESS_TOKEN;
   if (!token) return { error: "IG_ACCESS_TOKEN ausente", status: 500 };
 
+  const message: Record<string, unknown> = {};
+
+  if (input.attachmentUrl) {
+    if (input.attachmentType === "image") {
+      message.attachments = {
+        type: "image",
+        payload: { url: input.attachmentUrl },
+      };
+    } else {
+      message.attachment = {
+        type: input.attachmentType,
+        payload: { url: input.attachmentUrl },
+      };
+    }
+  } else {
+    message.text = input.text;
+  }
+
   const payload: Record<string, unknown> = {
-    recipient: { id: recipientIgsid },
-    message: { text },
+    recipient: { id: input.recipientIgsid },
+    message,
   };
 
   if (options?.humanAgentTag) {
@@ -301,6 +310,24 @@ export async function sendInstagramText(
   });
   const data = (await res.json().catch(() => ({ error: res.statusText }))) as InstagramSendResponse;
   return { ...data, status: res.status };
+}
+
+/** Envia uma mensagem de texto via Instagram Direct (janela de 24h). */
+export async function sendInstagramText(
+  env: Env,
+  igAccountId: string,
+  recipientIgsid: string,
+  text: string,
+  tokenOverride?: string,
+  options?: { humanAgentTag?: boolean },
+): Promise<InstagramSendResponse> {
+  return sendInstagramMessage(
+    env,
+    igAccountId,
+    { recipientIgsid, text },
+    tokenOverride,
+    options,
+  );
 }
 
 export { app as instagramWebhookRoutes };

@@ -215,4 +215,48 @@ describe("POST /api/whatsapp/webhook", () => {
       phoneNumberId: "123456",
     });
   });
+
+  it("reconciles delivery status webhooks (failed) into wa_messages", async () => {
+    // Status callbacks are NOT enqueued — they must be processed inline so the
+    // CRM stops showing a false "sent" for messages Meta could not deliver
+    // (e.g. 131047, outside the 24h window).
+    mockQuery.mockReset();
+    mockQuery.mockImplementation((sql: string) => {
+      if (/FROM organizations/.test(sql)) return Promise.resolve({ rows: [{ id: "org-1" }] });
+      if (/INSERT INTO wa_raw_events/.test(sql)) return Promise.resolve({ rows: [{ id: "raw-1" }] });
+      return Promise.resolve({ rows: [] });
+    });
+
+    const statusPayload = {
+      entry: [
+        {
+          id: "entry-1",
+          changes: [
+            {
+              value: {
+                metadata: { phone_number_id: "123456" },
+                statuses: [
+                  {
+                    id: "wamid.abc",
+                    status: "failed",
+                    recipient_id: "5511993524642",
+                    errors: [{ code: 131047, title: "Re-engagement message" }],
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    const res = await postWebhook(statusPayload);
+    expect(res.status).toBe(200);
+
+    const updateCall = mockQuery.mock.calls.find((call) =>
+      /UPDATE wa_messages SET status/.test(String(call[0])),
+    );
+    expect(updateCall).toBeTruthy();
+    expect(updateCall?.[1]).toEqual(["failed", "wamid.abc"]);
+  });
 });

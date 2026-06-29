@@ -74,6 +74,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isSubscribed, setIsSubscribed] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
+  const shouldReconnectRef = useRef(true);
 
   /**
    * Atualizar métricas baseadas nos appointments atuais
@@ -189,7 +190,12 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!organizationId) return;
 
     try {
-      if (wsRef.current?.readyState === WebSocket.OPEN) return;
+      if (
+        wsRef.current?.readyState === WebSocket.OPEN ||
+        wsRef.current?.readyState === WebSocket.CONNECTING
+      ) {
+        return;
+      }
 
       const token = await getNeonAccessToken();
       const baseUrl = getWorkersApiUrl().replace(/^http/, "ws");
@@ -201,6 +207,9 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       wsRef.current = ws;
 
       ws.onopen = () => {
+        if (wsRef.current !== ws) {
+          return;
+        }
         logger.info("Realtime: WebSocket Connected", { organizationId }, "RealtimeContext");
         setIsSubscribed(true);
         if (reconnectTimeoutRef.current) {
@@ -227,6 +236,9 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       };
 
       ws.onmessage = (event) => {
+        if (wsRef.current !== ws) {
+          return;
+        }
         try {
           const data = JSON.parse(event.data);
           logger.debug("Realtime: Message received", data, "RealtimeContext");
@@ -274,11 +286,21 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       };
 
       ws.onclose = (event) => {
-        setIsSubscribed(false);
-        wsRef.current = null;
-        logger.warn("Realtime: WebSocket Closed", { code: event.code }, "RealtimeContext");
+        const isActiveSocket = wsRef.current === ws;
+        const shouldReconnect = shouldReconnectRef.current && event.code !== 1000;
 
-        if (event.code !== 1000) {
+        setIsSubscribed(false);
+        if (isActiveSocket) {
+          wsRef.current = null;
+        }
+
+        if (shouldReconnect) {
+          logger.warn("Realtime: WebSocket Closed", { code: event.code }, "RealtimeContext");
+        } else {
+          logger.debug("Realtime: WebSocket Closed", { code: event.code }, "RealtimeContext");
+        }
+
+        if (isActiveSocket && shouldReconnect) {
           reconnectTimeoutRef.current = window.setTimeout(() => {
             connectWebSocket();
           }, 5000);
@@ -286,6 +308,11 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       };
 
       ws.onerror = (error) => {
+        if (!shouldReconnectRef.current || ws.readyState === WebSocket.CLOSING || ws.readyState === WebSocket.CLOSED) {
+          logger.debug("Realtime: WebSocket Error after shutdown", {}, "RealtimeContext");
+          return;
+        }
+
         logger.error("Realtime: WebSocket Error", error, "RealtimeContext");
         ws.close();
       };
@@ -318,12 +345,21 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return () => {};
     }
 
+    shouldReconnectRef.current = true;
     connectWebSocket();
 
     return () => {
+      shouldReconnectRef.current = false;
       logger.debug("Realtime: Stopping Realtime connection", { organizationId }, "RealtimeContext");
       if (wsRef.current) {
-        wsRef.current.close(1000, "Provider unmounting");
+        if (wsRef.current.readyState === WebSocket.OPEN) {
+          wsRef.current.close(1000, "Provider unmounting");
+        } else if (wsRef.current.readyState === WebSocket.CONNECTING) {
+          wsRef.current.onopen = null;
+          wsRef.current.onmessage = null;
+          wsRef.current.onclose = null;
+          wsRef.current.onerror = null;
+        }
         wsRef.current = null;
       }
       if (reconnectTimeoutRef.current) {

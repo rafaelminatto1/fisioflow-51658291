@@ -36,7 +36,12 @@ import {
   persistInstagramProfileSyncState,
   readInstagramProfileSyncState,
 } from "../lib/instagram-profile";
-import { getInstagramSendError, isInstagramOutsideWindowError, sendInstagramText } from "./instagram-webhook";
+import {
+  getInstagramSendError,
+  isInstagramOutsideWindowError,
+  sendInstagramMessage,
+  sendInstagramText,
+} from "./instagram-webhook";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
@@ -412,7 +417,11 @@ function getChannelSendErrorStatus(
   if (channel === "instagram" && isInstagramOutsideWindowError(sendError.metaError ?? sendError.message)) {
     return 422;
   }
-  if (sendError.kind === "missing_recipient" || sendError.kind === "missing_credentials") {
+  if (
+    sendError.kind === "missing_recipient" ||
+    sendError.kind === "missing_credentials" ||
+    sendError.kind === "unsupported_message_type"
+  ) {
     return 400;
   }
   return 502;
@@ -932,6 +941,7 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
     let metaMessageId: string | null = null;
     let metaStatusCode: number | undefined;
     let metaData: any;
+    let instagramHumanAgentTagUsed = false;
     let sendError: {
       kind: string;
       message: string;
@@ -957,38 +967,155 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
       const igToken = igRes.rows[0]?.ig_token || undefined;
       if (!to) {
         sendError = { kind: "missing_recipient", message: "Conversa do Instagram sem destinatário" };
+      } else if (body.templateName) {
+        sendError = { kind: "unsupported_message_type", message: "Templates não são suportados no canal Instagram." };
       } else if (!igId || !(igToken || c.env.IG_ACCESS_TOKEN)) {
         sendError = { kind: "missing_credentials", message: "Instagram não configurado" };
       } else {
         try {
-          let r = (await sendInstagramText(c.env, String(igId), to, body.content || "", igToken)) as any;
-          metaMessageId = r?.message_id ?? null;
-          const initialInstagramError = getInstagramSendError(r);
+          const attachmentType =
+            body.attachmentUrl && messageType === "image"
+              ? "image"
+              : body.attachmentUrl && messageType === "audio"
+                ? "audio"
+                : body.attachmentUrl && messageType === "video"
+                  ? "video"
+                  : body.attachmentUrl && messageType === "document"
+                    ? "file"
+                    : null;
 
-          if (initialInstagramError && isInstagramOutsideWindowError(initialInstagramError)) {
-            r = (await sendInstagramText(c.env, String(igId), to, body.content || "", igToken, {
-              humanAgentTag: true,
-            })) as any;
-            metaMessageId = r?.message_id ?? metaMessageId;
-          }
-
-          const instagramError = getInstagramSendError(r);
-          if (instagramError) {
-            const outsideWindow = isInstagramOutsideWindowError(instagramError);
+          if (body.attachmentUrl && !attachmentType) {
             sendError = {
-              kind: outsideWindow ? "instagram_outside_window" : "instagram_api_error",
-              message: outsideWindow
-                ? "A conversa do Instagram está fora da janela permitida. Se o recurso Human Agent não estiver liberado ou a última mensagem do cliente tiver mais de 7 dias, o Instagram bloqueia a resposta."
-                : instagramError.message || JSON.stringify(instagramError),
-              statusCode: r?.status,
-              metaError: {
-                type: instagramError.type,
-                code: instagramError.code,
-                errorSubcode: instagramError.error_subcode,
-                message: instagramError.message,
-                traceId: instagramError.fbtrace_id,
-              },
+              kind: "unsupported_message_type",
+              message: `Tipo de mídia não suportado no Instagram: ${messageType}.`,
             };
+          } else {
+            const sendInstagramWithRetry = async (
+              payload:
+                | { kind: "text"; text: string }
+                | { kind: "attachment"; attachmentUrl: string; attachmentType: "image" | "audio" | "video" | "file" },
+            ) => {
+              let response =
+                payload.kind === "text"
+                  ? await sendInstagramText(c.env, String(igId), to, payload.text, igToken)
+                  : await sendInstagramMessage(
+                      c.env,
+                      String(igId),
+                      {
+                        recipientIgsid: to,
+                        attachmentUrl: payload.attachmentUrl,
+                        attachmentType: payload.attachmentType,
+                      },
+                      igToken,
+                    );
+
+              const initialError = getInstagramSendError(response);
+              if (initialError && isInstagramOutsideWindowError(initialError)) {
+                instagramHumanAgentTagUsed = true;
+                response =
+                  payload.kind === "text"
+                    ? await sendInstagramText(c.env, String(igId), to, payload.text, igToken, {
+                        humanAgentTag: true,
+                      })
+                    : await sendInstagramMessage(
+                        c.env,
+                        String(igId),
+                        {
+                          recipientIgsid: to,
+                          attachmentUrl: payload.attachmentUrl,
+                          attachmentType: payload.attachmentType,
+                        },
+                        igToken,
+                        { humanAgentTag: true },
+                      );
+              }
+              return response;
+            };
+
+            if (body.attachmentUrl && attachmentType) {
+              const mediaRes = (await sendInstagramWithRetry({
+                kind: "attachment",
+                attachmentUrl: body.attachmentUrl,
+                attachmentType,
+              })) as any;
+              metaMessageId = mediaRes?.message_id ?? null;
+              metaStatusCode = mediaRes?.status;
+              metaData = mediaRes;
+
+              const mediaError = getInstagramSendError(mediaRes);
+              if (mediaError) {
+                const outsideWindow = isInstagramOutsideWindowError(mediaError);
+                sendError = {
+                  kind: outsideWindow ? "instagram_outside_window" : "instagram_api_error",
+                  message: outsideWindow
+                    ? "A conversa do Instagram está fora da janela permitida. Se o recurso Human Agent não estiver liberado ou a última mensagem do cliente tiver mais de 7 dias, o Instagram bloqueia a resposta."
+                    : mediaError.message || JSON.stringify(mediaError),
+                  statusCode: mediaRes?.status,
+                  metaError: {
+                    type: mediaError.type,
+                    code: mediaError.code,
+                    errorSubcode: mediaError.error_subcode,
+                    message: mediaError.message,
+                    traceId: mediaError.fbtrace_id,
+                  },
+                };
+              } else if ((body.content || "").trim()) {
+                const textRes = (await sendInstagramWithRetry({
+                  kind: "text",
+                  text: String(body.content || "").trim(),
+                })) as any;
+                metaData = {
+                  media: mediaRes,
+                  text: textRes,
+                };
+                metaStatusCode = textRes?.status ?? metaStatusCode;
+                const textError = getInstagramSendError(textRes);
+                if (textError) {
+                  const outsideWindow = isInstagramOutsideWindowError(textError);
+                  sendError = {
+                    kind: outsideWindow ? "instagram_outside_window" : "instagram_api_error",
+                    message: outsideWindow
+                      ? "A mídia foi enviada, mas o texto complementar ficou fora da janela permitida do Instagram."
+                      : textError.message || JSON.stringify(textError),
+                    statusCode: textRes?.status,
+                    metaError: {
+                      type: textError.type,
+                      code: textError.code,
+                      errorSubcode: textError.error_subcode,
+                      message: textError.message,
+                      traceId: textError.fbtrace_id,
+                    },
+                  };
+                }
+              }
+            } else {
+              let r = (await sendInstagramWithRetry({
+                kind: "text",
+                text: body.content || "",
+              })) as any;
+              metaMessageId = r?.message_id ?? null;
+              metaStatusCode = r?.status;
+              metaData = r;
+
+              const instagramError = getInstagramSendError(r);
+              if (instagramError) {
+                const outsideWindow = isInstagramOutsideWindowError(instagramError);
+                sendError = {
+                  kind: outsideWindow ? "instagram_outside_window" : "instagram_api_error",
+                  message: outsideWindow
+                    ? "A conversa do Instagram está fora da janela permitida. Se o recurso Human Agent não estiver liberado ou a última mensagem do cliente tiver mais de 7 dias, o Instagram bloqueia a resposta."
+                    : instagramError.message || JSON.stringify(instagramError),
+                  statusCode: r?.status,
+                  metaError: {
+                    type: instagramError.type,
+                    code: instagramError.code,
+                    errorSubcode: instagramError.error_subcode,
+                    message: instagramError.message,
+                    traceId: instagramError.fbtrace_id,
+                  },
+                };
+              }
+            }
           }
         } catch (error) {
           sendError = {
@@ -1104,18 +1231,20 @@ app.post("/conversations/:id/messages", requireAuth, async (c) => {
         templateName: body.templateName,
         mediaUrl: body.attachmentUrl,
         mediaType: body.attachmentUrl ? messageType : undefined,
-        status: sendStatus,
-        metadata: {
-          requestId,
-          sentVia: body.sentVia ?? "inbox",
-          whatsappSend: {
-            status: sendStatus,
-            metaStatusCode,
-            metaMessageId,
-            error: sendError,
-          },
-        },
-      },
+              status: sendStatus,
+              metadata: {
+                requestId,
+                sentVia: body.sentVia ?? "inbox",
+                whatsappSend: {
+                  channel,
+                  status: sendStatus,
+                  metaStatusCode,
+                  metaMessageId,
+                  humanAgentTagUsed: instagramHumanAgentTagUsed || undefined,
+                  error: sendError,
+                },
+              },
+            },
     );
     savedMsg.status = sendStatus;
 
@@ -2595,6 +2724,54 @@ app.get("/agents/workload", requireAuth, async (c) => {
     console.error("[WhatsApp Inbox] GET /agents/workload error:", err);
     return c.json({ error: "Failed to fetch workload" }, 500);
   }
+});
+
+/**
+ * Registra (uma vez) o template de reengajamento na Meta para reabrir conversas
+ * fora da janela de 24h. Idempotente: se já existir, a Meta retorna erro e nós
+ * repassamos. Requer WHATSAPP_ACCESS_TOKEN com permissão whatsapp_business_management
+ * e organizations.settings->>'whatsapp_business_account_id'.
+ */
+export const REENGAGEMENT_TEMPLATE = {
+  name: "reengajamento",
+  language: "pt_BR",
+  // Sem variáveis para casar com o envio padrão do inbox (parameters vazios).
+  body:
+    "Olá! 👋 Aqui é a Activity Fisioterapia. Notamos que nossa conversa ficou pausada. " +
+    "Podemos continuar seu atendimento por aqui? É só responder esta mensagem que retomamos. 😊",
+};
+
+app.post("/templates/reengagement/register", requireAuth, async (c) => {
+  const user = c.get("user");
+  const token = c.env.WHATSAPP_ACCESS_TOKEN;
+  if (!token) {
+    return c.json({ error: "WHATSAPP_ACCESS_TOKEN não configurado" }, 500);
+  }
+
+  const pool = await createPool(c.env);
+  const wabaRes = await pool.query(
+    `SELECT settings->>'whatsapp_business_account_id' AS waba FROM organizations WHERE id = $1`,
+    [user.organizationId],
+  );
+  const wabaId = wabaRes.rows[0]?.waba;
+  if (!wabaId) {
+    return c.json({ error: "whatsapp_business_account_id não configurado na organização" }, 400);
+  }
+
+  const payload = {
+    name: REENGAGEMENT_TEMPLATE.name,
+    category: "MARKETING",
+    language: REENGAGEMENT_TEMPLATE.language,
+    components: [{ type: "BODY", text: REENGAGEMENT_TEMPLATE.body }],
+  };
+
+  const res = await fetch(`https://graph.facebook.com/v25.0/${wabaId}/message_templates`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  return c.json({ ok: res.ok, status: res.status, meta: data }, res.ok ? 200 : 502);
 });
 
 export { app as whatsappInboxRoutes };

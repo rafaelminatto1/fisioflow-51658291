@@ -51,10 +51,18 @@ export function useWhatsAppInbox(filters?: ConversationFilters) {
   const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
+  // Callers frequently pass an inline `filters` object, which has a new identity
+  // on every render. Depending on the object reference would recreate `refetch`
+  // each render and retrigger the fetch effect in an infinite loop
+  // (ERR_INSUFFICIENT_RESOURCES). Depend on the serialized content instead so
+  // equal filters collapse to a single, stable fetch.
+  const filtersKey = JSON.stringify(filters ?? {});
+
   const refetch = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await fetchConversations(filters);
+      const parsedFilters = JSON.parse(filtersKey) as ConversationFilters;
+      const result = await fetchConversations(parsedFilters);
       setConversations(sortConversationsByInteraction(result.data));
       setPagination(result.pagination);
       setError(null);
@@ -71,7 +79,7 @@ export function useWhatsAppInbox(filters?: ConversationFilters) {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filtersKey]);
 
   // Fetch on mount and when filters change
   useEffect(() => {
@@ -88,63 +96,61 @@ export function useWhatsAppInbox(filters?: ConversationFilters) {
 
   // Listen for real-time WhatsApp new messages via WebSocket
   useEffect(() => {
-    const handleNewMessage = (event: MessageEvent) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === "whatsapp_new_message" && data.conversationId) {
-          // Track new message for animation
-          setNewMessageIds((prev) => new Set(prev).add(data.conversationId));
-          
-          // Remove "new" status after 5 seconds
-          setTimeout(() => {
-            setNewMessageIds((prev) => {
-              const next = new Set(prev);
-              next.delete(data.conversationId);
-              return next;
-            });
-          }, 5000);
-
-          // Update conversation in local state immediately
-          setConversations((prev) => {
-            const updated = prev.map((conv) => {
-              if (conv.id === data.conversationId) {
-                return {
-                  ...conv,
-                  lastMessage: data.message?.content || conv.lastMessage,
-                  lastMessageAt: data.message?.createdAt || new Date().toISOString(),
-                  unreadCount: (conv.unreadCount || 0) + 1,
-                };
-              }
-              return conv;
-            });
-
-            return sortConversationsByInteraction(updated);
-          });
-
-          // Also update React Query cache
-          queryClient.setQueryData(["whatsapp", "inbox"], (old: any) => {
-            if (!old?.data) return old;
-            const updatedData = old.data.map((conv: any) => {
-              if (conv.id === data.conversationId) {
-                return {
-                  ...conv,
-                  lastMessage: data.message?.content || conv.lastMessage,
-                  lastMessageAt: data.message?.createdAt || new Date().toISOString(),
-                  unreadCount: (conv.unreadCount || 0) + 1,
-                };
-              }
-              return conv;
-            });
-            const sorted = sortConversationsByInteraction(updatedData);
-            return { ...old, data: sorted };
-          });
-
-          // Invalidate unread count
-          queryClient.invalidateQueries({ queryKey: ["whatsapp", "unread-count"] });
-        }
-      } catch {
-        // Ignore non-JSON messages
+    const handleNewMessage = (event: Event) => {
+      const data = (event as CustomEvent).detail;
+      if (!data || data.type !== "whatsapp_new_message" || !data.conversationId) {
+        return;
       }
+
+      // Track new message for animation
+      setNewMessageIds((prev) => new Set(prev).add(data.conversationId));
+
+      // Remove "new" status after 5 seconds
+      setTimeout(() => {
+        setNewMessageIds((prev) => {
+          const next = new Set(prev);
+          next.delete(data.conversationId);
+          return next;
+        });
+      }, 5000);
+
+      // Update conversation in local state immediately
+      setConversations((prev) => {
+        const updated = prev.map((conv) => {
+          if (conv.id === data.conversationId) {
+            return {
+              ...conv,
+              lastMessage: data.message?.content || conv.lastMessage,
+              lastMessageAt: data.message?.createdAt || new Date().toISOString(),
+              unreadCount: (conv.unreadCount || 0) + 1,
+            };
+          }
+          return conv;
+        });
+
+        return sortConversationsByInteraction(updated);
+      });
+
+      // Also update React Query cache
+      queryClient.setQueryData(["whatsapp", "inbox"], (old: any) => {
+        if (!old?.data) return old;
+        const updatedData = old.data.map((conv: any) => {
+          if (conv.id === data.conversationId) {
+            return {
+              ...conv,
+              lastMessage: data.message?.content || conv.lastMessage,
+              lastMessageAt: data.message?.createdAt || new Date().toISOString(),
+              unreadCount: (conv.unreadCount || 0) + 1,
+            };
+          }
+          return conv;
+        });
+        const sorted = sortConversationsByInteraction(updatedData);
+        return { ...old, data: sorted };
+      });
+
+      // Invalidate unread count
+      queryClient.invalidateQueries({ queryKey: ["whatsapp", "unread-count"] });
     };
 
     // Listen on window for WebSocket messages from RealtimeContext

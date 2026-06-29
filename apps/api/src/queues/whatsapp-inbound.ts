@@ -12,6 +12,7 @@ import { findOrCreateConversation, addMessage } from "../lib/whatsapp-conversati
 import { broadcastToOrg } from "../lib/realtime";
 import { writeEvent } from "../lib/analytics";
 import { AIConciergeService } from "../services/ai-concierge";
+import { WhatsAppService } from "../lib/whatsapp";
 
 /**
  * Resolve organization ID from phone number ID (WhatsApp) or Instagram account ID.
@@ -156,8 +157,18 @@ export async function handleWhatsAppInboundQueue(
       // 9. Analytics event
       writeEvent(env, { orgId, event: "whatsapp_message_received" });
 
-      // 10. Process AI Concierge asynchronously (non-blocking)
-      void processConciergeAsync(env, pool, orgId, conversation.id, contact.id, msg.text || "");
+      // 10. Process AI Concierge — awaited so the outbound send is not killed
+      // when the consumer returns (fire-and-forget after ack() is unreliable in
+      // Workers). The customer just messaged us, so we are within the 24h window.
+      await processConciergeAsync(
+        env,
+        pool,
+        orgId,
+        conversation.id,
+        contact.id,
+        msg.from || msg.waId,
+        msg.text || "",
+      );
 
       // 11. Acknowledge successful processing
       message.ack();
@@ -179,6 +190,7 @@ async function processConciergeAsync(
   orgId: string,
   conversationId: string,
   contactId: string,
+  recipient: string,
   text: string,
 ): Promise<void> {
   try {
@@ -190,7 +202,18 @@ async function processConciergeAsync(
     );
 
     if (concierge.answerable && concierge.reply && concierge.reply.length >= 2) {
-      // Save concierge reply as outbound message
+      // Actually deliver the reply to the customer via Meta. We are within the
+      // 24h customer-service window (they just messaged), so free-form text is
+      // allowed and will deliver.
+      const whatsapp = new WhatsAppService(env);
+      const sendResult = (await whatsapp.sendTextMessage(recipient, concierge.reply)) as {
+        messages?: { id?: string }[];
+        error?: unknown;
+      };
+      const metaMessageId = sendResult?.messages?.[0]?.id ?? null;
+      const sendStatus = metaMessageId ? "sent" : "failed";
+
+      // Persist the reply with its real delivery status (sent/failed).
       await addMessage(
         pool,
         conversationId,
@@ -201,24 +224,39 @@ async function processConciergeAsync(
         contactId,
         "text",
         concierge.reply,
-        `ai_${Date.now()}`,
+        metaMessageId ?? `ai_${Date.now()}`,
+        {
+          status: sendStatus,
+          metadata: {
+            autoReply: true,
+            whatsappSend: {
+              status: sendStatus,
+              metaMessageId,
+              error: metaMessageId ? null : sendResult?.error ?? "send_failed",
+            },
+          },
+        },
       );
 
       // Broadcast the reply
       await broadcastToOrg(env, orgId, {
-        type: "whatsapp_message",
+        type: sendStatus === "failed" ? "whatsapp_message_failed" : "whatsapp_message",
         conversationId,
         message: {
           content: concierge.reply,
           direction: "outbound",
           messageType: "text",
+          status: sendStatus,
         },
       });
 
-      writeEvent(env, { orgId, event: "whatsapp_concierge_replied" });
+      writeEvent(env, {
+        orgId,
+        event: sendStatus === "failed" ? "whatsapp_concierge_failed" : "whatsapp_concierge_replied",
+      });
     }
   } catch (error) {
     console.error("[WA Queue] Concierge error:", error);
-    // Non-critical - message is already saved
+    // Non-critical - inbound message is already saved
   }
 }

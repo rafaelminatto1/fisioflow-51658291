@@ -135,7 +135,9 @@ registerRoute(
 async function clearOldVersionCaches(): Promise<void> {
   try {
     const cache = await caches.open(APP_VERSION_CACHE);
-    const stored = await cache.get("__app_manifest_revision__");
+    // Cache API exposes match(), not get() — using get() threw
+    // "TypeError: e.get is not a function", silently disabling deploy cleanup.
+    const stored = await cache.match("__app_manifest_revision__");
     // Busca a versão atual do manifest.webmanifest (gerado pelo Vite com hash)
     let current = "unknown";
     try {

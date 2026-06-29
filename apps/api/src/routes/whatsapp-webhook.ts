@@ -121,8 +121,13 @@ app.post("/", async (c) => {
     return c.json({ error: "Payload invalido" }, 400);
   }
 
-  // Extract messages and enqueue to Cloudflare Queue
+  // Inbound messages go to the Cloudflare Queue for reliable processing.
   const { entriesToEnqueue, phoneNumberId } = await extractAndEnqueueMessages(body, c);
+
+  // Status (sent/delivered/read/failed) and system events are NOT queued — they
+  // must be reconciled inline, otherwise outbound messages stay "sent" forever
+  // even when Meta fails delivery (e.g. 131047 outside the 24h window).
+  safeWaitUntil(c, processWebhook(body, c.env, rawBody));
 
   return c.json({ status: "ok", enqueued: entriesToEnqueue.length, phoneNumberId });
 });
@@ -192,8 +197,13 @@ async function processWebhook(
         const value = change?.value;
         if (!value) continue;
 
+        // Inbound messages are handled by the queue consumer; here we only
+        // reconcile status/system events. Skip message-only changes to avoid
+        // duplicate raw-event audit rows.
+        if (!value.statuses?.length && !value.system) continue;
+
         const phoneNumberId = value.metadata?.phone_number_id ?? null;
-        const eventType = value.messages?.length ? "message" : value.statuses?.length ? "status" : value.system ? "system" : "unknown";
+        const eventType = value.statuses?.length ? "status" : value.system ? "system" : "unknown";
         const providerEventId = extractProviderEventId(body);
 
         const orgId = await resolveOrgId(pool, phoneNumberId ?? undefined);
@@ -225,12 +235,6 @@ async function processWebhook(
         });
 
         try {
-          if (value.messages?.length) {
-            for (const msg of value.messages) {
-              await handleMessage(pool, env, orgId, msg, value.contacts);
-            }
-          }
-
           if (value.statuses?.length) {
             for (const status of value.statuses) {
               await handleStatus(pool, env, orgId, status);
