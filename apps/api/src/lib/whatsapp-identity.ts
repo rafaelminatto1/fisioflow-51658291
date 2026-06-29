@@ -2,6 +2,54 @@ import { createPool } from "./db";
 
 type Pool = ReturnType<typeof createPool>;
 
+/** True para strings só-dígitos com comprimento de telefone (10–13). Exclui IGSIDs (16–17) e webchat ("web:uuid"). */
+function looksLikePhone(value: string): boolean {
+  return /^\d{10,13}$/.test(value);
+}
+
+/**
+ * Normaliza um número brasileiro para E.164 (com 55), preservando o 9º dígito —
+ * usado como wa_id de armazenamento, para que lead manual ("11993524642") e
+ * inbound da Meta ("5511993524642") convirjam no MESMO contato.
+ * Não-telefones (IGSID, "web:uuid") são retornados intactos.
+ */
+export function toE164Brazil(raw: string): string {
+  const digits = String(raw ?? "").replace(/\D/g, "");
+  if (!looksLikePhone(digits)) return String(raw ?? "");
+  let national = digits;
+  if (national.length >= 12 && national.startsWith("55")) {
+    national = national.slice(2);
+  }
+  // national agora deve ser DDD(2) + assinante (8 ou 9 dígitos) = 10 ou 11.
+  if (national.length === 10 || national.length === 11) {
+    return "55" + national;
+  }
+  return digits;
+}
+
+/**
+ * Chave canônica para COMPARAÇÃO (dedup): remove 55 e o 9º dígito de celular,
+ * de modo que "11993524642", "5511993524642" e "551193524642" colidam.
+ * Não-telefones retornam só os dígitos.
+ */
+export function canonicalBrazilPhone(raw: string): string {
+  const digits = String(raw ?? "").replace(/\D/g, "");
+  if (!looksLikePhone(digits)) return digits;
+  let national = digits;
+  if (national.length >= 12 && national.startsWith("55")) {
+    national = national.slice(2);
+  }
+  if (national.length === 10 || national.length === 11) {
+    const ddd = national.slice(0, 2);
+    let sub = national.slice(2); // 8 ou 9 dígitos
+    if (sub.length === 9 && sub.startsWith("9")) {
+      sub = sub.slice(1); // descarta o 9º dígito p/ casar variantes
+    }
+    return "55" + ddd + sub;
+  }
+  return digits;
+}
+
 export async function resolveOrCreateContact(
   pool: Pool,
   orgId: string,
@@ -13,6 +61,10 @@ export async function resolveOrCreateContact(
   avatarUrl: string | null = null,
 ) {
   try {
+    // Normaliza telefone BR para E.164 (com 55) — converge lead manual e inbound
+    // no mesmo contato. Não-telefones (IGSID/webchat) passam intactos.
+    waId = toE164Brazil(waId);
+
     let contact =
       (await findContactByBsuid(pool, orgId, bsuid)) ??
       (await findContactByWaId(pool, orgId, waId)) ??
@@ -137,11 +189,32 @@ export async function findContactByWaId(pool: Pool, orgId: string, waId: string)
 export async function findContactByPhone(pool: Pool, orgId: string, phone: string) {
   try {
     const cleaned = phone.replace(/\D/g, "");
-    const result = await pool.query(
+
+    // 1) Match exato (back-compat: IGSID, webchat numérico, dados já E.164).
+    const exact = await pool.query(
       `SELECT * FROM whatsapp_contacts WHERE organization_id = $1 AND wa_id = $2 LIMIT 1`,
       [orgId, cleaned],
     );
-    return result.rows[0] ?? null;
+    if (exact.rows[0]) return exact.rows[0];
+
+    // 2) Match canônico p/ telefones BR — pega dados legados (sem 55) e variações
+    //    do 9º dígito. Busca candidatos pelos 8 últimos dígitos e confirma em JS.
+    const canon = canonicalBrazilPhone(phone);
+    if (canon.startsWith("55") && canon.length === 12) {
+      const sub8 = canon.slice(4); // 8 dígitos do assinante
+      const candidates = await pool.query(
+        `SELECT * FROM whatsapp_contacts
+         WHERE organization_id = $1
+           AND regexp_replace(wa_id, '\\D', '', 'g') LIKE '%' || $2`,
+        [orgId, sub8],
+      );
+      const match = candidates.rows.find(
+        (row: { wa_id?: string }) => canonicalBrazilPhone(String(row.wa_id ?? "")) === canon,
+      );
+      if (match) return match;
+    }
+
+    return null;
   } catch (error) {
     console.error("[whatsapp-identity] findContactByPhone error:", error);
     return null;
