@@ -147,6 +147,7 @@ export const ScheduleModals: React.FC<ScheduleModalsProps> = ({
                     modals.capacityConfirmation.newDate,
                     modals.capacityConfirmation.newTime,
                     true,
+                    modals.capacityConfirmation.durationMinutes,
                   );
                 }
               }}

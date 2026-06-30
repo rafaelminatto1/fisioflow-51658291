@@ -36,6 +36,7 @@ import { useSchedulePageData, type ViewType } from "@/hooks/useSchedulePage";
 import type { ViewType as CalendarViewType } from "@/hooks/useScheduleState";
 import { KEYBOARD_SHORTCUTS } from "@/lib/calendar/constants";
 import { updateScheduleViewSearchParams, type ScheduleViewType } from "@/lib/schedule/viewParams";
+import { rescheduleParamsFromDrag } from "@/lib/scheduleReschedule";
 import {
   parseLocalDate,
   getAdjustedToday,
@@ -266,15 +267,17 @@ export default function Schedule() {
                   viewType={viewType}
                   onViewTypeChange={handleViewTypeChange}
                   onTimeSlotClick={handleTimeSlotClick}
-                  onAppointmentReschedule={(id, start) => {
+                  onAppointmentReschedule={(id, start, end) => {
                     const appointment = appointments.find((a) => a.id === id);
                     if (!appointment) return;
-                    const match = start.match(/^(\d{4}-\d{2}-\d{2})(?:[T\s](\d{2}:\d{2}))?/);
-                    if (match)
+                    const params = rescheduleParamsFromDrag(start, end, appointment.duration);
+                    if (params)
                       actions.handleAppointmentReschedule(
                         appointment,
-                        parseLocalDate(match[1]),
-                        match[2] || "",
+                        parseLocalDate(params.date),
+                        params.time,
+                        undefined,
+                        params.durationMinutes,
                       );
                   }}
                   onEditAppointment={(id) => {

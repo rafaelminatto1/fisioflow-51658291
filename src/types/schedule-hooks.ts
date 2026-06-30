@@ -24,9 +24,15 @@ export interface ScheduleModalsState {
     appointment: Appointment;
     newDate: Date;
     newTime: string;
+    durationMinutes?: number;
   } | null;
   setCapacityConfirmation: (
-    data: { appointment: Appointment; newDate: Date; newTime: string } | null,
+    data: {
+      appointment: Appointment;
+      newDate: Date;
+      newTime: string;
+      durationMinutes?: number;
+    } | null,
   ) => void;
 }
 
@@ -39,6 +45,7 @@ export interface ScheduleActions {
     newDate: Date,
     newTime: string,
     ignoreCapacity?: boolean,
+    durationOverride?: number,
   ) => Promise<void>;
   handleEditAppointment: (appointment: Appointment) => void;
   handleDeleteAppointment: (appointment: Appointment) => Promise<void>;

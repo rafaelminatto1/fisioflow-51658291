@@ -114,14 +114,21 @@ export function useScheduleHandlers(
   }, []);
 
   const handleAppointmentReschedule = useCallback(
-    async (appointment: Appointment, newDate: Date, newTime: string, ignoreCapacity?: boolean) => {
+    async (
+      appointment: Appointment,
+      newDate: Date,
+      newTime: string,
+      ignoreCapacity?: boolean,
+      durationOverride?: number,
+    ) => {
       try {
         const formattedDate = toLocalYMD(newDate);
         await rescheduleAppointmentMutation({
           appointmentId: appointment.id,
           appointment_date: formattedDate,
           appointment_time: newTime,
-          duration: appointment.duration,
+          // Resize altera a duração; sem override mantém a duração atual (move).
+          duration: durationOverride ?? appointment.duration,
           ignoreCapacity,
         });
         toast({
@@ -136,7 +143,7 @@ export function useScheduleHandlers(
       } catch (error) {
         if (isAppointmentConflictError(error) && !ignoreCapacity) {
           // If it's a conflict and we haven't ignored capacity yet, show confirmation modal
-          setCapacityConfirmation({ appointment, newDate, newTime });
+          setCapacityConfirmation({ appointment, newDate, newTime, durationMinutes: durationOverride });
           return;
         }
 
