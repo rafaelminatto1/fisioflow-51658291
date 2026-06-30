@@ -154,7 +154,7 @@ export async function backfillInstagramProfilesForOrganization(
   const force = options?.force === true;
 
   const contactsResult = await pool.query(
-    `SELECT DISTINCT wc.id, wc.wa_id, wc.username, wc.display_name, wc.avatar_url
+    `SELECT DISTINCT wc.id, wc.wa_id, wc.username, wc.display_name, wc.avatar_url, wc.updated_at
      FROM whatsapp_contacts wc
      JOIN wa_conversations c ON c.contact_id = wc.id
      WHERE wc.organization_id = $1
