@@ -1020,7 +1020,7 @@ export default function CrmWhatsApp() {
               </div>
             </div>
           </div>
-          <div className="grid min-h-0 flex-1 grid-cols-[326px_minmax(0,1fr)_304px]">
+          <div className="grid min-h-0 flex-1 grid-rows-1 grid-cols-[326px_minmax(0,1fr)_304px] overflow-hidden">
             <aside className="flex min-h-0 flex-col border-r border-border">
               <div className="border-b border-border p-3.5">
                 <div className="flex items-center gap-2 rounded-[10px] bg-muted/60 px-3 py-2.5">
