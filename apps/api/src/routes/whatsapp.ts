@@ -1099,7 +1099,6 @@ app.post("/pending-replies/:id/reject", requireAuth, async (c) => {
  * with the Meta Graph API.
  */
 app.get("/admin/webhook-register", async (c) => {
-  const user = c.get("user");
   const env = c.env;
   
   const accessToken = env.WHATSAPP_ACCESS_TOKEN;

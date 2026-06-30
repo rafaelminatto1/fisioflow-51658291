@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   fetchConversations,
@@ -86,12 +86,21 @@ export function useWhatsAppInbox(filters?: ConversationFilters) {
     void refetch();
   }, [refetch]);
 
-  // Poll every 15 seconds as fallback
+  // Poll como fallback do WebSocket — só quando a aba está visível (evita
+  // refetch desnecessário em segundo plano). Atualiza ao reabrir a aba.
   useEffect(() => {
     const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
       void refetch();
-    }, 15_000);
-    return () => clearInterval(interval);
+    }, 20_000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void refetch();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [refetch]);
 
   // Listen for real-time WhatsApp new messages via WebSocket
@@ -200,6 +209,7 @@ export function useWhatsAppConversation(id: string | null) {
   useEffect(() => {
     if (!id) return;
     const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
       const cached = queryClient.getQueryState<ConversationResult>([
         "whatsapp",
         "conversation",
@@ -209,7 +219,7 @@ export function useWhatsAppConversation(id: string | null) {
       if (Date.now() - updatedAt > 30_000) {
         queryClient.invalidateQueries({ queryKey: ["whatsapp", "conversation", id] });
       }
-    }, 15_000);
+    }, 20_000);
     return () => clearInterval(interval);
   }, [id, queryClient]);
 

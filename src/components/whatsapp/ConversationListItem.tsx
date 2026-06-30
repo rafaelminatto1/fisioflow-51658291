@@ -1,4 +1,4 @@
-import { formatDistanceToNow, format, isToday, isYesterday } from "date-fns";
+import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Check, AlertTriangle, Clock } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
