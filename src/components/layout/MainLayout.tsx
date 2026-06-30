@@ -108,7 +108,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       data-testid="main-layout"
     >
       <ComplianceBanner />
-      <div className="flex flex-1 w-full relative">
+      <div className={cn("flex flex-1 w-full relative", fillViewport && "min-h-0")}>
         {/* Skip Links for Accessibility */}
         <SkipLinks />
 
