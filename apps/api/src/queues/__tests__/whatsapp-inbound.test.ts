@@ -32,11 +32,15 @@ vi.mock("../../lib/analytics", () => ({
   writeEvent: (...args: unknown[]) => mockWriteEvent(...args),
 }));
 
-vi.mock("../../services/ai-concierge", () => ({
-  AIConciergeService: {
-    processMessage: (...args: unknown[]) => mockProcessMessage(...args),
-  },
-}));
+vi.mock("../../services/ai-concierge", async (importActual) => {
+  const actual = await importActual<typeof import("../../services/ai-concierge")>();
+  return {
+    ...actual, // mantém os helpers puros (buildConciergeHistory, shouldSkipGreeting)
+    AIConciergeService: {
+      processMessage: (...args: unknown[]) => mockProcessMessage(...args),
+    },
+  };
+});
 
 vi.mock("../../lib/whatsapp", () => ({
   WhatsAppService: class {
@@ -113,5 +117,30 @@ describe("handleWhatsAppInboundQueue — concierge auto-reply", () => {
       (call) => call.includes("outbound") && call.includes("Atendemos das 8h às 18h."),
     );
     expect(outboundCall).toBeTruthy();
+  });
+
+  it("NÃO repete a apresentação quando o assistente já saudou nesta conversa", async () => {
+    const apresentacao =
+      "Bom dia, tudo bem?\nSou o Rafael da Activity Fisioterapia.\nComo posso ajudar?";
+    // Histórico já contém uma saudação anterior do assistente.
+    mockQuery.mockImplementation((sql: string) => {
+      if (/whatsapp_phone_number_id/.test(sql)) return Promise.resolve({ rows: [{ id: "org-1" }] });
+      if (/FROM wa_messages/.test(sql)) {
+        return Promise.resolve({
+          rows: [
+            { direction: "inbound", content: "oi" },
+            { direction: "outbound", content: apresentacao },
+          ],
+        });
+      }
+      return Promise.resolve({ rows: [] });
+    });
+    // O concierge responderia com a apresentação de novo.
+    mockProcessMessage.mockResolvedValue({ answerable: true, reply: apresentacao });
+
+    const { batch } = makeBatch();
+    await handleWhatsAppInboundQueue(batch, ENV);
+
+    expect(mockSendTextMessage).not.toHaveBeenCalled();
   });
 });

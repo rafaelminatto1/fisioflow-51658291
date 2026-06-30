@@ -2,6 +2,43 @@ import { Env } from "../types/env";
 import { runAi, readAiText } from "../lib/ai-native";
 import { WORKERS_AI_MODELS } from "../lib/workersAi";
 
+export type ConciergeHistoryItem = { role: "user" | "assistant"; content: string };
+
+/** Assinatura estável da apresentação (independe da saudação por horário). */
+const GREETING_SIGNATURE = "Sou o Rafael da Activity Fisioterapia";
+
+/** True se a resposta é a apresentação/saudação padrão do concierge. */
+export function isGreetingReply(reply: string): boolean {
+  return typeof reply === "string" && reply.includes(GREETING_SIGNATURE);
+}
+
+/**
+ * Decide se devemos PULAR o envio de uma saudação para não repetir a
+ * apresentação a cada mensagem: pula só quando a resposta é uma saudação E o
+ * assistente já saudou antes nesta conversa.
+ */
+export function shouldSkipGreeting(reply: string, history: ConciergeHistoryItem[]): boolean {
+  if (!isGreetingReply(reply)) return false;
+  return history.some((h) => h.role === "assistant" && isGreetingReply(h.content));
+}
+
+/**
+ * Converte linhas de wa_messages em histórico p/ o LLM: inbound→user,
+ * outbound→assistant. Ignora mensagens internas e sem conteúdo de texto.
+ */
+export function buildConciergeHistory(
+  rows: Array<{ direction?: string; content?: string }>,
+): ConciergeHistoryItem[] {
+  const out: ConciergeHistoryItem[] = [];
+  for (const row of rows) {
+    const content = (row.content ?? "").trim();
+    if (!content) continue;
+    if (row.direction === "inbound") out.push({ role: "user", content });
+    else if (row.direction === "outbound") out.push({ role: "assistant", content });
+  }
+  return out;
+}
+
 export interface ConciergeResponse {
   reply: string;
   intent: "scheduling" | "information" | "urgent" | "other";

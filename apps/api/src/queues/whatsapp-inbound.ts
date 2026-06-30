@@ -11,7 +11,11 @@ import { resolveOrCreateContact, linkContactToPatient } from "../lib/whatsapp-id
 import { findOrCreateConversation, addMessage } from "../lib/whatsapp-conversations";
 import { broadcastToOrg } from "../lib/realtime";
 import { writeEvent } from "../lib/analytics";
-import { AIConciergeService } from "../services/ai-concierge";
+import {
+  AIConciergeService,
+  buildConciergeHistory,
+  shouldSkipGreeting,
+} from "../services/ai-concierge";
 import { WhatsAppService } from "../lib/whatsapp";
 import { mirrorWhatsAppMedia } from "../lib/media-mirror";
 
@@ -215,12 +219,29 @@ async function processConciergeAsync(
   text: string,
 ): Promise<void> {
   try {
-    const concierge = await AIConciergeService.processMessage(
-      env,
-      orgId,
-      text,
-      [],
-    );
+    // Carrega o histórico recente da conversa p/ dar contexto ao concierge e,
+    // sobretudo, evitar repetir a apresentação a cada mensagem.
+    let history: ReturnType<typeof buildConciergeHistory> = [];
+    try {
+      const histRes = await pool.query(
+        `SELECT direction, content FROM wa_messages
+          WHERE conversation_id = $1 AND message_type = 'text'
+            AND direction IN ('inbound', 'outbound')
+          ORDER BY created_at DESC LIMIT 10`,
+        [conversationId],
+      );
+      history = buildConciergeHistory([...histRes.rows].reverse());
+      // Remove a mensagem atual (já persistida) do fim — ela é passada à parte.
+      const last = history[history.length - 1];
+      if (last && last.role === "user" && last.content === text.trim()) history.pop();
+    } catch (histErr) {
+      console.warn("[WA Queue] Concierge history load failed:", histErr);
+    }
+
+    const concierge = await AIConciergeService.processMessage(env, orgId, text, history);
+
+    // Não repete a apresentação se já saudamos nesta conversa.
+    if (shouldSkipGreeting(concierge.reply, history)) return;
 
     if (concierge.answerable && concierge.reply && concierge.reply.length >= 2) {
       // Actually deliver the reply to the customer via Meta. We are within the
