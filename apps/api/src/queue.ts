@@ -4,6 +4,9 @@ import { runAutomationsForEvent } from "./lib/automation/triggerAutomations";
 import { writeEvent } from "./lib/analytics";
 import { transcribeAudio, analyzeClinicImage } from "./lib/ai-native";
 import { sendPushToUser, sendPushToOrg, type PushPayload } from "./lib/webpush";
+import { buildHtml, generatePdfQuickAction } from "./routes/reportsPdf";
+import { R2Service } from "./lib/storage/R2Service";
+import { sendPrescriptionEmail } from "./lib/email";
 
 export type WhatsAppQueuePayload = {
   to: string;
@@ -206,6 +209,11 @@ export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Pro
 
         case "patient.birthday" as any:
           await handlePatientBirthday((task as any).data, env);
+          break;
+
+        // Prescrição criada → gera PDF + envia email (portado do Inngest morto).
+        case "prescription.created" as any:
+          await processPrescriptionCreated((task as any).data, env);
           break;
 
         case "PROCESS_BACKUP":
@@ -925,6 +933,72 @@ async function generateNFSeForSession(
       lastErr instanceof Error ? lastErr.message : lastErr,
     );
   }
+}
+
+// ===== PRESCRIÇÃO: PDF + EMAIL =====
+
+/**
+ * Gera o PDF da prescrição, espelha no R2 e envia por email ao paciente.
+ * Portado de `routes/inngest.ts` (código morto: o Inngest nunca recebia eventos —
+ * tudo passou a ir para o Cloudflare Queue, mas este handler não existia aqui).
+ */
+export async function processPrescriptionCreated(
+  data: { planId: string; patientId: string; organizationId: string },
+  env: Env,
+): Promise<{ pdfUrl?: string; emailSent: boolean; error?: string }> {
+  const { planId, patientId, organizationId } = data;
+  const db = createPool(env);
+
+  const res = await db.query(
+    `SELECT p.full_name as patient_name, p.email, ep.name as plan_name,
+       json_agg(json_build_object('name', ex.title, 'sets', i.sets, 'reps', i.repetitions, 'notes', i.notes) ORDER BY i.order_index) FILTER (WHERE i.id IS NOT NULL) AS items
+     FROM exercise_plans ep
+     JOIN patients p ON p.id = ep.patient_id
+     LEFT JOIN exercise_plan_items i ON i.plan_id = ep.id
+     LEFT JOIN exercises ex ON ex.id = i.exercise_id
+     WHERE ep.id = $1
+     GROUP BY ep.id, p.id`,
+    [planId],
+  );
+  const plan = res.rows[0];
+  if (!plan) return { emailSent: false, error: "Plano não encontrado" };
+
+  const html = buildHtml({
+    type: "prescription",
+    title: plan.plan_name || "Prescrição de Exercícios",
+    patientName: plan.patient_name,
+    patientId,
+    data: {
+      content:
+        plan.items
+          ?.map(
+            (i: any) =>
+              `- ${i.name ?? "Exercício"}: ${i.sets || "-"} séries de ${i.reps || "-"} reps. ${i.notes ? `(${i.notes})` : ""}`,
+          )
+          .join("\n") || "Nenhum exercício especificado.",
+      indication: "Programa de exercícios domiciliares",
+    },
+  });
+
+  const pdfBuffer = await generatePdfQuickAction(html);
+  const r2 = new R2Service(env);
+  const timestamp = Date.now();
+  const pdfKey = `reports/${organizationId}/${patientId}/prescription-${timestamp}.pdf`;
+  const fileName = `prescription-${String(plan.patient_name ?? "paciente").replace(/\s+/g, "_")}`;
+
+  await r2.uploadFile(pdfKey, new Uint8Array(pdfBuffer), "application/pdf", `${fileName}.pdf`);
+  const pdfUrl = `${env.R2_PUBLIC_URL}/${pdfKey}`;
+
+  if (plan.email) {
+    await sendPrescriptionEmail(env, plan.email, {
+      patientName: plan.patient_name,
+      pdfUrl,
+      title: plan.plan_name || "Prescrição de Exercícios",
+    });
+    return { pdfUrl, emailSent: true };
+  }
+
+  return { pdfUrl, emailSent: false };
 }
 
 // ===== EVENT HANDLERS =====
