@@ -16,10 +16,14 @@ export interface WhatsAppInboundMessage {
   waId: string;
   /** Sender phone number in E.164 format */
   from: string;
-  /** Message text body */
+  /** Message text body (ou legenda da mídia) */
   text?: string;
   /** Message type from Meta (text, image, audio, video, document, etc.) */
   messageType: string;
+  /** ID da mídia na Graph API — resolvido e espelhado no R2 pelo consumidor. */
+  mediaId?: string;
+  /** MIME informado pela Meta no webhook (quando disponível). */
+  mediaMimeType?: string;
   /** Raw webhook payload for the entry */
   rawPayload: Record<string, unknown>;
   /** Organization ID resolved from phone number mapping */

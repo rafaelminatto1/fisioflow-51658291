@@ -13,6 +13,7 @@ import { broadcastToOrg } from "../lib/realtime";
 import { writeEvent } from "../lib/analytics";
 import { AIConciergeService } from "../services/ai-concierge";
 import { WhatsAppService } from "../lib/whatsapp";
+import { mirrorWhatsAppMedia } from "../lib/media-mirror";
 
 /**
  * Resolve organization ID from phone number ID (WhatsApp) or Instagram account ID.
@@ -114,7 +115,26 @@ export async function handleWhatsAppInboundQueue(
         continue;
       }
 
-      // 6. Save message (this also updates last_message_at on the conversation)
+      // 6. Resolve + mirror inbound media to R2 (URLs da Meta expiram → 403).
+      let mediaUrl: string | undefined;
+      let mediaType: string | undefined;
+      if (msg.mediaId) {
+        const mirrored = await mirrorWhatsAppMedia(env, msg.mediaId);
+        if (mirrored) {
+          mediaUrl = mirrored.url;
+          mediaType = msg.messageType;
+        }
+      }
+
+      // Conteúdo textual: legenda (se houver) ou rótulo amigável p/ mídia sem texto.
+      const isMedia = Boolean(msg.mediaId);
+      const content = msg.text
+        ? msg.text
+        : isMedia
+          ? `[${msg.messageType}]`
+          : JSON.stringify(msg.rawPayload);
+
+      // 7. Save message (this also updates last_message_at on the conversation)
       const savedMsg = await addMessage(
         pool,
         conversation.id,
@@ -124,8 +144,9 @@ export async function handleWhatsAppInboundQueue(
         "contact",
         contact.id,
         msg.messageType,
-        msg.text || JSON.stringify(msg.rawPayload),
+        content,
         msg.metaMessageId,
+        mediaUrl ? { mediaUrl, mediaType } : undefined,
       );
 
       // 7. Mark as processed in D1 for idempotency

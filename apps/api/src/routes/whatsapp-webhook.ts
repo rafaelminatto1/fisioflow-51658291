@@ -154,13 +154,22 @@ async function extractAndEnqueueMessages(
 
       if (value.messages?.length) {
         for (const msg of value.messages) {
+          // Mídia: o id e a legenda ficam em msg[type] (image/audio/video/document/sticker).
+          const mediaNode = msg[msg.type as keyof typeof msg] as
+            | { id?: string; caption?: string; mime_type?: string }
+            | undefined;
+          const isMedia = ["image", "audio", "video", "document", "sticker"].includes(msg.type);
+          const text = msg.text?.body ?? (isMedia ? mediaNode?.caption : undefined);
+
           const message: WhatsAppInboundMessage = {
             type: "inbound_message",
             metaMessageId: msg.id,
             waId: value.contacts?.[0]?.wa_id ?? msg.from,
             from: msg.from,
-            text: msg.text?.body,
+            text,
             messageType: msg.type,
+            mediaId: isMedia ? mediaNode?.id : undefined,
+            mediaMimeType: isMedia ? mediaNode?.mime_type : undefined,
             rawPayload: body as Record<string, unknown>,
             organizationId: null, // Will be resolved by consumer
             phoneNumberId: phoneNumberId ?? "",

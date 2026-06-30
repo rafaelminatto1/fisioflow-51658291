@@ -6,6 +6,7 @@ import { findOrCreateConversation, addMessage } from "../lib/whatsapp-conversati
 import { fetchInstagramProfile, formatInstagramDisplayName, IG_GRAPH } from "../lib/instagram-profile";
 import { verifyMetaSignature } from "./whatsapp";
 import { writeEvent } from "../lib/analytics";
+import { mirrorToR2 } from "../lib/media-mirror";
 import type { Env } from "../types/env";
 
 /**
@@ -119,8 +120,10 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
         // Texto da mensagem; menção em Stories ganha rótulo amigável.
         const att = Array.isArray(message.attachments) ? message.attachments[0] : null;
         const attType: string | undefined = att?.type;
-        const mediaUrl: string | undefined =
+        const rawMediaUrl: string | undefined =
           typeof att?.payload?.url === "string" && att.payload.url.length ? att.payload.url : undefined;
+        // Espelha no R2 (URLs do CDN do IG expiram → 403).
+        const mediaUrl = await mirrorToR2(env, rawMediaUrl, "crm/instagram/media");
         let text: string;
         let messageType: string;
         if (typeof message.text === "string" && message.text.length) {
@@ -150,7 +153,7 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
           profileCache.set(senderId, prof);
         }
         const username = prof?.username ?? null;
-        const avatarUrl = prof?.profilePic ?? null;
+        const avatarUrl = (await mirrorToR2(env, prof?.profilePic ?? undefined, "crm/instagram/avatars")) ?? null;
         const displayName = formatInstagramDisplayName({
           name: prof?.name ?? null,
           username,
