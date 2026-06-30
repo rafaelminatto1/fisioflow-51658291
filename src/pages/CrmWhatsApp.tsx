@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, memo, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -16,6 +16,7 @@ import {
   Globe,
   ListTodo,
   MessageCircle,
+  MessageCirclePlus,
   MessageSquarePlus,
   Mic,
   MoreVertical,
@@ -79,7 +80,7 @@ import {
   REENGAGEMENT_TEMPLATE_LANGUAGE,
   REENGAGEMENT_TEMPLATE_TEXT,
 } from "@/lib/whatsappWindow";
-import { formatPhoneInput } from "@/utils/formatInputs";
+import { onlyDigits, looksLikePhone, canonicalBrazilPhone, formatBrazilPhone } from "@/lib/phone";
 
 type PipelineFilter = "all" | "lead" | "contact" | "evaluation" | "treatment";
 
@@ -185,6 +186,28 @@ function getMessageTimeLabel(timestamp?: string) {
   const date = new Date(timestamp);
   if (Number.isNaN(date.getTime())) return "";
   return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+
+function getDayKey(date: Date) {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+function getMessageDateLabel(timestamp?: string) {
+  if (!timestamp) return "";
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "";
+  const now = new Date();
+  const today = getDayKey(now);
+  const yesterday = getDayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
+  const key = getDayKey(date);
+  if (key === today) return "Hoje";
+  if (key === yesterday) return "Ontem";
+  const sameYear = date.getFullYear() === now.getFullYear();
+  return date.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    ...(sameYear ? {} : { year: "numeric" }),
+  });
 }
 
 function buildQuotedMessageText(message: Message) {
@@ -477,8 +500,7 @@ export default function CrmWhatsApp() {
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [editDraft, setEditDraft] = useState("");
   const [newConversationOpen, setNewConversationOpen] = useState(false);
-  const [newConversationPhone, setNewConversationPhone] = useState("");
-  const [newConversationName, setNewConversationName] = useState("");
+  const [newConversationQuery, setNewConversationQuery] = useState("");
   const [startingConversation, setStartingConversation] = useState(false);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -530,6 +552,31 @@ export default function CrmWhatsApp() {
     () => conversations.map(toCrmConversationViewModel),
     [conversations],
   );
+
+  // Busca estilo WhatsApp na "Nova conversa": casa contatos existentes por nome
+  // ou número (canônico BR, tolera 55 e o 9º dígito) para evitar duplicar conversa.
+  const newConvQueryDigits = onlyDigits(newConversationQuery);
+  const newConvIsPhone = looksLikePhone(newConversationQuery);
+  const newConvCanon = newConvIsPhone ? canonicalBrazilPhone(newConversationQuery) : "";
+  const newConversationMatches = useMemo(() => {
+    const term = newConversationQuery.trim().toLowerCase();
+    if (!term) return conversationCards;
+    return conversationCards.filter((card) => {
+      const nameMatch = card.name?.toLowerCase().includes(term);
+      const phoneDigits = onlyDigits(card.phone || "");
+      const phoneMatch =
+        phoneDigits.length > 0 &&
+        (newConvIsPhone
+          ? canonicalBrazilPhone(phoneDigits) === newConvCanon || phoneDigits.includes(newConvQueryDigits)
+          : false);
+      return nameMatch || phoneMatch;
+    });
+  }, [conversationCards, newConversationQuery, newConvIsPhone, newConvCanon, newConvQueryDigits]);
+  const newConvHasExactMatch =
+    newConvIsPhone &&
+    newConversationMatches.some(
+      (card) => canonicalBrazilPhone(onlyDigits(card.phone || "")) === newConvCanon,
+    );
 
   const filteredConversations = useMemo(() => {
     let list = pipelineFilter === "all"
@@ -631,19 +678,24 @@ export default function CrmWhatsApp() {
     await Promise.all([refetch(), refetchConversation()]);
   };
 
-  const handleStartNewConversation = async () => {
-    const phone = newConversationPhone.replace(/\D/g, "");
+  // Abre uma conversa existente (sem duplicar) a partir da busca.
+  const handleOpenExistingConversation = (conversationId: string) => {
+    setSelectedId(conversationId);
+    setNewConversationOpen(false);
+    setNewConversationQuery("");
+  };
+
+  const handleStartNewConversation = async (rawPhone?: string) => {
+    const phone = onlyDigits(rawPhone ?? newConversationQuery);
     if (phone.length < 10 || startingConversation) return;
     setStartingConversation(true);
     try {
-      const contact = await resolveContact({
-        phone,
-        displayName: newConversationName.trim() || undefined,
-      });
+      // resolveContact normaliza p/ E.164 no backend: se já existir contato/conversa
+      // para este número, findOrCreateConversation retorna a conversa existente.
+      const contact = await resolveContact({ phone });
       const conversation = await findOrCreateConversation(contact.id);
       setNewConversationOpen(false);
-      setNewConversationPhone("");
-      setNewConversationName("");
+      setNewConversationQuery("");
       setSelectedId(conversation.id);
       await refetch();
       toast.success("Conversa iniciada.");
@@ -1060,48 +1112,62 @@ export default function CrmWhatsApp() {
                   </div>
 
                   <div className="flex min-h-0 flex-1 flex-col bg-[radial-gradient(hsl(40_20%_88%)_1px,transparent_1px)] bg-[length:22px_22px] px-5 py-4">
-                    <div className="mx-auto mb-3 rounded-full bg-[hsl(40_25%_90%)] px-3 py-1 text-[10px] font-bold text-[hsl(40_15%_40%)]">
-                      Hoje
-                    </div>
-                        <div className="mb-3 self-center rounded-[10px] bg-[hsl(211_100%_95%)] px-3 py-2 text-center text-[11px] font-semibold text-[hsl(211_100%_32%)]">
-                          <span className="inline-flex items-center gap-1">
-                            <UserPlus className="h-[13px] w-[13px]" />
-                            Lead capturado via {selectedConversationVm.sourceLabel}
-                            {selectedConversationVm.campaignLabel !== "Não informado"
-                              ? ` · ${selectedConversationVm.campaignLabel}`
-                              : ""}
-                          </span>
-                        </div>
                     <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
                       {loadingConversation ? (
                         <div className="py-10 text-center text-sm text-muted-foreground">
                           Carregando conversa...
                         </div>
                       ) : (
-                        messages.map((message) => {
+                        messages.map((message, index) => {
                           const text = getMessageText(message.content);
                           const isSystem = message.type === "note";
                           const isTemplate = message.type === "template";
                           const isOutbound = message.direction === "outbound";
                           const isImage = message.type === "image" || message.mediaType === "image";
                           const mediaUrl = getMessageMediaUrl(message);
+
+                          const dayLabel = getMessageDateLabel(message.timestamp);
+                          const prevDayLabel = index > 0 ? getMessageDateLabel(messages[index - 1].timestamp) : "";
+                          const showDaySeparator = dayLabel !== "" && dayLabel !== prevDayLabel;
+                          const daySeparator = showDaySeparator ? (
+                            <div className="mx-auto my-3 w-fit rounded-full bg-[hsl(40_25%_90%)] px-3 py-1 text-[10px] font-bold text-[hsl(40_15%_40%)]">
+                              {dayLabel}
+                            </div>
+                          ) : null;
+                          const leadBanner = index === 0 ? (
+                            <div className="mb-3 self-center rounded-[10px] bg-[hsl(211_100%_95%)] px-3 py-2 text-center text-[11px] font-semibold text-[hsl(211_100%_32%)]">
+                              <span className="inline-flex items-center gap-1">
+                                <UserPlus className="h-[13px] w-[13px]" />
+                                Lead capturado via {selectedConversationVm.sourceLabel}
+                                {selectedConversationVm.campaignLabel !== "Não informado"
+                                  ? ` · ${selectedConversationVm.campaignLabel}`
+                                  : ""}
+                              </span>
+                            </div>
+                          ) : null;
+
                           if (isSystem) {
                             return (
-                              <div
-                                key={message.id}
-                                className="mx-auto max-w-[80%] rounded-[10px] bg-[hsl(211_100%_95%)] px-3 py-2 text-center text-[11px] font-semibold text-[hsl(211_100%_32%)]"
-                              >
-                                <span className="inline-flex items-center gap-1">
-                                  <StickyNote className="h-[13px] w-[13px]" />
-                                  {text || "Nota interna adicionada"}
-                                </span>
-                              </div>
+                              <Fragment key={message.id}>
+                                {daySeparator}
+                                {leadBanner}
+                                <div
+                                  className="mx-auto max-w-[80%] rounded-[10px] bg-[hsl(211_100%_95%)] px-3 py-2 text-center text-[11px] font-semibold text-[hsl(211_100%_32%)]"
+                                >
+                                  <span className="inline-flex items-center gap-1">
+                                    <StickyNote className="h-[13px] w-[13px]" />
+                                    {text || "Nota interna adicionada"}
+                                  </span>
+                                </div>
+                              </Fragment>
                             );
                           }
 
                           return (
+                            <Fragment key={message.id}>
+                            {daySeparator}
+                            {leadBanner}
                             <MemoMessageBubble
-                              key={message.id}
                               message={message}
                               isOutbound={isOutbound}
                               isTemplate={isTemplate}
@@ -1126,6 +1192,7 @@ export default function CrmWhatsApp() {
                               onPointerCancel={() => clearLongPress()}
                               onPointerLeave={() => clearLongPress()}
                             />
+                            </Fragment>
                           );
                         })
                       )}
@@ -1623,72 +1690,95 @@ export default function CrmWhatsApp() {
           open={newConversationOpen}
           onOpenChange={(open) => {
             setNewConversationOpen(open);
-            if (!open) {
-              setNewConversationPhone("");
-              setNewConversationName("");
-            }
+            if (!open) setNewConversationQuery("");
           }}
         >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Nova conversa</DialogTitle>
               <DialogDescription>
-                Informe o WhatsApp do destinatário para iniciar uma nova conversa.
+                Pesquise um contato existente ou digite um número para iniciar.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="new-conversation-phone">WhatsApp</Label>
-                <Input
-                  id="new-conversation-phone"
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  placeholder="(11) 98765-4321"
-                  value={newConversationPhone}
-                  onChange={(event) =>
-                    setNewConversationPhone(formatPhoneInput(event.target.value))
+              <Input
+                id="new-conversation-search"
+                placeholder="Pesquisar nome ou número"
+                value={newConversationQuery}
+                onChange={(event) => setNewConversationQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && newConvIsPhone && !newConvHasExactMatch) {
+                    event.preventDefault();
+                    void handleStartNewConversation(newConvQueryDigits);
                   }
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      void handleStartNewConversation();
-                    }
-                  }}
-                  autoFocus
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="new-conversation-name">Nome (opcional)</Label>
-                <Input
-                  id="new-conversation-name"
-                  placeholder="Como deseja identificar o contato"
-                  value={newConversationName}
-                  onChange={(event) => setNewConversationName(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      void handleStartNewConversation();
-                    }
-                  }}
-                />
+                }}
+                autoFocus
+              />
+
+              <div className="max-h-80 overflow-y-auto -mx-1 px-1">
+                {newConversationMatches.length > 0 && (
+                  <ul className="divide-y divide-border">
+                    {newConversationMatches.map((card) => (
+                      <li key={card.id}>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenExistingConversation(card.id)}
+                          className="flex w-full items-center gap-3 py-2.5 text-left hover:bg-muted/60 rounded-md px-2"
+                        >
+                          <span
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                            style={{ backgroundImage: card.avatarGradient }}
+                          >
+                            {card.initials}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-semibold">{card.name}</span>
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {card.phone ? formatBrazilPhone(card.phone) : card.lastMessage}
+                            </span>
+                          </span>
+                          <ChannelBadge channel={card.channel} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {newConvIsPhone && !newConvHasExactMatch && (
+                  <div className="pt-2">
+                    <p className="px-2 py-1 text-xs text-muted-foreground">
+                      Não está na sua lista de contatos
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => void handleStartNewConversation(newConvQueryDigits)}
+                      disabled={startingConversation}
+                      className="flex w-full items-center gap-3 py-2.5 text-left hover:bg-muted/60 rounded-md px-2 disabled:opacity-60"
+                    >
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                        <MessageCirclePlus className="h-5 w-5" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold">
+                          {formatBrazilPhone(newConvQueryDigits)}
+                        </span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {startingConversation ? "Iniciando..." : "Iniciar nova conversa no WhatsApp"}
+                        </span>
+                      </span>
+                    </button>
+                  </div>
+                )}
+
+                {newConversationQuery.trim() &&
+                  !newConvIsPhone &&
+                  newConversationMatches.length === 0 && (
+                    <p className="px-2 py-6 text-center text-sm text-muted-foreground">
+                      Nenhum contato encontrado. Digite um número de WhatsApp para iniciar.
+                    </p>
+                  )}
               </div>
             </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setNewConversationOpen(false)}
-                disabled={startingConversation}
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={() => void handleStartNewConversation()}
-                disabled={newConversationPhone.replace(/\D/g, "").length < 10 || startingConversation}
-              >
-                {startingConversation ? "Iniciando..." : "Iniciar conversa"}
-              </Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
 
