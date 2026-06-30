@@ -12,6 +12,8 @@ interface PageLayoutProps {
   hideDefaultHeader?: boolean;
   customHeader?: React.ReactNode;
   className?: string;
+  /** Fixa a altura na viewport (sem scroll de página); scroll só nas áreas internas. */
+  fillViewport?: boolean;
 }
 
 export function PageLayout({
@@ -24,6 +26,7 @@ export function PageLayout({
   hideDefaultHeader = false,
   customHeader,
   className,
+  fillViewport = false,
 }: PageLayoutProps) {
   return (
     <MainLayout
@@ -33,6 +36,7 @@ export function PageLayout({
       noPadding={noPadding}
       hideDefaultHeader={hideDefaultHeader}
       customHeader={customHeader}
+      fillViewport={fillViewport}
     >
       <div className={cn("flex-1 flex flex-col min-h-0", className)}>
         {children}

@@ -1,5 +1,6 @@
 import type { QuickReply } from "@/services/whatsapp-api";
 import type { Conversation } from "@/services/whatsapp-api";
+import { onlyDigits, formatBrazilPhone } from "@/lib/phone";
 
 export type CrmStage = "lead" | "contact" | "evaluation" | "treatment";
 
@@ -195,13 +196,21 @@ export function toCrmConversationViewModel(conversation: Conversation): CrmConve
             : "Vincular paciente e confirmar horário da avaliação."
           : "Acompanhar a evolução e a próxima sessão.");
 
+  // Telefone só faz sentido no WhatsApp. Webchat usa "web:uuid" e Instagram usa
+  // o IGSID — não devem ser exibidos como número de telefone.
+  const channelValue = conversation.channel ?? "whatsapp";
+  const phoneDigits = channelValue === "whatsapp" ? onlyDigits(phone) : "";
+  const phoneLabel = phoneDigits ? formatBrazilPhone(phoneDigits) : "";
+
   return {
     id: conversation.id,
-    channel: conversation.channel ?? "whatsapp",
+    channel: channelValue,
     temperature: conversation.temperature ?? "morno",
     name,
     initials: formatInitials(name),
     phone,
+    phoneDigits,
+    phoneLabel,
     patientId,
     avatarUrl: conversation.avatarUrl ?? null,
     avatarGradient: getAvatarGradient(phone || name || conversation.id),

@@ -42,6 +42,9 @@ interface MainLayoutProps {
   compactPadding?: boolean;
   customHeader?: React.ReactNode;
   hideDefaultHeader?: boolean;
+  /** Fixa a altura na viewport (sem scroll de página) — o scroll fica nas áreas
+   * internas com overflow-y-auto. Usado por telas estilo WhatsApp Web (CRM). */
+  fillViewport?: boolean;
 }
 
 export const MainLayout: React.FC<MainLayoutProps> = ({
@@ -54,6 +57,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   compactPadding = false,
   customHeader,
   hideDefaultHeader = false,
+  fillViewport = false,
 }) => {
   const { profile, loading, getDisplayName, getInitials } = useUserProfile();
   const { totalToReengage } = usePatientReengagement();
@@ -97,7 +101,10 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
   return (
     <div
-      className="min-h-screen flex flex-col w-full bg-slate-50 dark:bg-slate-950"
+      className={cn(
+        "flex flex-col w-full bg-slate-50 dark:bg-slate-950",
+        fillViewport ? "h-screen overflow-hidden" : "min-h-screen",
+      )}
       data-testid="main-layout"
     >
       <ComplianceBanner />
@@ -108,7 +115,12 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         {/* Sidebar - Hidden on mobile */}
         <Sidebar />
 
-        <div className="flex-1 flex flex-col min-h-screen min-w-0 overflow-visible relative">
+        <div
+          className={cn(
+            "flex-1 flex flex-col min-w-0 relative",
+            fillViewport ? "min-h-0 overflow-hidden" : "min-h-screen overflow-visible",
+          )}
+        >
           {/* Header Mobile */}
           <MobileHeader />
 

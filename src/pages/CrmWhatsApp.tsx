@@ -955,7 +955,7 @@ export default function CrmWhatsApp() {
   }, [selectedId]);
 
   return (
-    <PageLayout fullWidth noPadding compactHeader hideDefaultHeader showBreadcrumbs={false}>
+    <PageLayout fullWidth noPadding compactHeader hideDefaultHeader showBreadcrumbs={false} fillViewport>
       <PageContainer maxWidth="full" noPadding className="h-full">
         <div className="flex h-full min-h-0 flex-col bg-background">
           <div className="flex items-center gap-3 border-b border-border px-5 py-3">
@@ -1068,8 +1068,8 @@ export default function CrmWhatsApp() {
                     <div className="min-w-0">
                       <div className="text-sm font-extrabold">{selectedConversationVm.name}</div>
                       <div className="flex items-center gap-1.5 truncate text-[11px] font-semibold text-muted-foreground">
-                        {selectedConversationVm.phone ? <span>{selectedConversationVm.phone}</span> : null}
-                        {selectedConversationVm.phone ? <span aria-hidden>·</span> : null}
+                        {selectedConversationVm.phoneLabel ? <span>{selectedConversationVm.phoneLabel}</span> : null}
+                        {selectedConversationVm.phoneLabel ? <span aria-hidden>·</span> : null}
                         <span
                           className={cn(
                             selectedConversationVm.presenceLabel === "Ativo agora" &&
@@ -1315,7 +1315,7 @@ export default function CrmWhatsApp() {
                     />
                     <div className="text-base font-extrabold">{selectedConversationVm.name}</div>
                     <div className="mt-0.5 text-xs font-semibold text-muted-foreground">
-                      {selectedConversationVm.phone}
+                      {selectedConversationVm.phoneLabel}
                     </div>
                     <div className="mt-3 flex justify-center gap-2">
                       <Button
@@ -1325,7 +1325,7 @@ export default function CrmWhatsApp() {
                           navigate(
                             selectedConversationVm.patientId
                               ? `/patients/${selectedConversationVm.patientId}`
-                              : `/patients/new?name=${encodeURIComponent(selectedConversationVm.name)}&phone=${encodeURIComponent(selectedConversationVm.phone)}`,
+                              : `/patients/new?name=${encodeURIComponent(selectedConversationVm.name)}&phone=${encodeURIComponent(selectedConversationVm.phoneDigits)}`,
                           )
                         }
                         className="h-auto flex-col gap-1 rounded-xl px-3 py-2 text-[10px] font-bold"
@@ -1734,7 +1734,7 @@ export default function CrmWhatsApp() {
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-semibold">{card.name}</span>
                             <span className="block truncate text-xs text-muted-foreground">
-                              {card.phone ? formatBrazilPhone(card.phone) : card.lastMessage}
+                              {card.phoneLabel || card.lastMessage}
                             </span>
                           </span>
                           <ChannelBadge channel={card.channel} />
