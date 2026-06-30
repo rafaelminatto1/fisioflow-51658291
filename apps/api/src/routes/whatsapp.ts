@@ -1116,12 +1116,12 @@ app.get("/admin/webhook-register", async (c) => {
   
   try {
     // Step 1: Check current subscriptions
-    const subscriptionsUrl = `https://graph.facebook.com/v18.0/${businessAccountId}/subscriptions?access_token=${accessToken}`;
+    const subscriptionsUrl = `https://graph.facebook.com/v25.0/${businessAccountId}/subscriptions?access_token=${accessToken}`;
     const subRes = await fetch(subscriptionsUrl);
     const subData = await subRes.json() as any;
     
     // Step 2: Register webhook if not already registered
-    const registerUrl = `https://graph.facebook.com/v18.0/${businessAccountId}/subscriptions`;
+    const registerUrl = `https://graph.facebook.com/v25.0/${businessAccountId}/subscriptions`;
     const registerRes = await fetch(registerUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1168,11 +1168,11 @@ app.get("/admin/webhook-status", async (c) => {
   const callbackUrl = `${env.API_BASE_URL ?? "https://api-pro.moocafisio.com.br"}/api/whatsapp/webhook`;
 
   try {
-    const phoneUrl = `https://graph.facebook.com/v18.0/${phoneNumberId}?fields=id,display_phone_number,verified_name,webhook_configuration&access_token=${accessToken}`;
+    const phoneUrl = `https://graph.facebook.com/v25.0/${phoneNumberId}?fields=id,display_phone_number,verified_name,webhook_configuration&access_token=${accessToken}`;
     const phoneRes = await fetch(phoneUrl);
     const phoneData = await phoneRes.json() as any;
     
-    const bizUrl = `https://graph.facebook.com/v18.0/${businessAccountId}?fields=id,name,webhook_configuration&access_token=${accessToken}`;
+    const bizUrl = `https://graph.facebook.com/v25.0/${businessAccountId}?fields=id,name,webhook_configuration&access_token=${accessToken}`;
     const bizRes = await fetch(bizUrl);
     const bizData = await bizRes.json() as any;
     
@@ -1220,7 +1220,7 @@ app.post("/admin/test-send", async (c) => {
   }
 
   try {
-    const res = await fetch(`https://graph.facebook.com/v18.0/${phoneNumberId}/messages`, {
+    const res = await fetch(`https://graph.facebook.com/v25.0/${phoneNumberId}/messages`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,

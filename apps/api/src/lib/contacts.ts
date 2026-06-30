@@ -6,6 +6,7 @@
  * (organization_id, phone|email|cpf normalizados).
  */
 import type { DbPool } from "./db";
+import { toE164Brazil, canonicalBrazilPhone } from "./whatsapp-identity";
 
 export type LifecycleStage = "lead" | "mql" | "sql" | "opportunity" | "customer" | "churned";
 
@@ -47,6 +48,18 @@ export function normalizePhone(p?: string | null): string | null {
   if (!p) return null;
   const digits = p.replace(/\D+/g, "");
   return digits.length ? digits : null;
+}
+
+/**
+ * Telefone para ARMAZENAMENTO: E.164 brasileiro (com 55), preservando o 9º
+ * dígito. Converge lead manual ("11993524642") e import com 55 ("5511993524642")
+ * na mesma string canônica de storage. Não-telefones passam como dígitos.
+ */
+export function storagePhone(p?: string | null): string | null {
+  if (!p) return null;
+  const digits = p.replace(/\D+/g, "");
+  if (!digits.length) return null;
+  return toE164Brazil(digits);
 }
 
 export function normalizeEmail(e?: string | null): string | null {
@@ -93,7 +106,31 @@ export async function findContactByIdentity(
       LIMIT 1`,
     [orgId, cpf, tel, mail],
   );
-  return result.rows[0] ?? null;
+  if (result.rows[0]) return result.rows[0];
+
+  // Fallback canônico p/ telefone BR: pega dados legados (sem 55) e variações do
+  // 9º dígito que o match exato acima não cobre. Busca candidatos pelos 8 últimos
+  // dígitos e confirma a igualdade canônica em JS.
+  if (tel) {
+    const canon = canonicalBrazilPhone(tel);
+    if (canon.startsWith("55") && canon.length === 12) {
+      const sub8 = canon.slice(4);
+      const candidates = await pool.query<ContactRow>(
+        `SELECT * FROM contacts
+          WHERE organization_id = $1
+            AND deleted_at IS NULL
+            AND telefone IS NOT NULL
+            AND regexp_replace(telefone, '\\D', '', 'g') LIKE '%' || $2`,
+        [orgId, sub8],
+      );
+      const match = candidates.rows.find(
+        (row) => canonicalBrazilPhone(String(row.telefone ?? "")) === canon,
+      );
+      if (match) return match;
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -112,7 +149,7 @@ export async function upsertContact(
     cpf: input.cpf,
   });
 
-  const tel = normalizePhone(input.telefone);
+  const tel = storagePhone(input.telefone);
   const mail = normalizeEmail(input.email);
   const cpf = normalizeCpf(input.cpf);
 

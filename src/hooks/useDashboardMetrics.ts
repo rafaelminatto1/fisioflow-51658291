@@ -4,7 +4,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
+import { useVisiblePolling } from "@/hooks/useVisiblePolling";
 import {
   todayYMD,
   toLocalYMD,
@@ -119,19 +119,17 @@ export const useDashboardMetrics = (period: DashboardPeriod = "hoje") => {
   const queryClient = useQueryClient();
   const { organizationId } = useAuth();
 
-  useEffect(() => {
-    if (!organizationId) return;
-
-    const intervalId = window.setInterval(() => {
+  // Revalida as métricas periodicamente — só com a aba visível (evita acordar o
+  // Neon e refazer queries em segundo plano).
+  useVisiblePolling(
+    () => {
       queryClient.invalidateQueries({
         queryKey: ["dashboard-metrics", organizationId],
       });
-    }, 60000);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [queryClient, organizationId]);
+    },
+    60000,
+    !!organizationId,
+  );
 
   return useQuery({
     queryKey: ["dashboard-metrics", organizationId, period],
