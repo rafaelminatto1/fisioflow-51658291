@@ -1292,6 +1292,7 @@ app.post("/", async (c) => {
       c.executionCtx,
       "patient.created",
       {
+        organizationId: user.organizationId,
         patientId: patient.id,
         name: patient.fullName,
         email: patient.email,

@@ -29,6 +29,7 @@ import { sendReplyButtons, sendListMessage, sendFlowMessage } from "../lib/whats
 import { resolveOrCreateContact, linkContactToPatient } from "../lib/whatsapp-identity";
 import { isUuid } from "../lib/validators";
 import { WhatsAppService } from "../lib/whatsapp";
+import { AUTOMATION_TEMPLATES, automationTemplatePayload } from "../lib/whatsappAutomationTemplates";
 import { DEFAULT_REMINDER_CONFIG, resolveReminderConfig } from "../lib/reminderScheduling";
 import {
   InstagramApiError,
@@ -2824,6 +2825,44 @@ app.post("/upload", requireAuth, async (c) => {
   return c.json({
     data: { url: `${c.env.R2_PUBLIC_URL}/${key}`, type: kind, contentType, name: file.name },
   });
+});
+
+/**
+ * Registra (submete à Meta) os 4 templates de automação (welcome, feedback,
+ * lembrete de exercícios, avaliação Google). A APROVAÇÃO é assíncrona pela Meta;
+ * só após aprovados + com `settings.crm_whatsapp.automations_enabled` ligado os
+ * fluxos passam a enviar. Retorna o status por template.
+ */
+app.post("/templates/automation/register", requireAuth, async (c) => {
+  const user = c.get("user");
+  const token = c.env.WHATSAPP_ACCESS_TOKEN;
+  if (!token) {
+    return c.json({ error: "WHATSAPP_ACCESS_TOKEN não configurado" }, 500);
+  }
+
+  const pool = await createPool(c.env);
+  const wabaRes = await pool.query(
+    `SELECT settings->>'whatsapp_business_account_id' AS waba FROM organizations WHERE id = $1`,
+    [user.organizationId],
+  );
+  const wabaId = wabaRes.rows[0]?.waba;
+  if (!wabaId) {
+    return c.json({ error: "whatsapp_business_account_id não configurado na organização" }, 400);
+  }
+
+  const results: Array<{ name: string; ok: boolean; status: number; meta: unknown }> = [];
+  for (const template of Object.values(AUTOMATION_TEMPLATES)) {
+    const res = await fetch(`https://graph.facebook.com/v25.0/${wabaId}/message_templates`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(automationTemplatePayload(template)),
+    });
+    const meta = await res.json().catch(() => ({}));
+    results.push({ name: template.name, ok: res.ok, status: res.status, meta });
+  }
+
+  const allOk = results.every((r) => r.ok);
+  return c.json({ ok: allOk, results }, allOk ? 200 : 502);
 });
 
 export { app as whatsappInboxRoutes };

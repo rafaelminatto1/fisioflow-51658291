@@ -12,6 +12,7 @@ import { notifyPatientAppointment } from "./lib/push";
 import { RTMAlertsService } from "./services/rtm-alerts";
 import { syncAutoRAGContent } from "./routes/aiSearch";
 import { sendHepDailyReminders } from "./jobs/hepDailyReminder";
+import { dispatchExerciseReminders } from "./lib/exerciseReminders";
 import {
   backfillInstagramProfilesForOrganization,
   persistInstagramProfileSyncState,
@@ -97,6 +98,12 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
           await dispatchSessionDropoutReengagement(pool, env, ctx);
         } catch (e) {
           console.warn("[Cron] Session-3 dropout failed:", e);
+        }
+        try {
+          const out = await dispatchExerciseReminders(pool, env);
+          if (out.sent) console.log(`[Cron] Exercise reminders sent=${out.sent}`);
+        } catch (e) {
+          console.warn("[Cron] Exercise reminders failed:", e);
         }
         try {
           const sent = await dispatchMorningBriefing(env);

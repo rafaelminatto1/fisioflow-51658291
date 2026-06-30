@@ -7,6 +7,8 @@ import { sendPushToUser, sendPushToOrg, type PushPayload } from "./lib/webpush";
 import { buildHtml, generatePdfQuickAction } from "./routes/reportsPdf";
 import { R2Service } from "./lib/storage/R2Service";
 import { sendPrescriptionEmail } from "./lib/email";
+import { sendAutomationTemplate } from "./lib/whatsappAutomations";
+import type { AutomationTemplateKey } from "./lib/whatsappAutomationTemplates";
 
 export type WhatsAppQueuePayload = {
   to: string;
@@ -93,7 +95,16 @@ export type QueueTask =
   | { type: "PROCESS_BIOMECHANICS_MEDIA"; payload: BiomechanicsProcessPayload }
   | { type: "GENERATE_TTS"; payload: TTSPayload }
   | { type: "TRIGGER_WORKFLOW"; payload: WorkflowTriggerPayload }
-  | { type: "GENERATE_NFSE"; payload: GenerateNFSePayload };
+  | { type: "GENERATE_NFSE"; payload: GenerateNFSePayload }
+  | {
+      type: "WA_AUTOMATION";
+      payload: {
+        organizationId: string;
+        phone: string;
+        templateKey: AutomationTemplateKey;
+        vars: string[];
+      };
+    };
 
 export type QueueTaskSummary = {
   taskType: QueueTask["type"];
@@ -215,6 +226,23 @@ export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Pro
         case "prescription.created" as any:
           await processPrescriptionCreated((task as any).data, env);
           break;
+
+        // Paciente criado → mensagem de boas-vindas (portado do Inngest morto).
+        case "patient.created" as any:
+          await processPatientCreatedWelcome((task as any).data, env);
+          break;
+
+        // Consulta concluída → review (5ª sessão) + feedback (+2h) (portado do Inngest).
+        case "appointment.completed" as any:
+          await processAppointmentCompleted((task as any).data, env);
+          break;
+
+        // Envio atrasado de template de automação (ex.: feedback +2h).
+        case "WA_AUTOMATION": {
+          const p = task.payload;
+          await sendAutomationTemplate(env, p.organizationId, p.phone, p.templateKey, p.vars);
+          break;
+        }
 
         case "PROCESS_BACKUP":
         case "CLEANUP_LOGS":
@@ -999,6 +1027,67 @@ export async function processPrescriptionCreated(
   }
 
   return { pdfUrl, emailSent: false };
+}
+
+// ===== FLUXOS WHATSAPP AUTOMÁTICOS (portados do Inngest morto) =====
+
+function firstName(name: unknown): string {
+  return String(name ?? "").trim().split(/\s+/)[0] || "Paciente";
+}
+
+/** patient.created → mensagem de boas-vindas (gated por automations_enabled). */
+export async function processPatientCreatedWelcome(
+  data: { organizationId?: string; name?: string; phone?: string },
+  env: Env,
+): Promise<void> {
+  if (!data.organizationId) return;
+  await sendAutomationTemplate(env, data.organizationId, data.phone, "boas_vindas_paciente", [
+    firstName(data.name),
+  ]);
+}
+
+/**
+ * appointment.completed → pedido de avaliação no Google na 5ª sessão concluída
+ * (imediato) + pedido de feedback enfileirado com atraso de 2h. Ambos gated.
+ * O lembrete de exercícios (+2 dias) é tratado por cron (excede o atraso máx da fila).
+ */
+export async function processAppointmentCompleted(
+  data: { organizationId?: string; patientId?: string; name?: string; phone?: string },
+  env: Env,
+): Promise<void> {
+  if (!data.organizationId) return;
+  const name = firstName(data.name);
+
+  // Review na 5ª sessão concluída.
+  if (data.patientId) {
+    const pool = createPool(env);
+    const res = await pool.query(
+      `SELECT COUNT(*)::int AS count
+         FROM appointments
+        WHERE patient_id = $1
+          AND status::text IN ('atendido', 'avaliacao', 'completed', 'realizado', 'concluido')`,
+      [data.patientId],
+    );
+    if (Number(res.rows[0]?.count) === 5) {
+      await sendAutomationTemplate(env, data.organizationId, data.phone, "avaliacao_google", [name]);
+    }
+  }
+
+  // Feedback 2h depois — re-enfileira com delaySeconds (limite ~12h da fila).
+  if (env.BACKGROUND_QUEUE && data.phone) {
+    await env.BACKGROUND_QUEUE.send(
+      {
+        type: "WA_AUTOMATION",
+        payload: {
+          organizationId: data.organizationId,
+          phone: data.phone,
+          templateKey: "feedback_atendimento",
+          vars: [name],
+        },
+      },
+      { delaySeconds: 7200 },
+    );
+  }
 }
 
 // ===== EVENT HANDLERS =====

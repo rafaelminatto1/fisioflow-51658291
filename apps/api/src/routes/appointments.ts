@@ -623,6 +623,7 @@ const updateAppointmentHandler: MiddlewareHandler<{
               c.executionCtx,
               "appointment.completed",
               {
+                organizationId: user.organizationId,
                 appointmentId: row.id,
                 patientId: row.patientId,
                 name: patientRow?.fullName,
