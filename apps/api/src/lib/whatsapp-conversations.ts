@@ -72,7 +72,23 @@ export async function findOrCreateConversation(
     );
 
     if (existing.rows.length > 0) {
-      return existing.rows[0];
+      const conv = existing.rows[0];
+      // Nova atividade reabre conversa arquivada/excluída (soft-delete). Sem isto
+      // a thread continua recebendo mensagens mas some do inbox (que filtra
+      // metadata.deleted_at IS NULL) — cliente fica "invisível".
+      if (conv.metadata && conv.metadata.deleted_at) {
+        const reopened = await pool.query(
+          `UPDATE wa_conversations
+           SET metadata = (COALESCE(metadata, '{}'::jsonb) - 'deleted_at'),
+               status = CASE WHEN status IN ('open', 'pending', 'assigned') THEN status ELSE 'open' END,
+               updated_at = now()
+           WHERE id = $1
+           RETURNING *`,
+          [conv.id],
+        );
+        return reopened.rows[0] ?? conv;
+      }
+      return conv;
     }
 
     const created = await pool.query(
