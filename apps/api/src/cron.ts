@@ -607,6 +607,7 @@ async function dispatchInstagramProfileBackfill(pool: any, env: Env, batchLimit 
       const result = await backfillInstagramProfilesForOrganization(pool, String(org.id), igToken, {
         limit: batchLimit,
         force: false,
+        env,
       });
       let pendingCount = 0;
       try {

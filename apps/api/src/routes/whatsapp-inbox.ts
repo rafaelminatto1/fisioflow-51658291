@@ -2614,6 +2614,7 @@ app.post("/instagram/backfill-profiles", requireAuth, async (c) => {
       result = await backfillInstagramProfilesForOrganization(pool, user.organizationId, igToken, {
         limit,
         force,
+        env: c.env,
       });
     } catch (igErr) {
       if (igErr instanceof InstagramApiError) {

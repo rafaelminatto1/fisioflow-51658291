@@ -1,3 +1,6 @@
+import type { Env } from "../types/env";
+import { mirrorToR2 } from "./media-mirror";
+
 export const IG_GRAPH = "https://graph.instagram.com/v25.0";
 
 export type InstagramProfile = {
@@ -143,6 +146,8 @@ export async function backfillInstagramProfilesForOrganization(
   options?: {
     limit?: number;
     force?: boolean;
+    /** Quando presente, espelha o avatar no R2 (URL estável, sem 403 futuro). */
+    env?: Env;
   },
 ): Promise<InstagramProfileBackfillResult> {
   const limit = Math.min(Math.max(Number(options?.limit ?? 100), 1), 300);
@@ -213,7 +218,11 @@ export async function backfillInstagramProfilesForOrganization(
       name: profile.name ?? null,
       username,
     });
-    const avatarUrl = profile.profilePic ?? null;
+    let avatarUrl = profile.profilePic ?? null;
+    // Espelha o avatar no R2 — a URL do CDN do IG expira (causa dos 403).
+    if (avatarUrl && options?.env) {
+      avatarUrl = (await mirrorToR2(options.env, avatarUrl, "crm/instagram/avatars")) ?? avatarUrl;
+    }
 
     if (!username && !displayName && !avatarUrl) {
       skipped += 1;
