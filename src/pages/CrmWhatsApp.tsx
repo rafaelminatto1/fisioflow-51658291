@@ -52,6 +52,7 @@ import {
   fetchTags,
   findOrCreateConversation,
   markConversationRead,
+  uploadAttachment,
   markConversationUnread,
   muteConversation,
   pinConversation,
@@ -499,6 +500,7 @@ export default function CrmWhatsApp() {
   } | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [editDraft, setEditDraft] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [newConversationOpen, setNewConversationOpen] = useState(false);
   const [newConversationQuery, setNewConversationQuery] = useState("");
   const [startingConversation, setStartingConversation] = useState(false);
@@ -664,6 +666,43 @@ export default function CrmWhatsApp() {
     } catch (error) {
       toast.error("Não foi possível enviar a mensagem.", {
         description: error instanceof Error ? error.message : "Tente novamente em alguns instantes.",
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleAttachClick = () => {
+    if (sending) return;
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = ""; // permite re-selecionar o mesmo arquivo
+    if (!file || !selectedId || sending) return;
+
+    const channel = selectedConversationVm?.channel ?? "whatsapp";
+    if (channel === "whatsapp" && !isWhatsAppWindowOpen(messages)) {
+      toast.error("Janela de 24h fechada", {
+        description: "Não é possível enviar mídia por texto livre. Aguarde o cliente responder ou use um template.",
+      });
+      return;
+    }
+
+    setSending(true);
+    try {
+      const uploaded = await uploadAttachment(file);
+      await sendMessage(composer.trim() || "", {
+        type: uploaded.type,
+        attachmentUrl: uploaded.url,
+      });
+      setComposer("");
+      setReplyMessage(null);
+      await Promise.all([refetch(), refetchConversation()]);
+    } catch (error) {
+      toast.error("Não foi possível enviar a mídia.", {
+        description: error instanceof Error ? error.message : "Tente novamente.",
       });
     } finally {
       setSending(false);
@@ -1241,7 +1280,20 @@ export default function CrmWhatsApp() {
                     </div>
 
                     <div className="flex items-center gap-3 border-t border-border bg-card px-4 py-3">
-                      <button type="button" className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*,video/*,audio/*,application/pdf"
+                        className="hidden"
+                        onChange={(event) => void handleFileSelected(event)}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAttachClick}
+                        disabled={sending}
+                        title="Anexar mídia"
+                        className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary disabled:opacity-50"
+                      >
                         <Paperclip className="h-5 w-5" />
                       </button>
                       <div className="flex-1 rounded-[22px] bg-muted/60 px-4 py-2.5">

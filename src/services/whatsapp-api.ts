@@ -414,6 +414,35 @@ export async function muteConversation(conversationId: string, mutedUntil: strin
   return updateConversation(conversationId, { metadata: { mutedUntil } });
 }
 
+/** Faz upload de um anexo do CRM para o R2 e retorna a URL pública + tipo. */
+export async function uploadAttachment(
+  file: File,
+): Promise<{ url: string; type: string; contentType: string; name: string }> {
+  const { getNeonAccessToken } = await import("@/lib/auth/neon-token");
+  const { getWorkersApiUrl } = await import("@/lib/api/config");
+  const token = await getNeonAccessToken();
+  const form = new FormData();
+  form.append("file", file);
+  // Sem Content-Type manual: o browser define o boundary do multipart.
+  const res = await fetch(`${getWorkersApiUrl()}${BASE}/upload`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
+  if (!res.ok) {
+    let msg = `Upload falhou (${res.status})`;
+    try {
+      const j = (await res.json()) as { error?: string };
+      if (j.error) msg = j.error;
+    } catch {
+      /* ignore */
+    }
+    throw new Error(msg);
+  }
+  const json = (await res.json()) as { data?: any } & any;
+  return json.data ?? json;
+}
+
 export async function sendMessage(
   conversationId: string,
   content: string,

@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { createDb, createPool } from "../lib/db";
 import { requireAuth, type AuthUser } from "../lib/auth";
 import { broadcastToOrg } from "../lib/realtime";
+import { extFromContentType } from "../lib/media-mirror";
 import { logToAxiom } from "../lib/axiom";
 import {
   getInboxConversations,
@@ -2773,6 +2774,56 @@ app.post("/templates/reengagement/register", requireAuth, async (c) => {
   });
   const data = await res.json().catch(() => ({}));
   return c.json({ ok: res.ok, status: res.status, meta: data }, res.ok ? 200 : 502);
+});
+
+/**
+ * Upload de anexo do CRM (multipart) direto para o R2 (binding). Retorna a URL
+ * pública estável + o tipo de mensagem inferido, para usar como attachmentUrl
+ * no envio (WhatsApp/Instagram).
+ */
+app.post("/upload", requireAuth, async (c) => {
+  const user = c.get("user");
+  if (!c.env.MEDIA_BUCKET || !c.env.R2_PUBLIC_URL) {
+    return c.json({ error: "Armazenamento de mídia não configurado" }, 500);
+  }
+  let form: FormData;
+  try {
+    form = await c.req.formData();
+  } catch {
+    return c.json({ error: "Envio inválido (multipart esperado)" }, 400);
+  }
+  const file = form.get("file");
+  if (!(file instanceof File)) {
+    return c.json({ error: "Arquivo (campo 'file') é obrigatório" }, 400);
+  }
+  // Limite defensivo (16MB — limite de mídia do WhatsApp Cloud).
+  if (file.size > 16 * 1024 * 1024) {
+    return c.json({ error: "Arquivo excede o limite de 16MB" }, 413);
+  }
+
+  const contentType = file.type || "application/octet-stream";
+  const ext = extFromContentType(contentType);
+  const key = `crm/uploads/${user.organizationId}/${crypto.randomUUID()}${ext}`;
+  try {
+    await c.env.MEDIA_BUCKET.put(key, await file.arrayBuffer(), {
+      httpMetadata: { contentType, cacheControl: "public, max-age=31536000, immutable" },
+    });
+  } catch (err) {
+    console.error("[WhatsApp Inbox] POST /upload error:", err);
+    return c.json({ error: "Falha ao enviar arquivo" }, 500);
+  }
+
+  const kind = contentType.startsWith("image/")
+    ? "image"
+    : contentType.startsWith("video/")
+      ? "video"
+      : contentType.startsWith("audio/")
+        ? "audio"
+        : "document";
+
+  return c.json({
+    data: { url: `${c.env.R2_PUBLIC_URL}/${key}`, type: kind, contentType, name: file.name },
+  });
 });
 
 export { app as whatsappInboxRoutes };
