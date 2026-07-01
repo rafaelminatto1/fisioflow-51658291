@@ -407,6 +407,9 @@ function MessageBubble({
   onPointerCancel: () => void;
   onPointerLeave: () => void;
 }) {
+  const isVideo = message.type === "video" || message.mediaType === "video";
+  const isAudio = message.type === "audio" || message.mediaType === "audio";
+  const isFile = message.type === "file" || message.mediaType === "file";
   return (
     <div
       onContextMenu={onContextMenu}
@@ -451,6 +454,26 @@ function MessageBubble({
           </div>
           {text ? <div>{text}</div> : null}
         </div>
+      ) : isVideo && mediaUrl ? (
+        <div className="space-y-2">
+          <video src={mediaUrl} controls preload="metadata" className="max-h-[280px] w-full rounded-lg" />
+          {text ? <div>{text}</div> : null}
+        </div>
+      ) : isAudio && mediaUrl ? (
+        <div className="space-y-2">
+          <audio src={mediaUrl} controls preload="metadata" className="w-full" />
+          {text ? <div>{text}</div> : null}
+        </div>
+      ) : isFile && mediaUrl ? (
+        <a
+          href={mediaUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 rounded-lg border border-border/70 bg-muted/35 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted/60"
+        >
+          <Paperclip className="h-[13px] w-[13px]" />
+          {text || "Abrir arquivo"}
+        </a>
       ) : (
         <div>{text || "[mensagem sem texto]"}</div>
       )}

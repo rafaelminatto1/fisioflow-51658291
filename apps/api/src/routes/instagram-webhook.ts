@@ -21,6 +21,32 @@ import type { Env } from "../types/env";
  */
 const app = new Hono<{ Bindings: Env }>();
 
+/**
+ * Mapeia o `attachment.type` do webhook do IG → rótulo PT-BR + tipo interno + mediaType.
+ * `mediaType` só é definido quando há mídia recuperável (a URL é espelhada no R2).
+ * Mídia efêmera (view-once) NÃO vem com URL no webhook — só pode ser vista no app do
+ * Instagram —, por isso fica sem `mediaType`.
+ */
+const IG_ATTACHMENT_KINDS: Record<
+  string,
+  { text: string; messageType: string; mediaType?: string }
+> = {
+  story_mention: {
+    text: "📲 Mencionou a Activity Fisioterapia nos Stories do Instagram.",
+    messageType: "story_mention",
+  },
+  image: { text: "", messageType: "image", mediaType: "image" },
+  share: { text: "📎 Compartilhou uma publicação do Instagram.", messageType: "attachment" },
+  ig_reel: { text: "📎 Compartilhou uma publicação do Instagram.", messageType: "attachment" },
+  ephemeral: {
+    text: "📸 Enviou uma foto de visualização única (só pode ser vista no app do Instagram).",
+    messageType: "ephemeral",
+  },
+  video: { text: "🎥 Enviou um vídeo.", messageType: "video", mediaType: "video" },
+  audio: { text: "🎧 Enviou um áudio.", messageType: "audio", mediaType: "audio" },
+  file: { text: "📄 Enviou um arquivo.", messageType: "file", mediaType: "file" },
+};
+
 app.get("/", (c) => {
   const mode = c.req.query("hub.mode");
   const token = c.req.query("hub.verify_token");
@@ -126,30 +152,15 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
         const mediaUrl = await mirrorToR2(env, rawMediaUrl, "crm/instagram/media");
         let text: string;
         let messageType: string;
+        let mediaType: string | undefined;
         if (typeof message.text === "string" && message.text.length) {
           text = message.text;
           messageType = "text";
-        } else if (attType === "story_mention") {
-          text = "📲 Mencionou a Activity Fisioterapia nos Stories do Instagram.";
-          messageType = "story_mention";
-        } else if (attType === "image") {
-          text = "";
-          messageType = "image";
-        } else if (attType === "share" || attType === "ig_reel") {
-          text = "📎 Compartilhou uma publicação do Instagram.";
-          messageType = "attachment";
-        } else if (attType === "ephemeral") {
-          text = "📸 Enviou uma foto de visualização única (só pode ser vista no app do Instagram).";
-          messageType = "ephemeral";
-        } else if (attType === "video") {
-          text = "🎥 Enviou um vídeo.";
-          messageType = "video";
-        } else if (attType === "audio") {
-          text = "🎧 Enviou um áudio.";
-          messageType = "audio";
-        } else if (attType === "file") {
-          text = "📄 Enviou um arquivo.";
-          messageType = "file";
+        } else if (attType && IG_ATTACHMENT_KINDS[attType]) {
+          const kind = IG_ATTACHMENT_KINDS[attType];
+          text = kind.text;
+          messageType = kind.messageType;
+          mediaType = kind.mediaType;
         } else if (attType) {
           text = `[${attType}]`;
           messageType = "attachment";
@@ -199,7 +210,7 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
           message.mid,
           {
             mediaUrl,
-            mediaType: messageType === "image" ? "image" : undefined,
+            mediaType,
             metadata: attType
               ? {
                   attachmentType: attType,

@@ -163,7 +163,7 @@ describe("POST /api/instagram/webhook (inbound DMs)", () => {
     };
   }
 
-  it("renders view-once (ephemeral) messages with a friendly PT-BR label", async () => {
+  it("renders view-once (ephemeral) messages with a friendly PT-BR label and no mediaType", async () => {
     await postWebhook(makeAttachmentPayload("ephemeral"));
     const addArgs = mockAddMessage.mock.calls[0];
     expect(addArgs).toContain("ephemeral"); // messageType
@@ -171,16 +171,21 @@ describe("POST /api/instagram/webhook (inbound DMs)", () => {
       true,
     );
     expect(addArgs.every((a: unknown) => a !== "[ephemeral]")).toBe(true);
+    // Mídia efêmera não vem com URL no webhook → sem mediaType.
+    const opts = addArgs[addArgs.length - 1] as { mediaType?: string };
+    expect(opts.mediaType).toBeUndefined();
   });
 
   it.each([
     ["video", "vídeo"],
     ["audio", "áudio"],
     ["file", "arquivo"],
-  ])("renders %s attachments with a friendly PT-BR label", async (type, needle) => {
+  ])("renders %s attachments with a friendly PT-BR label and matching mediaType", async (type, needle) => {
     await postWebhook(makeAttachmentPayload(type));
     const addArgs = mockAddMessage.mock.calls[0];
     expect(addArgs.some((a: unknown) => typeof a === "string" && a.includes(needle))).toBe(true);
     expect(addArgs.every((a: unknown) => a !== `[${type}]`)).toBe(true);
+    const opts = addArgs[addArgs.length - 1] as { mediaType?: string };
+    expect(opts.mediaType).toBe(type);
   });
 });

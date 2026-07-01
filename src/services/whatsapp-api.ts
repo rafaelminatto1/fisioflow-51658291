@@ -53,7 +53,19 @@ export interface Message {
   id: string;
   conversationId: string;
   direction: "inbound" | "outbound";
-  type: "text" | "image" | "document" | "audio" | "interactive" | "template" | "note";
+  type:
+    | "text"
+    | "image"
+    | "document"
+    | "audio"
+    | "video"
+    | "file"
+    | "ephemeral"
+    | "story_mention"
+    | "attachment"
+    | "interactive"
+    | "template"
+    | "note";
   content: string;
   senderId?: string;
   senderName?: string;
