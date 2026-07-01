@@ -138,6 +138,18 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
         } else if (attType === "share" || attType === "ig_reel") {
           text = "📎 Compartilhou uma publicação do Instagram.";
           messageType = "attachment";
+        } else if (attType === "ephemeral") {
+          text = "📸 Enviou uma foto de visualização única (só pode ser vista no app do Instagram).";
+          messageType = "ephemeral";
+        } else if (attType === "video") {
+          text = "🎥 Enviou um vídeo.";
+          messageType = "video";
+        } else if (attType === "audio") {
+          text = "🎧 Enviou um áudio.";
+          messageType = "audio";
+        } else if (attType === "file") {
+          text = "📄 Enviou um arquivo.";
+          messageType = "file";
         } else if (attType) {
           text = `[${attType}]`;
           messageType = "attachment";

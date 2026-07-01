@@ -144,4 +144,43 @@ describe("POST /api/instagram/webhook (inbound DMs)", () => {
     await postWebhook(makeInstagramDirectPayload());
     expect(mockQueueSendBatch).not.toHaveBeenCalled();
   });
+
+  function makeAttachmentPayload(type: string) {
+    return {
+      object: "instagram",
+      entry: [
+        {
+          id: "17841400000000000",
+          messaging: [
+            {
+              sender: { id: "igsid_123" },
+              recipient: { id: "17841400000000000" },
+              message: { mid: "ig_mid_att", attachments: [{ type, payload: {} }] },
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+  it("renders view-once (ephemeral) messages with a friendly PT-BR label", async () => {
+    await postWebhook(makeAttachmentPayload("ephemeral"));
+    const addArgs = mockAddMessage.mock.calls[0];
+    expect(addArgs).toContain("ephemeral"); // messageType
+    expect(addArgs.some((a: unknown) => typeof a === "string" && a.includes("visualização única"))).toBe(
+      true,
+    );
+    expect(addArgs.every((a: unknown) => a !== "[ephemeral]")).toBe(true);
+  });
+
+  it.each([
+    ["video", "vídeo"],
+    ["audio", "áudio"],
+    ["file", "arquivo"],
+  ])("renders %s attachments with a friendly PT-BR label", async (type, needle) => {
+    await postWebhook(makeAttachmentPayload(type));
+    const addArgs = mockAddMessage.mock.calls[0];
+    expect(addArgs.some((a: unknown) => typeof a === "string" && a.includes(needle))).toBe(true);
+    expect(addArgs.every((a: unknown) => a !== `[${type}]`)).toBe(true);
+  });
 });
