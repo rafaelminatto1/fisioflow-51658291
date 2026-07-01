@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   AUTOMATION_TEMPLATES,
   automationTemplatePayload,
+  templateVarCount,
   type AutomationTemplate,
 } from "../whatsappAutomationTemplates";
 
@@ -13,11 +14,17 @@ describe("whatsappAutomationTemplates", () => {
     expect(AUTOMATION_TEMPLATES.avaliacao_google.name).toBe("avaliacao_google");
   });
 
-  it("todos usam pt_BR e têm a variável {{1}} (nome do paciente) no corpo", () => {
+  it("todos usam pt_BR", () => {
     for (const t of Object.values(AUTOMATION_TEMPLATES) as AutomationTemplate[]) {
       expect(t.language).toBe("pt_BR");
-      expect(t.body).toContain("{{1}}");
     }
+  });
+
+  it("boas_vindas_paciente tem 0 variáveis; os demais têm 1 (espelha os templates aprovados na Meta)", () => {
+    expect(templateVarCount(AUTOMATION_TEMPLATES.boas_vindas_paciente.body)).toBe(0);
+    expect(templateVarCount(AUTOMATION_TEMPLATES.feedback_atendimento.body)).toBe(1);
+    expect(templateVarCount(AUTOMATION_TEMPLATES.lembrete_exercicios_v1.body)).toBe(1);
+    expect(templateVarCount(AUTOMATION_TEMPLATES.avaliacao_google.body)).toBe(1);
   });
 
   it("o payload de registro inclui example.body_text quando o corpo tem variável (exigência da Meta)", () => {

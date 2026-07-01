@@ -88,12 +88,12 @@ export class WhatsAppService {
   }
 
   async sendSmartTemplate(to: string, templateName: string, variables: string[]) {
-    const components = [
-      {
-        type: "body",
-        parameters: variables.map((text) => ({ type: "text", text })),
-      },
-    ];
+    // Templates sem variável (ex.: boas_vindas_paciente aprovado com 0 vars) não
+    // podem levar um componente `body` com `parameters: []` — a Meta rejeita.
+    const components =
+      variables.length > 0
+        ? [{ type: "body", parameters: variables.map((text) => ({ type: "text", text })) }]
+        : [];
 
     return this.sendTemplateMessage(to, templateName, "pt_BR", components);
   }

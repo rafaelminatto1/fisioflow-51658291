@@ -1041,9 +1041,8 @@ export async function processPatientCreatedWelcome(
   env: Env,
 ): Promise<void> {
   if (!data.organizationId) return;
-  await sendAutomationTemplate(env, data.organizationId, data.phone, "boas_vindas_paciente", [
-    firstName(data.name),
-  ]);
+  // Template aprovado na Meta tem 0 variáveis — não enviar parâmetros.
+  await sendAutomationTemplate(env, data.organizationId, data.phone, "boas_vindas_paciente", []);
 }
 
 /**

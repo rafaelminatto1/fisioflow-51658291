@@ -22,13 +22,15 @@ export type AutomationTemplateKey =
   | "avaliacao_google";
 
 export const AUTOMATION_TEMPLATES: Record<AutomationTemplateKey, AutomationTemplate> = {
+  // Já existe APROVADO na Meta como MARKETING e SEM variáveis. Espelhamos aqui
+  // (0 vars) para que o envio não mande parâmetros que a Meta rejeitaria.
   boas_vindas_paciente: {
     name: "boas_vindas_paciente",
     language: "pt_BR",
-    category: "UTILITY",
+    category: "MARKETING",
     body:
-      "Olá {{1}}! 👋 Seja bem-vindo(a) à Activity Fisioterapia. " +
-      "Estamos felizes em ter você conosco. Qualquer dúvida, é só responder por aqui. 😊",
+      "Olá! Seja bem-vindo(a) à nossa clínica. É um prazer ter você conosco. " +
+      "Nossa equipe está pronta para cuidar de você. Em caso de dúvidas, basta responder a esta mensagem!",
   },
   feedback_atendimento: {
     name: "feedback_atendimento",

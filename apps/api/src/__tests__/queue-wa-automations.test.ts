@@ -23,7 +23,7 @@ describe("queue — fluxos WhatsApp automáticos portados", () => {
     baseEnv.BACKGROUND_QUEUE.send = vi.fn(async () => undefined);
   });
 
-  it("welcome: envia boas_vindas_paciente com o primeiro nome", async () => {
+  it("welcome: envia boas_vindas_paciente SEM variáveis (template aprovado na Meta tem 0 vars)", async () => {
     await processPatientCreatedWelcome(
       { organizationId: "org-1", name: "Maria Silva", phone: "5511999999999" },
       baseEnv,
@@ -33,7 +33,7 @@ describe("queue — fluxos WhatsApp automáticos portados", () => {
       "org-1",
       "5511999999999",
       "boas_vindas_paciente",
-      ["Maria"],
+      [],
     );
   });
 
