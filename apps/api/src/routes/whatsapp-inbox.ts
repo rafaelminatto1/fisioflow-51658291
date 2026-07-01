@@ -2267,6 +2267,27 @@ app.patch("/crm-settings", requireAuth, async (c) => {
   }
 });
 
+// Últimos disparos das automações (welcome/feedback/review/lembrete) — alimenta a
+// lista de monitoramento na aba Automações.
+app.get("/crm-settings/automation-log", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  try {
+    const res = await pool.query(
+      `SELECT template_key, phone, accepted, error, created_at
+         FROM whatsapp_automation_log
+        WHERE organization_id = $1
+        ORDER BY created_at DESC
+        LIMIT 20`,
+      [user.organizationId],
+    );
+    return c.json({ data: res.rows });
+  } catch (err) {
+    console.error("[WhatsApp Inbox] GET /crm-settings/automation-log error:", err);
+    return c.json({ error: "Failed to load automation log" }, 500);
+  }
+});
+
 app.post("/crm-settings/test", requireAuth, async (c) => {
   const user = c.get("user");
   const body = (await c.req.json()) as {

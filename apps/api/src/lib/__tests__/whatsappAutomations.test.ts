@@ -59,6 +59,7 @@ describe("whatsappAutomations — gate + envio", () => {
 
   it("registra evento de analytics no envio (observabilidade dos disparos)", async () => {
     mockQuery.mockResolvedValueOnce({ rows: [{ enabled: true }] });
+    mockQuery.mockResolvedValueOnce({ rows: [] }); // INSERT no log
     const writeDataPoint = vi.fn();
     const out = await sendAutomationTemplate(
       { ANALYTICS: { writeDataPoint } } as any,
@@ -73,5 +74,18 @@ describe("whatsappAutomations — gate + envio", () => {
     const arg = writeDataPoint.mock.calls[0][0];
     expect(arg.blobs).toContain("feedback_atendimento");
     expect(arg.blobs).toContain("whatsapp_automation_sent");
+  });
+
+  it("persiste o disparo em whatsapp_automation_log (alimenta a lista no front)", async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [{ enabled: true }] }); // gate
+    mockQuery.mockResolvedValueOnce({ rows: [] }); // INSERT
+    await sendAutomationTemplate(env, "org-1", "5511999999999", "avaliacao_google", ["Maria"]);
+    const insertCall = mockQuery.mock.calls.find((c) =>
+      String(c[0]).includes("whatsapp_automation_log"),
+    );
+    expect(insertCall).toBeTruthy();
+    expect(insertCall![1]).toEqual(
+      expect.arrayContaining(["org-1", "avaliacao_google", "5511999999999", true]),
+    );
   });
 });

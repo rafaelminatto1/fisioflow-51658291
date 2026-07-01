@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -10,6 +10,7 @@ import {
   MessageSquareText,
   Plug,
   Plus,
+  RefreshCw,
   Send,
   Trash2,
   XCircle,
@@ -35,12 +36,14 @@ import {
   createTag,
   deleteQuickReply,
   deleteTag,
+  fetchAutomationLog,
   fetchCrmSettings,
   fetchQuickReplies,
   fetchTags,
   sendTestMessage,
   updateCrmSettings,
   updateQuickReply,
+  type AutomationLogEntry,
   type ConciergeConfig,
   type ConciergeIntent,
   type CrmSettings,
@@ -91,6 +94,24 @@ const TONE_LABELS: Record<ConciergeConfig["greetingTone"], string> = {
   formal: "Formal",
 };
 
+const AUTOMATION_TEMPLATE_LABELS: Record<string, string> = {
+  boas_vindas_paciente: "Boas-vindas",
+  feedback_atendimento: "Feedback do atendimento",
+  avaliacao_google: "Avaliação no Google",
+  lembrete_exercicios_v1: "Lembrete de exercícios",
+};
+
+function formatLogTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function FieldRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between border-b border-border/60 py-2.5 text-sm last:border-none">
@@ -110,6 +131,8 @@ export default function CrmWhatsAppSettings() {
   const [funnel, setFunnel] = useState<FunnelStage[]>([]);
   const [reminders, setReminders] = useState<ReminderConfig | null>(null);
   const [automationsEnabled, setAutomationsEnabled] = useState(false);
+  const [automationLog, setAutomationLog] = useState<AutomationLogEntry[]>([]);
+  const [logLoading, setLogLoading] = useState(false);
 
   const [testNumber, setTestNumber] = useState("");
   const [testing, setTesting] = useState(false);
@@ -141,6 +164,21 @@ export default function CrmWhatsAppSettings() {
       active = false;
     };
   }, [toast]);
+
+  const loadAutomationLog = useCallback(async () => {
+    setLogLoading(true);
+    try {
+      setAutomationLog(await fetchAutomationLog());
+    } catch {
+      // best-effort — não bloqueia a tela
+    } finally {
+      setLogLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadAutomationLog();
+  }, [loadAutomationLog]);
 
   const dirty = useMemo(() => {
     if (!settings || !concierge) return false;
@@ -941,6 +979,54 @@ export default function CrmWhatsAppSettings() {
                       </span>
                     </li>
                   </ul>
+                </div>
+
+                <div className="rounded-xl border border-border bg-card p-5">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h3 className="text-sm font-bold">Últimos disparos</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => void loadAutomationLog()}
+                      disabled={logLoading}
+                    >
+                      <RefreshCw className={cn("h-4 w-4", logLoading && "animate-spin")} />
+                      <span className="ml-1.5">Atualizar</span>
+                    </Button>
+                  </div>
+                  {automationLog.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      Nenhum disparo ainda. As mensagens aparecem aqui conforme os gatilhos
+                      acontecem.
+                    </p>
+                  ) : (
+                    <ul className="divide-y divide-border">
+                      {automationLog.map((entry, i) => (
+                        <li key={i} className="flex items-center justify-between gap-3 py-2.5">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">
+                              {AUTOMATION_TEMPLATE_LABELS[entry.template_key] ?? entry.template_key}
+                            </p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {entry.phone ?? "—"} · {formatLogTime(entry.created_at)}
+                            </p>
+                          </div>
+                          {entry.accepted ? (
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[hsl(142_70%_94%)] px-2 py-0.5 text-xs font-bold text-[hsl(142_60%_28%)]">
+                              <CheckCircle2 className="h-3.5 w-3.5" /> Enviado
+                            </span>
+                          ) : (
+                            <span
+                              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-bold text-destructive"
+                              title={entry.error ?? undefined}
+                            >
+                              <XCircle className="h-3.5 w-3.5" /> Falhou
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
             </TabsContent>

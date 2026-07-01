@@ -41,6 +41,10 @@ export async function sendAutomationTemplate(
   const result = await wa.sendSmartTemplate(phone, template.name, vars);
   // A Meta responde { messages: [...] } quando aceita; erro traz { error }.
   const accepted = !!(result && typeof result === "object" && "messages" in result);
+  const errText =
+    !accepted && result && typeof result === "object" && "error" in result
+      ? JSON.stringify((result as { error: unknown }).error).slice(0, 500)
+      : null;
   writeEvent(env, {
     event: "whatsapp_automation_sent",
     orgId,
@@ -49,5 +53,15 @@ export async function sendAutomationTemplate(
     status: accepted ? 200 : 502,
     detail: key,
   });
+  // Persiste p/ a lista "Últimos disparos" no front (não-fatal).
+  try {
+    await pool.query(
+      `INSERT INTO whatsapp_automation_log (organization_id, template_key, phone, accepted, error)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [orgId, key, phone, accepted, errText],
+    );
+  } catch (e) {
+    console.warn("[WA Automation] log insert falhou (non-fatal):", e);
+  }
   return { sent: true, accepted };
 }

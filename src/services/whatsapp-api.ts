@@ -922,6 +922,21 @@ export async function updateCrmSettings(patch: {
   return unwrapData(res);
 }
 
+export interface AutomationLogEntry {
+  template_key: string;
+  phone: string | null;
+  accepted: boolean;
+  error: string | null;
+  created_at: string;
+}
+
+export async function fetchAutomationLog() {
+  const res = await request<{ data: AutomationLogEntry[] } | AutomationLogEntry[]>(
+    `${BASE}/crm-settings/automation-log`,
+  );
+  return unwrapData(res) as AutomationLogEntry[];
+}
+
 export async function sendTestMessage(
   to: string,
   opts?: { templateName?: string; language?: string },
