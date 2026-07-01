@@ -10,6 +10,7 @@ import { Hono } from "hono";
 import { createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { upsertContact, logContactActivity } from "../lib/contacts";
+import { summarizeEnvios } from "../lib/campaignMetrics";
 import { processCrmTrigger } from "../services/crm-automation-engine";
 import type { Env } from "../types/env";
 
@@ -490,6 +491,27 @@ app.get("/campanhas", requireAuth, async (c) => {
     return c.json({ data: result.rows || result });
   } catch {
     return c.json({ data: [] });
+  }
+});
+
+app.get("/campanhas/:id/summary", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  const { id } = c.req.param();
+  try {
+    const owns = await pool.query(
+      `SELECT id FROM crm_campanhas WHERE id = $1 AND organization_id = $2 LIMIT 1`,
+      [id, user.organizationId],
+    );
+    if (owns.rows.length === 0) return c.json({ error: "Campanha não encontrada" }, 404);
+    const envios = await pool.query(
+      `SELECT status FROM crm_campanha_envios WHERE campanha_id = $1`,
+      [id],
+    );
+    return c.json({ data: summarizeEnvios(envios.rows) });
+  } catch (err) {
+    console.error("[CRM] GET /campanhas/:id/summary error:", err);
+    return c.json({ error: "Failed to fetch campaign summary" }, 500);
   }
 });
 
