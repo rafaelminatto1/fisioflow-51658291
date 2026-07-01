@@ -895,6 +895,8 @@ export interface CrmSettings {
   reminders: ReminderConfig;
   /** Gate mestre das automações de WhatsApp (welcome/feedback/review/lembrete). */
   automationsEnabled: boolean;
+  /** Roteamento automático de conversas para atendentes. */
+  routing: { enabled: boolean; strategy: "round_robin" | "least_busy" };
   intents: ConciergeIntent[];
   instagramProfileSync?: {
     lastSyncedAt: string | null;
@@ -923,6 +925,7 @@ export async function updateCrmSettings(patch: {
   funnel?: FunnelStage[];
   reminders?: Partial<ReminderConfig>;
   automationsEnabled?: boolean;
+  routing?: { enabled?: boolean; strategy?: "round_robin" | "least_busy" };
 }) {
   const res = await request<{
     data: {
@@ -930,6 +933,7 @@ export async function updateCrmSettings(patch: {
       funnel: FunnelStage[];
       reminders: ReminderConfig;
       automationsEnabled: boolean;
+      routing: { enabled: boolean; strategy: "round_robin" | "least_busy" };
     };
   }>(`${BASE}/crm-settings`, { method: "PATCH", body: JSON.stringify(patch) });
   return unwrapData(res);

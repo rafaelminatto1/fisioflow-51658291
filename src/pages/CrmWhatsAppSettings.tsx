@@ -131,6 +131,10 @@ export default function CrmWhatsAppSettings() {
   const [funnel, setFunnel] = useState<FunnelStage[]>([]);
   const [reminders, setReminders] = useState<ReminderConfig | null>(null);
   const [automationsEnabled, setAutomationsEnabled] = useState(false);
+  const [routing, setRouting] = useState<{
+    enabled: boolean;
+    strategy: "round_robin" | "least_busy";
+  }>({ enabled: false, strategy: "round_robin" });
   const [automationLog, setAutomationLog] = useState<AutomationLogEntry[]>([]);
   const [logLoading, setLogLoading] = useState(false);
 
@@ -155,6 +159,7 @@ export default function CrmWhatsAppSettings() {
         setFunnel(cfg.funnel);
         setReminders(cfg.reminders);
         setAutomationsEnabled(cfg.automationsEnabled);
+        if (cfg.routing) setRouting(cfg.routing);
         setQuickReplies((qrs as unknown as QuickReplyRow[]) ?? []);
         setTags((tgs as Tag[]) ?? []);
       })
@@ -186,9 +191,10 @@ export default function CrmWhatsAppSettings() {
       JSON.stringify(concierge) !== JSON.stringify(settings.concierge) ||
       JSON.stringify(funnel) !== JSON.stringify(settings.funnel) ||
       JSON.stringify(reminders) !== JSON.stringify(settings.reminders) ||
-      automationsEnabled !== settings.automationsEnabled
+      automationsEnabled !== settings.automationsEnabled ||
+      JSON.stringify(routing) !== JSON.stringify(settings.routing)
     );
-  }, [settings, concierge, funnel, reminders, automationsEnabled]);
+  }, [settings, concierge, funnel, reminders, automationsEnabled, routing]);
 
   const handleSave = async () => {
     if (!concierge || !dirty) return;
@@ -199,6 +205,7 @@ export default function CrmWhatsAppSettings() {
         funnel,
         reminders: reminders ?? undefined,
         automationsEnabled,
+        routing,
       });
       setSettings((prev) =>
         prev
@@ -208,11 +215,13 @@ export default function CrmWhatsAppSettings() {
               funnel: saved.funnel,
               reminders: saved.reminders,
               automationsEnabled: saved.automationsEnabled,
+              routing: saved.routing,
             }
           : prev,
       );
       setReminders(saved.reminders);
       setAutomationsEnabled(saved.automationsEnabled);
+      if (saved.routing) setRouting(saved.routing);
       toast({ title: "Configurações salvas" });
     } catch {
       toast({ title: "Erro ao salvar", variant: "destructive" });
@@ -949,6 +958,38 @@ export default function CrmWhatsAppSettings() {
                       abaixo. Clique em <strong>Salvar</strong> para aplicar.
                     </div>
                   )}
+                </div>
+
+                <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <Label className="text-sm font-bold">Roteamento automático de conversas</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Distribui novas conversas automaticamente entre os atendentes.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={routing.enabled}
+                      onCheckedChange={(v) => setRouting((r) => ({ ...r, enabled: v }))}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <Label className="text-sm">Estratégia</Label>
+                    <Select
+                      value={routing.strategy}
+                      onValueChange={(v) =>
+                        setRouting((r) => ({ ...r, strategy: v as "round_robin" | "least_busy" }))
+                      }
+                    >
+                      <SelectTrigger className="w-56" disabled={!routing.enabled}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="round_robin">Rodízio (round-robin)</SelectItem>
+                        <SelectItem value="least_busy">Menos ocupado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="rounded-xl border border-border bg-card p-5">

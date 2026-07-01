@@ -1,9 +1,71 @@
 import { createPool } from "./db";
 import { isUuid } from "./validators";
 import { WhatsAppService } from "./whatsapp";
+import { pickNextAssignee } from "./leadRouting";
 import type { Env } from "../types/env";
 
 type Pool = ReturnType<typeof createPool>;
+
+/**
+ * Roteamento automático de uma conversa recém-criada. Gated por
+ * settings.crm_whatsapp.routing.enabled (default OFF). Non-fatal: qualquer erro
+ * apenas deixa a conversa sem responsável (fluxo manual continua).
+ */
+export async function autoAssignNewConversation(
+  pool: Pool,
+  orgId: string,
+  conversationId: string,
+): Promise<void> {
+  try {
+    const s = await pool.query(
+      `SELECT settings->'crm_whatsapp'->'routing' AS routing FROM organizations WHERE id = $1`,
+      [orgId],
+    );
+    const routing = s.rows[0]?.routing as
+      | { enabled?: boolean; strategy?: string; lastAssignedId?: string }
+      | null;
+    if (!routing || routing.enabled !== true) return;
+    const strategy = routing.strategy === "least_busy" ? "least_busy" : "round_robin";
+
+    const agentsRes = await pool.query(
+      `SELECT id::text AS id FROM profiles WHERE organization_id = $1`,
+      [orgId],
+    );
+    const ids: string[] = agentsRes.rows.map((r: any) => r.id);
+    if (ids.length === 0) return;
+
+    const loadRes = await pool.query(
+      `SELECT assigned_to::text AS id, COUNT(*)::int AS c FROM wa_conversations
+        WHERE organization_id = $1 AND assigned_to IS NOT NULL
+          AND status IN ('open', 'pending', 'assigned')
+        GROUP BY assigned_to`,
+      [orgId],
+    );
+    const loadMap = new Map<string, number>(loadRes.rows.map((r: any) => [r.id, r.c]));
+    const agents = ids.map((id) => ({ id, openCount: loadMap.get(id) ?? 0 }));
+
+    const last = typeof routing.lastAssignedId === "string" ? routing.lastAssignedId : null;
+    const chosen = pickNextAssignee(agents, strategy, last);
+    if (!chosen) return;
+
+    await pool.query(
+      `UPDATE wa_conversations SET assigned_to = $2, status = 'assigned', updated_at = now()
+        WHERE id = $1 AND organization_id = $3`,
+      [conversationId, chosen, orgId],
+    );
+    // Cursor do round-robin.
+    await pool.query(
+      `UPDATE organizations
+          SET settings = jsonb_set(COALESCE(settings, '{}'::jsonb),
+                                   '{crm_whatsapp,routing,lastAssignedId}',
+                                   to_jsonb($2::text), true)
+        WHERE id = $1`,
+      [orgId, chosen],
+    );
+  } catch (e) {
+    console.warn("[whatsapp-conversations] autoAssignNewConversation falhou (non-fatal):", e);
+  }
+}
 
 type JsonRecord = Record<string, unknown>;
 
@@ -97,6 +159,9 @@ export async function findOrCreateConversation(
        RETURNING *`,
       [orgId, contactId, channel],
     );
+
+    // Roteamento automático (gated por settings.crm_whatsapp.routing.enabled).
+    await autoAssignNewConversation(pool, orgId, created.rows[0].id);
 
     return created.rows[0];
   } catch (error) {

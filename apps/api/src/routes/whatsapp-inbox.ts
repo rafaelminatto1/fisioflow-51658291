@@ -110,7 +110,12 @@ export function readCrmConfig(settings: Record<string, unknown>) {
   // Gate mestre das automações de WhatsApp (welcome/feedback/review/lembrete).
   // Só o booleano `true` liga — string/truthy não conta.
   const automationsEnabled = crm.automations_enabled === true;
-  return { concierge, funnel, reminders, automationsEnabled };
+  const routingRaw = (crm.routing as Record<string, unknown>) ?? {};
+  const routing = {
+    enabled: routingRaw.enabled === true,
+    strategy: routingRaw.strategy === "least_busy" ? "least_busy" : "round_robin",
+  } as const;
+  return { concierge, funnel, reminders, automationsEnabled, routing };
 }
 
 const DEFAULT_WHATSAPP_TAGS = [
@@ -2243,7 +2248,7 @@ app.get("/crm-settings", requireAuth, async (c) => {
   const pool = await createPool(c.env);
   try {
     const settings = await loadOrgSettings(pool, user.organizationId);
-    const { concierge, funnel, reminders, automationsEnabled } = readCrmConfig(settings);
+    const { concierge, funnel, reminders, automationsEnabled, routing } = readCrmConfig(settings);
     const pendingRes = await pool.query(
       `SELECT COUNT(DISTINCT wc.id)::int AS pending
        FROM whatsapp_contacts wc
@@ -2276,6 +2281,7 @@ app.get("/crm-settings", requireAuth, async (c) => {
         funnel,
         reminders,
         automationsEnabled,
+        routing,
         intents: CONCIERGE_INTENTS,
         instagramProfileSync,
         instagramProfilePendingCount: pendingCount,
@@ -2295,6 +2301,7 @@ app.patch("/crm-settings", requireAuth, async (c) => {
     funnel?: Array<{ key: string; label: string; color: string }>;
     reminders?: Partial<typeof DEFAULT_REMINDER_CONFIG>;
     automationsEnabled?: boolean;
+    routing?: { enabled?: boolean; strategy?: "round_robin" | "least_busy" };
   };
   try {
     const settings = await loadOrgSettings(pool, user.organizationId);
@@ -2303,6 +2310,18 @@ app.patch("/crm-settings", requireAuth, async (c) => {
       typeof body.automationsEnabled === "boolean"
         ? body.automationsEnabled
         : current.automationsEnabled;
+    const routing = body.routing
+      ? {
+          enabled:
+            typeof body.routing.enabled === "boolean"
+              ? body.routing.enabled
+              : current.routing.enabled,
+          strategy:
+            body.routing.strategy === "least_busy" || body.routing.strategy === "round_robin"
+              ? body.routing.strategy
+              : current.routing.strategy,
+        }
+      : current.routing;
     const nextCrm = {
       ...(settings.crm_whatsapp as object),
       concierge: body.concierge ? { ...current.concierge, ...body.concierge } : current.concierge,
@@ -2311,6 +2330,7 @@ app.patch("/crm-settings", requireAuth, async (c) => {
         ? resolveReminderConfig({ ...current.reminders, ...body.reminders })
         : current.reminders,
       automations_enabled: automationsEnabled,
+      routing,
     };
     const nextSettings = { ...settings, crm_whatsapp: nextCrm };
     await pool.query(
@@ -2323,6 +2343,7 @@ app.patch("/crm-settings", requireAuth, async (c) => {
         funnel: nextCrm.funnel,
         reminders: nextCrm.reminders,
         automationsEnabled,
+        routing,
       },
     });
   } catch (err) {
