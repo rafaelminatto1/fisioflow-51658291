@@ -289,10 +289,23 @@ export const crmApi = {
   campanhas: {
     list: (p?: { status?: string; tipo?: string; limit?: number; offset?: number }) =>
       crm(withQuery("/campanhas", p)),
-    create: (d: Partial<CrmCampanha> & { patient_ids?: string[] }) =>
-      crm("/campanhas", { method: "POST", body: JSON.stringify(d) }),
+    create: (
+      d: Partial<CrmCampanha> & {
+        nome?: string;
+        tipo?: string;
+        conteudo?: string;
+        template_key?: string;
+        agendada_em?: string | null;
+        patient_ids?: string[];
+        total_destinatarios?: number;
+      },
+    ) => crm("/campanhas", { method: "POST", body: JSON.stringify(d) }),
     update: (id: string, d: Partial<CrmCampanha>) =>
       crm(`/campanhas/${id}`, { method: "PUT", body: JSON.stringify(d) }),
     delete: (id: string) => crm(`/campanhas/${id}`, { method: "DELETE" }),
+    summary: (id: string) =>
+      crm(`/campanhas/${id}/summary`) as Promise<{
+        data: { total: number; enviados: number; entregues: number; lidos: number; falhas: number };
+      }>,
   },
 };

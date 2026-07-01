@@ -161,40 +161,76 @@ export function useDeleteTarefa() {
   });
 }
 
-// ========== CAMPANHAS — not in Workers API yet ==========
+// ========== CAMPANHAS ==========
 
 export function useCRMCampanhas() {
   return useQuery({
     queryKey: ["crm-campanhas"],
-    queryFn: async (): Promise<CRMCampanha[]> => [],
-    staleTime: Infinity,
+    queryFn: async (): Promise<CRMCampanha[]> => {
+      const res = (await crmApi.campanhas.list()) as { data?: CRMCampanha[] } | CRMCampanha[];
+      return (Array.isArray(res) ? res : (res?.data ?? [])) as CRMCampanha[];
+    },
   });
 }
 
 export function useCreateCampanha() {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (_campanha: Partial<CRMCampanha>) => {
-      throw new Error("Campanhas ainda não disponíveis na API Workers");
+    mutationFn: async (
+      campanha: Partial<CRMCampanha> & {
+        template_key?: string;
+        agendada_em?: string | null;
+        patient_ids?: string[];
+      },
+    ) => {
+      const res = (await crmApi.campanhas.create(campanha)) as { data?: CRMCampanha } | CRMCampanha;
+      return ((res as { data?: CRMCampanha })?.data ?? res) as CRMCampanha;
     },
-    onError: (e: Error) => toast.error(e.message),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["crm-campanhas"] });
+      toast.success("Campanha criada.");
+    },
+    onError: () => toast.error("Erro ao criar campanha."),
   });
 }
 
 export function useUpdateCampanha() {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (_: Partial<CRMCampanha> & { id: string }) => {
-      throw new Error("Campanhas ainda não disponíveis na API Workers");
+    mutationFn: async ({ id, ...campanha }: Partial<CRMCampanha> & { id: string }) => {
+      const res = (await crmApi.campanhas.update(id, campanha)) as
+        | { data?: CRMCampanha }
+        | CRMCampanha;
+      return ((res as { data?: CRMCampanha })?.data ?? res) as CRMCampanha;
     },
-    onError: (e: Error) => toast.error(e.message),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["crm-campanhas"] }),
+    onError: () => toast.error("Erro ao atualizar campanha."),
   });
 }
 
 export function useDeleteCampanha() {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (_: string) => {
-      throw new Error("Campanhas ainda não disponíveis na API Workers");
+    mutationFn: async (id: string) => {
+      await crmApi.campanhas.delete(id);
+      return id;
     },
-    onError: (e: Error) => toast.error(e.message),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["crm-campanhas"] });
+      toast.success("Campanha excluída.");
+    },
+    onError: () => toast.error("Erro ao excluir campanha."),
+  });
+}
+
+export function useCampanhaSummary(id: string | null) {
+  return useQuery({
+    queryKey: ["crm-campanha-summary", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const res = await crmApi.campanhas.summary(String(id));
+      return res.data;
+    },
   });
 }
 

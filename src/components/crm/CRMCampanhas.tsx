@@ -49,6 +49,7 @@ import {
   useCreateCampanha,
   useUpdateCampanha,
   useDeleteCampanha,
+  useCampanhaSummary,
   CRMCampanha,
 } from "@/hooks/useCRM";
 import { useLeads } from "@/hooks/useLeads";
@@ -95,7 +96,16 @@ interface FormDataCampanha {
   assunto: string;
   conteudo: string;
   filtro_estagios: string[];
+  template_key: string;
+  agendada_em: string;
 }
+
+const APPROVED_TEMPLATES = [
+  { key: "boas_vindas_paciente", label: "Boas-vindas" },
+  { key: "feedback_atendimento", label: "Feedback do atendimento" },
+  { key: "avaliacao_google", label: "Avaliação no Google" },
+  { key: "lembrete_exercicios_v1", label: "Lembrete de exercícios" },
+];
 
 export function CRMCampanhas() {
   const isMobile = useIsMobile();
@@ -107,6 +117,8 @@ export function CRMCampanhas() {
     assunto: "",
     conteudo: "",
     filtro_estagios: [],
+    template_key: "",
+    agendada_em: "",
   });
 
   const { data: campanhas = [] } = useCRMCampanhas();
@@ -126,8 +138,9 @@ export function CRMCampanhas() {
 
     await createMutation.mutateAsync({
       ...formData,
+      template_key: formData.tipo === "whatsapp" && formData.template_key ? formData.template_key : undefined,
+      agendada_em: formData.agendada_em ? new Date(formData.agendada_em).toISOString() : undefined,
       total_destinatarios: destinatarios.length,
-      status: "rascunho",
     });
 
     setIsDialogOpen(false);
@@ -304,6 +317,10 @@ export function CRMCampanhas() {
                       </div>
                     </div>
                   </div>
+
+                  {campanha.tipo === "whatsapp" ? (
+                    <CampaignDeliveryBadges campanhaId={campanha.id} />
+                  ) : null}
 
                   <div className="flex items-center gap-2 mt-4">
                     {campanha.status === "rascunho" && (
@@ -499,6 +516,44 @@ export function CRMCampanhas() {
               </p>
             </div>
 
+            {formData.tipo === "whatsapp" && (
+              <div className="space-y-2 pt-2">
+                <Label className="font-semibold">Template aprovado (envio real)</Label>
+                <Select
+                  value={formData.template_key || "none"}
+                  onValueChange={(v) =>
+                    setFormData((prev) => ({ ...prev, template_key: v === "none" ? "" : v }))
+                  }
+                >
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue placeholder="Nenhum (rascunho)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum (rascunho, sem enviar)</SelectItem>
+                    {APPROVED_TEMPLATES.map((t) => (
+                      <SelectItem key={t.key} value={t.key}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-slate-400 italic">
+                  Com um template aprovado, a campanha dispara de verdade no WhatsApp. Sem template,
+                  fica só registrada.
+                </p>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label className="font-semibold">Agendar para (opcional)</Label>
+              <Input
+                type="datetime-local"
+                value={formData.agendada_em}
+                onChange={(e) => setFormData((prev) => ({ ...prev, agendada_em: e.target.value }))}
+                className="rounded-xl"
+              />
+            </div>
+
             <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-white rounded-lg shadow-sm">
@@ -540,6 +595,29 @@ export function CRMCampanhas() {
           </Button>
         </CustomModalFooter>
       </CustomModal>
+    </div>
+  );
+}
+
+function CampaignDeliveryBadges({ campanhaId }: { campanhaId: string }) {
+  const { data } = useCampanhaSummary(campanhaId);
+  if (!data || data.total === 0) return null;
+  return (
+    <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-bold">
+      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-600">
+        Enviados {data.enviados}
+      </span>
+      <span className="rounded-full bg-[hsl(142_60%_92%)] px-2 py-0.5 text-[hsl(142_55%_28%)]">
+        Entregues {data.entregues}
+      </span>
+      <span className="rounded-full bg-[hsl(211_100%_94%)] px-2 py-0.5 text-[hsl(211_80%_40%)]">
+        Lidos {data.lidos}
+      </span>
+      {data.falhas > 0 ? (
+        <span className="rounded-full bg-red-100 px-2 py-0.5 text-red-600">
+          Falhas {data.falhas}
+        </span>
+      ) : null}
     </div>
   );
 }
