@@ -19,7 +19,16 @@ describe("fetchCampaignAudience", () => {
     const params = query.mock.calls[0]![1] as any[];
     expect(params[0]).toBe("o1");
     expect(params[1]).toEqual(["aguardando"]);
+    expect(params[2]).toBe(false); // onlyEngaged default
     expect(String(query.mock.calls[0][0])).toMatch(/COUNT/i);
+  });
+
+  it("onlyEngaged passa true e usa o filtro de conversa existente", async () => {
+    const query = vi.fn(async (_sql: string, _params?: any[]) => ({ rows: [{ c: 3 }] }));
+    const pool = { query } as any;
+    await fetchCampaignAudience(pool, "o1", [], { countOnly: true, onlyEngaged: true });
+    expect((query.mock.calls[0]![1] as any[])[2]).toBe(true);
+    expect(String(query.mock.calls[0]![0])).toMatch(/wa_conversations/);
   });
 
   it("retorna os destinatários com telefone", async () => {

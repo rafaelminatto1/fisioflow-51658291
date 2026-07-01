@@ -501,10 +501,14 @@ app.get("/campanhas", requireAuth, async (c) => {
 app.post("/campanhas/audience-count", requireAuth, async (c) => {
   const user = c.get("user");
   const pool = await createPool(c.env);
-  const body = (await c.req.json().catch(() => ({}))) as { filtro_estagios?: unknown };
+  const body = (await c.req.json().catch(() => ({}))) as {
+    filtro_estagios?: unknown;
+    only_engaged?: boolean;
+  };
   try {
     const { count } = await fetchCampaignAudience(pool, user.organizationId, body.filtro_estagios, {
       countOnly: true,
+      onlyEngaged: body.only_engaged === true,
     });
     return c.json({ data: { count } });
   } catch (err) {
@@ -563,7 +567,11 @@ app.post("/campanhas", requireAuth, async (c) => {
   // telefone) pelo mesmo filtro de estágio, cobrindo leads que ainda não são
   // pacientes. Campanhas log-only continuam por patient_ids.
   const audience = isRealWhatsApp
-    ? (await fetchCampaignAudience(pool, user.organizationId, body.filtro_estagios, {})).rows
+    ? (
+        await fetchCampaignAudience(pool, user.organizationId, body.filtro_estagios, {
+          onlyEngaged: body.only_engaged === true,
+        })
+      ).rows
     : [];
   const totalDestinatarios = isRealWhatsApp ? audience.length : patientIds.length;
 

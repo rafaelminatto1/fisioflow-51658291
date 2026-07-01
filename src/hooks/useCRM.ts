@@ -181,6 +181,7 @@ export function useCreateCampanha() {
         template_key?: string;
         agendada_em?: string | null;
         patient_ids?: string[];
+        only_engaged?: boolean;
       },
     ) => {
       const res = (await crmApi.campanhas.create(campanha)) as { data?: CRMCampanha } | CRMCampanha;

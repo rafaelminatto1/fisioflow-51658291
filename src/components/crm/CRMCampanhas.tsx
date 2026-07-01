@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { crmApi } from "@/api/v2";
 import { Card, CardContent } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -99,6 +100,7 @@ interface FormDataCampanha {
   filtro_estagios: string[];
   template_key: string;
   agendada_em: string;
+  only_engaged: boolean;
 }
 
 const APPROVED_TEMPLATES = [
@@ -120,6 +122,7 @@ export function CRMCampanhas() {
     filtro_estagios: [],
     template_key: "",
     agendada_em: "",
+    only_engaged: true,
   });
 
   const { data: campanhas = [] } = useCRMCampanhas();
@@ -141,6 +144,7 @@ export function CRMCampanhas() {
       ...formData,
       template_key: formData.tipo === "whatsapp" && formData.template_key ? formData.template_key : undefined,
       agendada_em: formData.agendada_em ? new Date(formData.agendada_em).toISOString() : undefined,
+      only_engaged: formData.only_engaged,
       total_destinatarios: destinatarios.length,
     });
 
@@ -202,7 +206,7 @@ export function CRMCampanhas() {
     }
     let active = true;
     crmApi.campanhas
-      .audienceCount(formData.filtro_estagios)
+      .audienceCount(formData.filtro_estagios, formData.only_engaged)
       .then((r) => {
         if (active) setAudienceCount(r?.data?.count ?? 0);
       })
@@ -213,7 +217,13 @@ export function CRMCampanhas() {
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDialogOpen, formData.tipo, formData.template_key, formData.filtro_estagios]);
+  }, [
+    isDialogOpen,
+    formData.tipo,
+    formData.template_key,
+    formData.filtro_estagios,
+    formData.only_engaged,
+  ]);
 
   return (
     <div className="space-y-6">
@@ -564,6 +574,18 @@ export function CRMCampanhas() {
                   Com um template aprovado, a campanha dispara de verdade no WhatsApp. Sem template,
                   fica só registrada.
                 </p>
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
+                  <div>
+                    <Label className="text-sm font-semibold">Só quem já conversou comigo</Label>
+                    <p className="text-[10px] text-slate-400">
+                      Recomendado: evita spam e protege a qualidade do número na Meta.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.only_engaged}
+                    onCheckedChange={(v) => setFormData((prev) => ({ ...prev, only_engaged: v }))}
+                  />
+                </div>
               </div>
             )}
 

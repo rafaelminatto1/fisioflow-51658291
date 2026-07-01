@@ -297,6 +297,7 @@ export const crmApi = {
         template_key?: string;
         agendada_em?: string | null;
         patient_ids?: string[];
+        only_engaged?: boolean;
         total_destinatarios?: number;
       },
     ) => crm("/campanhas", { method: "POST", body: JSON.stringify(d) }),
@@ -307,10 +308,10 @@ export const crmApi = {
       crm(`/campanhas/${id}/summary`) as Promise<{
         data: { total: number; enviados: number; entregues: number; lidos: number; falhas: number };
       }>,
-    audienceCount: (filtro_estagios: string[]) =>
+    audienceCount: (filtro_estagios: string[], only_engaged?: boolean) =>
       crm("/campanhas/audience-count", {
         method: "POST",
-        body: JSON.stringify({ filtro_estagios }),
+        body: JSON.stringify({ filtro_estagios, only_engaged }),
       }) as Promise<{ data: { count: number } }>,
   },
 };

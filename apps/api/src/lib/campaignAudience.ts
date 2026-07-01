@@ -17,10 +17,19 @@ export interface AudienceRecipient {
   name: string | null;
 }
 
+// $3 = onlyEngaged: quando true, só contatos que JÁ conversaram no WhatsApp
+// (reduz risco de spam/queda de qualidade do número — recomendação Meta).
 const WHERE = `l.organization_id = $1
     AND (cardinality($2::text[]) = 0 OR l.estagio = ANY($2))
     AND COALESCE(l.telefone, c.telefone) IS NOT NULL
-    AND COALESCE(l.telefone, c.telefone) <> ''`;
+    AND COALESCE(l.telefone, c.telefone) <> ''
+    AND ($3::boolean = false OR EXISTS (
+      SELECT 1 FROM whatsapp_contacts wc
+      JOIN wa_conversations wconv ON wconv.contact_id = wc.id
+      WHERE wc.organization_id = l.organization_id
+        AND regexp_replace(wc.wa_id, '[^0-9]', '', 'g')
+            = regexp_replace(COALESCE(l.telefone, c.telefone), '[^0-9]', '', 'g')
+    ))`;
 
 /**
  * Resolve a audiência (ou só a contagem) de uma campanha a partir dos estágios
@@ -30,10 +39,10 @@ export async function fetchCampaignAudience(
   pool: DbPool,
   orgId: string,
   stages: unknown,
-  opts: { countOnly?: boolean } = {},
+  opts: { countOnly?: boolean; onlyEngaged?: boolean } = {},
 ): Promise<{ count: number; rows: AudienceRecipient[] }> {
   const norm = normalizeStages(stages);
-  const params = [orgId, norm];
+  const params = [orgId, norm, opts.onlyEngaged === true];
 
   if (opts.countOnly) {
     const r = await pool.query(
