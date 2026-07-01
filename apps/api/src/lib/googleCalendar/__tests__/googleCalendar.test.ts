@@ -21,6 +21,30 @@ describe("appointmentToGoogleEvent", () => {
     const ev = appointmentToGoogleEvent({ patient_name: "João", date: "2026-07-01", start_time: "10:00:00", durationMinutes: 30 });
     expect(ev.end.dateTime).toBe("2026-07-01T10:30:00");
   });
+
+  it("normaliza `date` quando vem como timestamp ISO (Appointment.date é Date → JSON vira ISO)", () => {
+    // O front serializa o Appointment; `date: Date` vira "2026-07-01T00:00:00.000Z".
+    // Sem normalização o dateTime saía como "2026-07-01T00:00:00.000ZT09:00:00" (RFC3339 inválido).
+    const ev = appointmentToGoogleEvent({
+      patientName: "Maria",
+      date: "2026-07-01T00:00:00.000Z",
+      startTime: "09:00",
+      endTime: "09:45",
+    } as any);
+    expect(ev.start.dateTime).toBe("2026-07-01T09:00:00");
+    expect(ev.end.dateTime).toBe("2026-07-01T09:45:00");
+  });
+
+  it("extrai HH:MM quando o horário vem como timestamp ISO completo", () => {
+    const ev = appointmentToGoogleEvent({
+      patientName: "Ana",
+      date: "2026-07-01",
+      start_time: "2026-07-01T14:30:00.000Z",
+      durationMinutes: 60,
+    } as any);
+    expect(ev.start.dateTime).toBe("2026-07-01T14:30:00");
+    expect(ev.end.dateTime).toBe("2026-07-01T15:30:00");
+  });
 });
 
 describe("refreshAccessToken", () => {

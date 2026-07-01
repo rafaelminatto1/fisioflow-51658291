@@ -14,8 +14,16 @@ export type AppointmentLike = {
   notes?: string;
 };
 
+/** Extrai "YYYY-MM-DD" de uma data-only ou de um timestamp ISO (Appointment.date
+ *  é um Date que o JSON serializa como "2026-07-01T00:00:00.000Z"). */
+function dateOnly(d: string): string {
+  return d.slice(0, 10);
+}
+
+/** Extrai "HH:MM" de "HH:MM", "HH:MM:SS" ou de um timestamp ISO ("...THH:MM:SS"). */
 function hhmm(t: string): string {
-  return t.length >= 5 ? t.slice(0, 5) : t;
+  const timePart = t.includes("T") ? (t.split("T")[1] ?? "") : t;
+  return timePart.length >= 5 ? timePart.slice(0, 5) : timePart;
 }
 
 function addMinutes(time: string, minutes: number): string {
@@ -35,7 +43,7 @@ export type GoogleCalendarEvent = {
 
 export function appointmentToGoogleEvent(appt: AppointmentLike): GoogleCalendarEvent {
   const name = appt.patientName ?? appt.patient_name ?? "Paciente";
-  const date = appt.date ?? "";
+  const date = dateOnly(appt.date ?? "");
   const start = hhmm(appt.startTime ?? appt.start_time ?? "08:00");
   const end =
     appt.endTime || appt.end_time
