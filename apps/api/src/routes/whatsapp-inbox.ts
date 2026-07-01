@@ -93,12 +93,15 @@ async function loadOrgSettings(pool: any, orgId: string): Promise<Record<string,
   }
 }
 
-function readCrmConfig(settings: Record<string, unknown>) {
-  const crm = settings.crm_whatsapp as Record<string, unknown>;
+export function readCrmConfig(settings: Record<string, unknown>) {
+  const crm = (settings.crm_whatsapp as Record<string, unknown>) ?? {};
   const concierge = { ...DEFAULT_CONCIERGE_CONFIG, ...(crm.concierge as object) };
   const funnel = Array.isArray(crm.funnel) && crm.funnel.length ? crm.funnel : DEFAULT_FUNNEL_STAGES;
   const reminders = resolveReminderConfig(crm.reminders);
-  return { concierge, funnel, reminders };
+  // Gate mestre das automações de WhatsApp (welcome/feedback/review/lembrete).
+  // Só o booleano `true` liga — string/truthy não conta.
+  const automationsEnabled = crm.automations_enabled === true;
+  return { concierge, funnel, reminders, automationsEnabled };
 }
 
 const DEFAULT_WHATSAPP_TAGS = [
@@ -2176,7 +2179,7 @@ app.get("/crm-settings", requireAuth, async (c) => {
   const pool = await createPool(c.env);
   try {
     const settings = await loadOrgSettings(pool, user.organizationId);
-    const { concierge, funnel, reminders } = readCrmConfig(settings);
+    const { concierge, funnel, reminders, automationsEnabled } = readCrmConfig(settings);
     const pendingRes = await pool.query(
       `SELECT COUNT(DISTINCT wc.id)::int AS pending
        FROM whatsapp_contacts wc
@@ -2208,6 +2211,7 @@ app.get("/crm-settings", requireAuth, async (c) => {
         concierge,
         funnel,
         reminders,
+        automationsEnabled,
         intents: CONCIERGE_INTENTS,
         instagramProfileSync,
         instagramProfilePendingCount: pendingCount,
@@ -2226,10 +2230,15 @@ app.patch("/crm-settings", requireAuth, async (c) => {
     concierge?: Partial<typeof DEFAULT_CONCIERGE_CONFIG>;
     funnel?: Array<{ key: string; label: string; color: string }>;
     reminders?: Partial<typeof DEFAULT_REMINDER_CONFIG>;
+    automationsEnabled?: boolean;
   };
   try {
     const settings = await loadOrgSettings(pool, user.organizationId);
     const current = readCrmConfig(settings);
+    const automationsEnabled =
+      typeof body.automationsEnabled === "boolean"
+        ? body.automationsEnabled
+        : current.automationsEnabled;
     const nextCrm = {
       ...(settings.crm_whatsapp as object),
       concierge: body.concierge ? { ...current.concierge, ...body.concierge } : current.concierge,
@@ -2237,6 +2246,7 @@ app.patch("/crm-settings", requireAuth, async (c) => {
       reminders: body.reminders
         ? resolveReminderConfig({ ...current.reminders, ...body.reminders })
         : current.reminders,
+      automations_enabled: automationsEnabled,
     };
     const nextSettings = { ...settings, crm_whatsapp: nextCrm };
     await pool.query(
@@ -2244,7 +2254,12 @@ app.patch("/crm-settings", requireAuth, async (c) => {
       [JSON.stringify(nextSettings), user.organizationId],
     );
     return c.json({
-      data: { concierge: nextCrm.concierge, funnel: nextCrm.funnel, reminders: nextCrm.reminders },
+      data: {
+        concierge: nextCrm.concierge,
+        funnel: nextCrm.funnel,
+        reminders: nextCrm.reminders,
+        automationsEnabled,
+      },
     });
   } catch (err) {
     console.error("[WhatsApp Inbox] PATCH /crm-settings error:", err);

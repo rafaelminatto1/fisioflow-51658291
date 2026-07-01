@@ -13,6 +13,7 @@ import {
   Send,
   Trash2,
   XCircle,
+  Zap,
 } from "lucide-react";
 import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
 import { Button } from "@/components/ui/button";
@@ -108,6 +109,7 @@ export default function CrmWhatsAppSettings() {
   const [concierge, setConcierge] = useState<ConciergeConfig | null>(null);
   const [funnel, setFunnel] = useState<FunnelStage[]>([]);
   const [reminders, setReminders] = useState<ReminderConfig | null>(null);
+  const [automationsEnabled, setAutomationsEnabled] = useState(false);
 
   const [testNumber, setTestNumber] = useState("");
   const [testing, setTesting] = useState(false);
@@ -129,6 +131,7 @@ export default function CrmWhatsAppSettings() {
         setConcierge(cfg.concierge);
         setFunnel(cfg.funnel);
         setReminders(cfg.reminders);
+        setAutomationsEnabled(cfg.automationsEnabled);
         setQuickReplies((qrs as unknown as QuickReplyRow[]) ?? []);
         setTags((tgs as Tag[]) ?? []);
       })
@@ -144,21 +147,34 @@ export default function CrmWhatsAppSettings() {
     return (
       JSON.stringify(concierge) !== JSON.stringify(settings.concierge) ||
       JSON.stringify(funnel) !== JSON.stringify(settings.funnel) ||
-      JSON.stringify(reminders) !== JSON.stringify(settings.reminders)
+      JSON.stringify(reminders) !== JSON.stringify(settings.reminders) ||
+      automationsEnabled !== settings.automationsEnabled
     );
-  }, [settings, concierge, funnel, reminders]);
+  }, [settings, concierge, funnel, reminders, automationsEnabled]);
 
   const handleSave = async () => {
     if (!concierge || !dirty) return;
     setSaving(true);
     try {
-      const saved = await updateCrmSettings({ concierge, funnel, reminders: reminders ?? undefined });
+      const saved = await updateCrmSettings({
+        concierge,
+        funnel,
+        reminders: reminders ?? undefined,
+        automationsEnabled,
+      });
       setSettings((prev) =>
         prev
-          ? { ...prev, concierge: saved.concierge, funnel: saved.funnel, reminders: saved.reminders }
+          ? {
+              ...prev,
+              concierge: saved.concierge,
+              funnel: saved.funnel,
+              reminders: saved.reminders,
+              automationsEnabled: saved.automationsEnabled,
+            }
           : prev,
       );
       setReminders(saved.reminders);
+      setAutomationsEnabled(saved.automationsEnabled);
       toast({ title: "Configurações salvas" });
     } catch {
       toast({ title: "Erro ao salvar", variant: "destructive" });
@@ -292,6 +308,9 @@ export default function CrmWhatsAppSettings() {
               </TabsTrigger>
               <TabsTrigger value="lembretes" className="gap-1.5">
                 <BellRing className="h-4 w-4" /> Lembretes
+              </TabsTrigger>
+              <TabsTrigger value="automacoes" className="gap-1.5">
+                <Zap className="h-4 w-4" /> Automações
               </TabsTrigger>
             </TabsList>
 
@@ -866,6 +885,64 @@ export default function CrmWhatsAppSettings() {
                   </div>
                 </div>
               )}
+            </TabsContent>
+
+            {/* ── Automações ── */}
+            <TabsContent value="automacoes">
+              <div className="max-w-2xl space-y-6">
+                <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <Label className="text-sm font-bold">Automações de WhatsApp</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Liga/desliga todos os disparos automáticos abaixo. Só funciona com os
+                        templates aprovados na Meta.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={automationsEnabled}
+                      onCheckedChange={setAutomationsEnabled}
+                    />
+                  </div>
+
+                  {automationsEnabled && (
+                    <div className="rounded-lg border border-[hsl(28_70%_60%)] bg-[hsl(28_100%_97%)] px-3 py-2 text-xs font-medium text-[hsl(28_80%_32%)]">
+                      Ligado: mensagens reais serão enviadas aos pacientes conforme os gatilhos
+                      abaixo. Clique em <strong>Salvar</strong> para aplicar.
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-xl border border-border bg-card p-5">
+                  <h3 className="mb-3 text-sm font-bold">O que é enviado</h3>
+                  <ul className="space-y-3 text-sm">
+                    <li className="flex flex-col">
+                      <span className="font-semibold">Boas-vindas</span>
+                      <span className="text-xs text-muted-foreground">
+                        Ao cadastrar um novo paciente com telefone.
+                      </span>
+                    </li>
+                    <li className="flex flex-col">
+                      <span className="font-semibold">Feedback do atendimento</span>
+                      <span className="text-xs text-muted-foreground">
+                        2 horas após a consulta ser concluída.
+                      </span>
+                    </li>
+                    <li className="flex flex-col">
+                      <span className="font-semibold">Avaliação no Google</span>
+                      <span className="text-xs text-muted-foreground">
+                        Na 5ª sessão concluída do paciente.
+                      </span>
+                    </li>
+                    <li className="flex flex-col">
+                      <span className="font-semibold">Lembrete de exercícios</span>
+                      <span className="text-xs text-muted-foreground">
+                        2 dias após a sessão (enviado às 9h).
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </TabsContent>
           </Tabs>
         )}

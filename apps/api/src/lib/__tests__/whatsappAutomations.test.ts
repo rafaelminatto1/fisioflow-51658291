@@ -56,4 +56,22 @@ describe("whatsappAutomations — gate + envio", () => {
       ["Maria"],
     );
   });
+
+  it("registra evento de analytics no envio (observabilidade dos disparos)", async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [{ enabled: true }] });
+    const writeDataPoint = vi.fn();
+    const out = await sendAutomationTemplate(
+      { ANALYTICS: { writeDataPoint } } as any,
+      "org-1",
+      "5511999999999",
+      "feedback_atendimento",
+      ["Maria"],
+    );
+    expect(out.sent).toBe(true);
+    expect(out.accepted).toBe(true);
+    expect(writeDataPoint).toHaveBeenCalledTimes(1);
+    const arg = writeDataPoint.mock.calls[0][0];
+    expect(arg.blobs).toContain("feedback_atendimento");
+    expect(arg.blobs).toContain("whatsapp_automation_sent");
+  });
 });

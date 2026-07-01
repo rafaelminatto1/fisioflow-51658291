@@ -880,6 +880,8 @@ export interface CrmSettings {
   concierge: ConciergeConfig;
   funnel: FunnelStage[];
   reminders: ReminderConfig;
+  /** Gate mestre das automações de WhatsApp (welcome/feedback/review/lembrete). */
+  automationsEnabled: boolean;
   intents: ConciergeIntent[];
   instagramProfileSync?: {
     lastSyncedAt: string | null;
@@ -907,9 +909,15 @@ export async function updateCrmSettings(patch: {
   concierge?: Partial<ConciergeConfig>;
   funnel?: FunnelStage[];
   reminders?: Partial<ReminderConfig>;
+  automationsEnabled?: boolean;
 }) {
   const res = await request<{
-    data: { concierge: ConciergeConfig; funnel: FunnelStage[]; reminders: ReminderConfig };
+    data: {
+      concierge: ConciergeConfig;
+      funnel: FunnelStage[];
+      reminders: ReminderConfig;
+      automationsEnabled: boolean;
+    };
   }>(`${BASE}/crm-settings`, { method: "PATCH", body: JSON.stringify(patch) });
   return unwrapData(res);
 }

@@ -8,6 +8,7 @@
 import type { Env } from "../types/env";
 import type { DbPool } from "./db";
 import { createPool } from "./db";
+import { writeEvent } from "./analytics";
 import { WhatsAppService } from "./whatsapp";
 import { AUTOMATION_TEMPLATES, type AutomationTemplateKey } from "./whatsappAutomationTemplates";
 
@@ -20,7 +21,7 @@ export async function areAutomationsEnabled(pool: DbPool, orgId: string): Promis
   return res.rows[0]?.enabled === true;
 }
 
-export type AutomationSendResult = { sent: boolean; skipped?: string };
+export type AutomationSendResult = { sent: boolean; skipped?: string; accepted?: boolean };
 
 export async function sendAutomationTemplate(
   env: Env,
@@ -37,6 +38,16 @@ export async function sendAutomationTemplate(
 
   const template = AUTOMATION_TEMPLATES[key];
   const wa = new WhatsAppService(env);
-  await wa.sendSmartTemplate(phone, template.name, vars);
-  return { sent: true };
+  const result = await wa.sendSmartTemplate(phone, template.name, vars);
+  // A Meta responde { messages: [...] } quando aceita; erro traz { error }.
+  const accepted = !!(result && typeof result === "object" && "messages" in result);
+  writeEvent(env, {
+    event: "whatsapp_automation_sent",
+    orgId,
+    route: "/queue/wa-automation",
+    method: "QUEUE",
+    status: accepted ? 200 : 502,
+    detail: key,
+  });
+  return { sent: true, accepted };
 }
