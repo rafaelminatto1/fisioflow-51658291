@@ -51,6 +51,14 @@ const BASE_CTE = `
          SELECT 1 FROM leads l
          WHERE l.organization_id = $1 AND l.estagio = ANY($2)
            AND regexp_replace(COALESCE(l.telefone, ''), '[^0-9]', '', 'g') = b.d))
+       -- Política LGPD: respeitar opt-out. Exclui telefones de pacientes que
+       -- revogaram/desativaram o consentimento de marketing.
+       AND NOT EXISTS (
+         SELECT 1 FROM patients p2
+         JOIN marketing_consents mc ON mc.patient_id = p2.id
+         WHERE p2.organization_id = $1
+           AND regexp_replace(COALESCE(p2.phone, ''), '[^0-9]', '', 'g') = b.d
+           AND (mc.is_active = false OR mc.revoked_at IS NOT NULL))
      ORDER BY b.d
   )`;
 

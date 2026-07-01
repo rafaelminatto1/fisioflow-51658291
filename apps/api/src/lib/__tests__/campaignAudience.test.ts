@@ -31,6 +31,13 @@ describe("fetchCampaignAudience", () => {
     expect(String(query.mock.calls[0]![0])).toMatch(/wa_conversations/);
   });
 
+  it("sempre aplica o opt-out de marketing (LGPD)", async () => {
+    const query = vi.fn(async (_sql: string, _params?: any[]) => ({ rows: [{ c: 1 }] }));
+    const pool = { query } as any;
+    await fetchCampaignAudience(pool, "o1", [], { countOnly: true });
+    expect(String(query.mock.calls[0]![0])).toMatch(/marketing_consents/);
+  });
+
   it("retorna os destinatários com telefone", async () => {
     const rows = [
       { contact_id: "c1", phone: "5511999990001", name: "Maria" },
