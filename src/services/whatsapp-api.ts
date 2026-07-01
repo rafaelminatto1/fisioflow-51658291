@@ -973,6 +973,14 @@ export async function summarizeConversation(conversationId: string) {
   return unwrapData(res) as { text: string };
 }
 
+export async function suggestNextAction(conversationId: string) {
+  const res = await request<{ data: { text: string } } | { text: string }>(
+    `${BASE}/conversations/${conversationId}/ai/next-action`,
+    { method: "POST", body: "{}" },
+  );
+  return unwrapData(res) as { text: string };
+}
+
 export async function suggestReply(conversationId: string) {
   const res = await request<{ data: { text: string } } | { text: string }>(
     `${BASE}/conversations/${conversationId}/ai/suggest-reply`,

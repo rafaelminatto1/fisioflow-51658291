@@ -52,6 +52,13 @@ diga quem é o contato, o que ele quer, o estágio da negociação e qual é a p
 atual. Não invente informações que não estejam na conversa.
 `.trim();
 
+export const NEXT_ACTION_SYSTEM_PROMPT = `
+Você ajuda um atendente de uma clínica de fisioterapia a avançar leads no WhatsApp.
+Com base no histórico, sugira a PRÓXIMA AÇÃO objetiva e acionável que o atendente
+deve tomar (ex.: "Confirmar horário da avaliação", "Enviar tabela de valores do
+convênio"). Responda em português com UMA frase curta, sem aspas e sem comentários.
+`.trim();
+
 export const SUGGEST_SYSTEM_PROMPT = `
 Você é um atendente de uma clínica de fisioterapia respondendo no WhatsApp em
 português (PT-BR). Com base no histórico, escreva UMA sugestão de resposta curta,

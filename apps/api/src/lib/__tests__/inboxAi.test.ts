@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { extractText, buildAiHistory, SUMMARY_SYSTEM_PROMPT, SUGGEST_SYSTEM_PROMPT } from "../inboxAi";
+import {
+  extractText,
+  buildAiHistory,
+  SUMMARY_SYSTEM_PROMPT,
+  SUGGEST_SYSTEM_PROMPT,
+  NEXT_ACTION_SYSTEM_PROMPT,
+} from "../inboxAi";
 
 describe("inboxAi", () => {
   it("extractText lida com string, JSON e objetos {text,body}", () => {
@@ -39,5 +45,6 @@ describe("inboxAi", () => {
   it("prompts estão em PT-BR", () => {
     expect(SUMMARY_SYSTEM_PROMPT.toLowerCase()).toContain("resum");
     expect(SUGGEST_SYSTEM_PROMPT.toLowerCase()).toContain("respost");
+    expect(NEXT_ACTION_SYSTEM_PROMPT.toLowerCase()).toContain("ação");
   });
 });

@@ -36,6 +36,7 @@ import {
   buildAiHistory,
   SUMMARY_SYSTEM_PROMPT,
   SUGGEST_SYSTEM_PROMPT,
+  NEXT_ACTION_SYSTEM_PROMPT,
 } from "../lib/inboxAi";
 import { writeEvent } from "../lib/analytics";
 import { WhatsAppService } from "../lib/whatsapp";
@@ -760,6 +761,51 @@ app.post("/conversations/:id/ai/summary", requireAuth, (c) =>
 app.post("/conversations/:id/ai/suggest-reply", requireAuth, (c) =>
   runInboxAi(c, SUGGEST_SYSTEM_PROMPT, "inbox_ai_suggest"),
 );
+
+// Next-best-action: gera a sugestão E persiste em metadata.nextAction (o adapter
+// já consome esse campo no card do lead).
+app.post("/conversations/:id/ai/next-action", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { id } = c.req.param();
+  const pool = await createPool(c.env);
+  try {
+    const convo = await getConversationWithMessages(pool, id, user.organizationId, 40);
+    if (!convo) return c.json({ error: "Conversation not found" }, 404);
+    const history = buildAiHistory(convo.messages || [], 20);
+    if (history.length === 0) return c.json({ error: "Sem mensagens para analisar" }, 400);
+
+    const response = await runAi(
+      c.env,
+      WORKERS_AI_MODELS.llama_3_1_8b,
+      {
+        messages: [{ role: "system", content: NEXT_ACTION_SYSTEM_PROMPT }, ...history],
+        temperature: 0.3,
+      },
+      { cache: false },
+    );
+    const text = readAiText(response).trim().slice(0, 200);
+    writeEvent(c.env, {
+      event: "inbox_ai_next_action",
+      orgId: user.organizationId,
+      route: "/api/whatsapp/inbox/ai",
+      method: "POST",
+      status: text ? 200 : 502,
+    });
+    if (!text) return c.json({ error: "IA não retornou texto" }, 502);
+
+    await pool.query(
+      `UPDATE wa_conversations
+          SET metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{nextAction}', to_jsonb($2::text), true),
+              updated_at = now()
+        WHERE id = $1 AND organization_id = $3`,
+      [id, text, user.organizationId],
+    );
+    return c.json({ data: { text } });
+  } catch (err) {
+    console.error("[WhatsApp Inbox] next-action error:", err);
+    return c.json({ error: "Falha ao consultar a IA" }, 500);
+  }
+});
 
 app.patch("/conversations/:id", requireAuth, async (c) => {
   const user = c.get("user");

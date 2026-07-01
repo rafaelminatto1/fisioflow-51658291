@@ -75,7 +75,7 @@ import {
   type CrmStageMeta,
 } from "@/features/whatsapp/crmWhatsAppAdapter";
 import { resolveMessageDisplayText } from "@/features/whatsapp/messageDisplay";
-import { summarizeConversation, suggestReply } from "@/services/whatsapp-api";
+import { summarizeConversation, suggestReply, suggestNextAction } from "@/services/whatsapp-api";
 import { cn } from "@/lib/utils";
 import {
   isWhatsAppWindowOpen,
@@ -509,7 +509,8 @@ export default function CrmWhatsApp() {
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
   const [sending, setSending] = useState(false);
-  const [aiBusy, setAiBusy] = useState<null | "summary" | "suggest">(null);
+  const [aiBusy, setAiBusy] = useState<null | "summary" | "suggest" | "nextaction">(null);
+  const [aiNextAction, setAiNextAction] = useState<string | null>(null);
   const [savingStage, setSavingStage] = useState(false);
   const [replyMessage, setReplyMessage] = useState<Message | null>(null);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
@@ -804,6 +805,11 @@ export default function CrmWhatsApp() {
     setComposer(quickReply.content);
   };
 
+  useEffect(() => {
+    // Nova conversa selecionada → limpa a sugestão de próxima ação da anterior.
+    setAiNextAction(null);
+  }, [selectedId]);
+
   const handleSummarize = async () => {
     if (!selectedId || aiBusy) return;
     setAiBusy("summary");
@@ -812,6 +818,24 @@ export default function CrmWhatsApp() {
       toast(text || "Sem resumo disponível.", { duration: 14000 });
     } catch {
       toast.error("Falha ao resumir a conversa");
+    } finally {
+      setAiBusy(null);
+    }
+  };
+
+  const handleSuggestNextAction = async () => {
+    if (!selectedId || aiBusy) return;
+    setAiBusy("nextaction");
+    try {
+      const { text } = await suggestNextAction(selectedId);
+      if (text) {
+        setAiNextAction(text);
+        toast.success("Próxima ação sugerida pela IA");
+      } else {
+        toast.error("A IA não retornou uma sugestão");
+      }
+    } catch {
+      toast.error("Falha ao sugerir a próxima ação");
     } finally {
       setAiBusy(null);
     }
@@ -1605,16 +1629,27 @@ export default function CrmWhatsApp() {
                     </section>
 
                     <section className="border-b border-border px-4 py-4">
-                      <h4 className="mb-3 text-[10px] font-extrabold uppercase tracking-[0.08em] text-muted-foreground">
-                        Próxima ação
-                      </h4>
+                      <div className="mb-3 flex items-center justify-between">
+                        <h4 className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-muted-foreground">
+                          Próxima ação
+                        </h4>
+                        <button
+                          type="button"
+                          onClick={() => void handleSuggestNextAction()}
+                          disabled={aiBusy !== null}
+                          className="inline-flex items-center gap-1 rounded-full border border-[hsl(211_90%_85%)] bg-[hsl(211_100%_97%)] px-2 py-0.5 text-[10px] font-bold text-[hsl(211_80%_40%)] hover:bg-[hsl(211_100%_94%)] disabled:opacity-60"
+                        >
+                          <Sparkles className="h-3 w-3" />
+                          {aiBusy === "nextaction" ? "Gerando…" : "Sugerir (IA)"}
+                        </button>
+                      </div>
                       <div className="rounded-[10px] border border-[hsl(28_80%_85%)] bg-[hsl(28_92%_95%)] px-3 py-3">
                         <div className="flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-[0.05em] text-[hsl(25_70%_38%)]">
                           <Clock3 className="h-3 w-3" />
-                          {selectedConversationVm.nextActionTitle}
+                          {aiNextAction ? "Próxima ação (IA)" : selectedConversationVm.nextActionTitle}
                         </div>
                         <div className="mt-1 text-xs font-bold text-[hsl(25_60%_25%)]">
-                          {selectedConversationVm.nextActionBody}
+                          {aiNextAction ?? selectedConversationVm.nextActionBody}
                         </div>
                       </div>
                     </section>
