@@ -279,6 +279,29 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
           );
         }
         if (result.error) console.error("[Cron] sloHealth error:", result.error);
+
+        // Campanhas de WhatsApp agendadas cuja hora chegou.
+        try {
+          const pool = createPool(env);
+          const due = await pool.query(
+            `SELECT id FROM crm_campanhas
+              WHERE status = 'agendada' AND agendada_em IS NOT NULL AND agendada_em <= now()
+              LIMIT 20`,
+          );
+          if (due.rows.length) {
+            const { processCampaignSend } = await import("./lib/campaignSender");
+            for (const row of due.rows) {
+              await pool.query(
+                `UPDATE crm_campanhas SET status = 'enviando', updated_at = now() WHERE id = $1`,
+                [row.id],
+              );
+              const out = await processCampaignSend(pool, env, String(row.id));
+              console.log(`[Cron] campanha ${row.id}: sent=${out.sent} failed=${out.failed}`);
+            }
+          }
+        } catch (err) {
+          console.error("[Cron] scheduled campaigns failed:", err);
+        }
         break;
       }
 

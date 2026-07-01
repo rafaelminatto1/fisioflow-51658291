@@ -405,6 +405,21 @@ async function handleStatus(pool: any, env: Env, orgId: string, statusObj: any):
       metaMessageId,
     ]);
 
+    // Espelha o status nos envios de campanha (rastreio de entrega/leitura).
+    if (mapped === "delivered" || mapped === "read" || mapped === "failed") {
+      const campanhaStatus =
+        mapped === "delivered" ? "entregue" : mapped === "read" ? "lido" : "falha";
+      await pool.query(
+        `UPDATE crm_campanha_envios
+            SET status = $1,
+                delivered_at = CASE WHEN $1 IN ('entregue', 'lido') AND delivered_at IS NULL
+                                    THEN now() ELSE delivered_at END,
+                read_at = CASE WHEN $1 = 'lido' THEN now() ELSE read_at END
+          WHERE meta_message_id = $2`,
+        [campanhaStatus, metaMessageId],
+      );
+    }
+
     writeEvent(env, {
       orgId,
       event: `whatsapp_${mapped}`,

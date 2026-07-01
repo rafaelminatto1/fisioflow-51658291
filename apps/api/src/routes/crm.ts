@@ -11,6 +11,8 @@ import { createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { upsertContact, logContactActivity } from "../lib/contacts";
 import { summarizeEnvios } from "../lib/campaignMetrics";
+import { processCampaignSend } from "../lib/campaignSender";
+import { AUTOMATION_TEMPLATES, type AutomationTemplateKey } from "../lib/whatsappAutomationTemplates";
 import { processCrmTrigger } from "../services/crm-automation-engine";
 import type { Env } from "../types/env";
 
@@ -528,11 +530,30 @@ app.post("/campanhas", requireAuth, async (c) => {
     ? body.patient_ids.map((id) => String(id))
     : [];
 
+  // Disparo real de WhatsApp exige um template APROVADO (template_key). Sem ele, a
+  // campanha continua log-only (comportamento antigo).
+  const templateKey = typeof body.template_key === "string" ? body.template_key : null;
+  if (body.tipo === "whatsapp" && templateKey && !AUTOMATION_TEMPLATES[templateKey as AutomationTemplateKey]) {
+    return c.json({ error: "template_key inválido (use um template aprovado)" }, 400);
+  }
+  const isRealWhatsApp = body.tipo === "whatsapp" && !!templateKey;
+  const scheduledAt =
+    typeof body.agendada_em === "string" && new Date(body.agendada_em).getTime() > Date.now()
+      ? body.agendada_em
+      : null;
+
+  const status = isRealWhatsApp
+    ? scheduledAt
+      ? "agendada"
+      : "enviando"
+    : (body.status ?? "concluida");
+  const envioStatus = isRealWhatsApp ? "pendente" : "enviado";
+
   const result = await pool.query(
     `INSERT INTO crm_campanhas
        (organization_id, created_by, nome, tipo, conteudo, status, total_destinatarios,
-        total_enviados, agendada_em, concluida_em, created_at, updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW(),NOW())
+        total_enviados, agendada_em, concluida_em, template_key, created_at, updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW(),NOW())
      RETURNING *`,
     [
       user.organizationId,
@@ -540,11 +561,12 @@ app.post("/campanhas", requireAuth, async (c) => {
       String(body.nome),
       String(body.tipo),
       body.conteudo ?? null,
-      body.status ?? "concluida",
+      status,
       patientIds.length,
-      patientIds.length,
-      body.agendada_em ?? null,
-      body.concluida_em ?? new Date().toISOString(),
+      isRealWhatsApp ? 0 : patientIds.length,
+      scheduledAt,
+      isRealWhatsApp ? null : (body.concluida_em ?? new Date().toISOString()),
+      templateKey,
     ],
   );
 
@@ -558,9 +580,18 @@ app.post("/campanhas", requireAuth, async (c) => {
         campaign.id,
         patientId,
         body.tipo ?? null,
-        "enviado",
-        body.concluida_em ?? new Date().toISOString(),
+        envioStatus,
+        isRealWhatsApp ? null : (body.concluida_em ?? new Date().toISOString()),
       ],
+    );
+  }
+
+  // Envio imediato (não agendado) roda em segundo plano.
+  if (isRealWhatsApp && !scheduledAt) {
+    c.executionCtx.waitUntil(
+      processCampaignSend(pool, c.env, campaign.id).catch((e) =>
+        console.error("[CRM] processCampaignSend falhou:", e),
+      ),
     );
   }
 
