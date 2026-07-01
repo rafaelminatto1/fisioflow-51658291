@@ -28,6 +28,14 @@ import {
 import { sendReplyButtons, sendListMessage, sendFlowMessage } from "../lib/whatsapp-interactive";
 import { resolveOrCreateContact, linkContactToPatient } from "../lib/whatsapp-identity";
 import { isUuid } from "../lib/validators";
+import { runAi, readAiText } from "../lib/ai-native";
+import { WORKERS_AI_MODELS } from "../lib/workersAi";
+import {
+  buildAiHistory,
+  SUMMARY_SYSTEM_PROMPT,
+  SUGGEST_SYSTEM_PROMPT,
+} from "../lib/inboxAi";
+import { writeEvent } from "../lib/analytics";
 import { WhatsAppService } from "../lib/whatsapp";
 import { AUTOMATION_TEMPLATES, automationTemplatePayload } from "../lib/whatsappAutomationTemplates";
 import { DEFAULT_REMINDER_CONFIG, resolveReminderConfig } from "../lib/reminderScheduling";
@@ -690,6 +698,54 @@ app.get("/conversations/:id", requireAuth, async (c) => {
     return c.json({ error: "Failed to fetch conversation" }, 500);
   }
 });
+
+/** IA do inbox: helper comum que carrega o histórico e chama o gateway. */
+async function runInboxAi(
+  c: any,
+  systemPrompt: string,
+  event: string,
+): Promise<Response> {
+  const user = c.get("user");
+  const { id } = c.req.param();
+  const pool = await createPool(c.env);
+  try {
+    const convo = await getConversationWithMessages(pool, id, user.organizationId, 40);
+    if (!convo) return c.json({ error: "Conversation not found" }, 404);
+    const history = buildAiHistory(convo.messages || [], 20);
+    if (history.length === 0) return c.json({ error: "Sem mensagens para analisar" }, 400);
+
+    const response = await runAi(
+      c.env,
+      WORKERS_AI_MODELS.llama_3_1_8b,
+      {
+        messages: [{ role: "system", content: systemPrompt }, ...history],
+        temperature: 0.3,
+      },
+      { cache: false },
+    );
+    const text = readAiText(response).trim();
+    writeEvent(c.env, {
+      event,
+      orgId: user.organizationId,
+      route: "/api/whatsapp/inbox/ai",
+      method: "POST",
+      status: text ? 200 : 502,
+    });
+    if (!text) return c.json({ error: "IA não retornou texto" }, 502);
+    return c.json({ data: { text } });
+  } catch (err) {
+    console.error(`[WhatsApp Inbox] ${event} error:`, err);
+    return c.json({ error: "Falha ao consultar a IA" }, 500);
+  }
+}
+
+app.post("/conversations/:id/ai/summary", requireAuth, (c) =>
+  runInboxAi(c, SUMMARY_SYSTEM_PROMPT, "inbox_ai_summary"),
+);
+
+app.post("/conversations/:id/ai/suggest-reply", requireAuth, (c) =>
+  runInboxAi(c, SUGGEST_SYSTEM_PROMPT, "inbox_ai_suggest"),
+);
 
 app.patch("/conversations/:id", requireAuth, async (c) => {
   const user = c.get("user");

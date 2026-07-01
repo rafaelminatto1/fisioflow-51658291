@@ -14,6 +14,43 @@ type RawEventState =
   | "processed"
   | "processing_error";
 
+/**
+ * Texto a persistir p/ uma mensagem inbound do WhatsApp. Usa o corpo real quando
+ * existe (texto ou legenda de mídia); senão devolve um rótulo PT-BR amigável para
+ * os tipos sem texto (interactive/reaction/location/contacts/sticker/…). Evita
+ * gravar placeholders crus e conversas com "[mensagem sem texto]".
+ */
+export function inboundMessageText(msg: any): string | undefined {
+  if (msg?.text?.body) return msg.text.body;
+  const isMedia = ["image", "audio", "video", "document", "sticker"].includes(msg?.type);
+  const mediaNode = msg?.[msg?.type] as { caption?: string } | undefined;
+  if (isMedia && mediaNode?.caption) return mediaNode.caption;
+  switch (msg?.type) {
+    case "interactive":
+      return (
+        msg.interactive?.button_reply?.title ??
+        msg.interactive?.list_reply?.title ??
+        "🔘 Resposta interativa"
+      );
+    case "button":
+      return msg.button?.text ?? "🔘 Clicou em um botão";
+    case "reaction":
+      return msg.reaction?.emoji ? `${msg.reaction.emoji} (reação)` : "❤️ Reação";
+    case "location":
+      return "📍 Enviou uma localização";
+    case "contacts":
+      return "👤 Compartilhou um contato";
+    case "sticker":
+      return "🌟 Enviou uma figurinha";
+    case "order":
+      return "🛒 Enviou um pedido";
+    case "unsupported":
+      return "❔ Mensagem não suportada";
+    default:
+      return undefined;
+  }
+}
+
 function extractProviderEventId(body: Record<string, unknown>): string | null {
   return (
     (body as any).entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.id ??
@@ -152,7 +189,7 @@ async function extractAndEnqueueMessages(
             | { id?: string; caption?: string; mime_type?: string }
             | undefined;
           const isMedia = ["image", "audio", "video", "document", "sticker"].includes(msg.type);
-          const text = msg.text?.body ?? (isMedia ? mediaNode?.caption : undefined);
+          const text = inboundMessageText(msg);
 
           const message: WhatsAppInboundMessage = {
             type: "inbound_message",

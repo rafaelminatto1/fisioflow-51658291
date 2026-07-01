@@ -28,6 +28,7 @@ import {
   Send,
   Settings,
   Smile,
+  Sparkles,
   StickyNote,
   Trash2,
   UserPlus,
@@ -73,6 +74,8 @@ import {
   type CrmStage,
   type CrmStageMeta,
 } from "@/features/whatsapp/crmWhatsAppAdapter";
+import { resolveMessageDisplayText } from "@/features/whatsapp/messageDisplay";
+import { summarizeConversation, suggestReply } from "@/services/whatsapp-api";
 import { cn } from "@/lib/utils";
 import {
   isWhatsAppWindowOpen,
@@ -475,7 +478,7 @@ function MessageBubble({
           {text || "Abrir arquivo"}
         </a>
       ) : (
-        <div>{text || "[mensagem sem texto]"}</div>
+        <div>{resolveMessageDisplayText(message.type, text)}</div>
       )}
       <div
         className={cn(
@@ -506,6 +509,7 @@ export default function CrmWhatsApp() {
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [aiBusy, setAiBusy] = useState<null | "summary" | "suggest">(null);
   const [savingStage, setSavingStage] = useState(false);
   const [replyMessage, setReplyMessage] = useState<Message | null>(null);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
@@ -798,6 +802,37 @@ export default function CrmWhatsApp() {
 
   const handleQuickReply = (quickReply: CrmQuickReplyViewModel) => {
     setComposer(quickReply.content);
+  };
+
+  const handleSummarize = async () => {
+    if (!selectedId || aiBusy) return;
+    setAiBusy("summary");
+    try {
+      const { text } = await summarizeConversation(selectedId);
+      toast(text || "Sem resumo disponível.", { duration: 14000 });
+    } catch {
+      toast.error("Falha ao resumir a conversa");
+    } finally {
+      setAiBusy(null);
+    }
+  };
+
+  const handleSuggestReply = async () => {
+    if (!selectedId || aiBusy) return;
+    setAiBusy("suggest");
+    try {
+      const { text } = await suggestReply(selectedId);
+      if (text) {
+        setComposer(text);
+        toast.success("Sugestão preenchida — revise antes de enviar");
+      } else {
+        toast.error("A IA não retornou uma sugestão");
+      }
+    } catch {
+      toast.error("Falha ao sugerir resposta");
+    } finally {
+      setAiBusy(null);
+    }
   };
 
   const closeMessageMenu = () => {
@@ -1298,6 +1333,27 @@ export default function CrmWhatsApp() {
                           {item.label}
                         </button>
                       ))}
+                    </div>
+
+                    <div className="flex gap-2 border-t border-border bg-card px-4 py-2">
+                      <button
+                        type="button"
+                        onClick={() => void handleSummarize()}
+                        disabled={aiBusy !== null}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[hsl(211_90%_85%)] bg-[hsl(211_100%_97%)] px-3 py-1.5 text-[11px] font-bold text-[hsl(211_80%_40%)] transition-colors hover:bg-[hsl(211_100%_94%)] disabled:opacity-60"
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        {aiBusy === "summary" ? "Resumindo…" : "Resumir conversa"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleSuggestReply()}
+                        disabled={aiBusy !== null}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[hsl(211_90%_85%)] bg-[hsl(211_100%_97%)] px-3 py-1.5 text-[11px] font-bold text-[hsl(211_80%_40%)] transition-colors hover:bg-[hsl(211_100%_94%)] disabled:opacity-60"
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        {aiBusy === "suggest" ? "Gerando…" : "Sugerir resposta"}
+                      </button>
                     </div>
 
                     <div className="flex items-center gap-3 border-t border-border bg-card px-4 py-3">

@@ -949,6 +949,22 @@ export async function fetchAutomationLog() {
   return unwrapData(res) as AutomationLogEntry[];
 }
 
+export async function summarizeConversation(conversationId: string) {
+  const res = await request<{ data: { text: string } } | { text: string }>(
+    `${BASE}/conversations/${conversationId}/ai/summary`,
+    { method: "POST", body: "{}" },
+  );
+  return unwrapData(res) as { text: string };
+}
+
+export async function suggestReply(conversationId: string) {
+  const res = await request<{ data: { text: string } } | { text: string }>(
+    `${BASE}/conversations/${conversationId}/ai/suggest-reply`,
+    { method: "POST", body: "{}" },
+  );
+  return unwrapData(res) as { text: string };
+}
+
 export async function sendTestMessage(
   to: string,
   opts?: { templateName?: string; language?: string },
