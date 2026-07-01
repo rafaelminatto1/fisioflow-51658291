@@ -59,8 +59,10 @@ export async function processCampaignSend(
   if (!template) return { sent: 0, failed: 0, skipped: "unknown_template" };
 
   const enviosRes = await pool.query(
-    `SELECT e.id, e.patient_id, COALESCE(e.phone, p.phone) AS phone, p.full_name
+    `SELECT e.id, COALESCE(e.phone, ct.telefone, p.phone) AS phone,
+            COALESCE(ct.nome, p.full_name) AS full_name
        FROM crm_campanha_envios e
+       LEFT JOIN contacts ct ON ct.id = e.contact_id
        LEFT JOIN patients p ON p.id = e.patient_id
       WHERE e.campanha_id = $1 AND e.status IN ('pendente', 'agendado')
       LIMIT 500`,

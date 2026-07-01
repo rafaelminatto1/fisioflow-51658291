@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { crmApi } from "@/api/v2";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -191,6 +192,28 @@ export function CRMCampanhas() {
       return formData.filtro_estagios.includes(lead.estagio);
     }).length;
   };
+
+  // Prévia real da audiência (contatos com telefone) quando é envio de WhatsApp.
+  const [audienceCount, setAudienceCount] = useState<number | null>(null);
+  useEffect(() => {
+    if (!isDialogOpen || formData.tipo !== "whatsapp" || !formData.template_key) {
+      setAudienceCount(null);
+      return;
+    }
+    let active = true;
+    crmApi.campanhas
+      .audienceCount(formData.filtro_estagios)
+      .then((r) => {
+        if (active) setAudienceCount(r?.data?.count ?? 0);
+      })
+      .catch(() => {
+        if (active) setAudienceCount(null);
+      });
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDialogOpen, formData.tipo, formData.template_key, formData.filtro_estagios]);
 
   return (
     <div className="space-y-6">
@@ -560,9 +583,13 @@ export function CRMCampanhas() {
                   <Users className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <span className="text-lg font-bold text-slate-800">{countDestinatarios()}</span>
+                  <span className="text-lg font-bold text-slate-800">
+                    {audienceCount !== null ? audienceCount : countDestinatarios()}
+                  </span>
                   <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">
-                    Destinatários Estimados
+                    {audienceCount !== null
+                      ? "Contatos com telefone (vão receber)"
+                      : "Destinatários Estimados"}
                   </p>
                 </div>
               </div>

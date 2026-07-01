@@ -307,5 +307,10 @@ export const crmApi = {
       crm(`/campanhas/${id}/summary`) as Promise<{
         data: { total: number; enviados: number; entregues: number; lidos: number; falhas: number };
       }>,
+    audienceCount: (filtro_estagios: string[]) =>
+      crm("/campanhas/audience-count", {
+        method: "POST",
+        body: JSON.stringify({ filtro_estagios }),
+      }) as Promise<{ data: { count: number } }>,
   },
 };

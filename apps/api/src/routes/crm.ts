@@ -12,6 +12,7 @@ import { requireAuth, type AuthVariables } from "../lib/auth";
 import { upsertContact, logContactActivity } from "../lib/contacts";
 import { summarizeEnvios } from "../lib/campaignMetrics";
 import { processCampaignSend } from "../lib/campaignSender";
+import { fetchCampaignAudience } from "../lib/campaignAudience";
 import { AUTOMATION_TEMPLATES, type AutomationTemplateKey } from "../lib/whatsappAutomationTemplates";
 import { processCrmTrigger } from "../services/crm-automation-engine";
 import type { Env } from "../types/env";
@@ -496,6 +497,22 @@ app.get("/campanhas", requireAuth, async (c) => {
   }
 });
 
+// Prévia da audiência: quantos contatos (com telefone) receberão, por estágio.
+app.post("/campanhas/audience-count", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  const body = (await c.req.json().catch(() => ({}))) as { filtro_estagios?: unknown };
+  try {
+    const { count } = await fetchCampaignAudience(pool, user.organizationId, body.filtro_estagios, {
+      countOnly: true,
+    });
+    return c.json({ data: { count } });
+  } catch (err) {
+    console.error("[CRM] POST /campanhas/audience-count error:", err);
+    return c.json({ error: "Failed to count audience" }, 500);
+  }
+});
+
 app.get("/campanhas/:id/summary", requireAuth, async (c) => {
   const user = c.get("user");
   const pool = await createPool(c.env);
@@ -542,6 +559,14 @@ app.post("/campanhas", requireAuth, async (c) => {
       ? body.agendada_em
       : null;
 
+  // Envio real é orientado a CONTATO: resolve a audiência (leads/contatos com
+  // telefone) pelo mesmo filtro de estágio, cobrindo leads que ainda não são
+  // pacientes. Campanhas log-only continuam por patient_ids.
+  const audience = isRealWhatsApp
+    ? (await fetchCampaignAudience(pool, user.organizationId, body.filtro_estagios, {})).rows
+    : [];
+  const totalDestinatarios = isRealWhatsApp ? audience.length : patientIds.length;
+
   const status = isRealWhatsApp
     ? scheduledAt
       ? "agendada"
@@ -562,7 +587,7 @@ app.post("/campanhas", requireAuth, async (c) => {
       String(body.tipo),
       body.conteudo ?? null,
       status,
-      patientIds.length,
+      totalDestinatarios,
       isRealWhatsApp ? 0 : patientIds.length,
       scheduledAt,
       isRealWhatsApp ? null : (body.concluida_em ?? new Date().toISOString()),
@@ -571,19 +596,31 @@ app.post("/campanhas", requireAuth, async (c) => {
   );
 
   const campaign = result.rows[0] as { id: string };
-  for (const patientId of patientIds) {
-    await pool.query(
-      `INSERT INTO crm_campanha_envios
-         (campanha_id, patient_id, canal, status, enviado_em, created_at)
-       VALUES ($1,$2,$3,$4,$5,NOW())`,
-      [
-        campaign.id,
-        patientId,
-        body.tipo ?? null,
-        envioStatus,
-        isRealWhatsApp ? null : (body.concluida_em ?? new Date().toISOString()),
-      ],
-    );
+
+  if (isRealWhatsApp) {
+    for (const r of audience) {
+      await pool.query(
+        `INSERT INTO crm_campanha_envios
+           (campanha_id, contact_id, phone, canal, status, created_at)
+         VALUES ($1,$2,$3,'whatsapp','pendente',NOW())`,
+        [campaign.id, r.contact_id, r.phone],
+      );
+    }
+  } else {
+    for (const patientId of patientIds) {
+      await pool.query(
+        `INSERT INTO crm_campanha_envios
+           (campanha_id, patient_id, canal, status, enviado_em, created_at)
+         VALUES ($1,$2,$3,$4,$5,NOW())`,
+        [
+          campaign.id,
+          patientId,
+          body.tipo ?? null,
+          envioStatus,
+          body.concluida_em ?? new Date().toISOString(),
+        ],
+      );
+    }
   }
 
   // Envio imediato (não agendado) roda em segundo plano.
