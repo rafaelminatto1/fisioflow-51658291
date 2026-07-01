@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
-import { OfflineSyncService, ACTION_TYPES, getOfflineSyncService } from "../offlineSync";
+import {
+  OfflineSyncService,
+  ACTION_TYPES,
+  getOfflineSyncService,
+  enqueueAction,
+} from "../offlineSync";
 import "fake-indexeddb/auto";
 import { getDB } from "@/hooks/useOfflineStorage";
 
@@ -83,6 +88,22 @@ describe("OfflineSyncService", () => {
     try {
       await db.clear("offline_actions");
     } catch {}
+  });
+
+  describe("flag `synced` como chave válida de IndexedDB (drenagem da fila)", () => {
+    it("enqueueAction grava `synced` como número 0, não boolean", async () => {
+      await enqueueAction("API_REQUEST", { url: "/x", method: "POST", body: "{}" });
+      const db = await getDB();
+      const all = await db.getAll("offline_actions");
+      expect(all.length).toBeGreaterThan(0);
+      const rec = all[all.length - 1];
+      // Booleanos NÃO são chaves válidas de IndexedDB: um índice sobre um valor
+      // boolean lança DataError em `getAll(false)` nos navegadores reais e a fila
+      // nunca drena. O valor precisa ser um número.
+      expect(typeof rec.synced).toBe("number");
+      expect(rec.synced).toBe(0);
+      expect(() => IDBKeyRange.only(rec.synced)).not.toThrow();
+    });
   });
 
   describe("executeAction Mapping", () => {
@@ -190,7 +211,7 @@ describe("OfflineSyncService", () => {
       expect(action).toMatchObject({
         action: actionType,
         payload,
-        synced: false,
+        synced: 0,
         retryCount: 0,
       });
     });

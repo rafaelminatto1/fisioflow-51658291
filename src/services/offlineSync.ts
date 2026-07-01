@@ -53,8 +53,10 @@ export interface QueuedAction {
   payload: unknown;
   /** Creation timestamp */
   timestamp: number;
-  /** Whether action has been synced */
-  synced: boolean;
+  /** Flag numérica de sincronização (0 = pendente, 1 = sincronizado).
+   *  NÃO usar boolean: chaves booleanas são inválidas no IndexedDB e o índice
+   *  `by-synced` quebra (`getAll(false)` lança DataError → a fila nunca drena). */
+  synced: number;
   /** Current retry count */
   retryCount: number;
   /** Quando 409 do servidor — aguarda resolução manual do usuário */
@@ -244,7 +246,7 @@ class OfflineSyncService {
       action: actionType,
       payload,
       timestamp: Date.now(),
-      synced: false,
+      synced: 0,
       retryCount: 0,
       url: options.url,
       method: options.method,
@@ -325,7 +327,7 @@ class OfflineSyncService {
       const db = await getDB();
       const tx = db.transaction("offline_actions", "readonly");
       const index = tx.store.index("by-synced");
-      const pendingActions = await index.getAll(false);
+      const pendingActions = await index.getAll(0);
 
       if (pendingActions.length === 0) {
         this.lastSyncStats = await this.getStats();

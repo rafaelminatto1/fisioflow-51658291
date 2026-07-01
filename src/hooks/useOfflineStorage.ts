@@ -48,10 +48,12 @@ interface FisioFlowDB extends DBSchema {
       action: string;
       payload: unknown;
       timestamp: number;
-      synced: boolean;
+      // Flag numérica (0 = pendente, 1 = sincronizado). NÃO usar boolean: chaves
+      // booleanas são inválidas no IndexedDB e o índice `by-synced` quebra.
+      synced: number;
       retryCount: number;
     };
-    indexes: { "by-synced": boolean; "by-timestamp": number };
+    indexes: { "by-synced": number; "by-timestamp": number };
   };
   /** Stores temporary session data with expiration */
   session_cache: {
@@ -343,7 +345,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
       // Count pending actions
       const tx = db.transaction("offline_actions", "readonly");
       const index = tx.store.index("by-synced");
-      const pending = await index.count(false);
+      const pending = await index.count(0);
       setPendingActions(pending);
     } catch (error) {
       logger.error("[OfflineStorage] Error loading cache stats", error, "useOfflineStorage");
@@ -360,7 +362,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
       action: string;
       payload: unknown;
       timestamp: number;
-      synced: boolean;
+      synced: number;
       retryCount: number;
     }>
   > => {
@@ -368,7 +370,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
       const db = await getDB();
       const tx = db.transaction("offline_actions", "readonly");
       const index = tx.store.index("by-synced");
-      const actions = await index.getAll(false);
+      const actions = await index.getAll(0);
 
       return actions.filter((a) => canRetryAction(a.retryCount, maxRetryAttempts));
     } catch (error) {
@@ -591,7 +593,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
           action,
           payload,
           timestamp: Date.now(),
-          synced: false,
+          synced: 0,
           retryCount: 0,
         });
 
