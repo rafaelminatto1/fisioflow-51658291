@@ -40,6 +40,7 @@ export interface Conversation {
   unreadCount: number;
   tags: Tag[];
   priority?: "low" | "medium" | "high" | "urgent";
+  leadScore?: number;
   slaDeadline?: string;
   slaBreached?: boolean;
   deletedAt?: string;

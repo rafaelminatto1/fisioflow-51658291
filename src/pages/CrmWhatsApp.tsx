@@ -1556,6 +1556,24 @@ export default function CrmWhatsApp() {
                         Detalhes do lead
                       </h4>
                       <div className="space-y-2 text-xs">
+                        {typeof selectedConversationVm.leadScore === "number" ? (
+                          <div className="flex items-center justify-between border-b border-border/50 py-1.5">
+                            <span className="font-semibold text-muted-foreground">Lead score</span>
+                            <span
+                              className={cn(
+                                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-extrabold",
+                                selectedConversationVm.leadScore >= 70
+                                  ? "bg-[hsl(142_60%_92%)] text-[hsl(142_55%_28%)]"
+                                  : selectedConversationVm.leadScore >= 40
+                                    ? "bg-[hsl(38_92%_92%)] text-[hsl(30_80%_35%)]"
+                                    : "bg-secondary text-muted-foreground",
+                              )}
+                            >
+                              <Flame className="h-[11px] w-[11px]" />
+                              {selectedConversationVm.leadScore}
+                            </span>
+                          </div>
+                        ) : null}
                         <div className="flex items-center justify-between border-b border-border/50 py-1.5">
                           <span className="font-semibold text-muted-foreground">Origem</span>
                           <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(142_60%_92%)] px-2 py-0.5 font-bold text-[hsl(142_55%_28%)]">

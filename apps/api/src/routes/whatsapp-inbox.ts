@@ -30,6 +30,7 @@ import { resolveOrCreateContact, linkContactToPatient } from "../lib/whatsapp-id
 import { isUuid } from "../lib/validators";
 import { runAi, readAiText } from "../lib/ai-native";
 import { WORKERS_AI_MODELS } from "../lib/workersAi";
+import { computeLeadScore } from "../lib/leadScore";
 import {
   buildAiHistory,
   SUMMARY_SYSTEM_PROMPT,
@@ -253,6 +254,11 @@ function mapConversationRow(row: any) {
   const metadata = row.metadata && typeof row.metadata === "object" ? row.metadata : {};
   const stage = deriveCrmStage(row, metadata);
   const nextAction = deriveNextAction(stage, row);
+  const leadScore = computeLeadScore({
+    stage: (row.crm_lead_stage as string) || (row.crm_lifecycle_stage as string) || stage,
+    origin: row.crm_origin as string,
+    lastInboundAt: row.last_message_direction === "inbound" ? row.last_message_at : null,
+  });
   const lastMessageType = row.last_message_type || row.message_type;
   const lastMessageContent = row.last_message ?? undefined;
   const lastMessage =
@@ -313,8 +319,10 @@ function mapConversationRow(row: any) {
         typeof row.crm_score_temperature === "string" && row.crm_score_temperature
           ? row.crm_score_temperature
           : metadata.scoreTemperature,
+      leadScore,
       nextAction,
     },
+    leadScore,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

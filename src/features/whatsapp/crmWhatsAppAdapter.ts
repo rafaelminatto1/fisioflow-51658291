@@ -38,6 +38,7 @@ export interface CrmConversationViewModel {
   ownerLabel: string;
   nextActionTitle: string;
   nextActionBody: string;
+  leadScore?: number;
   metadata: Record<string, unknown> | undefined;
 }
 
@@ -232,6 +233,12 @@ export function toCrmConversationViewModel(conversation: Conversation): CrmConve
     ownerLabel: conversation.assignedToName ?? "Não atribuído",
     nextActionTitle: nextAction ? "Próxima ação" : derivedNextActionTitle,
     nextActionBody: derivedNextActionBody,
+    leadScore:
+      typeof conversation.leadScore === "number"
+        ? conversation.leadScore
+        : typeof (metadata?.leadScore as number) === "number"
+          ? (metadata?.leadScore as number)
+          : undefined,
     metadata,
   };
 }
