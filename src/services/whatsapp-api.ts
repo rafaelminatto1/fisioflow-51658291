@@ -947,6 +947,17 @@ export interface AutomationLogEntry {
   created_at: string;
 }
 
+export interface FunnelReport {
+  stages: Array<{ stage: string; count: number; pct: number }>;
+  total: number;
+  winRate: number;
+}
+
+export async function fetchFunnelReport() {
+  const res = await request<{ data: FunnelReport } | FunnelReport>(`${BASE}/metrics/funnel`);
+  return unwrapData(res) as FunnelReport;
+}
+
 export async function fetchAutomationLog() {
   const res = await request<{ data: AutomationLogEntry[] } | AutomationLogEntry[]>(
     `${BASE}/crm-settings/automation-log`,

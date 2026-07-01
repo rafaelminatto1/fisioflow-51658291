@@ -28,7 +28,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-import { fetchMetrics, type Metrics } from "@/services/whatsapp-api";
+import {
+  fetchMetrics,
+  fetchFunnelReport,
+  type Metrics,
+  type FunnelReport,
+} from "@/services/whatsapp-api";
+
+const FUNNEL_STAGE_LABELS: Record<string, string> = {
+  lead: "Novo lead",
+  contact: "Aguardando",
+  evaluation: "Avaliação",
+  treatment: "Em tratamento",
+};
 import { PendingRepliesQueue } from "@/components/whatsapp/PendingRepliesQueue";
 
 function MetricCard({
@@ -131,9 +143,15 @@ export default function WhatsAppDashboardPage() {
     Array<{ date: string; abertas: number; resolvidas: number }>
   >([]);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const [funnel, setFunnel] = useState<FunnelReport | null>(null);
 
   const loadMetrics = () => {
     setLoading(true);
+    void fetchFunnelReport()
+      .then(setFunnel)
+      .catch(() => {
+        /* best-effort */
+      });
     return fetchMetrics()
       .then((m) => {
         setMetrics(m as Metrics);
@@ -382,6 +400,40 @@ export default function WhatsAppDashboardPage() {
               )}
             </CardContent>
           </Card>
+
+          {funnel && funnel.total > 0 ? (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center justify-between">
+                  <span>Funil de conversão</span>
+                  <span className="text-sm font-semibold text-muted-foreground">
+                    Win rate: {funnel.winRate}%
+                  </span>
+                </CardTitle>
+                <CardDescription>Distribuição das conversas por estágio do funil</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {funnel.stages.map((s) => (
+                    <div key={s.stage}>
+                      <div className="mb-1 flex items-center justify-between text-xs font-semibold">
+                        <span>{FUNNEL_STAGE_LABELS[s.stage] ?? s.stage}</span>
+                        <span className="text-muted-foreground">
+                          {s.count} · {s.pct}%
+                        </span>
+                      </div>
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+                        <div
+                          className="h-full rounded-full bg-[hsl(211_100%_50%)]"
+                          style={{ width: `${s.pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
         </div>
       </PageContainer>
     </PageLayout>

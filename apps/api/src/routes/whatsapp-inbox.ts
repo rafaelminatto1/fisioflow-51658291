@@ -31,6 +31,7 @@ import { isUuid } from "../lib/validators";
 import { runAi, readAiText } from "../lib/ai-native";
 import { WORKERS_AI_MODELS } from "../lib/workersAi";
 import { computeLeadScore } from "../lib/leadScore";
+import { computeFunnelConversion } from "../lib/funnelReport";
 import {
   buildAiHistory,
   SUMMARY_SYSTEM_PROMPT,
@@ -1945,6 +1946,28 @@ app.get("/metrics", requireAuth, async (c) => {
   } catch (err) {
     console.error("[WhatsApp Inbox] GET /metrics error:", err);
     return c.json({ error: "Failed to fetch metrics" }, 500);
+  }
+});
+
+// Funil de conversão: conta as conversas por estágio e calcula % + win rate.
+app.get("/metrics/funnel", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  try {
+    const { data: rows } = await getInboxConversations(pool, user.organizationId, {
+      limit: 500,
+      offset: 0,
+    });
+    const counts: Record<string, number> = {};
+    for (const row of rows) {
+      const mapped = mapConversationRow(row);
+      const stage = (mapped.metadata?.stage as string) || "lead";
+      counts[stage] = (counts[stage] ?? 0) + 1;
+    }
+    return c.json({ data: computeFunnelConversion(counts, [...CRM_STAGE_ORDER]) });
+  } catch (err) {
+    console.error("[WhatsApp Inbox] GET /metrics/funnel error:", err);
+    return c.json({ error: "Failed to fetch funnel" }, 500);
   }
 });
 
