@@ -13,23 +13,46 @@ export function normalizeStages(input: unknown): string[] {
 
 export interface AudienceRecipient {
   contact_id: string | null;
+  patient_id: string | null;
   phone: string;
   name: string | null;
 }
 
-// $3 = onlyEngaged: quando true, só contatos que JÁ conversaram no WhatsApp
-// (reduz risco de spam/queda de qualidade do número — recomendação Meta).
-const WHERE = `l.organization_id = $1
-    AND (cardinality($2::text[]) = 0 OR l.estagio = ANY($2))
-    AND COALESCE(l.telefone, c.telefone) IS NOT NULL
-    AND COALESCE(l.telefone, c.telefone) <> ''
-    AND ($3::boolean = false OR EXISTS (
-      SELECT 1 FROM whatsapp_contacts wc
-      JOIN wa_conversations wconv ON wconv.contact_id = wc.id
-      WHERE wc.organization_id = l.organization_id
-        AND regexp_replace(wc.wa_id, '[^0-9]', '', 'g')
-            = regexp_replace(COALESCE(l.telefone, c.telefone), '[^0-9]', '', 'g')
-    ))`;
+// Base de telefones do público: pacientes + contatos do CRM + quem já conversou
+// no WhatsApp (dedup por dígitos). Cobre clínicas que não usam a tabela `leads`.
+// $1 = org, $2 = estágios (opcional; filtra por leads quando houver),
+// $3 = onlyEngaged (só quem já conversou — recomendação anti-spam Meta).
+const BASE_CTE = `
+  WITH base AS (
+    SELECT regexp_replace(p.phone, '[^0-9]', '', 'g') AS d, NULL::uuid AS contact_id,
+           p.id AS patient_id, p.phone AS phone, p.full_name AS name
+      FROM patients p
+     WHERE p.organization_id = $1 AND p.phone ~ '[0-9]'
+    UNION ALL
+    SELECT regexp_replace(c.telefone, '[^0-9]', '', 'g'), c.id, NULL, c.telefone, c.nome
+      FROM contacts c
+     WHERE c.organization_id = $1 AND c.deleted_at IS NULL AND c.telefone ~ '[0-9]'
+    UNION ALL
+    SELECT regexp_replace(wc.wa_id, '[^0-9]', '', 'g'), NULL, wc.patient_id, wc.wa_id,
+           COALESCE(wc.display_name, wc.username, wc.wa_id)
+      FROM whatsapp_contacts wc
+     WHERE wc.organization_id = $1 AND wc.wa_id ~ '[0-9]'
+  ),
+  filtered AS (
+    SELECT DISTINCT ON (b.d) b.d, b.contact_id, b.patient_id, b.phone, b.name
+      FROM base b
+     WHERE b.d <> ''
+       AND ($3::boolean = false OR EXISTS (
+         SELECT 1 FROM whatsapp_contacts wc2
+         JOIN wa_conversations wv ON wv.contact_id = wc2.id
+         WHERE wc2.organization_id = $1
+           AND regexp_replace(wc2.wa_id, '[^0-9]', '', 'g') = b.d))
+       AND (cardinality($2::text[]) = 0 OR EXISTS (
+         SELECT 1 FROM leads l
+         WHERE l.organization_id = $1 AND l.estagio = ANY($2)
+           AND regexp_replace(COALESCE(l.telefone, ''), '[^0-9]', '', 'g') = b.d))
+     ORDER BY b.d
+  )`;
 
 /**
  * Resolve a audiência (ou só a contagem) de uma campanha a partir dos estágios
@@ -45,24 +68,12 @@ export async function fetchCampaignAudience(
   const params = [orgId, norm, opts.onlyEngaged === true];
 
   if (opts.countOnly) {
-    const r = await pool.query(
-      `SELECT COUNT(DISTINCT COALESCE(l.contact_id::text, l.id::text))::int AS c
-         FROM leads l
-         LEFT JOIN contacts c ON c.id = l.contact_id
-        WHERE ${WHERE}`,
-      params,
-    );
+    const r = await pool.query(`${BASE_CTE} SELECT COUNT(*)::int AS c FROM filtered`, params);
     return { count: r.rows[0]?.c ?? 0, rows: [] };
   }
 
   const r = await pool.query(
-    `SELECT DISTINCT ON (COALESCE(l.contact_id::text, l.id::text))
-        l.contact_id, COALESCE(l.telefone, c.telefone) AS phone, COALESCE(l.nome, c.nome) AS name
-       FROM leads l
-       LEFT JOIN contacts c ON c.id = l.contact_id
-      WHERE ${WHERE}
-      ORDER BY COALESCE(l.contact_id::text, l.id::text)
-      LIMIT 2000`,
+    `${BASE_CTE} SELECT contact_id, patient_id, phone, name FROM filtered LIMIT 2000`,
     params,
   );
   return { count: r.rows.length, rows: r.rows as AudienceRecipient[] };

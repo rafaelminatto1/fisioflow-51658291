@@ -609,9 +609,9 @@ app.post("/campanhas", requireAuth, async (c) => {
     for (const r of audience) {
       await pool.query(
         `INSERT INTO crm_campanha_envios
-           (campanha_id, contact_id, phone, canal, status, created_at)
-         VALUES ($1,$2,$3,'whatsapp','pendente',NOW())`,
-        [campaign.id, r.contact_id, r.phone],
+           (campanha_id, contact_id, patient_id, phone, canal, status, created_at)
+         VALUES ($1,$2,$3,$4,'whatsapp','pendente',NOW())`,
+        [campaign.id, r.contact_id, r.patient_id, r.phone],
       );
     }
   } else {
