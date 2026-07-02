@@ -2,7 +2,7 @@
  * Automation Builder — partes reutilizáveis (catálogo de nós estilo n8n + inspector).
  */
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import type { ReactNode } from "react";
 import {
   GitBranch,
   Clock,
@@ -14,48 +14,10 @@ import {
   Zap,
   X,
   Trash2,
-  type LucideIcon,
-  AlertTriangle,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-
-import type { AutomationRecord } from "@/api/v2";
-import {
-  useCreateAutomation,
-  useUpdateAutomation,
-  useDeleteAutomation,
-} from "@/hooks/useAutomations";
-import { TRIGGER_EVENTS, triggerLabel } from "./triggerEvents";
 import type { AutomationNodeData, NodeKind, Category, CatalogEntry } from "./types";
-import { cn } from "@/lib/utils";
 
 /* ======================== Catálogo de Nós ======================== */
 
@@ -281,7 +243,7 @@ export function SelectField({
 
 /* ------------------------------- Inspector -------------------------------- */
 
-function ParamHelper({ children }: { children: React.ReactNode }) {
+function ParamHelper({ children }: { children: ReactNode }) {
   return <p className="rounded-lg bg-slate-50 px-3 py-2 text-[11px] leading-snug text-slate-500">{children}</p>;
 }
 
@@ -535,8 +497,6 @@ function WaitEditor({
     }
   }
   const unit = WAIT_UNITS[unitIdx];
-
-  const label = `Aguardar ${amount} ${amount === 1 ? unit.label.slice(0, -1) : unit.label}`;
 
   return (
     <div className="space-y-3">

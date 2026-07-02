@@ -5,14 +5,14 @@ main = "apps/web/src/asset-worker.ts"
 compatibility_date = "2026-06-06"
 assets = { directory = "./apps/web/dist", binding = "ASSETS" }
 
-[observability]
-enabled = true
-
 # Custom domain routes — ensures the Worker handles all traffic for moocafisio.com.br
 routes = [
   { pattern = "www.moocafisio.com.br", custom_domain = true },
   { pattern = "moocafisio.com.br", custom_domain = true },
 ]
+
+[observability]
+enabled = true
 
 # Staging Environment
 [env.staging]

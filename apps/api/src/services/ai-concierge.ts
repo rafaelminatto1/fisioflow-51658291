@@ -185,7 +185,7 @@ function isoFromParts(year: number, month: number, day: number): string {
 }
 
 function parseExplicitDate(message: string, todayIso: string): AvailabilityRequest | null {
-  const match = message.match(/\b(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{2,4}))?\b/);
+  const match = message.match(/\b(\d{1,2})[/-](\d{1,2})(?:[/-](\d{2,4}))?\b/);
   if (!match) return null;
 
   const day = Number(match[1]);

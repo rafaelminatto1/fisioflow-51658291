@@ -2,38 +2,11 @@
  * Automation Builder — Nó de Gatilho customizado estilo n8n.
  */
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import ReactFlow, {
-  Background,
-  Controls,
-  MiniMap,
-  Panel,
-  Handle,
-  Position,
-  MarkerType,
-  addEdge,
-  useNodesState,
-  useEdgesState,
-  useReactFlow,
-  ReactFlowProvider,
-  type Connection,
-  type Edge,
-  type Node,
-  type NodeProps,
-  type ReactFlowInstance,
-} from "reactflow";
+import { Handle, Position, type NodeProps } from "reactflow";
 import "reactflow/dist/style.css";
 import {
   Zap,
-  Play,
-  Save,
   Plus,
-  ArrowLeft,
-  Search,
-  Loader2,
-  Eraser,
-  Workflow,
-  X,
   GitBranch,
   Clock,
   MessageSquare,
@@ -41,35 +14,10 @@ import {
   CheckSquare,
   Webhook,
   Terminal,
-  AlertTriangle,
   type LucideIcon,
 } from "lucide-react";
-import { toast } from "sonner";
-
-import { automationApi, type AutomationRecord } from "@/api/v2";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-import type { AutomationNodeData, NodeKind, Category, CatalogEntry } from "./types";
-import {
-  NODE_CATALOG,
-  CATEGORY_ORDER,
-  entryByType,
-  actionLabel,
-  CONTEXT_FIELDS,
-  CONDITION_OPS,
-  WAIT_UNITS,
-  formatWait,
-} from "./parts";
-import { NodeInspector } from "./parts";
-import { TRIGGER_EVENTS, triggerLabel } from "./triggerEvents";
+import type { AutomationNodeData, NodeKind } from "./types";
+import { formatWait } from "./parts";
 
 /* ====================== Componentes do Builder ====================== */
 
@@ -80,7 +28,7 @@ const STATUS_STYLE: Record<string, { ring: string; dot: string }> = {
   error: { ring: "ring-2 ring-red-300", dot: "bg-red-500" },
 };
 
-function TriggerNode({ id, data, selected }: NodeProps<AutomationNodeData>) {
+export function TriggerNode({ data, selected }: NodeProps<AutomationNodeData>) {
   const meta = KIND_META.trigger;
   const Icon = meta.icon;
 
@@ -115,7 +63,7 @@ const KIND_META: Record<
   wait: { label: "Espera", icon: Clock, ring: "border-slate-300", chip: "bg-slate-100 text-slate-700", dot: "bg-slate-500" },
 };
 
-function FlowNode({ id, data, selected }: NodeProps<AutomationNodeData>) {
+export function FlowNode({ id, data, selected }: NodeProps<AutomationNodeData>) {
   const meta = KIND_META[data.kind];
   const actionMeta = data.kind === "action" ? ACTION_META[data.action ?? ""] : undefined;
   const Icon = actionMeta?.icon ?? meta.icon;
