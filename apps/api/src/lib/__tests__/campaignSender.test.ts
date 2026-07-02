@@ -54,6 +54,12 @@ describe("processCampaignSend", () => {
     expect(
       pool.calls.some((c: any) => /UPDATE crm_campanhas SET status = 'concluida'/.test(c.sql)),
     ).toBe(true);
+    // re-checou opt-out de marketing antes de enviar (LGPD)
+    expect(
+      pool.calls.some(
+        (c: any) => /marketing_consents/.test(c.sql) && /opt-out de marketing/.test(c.sql),
+      ),
+    ).toBe(true);
   });
 
   it("marca falha e sem telefone não chama a Meta", async () => {

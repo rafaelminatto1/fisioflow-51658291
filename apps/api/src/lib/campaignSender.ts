@@ -58,6 +58,23 @@ export async function processCampaignSend(
   const template = AUTOMATION_TEMPLATES[camp.template_key as AutomationTemplateKey];
   if (!template) return { sent: 0, failed: 0, skipped: "unknown_template" };
 
+  // LGPD: re-checa o opt-out no momento do envio (importante p/ campanhas agendadas
+  // — o paciente pode ter revogado entre a criação e o disparo). Marca como falha
+  // quem revogou, para não enviar e refletir no resumo.
+  await pool.query(
+    `UPDATE crm_campanha_envios e
+        SET status = 'falha', error = 'opt-out de marketing', enviado_em = now()
+      WHERE e.campanha_id = $1 AND e.status IN ('pendente', 'agendado')
+        AND EXISTS (
+          SELECT 1 FROM patients p2
+          JOIN marketing_consents mc ON mc.patient_id = p2.id
+          WHERE p2.organization_id = $2
+            AND regexp_replace(COALESCE(p2.phone, ''), '[^0-9]', '', 'g')
+                = regexp_replace(COALESCE(e.phone, ''), '[^0-9]', '', 'g')
+            AND (mc.is_active = false OR mc.revoked_at IS NOT NULL))`,
+    [campaignId, camp.organization_id],
+  );
+
   const enviosRes = await pool.query(
     `SELECT e.id, COALESCE(e.phone, ct.telefone, p.phone) AS phone,
             COALESCE(ct.nome, p.full_name) AS full_name
