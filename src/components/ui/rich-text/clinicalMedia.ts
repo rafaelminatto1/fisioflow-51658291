@@ -12,6 +12,21 @@ export const DEFAULT_CLINICAL_MEDIA_WIDTH = "100%";
 export const DEFAULT_CLINICAL_MEDIA_ALIGN: ClinicalMediaAlign = "center";
 
 const WIDTH_PATTERN = /^(\d+(?:\.\d+)?)(px|%)$/i;
+const SAFE_PROTOCOL_PATTERN = /^(https?:|blob:|data:image\/|\/|\.\/|\.\.\/)/i;
+
+function normalizeClinicalMediaText(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim();
+  return normalized ? normalized.slice(0, 500) : undefined;
+}
+
+export function normalizeClinicalMediaSrc(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const normalized = value.trim();
+  if (!normalized) return "";
+  if (!SAFE_PROTOCOL_PATTERN.test(normalized)) return "";
+  return normalized;
+}
 
 export function normalizeClinicalMediaAlign(value: unknown): ClinicalMediaAlign {
   return value === "left" || value === "right" || value === "center"
@@ -42,11 +57,11 @@ export function getClinicalMediaAttrsFromElement(element: HTMLElement): Clinical
       ? (element as HTMLImageElement)
       : (element.querySelector("img") as HTMLImageElement | null);
 
-  const src = image?.getAttribute("src")?.trim();
+  const src = normalizeClinicalMediaSrc(image?.getAttribute("src"));
   if (!src) return false;
 
-  const alt = image.getAttribute("alt") || undefined;
-  const title = image.getAttribute("title") || undefined;
+  const alt = normalizeClinicalMediaText(image.getAttribute("alt"));
+  const title = normalizeClinicalMediaText(image.getAttribute("title"));
   const widthSource =
     element.getAttribute("data-width") ||
     image.getAttribute("data-width") ||
@@ -64,8 +79,15 @@ export function getClinicalMediaAttrsFromElement(element: HTMLElement): Clinical
 }
 
 export function buildClinicalMediaNode(attrs: ClinicalMediaAttrs, caption = "") {
+  const src = normalizeClinicalMediaSrc(attrs.src);
+  if (!src) {
+    throw new Error("clinical media requires a safe src");
+  }
+
   const normalizedAttrs = {
-    ...attrs,
+    src,
+    alt: normalizeClinicalMediaText(attrs.alt),
+    title: normalizeClinicalMediaText(attrs.title),
     width: normalizeClinicalMediaWidth(attrs.width),
     align: normalizeClinicalMediaAlign(attrs.align),
   };
@@ -94,9 +116,9 @@ export function getClinicalMediaFigureAttrs(attrs: Partial<ClinicalMediaAttrs>) 
 
 export function getClinicalMediaImageAttrs(attrs: Partial<ClinicalMediaAttrs>) {
   return {
-    src: attrs.src || "",
-    alt: attrs.alt || "",
-    title: attrs.title || "",
+    src: normalizeClinicalMediaSrc(attrs.src),
+    alt: normalizeClinicalMediaText(attrs.alt) || "",
+    title: normalizeClinicalMediaText(attrs.title) || "",
     "data-rich-text-image": "true",
   };
 }

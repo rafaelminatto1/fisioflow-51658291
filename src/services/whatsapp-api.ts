@@ -858,6 +858,9 @@ export interface ConciergeConfig {
   autoReplyNewLeads: boolean;
   approvalIntents: ConciergeIntent[];
   greetingTone: "acolhedor" | "direto" | "formal";
+  availabilityAutoReply: boolean;
+  availabilityScope: "organization" | "public_profile";
+  availabilityProfileSlug: string;
   slaEnabled: boolean;
   slaMinutes: number;
   instagramAutoReply: boolean;

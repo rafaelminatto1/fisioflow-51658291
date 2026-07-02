@@ -398,6 +398,17 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 1000,
       rolldownOptions: {
         external: [],
+        // @scaleflex/ui (bundled into vendor-image-editor) references `React`
+        // as a bare global (React.createElement, React.useRef…). When Rolldown
+        // splits it into a separate chunk, the identifier resolves to undefined
+        // at runtime. `transform.inject` replaces bare `React` identifiers with
+        // an actual import from the "react" module — equivalent to
+        // @rollup/plugin-inject but native in Rolldown.
+        transform: {
+          inject: {
+            React: ["react", "default"],
+          },
+        },
         output: {
           // Code splitting via Rolldown groups substitui o antigo manualChunks.
           // Mantemos esta abordagem porque o bundle desta app depende de cortes

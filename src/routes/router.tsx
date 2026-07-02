@@ -34,6 +34,7 @@ const NotFound = lazy(() => import("@/pages/NotFound"));
 const MasterDataHub = lazy(() => import("@/pages/cadastros/MasterDataHub"));
 const Surveys = lazy(() => import("@/pages/Surveys"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
+const ClinicalMediaHarness = lazy(() => import("@/pages/dev/ClinicalMediaHarness"));
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -61,6 +62,12 @@ export const router = createBrowserRouter(
         <Route path="/install" element={<Install />} />
         <Route path="/privacidade" element={<PrivacyPolicy />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route
+          path="/auth/dev/clinical-media"
+          element={
+            import.meta.env.DEV ? <ClinicalMediaHarness /> : <Navigate to="/auth" replace />
+          }
+        />
         <Route path="/admin" element={<Navigate to="/admin/analytics" replace />} />
         <Route path="/goals" element={<Navigate to="/cadastros/objetivos" replace />} />
         <Route

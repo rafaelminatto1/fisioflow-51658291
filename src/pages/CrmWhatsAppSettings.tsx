@@ -94,6 +94,11 @@ const TONE_LABELS: Record<ConciergeConfig["greetingTone"], string> = {
   formal: "Formal",
 };
 
+const AVAILABILITY_SCOPE_LABELS: Record<ConciergeConfig["availabilityScope"], string> = {
+  organization: "Agenda da clínica",
+  public_profile: "Perfil público específico",
+};
+
 const AUTOMATION_TEMPLATE_LABELS: Record<string, string> = {
   boas_vindas_paciente: "Boas-vindas",
   feedback_atendimento: "Feedback do atendimento",
@@ -198,10 +203,29 @@ export default function CrmWhatsAppSettings() {
 
   const handleSave = async () => {
     if (!concierge || !dirty) return;
+
+    const normalizedConcierge: ConciergeConfig = {
+      ...concierge,
+      availabilityProfileSlug: concierge.availabilityProfileSlug.trim(),
+    };
+
+    if (
+      normalizedConcierge.availabilityAutoReply &&
+      normalizedConcierge.availabilityScope === "public_profile" &&
+      !normalizedConcierge.availabilityProfileSlug
+    ) {
+      toast({
+        title: "Informe o slug do perfil público",
+        description: "Para usar um perfil público específico, preencha o slug do agendamento.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       const saved = await updateCrmSettings({
-        concierge,
+        concierge: normalizedConcierge,
         funnel,
         reminders: reminders ?? undefined,
         automationsEnabled,
@@ -221,6 +245,7 @@ export default function CrmWhatsAppSettings() {
       );
       setReminders(saved.reminders);
       setAutomationsEnabled(saved.automationsEnabled);
+      setConcierge(saved.concierge);
       if (saved.routing) setRouting(saved.routing);
       toast({ title: "Configurações salvas" });
     } catch {
@@ -464,6 +489,73 @@ export default function CrmWhatsAppSettings() {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-bold">
+                        Responder disponibilidade automaticamente
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Permite que o concierge use a configuração de agenda para responder perguntas
+                        como “quais horários disponíveis para amanhã?”.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={concierge.availabilityAutoReply}
+                      disabled={!concierge.enabled}
+                      onCheckedChange={(v) =>
+                        setConcierge({ ...concierge, availabilityAutoReply: v })
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-bold">Fonte da disponibilidade</Label>
+                    <Select
+                      value={concierge.availabilityScope}
+                      onValueChange={(value) =>
+                        setConcierge({
+                          ...concierge,
+                          availabilityScope: value as ConciergeConfig["availabilityScope"],
+                        })
+                      }
+                    >
+                      <SelectTrigger className="mt-1.5 w-64">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(
+                          AVAILABILITY_SCOPE_LABELS,
+                        ) as ConciergeConfig["availabilityScope"][]).map((scope) => (
+                          <SelectItem key={scope} value={scope}>
+                            {AVAILABILITY_SCOPE_LABELS[scope]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      Use agenda da clínica para disponibilidade geral ou informe um perfil público
+                      específico para consultar o booking por slug.
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-bold">Slug do perfil público</Label>
+                    <Input
+                      value={concierge.availabilityProfileSlug}
+                      onChange={(e) =>
+                        setConcierge({ ...concierge, availabilityProfileSlug: e.target.value })
+                      }
+                      disabled={concierge.availabilityScope !== "public_profile"}
+                      className="mt-1.5 max-w-sm"
+                      placeholder="Ex.: rafael-minatto"
+                    />
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      Preencha quando a fonte for um perfil público específico do agendamento online.
+                    </p>
                   </div>
                 </div>
 

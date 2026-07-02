@@ -237,7 +237,7 @@ export function ExerciseViewModal({
             <div className="lg:col-span-7 xl:col-span-8 bg-muted/10 min-h-[420px] lg:min-h-0 lg:h-full flex flex-col border-b lg:border-b-0 lg:border-r border-border/50 overflow-hidden relative exercise-print-media">
               <div className="absolute inset-0 bg-gradient-to-br from-background via-muted/20 to-muted/40 pointer-events-none" />
 
-              <Tabs defaultValue={defaultTab} className="flex-1 flex flex-col relative z-0">
+              <Tabs defaultValue={defaultTab} className="relative z-0 flex min-h-0 flex-1 flex-col">
                 <div className="px-6 pt-4 flex-none z-10">
                   <TabsList className="bg-card border w-auto inline-flex shadow-sm">
                     <TabsTrigger value="video" disabled={!hasVideo} className="gap-2 px-4">
@@ -249,10 +249,10 @@ export function ExerciseViewModal({
                   </TabsList>
                 </div>
 
-                <div className="flex-1 p-3 sm:p-6 flex items-center justify-center min-h-[320px] lg:min-h-0">
+                <div className="flex flex-1 min-h-[320px] min-h-0 items-center justify-center p-3 sm:p-6 lg:min-h-0">
                   <TabsContent
                     value="video"
-                    className="w-full h-full mt-0 data-[state=active]:flex data-[state=active]:items-center data-[state=active]:justify-center"
+                    className="mt-0 h-full min-h-0 w-full data-[state=active]:flex data-[state=active]:items-center data-[state=active]:justify-center"
                   >
                     {hasVideo ? (
                       <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-white/10 ring-1 ring-black/5 relative group">
@@ -293,18 +293,19 @@ export function ExerciseViewModal({
 
                   <TabsContent
                     value="image"
-                    className="w-full h-full mt-0 data-[state=active]:flex data-[state=active]:items-center data-[state=active]:justify-center"
+                    className="mt-0 h-full min-h-0 w-full data-[state=active]:flex data-[state=active]:items-center data-[state=active]:justify-center"
                   >
                     {hasImage && imageUrl ? (
-                      <div className="relative w-full h-full flex items-center justify-center bg-white rounded-xl overflow-hidden shadow-lg border border-border/50 p-4 sm:p-6">
+                      <div className="relative flex h-full min-h-0 w-full items-center justify-center overflow-hidden rounded-xl border border-border/50 bg-white p-4 shadow-lg sm:p-6">
                         <OptimizedImage
                           src={imageUrl}
                           alt={exercise?.name ?? "Exercício"}
-                          className="h-full w-full"
+                          className="flex h-full min-h-0 w-full items-center justify-center"
+                          imgClassName="max-h-full max-w-full object-contain object-center"
                           aspectRatio="auto"
                           priority={true}
                           sizes="(max-width: 768px) 100vw, (max-width: 1280px) 64vw, 68vw"
-                          style={{ objectFit: "contain" }}
+                          style={{ objectFit: "contain", objectPosition: "center" }}
                           fallbackSrcs={getImageUrlCandidates(exercise)}
                         />
                       </div>

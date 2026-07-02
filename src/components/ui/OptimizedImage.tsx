@@ -24,6 +24,8 @@ interface OptimizedImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 
   onError?: () => void;
   /** Adiciona hint de pré-carregamento para DNS/TCP/TLS */
   preloadHints?: boolean;
+  /** Classe aplicada diretamente ao elemento img */
+  imgClassName?: string;
 }
 
 const aspectRatioClasses = {
@@ -99,6 +101,7 @@ export function OptimizedImage({
   quality,
   fallbackSrcs = [],
   className,
+  imgClassName,
   onLoad,
   onError,
   preloadHints = false,
@@ -258,6 +261,7 @@ export function OptimizedImage({
         onError={handleError}
         className={cn(
           "h-full w-full object-cover transition-opacity duration-300",
+          imgClassName,
           isLoaded ? "opacity-100" : "opacity-0",
         )}
         {...props}

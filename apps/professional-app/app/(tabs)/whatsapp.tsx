@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -17,8 +17,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, type Href } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useRealtime } from "@/hooks/useRealtime";
 import {
   useWhatsAppConversations,
   useWhatsAppOpenConversation,
@@ -27,6 +29,7 @@ import {
 } from "@/hooks/useWhatsApp";
 import { usePatients } from "@/hooks/usePatients";
 import {
+  ConversationsResponse,
   WaConversation,
   getContactName,
   getContactPhone,
@@ -49,6 +52,28 @@ const STATUS_FILTERS = [
 ] as const;
 
 type StatusFilter = (typeof STATUS_FILTERS)[number]["key"];
+type WhatsAppRealtimeEvent = {
+  type: string;
+  conversationId?: string;
+  message?: {
+    content?: unknown;
+    direction?: string;
+    messageType?: string;
+    createdAt?: string;
+  };
+  contact?: {
+    name?: string;
+    phone?: string;
+  };
+};
+
+function sortConversationsByActivity(conversations: WaConversation[]): WaConversation[] {
+  return [...conversations].sort((a, b) => {
+    const aTime = Date.parse(a.lastMessageAt || a.updatedAt || a.createdAt || "");
+    const bTime = Date.parse(b.lastMessageAt || b.updatedAt || b.createdAt || "");
+    return bTime - aTime;
+  });
+}
 
 function formatRelativeTime(dateStr?: string): string {
   if (!dateStr) return "";
@@ -225,6 +250,8 @@ export default function WhatsAppScreen() {
   const colors = useColors();
   const router = useRouter();
   const { light } = useHaptics();
+  const queryClient = useQueryClient();
+  const { subscribe } = useRealtime();
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
@@ -280,6 +307,50 @@ export default function WhatsAppScreen() {
   const isCreatingConversation =
     resolveContactMutation.isPending || openConversationMutation.isPending;
   const canSubmitManual = manualPhone.replace(/\D/g, "").length >= 10;
+
+  useEffect(() => {
+    return subscribe(
+      ["whatsapp_new_message", "whatsapp_message", "whatsapp_message_failed"],
+      (rawEvent) => {
+        const event = rawEvent as WhatsAppRealtimeEvent;
+        if (!event.conversationId) return;
+
+        if (event.type === "whatsapp_new_message") {
+          queryClient.setQueriesData<ConversationsResponse>(
+            { queryKey: ["whatsapp-conversations"] },
+            (current) => {
+              if (!current) return current;
+
+              let found = false;
+              const occurredAt = event.message?.createdAt ?? new Date().toISOString();
+              const updated = current.data.map((conversation) => {
+                if (conversation.id !== event.conversationId) return conversation;
+                found = true;
+                return {
+                  ...conversation,
+                  contactName: event.contact?.name ?? conversation.contactName,
+                  contactPhone: event.contact?.phone ?? conversation.contactPhone,
+                  unreadCount: (conversation.unreadCount ?? 0) + 1,
+                  lastMessage: {
+                    content: event.message?.content ?? "",
+                    messageType: event.message?.messageType ?? "text",
+                    direction: event.message?.direction ?? "inbound",
+                    createdAt: occurredAt,
+                  },
+                  lastMessageAt: occurredAt,
+                  updatedAt: occurredAt,
+                };
+              });
+
+              return found ? { ...current, data: sortConversationsByActivity(updated) } : current;
+            },
+          );
+        }
+
+        queryClient.invalidateQueries({ queryKey: ["whatsapp-conversations"] });
+      },
+    );
+  }, [queryClient, subscribe]);
 
   const handleRefresh = async () => {
     setRefreshing(true);

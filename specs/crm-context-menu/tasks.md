@@ -12,19 +12,19 @@
 
 ## Fase 2 — Menu de Contexto na Mensagem (Expandir)
 
-- [ ] T008 Adicionar item "Editar mensagem" no menu de mensagem (visível apenas para outbound, dentro de 15min)
-- [ ] T009 Adicionar item "Excluir mensagem" no menu de mensagem (visível apenas para outbound, dentro do prazo)
-- [ ] T010 Implementar `handleEditMessage` — chama `editMessageContent` já existente no backend
-- [ ] T011 Implementar `handleDeleteMessage` — chama `markMessageDeleted` já existente no backend
-- [ ] T012 Adicionar badge "editada" na mensagem editada (renderização condicional em `MessageBubble`)
-- [ ] T013 Adicionar confirmação antes de excluir mensagem (modal leve inline)
+ - [x] T008 Adicionar item "Editar mensagem" no menu de mensagem (visível apenas para outbound, dentro de 15min)
+ - [x] T009 Adicionar item "Excluir mensagem" no menu de mensagem (visível apenas para outbound, dentro do prazo)
+ - [x] T010 Implementar `handleEditMessage` — chama `editMessageContent` já existente no backend
+ - [x] T011 Implementar `handleDeleteMessage` — chama `markMessageDeleted` já existente no backend
+ - [x] T012 Adicionar badge "editada" na mensagem editada (renderização condicional em `MessageBubble`)
+ - [x] T013 Adicionar confirmação antes de excluir mensagem (modal leve inline)
 
 ## Fase 3 — Funcionalidades Complementares
 
  - [x] T014 [P] Adicionar atalhos de teclado: `Ctrl+E` arquivar, `Ctrl+Shift+M` mute, `Ctrl+Backspace` deletar
- - [ ] T015 [P] Adicionar busca global `Ctrl+F` (filtrar conversas por conteúdo de mensagens)
+ - [x] T015 [P] Adicionar busca global `Ctrl+F` (filtrar conversas por conteúdo de mensagens)
  - [x] T016 Adicionar item "Copiar nome/telefone" no menu de contexto do contato
- - [ ] T017 Adicionar item "Criar/ver paciente" no menu de contexto do contato
+ - [x] T017 Adicionar item "Criar/ver paciente" no menu de contexto do contato
 
 ## Dependências
 

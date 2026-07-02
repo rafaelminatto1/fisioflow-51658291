@@ -67,6 +67,9 @@ const DEFAULT_CONCIERGE_CONFIG = {
   autoReplyNewLeads: true,
   approvalIntents: ["urgent"] as string[],
   greetingTone: "acolhedor" as "acolhedor" | "direto" | "formal",
+  availabilityAutoReply: false,
+  availabilityScope: "organization" as "organization" | "public_profile",
+  availabilityProfileSlug: "",
   // SLA de resposta humana (#1 speed-to-lead): alerta se um lead aguarda há X min.
   slaEnabled: true,
   slaMinutes: 10,
@@ -106,7 +109,18 @@ async function loadOrgSettings(pool: any, orgId: string): Promise<Record<string,
 
 export function readCrmConfig(settings: Record<string, unknown>) {
   const crm = (settings.crm_whatsapp as Record<string, unknown>) ?? {};
-  const concierge = { ...DEFAULT_CONCIERGE_CONFIG, ...(crm.concierge as object) };
+  const conciergeRaw = ((crm.concierge as Record<string, unknown>) ?? {}) as Record<string, unknown>;
+  const concierge = {
+    ...DEFAULT_CONCIERGE_CONFIG,
+    ...conciergeRaw,
+    availabilityAutoReply: conciergeRaw.availabilityAutoReply === true,
+    availabilityScope:
+      conciergeRaw.availabilityScope === "public_profile" ? "public_profile" : "organization",
+    availabilityProfileSlug:
+      typeof conciergeRaw.availabilityProfileSlug === "string"
+        ? conciergeRaw.availabilityProfileSlug.trim()
+        : "",
+  };
   const funnel = Array.isArray(crm.funnel) && crm.funnel.length ? crm.funnel : DEFAULT_FUNNEL_STAGES;
   const reminders = resolveReminderConfig(crm.reminders);
   // Gate mestre das automações de WhatsApp (welcome/feedback/review/lembrete).

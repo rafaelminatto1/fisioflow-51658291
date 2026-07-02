@@ -26,8 +26,8 @@ export function useWhatsAppConversations(filters?: ConversationFilters) {
   return useQuery({
     queryKey: ["whatsapp-conversations", filters],
     queryFn: () => fetchConversations(filters),
-    refetchInterval: 15_000,
-    staleTime: 5_000,
+    refetchInterval: 30_000,
+    staleTime: 10_000,
   });
 }
 
@@ -36,8 +36,8 @@ export function useWhatsAppMessages(conversationId: string | null) {
     queryKey: ["whatsapp-messages", conversationId],
     queryFn: () => fetchConversationDetail(conversationId!),
     enabled: !!conversationId,
-    refetchInterval: 5_000,
-    staleTime: 2_000,
+    refetchInterval: 15_000,
+    staleTime: 5_000,
   });
 }
 

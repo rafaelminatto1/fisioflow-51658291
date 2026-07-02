@@ -16,4 +16,11 @@ describe("readCrmConfig — automationsEnabled", () => {
     const cfg = readCrmConfig({ crm_whatsapp: { automations_enabled: "true" } as any });
     expect(cfg.automationsEnabled).toBe(false);
   });
+
+  it("expõe os defaults das configurações de disponibilidade do concierge", () => {
+    const cfg = readCrmConfig({});
+    expect(cfg.concierge.availabilityAutoReply).toBe(false);
+    expect(cfg.concierge.availabilityScope).toBe("organization");
+    expect(cfg.concierge.availabilityProfileSlug).toBe("");
+  });
 });

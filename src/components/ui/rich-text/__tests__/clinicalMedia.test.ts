@@ -7,6 +7,7 @@ import {
   getClinicalMediaFigureAttrs,
   getClinicalMediaImageAttrs,
   normalizeClinicalMediaAlign,
+  normalizeClinicalMediaSrc,
   normalizeClinicalMediaWidth,
 } from "../clinicalMedia";
 
@@ -23,6 +24,14 @@ describe("clinical media helpers", () => {
     expect(normalizeClinicalMediaAlign(undefined)).toBe(DEFAULT_CLINICAL_MEDIA_ALIGN);
     expect(normalizeClinicalMediaAlign("weird")).toBe(DEFAULT_CLINICAL_MEDIA_ALIGN);
     expect(normalizeClinicalMediaAlign("left")).toBe("left");
+  });
+
+  it("aceita apenas src seguros", () => {
+    expect(normalizeClinicalMediaSrc("https://cdn.example.com/a.png")).toBe(
+      "https://cdn.example.com/a.png",
+    );
+    expect(normalizeClinicalMediaSrc("/uploads/a.png")).toBe("/uploads/a.png");
+    expect(normalizeClinicalMediaSrc("javascript:alert(1)")).toBe("");
   });
 
   it("extrai atributos de markup legado em img", () => {
@@ -80,6 +89,14 @@ describe("clinical media helpers", () => {
       },
       content: [{ type: "text", text: "Legenda clínica" }],
     });
+  });
+
+  it("falha quando tenta criar mídia sem src seguro", () => {
+    expect(() =>
+      buildClinicalMediaNode({
+        src: "javascript:alert(1)",
+      }),
+    ).toThrow("clinical media requires a safe src");
   });
 
   it("gera attrs de render do figure e do img", () => {

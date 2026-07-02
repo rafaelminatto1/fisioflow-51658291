@@ -7,7 +7,12 @@ export interface RealtimeEvent {
   type:
     | "appointment_update"
     | "new_message"
+    | "whatsapp_new_message"
     | "whatsapp_message"
+    | "whatsapp_message_failed"
+    | "whatsapp_conversation_updated"
+    | "whatsapp_conversation_deleted"
+    | "whatsapp_conversation_restored"
     | "typing"
     | "sla_breach"
     | "notification";

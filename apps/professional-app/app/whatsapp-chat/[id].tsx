@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -16,8 +16,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useRealtime } from "@/hooks/useRealtime";
 import {
   useWhatsAppMessages,
   useWhatsAppSendMessage,
@@ -31,13 +33,27 @@ import {
   useWhatsAppRemoveTag,
 } from "@/hooks/useWhatsApp";
 import {
+  ConversationsResponse,
   WaMessage,
+  WaConversationDetailResponse,
   getContactName,
   getContactPhone,
   getMessageText,
 } from "@/services/whatsapp-api";
 
 const WA_GREEN = "#25D366";
+type WhatsAppRealtimeEvent = {
+  type: string;
+  conversationId?: string;
+  message?: {
+    id?: string;
+    content?: unknown;
+    direction?: string;
+    messageType?: string;
+    createdAt?: string;
+    status?: string;
+  };
+};
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -207,6 +223,8 @@ export default function WhatsAppChatScreen() {
   const colors = useColors();
   const router = useRouter();
   const { light, medium } = useHaptics();
+  const queryClient = useQueryClient();
+  const { subscribe } = useRealtime();
   const { id } = useLocalSearchParams<{ id: string }>();
   const safeId = id ?? "";
 
@@ -241,6 +259,93 @@ export default function WhatsAppChatScreen() {
   );
 
   const listData = useMemo(() => buildListData(messages), [messages]);
+
+  useEffect(() => {
+    if (!safeId) return;
+
+    return subscribe(
+      ["whatsapp_new_message", "whatsapp_message", "whatsapp_message_failed"],
+      (rawEvent) => {
+        const event = rawEvent as WhatsAppRealtimeEvent;
+        if (event.conversationId !== safeId) return;
+
+        if (event.type === "whatsapp_new_message") {
+          const createdAt = event.message?.createdAt ?? new Date().toISOString();
+
+          queryClient.setQueryData<WaConversationDetailResponse>(
+            ["whatsapp-messages", safeId],
+            (current) => {
+              if (!current) return current;
+
+              const incomingMessage: WaMessage = {
+                id: String(event.message?.id ?? `rt-${createdAt}`),
+                conversationId: safeId,
+                direction: String(event.message?.direction ?? "inbound"),
+                senderType: "contact",
+                messageType: String(event.message?.messageType ?? "text"),
+                content: event.message?.content ?? "",
+                status: String(event.message?.status ?? ""),
+                isInternalNote: false,
+                createdAt,
+              };
+
+              if (current.messages.some((message) => message.id === incomingMessage.id)) {
+                return current;
+              }
+
+              return {
+                ...current,
+                conversation: {
+                  ...current.conversation,
+                  unreadCount: 0,
+                  lastMessage: {
+                    content: incomingMessage.content,
+                    messageType: incomingMessage.messageType,
+                    direction: incomingMessage.direction,
+                    createdAt,
+                  },
+                  lastMessageAt: createdAt,
+                  updatedAt: createdAt,
+                },
+                messages: [...current.messages, incomingMessage],
+              };
+            },
+          );
+
+          queryClient.setQueriesData<ConversationsResponse>(
+            { queryKey: ["whatsapp-conversations"] },
+            (current) => {
+              if (!current) return current;
+              return {
+                ...current,
+                data: current.data.map((conversation) =>
+                  conversation.id === safeId
+                    ? {
+                        ...conversation,
+                        unreadCount: 0,
+                        lastMessage: {
+                          content: event.message?.content ?? "",
+                          messageType: event.message?.messageType ?? "text",
+                          direction: event.message?.direction ?? "inbound",
+                          createdAt,
+                        },
+                        lastMessageAt: createdAt,
+                        updatedAt: createdAt,
+                      }
+                    : conversation,
+                ),
+              };
+            },
+          );
+
+          return;
+        }
+
+        queryClient.invalidateQueries({ queryKey: ["whatsapp-messages", safeId] });
+        queryClient.invalidateQueries({ queryKey: ["whatsapp-conversations"] });
+      },
+    );
+  }, [queryClient, safeId, subscribe]);
 
   // ── actions ──
 
