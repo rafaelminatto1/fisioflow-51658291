@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   isGreetingReply,
   shouldSkipGreeting,
+  stripGreetingIntro,
   buildConciergeHistory,
   type ConciergeHistoryItem,
 } from "../ai-concierge";
@@ -33,6 +34,30 @@ describe("ai-concierge — anti-repetição da saudação", () => {
   it("shouldSkipGreeting: nunca pula uma resposta que não é saudação", () => {
     const history: ConciergeHistoryItem[] = [{ role: "assistant", content: apresentacao }];
     expect(shouldSkipGreeting("Nosso horário é das 7h às 19h.", history)).toBe(false);
+  });
+
+  it("stripGreetingIntro remove a linha da apresentação e mantém o resto", () => {
+    expect(stripGreetingIntro(apresentacao)).toBe("Bom dia, tudo bem?\nComo posso ajudar?");
+  });
+
+  it("stripGreetingIntro remove a apresentação inline (frase no meio)", () => {
+    expect(
+      stripGreetingIntro(
+        "Boa noite, tudo bem? Sou o Rafael da Activity Fisioterapia. Como posso ajudar?",
+      ),
+    ).toBe("Boa noite, tudo bem? Como posso ajudar?");
+  });
+
+  it("stripGreetingIntro cai no fallback quando a resposta é só a apresentação", () => {
+    expect(stripGreetingIntro("Sou o Rafael da Activity Fisioterapia.")).toBe(
+      "Como posso ajudar?",
+    );
+  });
+
+  it("stripGreetingIntro não altera respostas sem apresentação", () => {
+    expect(stripGreetingIntro("Nosso horário é das 7h às 19h.")).toBe(
+      "Nosso horário é das 7h às 19h.",
+    );
   });
 
   it("buildConciergeHistory mapeia inbound→user, outbound→assistant e ignora vazios/internos", () => {

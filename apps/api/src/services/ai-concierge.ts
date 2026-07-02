@@ -23,6 +23,23 @@ export function shouldSkipGreeting(reply: string, history: ConciergeHistoryItem[
 }
 
 /**
+ * Remove a frase/linha da apresentação de uma saudação, mantendo o resto
+ * ("Boa noite, tudo bem? Como posso ajudar?"). Usado quando já saudamos nesta
+ * conversa: respondemos a saudação de volta sem nos reapresentar (não ficamos
+ * mudos). Fallback quando a resposta era só a apresentação.
+ */
+export function stripGreetingIntro(reply: string): string {
+  if (!isGreetingReply(reply)) return reply;
+  const stripped = reply
+    .replace(new RegExp(`[^.!?\\n]*${GREETING_SIGNATURE}[^.!?\\n]*[.!?]?`, "g"), "")
+    .replace(/[ \t]+/g, " ")
+    .replace(/ ?\n ?/g, "\n")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+  return stripped || "Como posso ajudar?";
+}
+
+/**
  * Converte linhas de wa_messages em histórico p/ o LLM: inbound→user,
  * outbound→assistant. Ignora mensagens internas e sem conteúdo de texto.
  */

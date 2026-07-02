@@ -119,7 +119,7 @@ describe("handleWhatsAppInboundQueue — concierge auto-reply", () => {
     expect(outboundCall).toBeTruthy();
   });
 
-  it("NÃO repete a apresentação quando o assistente já saudou nesta conversa", async () => {
+  it("responde curto (sem apresentação) quando o assistente já saudou nesta conversa", async () => {
     const apresentacao =
       "Bom dia, tudo bem?\nSou o Rafael da Activity Fisioterapia.\nComo posso ajudar?";
     // Histórico já contém uma saudação anterior do assistente.
@@ -141,6 +141,10 @@ describe("handleWhatsAppInboundQueue — concierge auto-reply", () => {
     const { batch } = makeBatch();
     await handleWhatsAppInboundQueue(batch, ENV);
 
-    expect(mockSendTextMessage).not.toHaveBeenCalled();
+    // Não fica mudo: responde a saudação de volta, mas sem se reapresentar.
+    expect(mockSendTextMessage).toHaveBeenCalledWith(
+      "5511993524642",
+      "Bom dia, tudo bem?\nComo posso ajudar?",
+    );
   });
 });

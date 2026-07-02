@@ -15,6 +15,7 @@ import {
   AIConciergeService,
   buildConciergeHistory,
   shouldSkipGreeting,
+  stripGreetingIntro,
 } from "../services/ai-concierge";
 import { WhatsAppService } from "../lib/whatsapp";
 import { mirrorWhatsAppMedia } from "../lib/media-mirror";
@@ -240,15 +241,18 @@ async function processConciergeAsync(
 
     const concierge = await AIConciergeService.processMessage(env, orgId, text, history);
 
-    // Não repete a apresentação se já saudamos nesta conversa.
-    if (shouldSkipGreeting(concierge.reply, history)) return;
+    // Não repete a apresentação se já saudamos nesta conversa: responde a
+    // saudação de volta em versão curta, sem se reapresentar (nunca fica mudo).
+    const reply = shouldSkipGreeting(concierge.reply, history)
+      ? stripGreetingIntro(concierge.reply)
+      : concierge.reply;
 
-    if (concierge.answerable && concierge.reply && concierge.reply.length >= 2) {
+    if (concierge.answerable && reply && reply.length >= 2) {
       // Actually deliver the reply to the customer via Meta. We are within the
       // 24h customer-service window (they just messaged), so free-form text is
       // allowed and will deliver.
       const whatsapp = new WhatsAppService(env);
-      const sendResult = (await whatsapp.sendTextMessage(recipient, concierge.reply)) as {
+      const sendResult = (await whatsapp.sendTextMessage(recipient, reply)) as {
         messages?: { id?: string }[];
         error?: unknown;
       };
@@ -265,7 +269,7 @@ async function processConciergeAsync(
         "system",
         contactId,
         "text",
-        concierge.reply,
+        reply,
         metaMessageId ?? `ai_${Date.now()}`,
         {
           status: sendStatus,
@@ -285,7 +289,7 @@ async function processConciergeAsync(
         type: sendStatus === "failed" ? "whatsapp_message_failed" : "whatsapp_message",
         conversationId,
         message: {
-          content: concierge.reply,
+          content: reply,
           direction: "outbound",
           messageType: "text",
           status: sendStatus,
