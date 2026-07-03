@@ -314,6 +314,7 @@ export interface Env {
   NFSE_SP_CERT?: Fetcher; // mTLS binding (apresenta certificado na conexão TLS)
   NFSE_SP_CERT_PEM?: string; // Certificado PEM para assinatura XML
   NFSE_SP_KEY_PEM?: string; // Chave privada PEM para assinatura XML
+  NFSE_SANDBOX?: string; // "true"/"1" força modo sandbox/mock (sem chamada à prefeitura)
 
   // Cloudflare Turnstile (anti-bot para rotas públicas)
   TURNSTILE_SECRET_KEY?: string;
