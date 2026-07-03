@@ -35,7 +35,7 @@ import {
   Image as ImageIcon,
   BookOpen,
   MoreVertical,
-  Youtube,
+  Play,
   Search,
   Download,
   Link as LinkIcon,
@@ -210,7 +210,7 @@ function SortableMediaItem({
           <img src={url} alt="" className="h-full w-full object-cover" />
         ) : type === "youtube" ? (
           <div className="flex h-full w-full flex-col items-center justify-center bg-red-50 dark:bg-red-900/10">
-            <Youtube className="h-8 w-8 text-red-500" />
+            <Play className="h-8 w-8 text-red-500" />
             <span className="mt-2 text-[10px] font-bold text-red-600">YOUTUBE</span>
           </div>
         ) : (
