@@ -25,6 +25,13 @@ describe("toE164Brazil", () => {
   it("leaves webchat ids untouched", () => {
     expect(toE164Brazil("web:abc-123")).toBe("web:abc-123");
   });
+
+  it("não trata webchat id com 10–13 dígitos como telefone", () => {
+    // Regressão: "web:verify-1783092228" virava "551783092228" e o /poll
+    // (que busca wa_id = 'web:{visitorId}') nunca achava a conversa.
+    expect(toE164Brazil("web:verify-1783092228")).toBe("web:verify-1783092228");
+    expect(toE164Brazil("web:1e2d3c4b5a6f7890")).toBe("web:1e2d3c4b5a6f7890");
+  });
 });
 
 describe("canonicalBrazilPhone", () => {

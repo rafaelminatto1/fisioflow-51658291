@@ -14,8 +14,12 @@ function looksLikePhone(value: string): boolean {
  * Não-telefones (IGSID, "web:uuid") são retornados intactos.
  */
 export function toE164Brazil(raw: string): string {
-  const digits = String(raw ?? "").replace(/\D/g, "");
-  if (!looksLikePhone(digits)) return String(raw ?? "");
+  const str = String(raw ?? "");
+  // Identificadores com letras (ex.: "web:uuid", usernames) nunca são telefone,
+  // mesmo que a parte numérica tenha comprimento de telefone.
+  if (/[a-z]/i.test(str)) return str;
+  const digits = str.replace(/\D/g, "");
+  if (!looksLikePhone(digits)) return str;
   let national = digits;
   if (national.length >= 12 && national.startsWith("55")) {
     national = national.slice(2);
