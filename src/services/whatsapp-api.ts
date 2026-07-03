@@ -865,6 +865,10 @@ export interface ConciergeConfig {
   slaMinutes: number;
   instagramAutoReply: boolean;
   instagramReplyDelayMinutes: number;
+  /** Auto-resposta do Concierge no chat do site (independente do WhatsApp). */
+  webchatAutoReply: boolean;
+  /** Delay antes de responder no chat do site (0–20s; dá chance do humano atender). */
+  webchatReplyDelaySeconds: number;
 }
 
 export interface FunnelStage {

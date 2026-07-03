@@ -624,6 +624,46 @@ export default function CrmWhatsAppSettings() {
                   </div>
                 </div>
 
+                <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-bold">Auto-resposta no chat do site</Label>
+                      <p className="text-xs text-muted-foreground">
+                        A IA responde visitantes do chat do site automaticamente se ninguém
+                        atender no prazo.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={concierge.webchatAutoReply !== false}
+                      disabled={!concierge.enabled}
+                      onCheckedChange={(v) => setConcierge({ ...concierge, webchatAutoReply: v })}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Label className="text-sm">Responder após</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={20}
+                      value={concierge.webchatReplyDelaySeconds ?? 10}
+                      disabled={!concierge.enabled || concierge.webchatAutoReply === false}
+                      onChange={(e) =>
+                        setConcierge({
+                          ...concierge,
+                          webchatReplyDelaySeconds: Math.min(
+                            Math.max(Number(e.target.value) || 0, 0),
+                            20,
+                          ),
+                        })
+                      }
+                      className="w-20"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      segundos sem resposta humana (0 = imediato)
+                    </span>
+                  </div>
+                </div>
+
                 <div className="rounded-xl border border-border bg-card p-5">
                   <h3 className="text-sm font-bold">Exigir aprovação humana</h3>
                   <p className="mb-3 text-xs text-muted-foreground">

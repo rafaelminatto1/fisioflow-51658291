@@ -74,6 +74,9 @@ const DEFAULT_CONCIERGE_CONFIG = {
   slaEnabled: true,
   slaMinutes: 10,
   webchatSlaMinutes: 2,
+  // Auto-reply do Concierge no chat do site (independente do WhatsApp).
+  webchatAutoReply: true,
+  webchatReplyDelaySeconds: 10,
   // Auto-reply do Concierge no Instagram (com atraso: dá chance do humano atender primeiro).
   instagramAutoReply: false,
   instagramReplyDelayMinutes: 3,

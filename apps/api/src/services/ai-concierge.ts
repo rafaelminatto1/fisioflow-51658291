@@ -135,17 +135,71 @@ export function stripGreetingIntro(reply: string): string {
  * Converte linhas de wa_messages em histórico p/ o LLM: inbound→user,
  * outbound→assistant. Ignora mensagens internas e sem conteúdo de texto.
  */
+function textOf(content: unknown): string {
+  if (typeof content === "string") {
+    const t = content.trim();
+    if (t.startsWith('"') && t.endsWith('"')) {
+      try {
+        return JSON.parse(t);
+      } catch {
+        return t;
+      }
+    }
+    return content;
+  }
+  if (content && typeof content === "object") {
+    const r = content as Record<string, unknown>;
+    if (typeof r.text === "string") return r.text;
+    if (typeof r.body === "string") return r.body;
+  }
+  return "";
+}
+
 export function buildConciergeHistory(
-  rows: Array<{ direction?: string; content?: string }>,
+  rows: Array<{ direction?: string; content?: unknown }>,
 ): ConciergeHistoryItem[] {
   const out: ConciergeHistoryItem[] = [];
   for (const row of rows) {
-    const content = (row.content ?? "").trim();
+    const content = textOf(row.content).trim();
     if (!content) continue;
     if (row.direction === "inbound") out.push({ role: "user", content });
     else if (row.direction === "outbound") out.push({ role: "assistant", content });
   }
   return out;
+}
+
+/**
+ * Config do Concierge no canal webchat (chat do site).
+ * Independente de `autoReplyNewLeads` (que governa o WhatsApp): o site é
+ * controlado por `webchatAutoReply` + delay `webchatReplyDelaySeconds`.
+ * Delay clampado a 0–20s: waitUntil do Worker só estende a vida ~30s após a resposta.
+ */
+export interface WebchatConciergeConfig {
+  enabled: boolean;
+  delayMs: number;
+}
+
+const WEBCHAT_DEFAULT_DELAY_S = 10;
+const WEBCHAT_MAX_DELAY_S = 20;
+
+export function resolveWebchatConciergeConfig(raw: unknown): WebchatConciergeConfig {
+  let cfg: Record<string, unknown> | null = null;
+  if (typeof raw === "string") {
+    try {
+      cfg = JSON.parse(raw);
+    } catch {
+      cfg = null;
+    }
+  } else if (raw && typeof raw === "object") {
+    cfg = raw as Record<string, unknown>;
+  }
+  const enabled = cfg?.enabled !== false && cfg?.webchatAutoReply !== false;
+  const rawDelay = cfg?.webchatReplyDelaySeconds;
+  const delayS =
+    typeof rawDelay === "number" && Number.isFinite(rawDelay)
+      ? Math.min(Math.max(rawDelay, 0), WEBCHAT_MAX_DELAY_S)
+      : WEBCHAT_DEFAULT_DELAY_S;
+  return { enabled, delayMs: delayS * 1000 };
 }
 
 function isAvailabilityQuestion(message: string): boolean {

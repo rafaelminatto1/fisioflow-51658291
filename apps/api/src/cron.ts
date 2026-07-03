@@ -534,7 +534,7 @@ async function dispatchInstagramConcierge(pool: any, env: Env) {
     JOIN whatsapp_contacts wc ON wc.id = c.contact_id
     JOIN organizations o ON o.id = c.organization_id
     JOIN LATERAL (
-      SELECT direction, created_at, content FROM wa_messages m
+      SELECT direction, created_at, content, message_type, media_url FROM wa_messages m
       WHERE m.conversation_id = c.id AND m.direction <> 'internal'
       ORDER BY created_at DESC LIMIT 1
     ) lm ON true

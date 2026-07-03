@@ -220,6 +220,38 @@ async function processConciergeAsync(
   text: string,
 ): Promise<void> {
   try {
+    // 1. Check if concierge is enabled for this organization
+    const conciergeCfgRes = await pool.query(
+      `SELECT settings->'crm_whatsapp'->'concierge' AS concierge
+       FROM organizations WHERE id = $1 LIMIT 1`,
+      [orgId],
+    );
+    const raw = conciergeCfgRes.rows[0]?.concierge;
+    const cfg = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const conciergeEnabled = cfg?.enabled !== false;
+    const autoReplyNewLeads = cfg?.autoReplyNewLeads !== false;
+
+    if (!conciergeEnabled || !autoReplyNewLeads) {
+      console.log(`[WA Queue] Concierge is disabled for org ${orgId}. Skipping auto-reply.`);
+      return;
+    }
+
+    // 2. Check if a human agent has replied recently (within 15 minutes)
+    const recentAgentReply = await pool.query(
+      `SELECT id FROM wa_messages
+       WHERE conversation_id = $1::uuid
+         AND direction = 'outbound'
+         AND sender_type = 'agent'
+         AND created_at > NOW() - INTERVAL '15 minutes'
+       LIMIT 1`,
+      [conversationId],
+    );
+
+    if (recentAgentReply.rows.length > 0) {
+      console.log(`[WA Queue] Human agent replied recently in conversation ${conversationId}. Concierge skipping.`);
+      return;
+    }
+
     // Carrega o histórico recente da conversa p/ dar contexto ao concierge e,
     // sobretudo, evitar repetir a apresentação a cada mensagem.
     let history: ReturnType<typeof buildConciergeHistory> = [];

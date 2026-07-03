@@ -125,6 +125,8 @@ describe("handleWhatsAppInboundQueue — concierge auto-reply", () => {
     // Histórico já contém uma saudação anterior do assistente.
     mockQuery.mockImplementation((sql: string) => {
       if (/whatsapp_phone_number_id/.test(sql)) return Promise.resolve({ rows: [{ id: "org-1" }] });
+      // Check "atendente humano respondeu recentemente?" → não respondeu.
+      if (/sender_type = 'agent'/.test(sql)) return Promise.resolve({ rows: [] });
       if (/FROM wa_messages/.test(sql)) {
         return Promise.resolve({
           rows: [
