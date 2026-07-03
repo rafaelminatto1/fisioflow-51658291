@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Calendar, Phone } from "lucide-react";
+import { Clock, Calendar, Phone, MessageCircle } from "lucide-react";
 import { useData } from "@/hooks/useData";
 import { format, isToday, isTomorrow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -48,6 +48,8 @@ export function UpcomingAppointments() {
   const getStatusColor = (status: string) => {
     const s = String(status || "").toLowerCase();
     switch (s) {
+      case "confirmed":
+        return "bg-emerald-500/10 text-emerald-600 border-emerald-500/20";
       case "presenca_confirmada":
       case "atendido":
         return "bg-primary/10 text-primary border-primary/20";
@@ -101,9 +103,18 @@ export function UpcomingAppointments() {
                   </p>
                   <p className="text-sm text-muted-foreground">{appointment.type}</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <Badge className={`text-xs ${getStatusColor(appointment.status)}`}>
-                      {appointment.status}
+                    <Badge className={`text-xs ${getStatusColor(appointment.status)} flex items-center gap-1`}>
+                      {appointment.status === "confirmed" && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                      )}
+                      {appointment.status === "confirmed" ? "Confirmado" : appointment.status}
                     </Badge>
+                    {appointment.status === "confirmed" && (
+                      <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5" title="Confirmado automaticamente por WhatsApp">
+                        <MessageCircle className="w-3 h-3 text-emerald-600" />
+                        via WhatsApp
+                      </span>
+                    )}
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {formatAppointmentDate(

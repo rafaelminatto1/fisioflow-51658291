@@ -20,46 +20,46 @@ FisioFlow é **tecnicamente superior** a todos concorrentes.
 
 ---
 
-## 🔴 5 GAPS QUE BLOQUEIAM ESCALA
+## 🔴 4 GAPS CRÍTICOS OPERACIONAIS (P0)
 
 | # | Gap | Impacto | Timeline | ROI |
 |---|---|---|---|---|
-| 1 | **Dashboard CAC/LTV/Payback não existe** | Alto — gestão às cegas | 4d | 📈 Gestor toma 50% mais decisões certas |
-| 2 | **WhatsApp confirmação é manual** | Alto — no-show 15% | 3d | 📈 Reduz no-show 15%→8% = +2 sess/mês |
-| 3 | **Apps não estão nas stores** | Crítico — paciente não instala | 2d | 📈 +50% instalações quando lançado |
-| 4 | **Turmas (pilates/grupos) inacabada** | Médio — perde margem 60–80% | 5d | 💰 Novo segmento de receita |
-| 5 | **AI Concierge não responde leads** | Crítico — leads morrem | 3d | 📈 Conversão 5%→15% |
+| 1 | **Dashboard CAC/LTV/Payback não existe** | Alto — gestão às cegas | 4d | 📈 Decisões baseadas em ROI e retenção particular |
+| 2 | **WhatsApp confirmação é manual** | Alto — no-show 15% | 3d | 📈 Reduz no-show para <8% = otimização de horários particulares |
+| 3 | **Apps não estão nas stores** | Crítico — paciente não instala | 2d | 📈 Aumento drástico de engajamento do paciente individual |
+| 4 | **AI Concierge não responde leads** | Crítico — leads morrem | 3d | 📈 Eleva conversão de avaliações particulares (5% → 15%) |
 
-**Total P0:** 17 dias | **Impacto:** +R$15k/mês por clínica
+**Total P0:** 12 dias | **Impacto:** +R$15k/mês na clínica própria através de eficiência operacional
 
 ---
 
-## 💡 5 OPORTUNIDADES PARA VENCER CONCORRENTES
 
-| Oportunidade | Diferencial | Timeline | Valuation Impact |
+## 💡 OPORTUNIDADES DE DIFERENCIAÇÃO NO MERCADO DE SÃO PAULO
+
+| Oportunidade | Diferencial | Timeline | Impacto Operacional |
 |---|---|---|---|
-| 🥇 **Benchmark em Tempo Real** | Único no mercado | 2d | Stickiness +40% |
-| 🥈 **Portal Self-Booking** | Sem WhatsApp manual | 3d | CAC -30% |
-| 🥉 **Reativação Pós-Alta com IA** | Ninguém tem | 2d | LTV +200% |
-| 💎 **Integração com Médicos** | CAC quase zero | 3d | +10–20 pac/mês |
-| 🚀 **Marketplace Franquias** | White-label | 10d | +R$50k/mês passivo |
+| 🥇 **Benchmark em Tempo Real** | Único no mercado | 2d | Medição de performance vs. média da região |
+| 🥈 **Portal Self-Booking Particular** | Sem WhatsApp manual | 3d | Otimização de agenda e redução de atrito (CAC -30%) |
+| 🥉 **Reativação Pós-Alta com IA** | Ninguém tem | 2d | Reengajamento preventivo de pacientes particulares (LTV +200%) |
+| 💎 **Integração com Médicos** | CAC quase zero | 3d | Encaminhamento direto de ortopedistas (+10–20 pac/mês) |
 
-**Total P1:** 20 dias | **Impacto:** +R$40k/mês + 5× valuation
+**Total P1:** 10 dias | **Impacto:** Otimização máxima da taxa de ocupação da clínica própria
 
 ---
 
-## 📈 PROJEÇÃO DE IMPACTO
 
-### HOJE (Junho 2026)
+## 📈 PROJEÇÃO DE IMPACTO NA CLÍNICA PRÓPRIA
+
+### HOJE (Julho 2026)
 ```
 1 clínica (Mooca)
-200 pacientes
+200 pacientes ativos
 R$40k/mês
 No-show: 15%
 Churn: 40%
 ```
 
-### SEMANA 3 (Julio 2026 — P0 resolvido)
+### SEMANA 3 (Julho 2026 — P0 resolvido)
 ```
 1 clínica (Mooca)  
 280 pacientes (+40%)
@@ -70,50 +70,49 @@ Churn: 25% (-37%)
 
 ### MÊS 6 (Janeiro 2027 — P0+P1+P2)
 ```
-5 clínicas (marketplace)
-1.200 pacientes
-R$120k/mês consolidado
-FisioFlow receita passiva: R$18k/mês
-Valuation SaaS: R$1.08M–R$1.44M
+1 clínica (Mooca) otimizada com IA e Dados
+350 pacientes ativos em alta densidade
+R$80k/mês (100% particular, sem perdas fiscais ou operacionais)
+No-show: <5%
+Fidelização/LTV maximizado
 ```
 
 ---
 
-## ⚡ RECOMENDAÇÃO
 
-### ✅ FAZER AGORA (Semana 1)
+## ⚡ RECOMENDAÇÃO E CRONOGRAMA AJUSTADO
 
-1. **Sprint P0 (17 dias):**
+### ✅ FAZER AGORA (Semanas 1-2)
+
+1. **Sprint P0 (12 dias de desenvolvimento):**
    - [ ] Apps nas stores (2d)
    - [ ] Dashboard BI (4d)
    - [ ] Confirmação WhatsApp (3d)
-   - [ ] Turmas mobile (5d)
    - [ ] AI Concierge (3d)
 
-2. **Validar com gestor Mooca Fisio** (call 30min)
-   - Qual gap dói mais?
-   - Qual oportunidade excita?
+2. **Validar fluxo da clínica própria** (Alinhamento operacional)
+   - Teste prático do agendamento particular avançado e telemetria da IA.
 
-3. **Deploy em produção** (Dia 18)
+3. **Deploy em produção** (Dia 14)
 
 ### 🚀 RESULTADO ESPERADO
 
-- ✅ Gestor pode responder CAC/LTV/Payback em 10 segundos
-- ✅ No-show cai 47% (economiza R$2k/mês)
-- ✅ Pacientes instalam app nativo (+2× retenção)
-- ✅ Leads em WhatsApp respondidos por IA 24/7
-- ✅ Pronto para escalar para 5 clínicas piloto
+- ✅ Controle total de CAC/LTV/Payback de pacientes particulares em tempo real
+- ✅ No-show reduzido em 47% (libera horários na agenda para novos atendimentos avulsos)
+- ✅ Pacientes particulares com app nativo instalado (experiência premium)
+- ✅ Novos leads particulares qualificados e agendados por IA no WhatsApp 24/7
 
 ### ⚠️ RISCOS SE NÃO FIZER
 
 | Inação | Consequência | Timeline |
 |---|---|---|
-| Sem dashboard | Gestor cancela (não vê ROI) | 3 meses |
-| Apps não nas stores | -50% potencial de mercado | 6 meses |
-| Manual WhatsApp | No-show 15%, churn 40% | 2 meses |
-| Sem AI Concierge | Leads vão para concorrentes | 1 semana |
+| Sem dashboard | Perda de controle sobre retorno de marketing particular | Imediato |
+| Apps não nas stores | Pacientes não instalam (experiência web lenta/desconfortável) | 3 meses |
+| Manual WhatsApp | Perda de tempo administrativo + no-show de 15% | 1 mês |
+| Sem AI Concierge | Perda de novos leads particulares fora do horário comercial | 1 semana |
 
 ---
+
 
 ## 🎬 PRÓXIMOS PASSOS
 
@@ -135,26 +134,26 @@ Valuation SaaS: R$1.08M–R$1.44M
 - [ ] Métricas: No-show 15%→8%, CAC visível
 
 ### SEMANA 4
-- [ ] Soft launch com 5 clínicas piloto
-- [ ] Coleta de learnings
+- [ ] Operação 100% digital e IA ativada na clínica própria
+- [ ] Otimização contínua de conversão e retenção
+
 
 ---
 
-## 📞 DECISÃO NECESSÁRIA
+## 📞 DECISÃO OPERACIONAL
 
-**Pergunta:** Queremos ir para market com software bom, ou com plataforma inescapável?
+**Pergunta:** Queremos operar com a clínica no modelo tradicional manual, ou com automação e IA de ponta para pacientes particulares?
 
-**Se SIM:**
-- Aprova 4 semanas de intenso (P0 entregado)
-- Dedica gestor Mooca para feedback
-- Prepara 5 clínicas piloto para soft launch
+**Se SIM (Automação):**
+- Aprovar o plano de 2 semanas de desenvolvimento intensivo (P0 entregue)
+- Testar e refinar o fluxo na clínica real
 
 **Se NÃO:**
-- Mantém roadmap atual (1–2 oportunidades/mês)
-- Risco: Concorrentes nos pegam na escala
+- Manter agendamentos e controle administrativo manuais
+- Risco: Alta taxa de no-show (15%) e atrito na recepção
 
 ---
 
-**Conclusão:** FisioFlow está pronto tecnicamente. Falta 30% de product-market fit.  
-A diferença entre fracasso e unicórnio = resolver estes 5 gaps.
+**Conclusão:** O FisioFlow está pronto tecnicamente. Ajustando estes 4 gaps operacionais, a clínica estará automatizada, escalável e extremamente eficiente.
+
 

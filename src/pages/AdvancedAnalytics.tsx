@@ -301,7 +301,7 @@ function AdvancedAnalyticsContentInternal() {
           >
             <div className="space-y-4">
               <h2 className="text-lg font-bold">Análise de Retenção & ROI</h2>
-              <RetentionROI />
+              <RetentionROI months={biMonths} />
             </div>
             <PredictiveAnalytics />
           </TabsContent>

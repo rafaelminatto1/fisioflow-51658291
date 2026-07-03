@@ -551,16 +551,15 @@ Dashboard query:
 
 ---
 
-## SEMANA 3–4: P2 — ESCALA
+## SEMANA 3–4: P2 — OTIMIZAÇÃO AVANÇADA
 
-### Sprint 3.1: Marketplace Franquias (10 dias)
-### Sprint 3.2: Wearables + Anomaly Detection (7 dias)
-### Sprint 3.3: Previsão de Receita ML (5 dias)
-### Sprint 3.4: Compliance Dashboard (3 dias)
+### Sprint 3.1: Wearables + Anomaly Detection (7 dias)
+### Sprint 3.2: Previsão de Receita baseada em Histórico Particular (5 dias)
+### Sprint 3.3: Compliance Dashboard (3 dias)
 
 ---
 
-## 📊 TRACKING & METRICAS
+## 📊 TRACKING & MÉTRICAS
 
 ### Por Sprint
 
@@ -568,7 +567,7 @@ Dashboard query:
 |--------|---------|----------|--------|--------|
 | 1.1 (Apps) | % de instalações vs. web | 10% | 50% | 🟡 |
 | 1.2 (BI) | Decisões baseadas em dados | 20% | 70% | 🟡 |
-| 1.3 (WhatsApp) | No-show rate | 15% | 8% | 🟡 |
+| 1.3 (WhatsApp+AI) | No-show rate | 15% | 8% | 🟡 |
 | 2.1 (Reativação) | % retorno pós-alta | 15% | 30% | 🟡 |
 | 2.3 (Médicos) | Leads de médicos | 0 | 5/mês | 🟡 |
 
@@ -583,15 +582,15 @@ Dashboard query:
 
 ## ✅ FINAL CHECKLIST
 
-### Antes de ir para market
-- [ ] 3 clínicas piloto testadas (5 dias cada)
+### Antes do Go-live Operacional
+- [ ] Clínica Mooca Fisio testada com dados reais (uso interno)
 - [ ] No-show reduzido 15% → 8%
-- [ ] Dashboard sendo usado diariamente
-- [ ] Apps nas stores
-- [ ] Confirmação WhatsApp 100% automática
-- [ ] Suporte 24h para gestores novos
+- [ ] Dashboard de BI sendo usado ativamente
+- [ ] Apps nas stores (iOS e Android)
+- [ ] Confirmação de WhatsApp e AI Concierge 100% automáticos
 
-**Timeline final:** 28 dias de desenvolvimento  
-**Go-live:** Fim de Julho/2026  
-**Impacto:** +40% faturamento + transformação em dados-driven
+**Timeline final:** 14 dias para P0 (e 21 dias acumulados até P2)  
+**Go-live:** Em 14 dias  
+**Impacto:** +40% aproveitamento de agenda particular + gestão baseada em dados
+
 

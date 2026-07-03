@@ -183,18 +183,135 @@ export async function handleWhatsAppInboundQueue(
       // 9. Analytics event
       writeEvent(env, { orgId, event: "whatsapp_message_received" });
 
-      // 10. Process AI Concierge — awaited so the outbound send is not killed
-      // when the consumer returns (fire-and-forget after ack() is unreliable in
-      // Workers). The customer just messaged us, so we are within the 24h window.
-      await processConciergeAsync(
-        env,
-        pool,
-        orgId,
-        conversation.id,
-        contact.id,
-        msg.from || msg.waId,
-        msg.text || "",
-      );
+      // 9.1. Interceptar respostas de confirmação (Botão ou texto SIM)
+      let skipConcierge = false;
+      let apptConfirmed = false;
+      let targetApptId: string | null = null;
+
+      // Pegar o ID do botão interativo no payload bruto se existir
+      const rawPayload = msg.rawPayload as any;
+      const buttonId = rawPayload?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.interactive?.button_reply?.id 
+                    || rawPayload?.interactive?.button_reply?.id 
+                    || rawPayload?.button_reply?.id;
+
+      if (buttonId && typeof buttonId === "string") {
+        if (buttonId.startsWith("confirm_appt_")) {
+          targetApptId = buttonId.replace("confirm_appt_", "");
+          apptConfirmed = true;
+        } else if (buttonId.startsWith("reschedule_appt_")) {
+          targetApptId = buttonId.replace("reschedule_appt_", "");
+          // Paciente quer remarcar - enviamos um aviso amigável que a IA do Concierge está procurando slots
+          const rescheduleAck = "Entendido, você quer remarcar sua consulta. Vou consultar nossa agenda de horários livres para sugerir opções para você...";
+          const whatsapp = new WhatsAppService(env);
+          await whatsapp.sendTextMessage(msg.from || msg.waId, rescheduleAck);
+          
+          await addMessage(
+            pool,
+            conversation.id,
+            orgId,
+            contact.id,
+            "outbound",
+            "system",
+            contact.id,
+            "text",
+            rescheduleAck,
+            `reschedule_ack_${Date.now()}`,
+            { status: "sent", metadata: { autoReply: true } }
+          );
+
+          await broadcastToOrg(env, orgId, {
+            type: "whatsapp_message",
+            conversationId: conversation.id,
+            message: {
+              content: rescheduleAck,
+              direction: "outbound",
+              messageType: "text",
+              status: "sent",
+            },
+          });
+        }
+      }
+
+      // Fallback para texto simples (ex: responder "SIM" ou "confirmar")
+      const lowerText = (msg.text || "").trim().toLowerCase();
+      if (!apptConfirmed && contact.patient_id && ["sim", "confirmar", "confirmado", "quero", "vou"].includes(lowerText)) {
+        // Buscar consulta futura nas próximas 48h para este paciente
+        const apptResult = await pool.query(
+          `SELECT id FROM appointments 
+           WHERE patient_id = $1 
+             AND date >= CURRENT_DATE - INTERVAL '1 day'
+             AND status NOT IN ('cancelled', 'completed', 'realizado')
+           ORDER BY date ASC, time ASC LIMIT 1`,
+          [contact.patient_id],
+        );
+        if (apptResult.rows.length > 0) {
+          targetApptId = apptResult.rows[0].id;
+          apptConfirmed = true;
+        }
+      }
+
+      if (apptConfirmed && targetApptId) {
+        // Atualizar status do agendamento no banco
+        await pool.query(
+          `UPDATE appointments SET status = 'confirmed', updated_at = NOW() WHERE id = $1`,
+          [targetApptId],
+        );
+
+        // Notificar o frontend da agenda
+        await broadcastToOrg(env, orgId, {
+          type: "appointment_confirmed",
+          appointmentId: targetApptId,
+        });
+
+        // Enviar confirmação via WhatsApp
+        const whatsapp = new WhatsAppService(env);
+        const confirmMsg = "Obrigado! Sua consulta está confirmada com sucesso. Te esperamos na clínica! 🏥";
+        await whatsapp.sendTextMessage(msg.from || msg.waId, confirmMsg);
+
+        // Salvar mensagem automática de confirmação
+        await addMessage(
+          pool,
+          conversation.id,
+          orgId,
+          contact.id,
+          "outbound",
+          "system",
+          contact.id,
+          "text",
+          confirmMsg,
+          `confirm_ack_${Date.now()}`,
+          { status: "sent", metadata: { autoReply: true } }
+        );
+
+        // Broadcast de mensagem do sistema
+        await broadcastToOrg(env, orgId, {
+          type: "whatsapp_message",
+          conversationId: conversation.id,
+          message: {
+            content: confirmMsg,
+            direction: "outbound",
+            messageType: "text",
+            status: "sent",
+          },
+        });
+
+        skipConcierge = true; // Pular concierge já que o agendamento foi confirmado automaticamente
+      }
+
+      if (!skipConcierge) {
+        // 10. Process AI Concierge — awaited so the outbound send is not killed
+        // when the consumer returns (fire-and-forget after ack() is unreliable in
+        // Workers). The customer just messaged us, so we are within the 24h window.
+        await processConciergeAsync(
+          env,
+          pool,
+          orgId,
+          conversation.id,
+          contact.id,
+          msg.from || msg.waId,
+          msg.text || "",
+        );
+      }
 
       // 11. Acknowledge successful processing
       message.ack();

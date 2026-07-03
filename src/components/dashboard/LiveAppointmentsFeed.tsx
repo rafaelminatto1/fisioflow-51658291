@@ -127,13 +127,18 @@ export const LiveAppointmentsFeed = memo(function LiveAppointmentsFeed() {
                   </div>
 
                   <div className="flex-1 text-right">
-                    <div>
+                    <div className="flex items-center justify-end gap-1">
                       <Badge
                         variant="outline"
                         className={`${statusInfo.color} text-white border-0`}
                       >
                         {statusInfo.label}
                       </Badge>
+                      {apt.status === "confirmed" && (
+                        <Badge className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[9px] font-black uppercase py-0 px-1.5 rounded-full">
+                          WA
+                        </Badge>
+                      )}
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">

@@ -4,31 +4,19 @@ Este documento centraliza as premissas e restrições de negócio do FisioFlow. 
 
 ---
 
-## 🏥 Atendimento e Convênios (Medical Insurance)
+## 🏥 Atendimento Particular e Ciclo de Sessões (Billing Rules)
 
-### 🚫 Regra de Ouro: Sem Atendimento Direto
+### 🚫 Regra de Ouro: Sem Atendimento por Convênios Médicos
+O FisioFlow é projetado exclusivamente para atendimento particular (out-of-pocket). Não há suporte para faturamento por guias de convênios, tabelas TISS, ou qualquer trâmite administrativo com operadoras de planos de saúde.
 
-O FisioFlow **NÃO** realiza atendimento direto por convênios médicos. Todo o fluxo financeiro é baseado em atendimento particular (out-of-pocket).
+### 💰 Faturamento de Planos de Tratamento e Pacotes
+O fluxo financeiro baseia-se estritamente em pacotes de tratamento e sessões particulares avulsas de atendimento individualizado:
+1. **Cobrança por Pacotes:** Planos de tratamento recorrentes (comumente fechados em ciclos de 10 sessões) constituem o núcleo financeiro da clínica.
+2. **Gatilhos de Faturamento (Ciclo de 10 Sessões):**
+    - O sistema monitora o contador de sessões particulares finalizadas de cada paciente.
+    - **Notificação Administrativa:** Ao atingir a 10ª sessão (e múltiplos de 10), o time administrativo recebe uma notificação automática para faturamento de renovação do plano de tratamento.
+    - **Emissão Fiscal (NFS-e):** O sistema oferece a opção de emitir a NFS-e correspondente de forma direta.
 
-### 📄 Fluxo de Reembolso
-
-Embora não haja atendimento direto, o sistema permite o cadastro do convênio no perfil do paciente para fins de **Reembolso**.
-
-1.  **Campo de Convênio**: O perfil do paciente possui campos para `provider` (Operadora), `plan` (Plano) e `cardNumber` (Carteirinha).
-2.  **Automação de Documentos**: Estes dados são integrados automaticamente para facilitar o reembolso:
-    - **Recibos (PDF)**: Seção dedicada com os dados do convênio.
-    - **NFS-e**: Inclusão automática de bloco "[PARA FINS DE REEMBOLSO]" na discriminação do serviço.
-    - **Relatórios de Evolução**: Cabeçalho com dados de convênio para auditoria da operadora.
-3.  **Reembolso Inteligente (Estratégia Particular)**:
-    - O sistema permite planejar sessões futuras para fins de nota fiscal antecipada.
-    - **Regra de Datas**: As sessões planejadas devem ocorrer obrigatoriamente após a data do pedido médico.
-    - **Frequência Padrão**: 3x por semana em dias úteis (Segunda, Quarta, Sexta).
-    - **Código TUSS Padrão**: `50000160` (Fisioterapia Musculoesquelética).
-    - **Automação de Documento**: Ao emitir a nota, o sistema oferece a geração simultânea do "Relatório de Atendimento" técnico com linguagem clínica apropriada para as operadoras.
-4.  **Gatilhos de Faturamento (Ciclo de 10 Sessões)**:
-    - O sistema monitora o contador de sessões finalizadas.
-    - **Notificação Compulsória**: Ao atingir a 10ª sessão (e múltiplos de 10), o time administrativo/financeiro (admins) recebe uma notificação automática.
-    - **Ações Fiscais**: O sistema oferece a opção de emitir a NFS-e imediatamente ou criar uma tarefa pendente para faturamento posterior.
 
 ---
 

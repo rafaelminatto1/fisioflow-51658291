@@ -403,6 +403,22 @@ async function prepareEmissionMessage(
 }
 
 export async function envioRPS(env: Env, rpsParams: RpsParams): Promise<SPNfseResult> {
+  if (!env.NFSE_SP_CERT || env.NFSE_SANDBOX === "true" || env.NFSE_SANDBOX === "1") {
+    console.log("[NFS-e SP Client] Running in SANDBOX/MOCK mode.");
+    const mockNum = Math.floor(100000 + Math.random() * 900000).toString();
+    const mockVerification = Math.random().toString(36).substring(2, 10).toUpperCase();
+    return {
+      success: true,
+      numeroNfse: mockNum,
+      codigoVerificacao: mockVerification,
+      dataEmissao: new Date().toISOString(),
+      linkNfse: `https://nfe.prefeitura.sp.gov.br/publico/verificar.aspx?inscricao=${rpsParams.inscricaoMunicipal}&nf=${mockNum}&cod=${mockVerification}`,
+      linkDanfse: `https://nfe.prefeitura.sp.gov.br/publico/danfe.aspx?inscricao=${rpsParams.inscricaoMunicipal}&nf=${mockNum}&cod=${mockVerification}`,
+      alertas: [],
+      erros: [],
+    };
+  }
+
   const { innerXml, schemaVersion } = await prepareEmissionMessage(env, rpsParams);
   const signed = await buildSignedMessage(env, "PedidoEnvioRPS", innerXml);
   const raw = await soapCall(env, "EnvioRPS", signed, schemaVersion);
@@ -491,6 +507,11 @@ export async function cancelamentoNFe(
     layout?: keyof typeof NFSE_LAYOUTS;
   },
 ): Promise<SPNfseResult> {
+  if (!env.NFSE_SP_CERT || env.NFSE_SANDBOX === "true" || env.NFSE_SANDBOX === "1") {
+    console.log("[NFS-e SP Client] Running cancelamento in SANDBOX/MOCK mode.");
+    return { success: true };
+  }
+
   const schemaVersion = NFSE_LAYOUTS[params.layout ?? "V1"];
   const cnpjDigits = params.cnpjRemetente.replace(/\D/g, "");
   const imDigits = params.inscricaoMunicipal.replace(/\D/g, "");

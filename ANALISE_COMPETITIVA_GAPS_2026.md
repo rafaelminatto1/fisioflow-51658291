@@ -98,20 +98,8 @@ Se silêncio: Segunda tentativa em D-1
 
 ---
 
-### 4️⃣ GESTÃO DE TURMAS (PILATES/GRUPOS) INACABADA
-**Impacto:** 🟠 Médio-Alto — Perda de receita em segmento
-
-**O que falta:**
-- [ ] UI de matrícula em turma (mobile + web)
-- [ ] Check-in automático (QR code no app)
-- [ ] Lista de presença com sincro real
-- [ ] Faturamento por turma (pacote de 12 aulas)
-
-**Por que importa:** Grupo = margem 60–80% vs. Individual 40–50%
-
-**Diferencial:** Único com check-in via QR code
-
 ---
+
 
 ### 5️⃣ AI CONCIERGE NÃO RESPONDE A NOVOS LEADS
 **Impacto:** 🔴 Crítico — Leads chegam e morrem
@@ -244,19 +232,17 @@ Se ≤2: Agenda reavaliação preventiva
 
 ---
 
-### 🚀 OPO 5: MARKETPLACE DE FRANQUIAS (WHITE-LABEL)
-- Dashboard "Abra sua clínica FisioFlow"
-- Clínicas pagam 15% de taxa por atendimento
-- Infraestrutura multi-tenant já existe
+### 🚀 OPO 5: PROGRAMA DE FIDELIZAÇÃO PARTICULARES (LTV MAX)
+- Acompanhamento recorrente com reavaliações biomecânicas 3D periódicas inclusas no pacote.
+- Entrega de relatórios de desfecho clínico PDF personalizados e assinados digitalmente.
+- Otimização do valor do paciente sem depender de novas captações constantes.
 
 **Modelo:**
 ```
-Clínica A: 100 pac × R$80 = R$8k → FisioFlow ganha R$1.2k
-Clínica B: 50 pac × R$80 = R$4k → FisioFlow ganha R$600
-[...]
-Rede de 20 clínicas → R$50k/mês em receita passiva
-Valuation = +10× (SaaS + marketplace = 5–8× multiple)
+Pacote Semestral: Garantia de receita recorrente na clínica própria.
+Diferencial: Experiência clínica ultra-premium com inteligência artificial.
 ```
+
 
 **Diferencial:** Ninguém no mercado de fisio tem
 
@@ -297,21 +283,21 @@ Dashboard LGPD com checkmarks + alertas + relatório mensal
 ### SEMANA 1: P0 (Bloqueia tudo)
 1. **Apps nas stores** (2 dias)
 2. **Dashboard CAC/LTV/Payback** (4 dias)
-3. **Confirmação WhatsApp end-to-end** (3 dias)
+3. **Confirmação WhatsApp + AI Concierge** (5 dias)
 
-### SEMANA 2–3: P1 (Diferenciadores rápidos)
+### SEMANA 2: P1 (Diferenciadores rápidos)
 4. **Recuperação pós-alta (reativação IA)** (2 dias)
 5. **Deep linking no app** (1 dia)
 6. **Integração com médicos** (3 dias)
 7. **Benchmark vs. mercado** (2 dias)
 
-### SEMANA 4+: P2 (Escala competitiva)
-8. **Marketplace de franquias** (10 dias)
-9. **Wearables + anomaly detection** (7 dias)
-10. **Previsão de receita ML** (5 dias)
-11. **Compliance dashboard** (3 dias)
+### SEMANA 3+: P2 (Otimização avançada)
+8. **Wearables + anomaly detection** (7 dias)
+9. **Previsão de receita com dados** (5 dias)
+10. **Compliance dashboard LGPD** (3 dias)
 
 ---
+
 
 ## 📊 IMPACTO PROJETADO
 
@@ -322,27 +308,30 @@ Dashboard LGPD com checkmarks + alertas + relatório mensal
 R$40k/mês
 No-show: 15%
 Churn: 40%
-Valuation: N/A
+Valuation: N/A (Uso próprio)
 ```
 
 ### Cenário APÓS P0/P1 (3 meses)
 ```
 1 clínica (Mooca)
-280 pacientes (+40% via AI concierge)
+280 pacientes (+40% via AI concierge e WhatsApp automático)
 R$56k/mês (+40%)
 No-show: 8% (-47%)
 Churn: 25% (-37%)
-Receita recuperada: +R$8k/mês
+Receita recuperada por eficiência de horários: +R$8k/mês
 ```
 
-### Cenário APÓS ESCALA (12 meses)
+### Cenário APÓS OTIMIZAÇÃO (6 meses)
 ```
-5 clínicas via marketplace
-1.200 pacientes
-R$120k/mês consolidado
-FisioFlow receita passiva: R$18k/mês (15% de taxa)
-Valuation SaaS: R$18k × 12 × 5–8× = R$1.08M–R$1.44M
+1 clínica (Mooca) em alta densidade operacional
+350 pacientes ativos
+R$80k/mês faturamento (100% particular)
+No-show: <5%
+LTV maximizado via fidelização inteligente
 ```
+
+---
+
 
 ---
 
@@ -350,24 +339,21 @@ Valuation SaaS: R$18k × 12 × 5–8× = R$1.08M–R$1.44M
 
 ### ✅ O QUE FAZER AGORA
 
-1. **Validar com gestor real (Mooca Fisio)**  
-   Quais gaps doem mais? Qual é a prioridade dele?
+1. **Homologar fluxos com o gestor**  
+   Validar os textos da IA para atração de particulares e visual do dashboard BI.
 
-2. **Sprint de 1 semana (P0)**  
-   Apps + Dashboard CAC/LTV + Confirmação WhatsApp
+2. **Sprint de 2 semanas (P0)**  
+   Apps nas stores + Dashboard BI + Confirmação WhatsApp + AI Concierge.
 
-3. **Ir para market com soft launch**  
-   Benchmark + AI reativação + deep linking
-
-4. **Documentar tudo em RUNBOOK**  
-   Para reutilizar em próximas clínicas
+3. **Deploy em Produção**  
+   Ativar regras de ocupação de agenda e monitorar resultados de no-show.
 
 ### ⚠️ RISCOS SE NÃO FIZER
 
-- App não nas stores → -50% de potencial
-- Sem dashboard → Gestor não acredita em dados, cancela
-- WhatsApp manual → No-show 15%, churn 40%
-- Sem reativação pós-alta → LTV perde R$4–6k por paciente
+- App não nas stores → Pacientes não engajam na reabilitação domiciliar (HEP).
+- Sem dashboard → Falta de dados para mensurar o CAC/LTV das campanhas particulares.
+- WhatsApp manual → Alta taxa de no-show (15%) e ociosidade de horários.
+- Sem AI Concierge → Perda de novos leads particulares fora do horário comercial.
 
 ---
 
@@ -375,13 +361,14 @@ Valuation SaaS: R$18k × 12 × 5–8× = R$1.08M–R$1.44M
 
 **FisioFlow está 92% pronto tecnicamente.**
 
-**Falta: 30% de "product-market fit" + validação com usuário real.**
+**Falta: 8% de ajustes operacionais + validação com dados reais na clínica.**
 
-**Oportunidade: Transformar de "bom software" para "plataforma inescapável".**
+**Oportunidade: Transformar a clínica Mooca Fisio na operação mais eficiente e automatizada de São Paulo.**
 
-A diferença entre fracasso e unicórnio = resolver estes 5 gaps + validar com usuário.
+A diferença entre ineficiência e alta rentabilidade = resolver estes 4 gaps operacionais.
 
 ---
 
-**Próximo passo:** Agendar sessão com gestor da Mooca Fisio + priorizar roadmap.
+**Próximo passo:** Kickoff das correções operacionais e envio dos apps para homologação.
+
 

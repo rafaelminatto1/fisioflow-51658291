@@ -10,8 +10,9 @@
 
 | Software | Foco | Preço | CAC/LTV | Mobile | IA | NFS-e | Status |
 |---|---|---|---|---|---|---|---|
-| **FisioFlow** ⭐ | Fisio Avançada | SaaS | ✅ Em progr. | ✅ Completo | ✅ Studio | ✅ Nativo | Entrega histórica |
+| **FisioFlow** ⭐ | Fisio Particular | Exclusivo | ✅ Em progr. | ✅ Completo | ✅ Studio | ✅ Nativo | Uso Clínico Interno |
 | **FisioSync** | Fisio/Pilates | Freemium | ❌ | ⚠️ Básico | ⚠️ Secretária | ❌ | Grátis + upsell |
+
 | **GestãoDS** | Médico/Saúde | Alto | ⚠️ CRM | ❌ | ⚠️ Básico | ✅ | Enterprise |
 | **EffiClin** | "De fisio" | Baixo | ✅ Simples | ❌ | ❌ | ❌ | Estável |
 | **ZenFisio** | Idem | Baixo | ✅ Simples | ❌ | ❌ | ❌ | Estável |
@@ -45,9 +46,10 @@
 | **WhatsApp (Automação)** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ | ❌ | ❌ | ⭐⭐⭐ | ⭐⭐ | ⭐⭐ | ⭐⭐ | ⭐⭐⭐ | ⭐⭐ |
 | **Portal Paciente** | ⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐ | ❌ | ❌ | ⭐⭐ | ⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
 | **Telemedicina** | ⭐⭐⭐⭐ | ❌ | ⭐⭐ | ❌ | ❌ | ❌ | ⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐ | ⭐⭐ |
-| **Gestão de Turmas (Grupos)** | ⭐⭐⭐ (em progr.) | ⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ | ❌ | ⭐⭐⭐ | ⭐⭐ | ⭐⭐ |
+| **Gestão de Turmas (Grupos)** | ❌ (N/A) | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ | ❌ | ⭐⭐⭐ | ⭐⭐ | ⭐⭐ |
 
-**🏆 Winner por categoria:** FisioFlow (NFS-e, WhatsApp, Evolução), FisioSync (Grupos/Turmas)
+**🏆 Winner por categoria:** FisioFlow (NFS-e, WhatsApp, Evolução, Prontuário Inteligente), FisioSync (Grupos/Turmas)
+
 
 ---
 
@@ -113,7 +115,8 @@
 | Dimensão | FisioFlow | FisioSync | GestãoDS | EffiClin | ZenFisio | Ikora | Clinora | HumanDoc | NinSaúde | WIO | Cliniconect |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | **Edge Computing (< 60ms latência)** | ⭐⭐⭐⭐⭐ | ❌ | ⭐⭐ | ⭐⭐ | ⭐⭐ | ⭐⭐ | ⭐⭐⭐ | ❌ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
-| **Multi-Tenant Architecture** | ⭐⭐⭐⭐⭐ | ❌ | ⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐ | ❌ | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
+| **Single-Tenant Architecture** | ⭐⭐⭐⭐⭐ | ❌ | ⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐ | ❌ | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
+
 | **Disaster Recovery / Backup** | ⭐⭐⭐⭐⭐ | ❌ | ⭐⭐⭐ | ❌ | ❌ | ❌ | ⭐⭐ | ❌ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
 | **LGPD Compliance (RLS)** | ⭐⭐⭐⭐⭐ | ❌ | ⭐⭐⭐ | ⭐⭐ | ⭐⭐ | ❌ | ⭐⭐ | ❌ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
 | **Database Performance (< 100ms)** | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
@@ -211,16 +214,17 @@ ALTO PREÇO
    │ Clinora (R$50/user)    WIO (sob consulta)
    │ Modular               IA-first
    │
-   └──────────────────────→ ALTO VALUATION
-   FisioFlow     FisioSync
-   (Freemium    (Freemium
-    em progr.)   +IA base)
+    └──────────────────────→ ALTO RETORNO FINANCEIRO (ROI)
+    FisioFlow     FisioSync
+    (Tecnologia   (Freemium
+     Própria)     +IA base)
 ```
 
 **Estratégia FisioFlow:**
-- Não competir em preço (GestãoDS = legacy caro)
-- Competir em valor (IA inescapável = alto LTV para cliente)
-- Modelo: Freemium → Marketplace franquias (15% de taxa)
+- Tecnologia Proprietária: Eliminar custos recorrentes de licenças de SaaS por usuário.
+- Foco em Valor: Oferecer experiência de atendimento particular ultra-premium (Voice Scribe, Biomecânica) que justifica tíquetes médios elevados.
+- Modelo: Software interno exclusivo e fechado.
+
 
 ---
 
@@ -231,13 +235,12 @@ ALTO PREÇO
    - Marketing: "Única plataforma que ENTENDE o paciente"
    - Caso: "Reduz no-show 47% com IA de confirmação"
 
-2. **Marketplace Franquias:** Infraestrutura multi-tenant já existe
-   - Modelo: 15% de taxa por clínica
-   - Próxima geração: R$50k/mês em receita passiva
+2. **Tecnologia como Atrativo Particular:** Utilizar a IA (Voice Scribe e Biomecânica 3D) como argumento de venda para reabilitação particular.
+   - Modelo: Valorização do atendimento individualizado.
 
-3. **Enterprise via BI:** GestãoDS cobra caro; FisioFlow oferece CAC/LTV para pequenas clínicas
-   - Segment: Clínicas 10–50 pacientes/mês
-   - USP: "Crescimento baseado em dados, não em instinto"
+3. **Gestão por Dados Local:** Utilizar as métricas de CAC/LTV do dashboard de BI para otimizar os investimentos locais de marketing digital na Mooca.
+   - USP: "Crescimento de faturamento particular baseado em dados e eficiência de ocupação da agenda."
+
 
 ### ❌ EVITAR
 1. Competir com GestãoDS em CRM (perdemos)
@@ -245,10 +248,10 @@ ALTO PREÇO
 3. Validar IA sem usuário real (build for ghost)
 
 ### 🚀 ATACAR PRIMEIRO
-1. Resolver P0 (17 dias)
-2. Ir para market com soft launch (5 clínicas piloto)
-3. Documentar aprendizados
-4. Escalar modelo franquias (10 clínicas = unicórnio valuation)
+1. Resolver P0 (12 dias)
+2. Implantar em produção diretamente na clínica Mooca Fisio
+3. Otimizar e monitorar a taxa de no-show (<8%) e captação de leads via AI Concierge
+
 
 ---
 

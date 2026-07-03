@@ -238,7 +238,7 @@ app.get("/bi", async (c) => {
     );
     const periodStart = periodStartRes.rows[0]?.period_start;
 
-    const [revenueRes, currentMonthRes, occupancyRes, retentionRes, topTherapistsRes, statusRes] =
+    const [revenueRes, currentMonthRes, occupancyRes, retentionRes, topTherapistsRes, statusRes, marketingSpendRes, newPatientsRes] =
       await Promise.all([
         pool.query(
           `
@@ -350,6 +350,28 @@ app.get("/bi", async (c) => {
           `,
           [user.organizationId, periodStart],
         ),
+        pool.query(
+          `
+            SELECT COALESCE(SUM(amount), 0)::numeric AS marketing_spend
+            FROM transactions
+            WHERE organization_id = $1
+              AND type = 'despesa'
+              AND (category = 'marketing' OR category = 'anuncios' OR dre_category = 'marketing' OR description ILIKE '%marketing%' OR description ILIKE '%tráfego%')
+              AND created_at >= $2
+              AND deleted_at IS NULL
+          `,
+          [user.organizationId, periodStart],
+        ).catch(() => ({ rows: [{ marketing_spend: "0" }] })),
+        pool.query(
+          `
+            SELECT COUNT(*)::int AS count
+            FROM patients
+            WHERE organization_id = $1
+              AND created_at >= $2
+              AND deleted_at IS NULL
+          `,
+          [user.organizationId, periodStart],
+        ).catch(() => ({ rows: [{ count: 0 }] })),
       ]);
 
     const revenueTrend = revenueRes.rows.map((row) => ({
@@ -371,11 +393,29 @@ app.get("/bi", async (c) => {
     const retainedPatients = Number(retentionRes.rows[0]?.retained_patients ?? 0);
     const totalActivePatients = Number(retentionRes.rows[0]?.total_active_patients ?? 0);
 
+    // Cálculos de BI/ROI
+    const marketingSpend = Number(marketingSpendRes.rows[0]?.marketing_spend || 0);
+    const newPatients = Number(newPatientsRes.rows[0]?.count || 0);
+
+    const cac = newPatients > 0 ? Number((marketingSpend / newPatients).toFixed(2)) : 0;
+
+    const totalRevenuePeriod = revenueTrend.reduce((sum, row) => sum + Number(row.revenue), 0);
+    const totalPaymentsCount = revenueTrend.reduce((sum, row) => sum + Number(row.sessions), 0);
+
+    const avgTicket = totalPaymentsCount > 0 ? totalRevenuePeriod / totalPaymentsCount : 0;
+    const avgSessions = totalActivePatients > 0 ? totalPaymentsCount / totalActivePatients : 0;
+    const retentionRate = totalActivePatients > 0 ? (retainedPatients / totalActivePatients) : 0;
+
+    const ltv = Number((avgTicket * avgSessions * (retentionRate > 0 ? retentionRate : 1)).toFixed(2));
+
+    const monthlyRevenuePerPatient = totalActivePatients > 0 ? (totalRevenuePeriod / totalActivePatients) / months : 0;
+    const payback = cac > 0 && monthlyRevenuePerPatient > 0 ? Number((cac / monthlyRevenuePerPatient).toFixed(1)) : 0;
+
     return c.json({
       data: {
         revenue: {
           trend: revenueTrend,
-          total_period: revenueTrend.reduce((sum, row) => sum + Number(row.revenue), 0),
+          total_period: totalRevenuePeriod,
           current_month: currentMonth,
           trend_pct: trendPct,
         },
@@ -391,6 +431,13 @@ app.get("/bi", async (c) => {
               : 0,
           retained_patients: retainedPatients,
           total_active_patients: totalActivePatients,
+        },
+        roi: {
+          cac,
+          ltv,
+          payback,
+          marketing_spend: marketingSpend,
+          new_patients: newPatients,
         },
         top_therapists: topTherapistsRes.rows.map((row) => ({
           therapist_id: String(row.therapist_id ?? ""),

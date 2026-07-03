@@ -6,10 +6,10 @@
 
 ### O que FisioFlow É
 ✅ **Tecnicamente superior** a 10 concorrentes em 25 dimensões  
-✅ **IA inescapável** (voice scribe, biomecânica 3D, digital twin, peer-review)  
-✅ **Infraestrutura moderna** (edge computing <60ms, Neon serverless, multi-tenant)  
-✅ **Automação WhatsApp** + **NFS-e nativo** + **Gamificação** + **Mobile completo**  
-✅ **Pronto para 25.000 clínicas** (arquitetura testada em produção)  
+✅ **IA de ponta** (voice scribe, biomecânica 3D, digital twin, peer-review)  
+✅ **Infraestrutura moderna** (edge computing <60ms, Neon serverless, single-tenant)  
+✅ **Automação WhatsApp** + **NFS-e nativa** + **Gamificação** + **Mobile completo**  
+✅ **Pronto para operar** com máxima eficiência e exclusividade na clínica  
 
 ### O que FisioFlow NÃO É
 🔴 **Visible ao mercado** — Apps não estão nas stores  
@@ -31,7 +31,7 @@
 
 ## PÁGINA 2: O PLANO DE ATAQUE
 
-### SEMANA 1: P0 — Bloqueia Tudo (17 dias)
+### SEMANA 1: P0 — Bloqueia Tudo (14 dias)
 
 ```
 DAY 1-2:   Apps nas Stores
@@ -48,49 +48,49 @@ DAY 7-9:   Confirmação WhatsApp End-to-End
             ├─ Webhook: Recebe resposta, atualiza agenda
             └─ Impacto: No-show 15% → 8% (-47%)
             
-DAY 10-14: Gestão de Turmas (Mobile)
-            ├─ UI: Matrícula em turma
-            ├─ Check-in: QR code
-            └─ Faturamento: Pacote de 12 aulas
-            
-DAY 15-17: AI Concierge Produção
+DAY 10-12: AI Concierge Produção
             ├─ Validar endpoint (webhook + IA response)
             ├─ Telemetria: Taxa de conversão lead→agendamento
-            └─ Impacto: 5% → 15% conversão
+            └─ Impacto: 5% → 15% conversão particular
+            
+DAY 13-14: Ajustes Finos de Usabilidade e Jornada Particular
+            ├─ Fluxo de checkout e geração de NFS-e direto
+            └─ Polimento do Patient App (Home Exercise Prescription)
 ```
 
-**Timeline:** 17 dias (3 sprints paralelos)  
-**Impacto:** +R$15k/mês por clínica
+**Timeline:** 14 dias (Sprints focados de desenvolvimento)  
+**Impacto:** +R$15k/mês por eficiência de agenda e novos agendamentos particulares
+
 
 ---
 
-### SEMANA 2–3: P1 — Diferenciadores (20 dias)
+### SEMANA 2–3: P1 — Diferenciadores (10 dias)
 
 - **Recuperação Pós-Alta** (IA reativação): +30% LTV
 - **Deep Linking** (app via SMS): +50% instalações
-- **Integração com Médicos** (CAC quase zero): +10–20 pacientes/mês
-- **Benchmark vs. Mercado** (compare com SP): +40% stickiness
+- **Integração com Médicos** (CAC quase zero): +10–20 pacientes particulares/mês
+- **Benchmark vs. Mercado** (compare com SP): +40% de confiança operacional
 
 ---
 
-### SEMANA 4+: P2 — Escala (>30 dias)
+### SEMANA 4+: P2 — Otimização Avançada
 
-- **Marketplace Franquias** (white-label): R$50k/mês passivo
-- **Wearables + Anomaly Detection** (HealthKit/Google Fit): diferencial absurdo
-- **Previsão de Receita ML**: +R$8k/mês via decisões certas
-- **Compliance Dashboard**: LGPD automation
+- **Wearables + Anomaly Detection** (HealthKit/Google Fit): prevenção de abandono
+- **Previsão de Receita com Dados**: planejamento de marketing digital particular
+- **Compliance Dashboard**: automação de termo de consentimento LGPD
+
 
 ---
 
 ## IMPACTO PROJETADO
 
-### Hoje (Junho 2026)
+### Hoje (Julho 2026)
 ```
-1 clínica, 200 pacientes
+1 clínica, 200 pacientes ativos
 R$40k/mês, no-show 15%, churn 40%
 ```
 
-### Após P0 (3 semanas)
+### Após P0 (2 semanas)
 ```
 1 clínica, 280 pacientes (+40%)
 R$56k/mês (+40%), no-show 8% (-47%), churn 25% (-37%)
@@ -98,66 +98,68 @@ R$56k/mês (+40%), no-show 8% (-47%), churn 25% (-37%)
 
 ### Após P0+P1+P2 (6 meses)
 ```
-5 clínicas (marketplace)
-1.200 pacientes, R$120k/mês
-FisioFlow receita passiva: R$18k/mês
-Valuation: R$1.08M–R$1.44M
+1 clínica Mooca (IA + particular de alta densidade)
+350 pacientes ativos
+R$80k/mês faturamento otimizado
+No-show <5%
+LTV:CAC maximizado
 ```
+
 
 ---
 
 ## DECISÃO NECESSÁRIA
 
-### Opção A: "Go-Live em 17 dias" 🚀
-- Resolver P0 (dashboard + WhatsApp + apps)
-- Soft launch com 5 clínicas piloto
-- Go-to-market com "IA + dados = crescimento"
-- **Risco:** Baixo (já testado tecnicamente)
-- **Upside:** +40% faturamento mês 1
+### Opção A: "Go-Live em 14 dias" 🚀
+- Resolver P0 (dashboard + WhatsApp + apps + AI concierge)
+- Lançamento em produção direto na Mooca Fisio
+- Foco em maximizar agenda de atendimentos particulares
+- **Risco:** Baixo (código base já existe)
+- **Upside:** +40% aproveitamento de horários no mês 1
 
-### Opção B: "Continuar com roadmap atual" ⏳
-- 1–2 features/mês
-- **Risco:** Alto (concorrentes nos pegam)
-- **Upside:** Conservador (+5% mês a mês)
+### Opção B: "Continuar com operação manual" ⏳
+- Sem automação de recepção e CRM
+- **Risco:** Alto (no-show de 15% e ociosidade de horários na agenda)
+- **Upside:** Conservador (estabilidade de baixo crescimento)
 
 ---
 
 ## CHECKLIST DE PRONTO (GO/NO-GO)
 
-- [ ] P0 pronto em 17 dias (paralelo: apps + BI + WhatsApp + turmas + AI)
-- [ ] Clínica piloto (Mooca Fisio) em produção com dados reais
+- [ ] P0 pronto em 14 dias (apps + BI + WhatsApp + AI Concierge)
+- [ ] Mooca Fisio em produção com dados reais particulares
 - [ ] Métricas validadas: CAC visível, no-show 8%, apps nas stores
-- [ ] Suporte 24h para gestores novos
-- [ ] Roadmap P1 sincronizado com piloto
-- [ ] Marketplace franquias em design (para próximas 4 semanas)
+- [ ] Fluxo operacional de recepção fluindo com IA
+- [ ] Roadmap P1 de reativação particular configurado
+
 
 ---
 
-## RESSOURCE ALLOCATION
+## ALLOCATION DE RECURSOS
 
 | Componente | Dev-days | Owner | Status |
 |---|---|---|---|
-| Apps nas Stores | 2 | DevOps | Pronto (administrativo) |
+| Apps nas Stores | 2 | DevOps | Pronto para envio |
 | Dashboard BI | 4 | Backend + Frontend | 70% design, 30% build |
-| WhatsApp automático | 3 | Backend + Ops | 50% ready (cron + webhook) |
-| Turmas mobile | 5 | Frontend + Mobile | 30% UI, 70% falta |
-| AI Concierge | 3 | Backend + Ops | 80% ready (falta prod validation) |
-| **Total P0** | **17** | **Cross-team** | **60% ready** |
+| WhatsApp automático | 3 | Backend + Ops | 50% pronto (cron + webhook) |
+| AI Concierge | 3 | Backend + IA | 80% pronto (falta validação) |
+| Ajustes Jornada Particular | 2 | Frontend + Mobile | 50% pronto |
+| **Total P0** | **14** | **Cross-team** | **65% pronto** |
 
-**Slack:** 3 dias (padding para bugs/issues)  
-**Launch Date:** Dia 21 de Julho (se começar HOJE)
+**Slack:** 2 dias (padding para bugs/issues)  
+**Launch Date:** 14 dias a partir do início.
 
 ---
 
-## COMPETITIVE ADVANTAGE
+## VANTAGEM COMPETITIVA OPERACIONAL
 
-**Ninguém no mercado de fisio tem:**
+**Nossa clínica terá diferenciais tecnológicos que nenhuma clínica da região tem:**
 1. ✅ IA voice scribe (voice-to-prontuário automático)
 2. ✅ Biomecânica 3D (análise de movimento)
-3. ✅ Digital twin (predição de alta/abandono)
+3. ✅ Digital twin (predição de alta/abandono de tratamento particular)
 4. ✅ Peer-review automático (qualidade clínica)
-5. ✅ Marketplace franquias (white-label)
-6. ✅ Edge computing <60ms (latência zero)
+5. ✅ Edge computing <60ms (sem lentidão no prontuário)
+
 
 **A próxima geração vem:** WIO Clinic + Cliniconect (12–18 meses atrasados)  
 **Janela de oportunidade:** Agora (próximos 6 meses)
@@ -167,33 +169,26 @@ Valuation: R$1.08M–R$1.44M
 ## PRÓXIMOS PASSOS
 
 **HOJE:**
-- [ ] Apresentar esta análise ao gestor
-- [ ] Agendar call com Mooca Fisio (priorities + feedback)
-- [ ] Aprovação do roadmap P0
+- [ ] Aprovação do roadmap P0 adaptado
+- [ ] Kickoff técnico das correções de gaps
 
-**AMANHÃ:**
-- [ ] Sprint 1.1 (Apps) inicia
-- [ ] Sprint 1.2 (BI) inicia
-- [ ] Sprint 1.3 (WhatsApp) inicia
+**SEMANA 1:**
+- [ ] Envio dos Apps (iOS/Android)
+- [ ] Finalização das queries e UI do Dashboard BI
+- [ ] Integração do webhook WhatsApp Confirmação
 
 **SEMANA 2:**
-- [ ] Primeira build de teste em staging
-- [ ] Mooca Fisio feedback loop
+- [ ] Validação do AI Concierge e fluxos particulares em staging
+- [ ] Testes E2E (Playwright)
+- [ ] Deploy em produção na clínica
 
-**SEMANA 3:**
-- [ ] Deploy em produção Mooca
-- [ ] Métricas: CAC visível, no-show <10%, apps nas stores
-
-**SEMANA 4+:**
-- [ ] Soft launch: 5 clínicas piloto
-- [ ] Coleta de learnings
-- [ ] Roadmap P1 ajustado
+**SEMANA 3+:**
+- [ ] Monitoramento das métricas reais
+- [ ] Início do desenvolvimento de oportunidades P1 (Reativação Pós-Alta)
 
 ---
 
-**Conclusão:** FisioFlow pode ser unicórnio em 6 meses.  
-Falta: Validação com usuário + ir para market.  
-Tempo é crítico: Concorrentes vêm chegando.
+**Conclusão:** O FisioFlow trará o mais alto patamar de automação e inteligência para a clínica.  
+Falta: Finalizar os 4 gaps operacionais prioritários.  
 
-**Recomendação:** Aprovar P0, começar HOJE, ship em 3 semanas.
-
+**Recomendação:** Começar HOJE e liberar deploy em 14 dias.

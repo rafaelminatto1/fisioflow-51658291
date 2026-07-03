@@ -64,6 +64,7 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
 
     await step.do("send-d3-reminder", async () => {
       await this.sendReminder(
+        appointmentId,
         patientPhone,
         patientName,
         therapistName,
@@ -82,6 +83,7 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
 
     await step.do("send-d1-reminder", async () => {
       await this.sendReminder(
+        appointmentId,
         patientPhone,
         patientName,
         therapistName,
@@ -100,6 +102,7 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
 
     await step.do("send-d0-reminder", async () => {
       await this.sendReminder(
+        appointmentId,
         patientPhone,
         patientName,
         therapistName,
@@ -112,6 +115,7 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
   }
 
   private async sendReminder(
+    appointmentId: string,
     phone: string,
     patientName: string,
     therapistName: string,
@@ -132,7 +136,7 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
     let msg =
       daysAhead === 0
         ? `Olá ${patientName}! Sua consulta com ${therapistName} é em 2 horas (${dateStr}). Te esperamos! 🏥`
-        : `Olá ${patientName}! Lembrete: sua consulta com ${therapistName} é ${daysAhead === 1 ? "amanhã" : "em 3 dias"} (${dateStr}). Confirme sua presença respondendo SIM.`;
+        : `Olá ${patientName}! Lembrete: sua consulta com ${therapistName} é ${daysAhead === 1 ? "amanhã" : "em 3 dias"} (${dateStr}). Confirme sua presença selecionando uma das opções abaixo:`;
 
     // Se o risco for alto/médio, usamos IA para gerar um lembrete mais persuasivo
     if (riskLevel === "high" || riskLevel === "medium") {
@@ -155,19 +159,61 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
       }
     }
 
-    await fetch(`https://graph.facebook.com/v25.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.env.WHATSAPP_ACCESS_TOKEN}`,
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: phone.replace(/\D/g, ""),
-        type: "text",
-        text: { body: msg },
-      }),
-    });
+    const recipientPhone = phone.replace(/\D/g, "");
+
+    if (daysAhead === 0) {
+      // Mensagem informativa em texto simples 2h antes
+      await fetch(`https://graph.facebook.com/v25.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.env.WHATSAPP_ACCESS_TOKEN}`,
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: recipientPhone,
+          type: "text",
+          text: { body: msg },
+        }),
+      });
+    } else {
+      // Mensagem interativa com botões de confirmar/remarcar
+      await fetch(`https://graph.facebook.com/v25.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.env.WHATSAPP_ACCESS_TOKEN}`,
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          recipient_type: "individual",
+          to: recipientPhone,
+          type: "interactive",
+          interactive: {
+            type: "button",
+            body: { text: msg },
+            action: {
+              buttons: [
+                {
+                  type: "reply",
+                  reply: {
+                    id: `confirm_appt_${appointmentId}`,
+                    title: "Confirmar Presença",
+                  },
+                },
+                {
+                  type: "reply",
+                  reply: {
+                    id: `reschedule_appt_${appointmentId}`,
+                    title: "Remarcar Consulta",
+                  },
+                },
+              ],
+            },
+          },
+        }),
+      });
+    }
   }
 
   private async logReminder(appointmentId: string, organizationId: string, stage: string) {
@@ -181,3 +227,4 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
     } catch {}
   }
 }
+

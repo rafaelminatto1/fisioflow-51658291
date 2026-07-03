@@ -1,8 +1,9 @@
-# ⚡ QUICK-START: 21 Dias para Market-Ready (Sprint Roadmap)
+# ⚡ QUICK-START: 14 Dias para Operação Otimizada (Sprint Roadmap)
 
-**Início:** Hoje (segunda-feira)  
-**Alvo:** Go-live Produção (dia 21)  
-**Soft-launch:** 5 clínicas piloto (semana 4)
+**Início:** Hoje  
+**Alvo:** Go-live Produção (dia 14)  
+**Escopo:** Clínica própria Mooca Fisio (uso interno exclusivo)
+
 
 ---
 
@@ -85,12 +86,12 @@ Impacto: Gestor vê ROI, toma decisões corretas (+50% aprovação)
 
 ---
 
-### Sprint 1.3: WhatsApp Confirmação (3 dias)
-**Responsável:** Backend (1 dev)  
+### Sprint 1.3: WhatsApp Confirmação + AI Concierge (5 dias)
+**Responsável:** Backend + IA Specialist  
 **Paralelo:** SIM
 
 ```
-DIA 1: Backend — Cron + Webhook
+DIA 1: Backend WhatsApp — Cron + Webhook
   ☐ Cron de Confirmação (D-2, 48h antes)
     ├─ Query: agendamentos pendentes em 48h
     ├─ Loop: enviar template via Meta API com buttons
@@ -99,14 +100,14 @@ DIA 1: Backend — Cron + Webhook
     
   ☐ Webhook /webhooks/whatsapp-buttons
     ├─ Parse response (button_reply.id)
-    ├─ Update DB (status = 'confirmed' ou 'needs_reschedule')
+    ├─ Update DB (status = 'confirmed')
     ├─ Auto-reply via WhatsApp
     └─ Testes: Simular button click, assert DB update
 
-DIA 2: Cron D-1 + Frontend
+DIA 2: Cron D-1 + UI do Status
   ☐ Cron D-1 (24h antes, segunda tentativa)
     ├─ Query: ainda pendentes (não responderam)
-    ├─ Enviar mensagem sem buttons (urgência)
+    ├─ Enviar mensagem de texto sem buttons (urgência)
     └─ Testes: Validar escalation
     
   ☐ Frontend: Confirmation Status Card
@@ -114,142 +115,91 @@ DIA 2: Cron D-1 + Frontend
     ├─ Button: "Lembrar agora" (dispara manual D-2)
     └─ Integrar em dashboard
 
-DIA 3: Testes E2E + Deploy Staging
-  ☐ Teste completo: agendamento → D-2 lembrete → resposta → status updated
-  ☐ Validar latência Meta API (<2s)
-  ☐ Validar taxa de entrega (>95%)
-  ☐ Deploy staging com dados reais
+DIA 3: AI Concierge — Resposta a Leads
+  ☐ Endpoint /ai/concierge/lead-response
+    ├─ Recebe: WhatsApp message de novo lead
+    ├─ IA geraResponse (Gemini 1.5 Flash + system prompt particular)
+    ├─ Envia mensagem de resposta via Meta API
+    ├─ Log: latência, tokens, confidence
+    └─ Teste: Responder simuladamente e agendar avaliação particular
 
-Resultado: WhatsApp automático funcionando em staging
-Impacto: No-show 15%→8% (-47%), economiza R$2k/mês
-```
+DIA 4: Telemetria IA + Conversão
+  ☐ Dashboard: Conversão de leads em agendamentos
+    ├─ Gráficos de leads respondidos vs. agendados
+    └─ Conversion rate % e histórico 30 dias
 
----
-
-## 🎯 SEMANA 2: INTEGRAÇÃO (Sprint 2.1–2.2)
-
-### Sprint 2.1: Turmas + Mobile Check-in (5 dias)
-**Responsável:** Frontend + Mobile (2 devs)  
-**Paralelo:** NÃO (depende de schema pronto)
-
-```
-DIA 1: Design + API Contracts
-  ☐ UI Flow
-    ├─ Matrícula: paciente clica em turma, confirma 12 aulas
-    ├─ Check-in: QR code → scan → "Presente"
-    ├─ Presença: lista + resumo semanal
-    └─ Faturamento: pacote de 12 aulas = 1 recebimento
-
-DIA 2–3: Frontend Web
-  ☐ Componentes
-    ├─ TurmasGrid (listar turmas abertas)
-    ├─ ModalMatricula (escolher turma + confirmar)
-    ├─ ListaPresenca (admin: lista de presença + edit)
-    └─ RelatorioTurma (weekly summary)
-
-DIA 4: Mobile App
-  ☐ Tela de Check-in (app fisio)
-    ├─ QR code scanner (via react-native-qr-code)
-    ├─ Auto-mark "Presente"
-    ├─ Lista visual de presentes
-    └─ Sync offline-first
-
-DIA 5: Testes + Deploy
-  ☐ E2E: Matrícula → Check-in → Relatório
-  ☐ Faturamento automático após 12 presentes
+DIA 5: Testes E2E em Staging
+  ☐ Teste completo: lead entra → responde IA → agenda → confirma D-2
   ☐ Deploy staging
 
-Resultado: Gestão de turmas operacional
-Impacto: Novo segmento 60–80% margem, +R$3k/mês
+Resultado: WhatsApp automático e IA conversando com leads em staging
+Impacto: No-show 15%→8% e conversão de leads 5%→15%
+```
+
+
+---
+
+## 🎯 SEMANA 2: AJUSTES E VALIDAÇÃO (Sprint 2.1–2.2)
+
+### Sprint 2.1: Usabilidade Particular & Checkout Digital (3 dias)
+**Responsável:** Frontend + Mobile  
+**Paralelo:** NÃO
+
+```
+DIA 1: Checkout e NFS-e Direta
+  ☐ Configuração do Certificado Digital A1 no backend (São Paulo)
+  ☐ Endpoint de emissão automática pós-confirmação de pagamento particular
+  ☐ Geração de Recibo PDF simples para paciente
+
+DIA 2: Jornada Premium do Paciente Particular
+  ☐ Polimento visual do aplicativo do paciente (Home Exercise Prescription)
+  ☐ Visualização de histórico de avaliações biomecânicas
+  ☐ Testes de login sem fricção (PWA e nativo)
+
+DIA 3: Deploy em Staging + Correção de Bugs
+  ☐ Correções baseadas em testes rápidos de interface
+  ☐ Uptime e testes de stress em queries de BI
+
+Resultado: Aplicativos polidos e checkout particular operacional
+Impacto: Redução do atrito de pagamento e experiência premium
 ```
 
 ---
 
-### Sprint 2.2: AI Concierge Validação (3 dias)
-**Responsável:** Backend + Ops  
-**Paralelo:** SIM (mas depois de sprint 1.1–1.3)
-
-```
-DIA 1: Validação de Produção
-  ☐ Endpoint /ai/concierge/lead-response
-    ├─ Recebe: WhatsApp message
-    ├─ IA geraResponse (Gemini + system prompt)
-    ├─ Envia via Meta API
-    ├─ Log: latência, token count, confidence
-    └─ Teste: Latência <2s em prod
-
-DIA 2: Telemetria
-  ☐ Dashboard: Taxa de conversão lead→agendamento
-    ├─ Total leads recebidos
-    ├─ Respondidos por IA
-    ├─ Convertidos em agendamento
-    ├─ Conversion rate %
-    └─ Histórico últimos 30 dias
-
-DIA 3: Deploy + Monitor
-  ☐ Feature flag: ativar AI concierge para 10% de leads
-  ☐ Monitor SLOs: latência <2s, uptime >99%
-  ☐ Alert: se latência >5s ou erro rate >1%
-
-Resultado: AI respondendo leads em produção
-Impacto: Lead conversion 5%→15%, +R$4k/mês
-```
-
----
-
-## 🎯 SEMANA 3: INTEGRAÇÃO + TESTES (Sprint 3.1)
-
-### Sprint 3.1: E2E Testing + Staging Validation (7 dias)
-**Responsável:** QA + Backend Lead  
-**Paralelo:** NÃO (consolidação)
+### Sprint 2.2: Testes E2E & Homologação Mooca Fisio (4 dias)
+**Responsável:** Backend + QA + Gestor  
+**Paralelo:** NÃO
 
 ```
 DIA 1–2: Testes E2E (Playwright)
-  ☐ Fluxo completo (golden path)
-    ├─ Gestor faz login
-    ├─ Vê dashboard CAC/LTV/Payback
-    ├─ Paciente recebe WhatsApp D-2
-    ├─ Paciente confirma [✅]
-    ├─ Dashboard mostra "Confirmado"
-    ├─ Turmas: check-in QR code
-    ├─ AI Concierge: responde novo lead
-    └─ Relatório presença gerado
-    
-  ☐ Testes de performance
-    ├─ Dashboard load <2s
-    ├─ WhatsApp latência <2s
-    ├─ AI response <2s
-    └─ Mobile app <3s
+  ☐ Fluxo completo do paciente particular
+    ├─ Gestor vê BI (CAC/LTV)
+    ├─ Paciente recebe lembrete no WhatsApp D-2
+    ├─ Resposta automática de confirmação atualiza status na agenda
+    └─ Novo lead é atendido e agendado pelo AI Concierge
+  ☐ Testes de carga (API latency <100ms)
 
-DIA 3: Staging Validation com Mooca Fisio
-  ☐ Gestor acessa dashboard em staging
-  ☐ Fisioterapeuta recebe WhatsApp de teste
-  ☐ Paciente confirma
-  ☐ Feedback: UX, mensagens, fluxo
-  ☐ Log bugs / ajustes necessários
+DIA 3: Homologação com Dados Reais
+  ☐ Gestor Mooca Fisio acessa dashboard em staging
+  ☐ Simulação de mensagens reais de pacientes no WhatsApp
+  ☐ Validação de números de faturamento no BI
+  ☐ Coleta de feedback e ajuste imediato de textos de IA
 
-DIA 4–5: Bug Fixes
-  ☐ UX improvements baseado em feedback
-  ☐ Fix bugs críticos
-  ☐ Re-test golden path
-  ☐ Performance optimization (se necessário)
+DIA 4: Preparação para Produção (Go-live setup)
+  ☐ Backup preventivo do banco
+  ☐ Script de migrations testado em staging
+  ☐ Definição de rollback plan rápido (<5 min)
 
-DIA 6–7: Preparação para Produção
-  ☐ Backup da DB produção
-  ☐ Migration script testado
-  ☐ Rollback plan documentado
-  ☐ SLOs configurado (Datadog/CloudFlare)
-  ☐ Support playbook para gestores novos
-
-Resultado: Sistema pronto para produção
-Impacto: Zero downtime esperado, rollback <5 min
+Resultado: Sistema robustecido e validado pelo gestor
+Impacto: Zero downtime no go-live
 ```
+
 
 ---
 
-## 🎯 SEMANA 4: GO-LIVE (Sprint 4.1)
+## 🎯 SEMANA 3: GO-LIVE (Sprint 3.1)
 
-### Sprint 4.1: Deploy Produção + Soft Launch (7 dias)
+### Sprint 3.1: Deploy Produção + Soft Launch (7 dias)
 **Responsável:** DevOps + Backend Lead + Support  
 **Paralelo:** NÃO
 
@@ -258,69 +208,46 @@ DIA 1: Deploy em Produção (SEGUNDA)
   ☐ PRÉ-DEPLOY (30 min antes)
     ├─ Backup DB completo
     ├─ Teste de rollback (dry-run)
-    ├─ Team em guerra: DevOps + Backend + Support no Slack
-    └─ Check: todas checklist verde ✅
+    └─ Equipe em stand-by (DevOps + Backend)
     
   ☐ DEPLOY (15 min)
-    ├─ API v2 (Workers + D1 migration)
+    ├─ API (Cloudflare Workers)
     ├─ Frontend (Cloudflare Pages)
-    ├─ Workflows (confirmação WhatsApp)
-    └─ Smoke tests: validar endpoints principais
+    └─ Smoke tests em produção
     
   ☐ PÓS-DEPLOY (30 min)
-    ├─ Monitor SLOs em tempo real
-    ├─ Check: CAC query <500ms, WhatsApp latência <2s
-    ├─ Testes manuais em produção
-    └─ Log: tudo verde, comunica time
+    ├─ Monitorar logs e erros em tempo real
+    ├─ Validar latência Meta API (<2s)
+    └─ Notificar equipe do go-live concluído
 
-DIA 2–3: Ativar Mooca Fisio em Prod
-  ☐ Flip feature flags:
-    ├─ Dashboard BI: 100% traffic
-    ├─ WhatsApp confirmação: 100% traffic
-    ├─ Turmas: 100% traffic
-    ├─ AI Concierge: 10% → 100% gradualmente
-    └─ Monitorar métrica de erro
+DIA 2–3: Ativação das Regras Operacionais na Mooca
+  ☐ Habilitar feature flags:
+    ├─ Dashboard BI: 100% tráfego particular
+    ├─ WhatsApp confirmação: 100% tráfego
+    └─ AI Concierge: 100% tráfego de leads
+  ☐ Acompanhamento visual da agenda de pacientes reais
 
-DIA 4–5: Coleta de Feedback + Ajustes
-  ☐ Call diária com gestor Mooca (15 min)
-    ├─ O que funcionou bem?
-    ├─ O que deu erro?
-    ├─ Prioridade de ajustes?
-    └─ Próximas features que quer?
-    
-  ☐ Implementar hotfixes (se necessário)
-    ├─ Bug crítico: fix + deploy <1h
-    ├─ UX improvement: implement + deploy dia seguinte
-    └─ Feature request: backlog para P1
+DIA 4–7: Coleta de Feedback + Ajustes Finos
+  ☐ Reunião rápida diária com o gestor (10 min)
+  ☐ Resolução imediata de bugs de usabilidade
+  ☐ Otimização de prompt da IA com base em conversas reais
 
-DIA 6–7: Preparação para Soft Launch
-  ☐ Selecionar 5 clínicas piloto (com gestor)
-  ☐ Preparar materiais de treinamento
-    ├─ Vídeo: Como usar dashboard BI (2 min)
-    ├─ Vídeo: Como usar WhatsApp confirmação (1 min)
-    ├─ Guia escrito (PDF)
-    └─ Suporte WhatsApp (numero específico)
-    
-  ☐ Schedule: Onboarding calls
-    ├─ Segunda: Clínica 1 + 2
-    ├─ Terça: Clínica 3 + 4 + 5
-    └─ Suporte 24/7 esta semana
-
-Resultado: Go-live Produção com Mooca + Soft launch 5 pilotos
-Impacto: +R$15k/mês imediato, aprendizados para escala P1
+Resultado: Go-live Produção concluído com sucesso e 100% operacional
+Impacto: Agenda particular otimizada e processos automatizados
 ```
+
 
 ---
 
 ## 📊 TRACKING DIÁRIO
 
-### Status Board (standup 15 min)
+### Status Board
 ```
 SEMANA 1
 ┌─────────────────────────────────────────────┐
 │ Sprint 1.1 (Apps):        [████░░] 50%      │
 │ Sprint 1.2 (BI):          [░░░░░░] 0%       │
-│ Sprint 1.3 (WhatsApp):    [░░░░░░] 0%       │
+│ Sprint 1.3 (WhatsApp+AI): [░░░░░░] 0%       │
 │ Blocker: Nenhum            ✅                │
 │ Próximo: Start 1.2 today   ⏰                │
 └─────────────────────────────────────────────┘
@@ -328,115 +255,82 @@ SEMANA 1
 Métricas Esperadas (FIM SEMANA 1):
 ✓ Apps em TestFlight (iOS) + Beta (Android)
 ✓ BI queries <500ms em staging
-✓ WhatsApp webhook capturando respostas
-✓ P1 sprint design completo
+✓ WhatsApp webhook e AI Concierge capturando leads e confirmações
 ```
 
 ### Métricas Críticas (Weekly)
-| Métrica | Target | Semana 1 | Semana 2 | Semana 3 | Semana 4 |
-|---------|--------|----------|----------|----------|----------|
-| **Deploy Frequency** | Daily | 1× | 1× | 3× | Prod live |
-| **Build Pass Rate** | >95% | - | - | >95% | >98% |
-| **E2E Test Coverage** | >80% | - | - | >80% | >90% |
-| **Staging Uptime** | >99% | - | >99% | >99% | - |
-| **Prod Latency (API)** | <200ms | - | - | - | <100ms |
-| **Prod Errors** | <0.1% | - | - | - | <0.05% |
+| Métrica | Target | Semana 1 | Semana 2 |
+|---------|--------|----------|----------|
+| **Deploy Frequency** | Daily | 1× | Prod live |
+| **Build Pass Rate** | >95% | - | >98% |
+| **E2E Test Coverage** | >80% | - | >85% |
+| **Staging Uptime** | >99% | >99% | >99% |
+| **Prod Latency (API)** | <200ms | - | <100ms |
+| **Prod Errors** | <0.1% | - | <0.05% |
 
 ---
 
 ## 🚀 MILESTONES & GATES
 
 ### Gate 1: Fim Semana 1 ✅ BLOCKER
-- [ ] Apps em TestFlight + Play Console
-- [ ] BI endpoints retornando dados
-- [ ] WhatsApp cron + webhook funcionando
-- **Decision:** Continuar com sprint 2?
+- [ ] Apps submetidos para stores
+- [ ] BI endpoints ativos
+- [ ] WhatsApp cron + webhook + AI em staging
+- **Decision:** Continuar para validação?
 
-### Gate 2: Fim Semana 2 ✅ BLOCKER
-- [ ] Turmas operacional em staging
-- [ ] AI Concierge validado em staging
-- [ ] Testes E2E executando sem erro
-- **Decision:** Fazer deploy produção?
-
-### Gate 3: Fim Semana 3 ✅ BLOCKER
-- [ ] Zero bugs críticos em staging
-- [ ] SLOs configurado + alertas vivos
-- [ ] Rollback plan testado
-- [ ] Suporte treinado
-- **Decision:** Go-live amanhã?
-
-### Gate 4: Produção Live ✅ EPIC
-- [ ] Mooca Fisio em produção, dados reais
-- [ ] Soft launch 5 clínicas piloto
-- [ ] Suporte 24/7 ativo
-- [ ] Métricas sendo coletadas
-- **Next:** P1 roadmap (próximas 3 semanas)
+### Gate 2: Produção Live ✅ EPIC
+- [ ] Testes E2E passando sem erros
+- [ ] Homologação concluída com dados particulares reais
+- [ ] Deploy produção realizado com sucesso
+- **Next:** Oportunidades P1 (Reativação de pacientes pós-alta)
 
 ---
 
 ## 💬 COMUNICAÇÃO INTERNA
 
-### Daily Standup (15 min, 10h)
-**Participants:** Dev Leads (5 sprints) + DevOps + QA + PM  
-**Format:** Jira board + Status board  
-**Key Questions:**
-- O que foi feito ontem?
-- Qual é o plano hoje?
-- Tem blocker?
+### Alinhamento Técnico Diário (10 min)
+**Formato:** Standup rápido de progresso de código
+**Foco:** Garantir que as APIs de BI, WhatsApp e IA estejam integradas sem gargalos.
 
-### Weekly Sync (60 min, SEXTA 14h)
-**Participants:** Todos os acima + Gestor Mooca Fisio + Lideranças  
-**Agenda:**
-- Status geral por sprint (% done)
-- Blockers resolvidos?
-- Feedback de staging
-- Próxima semana planejado?
-- Impactos / riscos
+### Homologação Operacional (Dia 12)
+**Participantes:** Desenvolvedores + Gestor da Clínica  
+**Objetivo:** Validar na prática a visualização dos dados e as conversas de teste no WhatsApp.
 
-### Gestor Feedback (15 min, DIÁRIA a partir dia 1 produção)
-**Participants:** Dev Lead + Gestor Mooca  
-**Purpose:** Coleta de feedback real, priorização hotfixes
 
 ---
 
 ## 🛟 ESCALAÇÃO & RISCOS
 
-### Risco 1: Apps não aprovados em tempo
-**Mitigação:** Submit hoje (dia 1), ter backup web PWA pronto
+### Risco 1: Apps não aprovados pelas lojas a tempo
+**Mitigação:** Envio imediato no Dia 2; manter PWA web responsivo como contingência operacional.
 
-### Risco 2: BI queries lentas em produção
-**Mitigação:** Indexar corretamente, usar materialized views se necessário
-
-### Risco 3: Meta API rate limiting
-**Mitigação:** Implementar backoff + retry logic, monitorar quota
-
-### Risco 4: Mooca Fisio não consegue usar durante onboarding
-**Mitigação:** Suporte 24/7 dedicado, pair programming se necessário
+### Risco 2: Latência do AI Concierge no WhatsApp
+**Mitigação:** Utilizar o cache de contexto da API do Gemini para respostas rápidas (<2s).
 
 ---
 
 ## ✅ FINAL CHECKLIST (GO LIVE)
 
 **PRÉ-DEPLOY:**
-- [ ] Backup DB testado e confirmado
-- [ ] Rollback script testado (dry-run)
-- [ ] SLOs configurado + alertas vivos
-- [ ] Runbook de incidents documentado
-- [ ] Team em stand-by (DevOps + Backend + Support)
+- [ ] Backup do banco de dados concluído
+- [ ] Migrations validadas em staging
+- [ ] Script de rollback testado
 
 **PÓS-DEPLOY:**
-- [ ] Smoke tests passando (todos endpoints)
-- [ ] Dashboards mostrando métricas (Datadog/CloudFlare)
-- [ ] Logs limpos (sem errors)
-- [ ] Team comunica "Green light" no Slack
-- [ ] Gestor confirma tudo ok
+- [ ] Smoke tests validados em produção (BI, WhatsApp, AI)
+- [ ] Agenda funcionando sem erros de concorrência
+- [ ] Logs limpos
 
-**GO LIVE SEMANA 4:**
-- [ ] Mooca Fisio happy (usando todos features)
-- [ ] Métricas coletadas (CAC, no-show, conversão)
-- [ ] Soft launch 5 clínicas iniciado
-- [ ] Suporte rodando 24/7
-- [ ] P1 roadmap planejado para próximas 3 semanas
+**GO LIVE OPERACIONAL:**
+- [ ] Clínica Mooca Fisio rodando com dados reais
+- [ ] Métricas sendo coletadas com sucesso (CAC, no-show)
+- [ ] Início do planejamento das oportunidades P1
+
+---
+
+**Timeline resumida:** 14 dias para operação live  
+**Status:** 65% do código pronto, em fase de integração
+
 
 ---
 
