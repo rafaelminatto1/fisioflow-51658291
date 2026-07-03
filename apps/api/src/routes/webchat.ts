@@ -303,8 +303,12 @@ app.get("/poll", async (c) => {
 		);
 		if (conv.rows.length === 0) return c.json({ messages: [] });
 
+		// `at` precisa sair com precisão de MICROSSEGUNDOS: o widget ecoa esse valor
+		// como `after` e o Postgres compara contra timestamptz(µs). Serializar via JS
+		// Date trunca em ms e a última mensagem volta em todo poll (loop no widget).
 		const msgs = await pool.query(
-			`SELECT id, content, created_at
+			`SELECT id, content,
+              to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS at
        FROM wa_messages
        WHERE conversation_id = $1 AND direction = 'outbound' AND created_at > $2
        ORDER BY created_at ASC LIMIT 50`,
@@ -314,7 +318,7 @@ app.get("/poll", async (c) => {
 			messages: msgs.rows.map((m: any) => ({
 				id: m.id,
 				text: textOf(m.content),
-				at: m.created_at,
+				at: m.at,
 			})),
 		});
 	} catch (err) {
