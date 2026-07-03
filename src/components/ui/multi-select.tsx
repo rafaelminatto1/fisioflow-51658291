@@ -79,7 +79,7 @@ export function MultiSelect({
             className,
           )}
         >
-          <div className="flex flex-wrap gap-1 items-center">
+          <div className="flex flex-wrap gap-1.5 items-center w-full min-w-0">
             {selected.length > 0 ? (
               <>
                 {selected.slice(0, maxCount).map((value) => {
@@ -90,16 +90,18 @@ export function MultiSelect({
                       key={value}
                       variant={isCustom ? "outline" : "secondary"}
                       className={cn(
-                        "rounded-md border-none px-1.5 py-0 h-6 flex items-center gap-1 font-medium transition-all",
+                        "rounded-md border-none px-2 py-1 h-auto min-h-[24px] flex items-center gap-1.5 font-medium transition-all text-xs whitespace-normal break-words leading-tight max-w-full",
                         isCustom
                           ? "bg-blue-50 text-blue-700 border border-blue-200/50 border-dashed dark:bg-blue-900/20 dark:text-blue-300"
                           : "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100",
                       )}
                     >
-                      {isCustom && <Tag className="h-2.5 w-2.5 opacity-70" />}
-                      {option?.label || value}
+                      {isCustom && <Tag className="h-3 w-3 shrink-0 opacity-70" />}
+                      <span className="flex-1 min-w-0 pr-1 break-words whitespace-normal text-[11px]">
+                        {option?.label || value}
+                      </span>
                       <X
-                        className="h-3 w-3 cursor-pointer hover:text-destructive transition-colors ml-0.5"
+                        className="h-3 w-3 shrink-0 cursor-pointer hover:text-destructive transition-colors ml-auto"
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleValue(value);
@@ -111,7 +113,7 @@ export function MultiSelect({
                 {selected.length > maxCount && (
                   <Badge
                     variant="secondary"
-                    className="rounded-md border-none bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium px-1.5 py-0 h-6"
+                    className="rounded-md border-none bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium px-1.5 py-0 h-6 shrink-0"
                   >
                     +{selected.length - maxCount}
                   </Badge>

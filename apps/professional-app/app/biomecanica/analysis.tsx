@@ -44,6 +44,7 @@ import {
   Info,
   Brain,
   X,
+  Minus,
 } from "lucide-react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { bio, font } from "@/constants/biomecanica";
@@ -51,6 +52,8 @@ import { biomechanicsApi } from "@/lib/api/biomechanics";
 import { LineChart } from "react-native-gifted-charts";
 import { SymmetryMeter } from "@/components/biomecanica/SymmetryMeter";
 import { TrendelenburgOverlay, ValgusOverlay } from "@/components/biomecanica/ClinicalTestOverlays";
+import { MeasurementLayer, Annotation } from "@/components/biomecanica/MeasurementLayer";
+import { JumpAnalysis } from "@/components/biomecanica/JumpAnalysis";
 import { fetchApi } from "@/lib/api";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -93,6 +96,10 @@ export default function AnalysisScreen() {
   const [brainModalVisible, setBrainModalVisible] = useState(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [jobStatus, setJobStatus] = useState<string | null>(null);
+
+  const [activeTool, setActiveTool] = useState<"view" | "line" | "angle">("view");
+  const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [draftPoints, setDraftPoints] = useState<{ x: number; y: number }[]>([]);
 
   useEffect(() => {
     if (!assessmentId) return;
@@ -198,8 +205,6 @@ export default function AnalysisScreen() {
     }
   };
 
-  const [mode, setMode] = useState<"view" | "goniometer">("view");
-  const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
 
   const player = useVideoPlayer(
     uri
@@ -231,10 +236,58 @@ export default function AnalysisScreen() {
   };
 
   const handleTap = (e: any) => {
-    if (mode !== "goniometer") return;
-    setPoints((prev) => {
-      if (prev.length >= 3) return [{ x: e.x, y: e.y }];
-      return [...prev, { x: e.x, y: e.y }];
+    if (activeTool === "view") return;
+
+    setDraftPoints((prev) => {
+      const newPoints = [...prev, { x: e.x, y: e.y }];
+      
+      // Auto-save logic
+      if (activeTool === "line" && newPoints.length === 2) {
+        setAnnotations((anns) => [
+          ...anns,
+          {
+            id: Date.now().toString(),
+            type: "line",
+            points: newPoints,
+            color: bio.primary,
+          },
+        ]);
+        return []; // clear draft
+      } else if (activeTool === "angle" && newPoints.length === 3) {
+        setAnnotations((anns) => [
+          ...anns,
+          {
+            id: Date.now().toString(),
+            type: "angle",
+            points: newPoints,
+            color: bio.primary,
+          },
+        ]);
+        return []; // clear draft
+      } else if (
+        (protocol === "TRENDELENBURG" && newPoints.length === 2) ||
+        (protocol === "DYNAMIC_VALGUS" && newPoints.length === 3) ||
+        (protocol === "HOP_TEST" && newPoints.length === 2)
+      ) {
+        // For structured protocols that rely on specific point counts
+        // they usually re-evaluate, but we'll let them keep standard length
+        // We actually might want to just keep points for overlays
+        // But the previous code just capped at 3: `if (prev.length >= 3) return [{ x: e.x, y: e.y }];`
+        return newPoints;
+      }
+      
+      // If none of the complete conditions met, just return new points
+      // However, if we exceed maximum points for an overlay protocol, we restart
+      if (
+        protocol !== "GENERIC" &&
+        ((protocol === "TRENDELENBURG" && newPoints.length > 2) ||
+        (protocol === "DYNAMIC_VALGUS" && newPoints.length > 3) ||
+        (protocol === "HOP_TEST" && newPoints.length > 2))
+      ) {
+        return [{ x: e.x, y: e.y }];
+      }
+
+      return newPoints;
     });
   };
 
@@ -265,31 +318,26 @@ export default function AnalysisScreen() {
           <VideoView style={StyleSheet.absoluteFill} player={player} />
 
           {/* Wave 2: Protocol Overlays */}
-          {protocol === "TRENDELENBURG" && <TrendelenburgOverlay points={points} />}
-          {protocol === "DYNAMIC_VALGUS" && <ValgusOverlay points={points} />}
+          {protocol === "TRENDELENBURG" && <TrendelenburgOverlay points={draftPoints} />}
+          {protocol === "DYNAMIC_VALGUS" && <ValgusOverlay points={draftPoints} />}
 
           {/* Goniometer Canvas (Generic) */}
           {protocol === "GENERIC" && (
-            <View style={StyleSheet.absoluteFill} pointerEvents="none">
-              <Svg height="100%" width="100%">
-                {points.map((p, i) => (
-                  <G key={i}>
-                    <Circle cx={p.x} cy={p.y} r={12} fill="rgba(255,255,255,0.4)" />
-                    <Circle cx={p.x} cy={p.y} r={4} fill={bio.primary} />
-                  </G>
-                ))}
-                {points.length > 1 && (
-                  <Line
-                    x1={points[0].x}
-                    y1={points[0].y}
-                    x2={points[1].x}
-                    y2={points[1].y}
-                    stroke={bio.primary}
-                    strokeWidth={3}
-                    strokeDasharray="6 4"
-                  />
-                )}
-              </Svg>
+            <MeasurementLayer annotations={[
+              ...annotations,
+              ...(draftPoints.length > 0 ? [{
+                id: 'draft',
+                type: activeTool === 'angle' && draftPoints.length >= 3 ? 'angle' : 'line',
+                points: draftPoints,
+                color: 'rgba(255,255,255,0.7)'
+              } as Annotation] : [])
+            ]} />
+          )}
+
+          {/* Jump Analysis */}
+          {protocol === "HOP_TEST" && (
+            <View style={{ position: 'absolute', bottom: 120, left: 20, right: 20 }}>
+              <JumpAnalysis flightTimeMs={draftPoints.length > 0 ? 500 : 0} />
             </View>
           )}
         </View>
@@ -314,12 +362,16 @@ export default function AnalysisScreen() {
           <Pressable
             style={styles.roundBtn}
             onPress={() => {
-              setPoints([]);
-              setMode(mode === "goniometer" ? "view" : "goniometer");
+              if (activeTool !== "view") {
+                setActiveTool("view");
+                setDraftPoints([]);
+              } else {
+                setActiveTool(protocol === "GENERIC" ? "angle" : "line");
+              }
             }}
           >
-            {mode === "goniometer" ? (
-              <Eraser size={19} color="#fff" />
+            {activeTool !== "view" ? (
+              <Check size={19} color="#fff" />
             ) : (
               <PenTool size={19} color="#fff" />
             )}
@@ -340,7 +392,8 @@ export default function AnalysisScreen() {
                 key={p.id}
                 onPress={() => {
                   setProtocol(p.id);
-                  setPoints([]);
+                  setDraftPoints([]);
+                  setAnnotations([]);
                 }}
                 style={[styles.pt, sel && styles.ptSel]}
               >
@@ -349,6 +402,43 @@ export default function AnalysisScreen() {
             );
           })}
         </ScrollView>
+        
+        {/* Floating Side Toolbar for Kinovea-like tools */}
+        {protocol === "GENERIC" && activeTool !== "view" && (
+          <View style={styles.sideToolbar}>
+            <Pressable
+              style={[styles.toolBtn, activeTool === "line" && styles.toolBtnActive]}
+              onPress={() => setActiveTool("line")}
+            >
+              <Minus size={20} color={activeTool === "line" ? bio.primary : "#fff"} />
+            </Pressable>
+            <Pressable
+              style={[styles.toolBtn, activeTool === "angle" && styles.toolBtnActive]}
+              onPress={() => setActiveTool("angle")}
+            >
+              <Play size={20} color={activeTool === "angle" ? bio.primary : "#fff"} style={{ transform: [{ rotate: '-45deg' }] }} />
+            </Pressable>
+            <View style={styles.divider} />
+            <Pressable
+              style={styles.toolBtn}
+              onPress={() => {
+                setAnnotations(prev => prev.slice(0, -1));
+                setDraftPoints([]);
+              }}
+            >
+              <Rewind size={20} color="#fff" />
+            </Pressable>
+            <Pressable
+              style={styles.toolBtn}
+              onPress={() => {
+                setAnnotations([]);
+                setDraftPoints([]);
+              }}
+            >
+              <X size={20} color="#EF4444" />
+            </Pressable>
+          </View>
+        )}
       </SafeAreaView>
 
       {/* video controls */}
@@ -374,26 +464,43 @@ export default function AnalysisScreen() {
           </View>
           <View style={styles.ctlRow}>
             <Text style={styles.timecode}>{currentTime.toFixed(2)}s</Text>
-            <View style={{ flex: 1 }} />
-            <Pressable
-              style={styles.play}
-              onPress={() => {
-                if (playing) {
-                  player?.pause();
-                  setPlaying(false);
-                } else {
-                  player?.play();
-                  setPlaying(true);
-                }
-              }}
-            >
-              {playing ? (
-                <Pause size={26} color={bio.primary} />
-              ) : (
-                <Play size={26} color={bio.primary} />
-              )}
-            </Pressable>
-            <View style={{ flex: 1 }} />
+            <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', gap: 24, alignItems: 'center' }}>
+              <Pressable
+                onPress={() => {
+                  player?.seekBy(-0.033); // approx 1 frame at 30fps
+                }}
+              >
+                <Rewind size={20} color="#fff" />
+              </Pressable>
+              
+              <Pressable
+                style={styles.play}
+                onPress={() => {
+                  if (playing) {
+                    player?.pause();
+                    setPlaying(false);
+                  } else {
+                    player?.play();
+                    setPlaying(true);
+                  }
+                }}
+              >
+                {playing ? (
+                  <Pause size={26} color={bio.primary} />
+                ) : (
+                  <Play size={26} color={bio.primary} />
+                )}
+              </Pressable>
+
+              <Pressable
+                onPress={() => {
+                  player?.seekBy(0.033); // approx 1 frame at 30fps
+                }}
+              >
+                <FastForward size={20} color="#fff" />
+              </Pressable>
+            </View>
+            <View style={{ width: 40 }} /> {/* balance the timecode width */}
           </View>
         </View>
       )}
@@ -674,4 +781,35 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   applyBtnText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  divider: {
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    marginVertical: 4,
+    width: 24,
+    alignSelf: "center",
+  },
+  sideToolbar: {
+    position: "absolute",
+    right: 16,
+    top: 140,
+    backgroundColor: "rgba(15, 20, 32, 0.8)",
+    borderRadius: 12,
+    padding: 8,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  toolBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.05)",
+  },
+  toolBtnActive: {
+    backgroundColor: "rgba(0, 128, 255, 0.2)",
+    borderColor: bio.primary,
+    borderWidth: 1,
+  },
 });

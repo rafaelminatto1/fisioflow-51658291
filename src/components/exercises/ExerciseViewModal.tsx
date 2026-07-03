@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -22,21 +21,49 @@ import {
   Dumbbell,
   FileText,
   Video,
-  Image as ImageIcon,
   AlertTriangle,
   Printer,
   X,
   CheckCircle2,
   ChevronRight,
+  Play,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useExerciseFavorites } from "@/hooks/useExerciseFavorites";
 import { useToast } from "@/hooks/use-toast";
 import type { Exercise } from "@/hooks/useExercises";
-import { getBestImageUrl, getImageUrlCandidates } from "@/lib/imageUtils";
+import { getBestImageUrl, getImageUrlCandidates, isYouTubeUrl, getYouTubeThumbnailUrl } from "@/lib/imageUtils";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { ShareExerciseToWhatsAppModal } from "./ShareExerciseToWhatsAppModal";
 import "@/styles/print.css";
+import { useQuery } from "@tanstack/react-query";
+import { exercisesApi } from "@/api/v2";
+
+interface ScientificReference {
+  citation: string;
+  url?: string;
+  evidenceLevel?: string;
+}
+
+interface MediaItem {
+  id: string;
+  url: string;
+  type: "image" | "video" | "youtube";
+  thumbnailUrl?: string | null;
+  caption?: string | null;
+  orderIndex?: number;
+}
+
+type ExerciseExtended = Exercise & {
+  name_en?: string;
+  aliases_pt?: string[];
+  aliases_en?: string[];
+  alternativeEquipment?: string[];
+  precaution_level?: string;
+  precaution_notes?: string;
+  scientific_references?: ScientificReference[] | string | null;
+  media?: MediaItem[];
+};
 
 interface ExerciseViewModalProps {
   open: boolean;
@@ -88,18 +115,69 @@ export function ExerciseViewModal({
   const { isFavorite, toggleFavorite } = useExerciseFavorites();
   const { toast } = useToast();
   const [shareWhatsAppOpen, setShareWhatsAppOpen] = React.useState(false);
+  const [activeMediaId, setActiveMediaId] = React.useState<string | null>(null);
+
+  const { data: detailData } = useQuery({
+    queryKey: ["exercise-detail", exercise?.id],
+    queryFn: () => exercisesApi.get(exercise!.id),
+    enabled: Boolean(open && exercise?.id),
+    staleTime: 0,
+  });
+
+  const currentExercise = React.useMemo<ExerciseExtended | null>(() => {
+    if (!exercise) return null;
+    const fetched = (detailData?.data as Partial<ExerciseExtended> | undefined) ?? {};
+    return { ...(exercise as ExerciseExtended), ...fetched } as ExerciseExtended;
+  }, [exercise, detailData]);
+
+  const activeExercise = currentExercise || exercise;
 
   if (!exercise) return null;
 
-  const embedUrl = exercise.video_url ? getEmbedUrl(exercise.video_url) : null;
-  const isDirectVideo = embedUrl?.match(/\.(mp4|webm|ogg)$/i);
-  const hasVideo = !!exercise.video_url;
-  const hasImage = !!exercise.image_url || !!exercise.thumbnail_url;
+  const mediaList = React.useMemo(() => {
+    if (!activeExercise) return [];
+    const list = activeExercise.media || [];
+    if (list.length === 0) {
+      const fallbackList = [];
+      const imageUrl = getBestImageUrl(activeExercise);
+      if (imageUrl) {
+        fallbackList.push({
+          id: "fallback-image",
+          type: "image" as const,
+          url: imageUrl,
+          caption: "Imagem Principal",
+        });
+      }
+      if (activeExercise.video_url) {
+        const isYoutube =
+          activeExercise.video_url.includes("youtube.com") || activeExercise.video_url.includes("youtu.be");
+        fallbackList.push({
+          id: "fallback-video",
+          type: isYoutube ? ("youtube" as const) : ("video" as const),
+          url: activeExercise.video_url,
+          caption: "Vídeo Demonstrativo",
+        });
+      }
+      return fallbackList;
+    }
+    return list;
+  }, [activeExercise]);
 
-  // Usar o melhor URL de imagem disponível
-  const imageUrl = getBestImageUrl(exercise);
+  React.useEffect(() => {
+    if (mediaList.length > 0) {
+      // Tenta encontrar o primeiro vídeo/youtube
+      const firstVideo = mediaList.find((m) => m.type !== "image");
+      if (firstVideo) {
+        setActiveMediaId(firstVideo.id);
+      } else {
+        setActiveMediaId(mediaList[0].id);
+      }
+    } else {
+      setActiveMediaId(null);
+    }
+  }, [mediaList]);
 
-  const defaultTab = hasVideo ? "video" : "image";
+  const activeMedia = mediaList.find((m) => m.id === activeMediaId) || mediaList[0] || null;
 
   const handleShare = () => {
     setShareWhatsAppOpen(true);
@@ -237,87 +315,116 @@ export function ExerciseViewModal({
             <div className="lg:col-span-7 xl:col-span-8 bg-muted/10 min-h-[420px] lg:min-h-0 lg:h-full flex flex-col border-b lg:border-b-0 lg:border-r border-border/50 overflow-hidden relative exercise-print-media">
               <div className="absolute inset-0 bg-gradient-to-br from-background via-muted/20 to-muted/40 pointer-events-none" />
 
-              <Tabs defaultValue={defaultTab} className="relative z-0 flex min-h-0 flex-1 flex-col">
-                <div className="px-6 pt-4 flex-none z-10">
-                  <TabsList className="bg-card border w-auto inline-flex shadow-sm">
-                    <TabsTrigger value="video" disabled={!hasVideo} className="gap-2 px-4">
-                      <Video className="h-4 w-4" /> Vídeo
-                    </TabsTrigger>
-                    <TabsTrigger value="image" disabled={!hasImage} className="gap-2 px-4">
-                      <ImageIcon className="h-4 w-4" /> Imagem
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
-
-                <div className="flex flex-1 min-h-[320px] min-h-0 items-center justify-center p-3 sm:p-6 lg:min-h-0">
-                  <TabsContent
-                    value="video"
-                    className="mt-0 h-full min-h-0 w-full data-[state=active]:flex data-[state=active]:items-center data-[state=active]:justify-center"
-                  >
-                    {hasVideo ? (
-                      <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-white/10 ring-1 ring-black/5 relative group">
-                        {embedUrl ? (
-                          isDirectVideo ? (
-                            <video controls className="w-full h-full" src={embedUrl}>
-                              Seu navegador não suporta vídeos.
-                            </video>
-                          ) : (
-                            <iframe
-                              src={embedUrl}
-                              className="w-full h-full"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                            />
-                          )
-                        ) : (
-                          <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-4">
-                            <AlertTriangle className="h-12 w-12 opacity-50" />
-                            <p>Erro ao carregar vídeo</p>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => window.open(exercise.video_url, "_blank")}
-                            >
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              Abrir externo
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-center p-12 rounded-xl bg-muted/30 border border-dashed border-muted-foreground/20">
-                        <VideoOffState />
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  <TabsContent
-                    value="image"
-                    className="mt-0 h-full min-h-0 w-full data-[state=active]:flex data-[state=active]:items-center data-[state=active]:justify-center"
-                  >
-                    {hasImage && imageUrl ? (
-                      <div className="relative flex h-full min-h-0 w-full items-center justify-center overflow-hidden rounded-xl border border-border/50 bg-white p-4 shadow-lg sm:p-6">
+              <div className="relative z-0 flex min-h-0 flex-1 flex-col p-4 sm:p-6 justify-center">
+                {/* Main Media Preview */}
+                <div className="flex-1 flex min-h-[320px] min-h-0 items-center justify-center lg:min-h-0">
+                  <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-white/10 ring-1 ring-black/5 relative group flex items-center justify-center">
+                    {activeMedia ? (
+                      activeMedia.type === "image" ? (
                         <OptimizedImage
-                          src={imageUrl}
-                          alt={exercise?.name ?? "Exercício"}
-                          className="flex h-full min-h-0 w-full items-center justify-center"
-                          imgClassName="max-h-full max-w-full object-contain object-center"
-                          aspectRatio="auto"
-                          priority={true}
-                          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 64vw, 68vw"
-                          style={{ objectFit: "contain", objectPosition: "center" }}
+                          src={activeMedia.url}
+                          alt={activeMedia.caption || exercise.name || "Imagem do exercício"}
+                          className="h-full w-full object-contain"
+                          aspectRatio="16:9"
+                          fallback="/placeholder.svg"
+                          style={{ objectFit: "contain" }}
                           fallbackSrcs={getImageUrlCandidates(exercise)}
                         />
-                      </div>
+                      ) : (
+                        (() => {
+                          const embedUrl = getEmbedUrl(activeMedia.url);
+                          const isDirectVideo = embedUrl?.match(/\.(mp4|webm|ogg)$/i);
+                          if (embedUrl) {
+                            return isDirectVideo ? (
+                              <video controls className="w-full h-full object-contain" src={embedUrl}>
+                                Seu navegador não suporta vídeos.
+                              </video>
+                            ) : (
+                              <iframe
+                                src={embedUrl}
+                                className="w-full h-full border-none"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            );
+                          } else {
+                            return (
+                              <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-4">
+                                <AlertTriangle className="h-12 w-12 opacity-50" />
+                                <p className="text-xs">Erro ao carregar vídeo</p>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => window.open(activeMedia.url, "_blank")}
+                                >
+                                  <ExternalLink className="h-4 w-4 mr-2" />
+                                  Abrir externo
+                                </Button>
+                              </div>
+                            );
+                          }
+                        })()
+                      )
                     ) : (
-                      <div className="text-center p-12 rounded-xl bg-muted/30 border border-dashed border-muted-foreground/20">
-                        <ImageIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
-                        <p className="text-muted-foreground">Sem imagem</p>
+                      <div className="text-center p-12 text-slate-400">
+                        Nenhuma mídia disponível
                       </div>
                     )}
-                  </TabsContent>
+                  </div>
                 </div>
-              </Tabs>
+
+                {/* Subtitle / Caption for Active Media */}
+                {activeMedia?.caption && (
+                  <div className="mt-2 text-center text-xs text-muted-foreground italic">
+                    {activeMedia.caption}
+                  </div>
+                )}
+
+                {/* Thumbnail List (only shown if there are multiple items) */}
+                {mediaList.length > 1 && (
+                  <div className="flex items-center gap-2 overflow-x-auto py-2 px-1 scrollbar-thin mt-4 max-w-full justify-start no-scrollbar">
+                    {mediaList.map((item) => {
+                      const isActive = item.id === activeMediaId;
+                      const isYouTube = item.type === "youtube" || isYouTubeUrl(item.url);
+                      const isVideo = item.type === "video";
+                      const thumb = item.type === "image" 
+                        ? item.url 
+                        : (item.thumbnailUrl || (isYouTube ? getYouTubeThumbnailUrl(item.url) : null));
+
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setActiveMediaId(item.id)}
+                          className={cn(
+                            "h-14 w-24 rounded-lg overflow-hidden border-2 cursor-pointer transition-all relative shrink-0 flex items-center justify-center bg-slate-950",
+                            isActive 
+                              ? "border-primary scale-[1.03] shadow-md ring-2 ring-primary/20" 
+                              : "border-transparent opacity-70 hover:opacity-100 hover:border-slate-300 dark:hover:border-slate-700"
+                          )}
+                        >
+                          {thumb ? (
+                            <img src={thumb} className="h-full w-full object-cover animate-fade-in" alt="" />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-slate-900 text-white/50">
+                              <Video className="h-4 w-4" />
+                            </div>
+                          )}
+                          
+                          {/* Overlays for video/youtube items */}
+                          {(isVideo || isYouTube) && (
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center hover:bg-black/20 transition-colors">
+                              <div className="p-1 rounded-full bg-white/20 backdrop-blur-sm">
+                                <Play className="h-3 w-3 fill-white text-white" />
+                              </div>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Right Column - Information */}
@@ -545,22 +652,6 @@ function MetricCard({
         >
           {value || "-"}
         </span>
-      </div>
-    </div>
-  );
-}
-
-function VideoOffState() {
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-        <Video className="h-8 w-8 text-muted-foreground/50" />
-      </div>
-      <div className="space-y-1">
-        <p className="font-medium text-muted-foreground">Sem vídeo disponível</p>
-        <p className="text-xs text-muted-foreground/60 max-w-[200px] mx-auto">
-          Este exercício não possui uma demonstração em vídeo.
-        </p>
       </div>
     </div>
   );

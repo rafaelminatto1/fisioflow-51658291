@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getNeonAccessToken } from "@/lib/auth/neon-token";
 import { toast } from "sonner";
+import { getWorkersApiUrl } from "@/lib/api/config";
 
 export interface MediaItem {
   id: string;
@@ -29,7 +30,7 @@ export function useMediaGallery() {
         if (params?.folder) query.append("folder", params.folder);
         if (params?.type) query.append("type", params.type);
 
-        const response = await fetch(`/api/media/gallery?${query.toString()}`, {
+        const response = await fetch(`${getWorkersApiUrl()}/api/media/gallery?${query.toString()}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const result = await response.json();
@@ -47,7 +48,7 @@ export function useMediaGallery() {
   const fetchFolders = useCallback(async () => {
     try {
       const token = await getNeonAccessToken();
-      const response = await fetch("/api/media/gallery/folders", {
+      const response = await fetch(`${getWorkersApiUrl()}/api/media/gallery/folders`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const result = await response.json();
@@ -60,7 +61,7 @@ export function useMediaGallery() {
   const saveToGallery = async (data: Omit<MediaItem, "id" | "createdAt">) => {
     try {
       const token = await getNeonAccessToken();
-      const response = await fetch("/api/media/gallery", {
+      const response = await fetch(`${getWorkersApiUrl()}/api/media/gallery`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -85,7 +86,7 @@ export function useMediaGallery() {
   const deleteFromGallery = async (id: string) => {
     try {
       const token = await getNeonAccessToken();
-      const response = await fetch(`/api/media/gallery/${id}`, {
+      const response = await fetch(`${getWorkersApiUrl()}/api/media/gallery/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -120,7 +121,7 @@ export function useExerciseMedia(exerciseId?: string) {
     setLoading(true);
     try {
       const token = await getNeonAccessToken();
-      const response = await fetch(`/api/media/exercise/${exerciseId}`, {
+      const response = await fetch(`${getWorkersApiUrl()}/api/media/exercise/${exerciseId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const result = await response.json();
@@ -142,7 +143,7 @@ export function useExerciseMedia(exerciseId?: string) {
     if (!exerciseId) return;
     try {
       const token = await getNeonAccessToken();
-      const response = await fetch(`/api/media/exercise/${exerciseId}`, {
+      const response = await fetch(`${getWorkersApiUrl()}/api/media/exercise/${exerciseId}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -165,7 +166,7 @@ export function useExerciseMedia(exerciseId?: string) {
   ) => {
     try {
       const token = await getNeonAccessToken();
-      await fetch(`/api/media/exercise/attachment/${attachmentId}`, {
+      await fetch(`${getWorkersApiUrl()}/api/media/exercise/attachment/${attachmentId}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -182,7 +183,7 @@ export function useExerciseMedia(exerciseId?: string) {
   const detachMedia = async (attachmentId: string) => {
     try {
       const token = await getNeonAccessToken();
-      await fetch(`/api/media/exercise/attachment/${attachmentId}`, {
+      await fetch(`${getWorkersApiUrl()}/api/media/exercise/attachment/${attachmentId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

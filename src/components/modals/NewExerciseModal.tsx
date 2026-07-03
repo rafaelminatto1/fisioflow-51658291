@@ -35,7 +35,7 @@ import {
   Image as ImageIcon,
   BookOpen,
   MoreVertical,
-  Share2 as Youtube,
+  Youtube,
   Search,
   Download,
   Link as LinkIcon,
@@ -220,25 +220,31 @@ function SortableMediaItem({
      )}
    </div>
 
-   <div className="mt-2">
-     <label className="block text-[10px] font-medium text-slate-700 mb-1">
-       URL da Mídia
-     </label>
-     <input
-       type="text"
-       value={url}
-       onChange={(e) => onUrlChange(e.target.value)}
-       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[11px]"
-       placeholder="Cole a nova URL aqui..."
-     />
-   </div>
-
-   <Input
-     placeholder="Adicione uma observação..."
-     className="h-8 border-none bg-slate-50 text-[11px] focus-visible:ring-1 dark:bg-slate-800"
-     value={caption || ""}
-     onChange={(e) => onCaptionChange(e.target.value)}
-   />
+    <div className="space-y-2 mt-2">
+      <div className="space-y-0.5">
+        <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 ml-0.5">
+          URL da Mídia
+        </label>
+        <Input
+          type="text"
+          value={url}
+          onChange={(e) => onUrlChange?.(e.target.value)}
+          className="h-8 text-[11px] bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800"
+          placeholder="Cole a nova URL aqui..."
+        />
+      </div>
+      <div className="space-y-0.5">
+        <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 ml-0.5">
+          Observação
+        </label>
+        <Input
+          placeholder="Adicione uma observação..."
+          className="h-8 border-none bg-slate-50 text-[11px] focus-visible:ring-1 dark:bg-slate-800"
+          value={caption || ""}
+          onChange={(e) => onCaptionChange(e.target.value)}
+        />
+      </div>
+    </div>
     </div>
   );
 }
@@ -401,26 +407,28 @@ export function NewExerciseModal({
       const exercise = currentExercise as Exercise;
 
       // --- Lógica de Mídia Legada (Fallback) ---
-      let initialMedia = ext.media || [];
-      if (initialMedia.length === 0) {
-        if (exercise.image_url) {
-          initialMedia.push({
-            id: "legacy-image-" + Math.random().toString(36).substr(2, 9),
-            url: exercise.image_url,
-            type: "image",
-            orderIndex: 0,
-          });
-        }
-        if (exercise.video_url) {
-          const isYoutube =
-            exercise.video_url.includes("youtube.com") || exercise.video_url.includes("youtu.be");
-          initialMedia.push({
-            id: "legacy-video-" + Math.random().toString(36).substr(2, 9),
-            url: exercise.video_url,
-            type: isYoutube ? "youtube" : "video",
-            orderIndex: initialMedia.length,
-          });
-        }
+      let initialMedia = [...(ext.media || [])];
+      
+      const hasImage = initialMedia.some((m) => m.type === "image");
+      if (!hasImage && exercise.image_url) {
+        initialMedia.push({
+          id: "legacy-image-" + Math.random().toString(36).substr(2, 9),
+          url: exercise.image_url,
+          type: "image",
+          orderIndex: initialMedia.length,
+        });
+      }
+
+      const hasVideo = initialMedia.some((m) => m.type !== "image");
+      if (!hasVideo && exercise.video_url) {
+        const isYoutube =
+          exercise.video_url.includes("youtube.com") || exercise.video_url.includes("youtu.be");
+        initialMedia.push({
+          id: "legacy-video-" + Math.random().toString(36).substr(2, 9),
+          url: exercise.video_url,
+          type: isYoutube ? "youtube" : "video",
+          orderIndex: initialMedia.length,
+        });
       }
 
       form.reset({
@@ -985,7 +993,7 @@ export function NewExerciseModal({
                     control={form.control}
                     name="alternativeEquipment"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="md:col-span-2">
                         <FormLabel>Equipamentos Alternativos</FormLabel>
                         <FormControl>
                           <MultiSelect
@@ -1366,18 +1374,21 @@ onKeyDown={(e) => {
                       <div className="grid grid-cols-2 gap-2">
 {mediaFields
   .filter((m) => m.type === "image")
-  .map((item, index) => (
-    <SortableMediaItem
-      key={item.id}
-      id={item.id}
-      url={item.url}
-      type={item.type}
-      caption={item.caption || null}
-      onRemove={() => removeMedia(index)}
-      onCaptionChange={(val) => updateMedia(index, { ...item, caption: val })}
-      onUrlChange={(val) => updateMedia(index, { ...item, url: val })}
-    />
-  ))}
+  .map((item) => {
+    const originalIndex = mediaFields.findIndex((m) => m.id === item.id);
+    return (
+      <SortableMediaItem
+        key={item.id}
+        id={item.id}
+        url={item.url}
+        type={item.type}
+        caption={item.caption || null}
+        onRemove={() => removeMedia(originalIndex)}
+        onCaptionChange={(val) => updateMedia(originalIndex, { ...item, caption: val })}
+        onUrlChange={(val) => updateMedia(originalIndex, { ...item, url: val })}
+      />
+    );
+  })}
                       </div>
                     </SortableContext>
                   ) : (
@@ -1402,18 +1413,21 @@ onKeyDown={(e) => {
                       <div className="grid grid-cols-2 gap-2">
 {mediaFields
   .filter((m) => m.type !== "image")
-  .map((item, index) => (
-    <SortableMediaItem
-      key={item.id}
-      id={item.id}
-      url={item.url}
-      type={item.type}
-      caption={item.caption || null}
-      onRemove={() => removeMedia(index)}
-      onCaptionChange={(val) => updateMedia(index, { ...item, caption: val })}
-      onUrlChange={(val) => updateMedia(index, { ...item, url: val })}
-    />
-  ))}
+  .map((item) => {
+    const originalIndex = mediaFields.findIndex((m) => m.id === item.id);
+    return (
+      <SortableMediaItem
+        key={item.id}
+        id={item.id}
+        url={item.url}
+        type={item.type}
+        caption={item.caption || null}
+        onRemove={() => removeMedia(originalIndex)}
+        onCaptionChange={(val) => updateMedia(originalIndex, { ...item, caption: val })}
+        onUrlChange={(val) => updateMedia(originalIndex, { ...item, url: val })}
+      />
+    );
+  })}
                       </div>
                     </SortableContext>
                   ) : (

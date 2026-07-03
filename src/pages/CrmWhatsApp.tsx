@@ -1076,33 +1076,33 @@ export default function CrmWhatsApp() {
   return (
     <PageLayout fullWidth noPadding compactHeader hideDefaultHeader showBreadcrumbs={false} fillViewport>
       <PageContainer maxWidth="full" noPadding className="h-full">
-        <div className="flex h-full min-h-0 flex-col bg-background">
-          <div className="flex items-center gap-3 border-b border-border px-5 py-3">
-            <h1 className="flex items-center gap-2 text-[19px] font-extrabold tracking-[-0.01em]">
+        <div className="flex h-full min-h-0 flex-col bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex items-center gap-4 border-b border-border/50 bg-background/95 px-6 py-4 shadow-sm z-10">
+            <h1 className="flex items-center gap-3 text-xl font-extrabold tracking-tight">
               CRM
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(142_70%_94%)] px-2.5 py-1 text-[10px] font-extrabold tracking-[0.04em] text-[hsl(142_60%_28%)]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[hsl(142_70%_42%)]" />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100/80 dark:bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold tracking-wide text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 WhatsApp conectado
               </span>
             </h1>
-            <div className="ml-3 flex flex-1 flex-wrap gap-2">
+            <div className="ml-4 flex flex-1 flex-wrap gap-1.5">
               {(Object.keys(pipelineLabels) as PipelineFilter[]).map((key) => (
                 <button
                   key={key}
                   type="button"
                   onClick={() => setPipelineFilter(key)}
                   className={cn(
-                    "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors",
+                    "inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-all duration-200",
                     pipelineFilter === key
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-muted-foreground hover:bg-secondary",
+                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-105"
+                      : "bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
                   )}
                 >
                   {pipelineLabels[key]}
                   <span
                     className={cn(
-                      "rounded-full px-1.5 py-0.5 text-[10px] font-extrabold tabular-nums",
-                      pipelineFilter === key ? "bg-white/20 text-white" : "bg-secondary text-muted-foreground",
+                      "rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums transition-colors",
+                      pipelineFilter === key ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted-foreground/10 text-muted-foreground",
                     )}
                   >
                     {pipelineCounts[key]}
@@ -1110,45 +1110,43 @@ export default function CrmWhatsApp() {
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <Button
                 type="button"
                 size="sm"
                 onClick={() => setNewConversationOpen(true)}
-                className="h-9 rounded-[10px] bg-[hsl(142_70%_42%)] px-3 text-xs font-semibold text-white hover:bg-[hsl(142_70%_38%)]"
+                className="h-9 rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition-all hover:shadow-md hover:-translate-y-0.5"
               >
                 <MessageSquarePlus className="mr-2 h-4 w-4" />
                 Nova conversa
               </Button>
-              <button type="button" className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary">
+              <div className="h-4 w-px bg-border/50 mx-1"></div>
+              <button type="button" className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
                 <Filter className="h-[18px] w-[18px]" />
               </button>
-              <button type="button" className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary">
+              <button type="button" className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
                 <Bell className="h-[18px] w-[18px]" />
               </button>
               <button
                 type="button"
                 onClick={() => navigate("/crm-whatsapp/configuracoes")}
                 aria-label="Configurações do CRM·WhatsApp"
-                className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary"
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <Settings className="h-[18px] w-[18px]" />
               </button>
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[hsl(211_100%_92%)] text-xs font-extrabold text-[hsl(211_100%_30%)]">
-                RM
-              </div>
             </div>
           </div>
-          <div className="grid min-h-0 flex-1 grid-rows-1 grid-cols-[326px_minmax(0,1fr)_304px] overflow-hidden">
-            <aside className="flex min-h-0 flex-col border-r border-border">
-              <div className="border-b border-border p-3.5">
-                <div className="flex items-center gap-2 rounded-[10px] bg-muted/60 px-3 py-2.5">
-                  <Search className="h-[15px] w-[15px] text-muted-foreground" />
+          <div className="grid min-h-0 flex-1 grid-rows-1 grid-cols-[340px_minmax(0,1fr)_320px] overflow-hidden bg-muted/20">
+            <aside className="flex min-h-0 flex-col border-r border-border/50 bg-background/50">
+              <div className="p-4">
+                <div className="flex items-center gap-2.5 rounded-xl bg-muted/80 px-3.5 py-2.5 transition-colors focus-within:bg-muted focus-within:ring-2 focus-within:ring-primary/20">
+                  <Search className="h-4 w-4 text-muted-foreground shrink-0" />
                   <Input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="Buscar conversa ou paciente..."
-                    className="h-auto border-0 bg-transparent p-0 text-[13px] shadow-none focus-visible:ring-0"
+                    className="h-auto border-0 bg-transparent p-0 text-[14px] shadow-none focus-visible:ring-0 placeholder:text-muted-foreground/70"
                   />
                 </div>
               </div>

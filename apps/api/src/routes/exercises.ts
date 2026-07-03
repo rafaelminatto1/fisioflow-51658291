@@ -364,27 +364,28 @@ app.get("/:id", async (c) => {
           }))
         : [];
 
-    if (media.length === 0) {
-      if (exercise.imageUrl) {
-        media.push({
-          id: `legacy-image-${exercise.id}`,
-          url: exercise.imageUrl,
-          type: "image",
-          caption: null,
-          orderIndex: 0,
-        });
-      }
-      if (exercise.videoUrl) {
-        const isYoutube =
-          exercise.videoUrl.includes("youtube.com") || exercise.videoUrl.includes("youtu.be");
-        media.push({
-          id: `legacy-video-${exercise.id}`,
-          url: exercise.videoUrl,
-          type: isYoutube ? "youtube" : "video",
-          caption: null,
-          orderIndex: media.length,
-        });
-      }
+    const hasImage = media.some((m) => m.type === "image");
+    if (!hasImage && exercise.imageUrl) {
+      media.push({
+        id: `legacy-image-${exercise.id}`,
+        url: exercise.imageUrl,
+        type: "image",
+        caption: null,
+        orderIndex: media.length,
+      });
+    }
+
+    const hasVideo = media.some((m) => m.type !== "image");
+    if (!hasVideo && exercise.videoUrl) {
+      const isYoutube =
+        exercise.videoUrl.includes("youtube.com") || exercise.videoUrl.includes("youtu.be");
+      media.push({
+        id: `legacy-video-${exercise.id}`,
+        url: exercise.videoUrl,
+        type: isYoutube ? "youtube" : "video",
+        caption: null,
+        orderIndex: media.length,
+      });
     }
 
     return c.json({ data: { ...exercise, media } });
