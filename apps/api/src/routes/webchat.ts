@@ -12,7 +12,6 @@ import {
 	AIConciergeService,
 	buildConciergeHistory,
 	resolveWebchatConciergeConfig,
-	shouldSkipGreeting,
 	stripGreetingIntro,
 } from "../services/ai-concierge";
 
@@ -153,6 +152,9 @@ app.post("/message", async (c: any) => {
 
 		// -- AI Concierge: responde automaticamente com delay de 10s --
 		// Da chance do humano atender primeiro e evita duplicacao quando o atendente responde pelo CRM.
+		// A mensagem de captura de nome (widget manda `name` === texto na 1ª mensagem)
+		// não aciona o concierge: o widget já cumprimenta localmente logo em seguida.
+		const isNameCapture = !!providedName && providedName === text;
 		try {
 			// Carrega config do Concierge da organizacao
 			const conciergeCfgRes = await pool.query(
@@ -164,7 +166,7 @@ app.post("/message", async (c: any) => {
 				conciergeCfgRes.rows[0]?.concierge,
 			);
 
-			if (webchatCfg.enabled) {
+			if (webchatCfg.enabled && !isNameCapture) {
 				// Agenda resposta com delay - mantem o Worker vivo via waitUntil
 				const delayedReply = new Promise<void>((resolve) => {
 					setTimeout(async () => {
@@ -218,11 +220,10 @@ app.post("/message", async (c: any) => {
 								history,
 							);
 
-							// Não repete a apresentação se já saudamos nesta conversa: responde a
-							// saudação de volta em versão curta, sem se reapresentar (nunca fica mudo).
-							const reply = shouldSkipGreeting(concierge.reply, history)
-								? stripGreetingIntro(concierge.reply)
-								: concierge.reply;
+							// No webchat o widget SEMPRE se apresenta localmente (esse greet não
+							// vai ao banco, então o histórico não serve de sinal). Nunca nos
+							// reapresentamos: remove a frase de apresentação, mantendo o resto.
+							const reply = stripGreetingIntro(concierge.reply);
 
 							if (concierge.answerable && reply && reply.length >= 2) {
 								// Insere a resposta do Concierge como mensagem outbound
