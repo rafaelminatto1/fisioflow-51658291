@@ -15,6 +15,7 @@ import {
   AIConciergeService,
   buildConciergeHistory,
   conciergeIdentity,
+  createConciergeBookingTask,
   shouldSkipGreeting,
   stripGreetingIntro,
 } from "../services/ai-concierge";
@@ -458,6 +459,18 @@ export async function processConciergeAsync(
         orgId,
         event: sendStatus === "failed" ? "whatsapp_concierge_failed" : "whatsapp_concierge_replied",
       });
+
+      // Lead confirmou horário → tarefa p/ a equipe efetivar a reserva.
+      if (concierge.bookingRequest && sendStatus === "sent") {
+        await createConciergeBookingTask(
+          pool,
+          orgId,
+          conversationId,
+          concierge.bookingRequest.slotLabel,
+          text,
+        );
+        writeEvent(env, { orgId, event: "whatsapp_concierge_booking" });
+      }
     }
   } catch (error) {
     console.error("[WA Queue] Concierge error:", error);

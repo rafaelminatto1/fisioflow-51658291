@@ -730,17 +730,48 @@ async function queryPublicProfileAvailability(
   return buildDaySlots(date).filter((slot) => !bookedSlots.has(slot));
 }
 
+/** CTA que conduz o lead para fechar a reserva depois de ver os horários. */
+const AVAILABILITY_CTA =
+  "Quer garantir um desses horários? Me confirma o dia e o horário que a nossa equipe já reserva para você.";
+
+/**
+ * Feriados nas datas pedidas (D1 fisioflow-db, tabela feriados_nacionais).
+ * Sem binding DB (dev local) ou erro → mapa vazio (não bloqueia nada).
+ */
+async function loadHolidays(env: Env, dates: string[]): Promise<Map<string, string>> {
+  const db = (env as { DB?: D1Database }).DB;
+  if (!db || dates.length === 0) return new Map();
+  try {
+    const placeholders = dates.map(() => "?").join(", ");
+    const res = await db
+      .prepare(`SELECT data, nome FROM feriados_nacionais WHERE data IN (${placeholders})`)
+      .bind(...dates)
+      .all<{ data: string; nome: string }>();
+    return new Map((res.results ?? []).map((row) => [row.data, row.nome]));
+  } catch (error) {
+    console.warn("[AI Concierge] holiday lookup failed:", error);
+    return new Map();
+  }
+}
+
 function buildAvailabilityReply(
   request: AvailabilityRequest,
   slotsByDate: Array<{ date: string; slots: string[] }>,
+  holidays: Map<string, string>,
 ): ConciergeResponse {
   const nonEmpty = slotsByDate
     .map((item) => ({ ...item, slots: item.slots.slice(0, 8) }))
     .filter((item) => item.slots.length > 0);
 
   if (nonEmpty.length === 0) {
+    const holidayName = slotsByDate
+      .map((item) => holidays.get(item.date))
+      .find((name) => name);
+    const reason = holidayName
+      ? ` — é feriado (${holidayName}) e a clínica não abre`
+      : "";
     return {
-      reply: `Para ${request.label}${periodLabel(request.period)}${timeWindowLabel(request.timeWindow)} não temos horários livres no momento.`,
+      reply: `Para ${request.label}${periodLabel(request.period)}${timeWindowLabel(request.timeWindow)} não temos horários livres no momento${reason}.`,
       intent: "scheduling",
       answerable: true,
     };
@@ -749,7 +780,7 @@ function buildAvailabilityReply(
   if (nonEmpty.length === 1) {
     const limited = nonEmpty[0].slots;
     return {
-      reply: `Para ${request.label}${periodLabel(request.period)}${timeWindowLabel(request.timeWindow)} temos estes horários disponíveis: ${limited.join(", ")}.`,
+      reply: `Para ${request.label}${periodLabel(request.period)}${timeWindowLabel(request.timeWindow)} temos estes horários disponíveis: ${limited.join(", ")}. ${AVAILABILITY_CTA}`,
       intent: "scheduling",
       answerable: true,
     };
@@ -760,7 +791,7 @@ function buildAvailabilityReply(
     .map((item) => `${formatDateShort(item.date)}: ${item.slots.join(", ")}`)
     .join(" | ");
   return {
-    reply: `Para ${request.label}${periodLabel(request.period)}${timeWindowLabel(request.timeWindow)} temos disponibilidade nestes dias: ${parts}.`,
+    reply: `Para ${request.label}${periodLabel(request.period)}${timeWindowLabel(request.timeWindow)} temos disponibilidade nestes dias: ${parts}. ${AVAILABILITY_CTA}`,
     intent: "scheduling",
     answerable: true,
   };
@@ -779,8 +810,10 @@ async function maybeAnswerAvailability(
 
   try {
     const uniqueDates = [...new Set(request.dates)].slice(0, 7);
+    const holidays = await loadHolidays(env, uniqueDates);
     const slotsByDate = await Promise.all(
       uniqueDates.map(async (date) => {
+        if (holidays.has(date)) return { date, slots: [] as string[] };
         const allSlots =
           settings.availabilityScope === "public_profile"
             ? await queryPublicProfileAvailability(env, settings.availabilityProfileSlug, date)
@@ -796,7 +829,7 @@ async function maybeAnswerAvailability(
       date: item.date,
       slots: filterSlotsByTiming(item.slots, request.period, request.timeWindow),
     }));
-    return buildAvailabilityReply(request, filtered);
+    return buildAvailabilityReply(request, filtered, holidays);
   } catch (error) {
     console.error("[AI Concierge] availability lookup failed:", error);
     return { reply: "", intent: "scheduling", answerable: false };
@@ -817,6 +850,69 @@ export interface ConciergeResponse {
     condition?: string;
     insurance?: string;
   };
+  /**
+   * Presente quando o lead confirmou um horário concreto ("pode ser às 10h"):
+   * o canal deve criar tarefa p/ a equipe efetivar a reserva
+   * (createConciergeBookingTask).
+   */
+  bookingRequest?: { slotLabel: string };
+}
+
+/**
+ * Detecta confirmação de horário concreto depois que o bot ofereceu
+ * disponibilidade: "pode ser às 10h", "quero o de 14:30", "fecha sexta 9h".
+ * Exige um horário explícito — intenção vaga ("quero marcar") segue p/ o LLM.
+ */
+export function parseBookingConfirmation(message: string): { slotLabel: string } | null {
+  const time = message.match(/\b(\d{1,2})(?::(\d{2})|\s*h(?:\s*(\d{2}))?)/i);
+  if (!time) return null;
+  const hour = Number(time[1]);
+  if (hour > 23) return null;
+  const confirm =
+    /\b(pode ser|quero|prefiro|fecha(do|mos)?|confirmo|marca|agenda|reserva|vou querer|esse mesmo|serve)\b/i;
+  if (!confirm.test(message)) return null;
+  const minutes = time[2] ?? time[3];
+  const slotLabel = minutes ? `${time[1]}:${minutes}` : `${time[1]}h`;
+  return { slotLabel };
+}
+
+/**
+ * Tarefa p/ a equipe efetivar a reserva pedida ao concierge (dedup 1h por
+ * conversa). Usada pelos 3 canais quando a resposta traz bookingRequest.
+ */
+export async function createConciergeBookingTask(
+  pool: { query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[] }> },
+  orgId: string,
+  conversationId: string,
+  slotLabel: string,
+  originalMessage: string,
+): Promise<void> {
+  try {
+    const dup = await pool.query(
+      `SELECT 1 FROM tarefas
+       WHERE organization_id = $1 AND linked_entity_id = $2
+         AND titulo ILIKE 'Efetivar reserva%'
+         AND created_at > now() - interval '1 hour'
+       LIMIT 1`,
+      [orgId, conversationId],
+    );
+    if (dup.rows.length > 0) return;
+    await pool.query(
+      `INSERT INTO tarefas (organization_id, created_by, titulo, descricao, status, prioridade, tipo,
+         order_index, tags, label_ids, checklists, attachments, task_references, dependencies,
+         requires_acknowledgment, acknowledgments, linked_entity_type, linked_entity_id)
+       VALUES ($1, 'system', $2, $3, 'A_FAZER', 'ALTA', 'TAREFA',
+         0, '{}', '{}', '[]', '[]', '[]', '[]', false, '[]', 'conversation', $4)`,
+      [
+        orgId,
+        `Efetivar reserva pedida ao concierge — ${slotLabel}`,
+        `O lead confirmou um horário com o concierge:\n\n"${originalMessage}"\n\nCriar o agendamento na agenda e confirmar com o paciente pela conversa.`,
+        conversationId,
+      ],
+    );
+  } catch (error) {
+    console.warn("[AI Concierge] booking task creation failed:", error);
+  }
 }
 
 /**
@@ -880,6 +976,21 @@ export class AIConciergeService {
     const settings = await loadConciergeSettings(env, orgId);
     const availabilityReply = await maybeAnswerAvailability(env, orgId, trimmed, settings);
     if (availabilityReply) return availabilityReply;
+
+    // Lead confirmou um horário concreto → conduz o fechamento: confirma que a
+    // equipe reserva e sinaliza o canal p/ criar a tarefa (bookingRequest).
+    // Mesmo gate da disponibilidade (o bot só conduz se também oferece horários).
+    if (settings.availabilityAutoReply) {
+      const booking = parseBookingConfirmation(trimmed);
+      if (booking) {
+        return {
+          reply: `Perfeito! Anotei ${booking.slotLabel} aqui. Nossa equipe já vai confirmar a reserva por esta conversa. Se precisar ajustar, é só me avisar.`,
+          intent: "scheduling",
+          answerable: true,
+          bookingRequest: booking,
+        };
+      }
+    }
 
     const identity = conciergeIdentity(settings);
     const knowledgeBase = settings.knowledgeBase || CLINIC_KB;

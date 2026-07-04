@@ -520,6 +520,7 @@ export async function dispatchInstagramConcierge(pool: any, env: Env) {
     AIConciergeService,
     buildConciergeHistory,
     conciergeIdentity,
+    createConciergeBookingTask,
     shouldSkipGreeting,
     stripGreetingIntro,
   } = await import("./services/ai-concierge");
@@ -535,7 +536,8 @@ export async function dispatchInstagramConcierge(pool: any, env: Env) {
            o.settings->>'instagram_access_token' AS ig_token,
            (SELECT count(*) FROM wa_messages mo
               WHERE mo.conversation_id = c.id AND mo.direction = 'outbound'
-                AND mo.created_at > now() - interval '5 minutes') AS recent_out
+                AND mo.sender_type = 'agent'
+                AND mo.created_at > now() - interval '15 minutes') AS recent_out
     FROM wa_conversations c
     JOIN whatsapp_contacts wc ON wc.id = c.contact_id
     JOIN organizations o ON o.id = c.organization_id
@@ -555,9 +557,10 @@ export async function dispatchInstagramConcierge(pool: any, env: Env) {
     try {
       const cfg = (typeof row.concierge === "string" ? JSON.parse(row.concierge) : row.concierge) ?? {};
       if (cfg.instagramAutoReply !== true) continue;
-      // Só segura se um humano respondeu nos últimos 5 min (está atendendo agora).
-      // Respostas humanas mais antigas não bloqueiam: o bot cobre o "gap" da última
-      // pergunta não respondida (a query garante que a última mensagem é inbound).
+      // Janela unificada com WhatsApp/webchat: se um humano (sender_type='agent')
+      // respondeu nos últimos 15 min, o bot não entra. Respostas mais antigas não
+      // bloqueiam: o bot cobre o "gap" da última pergunta não respondida
+      // (a query garante que a última mensagem é inbound).
       if (Number(row.recent_out) > 0) continue;
       if (!row.ig_account_id || !(row.ig_token || env.IG_ACCESS_TOKEN)) continue;
 
@@ -624,6 +627,16 @@ export async function dispatchInstagramConcierge(pool: any, env: Env) {
             r.message_id,
           ).catch(() => {}),
         );
+        // Lead confirmou horário → tarefa p/ a equipe efetivar a reserva.
+        if (concierge.bookingRequest) {
+          await createConciergeBookingTask(
+            pool,
+            row.organization_id,
+            row.id,
+            concierge.bookingRequest.slotLabel,
+            text,
+          );
+        }
         sent++;
       }
     } catch (e) {

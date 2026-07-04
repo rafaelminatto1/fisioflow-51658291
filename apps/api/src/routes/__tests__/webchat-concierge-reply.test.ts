@@ -190,6 +190,23 @@ describe("POST /api/webchat/message — saudação duplicada", () => {
 		expect(autoReplies()).toHaveLength(0);
 	});
 
+	it("bookingRequest: envia confirmação e cria tarefa 'Efetivar reserva'", async () => {
+		mockProcessMessage.mockResolvedValue({
+			answerable: true,
+			reply: "Perfeito! Anotei 10h aqui. Nossa equipe já vai confirmar a reserva.",
+			intent: "scheduling",
+			bookingRequest: { slotLabel: "10h" },
+		});
+		const app = await buildApp();
+		await post(app, { org: ORG, visitorId: "v1", text: "pode ser amanhã às 10h" });
+		await vi.waitFor(() => expect(autoReplies()).toHaveLength(1));
+		const insert = mockQuery.mock.calls.find(([sql]) =>
+			String(sql).includes("INSERT INTO tarefas"),
+		);
+		expect(insert).toBeTruthy();
+		expect(String(insert?.[1]?.[1])).toContain("Efetivar reserva");
+	});
+
 	it("responde normalmente a uma pergunta comum", async () => {
 		mockProcessMessage.mockResolvedValue({
 			answerable: true,

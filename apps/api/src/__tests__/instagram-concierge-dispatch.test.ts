@@ -111,4 +111,35 @@ describe("dispatchInstagramConcierge", () => {
     expect(mockSendInstagramText).toHaveBeenCalledTimes(1);
     expect(String(mockSendInstagramText.mock.calls[0][3])).toContain("180");
   });
+
+  it("janela 'humano atendendo' unificada: a query filtra sender_type='agent' em 15 min", async () => {
+    const { dispatchInstagramConcierge } = await import("../cron");
+    const pool = makePool([]);
+    await dispatchInstagramConcierge(pool, ENV);
+    const mainSql = String(
+      pool.query.mock.calls.find(([sql]: [string]) =>
+        String(sql).includes("c.channel = 'instagram'"),
+      )?.[0] ?? "",
+    );
+    expect(mainSql).toContain("sender_type = 'agent'");
+    expect(mainSql).toContain("'15 minutes'");
+    expect(mainSql).not.toContain("'5 minutes'");
+  });
+
+  it("cria tarefa 'Efetivar reserva' quando a resposta traz bookingRequest", async () => {
+    mockProcessMessage.mockResolvedValue({
+      answerable: true,
+      reply: "Perfeito! Anotei 10h aqui.",
+      intent: "scheduling",
+      bookingRequest: { slotLabel: "10h" },
+    });
+    const { dispatchInstagramConcierge } = await import("../cron");
+    const pool = makePool([]);
+    await dispatchInstagramConcierge(pool, ENV);
+    const insert = pool.query.mock.calls.find((call: unknown[]) =>
+      String(call[0]).includes("INSERT INTO tarefas"),
+    ) as unknown[] | undefined;
+    expect(insert).toBeTruthy();
+    expect(String((insert?.[1] as unknown[])?.[1])).toContain("Efetivar reserva");
+  });
 });

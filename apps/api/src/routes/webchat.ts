@@ -12,6 +12,7 @@ import {
 	AIConciergeService,
 	buildConciergeHistory,
 	conciergeIdentity,
+	createConciergeBookingTask,
 	resolveWebchatConciergeConfig,
 	stripGreetingIntro,
 } from "../services/ai-concierge";
@@ -384,6 +385,18 @@ app.post("/message", messageRateLimit, async (c: any) => {
 									orgId,
 									event: "webchat_concierge_replied",
 								});
+
+								// Lead confirmou horário → tarefa p/ a equipe efetivar a reserva.
+								if (concierge.bookingRequest) {
+									await createConciergeBookingTask(
+										pool,
+										orgId,
+										conversation.id,
+										concierge.bookingRequest.slotLabel,
+										text,
+									);
+									writeEvent(c.env, { orgId, event: "webchat_concierge_booking" });
+								}
 								console.log("[Webchat] Concierge respondeu apos delay.");
 							}
 						} catch (delayedErr) {
