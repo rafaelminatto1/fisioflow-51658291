@@ -30,12 +30,12 @@ export function normalizeGender(value: unknown): Gender {
 }
 
 export function honorificName(name: string, gender?: Gender): string {
-  const title = gender === "M" ? "Dr." : gender === "F" ? "Dra." : "Dr(a).";
+  const title = gender === "F" ? "Dra." : "Dr.";
   return `${title} ${name.trim() || "—"}`;
 }
 
 export function patientReference(name: string, gender?: Gender): string {
-  const article = gender === "M" ? "do paciente" : gender === "F" ? "da paciente" : "do(a) paciente";
+  const article = gender === "M" ? "do paciente" : gender === "F" ? "da paciente" : "do paciente";
   return `${article} ${name.trim() || "—"}`;
 }
 

@@ -31,6 +31,7 @@ import {
 } from "@/components/evolution/v2-improved/PainTrendSparkline";
 import { EvolutionInsightCard } from "@/components/evolution/v2-improved/EvolutionInsightCard";
 import { MedicalReturnAlertCard } from "@/components/evolution/MedicalReturnAlertCard";
+import { MeasurementForm } from "@/components/evolution/MeasurementForm";
 import {
   PAIN_QUALITY_OPTIONS,
   PAIN_QUALITY_INTENSITIES,
@@ -46,7 +47,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
 
@@ -167,6 +168,7 @@ export const EvolutionNoScrollPanel = memo(
     onNavigateToTab,
   }: EvolutionNoScrollPanelProps) => {
     const [historyOpen, setHistoryOpen] = useState(false);
+    const [measurementModalOpen, setMeasurementModalOpen] = useState(false);
     const [focusSection, setFocusSection] = useState<null | "obs" | "condutas">(null);
     const [saveFeedback, setSaveFeedback] = useState<null | "saved" | "error">(null);
 
@@ -606,7 +608,7 @@ export const EvolutionNoScrollPanel = memo(
                 </p>
                 <button
                   type="button"
-                  onClick={() => onNavigateToTab?.("avaliacao")}
+                  onClick={() => setMeasurementModalOpen(true)}
                   className="text-[10px] font-bold text-primary hover:underline"
                 >
                   + Adicionar medição
@@ -717,6 +719,22 @@ export const EvolutionNoScrollPanel = memo(
                 />
               )}
             </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={measurementModalOpen} onOpenChange={setMeasurementModalOpen}>
+          <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto p-0">
+            <DialogHeader className="border-b px-6 py-4">
+              <DialogTitle>Adicionar medição</DialogTitle>
+              <DialogDescription>
+                Registre as medições desta sessão sem sair da evolução.
+              </DialogDescription>
+            </DialogHeader>
+            {patientId ? (
+              <div className="p-4">
+                <MeasurementForm patientId={patientId} soapRecordId={evolutionId} />
+              </div>
+            ) : null}
           </DialogContent>
         </Dialog>
 

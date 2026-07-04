@@ -7,8 +7,10 @@
 import { useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, Stethoscope } from "lucide-react";
 import { usePatientMedicalReturns } from "@/hooks/usePatientEvolution";
+import { useSearchDoctors } from "@/hooks/useDoctors";
 import { MedicalReturnFormModal } from "@/components/evolution/MedicalReturnFormModal";
 import type { MedicalReturn } from "@/types/evolution";
+import { honorificName, normalizeHonorificGender } from "@/lib/format/honorific";
 import { cn } from "@/lib/utils";
 
 interface MedicalReturnAlertCardProps {
@@ -47,6 +49,17 @@ export function MedicalReturnAlertCard({
     );
     return sorted.find((r) => String(r.return_date ?? "") >= today) ?? sorted[sorted.length - 1];
   }, [medicalReturns]);
+
+  const { data: matchedDoctors = [] } = useSearchDoctors(
+    displayReturn?.doctor_name ?? "",
+    !!displayReturn,
+  );
+  const doctorGender = normalizeHonorificGender(
+    matchedDoctors.find(
+      (doctor) =>
+        doctor.name?.trim().toLowerCase() === displayReturn?.doctor_name?.trim().toLowerCase(),
+    )?.gender,
+  );
 
   if (!patientId || !displayReturn) return null;
 
@@ -89,7 +102,7 @@ export function MedicalReturnAlertCard({
                 : ""}
             </div>
             <div className="truncate text-[11px] font-semibold text-muted-foreground">
-              Dr(a). {displayReturn.doctor_name}
+              {honorificName(displayReturn.doctor_name, doctorGender)}
             </div>
           </div>
           {sent ? (

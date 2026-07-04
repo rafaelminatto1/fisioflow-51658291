@@ -693,7 +693,7 @@ export const PatientDashboard360 = ({
                   <div>
                     <h4 className="font-semibold text-lg">{surgery.name}</h4>
                     <p className="text-muted-foreground text-sm">
-                      {surgery.hospital} • Dr(a). {surgery.surgeon}
+                      {surgery.hospital} • Dr. {surgery.surgeon}
                     </p>
                   </div>
                   <div className="mt-2 sm:mt-0 text-right">

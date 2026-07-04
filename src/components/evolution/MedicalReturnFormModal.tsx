@@ -52,6 +52,11 @@ import { patientsApi } from "@/api/v2/patients";
 import { uploadToR2 } from "@/lib/storage/r2-storage";
 import { useAuth } from "@/contexts/AuthContext";
 import type { MedicalReturn, MedicalReturnFormData } from "@/types/evolution";
+import {
+  honorificName,
+  normalizeHonorificGender,
+  patientReference,
+} from "@/lib/format/honorific";
 
 const formSchema = z.object({
   doctor_name: z.string().min(2, "Nome do médico é obrigatório"),
@@ -78,26 +83,6 @@ function normalizeDateInputValue(value: string | null | undefined): string {
 
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString().slice(0, 10);
-}
-
-type GenderMF = "M" | "F" | null;
-
-function normalizeGenderValue(value: unknown): GenderMF {
-  if (typeof value !== "string") return null;
-  const first = value.trim().toLowerCase()[0];
-  if (first === "m") return "M";
-  if (first === "f") return "F";
-  return null;
-}
-
-function honorificName(name: string, gender: GenderMF): string {
-  const title = gender === "M" ? "Dr." : gender === "F" ? "Dra." : "Dr(a).";
-  return `${title} ${name.trim() || "—"}`;
-}
-
-function patientReference(name: string, gender: GenderMF): string {
-  const article = gender === "M" ? "do paciente" : gender === "F" ? "da paciente" : "do(a) paciente";
-  return `${article} ${name.trim() || "—"}`;
 }
 
 function toWhatsAppNumber(phone: string): string | null {
@@ -141,7 +126,7 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
     (profile as { full_name?: string } | null)?.full_name ||
     (user as { displayName?: string } | null)?.displayName ||
     "";
-  const therapistGender = normalizeGenderValue(
+  const therapistGender = normalizeHonorificGender(
     (profile as { gender?: string | null } | null)?.gender,
   );
 
@@ -165,7 +150,7 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
     watchedDoctorName ?? "",
     (watchedDoctorName ?? "").length >= 2,
   );
-  const doctorGender = normalizeGenderValue(
+  const doctorGender = normalizeHonorificGender(
     matchedDoctors.find(
       (d) => d.name?.trim().toLowerCase() === (watchedDoctorName ?? "").trim().toLowerCase(),
     )?.gender,
@@ -356,7 +341,7 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
     return (
       `Olá ${honorificName(v.doctor_name || "", doctorGender)}! ` +
       `Sou ${honorificName(therapistName, therapistGender)}, ` +
-      `fisioterapeuta ${patientReference(patientName || "", normalizeGenderValue(patientGender))}. ` +
+      `fisioterapeuta ${patientReference(patientName || "", normalizeHonorificGender(patientGender))}. ` +
       `Segue o relatório de fisioterapia referente ao retorno de ${formatDateBr(v.return_date)}. ` +
       `Pedido/relatório: ${link}. Fico à disposição!`
     );

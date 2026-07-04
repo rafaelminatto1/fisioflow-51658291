@@ -29,6 +29,7 @@ import { Profile } from "@/types/auth";
 import { useAppointments } from "@/hooks/useAppointments";
 import { useRenderTracking } from "@/hooks/useRenderTracking";
 import type { DashboardPeriod } from "@/hooks/useDashboardMetrics";
+import { honorificName, normalizeHonorificGender } from "@/lib/format/honorific";
 import { cn } from "@/lib/utils";
 
 interface TherapistDashboardProps {
@@ -229,7 +230,10 @@ export function TherapistDashboard({
               Visão clínica
             </p>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
-              Dr(a). {profile.full_name?.split(" ")[0]}
+              {honorificName(
+                profile.full_name?.split(" ")[0] ?? "",
+                normalizeHonorificGender((profile as { gender?: string | null }).gender),
+              )}
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
               {periodLabel} • atualização às {format(lastUpdate, "HH:mm", { locale: ptBR })}

@@ -197,6 +197,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const isUpdatingFromProp = useRef(false);
   const onValueChangeRef = useRef(onValueChange);
   const [isTyping, setIsTyping] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const context = useRichTextContext();
   const setActiveEditor = context?.setActiveEditor;
@@ -280,6 +281,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     if (!editor) return;
     const loadingToast = toast.loading("Enviando imagem...");
     try {
+      setUploadError(null);
       const result = await uploadFile(file, {
         folder: imageUploadFolder || STORAGE_FOLDERS.PATIENTS,
       });
@@ -296,11 +298,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         })
         .run();
       toast.dismiss(loadingToast);
-      toast.success("Imagem enviada com sucesso!");
-    } catch (error) {
+      // toast.success("Imagem enviada com sucesso!");
+    } catch (error: any) {
       console.error("Error uploading image:", error);
       toast.dismiss(loadingToast);
-      toast.error("Erro ao fazer upload da imagem");
+      setUploadError(error.message || "Erro ao fazer upload da imagem");
+      
+      // Auto-dismiss the inline error after 5s
+      setTimeout(() => setUploadError(null), 5000);
     }
   };
 
@@ -712,7 +717,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   return (
     <div
       className={cn(
-        "rich-text-editor rounded-lg border border-transparent",
+        "relative rich-text-editor rounded-lg border border-transparent",
         isTyping && "typing-active",
         className,
       )}
@@ -725,6 +730,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         accept="image/*"
         onChange={handleImageUpload}
       />
+      {uploadError && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 bg-red-100 border border-red-300 text-red-700 px-3 py-1.5 rounded shadow-md text-sm flex items-center gap-2 max-w-[90%]">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <span className="truncate">{uploadError}</span>
+        </div>
+      )}
       {showToolbar && editor && (
         <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border border-slate-200 bg-slate-50/80 rounded-t-lg sticky top-0 z-10">
           <select

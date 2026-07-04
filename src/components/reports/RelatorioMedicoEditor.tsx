@@ -191,7 +191,7 @@ export function RelatorioMedicoEditor({
               <div className="space-y-2">
                 <Label>Nome do Médico/Especialista</Label>
                 <Input
-                  placeholder="Dr(a). Nome Sobrenome"
+                  placeholder="Dr. ou Dra. Nome Sobrenome"
                   value={data.profissional_destino?.nome || ""}
                   onChange={(e) =>
                     onChange({

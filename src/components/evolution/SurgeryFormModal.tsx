@@ -401,7 +401,7 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
                         Cirurgião
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="Dr(a). Nome" {...field} />
+                        <Input placeholder="Dr. ou Dra. Nome" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

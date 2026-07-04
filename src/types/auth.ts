@@ -44,6 +44,7 @@ export interface Profile {
   specialties?: string[];
   avatar_url?: string;
   cpf?: string;
+  gender?: string | null;
   birth_date?: string;
   address?: string;
   license_expiry?: string;

@@ -205,7 +205,7 @@ export function DoctorFormModal({
                       <div className="relative group">
                         <User2 className={fieldIconClass} />
                         <Input
-                          placeholder="Dr(a). Nome Completo"
+                          placeholder="Dr. ou Dra. Nome Completo"
                           className={fieldInputClass}
                           {...field}
                         />

@@ -48,7 +48,7 @@ interface _CallStats {
 export function VideoCall({
   _roomId,
   patientName = "Paciente",
-  _therapistName = "Dr(a).",
+  _therapistName = "Dr.",
   onJoin,
   onLeave,
   className,

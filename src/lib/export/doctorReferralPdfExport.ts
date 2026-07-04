@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { loadJsPdfRuntime } from "@/lib/export/jspdfRuntime";
+import { honorificName, normalizeHonorificGender } from "@/lib/format/honorific";
 
 export interface DoctorReferralPdfData {
   patient: {
@@ -12,6 +13,7 @@ export interface DoctorReferralPdfData {
   clinic: {
     name: string;
     doctorName: string;
+    doctorGender?: string | null;
     crf: string;
     address: string;
     phone: string;
@@ -102,9 +104,12 @@ export async function exportDoctorReferralPdf(fileName: string, data: DoctorRefe
   doc.line(margin + 90, y, pageWidth - margin - 10, y);
   y += 6;
   doc.setFont("helvetica", "bold");
-  doc.text(`Dr(a). ${data.clinic.doctorName}`, pageWidth - margin - 10, y, {
-    align: "right",
-  });
+  doc.text(
+    honorificName(data.clinic.doctorName, normalizeHonorificGender(data.clinic.doctorGender)),
+    pageWidth - margin - 10,
+    y,
+    { align: "right" },
+  );
   doc.setFont("helvetica", "normal");
   y += 5;
   doc.text(`Fisioterapeuta • CRF: ${data.clinic.crf}`, pageWidth - margin - 10, y, {

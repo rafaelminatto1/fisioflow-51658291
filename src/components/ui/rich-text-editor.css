@@ -73,6 +73,7 @@
   line-height: 1.7;
   color: hsl(var(--foreground));
   position: relative !important;
+  display: flow-root;
 }
 
 /* Observações clínicas: leitura principal, fonte maior por padrão. */
@@ -1018,8 +1019,7 @@ body.high-contrast *:focus-visible {
     transform 0.15s ease;
 }
 
-.clinical-media-node:hover .clinical-media-toolbar,
-.clinical-media-node.is-selected .clinical-media-toolbar,
+.clinical-media-node.is-menu-open .clinical-media-toolbar,
 .clinical-media-toolbar:focus-within {
   opacity: 1;
   transform: translateY(0);

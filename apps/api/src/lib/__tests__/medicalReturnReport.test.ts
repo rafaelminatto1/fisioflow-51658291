@@ -31,13 +31,13 @@ describe("normalizeGender", () => {
 });
 
 describe("honorificName / patientReference", () => {
-  it("aplica Dr./Dra. e do/da conforme o gênero, com fallback neutro", () => {
+  it("aplica Dr./Dra. e do/da conforme o gênero, com fallback masculino", () => {
     expect(honorificName("Rafael Minatto", "M")).toBe("Dr. Rafael Minatto");
     expect(honorificName("Ana Lima", "F")).toBe("Dra. Ana Lima");
-    expect(honorificName("Alex", null)).toBe("Dr(a). Alex");
+    expect(honorificName("Alex", null)).toBe("Dr. Alex");
     expect(patientReference("João", "M")).toBe("do paciente João");
     expect(patientReference("Maria", "F")).toBe("da paciente Maria");
-    expect(patientReference("Sam", null)).toBe("do(a) paciente Sam");
+    expect(patientReference("Sam", null)).toBe("do paciente Sam");
   });
 });
 
@@ -61,9 +61,9 @@ describe("buildMedicalReportVariables", () => {
       attachmentUrl: null,
     });
     expect(vars).toEqual([
-      "Dr(a). Alex",
-      "Dr(a). Sam",
-      "do(a) paciente Chris",
+      "Dr. Alex",
+      "Dr. Sam",
+      "do paciente Chris",
       "data a confirmar",
       "segue em anexo",
     ]);

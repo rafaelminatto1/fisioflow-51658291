@@ -37,6 +37,19 @@ function ClinicalMediaNodeView({
   const captionIsEmpty = node.textContent.trim().length === 0;
 
   const isAbsolute = attrs.wrap === "behind" || attrs.wrap === "front";
+  const [showMenu, setShowMenu] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (showMenu) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [showMenu]);
 
   useEffect(() => {
     const nextWidth = attrs.width || DEFAULT_CLINICAL_MEDIA_WIDTH;
@@ -152,9 +165,15 @@ function ClinicalMediaNodeView({
         selected ? "is-selected" : "",
         `is-aligned-${align}`,
         `is-wrapped-${attrs.wrap || "none"}`,
+        showMenu ? "is-menu-open" : "",
       ].join(" ")}
       data-align={align}
       style={style}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setShowMenu(true);
+      }}
     >
       <div className="clinical-media-shell">
         <div className="clinical-media-frame" contentEditable={false}>
@@ -175,8 +194,9 @@ function ClinicalMediaNodeView({
             draggable={false}
             className="clinical-media-image"
           />
-          <div className="clinical-media-toolbar">
-            {/* Alinhamento */}
+          {showMenu && (
+            <div className="clinical-media-toolbar" onClick={(e) => e.stopPropagation()}>
+              {/* Alinhamento */}
             <div className="flex gap-1 border-r border-slate-700/20 dark:border-slate-200/20 pr-1">
               <button
                 type="button"
@@ -306,10 +326,13 @@ function ClinicalMediaNodeView({
               onClick={() => {
                 deleteNode();
               }}
+              title="Remover"
             >
+              <Trash2 className="h-3 w-3" />
               Remover
             </button>
           </div>
+          )}
           <button
             type="button"
             className="clinical-media-resize-handle"
