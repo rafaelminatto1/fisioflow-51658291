@@ -919,9 +919,19 @@ Retorne APENAS um JSON válido neste formato, sem texto fora do JSON:
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
       const parsed = JSON.parse(jsonMatch?.[0] ?? "{}") as Partial<ConciergeResponse>;
 
-      const answerable = parsed.answerable === true;
+      let answerable = parsed.answerable === true;
       const reply = typeof parsed.reply === "string" ? parsed.reply.trim() : "";
       const intent = parsed.intent ?? "other";
+
+      // Guarda determinística: o modelo às vezes marca answerable=true numa
+      // deflexão ("não temos informações...", "entre em contato"). Isso não é
+      // resposta — rebaixa a unanswerable p/ o canal fazer handoff/humano.
+      if (
+        answerable &&
+        /n[ãa]o (temos|tenho|h[áa]) (essa |esta |mais )?informa[çc]/i.test(reply)
+      ) {
+        answerable = false;
+      }
 
       return {
         // Garante que nada é enviado quando não há resposta segura.

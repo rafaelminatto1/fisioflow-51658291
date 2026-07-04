@@ -61,6 +61,43 @@ describe("greeting helpers com assinatura custom", () => {
   });
 });
 
+describe("processMessage rebaixa deflexões a unanswerable", () => {
+	it('resposta "não temos informações..." vira answerable=false (handoff/humano)', async () => {
+		orgSettings({});
+		mockRunAi.mockResolvedValue({
+			text: JSON.stringify({
+				reply:
+					"Não temos informações sobre o atendimento a crianças de 8 anos. Por favor, entre em contato conosco.",
+				intent: "information",
+				answerable: true,
+			}),
+		});
+		const { AIConciergeService } = await import("../ai-concierge");
+		const out = await AIConciergeService.processMessage(
+			ENV,
+			"org-x",
+			"atendem crianças?",
+			[],
+		);
+		expect(out.answerable).toBe(false);
+		expect(out.reply).toBe("");
+	});
+
+	it("resposta real coberta pelo KB continua answerable=true", async () => {
+		orgSettings({});
+		mockRunAi.mockResolvedValue({
+			text: JSON.stringify({
+				reply: "A sessão avulsa custa R$ 180,00 e a avaliação R$ 180,00.",
+				intent: "information",
+				answerable: true,
+			}),
+		});
+		const { AIConciergeService } = await import("../ai-concierge");
+		const out = await AIConciergeService.processMessage(ENV, "org-x", "valores?", []);
+		expect(out.answerable).toBe(true);
+	});
+});
+
 describe("processMessage usa KB e identidade das settings da organização", () => {
   it("KB custom entra no system prompt no lugar do default", async () => {
     orgSettings({ knowledgeBase: "Clínica Verde — valores: sessão R$ 250,00." });
