@@ -276,15 +276,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     updateAttributes: (attrs: Record<string, unknown>) => void;
   } | null>(null);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !editor) return;
-
-    // Reset input
-    e.target.value = "";
-
+  const uploadAndInsertImage = async (file: File) => {
+    if (!editor) return;
     const loadingToast = toast.loading("Enviando imagem...");
-
     try {
       const result = await uploadFile(file, {
         folder: imageUploadFolder || STORAGE_FOLDERS.PATIENTS,
@@ -296,8 +290,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         .setClinicalMedia({
           src: imageUrl,
           alt: file.name,
-          width: "100%",
+          width: "350px",
           align: "center",
+          wrap: "none",
         })
         .run();
       toast.dismiss(loadingToast);
@@ -307,6 +302,15 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       toast.dismiss(loadingToast);
       toast.error("Erro ao fazer upload da imagem");
     }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editor) return;
+
+    // Reset input
+    e.target.value = "";
+    await uploadAndInsertImage(file);
   };
 
   const handleInput = useCallback(() => {
@@ -440,6 +444,30 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     },
     editorProps: {
       attributes: { class: "outline-none" },
+      handleDrop: (view, event, slice, moved) => {
+        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+          event.preventDefault();
+          const file = event.dataTransfer.files[0];
+          if (file.type.startsWith("image/")) {
+            uploadAndInsertImage(file);
+          } else {
+            toast.error("Apenas imagens podem ser arrastadas diretamente para o editor.");
+          }
+          return true;
+        }
+        return false;
+      },
+      handlePaste: (view, event) => {
+        if (event.clipboardData && event.clipboardData.files && event.clipboardData.files.length > 0) {
+          event.preventDefault();
+          const file = event.clipboardData.files[0];
+          if (file.type.startsWith("image/")) {
+            uploadAndInsertImage(file);
+          }
+          return true;
+        }
+        return false;
+      },
     },
   });
 

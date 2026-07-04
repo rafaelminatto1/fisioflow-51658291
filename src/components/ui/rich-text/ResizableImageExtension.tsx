@@ -16,6 +16,8 @@ import {
   getClinicalMediaImageAttrs,
   normalizeClinicalMediaAlign,
   normalizeClinicalMediaWidth,
+  normalizeClinicalMediaWrap,
+  normalizeClinicalMediaCoord,
   type ClinicalMediaAttrs,
 } from "./clinicalMedia";
 
@@ -33,6 +35,8 @@ function ClinicalMediaNodeView({
   const [draftWidth, setDraftWidth] = useState(attrs.width || DEFAULT_CLINICAL_MEDIA_WIDTH);
   const align = normalizeClinicalMediaAlign(attrs.align);
   const captionIsEmpty = node.textContent.trim().length === 0;
+
+  const isAbsolute = attrs.wrap === "behind" || attrs.wrap === "front";
 
   useEffect(() => {
     const nextWidth = attrs.width || DEFAULT_CLINICAL_MEDIA_WIDTH;
@@ -76,6 +80,48 @@ function ClinicalMediaNodeView({
     window.addEventListener("pointerup", onPointerUp);
   };
 
+  const startAbsoluteDrag = (event: React.PointerEvent<HTMLButtonElement | HTMLDivElement>) => {
+    if (attrs.wrap !== "behind" && attrs.wrap !== "front") return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+
+    const container = wrapper.closest(".ProseMirror");
+    if (!container) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const wrapperRect = wrapper.getBoundingClientRect();
+
+    const offsetX = event.clientX - wrapperRect.left;
+    const offsetY = event.clientY - wrapperRect.top;
+
+    const onPointerMove = (moveEvent: PointerEvent) => {
+      const x = moveEvent.clientX - containerRect.left - offsetX + container.scrollLeft;
+      const y = moveEvent.clientY - containerRect.top - offsetY + container.scrollTop;
+
+      wrapper.style.left = `${x}px`;
+      wrapper.style.top = `${y}px`;
+    };
+
+    const onPointerUp = (upEvent: PointerEvent) => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+
+      const x = upEvent.clientX - containerRect.left - offsetX + container.scrollLeft;
+      const y = upEvent.clientY - containerRect.top - offsetY + container.scrollTop;
+
+      updateAttributes({
+        left: `${Math.round(x)}px`,
+        top: `${Math.round(y)}px`,
+      });
+    };
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+  };
+
   const openImageEditor = () => {
     window.dispatchEvent(
       new CustomEvent("rich-text-edit-existing-image", {
@@ -89,6 +135,15 @@ function ClinicalMediaNodeView({
     );
   };
 
+  const style: React.CSSProperties = {
+    width: draftWidth,
+  };
+  if (isAbsolute) {
+    style.position = "absolute";
+    style.top = attrs.top || "20px";
+    style.left = attrs.left || "20px";
+  }
+
   return (
     <NodeViewWrapper
       ref={wrapperRef}
@@ -96,9 +151,10 @@ function ClinicalMediaNodeView({
         "clinical-media-node",
         selected ? "is-selected" : "",
         `is-aligned-${align}`,
+        `is-wrapped-${attrs.wrap || "none"}`,
       ].join(" ")}
       data-align={align}
-      style={{ width: draftWidth }}
+      style={style}
     >
       <div className="clinical-media-shell">
         <div className="clinical-media-frame" contentEditable={false}>
@@ -106,8 +162,9 @@ function ClinicalMediaNodeView({
             type="button"
             className="clinical-media-drag-handle"
             aria-label="Mover imagem"
-            title="Mover imagem"
-            data-drag-handle
+            title={isAbsolute ? "Mover imagem (Arrastar Livre)" : "Mover imagem"}
+            onPointerDown={isAbsolute ? startAbsoluteDrag : undefined}
+            data-drag-handle={!isAbsolute ? "true" : undefined}
           >
             <GripVertical className="h-3.5 w-3.5" />
           </button>
@@ -119,24 +176,127 @@ function ClinicalMediaNodeView({
             className="clinical-media-image"
           />
           <div className="clinical-media-toolbar">
-            <button type="button" onClick={() => updateAttributes({ align: "left" })}>
-              Esq
-            </button>
-            <button type="button" onClick={() => updateAttributes({ align: "center" })}>
-              Centro
-            </button>
-            <button type="button" onClick={() => updateAttributes({ align: "right" })}>
-              Dir
-            </button>
-            <button type="button" onClick={() => commitWidth("50%")}>
-              50%
-            </button>
-            <button type="button" onClick={() => commitWidth("75%")}>
-              75%
-            </button>
-            <button type="button" onClick={() => commitWidth("100%")}>
-              100%
-            </button>
+            {/* Alinhamento */}
+            <div className="flex gap-1 border-r border-slate-700/20 dark:border-slate-200/20 pr-1">
+              <button
+                type="button"
+                className={align === "left" ? "is-active" : ""}
+                onClick={() => updateAttributes({ align: "left" })}
+                title="Esquerda"
+              >
+                Esq
+              </button>
+              <button
+                type="button"
+                className={align === "center" ? "is-active" : ""}
+                onClick={() => updateAttributes({ align: "center" })}
+                title="Centro"
+              >
+                Centro
+              </button>
+              <button
+                type="button"
+                className={align === "right" ? "is-active" : ""}
+                onClick={() => updateAttributes({ align: "right" })}
+                title="Direita"
+              >
+                Dir
+              </button>
+            </div>
+
+            {/* Word wrap options */}
+            <div className="flex gap-1 border-r border-slate-700/20 dark:border-slate-200/20 pr-1">
+              <button
+                type="button"
+                className={(attrs.wrap || "none") === "none" ? "is-active" : ""}
+                onClick={() => updateAttributes({ wrap: "none", top: null, left: null })}
+                title="Quebrar texto"
+              >
+                Quebrar
+              </button>
+              <button
+                type="button"
+                className={attrs.wrap === "inline" ? "is-active" : ""}
+                onClick={() => updateAttributes({ wrap: "inline", top: null, left: null })}
+                title="Em Linha"
+              >
+                Linha
+              </button>
+              <button
+                type="button"
+                className={attrs.wrap === "left" ? "is-active" : ""}
+                onClick={() => updateAttributes({ wrap: "left", top: null, left: null })}
+                title="Envolver Esquerda"
+              >
+                Esq (Flutuar)
+              </button>
+              <button
+                type="button"
+                className={attrs.wrap === "right" ? "is-active" : ""}
+                onClick={() => updateAttributes({ wrap: "right", top: null, left: null })}
+                title="Envolver Direita"
+              >
+                Dir (Flutuar)
+              </button>
+              <button
+                type="button"
+                className={attrs.wrap === "behind" ? "is-active font-bold" : ""}
+                onClick={() => {
+                  const wrapper = wrapperRef.current;
+                  let t = "20px";
+                  let l = "20px";
+                  if (wrapper) {
+                    const container = wrapper.closest(".ProseMirror");
+                    if (container) {
+                      const containerRect = container.getBoundingClientRect();
+                      const wrapperRect = wrapper.getBoundingClientRect();
+                      t = `${Math.round(wrapperRect.top - containerRect.top + container.scrollTop)}px`;
+                      l = `${Math.round(wrapperRect.left - containerRect.left + container.scrollLeft)}px`;
+                    }
+                  }
+                  updateAttributes({ wrap: "behind", top: t, left: l });
+                }}
+                title="Atrás do texto (Livre)"
+              >
+                Atrás
+              </button>
+              <button
+                type="button"
+                className={attrs.wrap === "front" ? "is-active font-bold" : ""}
+                onClick={() => {
+                  const wrapper = wrapperRef.current;
+                  let t = "20px";
+                  let l = "20px";
+                  if (wrapper) {
+                    const container = wrapper.closest(".ProseMirror");
+                    if (container) {
+                      const containerRect = container.getBoundingClientRect();
+                      const wrapperRect = wrapper.getBoundingClientRect();
+                      t = `${Math.round(wrapperRect.top - containerRect.top + container.scrollTop)}px`;
+                      l = `${Math.round(wrapperRect.left - containerRect.left + container.scrollLeft)}px`;
+                    }
+                  }
+                  updateAttributes({ wrap: "front", top: t, left: l });
+                }}
+                title="Na frente do texto (Livre)"
+              >
+                Frente
+              </button>
+            </div>
+
+            {/* Larguras predefinidas */}
+            <div className="flex gap-1 border-r border-slate-700/20 dark:border-slate-200/20 pr-1">
+              <button type="button" className={attrs.width === "50%" ? "is-active" : ""} onClick={() => commitWidth("50%")}>
+                50%
+              </button>
+              <button type="button" className={attrs.width === "75%" ? "is-active" : ""} onClick={() => commitWidth("75%")}>
+                75%
+              </button>
+              <button type="button" className={attrs.width === "100%" ? "is-active" : ""} onClick={() => commitWidth("100%")}>
+                100%
+              </button>
+            </div>
+
             <button type="button" onClick={openImageEditor}>
               Editar
             </button>
@@ -212,6 +372,27 @@ export const ResizableImage = Node.create({
         parseHTML: (element) =>
           normalizeClinicalMediaAlign(
             element.getAttribute("data-align") || DEFAULT_CLINICAL_MEDIA_ALIGN,
+          ),
+      },
+      wrap: {
+        default: "none",
+        parseHTML: (element) =>
+          normalizeClinicalMediaWrap(
+            element.getAttribute("data-wrap") || "none",
+          ),
+      },
+      top: {
+        default: null,
+        parseHTML: (element) =>
+          normalizeClinicalMediaCoord(
+            element.getAttribute("data-top") || null,
+          ),
+      },
+      left: {
+        default: null,
+        parseHTML: (element) =>
+          normalizeClinicalMediaCoord(
+            element.getAttribute("data-left") || null,
           ),
       },
     };

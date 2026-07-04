@@ -24,7 +24,7 @@ describe("clinical media extension integration", () => {
       ],
     });
 
-    expect(editor.getHTML()).toContain('<figure data-type="clinical-media" data-align="right" data-width="75%">');
+    expect(editor.getHTML()).toContain('<figure data-type="clinical-media" data-align="right" data-width="75%" data-wrap="none" data-top="" data-left="">');
     expect(editor.getHTML()).toContain('<img src="/legacy.png" alt="" title="" data-rich-text-image="true">');
   });
 

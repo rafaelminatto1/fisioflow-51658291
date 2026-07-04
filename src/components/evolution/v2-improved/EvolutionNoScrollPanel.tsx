@@ -10,7 +10,6 @@ import {
   History,
   Maximize2,
   MapPin,
-  Paperclip,
   Ruler,
   Stethoscope,
   TrendingDown,
@@ -25,13 +24,13 @@ import type { EvolutionV2Data } from "@/components/evolution/v2-improved/types";
 import { RichTextBlock } from "@/components/evolution/v2-improved/RichTextBlock";
 import { EvolutionBlockV3 } from "@/components/evolution/v3-unified/EvolutionBlockV3";
 import { SessionTimelineStrip } from "@/components/evolution/v2-improved/SessionTimelineStrip";
-import { AttachmentsBlock } from "@/components/evolution/v2-improved/AttachmentsBlock";
 import { PainGauge, painColor, painLabel } from "@/components/evolution/v2-improved/PainGauge";
 import {
   PainTrendSparkline,
   type PainTrendPoint,
 } from "@/components/evolution/v2-improved/PainTrendSparkline";
 import { EvolutionInsightCard } from "@/components/evolution/v2-improved/EvolutionInsightCard";
+import { MedicalReturnAlertCard } from "@/components/evolution/MedicalReturnAlertCard";
 import {
   PAIN_QUALITY_OPTIONS,
   PAIN_QUALITY_INTENSITIES,
@@ -169,7 +168,6 @@ export const EvolutionNoScrollPanel = memo(
   }: EvolutionNoScrollPanelProps) => {
     const [historyOpen, setHistoryOpen] = useState(false);
     const [focusSection, setFocusSection] = useState<null | "obs" | "condutas">(null);
-    const [anexosOpen, setAnexosOpen] = useState(false);
     const [saveFeedback, setSaveFeedback] = useState<null | "saved" | "error">(null);
 
     // Atalhos de teclado (T013)
@@ -400,6 +398,9 @@ export const EvolutionNoScrollPanel = memo(
           animate="visible"
           className="custom-scrollbar flex min-h-0 flex-col gap-2 overflow-y-auto pb-2 pr-1"
         >
+          {/* alerta de retorno médico — vermelho até o relatório ser enviado */}
+          <MedicalReturnAlertCard patientId={patientId || ""} patientName={patient?.name} />
+
           {/* nível de dor — EVA */}
           <div data-pain-section className="rounded-2xl border border-t-[3px] border-border border-t-rose-500 bg-card px-3 py-2 shadow-sm">
             <div className="mb-0.5 flex items-center gap-2">
@@ -489,8 +490,8 @@ export const EvolutionNoScrollPanel = memo(
               </div>
             </div>
 
-            <div className="mt-2 flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+            <div className="mt-2 flex flex-nowrap items-center gap-1 overflow-hidden">
+              <span className="shrink-0 text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
                 Tipo:
               </span>
               {PAIN_QUALITY_OPTIONS.map((type) => {
@@ -502,14 +503,14 @@ export const EvolutionNoScrollPanel = memo(
                     type="button"
                     onClick={() => toggleQuality(type)}
                     className={cn(
-                      "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors",
+                      "inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9.5px] font-bold leading-none transition-colors xl:gap-1 xl:px-2 xl:py-1 xl:text-[10px]",
                       active
                         ? "bg-rose-100 text-rose-700"
                         : "bg-slate-100 text-muted-foreground hover:bg-slate-200",
                     )}
                     title={active ? `${type} · ${active.intensity}` : type}
                   >
-                    <Icon className="h-3 w-3" /> {type}
+                    <Icon className="h-2.5 w-2.5 xl:h-3 xl:w-3" /> {type}
                     {active && (
                       <span className="text-[9px] font-extrabold uppercase opacity-70">
                         {active.intensity[0]}
@@ -625,71 +626,7 @@ export const EvolutionNoScrollPanel = memo(
             </p>
           </SideCard>
 
-          {/* anexos — minimizado por padrão (T015: drag-and-drop direto) */}
-          <SideCard
-            icon={Paperclip}
-            title="Anexos"
-            accent="border-t-[#14B8A6]"
-            onDragOver={(e) => { e.preventDefault(); }}
-            onDrop={(e) => {
-              e.preventDefault();
-              const files = Array.from(e.dataTransfer.files);
-              if (files.length > 0) {
-                setAnexosOpen(true);
-                // Trigger file input via hidden element
-                const input = document.getElementById("file-upload") as HTMLInputElement;
-                if (input) {
-                  const dt = new DataTransfer();
-                  files.forEach(f => dt.items.add(f));
-                  input.files = dt.files;
-                  input.dispatchEvent(new Event("change", { bubbles: true }));
-                }
-              }
-            }}
-            action={
-              <button
-                type="button"
-                onClick={() => setAnexosOpen((v) => !v)}
-                className="text-[10px] font-extrabold uppercase tracking-wider text-primary hover:underline"
-              >
-                {anexosOpen ? "Recolher" : (data.attachments?.length ?? 0) > 0 ? "Ver" : "Adicionar"}
-              </button>
-            }
-          >
-            {anexosOpen ? (
-              <AttachmentsBlock
-                patientId={patientId}
-                evolutionId={evolutionId}
-                value={data.attachments ?? []}
-                onChange={(attachments) => onChange({ ...data, attachments })}
-                variant="embedded"
-              />
-            ) : (
-              <div className="flex flex-col items-center gap-1.5 py-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50">
-                  <Paperclip className="h-4 w-4 text-teal-500" />
-                </div>
-                {(data.attachments?.length ?? 0) > 0 ? (
-                  <p className="text-[11px] font-semibold text-slate-700">
-                    {data.attachments?.length} arquivo(s) anexado(s)
-                  </p>
-                ) : (
-                  <>
-                    <p className="text-[11px] font-semibold text-muted-foreground text-center">
-                      Nenhum anexo
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setAnexosOpen(true)}
-                      className="text-[10px] font-bold text-primary hover:underline"
-                    >
-                      + Adicionar arquivo
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
-          </SideCard>
+
 
           {/* sinais vitais — condicional */}
           {showVitals && (

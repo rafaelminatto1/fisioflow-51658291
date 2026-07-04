@@ -12,7 +12,7 @@ import {
 } from "../clinicalMedia";
 
 describe("clinical media helpers", () => {
-  it("normaliza largura inválida para 100%", () => {
+  it("normaliza largura inválida", () => {
     expect(normalizeClinicalMediaWidth(undefined)).toBe(DEFAULT_CLINICAL_MEDIA_WIDTH);
     expect(normalizeClinicalMediaWidth("abc")).toBe(DEFAULT_CLINICAL_MEDIA_WIDTH);
     expect(normalizeClinicalMediaWidth("999%")).toBe("100%");
@@ -48,6 +48,9 @@ describe("clinical media helpers", () => {
       title: "Pré",
       width: "75%",
       align: "right",
+      wrap: "none",
+      top: null,
+      left: null,
     });
   });
 
@@ -67,6 +70,9 @@ describe("clinical media helpers", () => {
       title: undefined,
       width: "720px",
       align: "left",
+      wrap: "none",
+      top: null,
+      left: null,
     });
   });
 
@@ -77,6 +83,7 @@ describe("clinical media helpers", () => {
           src: "/a.png",
           width: "75%",
           align: "center",
+          wrap: "none",
         },
         "Legenda clínica",
       ),
@@ -86,6 +93,11 @@ describe("clinical media helpers", () => {
         src: "/a.png",
         width: "75%",
         align: "center",
+        wrap: "none",
+        alt: undefined,
+        title: undefined,
+        top: null,
+        left: null,
       },
       content: [{ type: "text", text: "Legenda clínica" }],
     });
@@ -104,11 +116,15 @@ describe("clinical media helpers", () => {
       getClinicalMediaFigureAttrs({
         width: "80%",
         align: "right",
+        wrap: "none",
       }),
     ).toEqual({
       "data-type": "clinical-media",
       "data-align": "right",
       "data-width": "80%",
+      "data-wrap": "none",
+      "data-top": "",
+      "data-left": "",
     });
 
     expect(

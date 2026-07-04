@@ -72,6 +72,7 @@
   font-size: 14px;
   line-height: 1.7;
   color: hsl(var(--foreground));
+  position: relative !important;
 }
 
 /* Observações clínicas: leitura principal, fonte maior por padrão. */
@@ -896,6 +897,61 @@ body.high-contrast *:focus-visible {
     box-shadow 0.15s ease;
 }
 
+/* Word-style image wrapping modes */
+.rich-text-editor .ProseMirror .clinical-media-node.is-wrapped-none {
+  display: block;
+  float: none;
+  clear: both;
+  margin: 12px auto;
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+}
+
+.rich-text-editor .ProseMirror .clinical-media-node.is-wrapped-inline {
+  display: inline-block;
+  float: none;
+  vertical-align: baseline;
+  margin: 0 8px;
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+}
+
+.rich-text-editor .ProseMirror .clinical-media-node.is-wrapped-left {
+  display: block;
+  float: left;
+  clear: none;
+  margin-right: 16px;
+  margin-bottom: 12px;
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+}
+
+.rich-text-editor .ProseMirror .clinical-media-node.is-wrapped-right {
+  display: block;
+  float: right;
+  clear: none;
+  margin-left: 16px;
+  margin-bottom: 12px;
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+}
+
+.rich-text-editor .ProseMirror .clinical-media-node.is-wrapped-behind {
+  position: absolute !important;
+  z-index: -10;
+  opacity: 0.6;
+}
+
+.rich-text-editor .ProseMirror .clinical-media-node.is-wrapped-front {
+  position: absolute !important;
+  z-index: 50;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
 .clinical-media-node.is-aligned-left {
   margin-left: 0;
   margin-right: auto;
@@ -995,6 +1051,13 @@ body.high-contrast *:focus-visible {
 .clinical-media-drag-handle:hover {
   background: hsl(var(--muted));
   border-color: hsl(var(--primary) / 0.35);
+}
+
+.clinical-media-toolbar button.is-active,
+.clinical-media-toolbar button[data-active="true"] {
+  background: hsl(var(--primary) / 0.12) !important;
+  color: hsl(var(--primary)) !important;
+  border-color: hsl(var(--primary) / 0.4) !important;
 }
 
 .clinical-media-toolbar button.is-danger:hover {

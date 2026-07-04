@@ -1,4 +1,5 @@
 export type ClinicalMediaAlign = "left" | "center" | "right";
+export type ClinicalMediaWrap = "none" | "left" | "right" | "inline" | "behind" | "front";
 
 export type ClinicalMediaAttrs = {
   src: string;
@@ -6,10 +7,14 @@ export type ClinicalMediaAttrs = {
   title?: string;
   width?: string | null;
   align?: ClinicalMediaAlign;
+  wrap?: ClinicalMediaWrap;
+  top?: string | null;
+  left?: string | null;
 };
 
-export const DEFAULT_CLINICAL_MEDIA_WIDTH = "100%";
+export const DEFAULT_CLINICAL_MEDIA_WIDTH = "350px"; // Começa menor e mais compatível
 export const DEFAULT_CLINICAL_MEDIA_ALIGN: ClinicalMediaAlign = "center";
+export const DEFAULT_CLINICAL_MEDIA_WRAP: ClinicalMediaWrap = "none";
 
 const WIDTH_PATTERN = /^(\d+(?:\.\d+)?)(px|%)$/i;
 const SAFE_PROTOCOL_PATTERN = /^(https?:|blob:|data:image\/|\/|\.\/|\.\.\/)/i;
@@ -32,6 +37,21 @@ export function normalizeClinicalMediaAlign(value: unknown): ClinicalMediaAlign 
   return value === "left" || value === "right" || value === "center"
     ? value
     : DEFAULT_CLINICAL_MEDIA_ALIGN;
+}
+
+export function normalizeClinicalMediaWrap(value: unknown): ClinicalMediaWrap {
+  const v = String(value).trim();
+  if (v === "left" || v === "right" || v === "inline" || v === "behind" || v === "front") {
+    return v;
+  }
+  return DEFAULT_CLINICAL_MEDIA_WRAP;
+}
+
+export function normalizeClinicalMediaCoord(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const v = value.trim();
+  if (/^-?\d+px$/.test(v)) return v;
+  return null;
 }
 
 export function normalizeClinicalMediaWidth(value: unknown): string {
@@ -69,12 +89,19 @@ export function getClinicalMediaAttrsFromElement(element: HTMLElement): Clinical
     image.getAttribute("width");
   const alignSource = element.getAttribute("data-align") || image.getAttribute("data-align");
 
+  const wrapSource = element.getAttribute("data-wrap") || image.getAttribute("data-wrap");
+  const topSource = element.getAttribute("data-top") || image.getAttribute("data-top");
+  const leftSource = element.getAttribute("data-left") || image.getAttribute("data-left");
+
   return {
     src,
     alt,
     title,
     width: normalizeClinicalMediaWidth(widthSource),
     align: normalizeClinicalMediaAlign(alignSource),
+    wrap: normalizeClinicalMediaWrap(wrapSource),
+    top: normalizeClinicalMediaCoord(topSource),
+    left: normalizeClinicalMediaCoord(leftSource),
   };
 }
 
@@ -90,6 +117,9 @@ export function buildClinicalMediaNode(attrs: ClinicalMediaAttrs, caption = "") 
     title: normalizeClinicalMediaText(attrs.title),
     width: normalizeClinicalMediaWidth(attrs.width),
     align: normalizeClinicalMediaAlign(attrs.align),
+    wrap: normalizeClinicalMediaWrap(attrs.wrap),
+    top: normalizeClinicalMediaCoord(attrs.top),
+    left: normalizeClinicalMediaCoord(attrs.left),
   };
 
   return {
@@ -111,6 +141,9 @@ export function getClinicalMediaFigureAttrs(attrs: Partial<ClinicalMediaAttrs>) 
     "data-type": "clinical-media",
     "data-align": normalizeClinicalMediaAlign(attrs.align),
     "data-width": normalizeClinicalMediaWidth(attrs.width),
+    "data-wrap": normalizeClinicalMediaWrap(attrs.wrap),
+    "data-top": normalizeClinicalMediaCoord(attrs.top) || "",
+    "data-left": normalizeClinicalMediaCoord(attrs.left) || "",
   };
 }
 

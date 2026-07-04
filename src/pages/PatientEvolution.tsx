@@ -1058,6 +1058,7 @@ const PatientEvolution = () => {
 								open={medicalReturnModalOpen}
 								onOpenChange={setMedicalReturnModalOpen}
 								patientId={state.patientId}
+								patientName={PatientHelpers.getName(state.patient as any)}
 								onSuccess={() => state.invalidateData("all")}
 							/>
 							<SurgeryFormModal

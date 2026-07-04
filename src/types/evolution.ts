@@ -26,6 +26,7 @@ export interface MedicalReturn {
   notes?: string;
   report_done?: boolean;
   report_sent?: boolean;
+  request_attachment_url?: string | null;
   created_at: string;
   updated_at: string;
 }

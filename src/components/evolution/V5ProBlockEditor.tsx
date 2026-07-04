@@ -4,7 +4,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 // import { FloatingMenu } from '@tiptap/react/menus';
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
-import Image from "@tiptap/extension-image";
+import { ResizableImage } from "@/components/ui/rich-text/ResizableImageExtension";
 import Link from "@tiptap/extension-link";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
@@ -55,6 +55,11 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
   const [syncStatus, setSyncStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [isUploading, setIsUploading] = useState(false);
   const [editingImage, setEditingImage] = useState<File | null>(null);
+  const [editingExistingImage, setEditingExistingImage] = useState<{
+    src: string;
+    updateAttributes: (attrs: Record<string, any>) => void;
+    alt?: string;
+  } | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showScribe, setShowScribe] = useState(false);
 
@@ -67,11 +72,8 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
         // Desativar extensões que carregamos manualmente para evitar aviso de duplicidade
         link: false,
       }),
-      Image.configure({
-        HTMLAttributes: {
-          class:
-            "rounded-lg border border-gray-200 shadow-md max-w-full h-auto cursor-zoom-in hover:opacity-95 transition-opacity",
-        },
+      ResizableImage.configure({
+        allowBase64: true,
       }),
       PdfEmbed, // Habilitar visualização de PDFs nativa no editor
       Link.configure({
@@ -102,6 +104,32 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
       attributes: {
         class:
           "prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg xl:prose-2xl focus:outline-none min-h-[500px]",
+      },
+      handleDrop: (view, event, slice, moved) => {
+        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+          event.preventDefault();
+          const file = event.dataTransfer.files[0];
+          if (file.type.startsWith("image/")) {
+            setEditingImage(file);
+          } else {
+            uploadToCloudflareR2(file);
+          }
+          return true;
+        }
+        return false;
+      },
+      handlePaste: (view, event) => {
+        if (event.clipboardData && event.clipboardData.files && event.clipboardData.files.length > 0) {
+          event.preventDefault();
+          const file = event.clipboardData.files[0];
+          if (file.type.startsWith("image/")) {
+            setEditingImage(file);
+          } else {
+            uploadToCloudflareR2(file);
+          }
+          return true;
+        }
+        return false;
       },
     },
     onUpdate: ({ editor }) => {
@@ -234,7 +262,7 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
 
         if (data.url) {
           if (file.type.startsWith("image/")) {
-            editor?.chain().focus().setImage({ src: data.url, alt: file.name }).run();
+            editor?.chain().focus().setClinicalMedia({ src: data.url, alt: file.name }).run();
           } else if (file.type === "application/pdf") {
             // Usar a nova extensão PdfEmbed para renderização visual
             editor?.chain().focus().setPdf({ src: data.url, title: file.name }).run();
@@ -276,6 +304,17 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
     };
     window.addEventListener("tiptap-upload", handleUploadEvent);
 
+    const handleEditExistingImage = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (!detail?.src || typeof detail.updateAttributes !== "function") return;
+      setEditingExistingImage({
+        src: detail.src,
+        updateAttributes: detail.updateAttributes,
+        alt: detail.alt,
+      });
+    };
+    window.addEventListener("rich-text-edit-existing-image", handleEditExistingImage);
+
     const handleSuggestionsOpen = () => setShowSuggestions(true);
     window.addEventListener("tiptap-sugestoes-open", handleSuggestionsOpen);
 
@@ -284,6 +323,7 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
 
     return () => {
       window.removeEventListener("tiptap-upload", handleUploadEvent);
+      window.removeEventListener("rich-text-edit-existing-image", handleEditExistingImage);
       window.removeEventListener("tiptap-sugestoes-open", handleSuggestionsOpen);
       window.removeEventListener("tiptap-scribe-open", handleScribeOpen);
     };
@@ -549,7 +589,7 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
           editor?.chain().focus().insertContent(content).run();
         }}
       />
-      {editingImage && (
+      {(editingImage || editingExistingImage) && (
         <Suspense
           fallback={
             <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90">
@@ -560,28 +600,50 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
           <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-2 sm:p-6">
             <div className="w-full h-full max-w-[1200px] max-h-[95vh] bg-slate-900 rounded-2xl overflow-hidden shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] border border-slate-800 relative flex flex-col">
               <LazyFilerobotImageEditor
-                source={URL.createObjectURL(editingImage)}
+                source={editingImage ? URL.createObjectURL(editingImage) : (editingExistingImage?.src || "")}
                 onSave={async (editedImageObject: any, _designState: any) => {
                   try {
                     setIsUploading(true);
-                    setEditingImage(null);
+                    const sourceName = editingImage ? editingImage.name : "imagem";
+                    const originalName = sourceName.replace(/\.[^/.]+$/, "");
+                    
                     if (editedImageObject.imageBase64) {
                       const res = await fetch(editedImageObject.imageBase64);
                       const blob = await res.blob();
-                      const originalName = editingImage.name.replace(/\.[^/.]+$/, "");
                       const extension = editedImageObject.extension || "png";
                       const newFile = new File([blob], `${originalName}-editada.${extension}`, {
                         type: editedImageObject.mimeType || "image/png",
                       });
-                      await uploadToCloudflareR2(newFile);
+                      
+                      const folder = patientId ? `patient-evolutions/${patientId}` : "patient-evolutions";
+                      const data = await uploadToR2(newFile, folder);
+                      
+                      if (data.url) {
+                        if (editingExistingImage) {
+                          editingExistingImage.updateAttributes({
+                            src: data.url,
+                            alt: newFile.name,
+                          });
+                          toast.success("Imagem existente atualizada!");
+                        } else {
+                          editor?.chain().focus().setClinicalMedia({ src: data.url, alt: newFile.name }).run();
+                          toast.success("Nova imagem inserida!");
+                        }
+                      }
                     }
                   } catch (e) {
                     console.error(e);
                     toast.error("Erro ao salvar imagem editada.");
+                  } finally {
                     setIsUploading(false);
+                    setEditingImage(null);
+                    setEditingExistingImage(null);
                   }
                 }}
-                onClose={() => setEditingImage(null)}
+                onClose={() => {
+                  setEditingImage(null);
+                  setEditingExistingImage(null);
+                }}
                 annotationsCommon={{
                   fill: "#ef4444",
                   stroke: "#ef4444",

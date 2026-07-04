@@ -39,6 +39,8 @@ export interface MedicalReturnInput {
   return_date: string;
   reason?: string;
   notes?: string;
+  request_attachment_url?: string;
+  report_sent?: boolean;
 }
 
 export interface PatientsListParams {
@@ -355,6 +357,14 @@ export const patientsApi = {
       `/api/patients/${encodeURIComponent(patientId)}/medical-returns/${encodeURIComponent(returnId)}`,
       {
         method: "DELETE",
+      },
+    ),
+  sendMedicalReturnReport: (patientId: string, returnId: string, therapistName: string) =>
+    request<{ data: MedicalReturn }>(
+      `/api/patients/${encodeURIComponent(patientId)}/medical-returns/${encodeURIComponent(returnId)}/send-report`,
+      {
+        method: "POST",
+        body: JSON.stringify({ therapist_name: therapistName }),
       },
     ),
 };

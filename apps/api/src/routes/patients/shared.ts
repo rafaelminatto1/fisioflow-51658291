@@ -207,6 +207,7 @@ export function normalizeMedicalReturnRow(row: DbRow) {
     notes: trimmedString(row.notes) ?? null,
     report_done: Boolean(row.report_done),
     report_sent: Boolean(row.report_sent),
+    request_attachment_url: trimmedString(row.request_attachment_url) ?? null,
     created_at: row.created_at ? String(row.created_at) : new Date().toISOString(),
     updated_at: row.updated_at ? String(row.updated_at) : null,
   };

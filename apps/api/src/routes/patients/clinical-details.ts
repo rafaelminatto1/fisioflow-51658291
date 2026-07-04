@@ -1,4 +1,9 @@
 import { createPool } from "../../lib/db";
+import { WhatsAppService } from "../../lib/whatsapp";
+import {
+  buildMedicalReportVariables,
+  MEDICAL_REPORT_TEMPLATE_NAME,
+} from "../../lib/medicalReturnReport";
 import {
   type PatientPayload,
   type PatientRouteApp,
@@ -887,6 +892,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
           notes,
           report_done,
           report_sent,
+          request_attachment_url,
           created_by,
           created_at,
           updated_at
@@ -902,6 +908,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
           COALESCE($8, false),
           COALESCE($9, false),
           $10,
+          $11,
           NOW(),
           NOW()
         )
@@ -917,6 +924,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
         nullableString(body.notes),
         nullableBoolean(body.report_done),
         nullableBoolean(body.report_sent),
+        nullableString(body.request_attachment_url),
         user.uid,
       ],
     );
@@ -941,10 +949,11 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
           notes = COALESCE($5, notes),
           report_done = COALESCE($6, report_done),
           report_sent = COALESCE($7, report_sent),
+          request_attachment_url = COALESCE($8, request_attachment_url),
           updated_at = NOW()
-        WHERE id = $8::uuid
-          AND patient_id = $9::uuid
-          AND organization_id = $10::uuid
+        WHERE id = $9::uuid
+          AND patient_id = $10::uuid
+          AND organization_id = $11::uuid
         RETURNING *
       `,
       [
@@ -955,6 +964,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
         nullableString(body.notes),
         nullableBoolean(body.report_done),
         nullableBoolean(body.report_sent),
+        nullableString(body.request_attachment_url),
         medicalReturnId,
         id,
         user.organizationId,
@@ -964,6 +974,70 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     const row = result.rows[0] as DbRow | undefined;
     if (!row) return c.json({ error: "Retorno médico não encontrado" }, 404);
     return c.json({ data: normalizeMedicalReturnRow(row) });
+  });
+
+  // Envia o relatório ao médico via template aprovado no WhatsApp da clínica
+  // e marca report_sent = true em caso de sucesso.
+  app.post("/:id/medical-returns/:medicalReturnId/send-report", async (c) => {
+    const user = c.get("user");
+    const db = await createPool(c.env);
+    const { id, medicalReturnId } = c.req.param();
+    const body = (await c.req.json().catch(() => ({}))) as PatientPayload;
+
+    const result = await db.query(
+      `
+        SELECT mr.*, p.name AS patient_name
+        FROM patient_medical_returns mr
+        JOIN patients p ON p.id = mr.patient_id
+        WHERE mr.id = $1::uuid
+          AND mr.patient_id = $2::uuid
+          AND mr.organization_id = $3::uuid
+        LIMIT 1
+      `,
+      [medicalReturnId, id, user.organizationId],
+    );
+    const row = result.rows[0] as DbRow | undefined;
+    if (!row) return c.json({ error: "Retorno médico não encontrado" }, 404);
+
+    const doctorPhone = trimmedString(row.doctor_phone);
+    if (!doctorPhone) {
+      return c.json({ error: "Retorno sem telefone do médico cadastrado" }, 400);
+    }
+
+    const variables = buildMedicalReportVariables({
+      doctorName: trimmedString(row.doctor_name) ?? "",
+      therapistName: trimmedString(body.therapist_name) ?? "",
+      patientName: trimmedString(row.patient_name) ?? "",
+      returnDate: row.return_date ? String(row.return_date) : null,
+      attachmentUrl: trimmedString(row.request_attachment_url) ?? null,
+    });
+
+    const whatsapp = new WhatsAppService(c.env);
+    const sendResult = (await whatsapp.sendSmartTemplate(
+      doctorPhone,
+      MEDICAL_REPORT_TEMPLATE_NAME,
+      variables,
+    )) as { messages?: unknown[]; error?: { message?: string } | string };
+
+    if (!sendResult?.messages?.length) {
+      const metaMessage =
+        typeof sendResult?.error === "string"
+          ? sendResult.error
+          : sendResult?.error?.message || "Falha ao enviar pelo WhatsApp da clínica";
+      return c.json({ error: metaMessage, details: sendResult }, 502);
+    }
+
+    const updated = await db.query(
+      `
+        UPDATE patient_medical_returns
+        SET report_sent = true, updated_at = NOW()
+        WHERE id = $1::uuid AND organization_id = $2::uuid
+        RETURNING *
+      `,
+      [medicalReturnId, user.organizationId],
+    );
+
+    return c.json({ data: normalizeMedicalReturnRow(updated.rows[0] as DbRow) });
   });
 
   app.delete("/:id/medical-returns/:medicalReturnId", async (c) => {

@@ -828,6 +828,7 @@ app.post("/templates", requireAuth, async (c) => {
     variables?: string[];
     localOnly?: boolean;
     footer?: string;
+    bodyExample?: string[];
     buttons?: Array<{
       type: "QUICK_REPLY" | "URL" | "PHONE_NUMBER";
       text: string;
@@ -893,7 +894,11 @@ app.post("/templates", requireAuth, async (c) => {
     components.push({ type: "HEADER", format: "TEXT", text: body.headerText });
   }
 
-  components.push({ type: "BODY", text: body.body });
+  components.push({
+    type: "BODY",
+    text: body.body,
+    ...(body.bodyExample?.length ? { example: { body_text: [body.bodyExample] } } : {}),
+  });
 
   if (body.footer) {
     components.push({ type: "FOOTER", text: body.footer });
