@@ -14,7 +14,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,7 +24,6 @@ import {
   Phone,
   Mail,
   Building2,
-  FileText,
   Stethoscope,
   MapPin,
   Hash,
@@ -59,6 +57,12 @@ interface DoctorFormModalProps {
   onSuccess?: (doctor: Doctor) => void;
   suggestedName?: string;
 }
+
+const fieldLabelClass = "text-[11px] font-bold uppercase text-muted-foreground/80";
+const fieldInputClass =
+  "pl-9 h-10 border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm";
+const fieldIconClass =
+  "absolute left-3 top-3 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-blue-500";
 
 export function DoctorFormModal({
   open,
@@ -155,17 +159,17 @@ export function DoctorFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[96vw] sm:!max-w-5xl max-h-[92vh] overflow-hidden p-0 gap-0 border-none shadow-2xl">
-        <DialogHeader className="p-6 pb-4 bg-gradient-to-br from-blue-600 to-blue-700 text-white dark:from-blue-900 dark:to-slate-900">
+      <DialogContent className="w-[96vw] sm:!max-w-4xl border-none shadow-2xl">
+        <DialogHeader className="-mx-6 -mt-6 px-6 py-3.5 bg-gradient-to-br from-blue-600 to-blue-700 text-white dark:from-blue-900 dark:to-slate-900">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-white/20 rounded-xl ring-1 ring-white/30">
-              <Stethoscope className="h-6 w-6 text-white" />
+            <div className="p-2 bg-white/20 rounded-lg ring-1 ring-white/30">
+              <Stethoscope className="h-5 w-5 text-white" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold tracking-tight text-white">
+              <DialogTitle className="text-lg font-bold tracking-tight text-white leading-tight">
                 {isEditing ? "Editar Médico" : "Cadastrar Novo Médico"}
               </DialogTitle>
-              <DialogDescription className="text-blue-100/90 font-medium">
+              <DialogDescription className="text-blue-100/90 text-xs font-medium">
                 {isEditing
                   ? "Atualize as informações do médico"
                   : "Gerencie sua rede de parceiros e indicações."}
@@ -175,292 +179,220 @@ export function DoctorFormModal({
         </DialogHeader>
 
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="p-6 space-y-8 bg-background"
-          >
-            {/* Basic Information Section */}
-            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div className="flex items-center gap-2 pb-1 border-b border-border/50">
-                <div className="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
-                  <User2 className="h-4 w-4" />
-                </div>
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  Informações Básicas
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-8 gap-5">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-8">
-                      <FormLabel className="text-xs font-bold uppercase text-muted-foreground/80 flex items-center gap-1.5">
-                        Nome Completo <span className="text-destructive">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative group">
-                          <User2 className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-blue-500" />
-                          <Input
-                            placeholder="Dr(a). Nome Completo"
-                            className="pl-10 h-11 border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-xs font-medium" />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="specialty"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-4">
-                      <FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">
-                        Especialidade
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative group">
-                          <Briefcase className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-blue-500" />
-                          <Input
-                            placeholder="Ex: Ortopedista"
-                            className="pl-10 h-11 border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-xs font-medium" />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="crm"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2">
-                      <FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">
-                        CRM
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative group">
-                          <Hash className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-blue-500" />
-                          <Input
-                            placeholder="123456"
-                            className="pl-10 h-11 border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-xs font-medium" />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="crm_state"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2">
-                      <FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">
-                        UF
-                      </FormLabel>
-                      <FormControl>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="pt-5 space-y-4 bg-background">
+            <div className="grid grid-cols-12 gap-x-4 gap-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem className="col-span-12 md:col-span-6">
+                    <FormLabel className={fieldLabelClass}>
+                      Nome Completo <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <div className="relative group">
+                        <User2 className={fieldIconClass} />
                         <Input
-                          placeholder="SP"
-                          maxLength={2}
-                          className="h-11 text-center font-semibold border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all uppercase shadow-sm"
+                          placeholder="Dr(a). Nome Completo"
+                          className={fieldInputClass}
                           {...field}
                         />
-                      </FormControl>
-                      <FormMessage className="text-xs font-medium" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-xs font-medium" />
+                  </FormItem>
+                )}
+              />
 
-            {/* Contact Information Section */}
-            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 delay-75">
-              <div className="flex items-center gap-2 pb-1 border-b border-border/50">
-                <div className="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
-                  <Phone className="h-4 w-4" />
-                </div>
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  Contato Direto
-                </h3>
-              </div>
+              <FormField
+                control={form.control}
+                name="specialty"
+                render={({ field }) => (
+                  <FormItem className="col-span-12 md:col-span-3">
+                    <FormLabel className={fieldLabelClass}>Especialidade</FormLabel>
+                    <FormControl>
+                      <div className="relative group">
+                        <Briefcase className={fieldIconClass} />
+                        <Input
+                          placeholder="Ex: Ortopedista"
+                          className={fieldInputClass}
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-xs font-medium" />
+                  </FormItem>
+                )}
+              />
 
-              <div className="grid grid-cols-1 md:grid-cols-8 gap-5">
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-4">
-                      <FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">
-                        WhatsApp / Telefone
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative group">
-                          <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-blue-500" />
-                          <Input
-                            placeholder="(11) 99999-9999"
-                            className="pl-10 h-11 border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-xs font-medium" />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="crm"
+                render={({ field }) => (
+                  <FormItem className="col-span-8 md:col-span-2">
+                    <FormLabel className={fieldLabelClass}>CRM</FormLabel>
+                    <FormControl>
+                      <div className="relative group">
+                        <Hash className={fieldIconClass} />
+                        <Input placeholder="123456" className={fieldInputClass} {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-xs font-medium" />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-4">
-                      <FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">
-                        E-mail
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative group">
-                          <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-blue-500" />
-                          <Input
-                            type="email"
-                            placeholder="medico@exemplo.com"
-                            className="pl-10 h-11 border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-xs font-medium" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+              <FormField
+                control={form.control}
+                name="crm_state"
+                render={({ field }) => (
+                  <FormItem className="col-span-4 md:col-span-1">
+                    <FormLabel className={fieldLabelClass}>UF</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="SP"
+                        maxLength={2}
+                        className="h-10 text-center font-semibold border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all uppercase shadow-sm"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs font-medium" />
+                  </FormItem>
+                )}
+              />
 
-            {/* Clinic Information Section */}
-            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 delay-150">
-              <div className="flex items-center gap-2 pb-1 border-b border-border/50">
-                <div className="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
-                  <Building2 className="h-4 w-4" />
-                </div>
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  Vínculo com Clínica
-                </h3>
-              </div>
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem className="col-span-12 md:col-span-3">
+                    <FormLabel className={fieldLabelClass}>WhatsApp / Telefone</FormLabel>
+                    <FormControl>
+                      <div className="relative group">
+                        <Phone className={fieldIconClass} />
+                        <Input
+                          placeholder="(11) 99999-9999"
+                          className={fieldInputClass}
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-xs font-medium" />
+                  </FormItem>
+                )}
+              />
 
-              <div className="grid grid-cols-1 md:grid-cols-8 gap-5">
-                <FormField
-                  control={form.control}
-                  name="clinic_name"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-4">
-                      <FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">
-                        Nome da Clínica
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative group">
-                          <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-blue-500" />
-                          <Input
-                            placeholder="Nome da instituição"
-                            className="pl-10 h-11 border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-xs font-medium" />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem className="col-span-12 md:col-span-3">
+                    <FormLabel className={fieldLabelClass}>E-mail</FormLabel>
+                    <FormControl>
+                      <div className="relative group">
+                        <Mail className={fieldIconClass} />
+                        <Input
+                          type="email"
+                          placeholder="medico@exemplo.com"
+                          className={fieldInputClass}
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-xs font-medium" />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="clinic_phone"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-4">
-                      <FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">
-                        Telefone Clínica
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative group">
-                          <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-blue-500" />
-                          <Input
-                            placeholder="(11) 3333-3333"
-                            className="pl-10 h-11 border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-xs font-medium" />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="clinic_name"
+                render={({ field }) => (
+                  <FormItem className="col-span-12 md:col-span-3">
+                    <FormLabel className={fieldLabelClass}>Nome da Clínica</FormLabel>
+                    <FormControl>
+                      <div className="relative group">
+                        <Building2 className={fieldIconClass} />
+                        <Input
+                          placeholder="Nome da instituição"
+                          className={fieldInputClass}
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-xs font-medium" />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="clinic_address"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-8">
-                      <FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">
-                        Endereço Profissional
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative group">
-                          <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-blue-500" />
-                          <Input
-                            placeholder="Rua, número, bairro, cidade"
-                            className="pl-10 h-11 border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-xs font-medium" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+              <FormField
+                control={form.control}
+                name="clinic_phone"
+                render={({ field }) => (
+                  <FormItem className="col-span-12 md:col-span-3">
+                    <FormLabel className={fieldLabelClass}>Telefone Clínica</FormLabel>
+                    <FormControl>
+                      <div className="relative group">
+                        <Phone className={fieldIconClass} />
+                        <Input
+                          placeholder="(11) 3333-3333"
+                          className={fieldInputClass}
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-xs font-medium" />
+                  </FormItem>
+                )}
+              />
 
-            {/* Notes Section */}
-            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 delay-200">
-              <div className="flex items-center gap-2 pb-1 border-b border-border/50">
-                <div className="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
-                  <FileText className="h-4 w-4" />
-                </div>
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  Observações Internas
-                </h3>
-              </div>
+              <FormField
+                control={form.control}
+                name="clinic_address"
+                render={({ field }) => (
+                  <FormItem className="col-span-12 md:col-span-7">
+                    <FormLabel className={fieldLabelClass}>Endereço Profissional</FormLabel>
+                    <FormControl>
+                      <div className="relative group">
+                        <MapPin className={fieldIconClass} />
+                        <Input
+                          placeholder="Rua, número, bairro, cidade"
+                          className={fieldInputClass}
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-xs font-medium" />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
                 name="notes"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="col-span-12 md:col-span-5 md:row-span-2">
+                    <FormLabel className={fieldLabelClass}>
+                      Observações Internas
+                      <span className="ml-1.5 normal-case font-medium text-muted-foreground/60">
+                        · visíveis apenas para sua equipe
+                      </span>
+                    </FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Adicione informações que ajudem na identificação ou parceria com este médico..."
-                        className="min-h-[100px] border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all resize-none shadow-sm"
+                        placeholder="Informações que ajudem na identificação ou parceria com este médico..."
+                        rows={2}
+                        className="min-h-[60px] border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all resize-none shadow-sm"
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription className="text-[11px] font-medium text-muted-foreground italic flex items-center gap-1 mt-1.5">
-                      <FileText className="h-3 w-3" /> Essas informações são visíveis apenas para
-                      sua equipe.
-                    </FormDescription>
                     <FormMessage className="text-xs font-medium" />
                   </FormItem>
                 )}
               />
             </div>
 
-            <DialogFooter className="sticky bottom-0 z-10 pt-4 border-t border-border/50 flex items-center gap-3 bg-background">
+            <DialogFooter className="pt-4 border-t border-border/50 flex items-center gap-3 bg-background">
               <Button
                 type="button"
                 variant="ghost"
