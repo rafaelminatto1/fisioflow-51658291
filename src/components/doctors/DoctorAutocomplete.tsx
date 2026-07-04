@@ -26,10 +26,19 @@ export function DoctorAutocomplete({
 }: DoctorAutocompleteProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(value);
+  const [debouncedTerm, setDebouncedTerm] = useState(value);
   const [, setIsFocused] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { data: doctors = [], isLoading } = useSearchDoctors(searchTerm, searchTerm.length >= 2);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedTerm(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const { data: doctors = [], isLoading } = useSearchDoctors(
+    debouncedTerm,
+    debouncedTerm.length >= 2,
+  );
 
   // Update search term when value changes externally
   useEffect(() => {

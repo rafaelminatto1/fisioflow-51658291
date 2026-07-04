@@ -12,8 +12,8 @@ export class DoctorService {
       return [];
     }
 
-    const response = await doctorsApi.search({ searchTerm, limit: maxResults });
-    return (response.data || []) as Doctor[];
+    const response = await doctorsApi.list({ search: searchTerm.trim(), limit: maxResults });
+    return (response.data || []) as unknown as Doctor[];
   }
 
   static async getDoctorById(doctorId: string): Promise<Doctor | null> {

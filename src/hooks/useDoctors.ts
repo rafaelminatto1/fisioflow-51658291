@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { DoctorService } from "@/lib/services/doctorService";
 import type { Doctor, DoctorFormData } from "@/types/doctor";
 import { toast } from "sonner";
@@ -23,6 +23,7 @@ export function useSearchDoctors(searchTerm: string, enabled: boolean = true) {
     queryFn: () => DoctorService.searchDoctors(searchTerm),
     enabled: enabled && searchTerm.length >= 2,
     staleTime: 2 * 60 * 1000, // 2 minutes
+    placeholderData: keepPreviousData,
   });
 }
 

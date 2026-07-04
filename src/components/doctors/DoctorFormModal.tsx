@@ -177,7 +177,7 @@ export function DoctorFormModal({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="p-6 space-y-8 bg-background max-h-[calc(92vh-112px)] overflow-y-auto"
+            className="p-6 space-y-8 bg-background"
           >
             {/* Basic Information Section */}
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
