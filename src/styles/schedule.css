@@ -24,8 +24,7 @@
   --agenda-slot-height: 12px; /* Compacto: 14h × 56 slots × 12px = 672px (7h–21h) */
   --agenda-header-height: 42px;
   --agenda-grid-hour-line: hsl(var(--foreground) / 0.16);
-  --agenda-grid-minor-line: hsl(var(--foreground) / 0.07);
-  --agenda-grid-day-line: hsl(var(--foreground) / 0.2);
+  --agenda-grid-day-line: hsl(var(--border) / 0.35);
 }
 
 .fc .fc-timegrid-slot,
@@ -43,7 +42,7 @@
 
 /* Grade legível: horas cheias mais fortes, subdivisões discretas */
 .fc .fc-timegrid-slot-minor {
-  border-top: 1px solid var(--agenda-grid-minor-line) !important;
+  border-top: none !important;
 }
 
 .fc .fc-timegrid-slot:not(.fc-timegrid-slot-minor) {

@@ -1,0 +1,3630 @@
+[
+  {
+    "id": "831a4893-7d40-417b-8469-633910020002",
+    "name": "Mobilidade de Coluna",
+    "video": "https://www.youtube.com/watch?v=nWa3MMgGLoE",
+    "image": "/exercises/illustrations/mobilidade-coluna-sentado.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "1e406b04-b7b4-4d25-a185-3eb70032b9c9",
+    "name": "Agachamento Lateral Alternado (Cossack Squat)",
+    "video": "https://www.youtube.com/watch?v=fyAl4o1BGVo",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/afundo-lateral.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "56241beb-e356-4429-b23c-fe183a130c23",
+    "name": "Agachamento Profundo (Cócoras)",
+    "video": "https://www.youtube.com/watch?v=IHApHfNA2Ag",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/agachamento-profundo-sustentado-asian-squat.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "c740a5e0-f44b-4a5e-a3cb-4fc36fd4808d",
+    "name": "Flexão de Braço",
+    "video": "https://www.youtube.com/watch?v=HvZBLpSZ5Wg",
+    "image": "/exercises/illustrations/flexao-braco.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "e05cb78b-bcaa-41d0-a9e6-6fe6db307b51",
+    "name": "Bird-dog (Cachorro e Pássaro)",
+    "video": "https://www.youtube.com/watch?v=g_wUo3CQYWY",
+    "image": "/exercises/illustrations/bird-dog.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "183895b6-12a5-436f-b14e-59cc5e561f51",
+    "name": "Agachamento Sumô",
+    "video": "https://youtube.com/watch?v=uSbxGCa71PU",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/agachamento-sumo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "9e4523a0-564e-415e-9640-fe49e431805e",
+    "name": "Alongamento de Glúteo (Figura 4) Sentado",
+    "video": "https://youtube.com/watch?v=CeeXQtmjNjw",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-de-gluteo-sentado.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "94ed0c16-cb4e-4f24-812c-ada89aaa87cf",
+    "name": "Barra Fixa Pronada",
+    "video": "https://youtube.com/watch?v=gYOeyM6PqmU",
+    "image": "/exercises/illustrations/barra-fixa-pronada.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "9a4a142a-4718-413a-b405-a0010a8e900a",
+    "name": "Agachamento Espanhol",
+    "video": "https://youtube.com/watch?v=nVp1JJ13eFI",
+    "image": "/exercises/illustrations/spanish-squat.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "a25eeba3-63f4-4fae-9256-42adc7f980ff",
+    "name": "Alongamento de Grande Dorsal na Parede",
+    "video": "https://youtube.com/watch?v=SHAh9qyuQYk",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-dorsal.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "6d0e2daf-d04c-4305-b554-e1369342435e",
+    "name": "Step Up Frontal",
+    "video": "https://youtube.com/watch?v=wfhXnLILqdk",
+    "image": "/exercises/illustrations/step-up-frontal.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "68efc336-a02f-4fb8-9f05-00afb97207c3",
+    "name": "Superman",
+    "video": "https://www.youtube.com/watch?v=z6PJMT2y8GQ",
+    "image": "/exercises/illustrations/cobra-prona.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "296c9330-4818-4cc4-9c77-ccd1030952ce",
+    "name": "Afundo Frontal (Lunge)",
+    "video": "https://www.youtube.com/watch?v=QyToBgXairI",
+    "image": "/exercises/illustrations/afundo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "10680f49-f713-41bb-98b9-9ec93825116e",
+    "name": "Ab Wheel Rollout",
+    "video": "https://www.youtube.com/watch?v=pS3P6Yt3m4o",
+    "image": "/exercises/illustrations/ab-wheel-rollout.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "5ab91925-7e9b-4226-9215-889ba64de654",
+    "name": "Alongamento de Peitoral no Canto da Parede",
+    "video": "https://youtube.com/watch?v=wVqivQADUfo",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-de-peitoral-no-canto.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "0c4077f8-179f-43b1-b4ff-05d8a14803f0",
+    "name": "Flexão Inclinada",
+    "video": "https://www.youtube.com/watch?v=2gheWeraY44",
+    "image": "/exercises/illustrations/flexao_inclinada.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "c0b5b5c8-9683-4ac4-b033-75f5c3385217",
+    "name": "Abdução de Quadril Ativa em Pé (Swing Lateral)",
+    "video": "https://www.youtube.com/watch?v=HiuUQT4-KyI",
+    "image": "/exercises/illustrations/abducao-quadril-ativa-pe.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "645733f0-abd3-4659-b6e9-2e2b2b121402",
+    "name": "Dead Bug",
+    "video": "https://www.youtube.com/watch?v=o4GKiEoYClI",
+    "image": "/exercises/illustrations/dead-bug.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "a5068f85-cf46-41c9-b1b0-e553f9fbe83e",
+    "name": "Clamshell",
+    "video": "https://youtube.com/watch?v=39vuP5xozsI",
+    "image": "/exercises/illustrations/clamshell.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "7d1bebb9-bc12-496e-accf-deb5cd047e11",
+    "name": "Drop Jump",
+    "video": "https://youtube.com/watch?v=yRnt111GaRY",
+    "image": "/exercises/illustrations/drop-jump.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "dc407048-1054-4236-bc83-73de7a24933f",
+    "name": "Alongamento de Psoas em Afundo (Half-Kneeling)",
+    "video": "https://youtube.com/watch?v=HLTR79g4Gco",
+    "image": "/exercises/illustrations/afundo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "fe6b91ec-bdef-4e23-9511-700de3dc86a8",
+    "name": "Alongamento de Isquiotibiais",
+    "video": "https://www.youtube.com/watch?v=V-zQZ0MTTvM",
+    "image": "/exercises/illustrations/alongamento-isquiotibiais.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "80a81042-412a-4a28-a7b2-641e92501e1a",
+    "name": "Monster Walk",
+    "video": "https://www.youtube.com/watch?v=tOe7TEkJuJI",
+    "image": "/exercises/illustrations/caminhada-de-lado-com-miniband-lateral-band-walk.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "7fb207a7-8139-49e6-a718-2b8ad591c305",
+    "name": "Avanço com Salto",
+    "video": "https://youtube.com/watch?v=qQJr3sQd6YQ",
+    "image": "/exercises/illustrations/avanco-com-salto.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "cabdf94d-7b2f-469d-a5bb-10460395a433",
+    "name": "Alongamento de Quadríceps",
+    "video": "https://www.youtube.com/watch?v=4sEq7OYYee0",
+    "image": "/exercises/illustrations/alongamento-quadriceps.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "a3374bca-1874-4ab9-b717-12498679f55a",
+    "name": "Cadeira Extensora",
+    "video": "https://youtube.com/watch?v=-pz6wr6PQYo",
+    "image": "/exercises/illustrations/extensao-joelho-cadeira.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "7a349c3c-6a9b-43fb-bf86-525e5264210a",
+    "name": "Afundo ou Passada",
+    "video": "https://www.youtube.com/watch?v=poAnWrA7DSU",
+    "image": "/exercises/illustrations/afundo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "7e21f14a-72e3-4535-9ef9-10392d908432",
+    "name": "Exercício do Pé Curto (Short Foot)",
+    "video": "https://www.youtube.com/watch?v=S9m9kcasu3g",
+    "image": "/exercises/illustrations/short-foot.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "998cb8b6-c230-40ba-9251-0a4b4aa9eb75",
+    "name": "Stiff",
+    "video": "https://youtube.com/watch?v=tv7M2jgbyiw",
+    "image": "/exercises/illustrations/deadlift_dumbbells.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "4f5af516-a13e-4853-b438-119e81c80d38",
+    "name": "Disco Proprioceptivo",
+    "video": "https://youtube.com/watch?v=KvNz6UKQSi8",
+    "image": "/exercises/illustrations/disco-proprioceptivo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "90f1271a-b3ac-4505-a77d-3e802b453656",
+    "name": "Ativação de Serrátil Anterior (Serratus Punch)",
+    "video": "https://youtube.com/watch?v=oMSVe7PWJ3o",
+    "image": "/exercises/illustrations/serratus-punch.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "98ad64ea-aa71-440e-afc6-9367adced7bc",
+    "name": "Inversão Resistida",
+    "video": "https://youtube.com/watch?v=PR18M5j_b88",
+    "image": "/exercises/illustrations/inversao-tornozelo-elastico.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f5301e49-9396-4fc4-8198-9e69b06a807e",
+    "name": "Coordenação Cruzada (Cross Crawl)",
+    "video": "https://www.youtube.com/watch?v=7NsZPmYbebs",
+    "image": "/exercises/illustrations/coordenacao-cruzada-cross-crawl.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "746bd71f-9b4a-4eb6-ade3-5d081c0d9e98",
+    "name": "Alongamento de Romboides Sentado",
+    "video": "https://www.youtube.com/watch?v=k5-XTE2YF7g",
+    "image": "/exercises/illustrations/alongamento-romboides-sentado.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "b30cd552-25a9-42b3-a8a8-e006990e1ad5",
+    "name": "Cadeira Flexora",
+    "video": "https://youtube.com/watch?v=Zss6E3VU6X0",
+    "image": "/exercises/illustrations/flexao-joelho-cadeira.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "ae2417ec-63d0-496c-a7d5-f801d561faca",
+    "name": "Leg Press",
+    "video": "https://www.youtube.com/watch?v=q4W4_VJbKW0",
+    "image": "/exercises/illustrations/leg-press.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "1f358e52-25ae-4252-9123-e588953630d6",
+    "name": "Crucifixo Reverso",
+    "video": "https://youtube.com/watch?v=v_Y7-mTNVxA",
+    "image": "/exercises/illustrations/crucifixo-reverso.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "24751716-8840-4ea9-99a0-2567dac26e01",
+    "name": "Alongamento de Isquiotibiais Sentado",
+    "video": "https://youtube.com/watch?v=mtEddr5CF7c",
+    "image": "/exercises/illustrations/alongamento-isquiotibiais.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "50729cb6-5ec7-4d82-830d-13f567589a8a",
+    "name": "Carrying de Carga (Farmer Walk)",
+    "video": "https://www.youtube.com/watch?v=v6uwFOVzDbo",
+    "image": "/exercises/illustrations/farmer_walk.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "d260d97a-6e31-4b00-9abb-a71b2b4dcbaa",
+    "name": "Rosca Bíceps",
+    "video": "https://youtube.com/watch?v=vAP-C7CI06g",
+    "image": "/exercises/illustrations/bicep-curl-alternado.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "d84445a3-dee4-4f81-814e-f976fb6a6e6e",
+    "name": "Flexão de Punho",
+    "video": "https://www.youtube.com/watch?v=ETxgQQ1STci",
+    "image": "/exercises/illustrations/flexao-punho.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "a35d481b-5764-43ae-ac66-3f3500fb061c",
+    "name": "Agachamento Parelde (Wall Sit)",
+    "video": "https://www.youtube.com/watch?v=p1KsWs_SNjg",
+    "image": "/exercises/illustrations/agachamento-parelde-wall-sit.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "47e0e589-4d0c-4fef-ba8d-854176a3c35e",
+    "name": "Supinação e Pronação",
+    "video": "https://youtube.com/watch?v=SKlDwdKeDjQ",
+    "image": "/exercises/illustrations/supinacao-pronacao-antibraco.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "acf2a152-86f3-4b04-95ec-4ff661ab8fdb",
+    "name": "Equilíbrio Unipodal Solo",
+    "video": "https://www.youtube.com/watch?v=Dls7wd5qgfI",
+    "image": "/exercises/illustrations/recuperacao_equilibrio.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "9f6cddd0-664a-465e-adc7-e587571df522",
+    "name": "Eversão de Tornozelo com Faixa",
+    "video": "https://www.youtube.com/watch?v=-XHzgimYeiA",
+    "image": "/exercises/illustrations/ankle-inversion-isometric.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "6b005f9c-97d2-415f-aa8d-6607faed7ff5",
+    "name": "Terminal Knee Extension (TKE) com Thera-Band",
+    "video": "https://youtube.com/watch?v=xdKm8PSX438",
+    "image": "/exercises/illustrations/tke-thera-band.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "b045cf5a-e256-4f4b-9026-716da4edd7aa",
+    "name": "Liberação com Bola de Lacrosse",
+    "video": "https://youtube.com/watch?v=TjJM4tnt4Zc",
+    "image": "/exercises/illustrations/liberacao-bola-lacrosse.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f83eb075-c9cb-45e0-b8d8-a0a4cb28e141",
+    "name": "Estabilização do Olhar (VOR)",
+    "video": "https://youtube.com/watch?v=Z_6-qt9k-Jg",
+    "image": "/exercises/illustrations/estabilizacao-olhar-vor.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "919af380-93e6-4844-a7c6-fcde3821b319",
+    "name": "Eversão Resistida",
+    "video": "https://youtube.com/watch?v=-U-PHYdglEQ",
+    "image": "/exercises/illustrations/eversao-tornozelo-elastico.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "a846b647-74f5-41e5-a583-8147cbd61919",
+    "name": "Expansão Torácica unilateral",
+    "video": "https://www.youtube.com/watch?v=_e_JV1-_HAA",
+    "image": "/exercises/illustrations/respiracao-diafragmatica.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e5e34355-4939-4a74-b71f-3fe22186ad01",
+    "name": "Alongamento de Trapézio",
+    "video": "https://www.youtube.com/watch?v=EZN78jMP6Rw",
+    "image": "/exercises/illustrations/alongamento-trapezio-superior.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "4c7546fb-ea04-4271-9187-1076144b16a5",
+    "name": "Full Can",
+    "video": "https://youtube.com/watch?v=PTCRl1t1ttQ",
+    "image": "/exercises/illustrations/full-can.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "8a8e9799-b2b1-46b4-ac30-f82d149430c1",
+    "name": "Abdominal",
+    "video": "https://youtube.com/watch?v=Ke9al-Aliyc",
+    "image": "/exercises/illustrations/abdominal-crupeado.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "094f51a9-305c-4d01-a71b-20d05565ba6a",
+    "name": "Abdominal Reverso",
+    "video": "https://youtube.com/watch?v=d08gicBJiv4",
+    "image": "/exercises/illustrations/abdominal-reverso.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "00b03826-fd00-4741-b4ba-3fe06c71cc34",
+    "name": "Respiração Costal Inferior",
+    "video": "https://www.youtube.com/watch?v=yS4DDjKNObs",
+    "image": "/exercises/illustrations/respiracao-diafragmatica.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "de6daecf-7e3a-497e-a9a9-41b6a97d3ed8",
+    "name": "Prancha Abdominal",
+    "video": "https://www.youtube.com/watch?v=dduZjSypIS8",
+    "image": "/exercises/illustrations/prancha-abdominal.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "5d1ccf64-73d9-46e1-a95b-c535dc634b1d",
+    "name": "Extensão de Cotovelo (Tricep)",
+    "video": "https://www.youtube.com/watch?v=Vf3zBwDqxA8",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/extensao-de-cotovelo-com-garrafa.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "3f5ce2d6-5a7e-4bc2-b048-cd2144afee7b",
+    "name": "Agachamento Livre",
+    "video": "https://www.youtube.com/watch?v=4L5nBs8Eq7g",
+    "image": "/exercises/illustrations/agachamento-livre.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "ec04640e-bf1f-4148-881d-7b60e201b3bf",
+    "name": "Postura da Criança",
+    "video": "https://youtube.com/watch?v=3z9Q2RsZ470",
+    "image": "/exercises/illustrations/postura-crianca.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "67f02cc4-9f33-404a-8ce3-c0a023468519",
+    "name": "Dorsiflexão Resistida",
+    "video": "https://youtube.com/watch?v=cqnaOR5jJqo",
+    "image": "/exercises/illustrations/tibial-anterior-fortalecimento.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "86cba33b-0b33-4f6e-842d-1d56f62ad519",
+    "name": "Retração Cervical",
+    "video": "https://youtube.com/watch?v=vph1t0WCYhU",
+    "image": "/exercises/illustrations/retracao-cervical.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "8db68e9d-7ca3-472e-9af9-99c638b0949e",
+    "name": "Isométrico Cervical",
+    "video": "https://youtube.com/watch?v=vph1t0WCYhU",
+    "image": "/exercises/illustrations/isometrico-cervical.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e61cabcd-f72e-47fe-adb7-a394d8bac445",
+    "name": "Elevação de Panturrilha em Pé",
+    "video": "https://www.youtube.com/watch?v=tPiLhI7TkLE",
+    "image": "/exercises/illustrations/panturrilha-pe.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "dc0b3486-acda-43ed-83b0-3c5bee243db3",
+    "name": "Tyler Twist",
+    "video": "https://youtube.com/watch?v=gsKGbqA9aNo",
+    "image": "/exercises/illustrations/tyler-twist.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "29285d0d-4430-4b24-931c-720d8b691f23",
+    "name": "Flexão de Williams",
+    "video": "https://youtube.com/watch?v=RB4uqH-wf3U",
+    "image": "/exercises/illustrations/flexao-williams.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "cc6264de-8382-410f-a838-0b792434b7ff",
+    "name": "Ponte Unipodal",
+    "video": "https://youtube.com/watch?v=WXH-cBUO4oY",
+    "image": "/exercises/illustrations/ponte-unipodal.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "37b7cd5b-ccf9-41d4-8cfa-156dac518db0",
+    "name": "Carregamento Unilateral",
+    "video": "https://youtube.com/watch?v=niWe4rXFDXo",
+    "image": "/exercises/illustrations/suitcase-carry.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e0df87ae-4ef3-4df0-b944-c15f0c987e91",
+    "name": "Remada",
+    "video": "https://youtube.com/watch?v=nSuPoJ0xo9c",
+    "image": "/exercises/illustrations/serrote-halter.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "a82b4598-9b68-4b6c-9dcb-b6192b03da5b",
+    "name": "4 Apoios (Four Point Kneeling)",
+    "video": "https://www.youtube.com/watch?v=x7UL6t8g9Uw",
+    "image": "/exercises/illustrations/quatro-apoios-estabilizacao.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "6e3082dd-12fe-4f59-90c4-99cc16c9baf2",
+    "name": "Bird-Dog (Cachorro-Passarinho)",
+    "video": "https://youtube.com/watch?v=b6zcIxFkuN4",
+    "image": "/exercises/illustrations/bird-dog.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "74123e1f-5ab0-4338-b40c-32abc180309d",
+    "name": "Serrote com halter (Remada Unilateral)",
+    "video": "https://youtube.com/watch?v=HcyPuf31RmE",
+    "image": "/exercises/illustrations/serrote-halter.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "3e4379aa-1bbe-470d-a902-6b318fac80ea",
+    "name": "Step Touch com Braços",
+    "video": "https://www.youtube.com/watch?v=26Z6rxmGWmo",
+    "image": "/exercises/illustrations/marcha-paralela.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "ae328acc-7236-4e0f-bf6a-bb0271ede792",
+    "name": "Levantamento Terra",
+    "video": "https://youtube.com/watch?v=5rIPY_01wHc",
+    "image": "/exercises/illustrations/deadlift_dumbbells.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "bdc8c1fb-d613-490f-9838-2dd29594aaca",
+    "name": "Turkish Get-Up",
+    "video": "https://youtube.com/watch?v=sgd8n917Zv0",
+    "image": "/exercises/illustrations/turkish-getup.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "59933cf5-7599-43de-8f69-606575f91b4f",
+    "name": "Huff Cough",
+    "video": "https://www.youtube.com/watch?v=pmJU3osuHSo",
+    "image": "/exercises/illustrations/respiracao-diafragmatica.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "30c2ad4f-4dd8-4da3-a806-0f6d359e9366",
+    "name": "Alongamento de Fáscia Plantar",
+    "video": "https://youtube.com/watch?v=3AtIpBT0K1E",
+    "image": "/exercises/illustrations/alongamento-de-fascia-plantar.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "569e59b9-2e1b-4a20-94be-9de06c131217",
+    "name": "Salto Lateral",
+    "video": "https://youtube.com/watch?v=1ewxxIgNLZE",
+    "image": "/exercises/illustrations/salto-lateral.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "31f4a85f-54fd-4efc-8b24-15cdac99f501",
+    "name": "Extensão de Joelho na Cadeira",
+    "video": "https://youtube.com/watch?v=peDilTnI3Cg",
+    "image": "/exercises/illustrations/extensao-joelho.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "7a79f8b3-2931-4618-a7ce-1063702a8aa8",
+    "name": "Alongamento de Sóleo",
+    "video": "https://www.youtube.com/watch?v=MeKOWx5oWRc",
+    "image": "/exercises/illustrations/alongamento-de-soleo-na-parede.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "32ec0a99-c6c3-4f21-98d2-9aee0d31c27f",
+    "name": "Alongamento de Piriforme",
+    "video": "https://www.youtube.com/watch?v=AYKYKmTsv0w",
+    "image": "/exercises/illustrations/alongamento-de-piriforme-4-supino.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "722d9c76-6769-4b1e-ad1f-57cb0070448b",
+    "name": "Alongamento de Panturrilha",
+    "video": "https://www.youtube.com/watch?v=zWKZO-SSIic",
+    "image": "/exercises/illustrations/alongamento-de-panturrilha-na-parede.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e8673feb-fd63-4d52-b6d6-233a89331618",
+    "name": "Supino Reto",
+    "video": "https://youtube.com/watch?v=YiP-Zhk5YMk",
+    "image": "/exercises/illustrations/supino-halter.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "5c389719-5452-478a-bde0-a8266adcce42",
+    "name": "Alongamento de TFL e Banda IT",
+    "video": "https://youtube.com/watch?v=XkLCMXzWtGs",
+    "image": "/exercises/illustrations/alongamento-tfl.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "c11adcd2-8580-420f-a64a-160ee94aa32c",
+    "name": "Alongamento de Rotadores de Ombro",
+    "video": "https://youtube.com/watch?v=Xnmhk5sYABA",
+    "image": "/exercises/illustrations/alongamento-rotadores-ombro.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f4a309c4-ce4c-4be9-bc48-b2cb34aacb04",
+    "name": "Descida Controlada de Degrau",
+    "video": "https://www.youtube.com/watch?v=Or4C-UQ63Xc",
+    "image": "/exercises/illustrations/descida-controlada-de-degrau.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "cc264b5f-0fb2-4e63-a0bd-de90c06f3e8c",
+    "name": "Expansão Costal",
+    "video": "https://youtube.com/watch?v=kKDUJ9CXjTw",
+    "image": "/exercises/illustrations/expansao-costal.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e33feda9-054e-4da4-9dda-1e464b59292c",
+    "name": "Extensão de Ombro em Pronação",
+    "video": "https://www.youtube.com/watch?v=spFsexpuQt8",
+    "image": "/exercises/illustrations/barra-fixa-pronada.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "17c53541-8d77-40a7-96b3-24b3b47e41ce",
+    "name": "Mobilização de Ombro",
+    "video": "https://www.youtube.com/watch?v=u4J61K44OkU",
+    "image": "/exercises/illustrations/mobilidade-ombro.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "fbe63e9c-f8ec-4b82-aa8a-c6c2b3a4e4f7",
+    "name": "Caminhada nos Calcanhares",
+    "video": "https://www.youtube.com/watch?v=ZQVWy_MuTJg",
+    "image": "/exercises/illustrations/caminhada-calcanhares.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "813ece6a-8b3f-4daa-a54e-47f1ccccc740",
+    "name": "Alongamento de Adutores (Borboleta)",
+    "video": "https://youtube.com/watch?v=8xnhUqiILcE",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-de-adutores.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f2e7bc8f-77ea-45b8-bdb2-1ad3c23a7f57",
+    "name": "Prancha Lateral",
+    "video": "https://youtube.com/watch?v=ht3hMZ8b78M",
+    "image": "/exercises/illustrations/prancha-lateral.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "50456d98-c416-4bd1-a2ee-87952ae4287a",
+    "name": "Ponte de Glúteo",
+    "video": "https://www.youtube.com/watch?v=O18cJCrlU1M",
+    "image": "/exercises/illustrations/ponte-gluteo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "89f92b8f-7af1-41bd-97db-afc5cf66a455",
+    "name": "Respiração 360",
+    "video": "https://youtube.com/watch?v=UuqTRhNJtDg",
+    "image": "/exercises/illustrations/respiracao-360.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "4dd2e2f3-4046-4ab4-8687-5220a93a1070",
+    "name": "Extensão de Quadril Ativa no Chão",
+    "video": "https://www.youtube.com/watch?v=F5xLq7K-U3E",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/extensao-quadril-quatro-apoios.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "fc207ece-1acb-4fdc-849f-0b47eee02d03",
+    "name": "Tuck Jump (Salto Grupard)",
+    "video": "https://www.youtube.com/watch?v=r7oBejx1PHM",
+    "image": "/exercises/illustrations/tuck-jump.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "3e8bd760-cec2-462c-9f10-39aa8c243aeb",
+    "name": "Ponte com Uma Perna",
+    "video": "https://www.youtube.com/watch?v=HmxvYqmPXfk",
+    "image": "/exercises/illustrations/ponte-com-uma-perna.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "ddcbf38b-e70b-43a9-b4f0-9ee903fba554",
+    "name": "Extensão de Tronco Prono (Cobra)",
+    "video": "https://www.youtube.com/watch?v=oa2I7HugJQA",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/cobra-prona.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "705de1c3-7aa2-4b32-bf9f-2bb903e79450",
+    "name": "Hip Airplane",
+    "video": "https://www.youtube.com/watch?v=4XCbYaQGF2o",
+    "image": "/exercises/illustrations/abducao-de-quadril-em-pe.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "dcba2295-5810-48ad-b100-e7166eda0d5f",
+    "name": "Side Plank (Prancha Lateral)",
+    "video": "https://www.youtube.com/watch?v=8imTmxwFgRg",
+    "image": "/exercises/illustrations/prancha-lateral.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "154f30b9-fe90-4977-be8c-94c6003cf6c2",
+    "name": "Alongamento de Peitoral",
+    "video": "https://www.youtube.com/watch?v=oe7C99EHJYM",
+    "image": "/exercises/illustrations/alongamento-peitoral-porta.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "62d289e6-ac71-497f-bbb0-ce3267478bb5",
+    "name": "Salto Unipodal",
+    "video": "https://youtube.com/watch?v=ty-7NhgsiaI",
+    "image": "/exercises/illustrations/salto-unipodal-aterrissagem.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "65d3e464-ba36-4594-92c5-970cf5a4a2a6",
+    "name": "Alcance Funcional",
+    "video": "https://youtube.com/watch?v=ZydhIFrtN9k",
+    "image": "/exercises/illustrations/alcance-funcional.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "20c2158e-3728-4b42-baf1-96e315df0dc0",
+    "name": "Rotação Externa de Ombro",
+    "video": "https://www.youtube.com/watch?v=GOajkbXkuak",
+    "image": "/exercises/illustrations/rotacao-externa-ombro.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "5888dab0-c8d8-4e64-b242-44fd0c81b1a4",
+    "name": "Nordic Hamstring",
+    "video": "https://www.youtube.com/watch?v=QjX2HXlFH1M",
+    "image": "/exercises/illustrations/nordic-hamstring-beginner.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "4012f052-a61d-48f8-9b25-dd5d4551a7bc",
+    "name": "Copenhagen Adduction (Nível 1)",
+    "video": "https://youtube.com/watch?v=IPjGFvOQTgA",
+    "image": "/exercises/illustrations/copenhagen-adduction-lvl1.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e589794c-6474-4982-bdb5-29724af5bbf2",
+    "name": "Fortalecimento de Glúteo",
+    "video": "https://www.youtube.com/watch?v=E_uO_YbJCZY",
+    "image": "/exercises/illustrations/fortalecimento-gluteo-lateral.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e93d18c5-6f31-4f4b-b76f-da556d762cb4",
+    "name": "Isometria Cervical (Extensão)",
+    "video": "https://www.youtube.com/watch?v=68fE9n73d6Q",
+    "image": "/exercises/illustrations/chin-tucks.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "a025c68c-a3cb-45d6-82fb-2de5ad632766",
+    "name": "Escalada na Parede (Wall Climber)",
+    "video": "https://www.youtube.com/watch?v=As8WHCrFT-E",
+    "image": "/exercises/illustrations/escalada-na-parede-wall-climber.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "a7a80b05-0723-4c52-97c2-4e6689371143",
+    "name": "Lunge com Rotação",
+    "video": "https://www.youtube.com/watch?v=2XTF_3tgH00",
+    "image": "/exercises/illustrations/afundo-frontal-lunge.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e7b7fe16-e2d7-42f5-8650-eb4ea6d4b5da",
+    "name": "Agachamento em Disco Instável",
+    "video": "https://www.youtube.com/watch?v=02HgYV3ZxNU",
+    "image": "/exercises/illustrations/agachamento-disco-instavel.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "24c00b51-2456-4701-b2c8-3f799d045d3d",
+    "name": "Alongamento da Fáscia Plantar",
+    "video": "https://youtube.com/watch?v=hBZ70N0NkP0",
+    "image": "/exercises/illustrations/alongamento-de-fascia-plantar.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "8a7ffd62-5075-453c-89e6-057843dcb8e1",
+    "name": "Marcha com Padrões Cruzados",
+    "video": "https://www.youtube.com/watch?v=1wOSCEpPkV0",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/coordenacao-cruzada-cross-crawl.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "2d173136-f2e3-4dfe-b25b-8b0eeaede0e2",
+    "name": "Mobilidade Torácica (Quatro Apoios Rotação)",
+    "video": "https://www.youtube.com/watch?v=Vl8dF9vVn7M",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/cat-cow-gato-camelo.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "7328ec3f-43d3-44a3-9930-c5d1ccf84d28",
+    "name": "Alongamento de Tríceps Overhead",
+    "video": "https://youtube.com/watch?v=qsyrvNY8uBA",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-de-triceps-por-tras.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "a3ad0080-7ae8-40bc-a94d-b5b1eab3ca9b",
+    "name": "Mobilidade Lombar (Pelvic Tilts no Chão)",
+    "video": "https://www.youtube.com/watch?v=HTvhgm1WrwB",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/flexao-williams.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "642f305a-fd51-402a-82d6-fbfdbc532bbc",
+    "name": "Serratus Punch",
+    "video": "https://youtube.com/watch?v=TbP0tfa-S6k",
+    "image": "/exercises/illustrations/serratus-punch.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "60911b03-c204-4f03-b33d-ddc5d4c23238",
+    "name": "Panturrilha Unilateral",
+    "video": "https://youtube.com/watch?v=EdDopvMJyN0",
+    "image": "/exercises/illustrations/panturrilha-unilateral.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e8fe6047-cb35-423e-85bc-e9e5c20c9e62",
+    "name": "Agachamento Profundo Sustentado (Asian Squat)",
+    "video": "https://youtube.com/watch?v=a6Na67zUMZk",
+    "image": "/exercises/illustrations/agachamento-profundo-sustentado-asian-squat.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "51cdeee6-ca28-4e1a-800e-c7262504fb03",
+    "name": "Coordenação Óculo-Manual",
+    "video": "https://www.youtube.com/watch?v=RF7gYbSntrU",
+    "image": "/exercises/illustrations/coordenacao-oculo-manual.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "b20df563-5a86-42f3-b69e-376f961ff70b",
+    "name": "Farmer's Carry (Caminhada do Fazendeiro)",
+    "video": "https://www.youtube.com/watch?v=xb1GMZacM8w",
+    "image": "/exercises/illustrations/farmer_walk.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "4f3a3e90-6240-4fd7-84ba-959830031184",
+    "name": "Medicine Ball Slam",
+    "video": "https://www.youtube.com/watch?v=V0uWjO8EFrU",
+    "image": "/exercises/illustrations/agachamento-com-soco.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "725e7c07-fe79-46fb-99f4-b6fd1738ce82",
+    "name": "Mini-Landing Protocol",
+    "video": "https://www.youtube.com/watch?v=HLx6MZmOBAE",
+    "image": "/exercises/illustrations/salto-unipodal-aterrissagem.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "ad0a662f-48b4-4129-96b4-c2b07f08fe3e",
+    "name": "Alongamento de Peitoral na Porta",
+    "video": "https://youtube.com/watch?v=pPovBkc8-2Q",
+    "image": "/exercises/illustrations/peitoral-porta.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "784d28cc-b63a-415b-bcd1-fefa7386505c",
+    "name": "Thread the Needle (Mobilidade Torácica Alta)",
+    "video": "https://www.youtube.com/watch?v=R9Z2pU7o2wQ",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/cat-cow-gato-camelo.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "8b8403c2-9089-4dd6-a4e5-a62c4775f985",
+    "name": "Elevação em I (Prono)",
+    "video": "https://youtube.com/watch?v=-ZhkDupuNKI",
+    "image": "/exercises/illustrations/prone-i-raise.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "d056673e-8161-435b-8389-9311b8ad0366",
+    "name": "Mobilidade de Ombro (Deslizamento na Parede Lateral)",
+    "video": "https://www.youtube.com/watch?v=GVvEt79dsBk",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/escalada-na-parede-wall-climber.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "a82a7459-dbdc-4c72-b247-30f55a6cd3f2",
+    "name": "PNF Diagonal de MS (Kabat)",
+    "video": "https://youtube.com/watch?v=5Y0N5nCdyJ4",
+    "image": "/exercises/illustrations/pnf-diagonal-ms.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e4b73ede-4762-471a-9059-31d7321532bc",
+    "name": "Alongamento de Adutores Lateral",
+    "video": "https://youtube.com/watch?v=maIHmHGAXZ8",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-de-adutores.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f5f76796-5a13-46dd-b0d7-f0492dce6a6a",
+    "name": "Mobilidade Cervical (Rotação Ativa)",
+    "video": "https://www.youtube.com/watch?v=gT8tY8uM82U",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/retracao-cervical.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "e2444bfa-ee97-4214-bdf0-901b1924e968",
+    "name": "Blackburns em Prono",
+    "video": "https://youtube.com/watch?v=iHT7gd3AetA",
+    "image": "/exercises/illustrations/blackburns.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "ec9a1a9e-e3fd-459e-b57e-f4981e130f51",
+    "name": "Alongamento de Iliotibial Cruzado em Pé",
+    "video": "https://youtube.com/watch?v=coIj6pERsZo",
+    "image": "/exercises/illustrations/alongamento-de-iliotibial-cruzado-em-pe.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "c506feb8-88e3-49aa-b467-df018ba96402",
+    "name": "Panturrilha Sentado",
+    "video": "https://youtube.com/watch?v=0k9__8Ayoi8",
+    "image": "/exercises/illustrations/elevacao-de-panturrilha-sentado.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "a738ac09-08f7-414c-8ea5-e8cf65b0c41d",
+    "name": "Mobilidade de Escápula (Protração e Retração em Quatro Apoios)",
+    "video": "https://www.youtube.com/watch?v=NKekqeudgWs",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/quatro-apoios-estabilizacao.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f0d5a165-383c-4086-aa93-3c3a15d0d064",
+    "name": "Macarena (Controle Escapular)",
+    "video": "https://youtube.com/watch?v=XEsFuCIX0yk",
+    "image": "/exercises/illustrations/macarena-exercise.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "619b9258-8138-486d-a902-c046eb0ca8dc",
+    "name": "Mobilidade de Quadril Sereia",
+    "video": "https://youtube.com/watch?v=4I8UMQ9zjZI",
+    "image": "/exercises/illustrations/mermaid-mobility.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "7399a88b-5141-4542-a134-db32762629ee",
+    "name": "Mobilidade de Ombro (Bastão Passagem Frontal/Traseira)",
+    "video": "https://www.youtube.com/watch?v=aG3g6k_f-D4",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/mobilizacao-ombro-bastao.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "addf2969-d77b-4e48-aa9f-7bbd94292a9c",
+    "name": "Mobilidade de Punho em Quatro Apoios",
+    "video": "https://www.youtube.com/watch?v=CRivg5ls6Vc",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/flexao-punho.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "d780d651-7d8e-479e-b391-7055be354aa3",
+    "name": "Alongamento de Panturrilha na Parede",
+    "video": "https://youtube.com/watch?v=ltH2dnWUnPY",
+    "image": "/exercises/illustrations/alongamento-de-panturrilha-na-parede.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f4907121-a422-459e-91ed-bb526d23fc7b",
+    "name": "Alongamento de Gato-Camelo (Cat-Cow)",
+    "video": "https://youtube.com/watch?v=YuzoxlVanHw",
+    "image": "/exercises/illustrations/cat-cow.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "140ba075-96a7-42ff-9d2b-4d54e7a6843d",
+    "name": "Abdução de Quadril em Pé",
+    "video": "https://www.youtube.com/watch?v=9-XUx041ioE",
+    "image": "/exercises/illustrations/abducao-quadril-em-pe.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "3f4addab-9932-4202-90d6-87bf8a01c480",
+    "name": "Afundo com Salto (Pliometria)",
+    "video": "https://youtube.com/watch?v=tMgVGeufRcw",
+    "image": "/exercises/illustrations/afundo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f605af15-ed51-49e0-a2c1-5f9562ece9a5",
+    "name": "Serrote",
+    "video": "https://youtube.com/watch?v=kWTbCOpD5s0",
+    "image": "/exercises/illustrations/serrote-halter.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "b51013de-7453-45d5-840c-fb3a5a2f7c2d",
+    "name": "Excêntrico de Supraespinal",
+    "video": "https://youtube.com/watch?v=hZPbQZUqjKA",
+    "image": "/exercises/illustrations/eccentric-supraspinatus.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f319c5f4-888f-4858-ab9e-1efd4e9e7b42",
+    "name": "Apoio Unipodal",
+    "video": "https://www.youtube.com/watch?v=z-GrNaTVDhw",
+    "image": "/exercises/illustrations/apoio-unipodal.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "38339f6b-76ea-411e-8a95-53b0d52d6d81",
+    "name": "Laserterapia de Baixa Intensidade",
+    "video": "https://youtube.com/watch?v=FW4L537UPGU",
+    "image": "/exercises/illustrations/ativacao-vmo-quad-set.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "ce8cd6f1-65e5-4298-b05c-474185b55368",
+    "name": "Salto Vertical Unipodal",
+    "video": "https://youtube.com/watch?v=ty-7NhgsiaI",
+    "image": "/exercises/illustrations/jump-squat.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "dbd79f65-6b30-4abf-acf0-8e87d46fefa1",
+    "name": "Corrida com Resistência (Cinto)",
+    "video": "https://youtube.com/watch?v=mc0SMpF9CVA",
+    "image": "/exercises/illustrations/skipping-high-knees.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "0c2f993e-0331-400f-8c6b-3ca1c765c5fe",
+    "name": "Abdominal Crupeado",
+    "video": "https://www.youtube.com/watch?v=O0pIQ2UqeCY",
+    "image": "/exercises/illustrations/abdominal-crupeado.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "2b3d7201-047f-4057-9fcc-eb919a4fe8b6",
+    "name": "Abdominal Oblíquo",
+    "video": "https://www.youtube.com/watch?v=Smr8ipkN5A0",
+    "image": "/exercises/illustrations/abdominal-obliquo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "90d9a757-babb-444d-80a5-55039e77880d",
+    "name": "Retração Escapular",
+    "video": "https://youtube.com/watch?v=TUp29borYFA",
+    "image": "/exercises/illustrations/retracao-escapular.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "b2baee7b-8594-4298-8056-20946cdf57ba",
+    "name": "IYTW",
+    "video": "https://media.moocafisio.com.br/exercises/iytw.mp4",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/wall-angels.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "ec32faef-8fb3-462e-a577-f1627e0c5f21",
+    "name": "Mobilidade Torácica",
+    "video": "https://www.youtube.com/watch?v=QwsdhRTdqqs",
+    "image": "/exercises/illustrations/mobilidade-toracica-open-book.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "57b30ea2-bc4f-49da-9768-07b7d858ba48",
+    "name": "Mobilidade de Quadril (Ponte com Alcance Cruzado)",
+    "video": "https://www.youtube.com/watch?v=jW9S5V3nN_I",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/ponte-gluteo-v2.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "abfebb68-22e8-4eb9-b1f9-90c0fd8862e8",
+    "name": "Rosca Martelo",
+    "video": "https://youtube.com/watch?v=xDaBywsDams",
+    "image": "/exercises/illustrations/bicep-curl-martelo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "534f75d9-e816-4c42-8198-5aa7198979d3",
+    "name": "Bird-Dog",
+    "video": "https://youtube.com/watch?v=NRI8vnSHNFg",
+    "image": "/exercises/illustrations/bird-dog.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "d113ef2d-f53d-4b4d-95e6-2e70ee578402",
+    "name": "Afundo",
+    "video": "https://youtube.com/watch?v=SNUWg0De4RE",
+    "image": "/exercises/illustrations/afundo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e4ddff82-1858-408c-8f37-f84c0942060f",
+    "name": "Extensão de McKenzie",
+    "video": "https://youtube.com/watch?v=Ji3o1Plmjpw",
+    "image": "/exercises/illustrations/extensao-tronco-cobra.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "851c7fc4-83ce-4160-a7f4-efd1efc94bab",
+    "name": "Alongamento de Quadrado Lombar Sentado",
+    "video": "https://www.youtube.com/watch?v=HiuUQT4-KyI",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-de-gluteo-sentado.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "ea1a3e28-d143-4f94-898a-ce77467d98fc",
+    "name": "Prancha Ventral",
+    "video": "https://youtube.com/watch?v=C1WtQlMHm_A",
+    "image": "/exercises/illustrations/prancha-frontal.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "bc8ce5f0-9e12-4602-94ed-8427ae5f3104",
+    "name": "Mobilidade de Quadril (Pêndulo em Pé)",
+    "video": "https://www.youtube.com/watch?v=GrLw0lNmqjM",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/circulos-quadril.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "6c50f32b-126c-4a87-9b2f-2ee52dfff01c",
+    "name": "Wall Ball (Reabilitação)",
+    "video": "https://youtube.com/watch?v=qf-zd1A5kro",
+    "image": "/exercises/illustrations/wall-ball-rehab.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "5cc49679-830d-44a3-b67d-8f4ae3ba8223",
+    "name": "Stir the Pot",
+    "video": "https://youtube.com/watch?v=v4WJKQmNsck",
+    "image": "/exercises/illustrations/stir-the-pot.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "82cdbd12-18c8-4f04-911c-fcc32e319712",
+    "name": "Suicídio (Agilidade)",
+    "video": "https://youtube.com/watch?v=5NeHI2Zarlw",
+    "image": "/exercises/illustrations/deslocamento-lateral-shuffle.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "08bfc9d5-830b-4046-9fab-217db50eacd5",
+    "name": "Mobilidade de Tornozelo na Parede",
+    "video": "https://youtube.com/watch?v=qh7KaN8FRZk",
+    "image": "/exercises/illustrations/mobilidade-tornozelo-parede.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "12dc32ac-88c2-4d1b-86c7-ad6de33979d4",
+    "name": "Massagem Gun (Recuperação)",
+    "video": "https://youtube.com/watch?v=CKoLrANWGGw",
+    "image": "/exercises/illustrations/liberacao-foam-roller.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "7526c048-545e-488b-8f4d-0e23ddd9a4f2",
+    "name": "Hollow Rock (Canoa)",
+    "video": "https://www.youtube.com/watch?v=eQ9h5LwqjDE",
+    "image": "/exercises/illustrations/canivete-v-up.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "2818154e-0c0f-44e5-ac02-8323a23a23e9",
+    "name": "O Maior Alongamento do Mundo",
+    "video": "https://www.youtube.com/watch?v=-CiWQ2IvY34",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/worlds-greatest-stretch.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "88b2d54e-3542-48a1-9b74-1610b8d83ff3",
+    "name": "Flexão Nórdica",
+    "video": "https://youtube.com/watch?v=SKyPSkDVQzY",
+    "image": "/exercises/illustrations/nordic-hamstring.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "df7a1621-e0ee-4e8d-b289-01dfc286da04",
+    "name": "Rotação em Prancha com Band",
+    "video": "https://youtube.com/watch?v=Fg2M8rnqUvE",
+    "image": "/exercises/illustrations/plank-rotation-band.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "bdbf8be7-c330-4afe-99e3-e10c9a9a810d",
+    "name": "Alongamento de Iliopsoas",
+    "video": "https://youtube.com/watch?v=3ea8_FdpX2o",
+    "image": "/exercises/illustrations/alongamento-de-psoas-lunge-stretch.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "cd0ea681-c92c-4006-bdd7-5afc3c868bab",
+    "name": "Exercício de Parede para Ombro",
+    "video": "https://www.youtube.com/watch?v=EM2UO6uwm4c",
+    "image": "/exercises/illustrations/wall-angels.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f3904f78-b5fe-4cbd-b46a-54f4efab8afa",
+    "name": "Alongamento de Grande Dorsal",
+    "video": "https://youtube.com/watch?v=SHAh9qyuQYk",
+    "image": "/exercises/illustrations/alongamento-dorsal.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "663e8b11-b463-4ad8-8280-3797c030d378",
+    "name": "Elevação de Perna Reta (SLR)",
+    "video": "https://youtube.com/watch?v=lqSvgCmOR9Y",
+    "image": "/exercises/illustrations/elevacao-perna-reta.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "1ab10112-a3b9-4b51-b4b7-651144d8f9c7",
+    "name": "Alongamento de Levantador da Escápula",
+    "video": "https://youtube.com/watch?v=SE1tRdzSnnk",
+    "image": "/exercises/illustrations/alongamento-de-levantador-da-escapula.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "50e9fc48-904f-4f5c-b2ac-40b93670f4ee",
+    "name": "Mobilidade de Quadril em Z-Sit (90/90)",
+    "video": "https://youtube.com/watch?v=t4Zz6-aG8Iw",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-90-90.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "c9f48ccd-7c4b-42b3-ad39-94a0edbf5a7a",
+    "name": "Mobilidade de Tornozelo (Balanço em Pé)",
+    "video": "https://www.youtube.com/watch?v=gRHg6v6-szc",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/mobilidade-tornozelo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "962a7fc6-e93c-4972-adeb-23f113385950",
+    "name": "Mobilidade de Tornozelo (Desenhar o Alfabeto)",
+    "video": "https://www.youtube.com/watch?v=vHMJ0zgrsFU",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/mobilidade-tornozelo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "5c659b55-dfdf-47b5-a29e-db6d9025146f",
+    "name": "Mobilidade de Tornozelo (Desenhar o Infinito)",
+    "video": "https://www.youtube.com/watch?v=mzTQGYGY0Ng",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/mobilidade-tornozelo.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "6f44c9e0-4de7-412c-bb52-f73868fc3ee7",
+    "name": "Afundo Caminhando",
+    "video": "https://youtube.com/watch?v=SNUWg0De4RE",
+    "image": "/exercises/illustrations/afundo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "6bdf3bf9-423e-43ac-abaa-6b51c92ad713",
+    "name": "Mobilidade de Tornozelo (Knee to Wall)",
+    "video": "https://www.youtube.com/watch?v=FRDaT9iZNVI",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/mobilidade-tornozelo.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "262e1954-f6d4-4930-a20c-ee6fef22060f",
+    "name": "Mobilidade de Tornozelo com Elástico",
+    "video": "https://www.youtube.com/watch?v=ILSbK8RnGdI",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/mobilizacao-tornozelo-df.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "2b854366-2ddc-4edf-b157-d7881d4d9594",
+    "name": "Avanço Reverso com Halteres",
+    "video": "https://youtube.com/watch?v=tSDPup-Jcnw",
+    "image": "/exercises/illustrations/avanco-reverso-halteres.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "c6feba6e-0b50-4a08-b8e8-fece0019d07d",
+    "name": "Gato-Vaca (Cat-Cow)",
+    "video": "https://youtube.com/watch?v=40Y1rukJs4E",
+    "image": "/exercises/illustrations/cat-cow.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "a644a383-289e-4fb9-9a1b-3f1513b29872",
+    "name": "Mobilização Cervical com Toalha",
+    "video": "https://www.youtube.com/watch?v=rxYEHsf_hsQ",
+    "image": "/exercises/illustrations/alongamento-lateral-de-pescoco.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "96cc9b30-d14a-4938-b490-4d2775343539",
+    "name": "Step-Down",
+    "video": "https://www.youtube.com/watch?v=tOplbmmW2Rg",
+    "image": "/exercises/illustrations/descida-controlada-de-degrau.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "484f3773-1961-42e6-967b-b3312bfb9ce3",
+    "name": "Mobilização Articular (MWM/Passiva)",
+    "video": "https://youtube.com/watch?v=OvHpIyjnzjo",
+    "image": "/exercises/illustrations/mobilizacao-ombro-bastao.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "1cc14298-c14a-4df0-a633-8622141574c8",
+    "name": "Mobilidade de Quadril (Abertura em Borboleta)",
+    "video": "https://www.youtube.com/watch?v=MdE_Cj6ChLo",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-de-adutores.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "70f736f0-8a3b-4984-af93-c48ac192c748",
+    "name": "Agachamento com Soco",
+    "video": "https://www.youtube.com/watch?v=WHnqsTRpucU",
+    "image": "/exercises/illustrations/agachamento-com-soco.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "0043a44d-95aa-4658-9950-8d5f0075d815",
+    "name": "Abdução de Quadril Deitado",
+    "video": "https://youtube.com/watch?v=HsDjIST69kg",
+    "image": "/exercises/illustrations/abducao-quadril-deitado.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "d25771b9-a824-4455-b848-1e02f3dc7dc9",
+    "name": "Extensão Lombar",
+    "video": "https://youtube.com/watch?v=Ji3o1Plmjpw",
+    "image": "/exercises/illustrations/extensao-lombar-bola.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f0ed5600-3b49-4d13-bee3-8eb5420c19a4",
+    "name": "Caminhada com Amplitude (Big Steps)",
+    "video": "https://youtube.com/watch?v=gWRHtWm7enA",
+    "image": "/exercises/illustrations/caminhada_amplitude.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "bd653123-bca8-4eaa-a42a-1bc8de623100",
+    "name": "Mobilização Torácica",
+    "video": "https://youtube.com/watch?v=adRR3oHwLrc",
+    "image": "/exercises/illustrations/mobilidade-coluna-sentado.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "c9ddfdad-26c2-42c4-bc29-4fc563b95a96",
+    "name": "Cossack Squat (Mobilidade Adutores)",
+    "video": "https://www.youtube.com/watch?v=peM2kH-sV74",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/afundo-lateral.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "7dab5ffc-02c9-4580-8b4f-bc23c0ceda32",
+    "name": "Elevação Frontal",
+    "video": "https://www.youtube.com/watch?v=nd1R8XKFHNI",
+    "image": "/exercises/illustrations/elevacao-frontal-de-ombro.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "0c71c989-d905-4617-a92f-cc32de6cce87",
+    "name": "Remada Sentada com Faixa",
+    "video": "https://www.youtube.com/watch?v=IVUC76X7iOI",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/retracao-escapular.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f33260e7-92c4-4fc5-83a8-a442f402e498",
+    "name": "Mobilidade Cervical (Retração Ativa)",
+    "video": "https://www.youtube.com/watch?v=QQMfNNHcf8w",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/retracao-cervical.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "863034c3-5fa8-4bfd-894c-4bb1ed052881",
+    "name": "Alongamento de Rombóides (Abraço a si mesmo)",
+    "video": "https://www.youtube.com/watch?v=sO8N_m7D9aU",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-romboides-sentado.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "0b938de5-ac7e-4ce8-974d-9ec5e30a5ed1",
+    "name": "Panturrilha em Pé",
+    "video": "https://youtube.com/watch?v=PR18M5j_b88",
+    "image": "/exercises/illustrations/panturrilha-pe.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "92b3a045-151d-4ad1-aa0a-2c9058e7331d",
+    "name": "Quadríceps Arco Curto",
+    "video": "https://youtube.com/watch?v=EAn3N2on3Hw",
+    "image": "/exercises/illustrations/quadriceps-arco-curto.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "b5c16c28-8db7-4308-aa76-cf6069f5a32f",
+    "name": "Flexão Ativa de Quadril em Pé (Over Hurdle)",
+    "video": "https://www.youtube.com/watch?v=FRDaT9iZNVI",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alcance-em-y-y-balance-practice.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "900cfdf2-0b91-434a-9663-a81649f6d3fb",
+    "name": "Extensão de Punho",
+    "video": "https://www.youtube.com/watch?v=N2PYcttGDG0",
+    "image": "/exercises/illustrations/extensao-punho.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "1843c7b5-0179-47e2-8bcb-960d3135ee49",
+    "name": "Alongamento de Ílio-psoas (Afundo profundo)",
+    "video": "https://www.youtube.com/watch?v=jW9S5V3nN_I",
+    "image": "/exercises/illustrations/afundo.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "3772c13d-9a3f-4938-96e4-b33d725e4346",
+    "name": "Inversão de Tornozelo com Faixa",
+    "video": "https://www.youtube.com/watch?v=DOjpPIW2ukQ",
+    "image": "/exercises/illustrations/ankle-inversion-isometric.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "d4da6725-d1cb-43d4-8cc0-32ca4e15c7d2",
+    "name": "Ativação de VMO",
+    "video": "https://youtube.com/watch?v=M8u5lbP4f4g",
+    "image": "/exercises/illustrations/ativacao-vmo-quad-set.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "cbeeb150-eac5-4a65-8da3-5b8a1e5e31bb",
+    "name": "Mobilidade de Quadril (Postura do Guerreiro)",
+    "video": "https://www.youtube.com/watch?v=SQdNpK2cWyY",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-de-psoas-lunge-stretch.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "55be11db-c9c8-482f-bc30-f0e57f4e7b72",
+    "name": "Marcha Estacionária Alta",
+    "video": "https://www.youtube.com/watch?v=dzN8I3ap47U",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/skipping-high-knees.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "5465a626-f7a3-4541-94f7-5e281b9036ce",
+    "name": "Mobilização Patelar",
+    "video": "https://www.youtube.com/watch?v=yZ0Oh561mc8",
+    "image": "/exercises/illustrations/quadriceps-arco-curto.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "b7a73f65-a68d-4aa1-a437-3ab7602a5192",
+    "name": "Isometria de Quadríceps (Quad Sets)",
+    "video": "https://youtube.com/watch?v=HscSsKwohoQ",
+    "image": "/exercises/illustrations/isometria-quadriceps.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "4bf684f6-57af-438e-8e8e-f4b1fce855ff",
+    "name": "Gato-Vaca",
+    "video": "https://youtube.com/watch?v=yVtIwBxkrtI",
+    "image": "/exercises/illustrations/cat-cow.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "016e0c1f-4498-4c0a-b418-876109548cf2",
+    "name": "Farmer Walk",
+    "video": "https://youtube.com/watch?v=NH7Xv-7NQNQ",
+    "image": "/exercises/illustrations/farmer_walk.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "3b2a0999-9ba6-4f4f-a037-bfb94551622f",
+    "name": "Face Pull",
+    "video": "https://www.youtube.com/watch?v=0Po47vvj9g4",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/retracao-escapular.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e2e66789-4743-42e6-b232-7e61c13855ba",
+    "name": "Giro Russo",
+    "video": "https://youtube.com/watch?v=izyhHukwLac",
+    "image": "/exercises/illustrations/rotacao-tronco-sentado.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "d4ec466f-ae13-4725-af3b-41370b847073",
+    "name": "Mobilidade de Punho (Círculos Ativos)",
+    "video": "https://www.youtube.com/watch?v=7d4D9f_j-D8",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/radial-deviation-wrist.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "ca4e687d-07b7-4a5f-a92d-27a7c366da65",
+    "name": "Sit-to-Stand",
+    "video": "https://www.youtube.com/watch?v=chw2oMUrh4U",
+    "image": "/exercises/illustrations/sentar-levantar.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "7fc51511-d748-40e8-8a1d-620bf1781e0a",
+    "name": "Mobilização de Coluna Thorácica com Foam Roller",
+    "video": "https://www.youtube.com/watch?v=sTyRcxKnrsI",
+    "image": "/exercises/illustrations/mckenzie-extensao-lombar-deitado.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "731f8406-6101-4dbe-ae0e-706caeca6f60",
+    "name": "Respiração Labial Franzida",
+    "video": "https://youtube.com/watch?v=JwjTdxObTXU",
+    "image": "/exercises/illustrations/respiracao-labial-franzida.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "9e380020-c4fd-4365-8473-c61ae50d9629",
+    "name": "Cat-Camel (Mobilização Lombar)",
+    "video": "https://youtube.com/watch?v=OQJAHhHwodc",
+    "image": "/exercises/illustrations/cat-camel.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "9e6d7492-7a9b-4a98-ba0f-49dc398c36a5",
+    "name": "Mobilidade de Quadril (Limpador de Para-brisa)",
+    "video": "https://www.youtube.com/watch?v=0Y8LL_MCmBg",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/rotacao-interna-quadril.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "8c85d73b-8c32-416d-9d81-6d0f3ec00ccd",
+    "name": "Prancha Frontal (Plank)",
+    "video": "https://youtube.com/watch?v=GQE8ASRA7t0",
+    "image": "/exercises/illustrations/prancha-frontal.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "5d436fae-1159-4ac7-8203-83bb4b85669a",
+    "name": "Mobilidade de Punho (Quatro Apoios Rocking)",
+    "video": "https://www.youtube.com/watch?v=gXj0w2vA6Y0",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/desvio-radial-de-punho.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "1e2c3be0-288d-4858-ab94-345adf190ebd",
+    "name": "World's Greatest Stretch",
+    "video": "https://youtube.com/watch?v=-CiWQ2IvY34",
+    "image": "/exercises/illustrations/worlds-greatest-stretch.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "ea494c34-ec8b-43d7-8f62-7926d33e9ade",
+    "name": "Alongamento de Extensão Lombar (Cobra)",
+    "video": "https://youtube.com/watch?v=Ji3o1Plmjpw",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/cobra-prona.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "73573738-bb4b-43ad-b67a-f78548ad210c",
+    "name": "Alongamento Lateral de Pescoço",
+    "video": "https://www.youtube.com/watch?v=H3LH3vDxVsc",
+    "image": "/exercises/illustrations/alongamento-lateral-de-pescoco.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "b3605c52-b458-4263-9056-1779ba2843f3",
+    "name": "Flexão de Braços",
+    "video": "https://youtube.com/watch?v=95OsZOJ4T_I",
+    "image": "/exercises/illustrations/flexao-braco.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "433da7d2-bd1b-4ce0-9bc3-16d241bf6c07",
+    "name": "Prancha com Toque no Ombro",
+    "video": "https://youtube.com/watch?v=Vhxyz6dSwTs",
+    "image": "/exercises/illustrations/prancha-toque-ombro.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "4e15d77e-fa53-4d75-b9f7-5cb600bcf8b7",
+    "name": "Mobilidade de Quadril (90/90 Básico)",
+    "video": "https://www.youtube.com/watch?v=HiuUQT4-KyI",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-90-90.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "4a870032-e3ad-46d2-9d4a-7681cfaca191",
+    "name": "Alongamento de Antebraço (Extensores)",
+    "video": "https://youtube.com/watch?v=tv7M2jgbyiw",
+    "image": "/exercises/illustrations/alongamento-de-antebraco-extensores.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "33fc05eb-d127-463f-95e4-ff1ce430f80e",
+    "name": "Skipping",
+    "video": "https://youtube.com/watch?v=qAn8GHmn6Cs",
+    "image": "/exercises/illustrations/skipping-high-knees.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "328f722b-9b0a-4cec-a75d-5d9deb1738de",
+    "name": "Copenhagen Plank",
+    "video": "https://www.youtube.com/watch?v=YRRnnZsRs9U",
+    "image": "/exercises/illustrations/copenhagen-plank.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "fea69d63-d77f-4612-85fe-e06bf47c08b6",
+    "name": "Remada/Empurrada em Decúbito Lateral",
+    "video": "https://youtube.com/watch?v=e11QjgJADn4",
+    "image": "/exercises/illustrations/side-lying-row-push.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "dfc339dd-7df6-4d14-88cd-5a62f29637b3",
+    "name": "Mobilidade de Quadril (Rotação Interna Alternada)",
+    "video": "https://www.youtube.com/watch?v=sO8N_m7D9aU",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/rotacao-interna-quadril.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "230fe21d-6124-492c-a6be-2bff1e8ed40a",
+    "name": "Mobilização de Escápula (Wall Slides)",
+    "video": "https://www.youtube.com/watch?v=tWDGEyMWv10",
+    "image": "/exercises/illustrations/wall-angels.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "decc34ac-b128-4430-9a42-6e00dd783d6e",
+    "name": "Caminhada Siri (Monster Walk)",
+    "video": "https://youtube.com/watch?v=RZ5gkPO2oyw",
+    "image": "/exercises/illustrations/caminhada-siri-miniband.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "1b962d72-4ad0-4bef-8e4e-dd6da6b73ace",
+    "name": "Mobilidade de Escápula (Scapular Pull-ups)",
+    "video": "https://www.youtube.com/watch?v=A3F1FfT1XpE",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/retracao-escapular.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "21b1c493-8ea8-4b6c-9880-23b69323384c",
+    "name": "Mobilidade de Ombro (Wall Angels)",
+    "video": "https://www.youtube.com/watch?v=GVvEt79dsBk",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/wall-angels.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "6c6b60cb-347b-4317-8e49-449f9cea9d2b",
+    "name": "Corner Stretch (Alongamento no Canto)",
+    "video": "https://www.youtube.com/watch?v=CefFedA3g-m",
+    "image": "/exercises/illustrations/corner-stretch-alongamento-no-canto.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "7606d4bf-4cff-40e2-8cbc-38d7f2b3ada3",
+    "name": "Exercício 1778093655027 EDIT",
+    "video": "https://youtube.com/watch?v=BxZcAmlo1uU",
+    "image": "/images/exercises/placeholder_alongamento.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "89331bed-2687-4996-95db-7a77aee847d5",
+    "name": "Ponte Unilateral",
+    "video": "https://youtube.com/watch?v=rVduR4q3mnE",
+    "image": "/exercises/illustrations/ponte-unipodal.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "776d0824-089c-4331-903b-0fb1f27597c4",
+    "name": "Agachamento RNT",
+    "video": "https://youtube.com/watch?v=Xjqou9b2FMA",
+    "image": "/exercises/illustrations/rnt-squat.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "dae5c538-3ef4-407d-8f14-2ac955c4649d",
+    "name": "Equilíbrio no BOSU",
+    "video": "https://youtube.com/watch?v=K09YoDnn3c4",
+    "image": "/exercises/illustrations/equilibrio-bosu.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "fdf59301-981f-4f37-be5d-91e6ab969eb6",
+    "name": "Eletroestimulação (TENS/EENM)",
+    "video": "https://youtube.com/watch?v=eypnA9Xm9EI",
+    "image": "/exercises/illustrations/estabilizacao-olhar-vor.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "c8392015-d666-4626-a562-7e9de6474c95",
+    "name": "Coordenação Digital (Dedos)",
+    "video": "https://www.youtube.com/watch?v=OdrLrV8Gdlw",
+    "image": "/exercises/illustrations/coordenacao-digital-dedos.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "7f5b205d-9f33-4341-9178-bdff6be5a9cd",
+    "name": "Ativação Escapular (YTW / ITWY)",
+    "video": "https://www.youtube.com/watch?v=sOJndB-OznA",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/retracao-escapular.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "052d06cc-dc9e-4fa9-be83-cc71bb069c7f",
+    "name": "Abdominal Bicicleta",
+    "video": "https://youtube.com/watch?v=apmprS8H1MY",
+    "image": "/exercises/illustrations/abdominal-bicicleta.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "876b6902-53ce-4843-918d-558a50c6ca9f",
+    "name": "McKenzie - Extensão Lombar deitado",
+    "video": "https://youtube.com/watch?v=Ji3o1Plmjpw",
+    "image": "/exercises/illustrations/mckenzie-extensao-lombar-deitado.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "a785ad97-7daa-4d93-a6b6-e541fb9536a9",
+    "name": "Deslizamento na Parede",
+    "video": "https://youtube.com/watch?v=GVHu5syB-gY",
+    "image": "/exercises/illustrations/wall-angels.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "b5dd7f24-4e3c-4b65-9f9c-047fd43b3737",
+    "name": "Alongamento de Glúteo (Figura 4) Deitado",
+    "video": "https://youtube.com/watch?v=IVyMV-O4BwM",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-de-gluteo-supino.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e90ef9cc-b8b9-4ebe-9afa-d32956df8afc",
+    "name": "Mobilidade de Quadril em Quatro Apoios (Balanço)",
+    "video": "https://www.youtube.com/watch?v=GImwCsuBLyo",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/cat-camel.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "092ddd12-0558-4b87-99a0-c073603eb1e5",
+    "name": "Caminhada na Ponta dos Pés",
+    "video": "https://www.youtube.com/watch?v=K83sGJb6iw4",
+    "image": "/exercises/illustrations/equilibrio-na-ponta-dos-pes.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e618ac87-5ae5-42c4-8b02-9867b6c82199",
+    "name": "Alongamento Subescapular",
+    "video": "https://youtube.com/watch?v=Xnmhk5sYABA",
+    "image": "/exercises/illustrations/alongamento-subescapular.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "8dd30660-1907-42ec-9a5b-1548e4437839",
+    "name": "Treino de Marcha na Barra Paralela",
+    "video": "https://youtube.com/watch?v=iwefbdeMydA",
+    "image": "/exercises/illustrations/marcha-paralela.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f9fac326-631d-4e1f-bbad-6927e550dd42",
+    "name": "Rotação de Tronco",
+    "video": "https://youtube.com/watch?v=zVfrEmjNJLQ",
+    "image": "/exercises/illustrations/mobilidade-coluna-sentado.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "ab7fa768-9f2b-4171-96e4-8db1bce61c87",
+    "name": "L-Sit (Sustentação em L)",
+    "video": "https://www.youtube.com/watch?v=NejWhapZ9NY",
+    "image": "/exercises/illustrations/prancha-abdominal.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "4bcd540f-67d4-4c4b-95d8-a44467da53cf",
+    "name": "Respiração Diafragmática",
+    "video": "https://youtube.com/watch?v=9jpchJcKivk",
+    "image": "/exercises/illustrations/respiracao-diafragmatica.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "323149ca-b32d-4e3d-a144-4fe8a5cf3c18",
+    "name": "Flexão de Cotovelo (Bicep Curl)",
+    "video": "https://www.youtube.com/watch?v=8dP1h64X40Y",
+    "image": "/exercises/illustrations/bicep-curl-martelo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f81327c9-a0a0-4bb1-8a75-31659c051516",
+    "name": "Mobilidade de Ombro",
+    "video": "https://www.youtube.com/watch?v=QPjIbr_sSCk",
+    "image": "/exercises/illustrations/mobilidade-ombro.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "12f79b82-471b-460a-bc3a-452ce974de2a",
+    "name": "Fortalecimento de Intrínsecos do Pé (Toalha)",
+    "video": "https://youtube.com/watch?v=PR18M5j_b88",
+    "image": "/exercises/illustrations/fortalecimento-intrinsecos-pe.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "9723383b-ccdc-4815-a219-8e42d0c87944",
+    "name": "Mobilização de Nervo Ulnar",
+    "video": "https://www.youtube.com/watch?v=wC_dAf-EJyA",
+    "image": "/exercises/illustrations/deslizamento-nervo-mediano.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "13918b7b-c13f-462f-99f2-b6e17c15ee52",
+    "name": "Supino com halter",
+    "video": "https://youtube.com/watch?v=YiP-Zhk5YMk",
+    "image": "/exercises/illustrations/supino-halter.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "a70e4ed5-3724-4f31-83fa-4b7137d53652",
+    "name": "Alongamento de Flexão Lombar (Posição da Criança)",
+    "video": "https://youtube.com/watch?v=00dOJeGMdb4",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/postura-crianca.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f3d6370e-8a90-49cb-840c-287997c35978",
+    "name": "Elevação Pélvica (Ponte)",
+    "video": "https://youtube.com/watch?v=Q_Bpj91Yiis",
+    "image": "/exercises/illustrations/elevacao-pelvica.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "2b9dae47-4a0a-44ca-8d9b-190b5a257234",
+    "name": "Extensão de Dedos",
+    "video": "https://youtube.com/watch?v=40e6sZhONc8",
+    "image": "/exercises/illustrations/extensao-dedos-elastico.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "7409c4c6-adf4-47fb-b2b7-d6c36ff51855",
+    "name": "Quatro Apoios",
+    "video": "https://youtube.com/watch?v=2eh14nuNmSg",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/4-apoios-four-point-kneeling.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "814e398e-8302-4007-9bbb-bc35459db703",
+    "name": "Alongamento de Tensor da Fáscia Lata",
+    "video": "https://youtube.com/watch?v=3LjoPNJfmz8",
+    "image": "/exercises/illustrations/alongamento-tensor-fascia-lata.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "58aa2fad-33df-40d5-a322-76aadb4629b1",
+    "name": "Caminhada Tandem",
+    "video": "https://youtube.com/watch?v=ra7tzlPxnsQ",
+    "image": "/exercises/illustrations/marcha_tandem.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "d7feba14-d7dd-416f-862e-69b604d371d5",
+    "name": "Alongamento 90-90",
+    "video": "https://www.youtube.com/watch?v=HX0c-U6Z4hw",
+    "image": "/exercises/illustrations/alongamento-90-90.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "8ec340fb-073f-4ddb-9a34-bbc3ce276b65",
+    "name": "Alongamento de Adutores",
+    "video": "https://youtube.com/watch?v=ug4cJ6TLius",
+    "image": "/exercises/illustrations/alongamento-de-adutores.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "30db256e-c096-4b8f-9e13-bf406fba961a",
+    "name": "Mobilização de Tornozelo",
+    "video": "https://www.youtube.com/watch?v=eJOwsFeLdik",
+    "image": "/exercises/illustrations/mobilidade-tornozelo-parede.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "473e742f-815e-4e09-a394-b346ccbdf42b",
+    "name": "Manobra de Epley",
+    "video": "https://youtube.com/watch?v=Q5xCwQwmY74",
+    "image": "/exercises/illustrations/manobra-epley.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "bd6ff409-550f-48ab-8ef3-c992b1e86cb3",
+    "name": "Alongamento de Escalenos e ECOM (Pescoço)",
+    "video": "https://youtube.com/watch?v=vph1t0WCYhU",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-de-pescoco-trapezio-superior.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "56b512a2-f095-4c5f-94db-c7a31ecb9e18",
+    "name": "Afundo Lateral",
+    "video": "https://www.youtube.com/watch?v=R6RDbi_GjjE",
+    "image": "/exercises/illustrations/afundo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "44f17d93-fc49-4090-8d75-eaeb6e0b6b6d",
+    "name": "Espirometria Incentivada",
+    "video": "https://www.youtube.com/watch?v=PLji1XJ0Z-E",
+    "image": "/exercises/illustrations/respiracao-diafragmatica.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f3d3f0f4-0366-42a4-9d6d-ce72d13f0fdb",
+    "name": "Afundo Reverso",
+    "video": "https://www.youtube.com/watch?v=mUvbDSFffE4",
+    "image": "/exercises/illustrations/afundo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "a2129d7d-6679-443b-ac47-5e2063309f36",
+    "name": "Sentar e Levantar (5x STS)",
+    "video": "https://youtube.com/watch?v=tIpa1dnMGeI",
+    "image": "/exercises/illustrations/sentar-levantar.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "1d2f63c8-a5b4-4e18-9aee-ec9848a5e017",
+    "name": "Agachamento",
+    "video": "https://youtube.com/watch?v=mMvNLg3G9TU",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/agachamento-livre.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "35e0255b-923e-45b4-bef0-8c44eafbad80",
+    "name": "Stiff com Barra",
+    "video": "https://youtube.com/watch?v=UwiHEZrJJn0",
+    "image": "/exercises/illustrations/stiff-deadlift.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "d0c61d3a-873d-47a6-a334-b5edd603b31d",
+    "name": "Agachamento Pistol",
+    "video": "https://youtube.com/watch?v=hH6IyNI1XYw",
+    "image": "/exercises/illustrations/agachamento-pistol.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "2977395c-8997-4a1c-a7a9-d188de10a2a7",
+    "name": "Auto-correção 3D (Escoliose)",
+    "video": "https://youtube.com/watch?v=BRMmsJ6yNoU",
+    "image": "/exercises/illustrations/autocorrecao-3d.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "bf4208a8-e581-42a2-8ada-8c58cf610e70",
+    "name": "Oposição de Dedos",
+    "video": "https://www.youtube.com/watch?v=EW_XtXkD0Yy",
+    "image": "/exercises/illustrations/coordenacao-digital-dedos.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "f6dc95d4-dc8d-4169-b717-f9bfd1ba62cc",
+    "name": "Deslizamento de Calcanhar",
+    "video": "https://www.youtube.com/watch?v=6-anByqnKp8",
+    "image": "/exercises/illustrations/deslizamento-calcanhar.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f87d9c7a-9b35-4235-b7a0-59ef2d3f0f20",
+    "name": "Star Excursion Balance Test (SEBT)",
+    "video": "https://www.youtube.com/watch?v=4GMzE7NV3W0",
+    "image": "/exercises/illustrations/sebt.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "a8ca9005-3da7-465a-9e91-2825e700528e",
+    "name": "Mobilidade de Quadril (Postura do Pombo)",
+    "video": "https://www.youtube.com/watch?v=oS6d15uwyRg",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-piriforme.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "3974836c-03ed-49a0-9aef-10e02c51621f",
+    "name": "Agachamento Búlgaro",
+    "video": "https://www.youtube.com/watch?v=luFZWNBUMRc",
+    "image": "/exercises/illustrations/agachamento-bulgaro.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "c5e626d6-48c5-46be-bd29-0e0a800bbbd9",
+    "name": "Passos Laterais com Faixa",
+    "video": "https://www.youtube.com/watch?v=xGcGvoaq854",
+    "image": "/exercises/illustrations/passos_laterais.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "635f10ba-c1db-46fb-a6ef-63e56275a6ab",
+    "name": "Mobilidade de Quadril Ajoelhado",
+    "video": "https://www.youtube.com/watch?v=gqoPYLUgP48",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-de-psoas-iliaco.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e5b40a4b-ee8b-483f-b45f-40a23a769a4b",
+    "name": "Alcance em Y (Y-Balance Practice)",
+    "video": "https://www.youtube.com/watch?v=i4k2pa53a20",
+    "image": "/exercises/illustrations/alcance-em-y-y-balance-practice.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "524dca2d-cf76-4bbe-b68e-745859dc402d",
+    "name": "Prancha na Parede",
+    "video": "https://www.youtube.com/watch?v=Hp-k0crifnI",
+    "image": "/exercises/illustrations/agachamento-isometrico.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "00bd4bee-f76e-4787-b5c0-d2de83f91098",
+    "name": "Exercício Pêndulo de Codman",
+    "video": "https://youtube.com/watch?v=xmrJPPs80XA",
+    "image": "/exercises/illustrations/pendulo-codman.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "905ea803-57e0-43b7-b1bb-d624d1654ba8",
+    "name": "Mobilidade de Quadril (Postura do Sapo)",
+    "video": "https://www.youtube.com/watch?v=P9np6qXl3Ko",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-de-adutores.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "533a69d8-7fb5-44a5-a51d-721fba253192",
+    "name": "Pronação e Supinação de Punho",
+    "video": "https://www.youtube.com/watch?v=bkv6W9fkxsQ",
+    "image": "/exercises/illustrations/desvio-radial-de-punho.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "8ceed7b2-ac72-43d5-8d29-47c81e234897",
+    "name": "Hip Thrust",
+    "video": "https://youtube.com/watch?v=uDicPfk8k2o",
+    "image": "/exercises/illustrations/elevacao-pelvica.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "61dcaaf9-92ed-4224-b242-d2406a00e8ea",
+    "name": "Agachamento Goblet",
+    "video": "https://www.youtube.com/watch?v=ge1vdJRP0UA",
+    "image": "/exercises/illustrations/agachamento-goblet.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "0513186d-aaca-4001-8047-2e9cbed2f213",
+    "name": "Propriocepção em Disco",
+    "video": "https://www.youtube.com/watch?v=GLLRLrS48UA",
+    "image": "/exercises/illustrations/equilibrio-em-disco-instavel.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "9285358c-8172-4389-af39-4ca0f67f1a96",
+    "name": "Pular Corda Imaginária",
+    "video": "https://www.youtube.com/watch?v=-q2_qGMp8Us",
+    "image": "/exercises/illustrations/box-jump.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f57ceaf7-b527-4b2c-b74f-f6a1411e2aa4",
+    "name": "Isometria de Inversão de Tornozelo",
+    "video": "https://youtube.com/watch?v=lmbYoHO_IIc",
+    "image": "/exercises/illustrations/ankle-inversion-isometric.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "620fc8d3-0d28-4499-9102-6a9a3e86d5d9",
+    "name": "Elevação de Calcanhar Sentado",
+    "video": "https://www.youtube.com/watch?v=Gp7NCnTKbzj",
+    "image": "/exercises/illustrations/calf-raise-seated.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "4a6df43b-1f15-4acf-bd2c-b54b87866d95",
+    "name": "Alongamento de Quadríceps em Pé",
+    "video": "https://youtube.com/watch?v=cwOQ1ogzCAA",
+    "image": "/exercises/illustrations/alongamento-quadriceps.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "d68483d3-04e4-4f34-8e41-1a37635a141a",
+    "name": "Alongamento de Bíceps na Parede",
+    "video": "https://www.youtube.com/watch?v=G30Hk9EoYhk",
+    "image": "/exercises/illustrations/alongamento-de-biceps-na-parede.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "56affb3b-2980-4abb-8657-bc48d379bae5",
+    "name": "Mobilidade de Quadril 90/90",
+    "video": "https://www.youtube.com/watch?v=qq_Z7sAmVrA",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-90-90.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "7d5a4d7d-9386-450e-91f7-5bfe6e70e12e",
+    "name": "Push-up Plus",
+    "video": "https://www.youtube.com/watch?v=I2MM3UBAlU4",
+    "image": "/exercises/illustrations/retracao-escapular.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "cb43252c-aa17-4eca-ae58-93120b7550c5",
+    "name": "Liberação Miofascial Manual",
+    "video": "https://youtube.com/watch?v=tv7M2jgbyiw",
+    "image": "/exercises/illustrations/liberacao-foam-roller.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "81f95733-aa81-4bde-8c4a-25adc832dcbb",
+    "name": "RDL (Romanian Deadlift)",
+    "video": "https://www.youtube.com/watch?v=5zmlnbWb-g4",
+    "image": "/exercises/illustrations/deadlift_dumbbells.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "65294274-2f04-4df3-be5e-fe426b1cc950",
+    "name": "Elevação de Pernas",
+    "video": "https://www.youtube.com/watch?v=nPmIwKvB3kI",
+    "image": "/exercises/illustrations/elevacao-pernas.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "cc193885-c225-4308-961d-6344ba96bcd9",
+    "name": "Deslizamento de Tendões (Tendon Glides)",
+    "video": "https://www.youtube.com/watch?v=QG7mKnd6Lac",
+    "image": "/exercises/illustrations/deslizamento-de-tendoes-tendon-glides.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "2e57d2da-071a-4c73-889a-faa456447738",
+    "name": "Deslocamento Lateral (Shuffle)",
+    "video": "https://www.youtube.com/watch?v=Hk9Zp6UX3Kp",
+    "image": "/exercises/illustrations/deslocamento-lateral-shuffle.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "a69f1946-6f77-4840-a737-6eb4089e3c60",
+    "name": "Relaxamento Progressivo de Jacobson",
+    "video": "https://www.youtube.com/watch?v=qEC51in5Yfg",
+    "image": "/exercises/illustrations/respiracao-diafragmatica.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "df77fa5b-306e-4053-91d2-a60cc0017411",
+    "name": "Alongamento de Psoas (Ilíaco)",
+    "video": "https://www.youtube.com/watch?v=3ea8_FdpX2o",
+    "image": "/exercises/illustrations/alongamento-de-psoas-iliaco.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "b1e3e328-210c-42e0-9f1b-9d538cdd4a51",
+    "name": "Alongamento de Antebraço (Flexores)",
+    "video": "https://youtube.com/watch?v=tv7M2jgbyiw",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/alongamento-de-antebraco-extensores.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "54a5abf8-892a-4ee7-a1ba-860b956e7eb7",
+    "name": "Remada Curvada (Barbell Row)",
+    "video": "https://www.youtube.com/watch?v=eeZ59A0qmtk",
+    "image": "/exercises/illustrations/retracao-escapular.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "6937b976-3559-47d7-849d-7e022d483897",
+    "name": "CARs de Quadril",
+    "video": "https://youtube.com/watch?v=bfCfspZgiKU",
+    "image": "/exercises/illustrations/hip-cars.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "0aa7be71-0f0b-486b-b6e9-495ea5a641d0",
+    "name": "Y-Balance",
+    "video": "https://youtube.com/watch?v=lFNC1gq-ysk",
+    "image": "/exercises/illustrations/y-balance-test.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "c06aef41-c29f-44d3-b06b-21c24ebdcd71",
+    "name": "Extensão de Quadril",
+    "video": "https://youtube.com/watch?v=bfCfspZgiKU",
+    "image": "/exercises/illustrations/extensao-quadril-quatro-apoios.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "ddb808f5-5ab5-49ca-bfe4-31f7e641582e",
+    "name": "Respiração 4-7-8",
+    "video": "https://www.youtube.com/watch?v=PC2gtWs6hsw",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/respiracao-diafragmatica.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "9c173ab4-8a11-462d-a076-57b2056a60d2",
+    "name": "Abdominal Crunch",
+    "video": "https://youtube.com/watch?v=Ke9al-Aliyc",
+    "image": "/exercises/illustrations/abdominal-crunch.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "800366f0-aade-4b48-8cba-f6106dbb7edb",
+    "name": "Mobilidade Torácica (Open Book)",
+    "video": "https://www.youtube.com/watch?v=R9Z2pU7o2wQ",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/mobilidade-toracica-open-book.png",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "7e20d7ff-13ee-45ec-9f2a-1cf1ac37b3d8",
+    "name": "CARs de Ombro",
+    "video": "https://youtube.com/watch?v=hZPbQZUqjKA",
+    "image": "/exercises/illustrations/shoulder-cars.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f9b5eb0c-34f0-47ae-a5a4-c0f723a86cea",
+    "name": "Respiração com Labios Franzidos (Pursed Lip)",
+    "video": "https://www.youtube.com/watch?v=2cGWi2Td8eg",
+    "image": "/exercises/illustrations/respiracao-labial-franzida.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "5fe5c76e-0afc-4ad8-9174-1e89c7fe83c6",
+    "name": "Subida de Degrau Assistida",
+    "video": "https://youtube.com/watch?v=usMYxVc50eg",
+    "image": "/exercises/illustrations/subida-degrau-assistida.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "69f345ad-dfbe-42e7-b476-fae3c48b12e6",
+    "name": "Desvio Radial",
+    "video": "https://www.youtube.com/watch?v=pgZVjtTOfDV",
+    "image": "/exercises/illustrations/radial-deviation-wrist.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "ba6ce50d-fb5c-4c7c-bd0f-00aa21b04f3a",
+    "name": "Alongamento de Tríceps Sentado",
+    "video": "https://www.youtube.com/watch?v=m8ZEOpPRXO8",
+    "image": "/exercises/illustrations/alongamento-triceps-sentado.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "deb0e132-ca96-4169-a90b-97245b521dcb",
+    "name": "Alongamento de Pescoço (Trapézio Superior)",
+    "video": "https://youtube.com/watch?v=1J_uEUt0EWg",
+    "image": "/exercises/illustrations/alongamento-de-pescoco-trapezio-superior.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "3c4d7459-4c2e-4f9a-91f0-8b55a5096cbd",
+    "name": "Alongamento Torácico (Child Pose com Rotação)",
+    "video": "https://youtube.com/watch?v=PJcSH6Fp2yw",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/postura-crianca.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "b3604eb2-fe5f-4f50-a0a3-ee258b8b24c1",
+    "name": "Elevação Lateral",
+    "video": "https://www.youtube.com/watch?v=n9PrIOKUebo",
+    "image": "/exercises/illustrations/elevacao-lateral-de-ombro-0-90.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "ed0d2a9e-281f-41fd-b314-29dd5d6b18b2",
+    "name": "Rolling com Foam Roller",
+    "video": "https://www.youtube.com/watch?v=Hu-rVZVSzxs",
+    "image": "/exercises/illustrations/mckenzie-extensao-lombar-deitado.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "23fb8e81-b882-46f7-b923-db6cab7ae954",
+    "name": "Rotação de Ombro com Toalha",
+    "video": "https://www.youtube.com/watch?v=omeww85Mhkw",
+    "image": "/exercises/illustrations/mobilizacao-ombro-bastao.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "15068005-3448-4b29-aa5e-7a596d7929df",
+    "name": "Saltos Laterais (Skater Hops)",
+    "video": "https://www.youtube.com/watch?v=9_jLW6VkU8A",
+    "image": "/exercises/illustrations/alongamento-de-psoas-lunge-stretch.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "08983634-dacc-41ab-b85d-604f5ad53c49",
+    "name": "Mobilização de Quadril",
+    "video": "https://www.youtube.com/watch?v=JSA-6h66cYY",
+    "image": "/exercises/illustrations/mobilizacao-quadril-capsular.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "8b8d9f96-5f3a-4866-9649-ce1cdbb659fa",
+    "name": "Rotação Interna de Ombro",
+    "video": "https://www.youtube.com/watch?v=GOajkbXkuak",
+    "image": "/exercises/illustrations/rotacao-interna-ombro.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "fe6c6829-7d1b-4fa6-adac-41c06d2e1828",
+    "name": "Rotação de Quadril em Prancha (Spiderman Lunge)",
+    "video": "https://www.youtube.com/watch?v=Fj-o_H2Hqic",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/worlds-greatest-stretch.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "8537341a-aebe-4754-9990-03a74f215470",
+    "name": "Fortalecimento de Preensão",
+    "video": "https://www.youtube.com/watch?v=6jKb78nSU6Y",
+    "image": "/exercises/illustrations/fortalecimento-preensao-bolinha.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "9da8f08b-1db1-49fd-980f-8f8c2a923989",
+    "name": "Rowing com Faixa Elástica",
+    "video": "https://www.youtube.com/watch?v=1wQGAbIkdXo",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/retracao-escapular.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "794029e9-4902-47db-b7e9-7f547467a026",
+    "name": "Step-Up",
+    "video": "https://www.youtube.com/watch?v=wfhXnLILqdk",
+    "image": "/exercises/illustrations/step-up-frontal.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "a8f63480-07c2-402e-af0f-77011fd9f6bf",
+    "name": "Deslizamento de Nervo Ulnar",
+    "video": "https://www.youtube.com/watch?v=8M9r5woO2qY",
+    "image": "/exercises/illustrations/deslizamento-nervo-ulnar.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "1aad542e-26ee-4758-8a97-450e4db0d3fa",
+    "name": "Flexão de Joelho em Pronação",
+    "video": "https://www.youtube.com/watch?v=4cDAR84kEPw",
+    "image": "/exercises/illustrations/flexao-joelho-pronacao.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "018e4acd-7a86-4b81-9870-d6363cb1508a",
+    "name": "Mobilidade de Tornozelo com Band Elástico",
+    "video": "https://www.youtube.com/watch?v=L58X1j17uoo",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/tke-thera-band.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "22f56dfc-0802-4828-b5ce-bcb1ec61c87a",
+    "name": "SLR com Dorsiflexão Automática",
+    "video": "https://www.youtube.com/watch?v=LdAD9GNv8FI",
+    "image": "/exercises/illustrations/elevacao-perna-reta.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "7e2cb83e-3c78-4d8f-941f-e4745add4760",
+    "name": "Elevação de Calcanhares (Heel Raises)",
+    "video": "https://youtube.com/watch?v=dV4Yjv-gsyY",
+    "image": "/exercises/illustrations/elevacao-calcanhares.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "d4b97071-7425-44b3-b6d9-920a0612201c",
+    "name": "Mobilidade de Escápula (Scapular Push-ups)",
+    "video": "https://www.youtube.com/watch?v=A3F1FfT1XpE",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/retracao-escapular.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "5b7e7fd5-71d0-49ab-ad9e-557cddb96124",
+    "name": "Caminhada do Urso (Bear Crawl - Mobilidade Global)",
+    "video": "https://www.youtube.com/watch?v=peM2kH-sV74",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/caminhada-com-as-maos-inchworm.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "92ad0a60-abd6-4969-a605-a481717c203f",
+    "name": "Mobilidade de Ombros (Circundução de Braços)",
+    "video": "https://www.youtube.com/watch?v=_BGfFD8UI8o",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/shoulder-cars.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e5509f20-f73f-4496-bafc-8bc207a1f44a",
+    "name": "Stiff Unipodal com Equilíbrio",
+    "video": "https://youtube.com/watch?v=GLLRLrS48UA",
+    "image": "/exercises/illustrations/single-leg-deadlift.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "61ab52c6-cdf5-406b-b940-d7dbbfcecc05",
+    "name": "Mobilidade de Tornozelo",
+    "video": "https://www.youtube.com/watch?v=CREaubVbw0I",
+    "image": "/exercises/illustrations/mobilidade-tornozelo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "3684e44a-e99b-43a5-808d-ab422a1dc288",
+    "name": "Salto Horizontal Unipodal",
+    "video": "https://www.youtube.com/watch?v=3iGudwNA2pA",
+    "image": "/exercises/illustrations/avanco-com-salto.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "fc65fe36-79d2-4af3-8185-751e335b920d",
+    "name": "Carregamento Lateral",
+    "video": "https://www.youtube.com/watch?v=hJf0QkdnD6k",
+    "image": "/exercises/illustrations/carregamento-lateral.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "89fe1888-aa91-4dbb-9372-64b702e67aa0",
+    "name": "Pallof Press",
+    "video": "https://www.youtube.com/watch?v=_2xWmYNnFS8",
+    "image": "/exercises/illustrations/pallof-press.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "2da02ebe-d89c-46ba-bdcc-1453c30a89a4",
+    "name": "Salto Unilateral na Caixa",
+    "video": "https://www.youtube.com/watch?v=LDU_yVvp7pA",
+    "image": "/exercises/illustrations/box-jump.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "5b42e888-789f-43e5-8145-5d41b325acc6",
+    "name": "Box Jump",
+    "video": "https://www.youtube.com/watch?v=kNIInK_Le8I",
+    "image": "/exercises/illustrations/box-jump.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "cca990c1-edd3-4bbd-a8d9-0f7a7c717c84",
+    "name": "Mobilidade Torácica com Foam Roller",
+    "video": "https://youtube.com/watch?v=81kPLsMt6wY",
+    "image": "https://media.moocafisio.com.br/exercises/illustrations/liberacao-foam-roller.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "6bc8caa0-645b-469e-b7e8-4aa18d336761",
+    "name": "Burpee Modificado",
+    "video": "https://www.youtube.com/watch?v=OC8SuAknPJ4",
+    "image": "/exercises/illustrations/burpee-modificado.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "a333405d-3745-47fd-89e6-f80e1553526d",
+    "name": "Scorpion Stretch",
+    "video": "https://www.youtube.com/watch?v=fEonF-SVkdk",
+    "image": "/exercises/illustrations/alongamento-de-piriforme-4-supino.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "158c531f-3285-4a29-913e-a486e1b48350",
+    "name": "Chin Tuck com Elevação (Head Lift)",
+    "video": "https://www.youtube.com/watch?v=R3n0R-9pY34",
+    "image": "/exercises/illustrations/chin-tuck-com-elevacao-head-lift.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "0d47fc21-637f-484d-bea6-9e8fe7ba4a5e",
+    "name": "Chin Tucks",
+    "video": "https://www.youtube.com/watch?v=1v9e8PdmqEI",
+    "image": "/exercises/illustrations/chin-tucks.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "dcf3b879-b4c9-4f30-bf44-d66b14930d99",
+    "name": "Heel Flicks (Calcanhar no Glúteo)",
+    "video": "https://www.youtube.com/watch?v=VENG1fXDjs4",
+    "image": "/exercises/illustrations/marcha-paralela.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "c5da19e8-e549-4bdd-8e82-5a87b7759c4f",
+    "name": "Descida de Escada",
+    "video": "https://www.youtube.com/watch?v=mvT_RiWBykM",
+    "image": "/exercises/illustrations/descida-de-escada.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "bd5e03da-5d41-4404-96db-5c056c13ecdb",
+    "name": "Snatch com TheraBand",
+    "video": "https://youtube.com/watch?v=QP_eDUiR7b4",
+    "image": "/exercises/illustrations/snatch-theraband.png",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "bd0eb7cb-7c6e-4978-8586-1a2872cf40aa",
+    "name": "Single Leg Stance com Movimento de Braço",
+    "video": "https://www.youtube.com/watch?v=MfJdMLouRLc",
+    "image": "/exercises/illustrations/apoio-unipodal.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "dd153c41-4535-4966-ac0a-7f457e90b0ab",
+    "name": "Ankle Pumps (Bombinha)",
+    "video": "https://youtube.com/watch?v=KxfFzSOAT7g",
+    "image": "/exercises/illustrations/ankle-pumps.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "205ef2f5-83b5-41c0-932b-d6e8b8a53f29",
+    "name": "Squat Jump",
+    "video": "https://www.youtube.com/watch?v=XOTO2qWRy9U",
+    "image": "/exercises/illustrations/jump-squat.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "d793fc85-be13-4267-b5fd-2defd5218a57",
+    "name": "Contrações de Kegel",
+    "video": "https://youtube.com/watch?v=5l4XmEQfXnI",
+    "image": "/exercises/illustrations/contracoes-kegel.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "9e20767b-ba39-4407-9c90-3a348ba150c5",
+    "name": "Squeeze de Bola (Espalmar)",
+    "video": "https://www.youtube.com/watch?v=nuMxlv2i8Aw",
+    "image": "/exercises/illustrations/fortalecimento-preensao-bolinha.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "34dd0feb-bc0a-4280-bf20-1f241ae2ce75",
+    "name": "Boxe de Sombra (Shadow Boxing)",
+    "video": "https://www.youtube.com/watch?v=j7xR8HB3M7c",
+    "image": "/exercises/illustrations/boxe-de-sombra-shadow-boxing.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "69e13938-c3ff-4e2f-8d8a-0b08ded75c17",
+    "name": "Extensão de Tríceps",
+    "video": "https://youtube.com/watch?v=Vf3zBwDqxA8",
+    "image": "/exercises/illustrations/extensao-de-cotovelo-com-garrafa.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "b29e7660-c7f2-411c-8312-61bea3cc3c48",
+    "name": "Exercício Pendular de Codman",
+    "video": "https://youtube.com/watch?v=s1EBZ8CHAaY",
+    "image": "/exercises/illustrations/codman-pendular.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "bf106c3d-7d51-413c-a7e7-c8d77c018949",
+    "name": "Mobilidade do Hálux",
+    "video": "https://www.youtube.com/watch?v=a_hmiePqFAQ",
+    "image": "/exercises/illustrations/fortalecimento-intrinsecos-pe.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "25814c99-f438-48f3-84ed-8cb49d2fbbc9",
+    "name": "Gato-Camelo",
+    "video": "https://www.youtube.com/watch?v=YuzoxlVanHw",
+    "image": "/exercises/illustrations/cat-cow-gato-camelo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "bbfab6d3-4108-44b1-867a-4bf8d3e17514",
+    "name": "Torção de Toalha (Grip)",
+    "video": "https://www.youtube.com/watch?v=dBbyipEKA5s",
+    "image": "/exercises/illustrations/towel-wring-grip.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "d513c74d-5adf-4ae2-872b-5a80d26f5a00",
+    "name": "Deadlift (Levantamento Terra) com Halteres",
+    "video": "https://www.youtube.com/watch?v=zH1QFLtuep0",
+    "image": "/exercises/illustrations/deadlift_dumbbells.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "579602db-606f-4c82-812d-a623131f24ff",
+    "name": "Agachamento na Parede",
+    "video": "https://youtube.com/watch?v=sHxPFpaB6W4",
+    "image": "/exercises/illustrations/agachamento-parede.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "0d194359-daa9-4579-b24d-b31d0b7e0312",
+    "name": "Clock Reach (Alcance do Relógio)",
+    "video": "https://www.youtube.com/watch?v=DTOKhh2D1eI",
+    "image": "/exercises/illustrations/clock-reach.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e7f22737-a2f6-4f85-946f-b5d16339bc46",
+    "name": "Stiff Unilateral",
+    "video": "https://www.youtube.com/watch?v=fyY91sSpNkI",
+    "image": "/exercises/illustrations/deadlift_dumbbells.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e57a3517-b93f-4dfc-9a36-7155521d1d0e",
+    "name": "Stretching Global Ativo",
+    "video": "https://www.youtube.com/watch?v=glBs1fsyhdo",
+    "image": "/exercises/illustrations/respiracao-diafragmatica.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "7cad6665-244c-4cd3-99c1-0b4025614503",
+    "name": "Spanish Squat (Agachamento Espanhol)",
+    "video": "https://youtube.com/watch?v=mik90mAS6fU",
+    "image": "/exercises/illustrations/spanish-squat.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f9e420fc-7da5-479c-a850-beedeca1c86b",
+    "name": "Equilíbrio em Tandem",
+    "video": "https://www.youtube.com/watch?v=49t1s5pAcbc",
+    "image": "/exercises/illustrations/equilibrio-em-tandem.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e7f16c0f-7597-42b1-acfd-cce87575fd23",
+    "name": "Subida de Escada",
+    "video": "https://www.youtube.com/watch?v=KK7YWYBG5q4",
+    "image": "/exercises/illustrations/step-up-frontal.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "230ba5be-9b9b-4e33-989c-33175b477d37",
+    "name": "Wall Angels (Anjos na Parede)",
+    "video": "https://www.youtube.com/watch?v=c9hHcb5tk9E",
+    "image": "/exercises/illustrations/wall-angels.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "30d75609-e612-4cb8-a9f8-018e6156a2db",
+    "name": "Tandem Walk (Caminhada em Tandem)",
+    "video": "https://www.youtube.com/watch?v=MuueTXaBJ3k",
+    "image": "/exercises/illustrations/marcha_tandem.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "868bd11e-5352-4eca-882d-bf1faf4cee0c",
+    "name": "V-Up (Abdominal Canivete)",
+    "video": "https://www.youtube.com/watch?v=JIBUiDfHTS8",
+    "image": "/exercises/illustrations/canivete-v-up.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e3b2b395-8c80-4ad0-a9d1-62170cd41446",
+    "name": "Flexão de Quadril com Vassoura",
+    "video": "https://www.youtube.com/watch?v=isM9Y0S9TQY",
+    "image": "/exercises/illustrations/abducao-quadril-pe.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "81cadc1c-8ff5-4093-abd1-713f133fb4ca",
+    "name": "Marcha Supina de Quadril",
+    "video": "https://www.youtube.com/watch?v=KPB2EAs-hyE",
+    "image": "/exercises/illustrations/elevacao-perna-reta.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "5eca0c6e-41ba-4ed5-93c1-fb5ae4660db0",
+    "name": "Mergulho no Banco (Tríceps)",
+    "video": "https://www.youtube.com/watch?v=dl8_opV0A0Y",
+    "image": "/exercises/illustrations/alongamento-triceps-sentado.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "eee9e338-9f83-45b1-b27a-2280f370a73b",
+    "name": "Preensão de Toalha com os Dedos",
+    "video": "https://www.youtube.com/watch?v=rfJi7qocl2Y",
+    "image": "/exercises/illustrations/fortalecimento-intrinsecos-pe.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "3f1aba01-9a6b-4569-b152-19ec1164cdfd",
+    "name": "Depth Jump (Salto Profundo)",
+    "video": "https://www.youtube.com/watch?v=_0bIUPqIox4",
+    "image": "/exercises/illustrations/depth-jump-salto-profundo.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "54792e1d-0a12-4d3a-b70d-7edc674df6ea",
+    "name": "Tapete de Pisos Diferentes",
+    "video": "https://www.youtube.com/watch?v=olY58rwkvaQ",
+    "image": "/exercises/illustrations/tapete-propriocepcao.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "74ad1c8a-c300-419d-b6a0-4f331a98b611",
+    "name": "Perdigueiro (Bird Dog)",
+    "video": "https://www.youtube.com/watch?v=1DIjDnq7p3k",
+    "image": "/exercises/illustrations/bird-dog.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "05cc9ea0-8087-492a-8750-ecabf4d1373f",
+    "name": "BOSU Ball Squat",
+    "video": "https://www.youtube.com/watch?v=uzwYIILcgfE",
+    "image": "/exercises/illustrations/bosu-ball-squat.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f451ae26-c34c-458d-8b0c-a992a11b343e",
+    "name": "Avanço Isométrico",
+    "video": "https://youtube.com/watch?v=-5j9Li6Jn9A",
+    "image": "/exercises/illustrations/avanco-isometrico.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "50919edd-6639-44e1-851a-115a56758a96",
+    "name": "Codman Pendular",
+    "video": "https://www.youtube.com/watch?v=QF_ubbr_RUE",
+    "image": "/exercises/illustrations/codman-pendular.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "7c602d5c-bbbb-4ddb-97d0-6ebcc3ddfa20",
+    "name": "Alongamento Levantador da Escápula",
+    "video": "https://www.youtube.com/watch?v=GSoXPJRnR6E",
+    "image": "/exercises/illustrations/alongamento-de-levantador-da-escapula.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "92c07ed7-e61c-43c4-8651-08a34ca3e1fe",
+    "name": "Gait Training com Obstáculos",
+    "video": "https://www.youtube.com/watch?v=7A-zUBKCukA",
+    "image": "/exercises/illustrations/marcha-paralela.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "5ce76038-76ef-43d6-8455-60290a618ff0",
+    "name": "Alongamento de Glúteo Supino",
+    "video": "https://www.youtube.com/watch?v=byVSCnP0gmU",
+    "image": "/exercises/illustrations/alongamento-de-gluteo-supino.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "e74298ae-21c3-4e6e-83a8-354c722c9d7e",
+    "name": "Círculos de Quadril",
+    "video": "https://www.youtube.com/watch?v=Ky-vjymbfCE",
+    "image": "/exercises/illustrations/circulos-quadril.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "13194255-4faa-480f-a13c-6081fdd2a831",
+    "name": "Polichinelo Adaptado",
+    "video": "https://www.youtube.com/watch?v=SIrZwbV1v0i",
+    "image": "/exercises/illustrations/agachamento-com-soco.avif",
+    "cause": [
+      "video",
+      "image"
+    ]
+  },
+  {
+    "id": "fa8a49b7-cfcd-4a77-84ec-ec345ecd08c5",
+    "name": "Agachamento na Cadeira",
+    "video": "https://www.youtube.com/watch?v=lKqJF5XkrSY",
+    "image": "/exercises/illustrations/agachamento-na-cadeira.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "cc02bbba-113d-433f-a70c-9590b3bdbd74",
+    "name": "Cobra Prona",
+    "video": "https://www.youtube.com/watch?v=hcTILl3cVkQ",
+    "image": "/exercises/illustrations/cobra-prona.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "f31824d4-ce62-4c4a-80ea-2b248041de7d",
+    "name": "Rotação Torácica Sentado",
+    "video": "https://www.youtube.com/watch?v=pLerj04KsHw",
+    "image": "/exercises/illustrations/mobilidade-coluna-sentado.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "6e6fa606-3248-4a8f-a015-ae0026fae84a",
+    "name": "Equilíbrio em Disco Instável",
+    "video": "https://www.youtube.com/watch?v=GLLRLrS48UA",
+    "image": "/exercises/illustrations/equilibrio-em-disco-instavel.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "5638e403-b106-4451-8b98-f14c049447d2",
+    "name": "Thomas Test Stretch",
+    "video": "https://www.youtube.com/watch?v=Q0XiUq9TJ2w",
+    "image": "/exercises/illustrations/alongamento-de-psoas-lunge-stretch.avif",
+    "cause": [
+      "image"
+    ]
+  },
+  {
+    "id": "8371d239-46d5-45e4-98d4-5c350d76ba9b",
+    "name": "Clamshell (Concha)",
+    "video": "https://www.youtube.com/watch?v=39vuP5xozsI",
+    "image": "/exercises/illustrations/clamshell.avif",
+    "cause": [
+      "image"
+    ]
+  }
+]

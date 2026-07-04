@@ -16,7 +16,6 @@ import {
   Search,
   Sparkles,
   Target,
-  Video,
 } from "lucide-react";
 import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
 import { Card } from "@/components/ui/card";
@@ -43,7 +42,6 @@ const NewExerciseModal = lazy(() =>
 
 const SECTION_NAV = [
   { key: "library", label: "Biblioteca", icon: BookOpen, href: "/exercises" },
-  { key: "videos", label: "Mídias", icon: Video, href: "/exercises/videos" },
   { key: "templates", label: "Templates", icon: FileText, href: "/exercises/templates" },
   { key: "protocols", label: "Protocolos", icon: Target, href: "/exercises/protocols" },
   { key: "search-ai", label: "Busca IA", icon: Search, href: "/exercises/search-ai", badge: "IA" },

@@ -277,11 +277,111 @@ app.post("/treatment-assistant", async (c) => {
   const patientId = safeText(body.patientId);
 
   if (action !== "predict_adherence") {
+    const isReport = action === "generate_report";
+    const isTreatmentSuggestion = action === "suggest_treatment";
+    if (isReport || isTreatmentSuggestion) {
+      const prompt = `Paciente ID: ${patientId || "N/A"}
+Contexto clínico/histórico da sessão:
+${context || "Sem contexto adicional fornecido."}
+
+Tarefa:
+${
+  isReport
+    ? "Gerar um relatório clínico profissional e objetivo para evolução fisioterapêutica."
+    : "Sugerir conduta fisioterapêutica para a próxima intervenção."
+}
+
+Formato obrigatório em markdown:
+## Síntese clínica
+- 2 a 4 bullets com o entendimento do quadro.
+
+## Conduta recomendada
+- 3 a 6 ações específicas, progressivas e mensuráveis.
+
+## Critérios de monitoramento
+- sinais, testes, escalas ou medidas que devem ser acompanhados.
+
+## Cautelas
+- contraindicações, red flags ou limites da sugestão.
+
+## Próximo passo
+- uma ação prática para a próxima sessão.
+
+Regras:
+- Não invente diagnóstico, exame ou dado ausente.
+- Se o contexto for insuficiente, declare quais dados faltam e proponha uma conduta conservadora.
+- Use português brasileiro, tom clínico e direto.
+- Não substitui julgamento profissional.`;
+
+      const systemInstruction =
+        "Você é um fisioterapeuta sênior apoiando documentação e decisão clínica. Seja específico, seguro, baseado em evidências e evite respostas genéricas.";
+
+      const start = performance.now();
+      try {
+        const result = await unifiedThinking(c.env, {
+          prompt,
+          model: "gemini-3.1-pro-preview",
+          thinkingLevel: isReport ? "MEDIUM" : "HIGH",
+          systemInstruction,
+          temperature: 0.25,
+          maxOutputTokens: isReport ? 1800 : 1400,
+        });
+        const duration = performance.now() - start;
+
+        c.executionCtx.waitUntil(
+          logToAxiom(c.env, c.executionCtx, {
+            level: "info",
+            type: "ai_inference_latency",
+            message: "Treatment assistant completed",
+            metadata: {
+              action,
+              durationMs: duration,
+              model: "gemini-3.1-pro-preview",
+              contextLength: context.length,
+            },
+          }),
+        );
+
+        return c.json({ data: { suggestion: result.text } });
+      } catch (error) {
+        c.executionCtx.waitUntil(
+          logToAxiom(c.env, c.executionCtx, {
+            level: "error",
+            type: "ai_inference_error",
+            message: "Treatment assistant failed, using heuristic",
+            metadata: {
+              action,
+              error: error instanceof Error ? error.message : String(error),
+            },
+          }),
+        );
+      }
+    }
+
     const fallbackRisk = inferRiskLevel(`${patientId} ${context}`);
     const suggestion =
       action === "generate_report"
-        ? "Relatório automático: evolução clínica monitorada, manter acompanhamento e registrar resposta funcional nas próximas sessões."
-        : `Conduta sugerida (risco ${fallbackRisk}): revisar metas, ajustar progressão terapêutica e reforçar educação do paciente.`;
+        ? `## Síntese clínica
+- Evolução clínica em acompanhamento.
+- Contexto disponível limitado; revisar achados objetivos antes de concluir.
+
+## Conduta recomendada
+- Manter registro de dor, função e resposta aos exercícios.
+- Comparar medidas funcionais nas próximas sessões.
+
+## Cautelas
+- Validar achados com exame físico e evolução do paciente.`
+        : `## Síntese clínica
+- Contexto insuficiente para uma sugestão altamente específica.
+- Risco inferido: ${fallbackRisk}.
+
+## Conduta recomendada
+- Revisar metas ativas e resposta funcional.
+- Ajustar progressão terapêutica conforme dor, fadiga e tolerância.
+- Reforçar educação do paciente e plano domiciliar.
+
+## Próximo passo
+- Registrar medida objetiva ou escala funcional na próxima sessão.`;
     return c.json({ data: { suggestion } });
   }
 

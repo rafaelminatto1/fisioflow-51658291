@@ -46,6 +46,19 @@ export const aiApi = {
       method: "POST",
       body: JSON.stringify({ patientData }),
     }),
+  treatmentAssistant: (params: { patientId: string; action: string; context?: string }) =>
+    request<{
+      data: {
+        suggestion: string;
+        riskLevel?: "low" | "medium" | "high";
+        confidenceScore?: number;
+        primaryFactors?: string[];
+        nextActions?: Array<{ action: string; priority: "high" | "medium" | "low" }>;
+      };
+    }>("/api/ai/treatment-assistant", {
+      method: "POST",
+      body: JSON.stringify(params),
+    }),
   transcribe: (audioUrl: string) =>
     request<{ data: { text: string } }>("/api/ai/transcribe", {
       method: "POST",
