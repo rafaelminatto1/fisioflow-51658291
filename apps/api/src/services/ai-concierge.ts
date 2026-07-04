@@ -864,6 +864,19 @@ export class AIConciergeService {
       return { reply: "", intent: "other", answerable: false };
     }
 
+    // Pré-filtro determinístico: perguntas sobre atender público específico
+    // (crianças, gestantes, idade mínima...) são decisão do humano — o LLM
+    // alucina afirmações/negações aqui, então nem o consultamos.
+    if (
+      /\b(atendem?|tratam?|aceitam?|idade)\b/i.test(trimmed) &&
+      // sem \b no fim: \b do JS não funciona após acento ("bebê", "mínima")
+      /(crian[çc]a|gestante|gr[áa]vida|beb[êe]|adolescente|menor(es)? de idade|idade m[ií]nima|\d{1,2}\s*anos)/i.test(
+        trimmed,
+      )
+    ) {
+      return { reply: "", intent: "information", answerable: false };
+    }
+
     const settings = await loadConciergeSettings(env, orgId);
     const availabilityReply = await maybeAnswerAvailability(env, orgId, trimmed, settings);
     if (availabilityReply) return availabilityReply;
@@ -929,6 +942,17 @@ Retorne APENAS um JSON válido neste formato, sem texto fora do JSON:
       if (
         answerable &&
         /n[ãa]o (temos|tenho|h[áa]) (essa |esta |mais )?informa[çc]/i.test(reply)
+      ) {
+        answerable = false;
+      }
+
+      // Guarda contra negações inventadas ("não atendemos X", "não tratamos Y"):
+      // as únicas negações cobertas pelo KB são domingo e convênio. Qualquer
+      // outra negação de atendimento/tratamento é alucinação → humano.
+      if (
+        answerable &&
+        /n[ãa]o (atendemos|tratamos|oferecemos|fazemos|trabalhamos com)/i.test(reply) &&
+        !/domingo|conv[êe]nio/i.test(reply)
       ) {
         answerable = false;
       }

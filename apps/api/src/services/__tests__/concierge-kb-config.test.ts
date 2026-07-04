@@ -83,6 +83,59 @@ describe("processMessage rebaixa deflexões a unanswerable", () => {
 		expect(out.reply).toBe("");
 	});
 
+	it("pergunta sobre público específico (crianças/gestantes/idade) nem chama o LLM", async () => {
+		orgSettings({});
+		const { AIConciergeService } = await import("../ai-concierge");
+		for (const q of [
+			"Voces atendem criancas de 8 anos?",
+			"atendem gestantes?",
+			"qual a idade mínima para atendimento?",
+			"tratam bebê com torcicolo?",
+		]) {
+			const out = await AIConciergeService.processMessage(ENV, "org-x", q, []);
+			expect(out.answerable, q).toBe(false);
+		}
+		expect(mockRunAi).not.toHaveBeenCalled();
+	});
+
+	it("resposta que NEGA atendimento inventado vira unanswerable", async () => {
+		orgSettings({});
+		mockRunAi.mockResolvedValue({
+			text: JSON.stringify({
+				reply: "Infelizmente, não atendemos pilates na clínica.",
+				intent: "information",
+				answerable: true,
+			}),
+		});
+		const { AIConciergeService } = await import("../ai-concierge");
+		const out = await AIConciergeService.processMessage(ENV, "org-x", "tem pilates?", []);
+		expect(out.answerable).toBe(false);
+	});
+
+	it("negações COBERTAS pelo KB (domingo/convênio) continuam passando", async () => {
+		orgSettings({});
+		const { AIConciergeService } = await import("../ai-concierge");
+		mockRunAi.mockResolvedValue({
+			text: JSON.stringify({
+				reply: "Não atendemos aos domingos. Nosso horário é de segunda a sexta das 07h às 21h.",
+				intent: "information",
+				answerable: true,
+			}),
+		});
+		const dom = await AIConciergeService.processMessage(ENV, "org-x", "abrem domingo?", []);
+		expect(dom.answerable).toBe(true);
+
+		mockRunAi.mockResolvedValue({
+			text: JSON.stringify({
+				reply: "Não aceitamos convênios, mas fornecemos nota fiscal para reembolso.",
+				intent: "information",
+				answerable: true,
+			}),
+		});
+		const conv = await AIConciergeService.processMessage(ENV, "org-x", "aceitam convênio?", []);
+		expect(conv.answerable).toBe(true);
+	});
+
 	it("resposta real coberta pelo KB continua answerable=true", async () => {
 		orgSettings({});
 		mockRunAi.mockResolvedValue({
