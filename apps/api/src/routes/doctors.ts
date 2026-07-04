@@ -30,6 +30,7 @@ app.get("/", requireAuth, async (c) => {
           id,
           name,
           specialty,
+          gender,
           crm,
           crm_state,
           phone,
@@ -75,6 +76,7 @@ app.get("/:id", requireAuth, async (c) => {
         id,
         name,
         specialty,
+        gender,
         crm,
         crm_state,
         phone,
@@ -114,6 +116,7 @@ app.post("/", requireAuth, async (c) => {
         organization_id,
         name,
         specialty,
+        gender,
         crm,
         crm_state,
         phone,
@@ -127,12 +130,13 @@ app.post("/", requireAuth, async (c) => {
         created_at,
         updated_at
       ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,true,$12,NOW(),NOW()
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,true,$13,NOW(),NOW()
       )
       RETURNING
         id,
         name,
         specialty,
+        gender,
         crm,
         crm_state,
         phone,
@@ -150,6 +154,7 @@ app.post("/", requireAuth, async (c) => {
         user.organizationId,
         name,
         body.specialty ? String(body.specialty) : null,
+        body.gender ? String(body.gender) : null,
         body.crm ? String(body.crm) : null,
         body.crm_state ? String(body.crm_state) : null,
         body.phone ? String(body.phone) : null,
@@ -187,21 +192,23 @@ app.put("/:id", requireAuth, async (c) => {
       SET
         name = $1,
         specialty = $2,
-        crm = $3,
-        crm_state = $4,
-        phone = $5,
-        email = $6,
-        clinic_name = $7,
-        clinic_address = $8,
-        clinic_phone = $9,
-        notes = $10,
-        is_active = $11,
+        gender = $3,
+        crm = $4,
+        crm_state = $5,
+        phone = $6,
+        email = $7,
+        clinic_name = $8,
+        clinic_address = $9,
+        clinic_phone = $10,
+        notes = $11,
+        is_active = $12,
         updated_at = NOW()
-      WHERE id = $12 AND organization_id = $13
+      WHERE id = $13 AND organization_id = $14
       RETURNING
         id,
         name,
         specialty,
+        gender,
         crm,
         crm_state,
         phone,
@@ -221,6 +228,7 @@ app.put("/:id", requireAuth, async (c) => {
             ? String(body.specialty)
             : null
           : d.specialty,
+        body.gender !== undefined ? (body.gender ? String(body.gender) : null) : d.gender,
         body.crm !== undefined ? (body.crm ? String(body.crm) : null) : d.crm,
         body.crm_state !== undefined
           ? body.crm_state

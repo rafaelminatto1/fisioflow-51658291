@@ -399,7 +399,11 @@ export const EvolutionNoScrollPanel = memo(
           className="custom-scrollbar flex min-h-0 flex-col gap-2 overflow-y-auto pb-2 pr-1"
         >
           {/* alerta de retorno médico — vermelho até o relatório ser enviado */}
-          <MedicalReturnAlertCard patientId={patientId || ""} patientName={patient?.name} />
+          <MedicalReturnAlertCard
+            patientId={patientId || ""}
+            patientName={patient?.name}
+            patientGender={patient?.gender ?? null}
+          />
 
           {/* nível de dor — EVA */}
           <div data-pain-section className="rounded-2xl border border-t-[3px] border-border border-t-rose-500 bg-card px-3 py-2 shadow-sm">

@@ -27,6 +27,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SmartDatePicker } from "@/components/ui/smart-date-picker";
@@ -83,6 +90,7 @@ function ProfileContent() {
     bio: "",
     address: "",
     birthDate: "",
+    gender: "",
     avatar: "",
     slug: "",
   });
@@ -97,6 +105,7 @@ function ProfileContent() {
         bio: String(profile.bio ?? ""),
         address: String(profile.address ?? ""),
         birthDate: String(profile.birth_date ?? profile.birthDate ?? ""),
+        gender: String(profile.gender ?? ""),
         avatar: String(profile.avatar_url ?? ""),
         slug: String(profile.slug ?? ""),
       });
@@ -113,6 +122,7 @@ function ProfileContent() {
         bio: form.bio,
         address: form.address,
         birth_date: form.birthDate || null,
+        gender: form.gender || null,
         slug: form.slug || null,
         updated_at: new Date().toISOString(),
       }),
@@ -271,6 +281,24 @@ function ProfileContent() {
                 fromYear={1900}
                 toYear={new Date().getFullYear()}
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="gender">Sexo</Label>
+              <Select
+                value={form.gender || "__none"}
+                onValueChange={(value) =>
+                  setForm((p) => ({ ...p, gender: value === "__none" ? "" : value }))
+                }
+              >
+                <SelectTrigger id="gender">
+                  <SelectValue placeholder="Não informado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none">Não informar</SelectItem>
+                  <SelectItem value="M">Masculino (Dr.)</SelectItem>
+                  <SelectItem value="F">Feminino (Dra.)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="space-y-1.5">

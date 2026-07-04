@@ -16,6 +16,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +45,7 @@ import { useCreateDoctor, useUpdateDoctor } from "@/hooks/useDoctors";
 const formSchema = z.object({
   name: z.string().min(2, "Nome é obrigatório"),
   specialty: z.string().optional(),
+  gender: z.string().optional(),
   crm: z.string().optional(),
   crm_state: z.string().max(2, "Use a sigla do estado (ex: SP)").optional(),
   phone: z.string().optional(),
@@ -80,6 +88,7 @@ export function DoctorFormModal({
     defaultValues: {
       name: doctor?.name || suggestedName || "",
       specialty: doctor?.specialty || "",
+      gender: doctor?.gender || "",
       crm: doctor?.crm || "",
       crm_state: doctor?.crm_state || "",
       phone: doctor?.phone || "",
@@ -96,6 +105,7 @@ export function DoctorFormModal({
       form.reset({
         name: doctor.name || "",
         specialty: doctor.specialty || "",
+        gender: doctor.gender || "",
         crm: doctor.crm || "",
         crm_state: doctor.crm_state || "",
         phone: doctor.phone || "",
@@ -109,6 +119,7 @@ export function DoctorFormModal({
       form.reset({
         name: suggestedName || "",
         specialty: "",
+        gender: "",
         crm: "",
         crm_state: "",
         phone: "",
@@ -125,6 +136,7 @@ export function DoctorFormModal({
     const data: DoctorFormData = {
       name: values.name,
       specialty: values.specialty || undefined,
+      gender: (values.gender as "M" | "F") || undefined,
       crm: values.crm || undefined,
       crm_state: values.crm_state || undefined,
       phone: values.phone || undefined,
@@ -185,7 +197,7 @@ export function DoctorFormModal({
                 control={form.control}
                 name="name"
                 render={({ field }) => (
-                  <FormItem className="col-span-12 md:col-span-6">
+                  <FormItem className="col-span-12 md:col-span-4">
                     <FormLabel className={fieldLabelClass}>
                       Nome Completo <span className="text-destructive">*</span>
                     </FormLabel>
@@ -227,9 +239,35 @@ export function DoctorFormModal({
 
               <FormField
                 control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem className="col-span-4 md:col-span-2">
+                    <FormLabel className={fieldLabelClass}>Sexo</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(value === "__none" ? "" : value)}
+                      value={field.value || "__none"}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-10 border-border/60 bg-muted/5 shadow-sm">
+                          <SelectValue placeholder="Sexo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="__none">Não informar</SelectItem>
+                        <SelectItem value="M">Masculino (Dr.)</SelectItem>
+                        <SelectItem value="F">Feminino (Dra.)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="text-xs font-medium" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="crm"
                 render={({ field }) => (
-                  <FormItem className="col-span-8 md:col-span-2">
+                  <FormItem className="col-span-4 md:col-span-2">
                     <FormLabel className={fieldLabelClass}>CRM</FormLabel>
                     <FormControl>
                       <div className="relative group">

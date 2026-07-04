@@ -5,6 +5,7 @@ export interface DoctorRow {
   organization_id: string;
   name: string;
   specialty: string | null;
+  gender: string | null;
   crm: string | null;
   crm_state: string | null;
   phone: string | null;

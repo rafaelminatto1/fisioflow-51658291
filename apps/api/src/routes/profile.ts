@@ -20,6 +20,7 @@ const PROFILE_SELECT_COLUMNS = [
   "avatar_url",
   "address",
   "birth_date",
+  "gender",
   "slug",
   "organization_id",
   "email_verified",
@@ -242,8 +243,9 @@ app.put("/me", requireAuth, async (c) => {
 
   const hasFullName = typeof payload.full_name === "string";
   const hasBirthDate = Object.hasOwn(payload, "birth_date");
+  const hasGender = Object.hasOwn(payload, "gender");
 
-  if (!hasFullName && !hasBirthDate) {
+  if (!hasFullName && !hasBirthDate && !hasGender) {
     return c.json({ error: "Nenhum campo suportado enviado para atualizacao." }, 400);
   }
 
@@ -251,6 +253,10 @@ app.put("/me", requireAuth, async (c) => {
   const birthDateValue =
     hasBirthDate && typeof payload.birth_date === "string" && payload.birth_date.trim()
       ? String(payload.birth_date).trim()
+      : null;
+  const genderValue =
+    hasGender && typeof payload.gender === "string" && payload.gender.trim()
+      ? String(payload.gender).trim().toUpperCase().slice(0, 1)
       : null;
 
   try {
@@ -271,9 +277,10 @@ app.put("/me", requireAuth, async (c) => {
           SET
             full_name = CASE WHEN $1::boolean THEN $2 ELSE full_name END,
             birth_date = CASE WHEN $3::boolean THEN $4::date ELSE birth_date END,
+            gender = CASE WHEN $6::boolean THEN $7 ELSE gender END,
             updated_at = NOW()
           WHERE user_id = $5
-          RETURNING id, user_id, email, full_name, role, organization_id, birth_date, created_at, updated_at
+          RETURNING id, user_id, email, full_name, role, organization_id, birth_date, gender, created_at, updated_at
         `
         : `
           INSERT INTO profiles (
@@ -283,16 +290,17 @@ app.put("/me", requireAuth, async (c) => {
             role,
             organization_id,
             birth_date,
+            gender,
             created_at,
             updated_at
           )
-          VALUES ($5, $6, $7, $8, $9, $10::date, NOW(), NOW())
-          RETURNING id, user_id, email, full_name, role, organization_id, birth_date, created_at, updated_at
+          VALUES ($5, $6, $7, $8, $9, $10::date, $11, NOW(), NOW())
+          RETURNING id, user_id, email, full_name, role, organization_id, birth_date, gender, created_at, updated_at
         `;
 
     const params =
       existing.rows.length > 0
-        ? [hasFullName, fullName, hasBirthDate, birthDateValue, user.uid]
+        ? [hasFullName, fullName, hasBirthDate, birthDateValue, user.uid, hasGender, genderValue]
         : [
             hasFullName,
             fullName,
@@ -304,6 +312,7 @@ app.put("/me", requireAuth, async (c) => {
             user.role ?? "viewer",
             user.organizationId,
             birthDateValue,
+            genderValue,
           ];
 
     const result = await pool.query(query, params);
@@ -318,6 +327,7 @@ app.put("/me", requireAuth, async (c) => {
         role: row.role,
         organization_id: row.organization_id,
         birth_date: row.birth_date,
+        gender: row.gender,
         created_at: row.created_at,
         updated_at: row.updated_at,
       },

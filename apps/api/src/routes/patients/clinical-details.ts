@@ -2,6 +2,7 @@ import { createPool } from "../../lib/db";
 import { WhatsAppService } from "../../lib/whatsapp";
 import {
   buildMedicalReportVariables,
+  normalizeGender,
   MEDICAL_REPORT_TEMPLATE_NAME,
 } from "../../lib/medicalReturnReport";
 import {
@@ -12,6 +13,7 @@ import {
   nullableString,
   nullableBoolean,
   nullableNumber,
+  dateOnlyString,
   parseJsonObject,
   normalizeMedicalRecordRow,
   normalizePhysicalExaminationRow,
@@ -879,6 +881,11 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     const db = await createPool(c.env);
     const { id } = c.req.param();
     const body = (await c.req.json()) as PatientPayload;
+    const returnDate = dateOnlyString(body.return_date);
+
+    if (!returnDate) {
+      return c.json({ error: "Data do retorno inválida ou ausente" }, 400);
+    }
 
     const result = await db.query(
       `
@@ -919,7 +926,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
         user.organizationId,
         trimmedString(body.doctor_name) ?? "",
         nullableString(body.doctor_phone),
-        nullableString(body.return_date),
+        returnDate,
         nullableString(body.return_period),
         nullableString(body.notes),
         nullableBoolean(body.report_done),
@@ -937,6 +944,12 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
     const db = await createPool(c.env);
     const { id, medicalReturnId } = c.req.param();
     const body = (await c.req.json()) as PatientPayload;
+    const returnDate =
+      body.return_date === undefined ? undefined : dateOnlyString(body.return_date);
+
+    if (body.return_date !== undefined && !returnDate) {
+      return c.json({ error: "Data do retorno inválida" }, 400);
+    }
 
     const result = await db.query(
       `
@@ -959,7 +972,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
       [
         nullableString(body.doctor_name),
         nullableString(body.doctor_phone),
-        nullableString(body.return_date),
+        returnDate ?? null,
         nullableString(body.return_period),
         nullableString(body.notes),
         nullableBoolean(body.report_done),
@@ -986,7 +999,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
 
     const result = await db.query(
       `
-        SELECT mr.*, p.name AS patient_name
+        SELECT mr.*, p.name AS patient_name, p.gender AS patient_gender
         FROM patient_medical_returns mr
         JOIN patients p ON p.id = mr.patient_id
         WHERE mr.id = $1::uuid
@@ -1004,10 +1017,32 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
       return c.json({ error: "Retorno sem telefone do médico cadastrado" }, 400);
     }
 
+    // Gênero do médico: retorno guarda só nome/telefone, então casa com o cadastro
+    const doctorLookup = await db.query(
+      `
+        SELECT gender FROM doctors
+        WHERE organization_id = $1
+          AND (lower(name) = lower($2) OR regexp_replace(COALESCE(phone, ''), '\\D', '', 'g') = regexp_replace($3, '\\D', '', 'g'))
+        ORDER BY (lower(name) = lower($2)) DESC
+        LIMIT 1
+      `,
+      [user.organizationId, trimmedString(row.doctor_name) ?? "", doctorPhone],
+    );
+
+    const therapistLookup = await db.query(
+      `SELECT full_name, gender FROM profiles WHERE user_id = $1 LIMIT 1`,
+      [user.uid],
+    );
+    const therapistRow = therapistLookup.rows[0] as DbRow | undefined;
+
     const variables = buildMedicalReportVariables({
       doctorName: trimmedString(row.doctor_name) ?? "",
-      therapistName: trimmedString(body.therapist_name) ?? "",
+      doctorGender: normalizeGender(doctorLookup.rows[0]?.gender),
+      therapistName:
+        trimmedString(therapistRow?.full_name) ?? trimmedString(body.therapist_name) ?? "",
+      therapistGender: normalizeGender(therapistRow?.gender),
       patientName: trimmedString(row.patient_name) ?? "",
+      patientGender: normalizeGender(row.patient_gender),
       returnDate: row.return_date ? String(row.return_date) : null,
       attachmentUrl: trimmedString(row.request_attachment_url) ?? null,
     });

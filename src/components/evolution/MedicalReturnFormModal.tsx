@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { MedicalReturnService } from "@/lib/services/medicalReturnService";
+import { useSearchDoctors } from "@/hooks/useDoctors";
 import { patientsApi } from "@/api/v2/patients";
 import { uploadToR2 } from "@/lib/storage/r2-storage";
 import { useAuth } from "@/contexts/AuthContext";
@@ -69,6 +70,36 @@ function formatDateBr(isoDate: string | undefined): string {
   return `${match[3]}/${match[2]}/${match[1]}`;
 }
 
+function normalizeDateInputValue(value: string | null | undefined): string {
+  if (!value) return "";
+
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (dateOnly) return `${dateOnly[1]}-${dateOnly[2]}-${dateOnly[3]}`;
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString().slice(0, 10);
+}
+
+type GenderMF = "M" | "F" | null;
+
+function normalizeGenderValue(value: unknown): GenderMF {
+  if (typeof value !== "string") return null;
+  const first = value.trim().toLowerCase()[0];
+  if (first === "m") return "M";
+  if (first === "f") return "F";
+  return null;
+}
+
+function honorificName(name: string, gender: GenderMF): string {
+  const title = gender === "M" ? "Dr." : gender === "F" ? "Dra." : "Dr(a).";
+  return `${title} ${name.trim() || "—"}`;
+}
+
+function patientReference(name: string, gender: GenderMF): string {
+  const article = gender === "M" ? "do paciente" : gender === "F" ? "da paciente" : "do(a) paciente";
+  return `${article} ${name.trim() || "—"}`;
+}
+
 function toWhatsAppNumber(phone: string): string | null {
   const digits = phone.replace(/\D/g, "");
   if (digits.length < 10) return null;
@@ -82,6 +113,7 @@ interface MedicalReturnFormModalProps {
   onOpenChange: (open: boolean) => void;
   patientId: string;
   patientName?: string;
+  patientGender?: string | null;
   medicalReturn?: MedicalReturn | null;
   onSuccess?: () => void;
 }
@@ -91,6 +123,7 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
   onOpenChange,
   patientId,
   patientName,
+  patientGender,
   medicalReturn,
   onSuccess,
 }) => {
@@ -108,6 +141,10 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
     (profile as { full_name?: string } | null)?.full_name ||
     (user as { displayName?: string } | null)?.displayName ||
     "";
+  const therapistGender = normalizeGenderValue(
+    (profile as { gender?: string | null } | null)?.gender,
+  );
+
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -123,12 +160,23 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
     },
   });
 
+  const watchedDoctorName = form.watch("doctor_name");
+  const { data: matchedDoctors = [] } = useSearchDoctors(
+    watchedDoctorName ?? "",
+    (watchedDoctorName ?? "").length >= 2,
+  );
+  const doctorGender = normalizeGenderValue(
+    matchedDoctors.find(
+      (d) => d.name?.trim().toLowerCase() === (watchedDoctorName ?? "").trim().toLowerCase(),
+    )?.gender,
+  );
+
   useEffect(() => {
     if (medicalReturn) {
       form.reset({
         doctor_name: medicalReturn.doctor_name || "",
         doctor_phone: medicalReturn.doctor_phone || "",
-        return_date: medicalReturn.return_date || "",
+        return_date: normalizeDateInputValue(medicalReturn.return_date),
         return_period: medicalReturn.return_period || null,
         notes: medicalReturn.notes || "",
         report_done: !!medicalReturn.report_done,
@@ -240,11 +288,20 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
   });
 
   const onSubmit = (values: FormValues) => {
+    const returnDate = normalizeDateInputValue(values.return_date);
+    if (!returnDate) {
+      form.setError("return_date", {
+        type: "validate",
+        message: "Data do retorno inválida",
+      });
+      return;
+    }
+
     const data: MedicalReturnFormData = {
       patient_id: patientId,
       doctor_name: values.doctor_name,
       doctor_phone: values.doctor_phone || "",
-      return_date: values.return_date,
+      return_date: returnDate,
       return_period: values.return_period || undefined,
       notes: values.notes || "",
       report_done: values.report_done,
@@ -297,8 +354,9 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
     const v = form.getValues();
     const link = v.request_attachment_url?.trim() || "segue em anexo";
     return (
-      `Olá Dr(a). ${v.doctor_name || "—"}! Sou Dr(a). ${therapistName || "—"}, ` +
-      `fisioterapeuta do(a) paciente ${patientName || "—"}. ` +
+      `Olá ${honorificName(v.doctor_name || "", doctorGender)}! ` +
+      `Sou ${honorificName(therapistName, therapistGender)}, ` +
+      `fisioterapeuta ${patientReference(patientName || "", normalizeGenderValue(patientGender))}. ` +
       `Segue o relatório de fisioterapia referente ao retorno de ${formatDateBr(v.return_date)}. ` +
       `Pedido/relatório: ${link}. Fico à disposição!`
     );

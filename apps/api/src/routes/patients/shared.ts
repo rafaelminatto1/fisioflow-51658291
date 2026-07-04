@@ -19,6 +19,21 @@ export function nullableString(value: unknown): string | null {
   return trimmedString(value) ?? null;
 }
 
+export function dateOnlyString(value: unknown): string | null {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value.toISOString().slice(0, 10);
+  }
+
+  const raw = trimmedString(value);
+  if (!raw) return null;
+
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})/.exec(raw);
+  if (dateOnly) return `${dateOnly[1]}-${dateOnly[2]}-${dateOnly[3]}`;
+
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString().slice(0, 10);
+}
+
 export function nullableBoolean(value: unknown): boolean | null {
   if (typeof value === "boolean") return value;
   if (typeof value === "string") {
@@ -202,7 +217,7 @@ export function normalizeMedicalReturnRow(row: DbRow) {
     patient_id: String(row.patient_id),
     doctor_name: trimmedString(row.doctor_name) ?? "",
     doctor_phone: trimmedString(row.doctor_phone) ?? null,
-    return_date: row.return_date ? String(row.return_date) : null,
+    return_date: dateOnlyString(row.return_date),
     return_period: trimmedString(row.return_period) ?? null,
     notes: trimmedString(row.notes) ?? null,
     report_done: Boolean(row.report_done),

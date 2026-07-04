@@ -1059,6 +1059,7 @@ const PatientEvolution = () => {
 								onOpenChange={setMedicalReturnModalOpen}
 								patientId={state.patientId}
 								patientName={PatientHelpers.getName(state.patient as any)}
+								patientGender={(state.patient as any)?.gender ?? null}
 								onSuccess={() => state.invalidateData("all")}
 							/>
 							<SurgeryFormModal

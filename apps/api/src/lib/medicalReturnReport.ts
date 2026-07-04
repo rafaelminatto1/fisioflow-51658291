@@ -1,18 +1,42 @@
-export const MEDICAL_REPORT_TEMPLATE_NAME = "relatorio_fisioterapia";
+// Template v2: gênero embutido nas VARIÁVEIS (Meta não permite editar template
+// PENDING nem variável no início/fim do body; um único template atende M/F).
+export const MEDICAL_REPORT_TEMPLATE_NAME = "relatorio_fisioterapia_v2";
 
-// Texto idêntico ao template aprovado na Meta (id 1049539834163719) —
-// variáveis não podem abrir nem fechar o corpo, por isso o fecho fixo.
 export const MEDICAL_REPORT_TEMPLATE_BODY =
-  "Olá Dr(a). {{1}}! Sou Dr(a). {{2}}, fisioterapeuta do(a) paciente {{3}}. " +
+  "Olá {{1}}! Sou {{2}}, fisioterapeuta {{3}}. " +
   "Segue o relatório de fisioterapia referente ao retorno de {{4}}. " +
   "Pedido/relatório: {{5}}. Fico à disposição!";
 
+export type Gender = "M" | "F" | null;
+
 export interface MedicalReportContext {
   doctorName: string;
+  doctorGender?: Gender;
   therapistName: string;
+  therapistGender?: Gender;
   patientName: string;
+  patientGender?: Gender;
   returnDate: string | null;
   attachmentUrl: string | null;
+}
+
+/** Normaliza 'M'/'F'/'masculino'/'feminino' (qualquer caixa) para 'M' | 'F' | null. */
+export function normalizeGender(value: unknown): Gender {
+  if (typeof value !== "string") return null;
+  const first = value.trim().toLowerCase()[0];
+  if (first === "m") return "M";
+  if (first === "f") return "F";
+  return null;
+}
+
+export function honorificName(name: string, gender?: Gender): string {
+  const title = gender === "M" ? "Dr." : gender === "F" ? "Dra." : "Dr(a).";
+  return `${title} ${name.trim() || "—"}`;
+}
+
+export function patientReference(name: string, gender?: Gender): string {
+  const article = gender === "M" ? "do paciente" : gender === "F" ? "da paciente" : "do(a) paciente";
+  return `${article} ${name.trim() || "—"}`;
 }
 
 export function formatReturnDateBr(returnDate: string | null): string {
@@ -24,9 +48,9 @@ export function formatReturnDateBr(returnDate: string | null): string {
 
 export function buildMedicalReportVariables(ctx: MedicalReportContext): string[] {
   return [
-    ctx.doctorName.trim() || "—",
-    ctx.therapistName.trim() || "—",
-    ctx.patientName.trim() || "—",
+    honorificName(ctx.doctorName, ctx.doctorGender),
+    honorificName(ctx.therapistName, ctx.therapistGender),
+    patientReference(ctx.patientName, ctx.patientGender),
     formatReturnDateBr(ctx.returnDate),
     ctx.attachmentUrl?.trim() || "segue em anexo",
   ];

@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 interface MedicalReturnAlertCardProps {
   patientId: string;
   patientName?: string;
+  patientGender?: string | null;
 }
 
 function formatDateBr(isoDate: string | null | undefined): string {
@@ -28,7 +29,11 @@ const PERIOD_LABEL: Record<string, string> = {
   noite: "noite",
 };
 
-export function MedicalReturnAlertCard({ patientId, patientName }: MedicalReturnAlertCardProps) {
+export function MedicalReturnAlertCard({
+  patientId,
+  patientName,
+  patientGender,
+}: MedicalReturnAlertCardProps) {
   const { data: medicalReturns = [] } = usePatientMedicalReturns(patientId);
   const [editing, setEditing] = useState<MedicalReturn | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -107,6 +112,7 @@ export function MedicalReturnAlertCard({ patientId, patientName }: MedicalReturn
         }}
         patientId={patientId}
         patientName={patientName}
+        patientGender={patientGender}
         medicalReturn={editing}
       />
     </>

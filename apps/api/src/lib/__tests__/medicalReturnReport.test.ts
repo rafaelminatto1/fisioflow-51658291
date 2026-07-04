@@ -3,31 +3,70 @@ import {
   buildMedicalReportVariables,
   buildMedicalReportText,
   formatReturnDateBr,
+  normalizeGender,
+  honorificName,
+  patientReference,
 } from "../medicalReturnReport";
 
 const ctx = {
   doctorName: "Eduardo Souza",
-  therapistName: "Rafael Minatto",
+  doctorGender: "M" as const,
+  therapistName: "Ana Lima",
+  therapistGender: "F" as const,
   patientName: "Maria Silva",
+  patientGender: "F" as const,
   returnDate: "2026-08-10",
   attachmentUrl: "https://media.moocafisio.com.br/x.pdf",
 };
 
+describe("normalizeGender", () => {
+  it("aceita M/F e masculino/feminino em qualquer caixa", () => {
+    expect(normalizeGender("M")).toBe("M");
+    expect(normalizeGender("f")).toBe("F");
+    expect(normalizeGender("Masculino")).toBe("M");
+    expect(normalizeGender("feminino")).toBe("F");
+    expect(normalizeGender("outro")).toBe(null);
+    expect(normalizeGender(null)).toBe(null);
+  });
+});
+
+describe("honorificName / patientReference", () => {
+  it("aplica Dr./Dra. e do/da conforme o gênero, com fallback neutro", () => {
+    expect(honorificName("Rafael Minatto", "M")).toBe("Dr. Rafael Minatto");
+    expect(honorificName("Ana Lima", "F")).toBe("Dra. Ana Lima");
+    expect(honorificName("Alex", null)).toBe("Dr(a). Alex");
+    expect(patientReference("João", "M")).toBe("do paciente João");
+    expect(patientReference("Maria", "F")).toBe("da paciente Maria");
+    expect(patientReference("Sam", null)).toBe("do(a) paciente Sam");
+  });
+});
+
 describe("buildMedicalReportVariables", () => {
-  it("monta as 5 variáveis do template na ordem", () => {
+  it("monta as 5 variáveis com gênero embutido", () => {
     expect(buildMedicalReportVariables(ctx)).toEqual([
-      "Eduardo Souza",
-      "Rafael Minatto",
-      "Maria Silva",
+      "Dr. Eduardo Souza",
+      "Dra. Ana Lima",
+      "da paciente Maria Silva",
       "10/08/2026",
       "https://media.moocafisio.com.br/x.pdf",
     ]);
   });
 
-  it("usa fallbacks para data e anexo ausentes", () => {
-    const vars = buildMedicalReportVariables({ ...ctx, returnDate: null, attachmentUrl: null });
-    expect(vars[3]).toBe("data a confirmar");
-    expect(vars[4]).toBe("segue em anexo");
+  it("usa fallbacks para gênero, data e anexo ausentes", () => {
+    const vars = buildMedicalReportVariables({
+      doctorName: "Alex",
+      therapistName: "Sam",
+      patientName: "Chris",
+      returnDate: null,
+      attachmentUrl: null,
+    });
+    expect(vars).toEqual([
+      "Dr(a). Alex",
+      "Dr(a). Sam",
+      "do(a) paciente Chris",
+      "data a confirmar",
+      "segue em anexo",
+    ]);
   });
 });
 
@@ -39,10 +78,9 @@ describe("formatReturnDateBr", () => {
 });
 
 describe("buildMedicalReportText", () => {
-  it("gera o texto padrão com Sou Dr(a). {fisioterapeuta}", () => {
-    const text = buildMedicalReportText(ctx);
-    expect(text).toBe(
-      "Olá Dr(a). Eduardo Souza! Sou Dr(a). Rafael Minatto, fisioterapeuta do(a) paciente Maria Silva. " +
+  it("gera o texto com tratamento correto por gênero", () => {
+    expect(buildMedicalReportText(ctx)).toBe(
+      "Olá Dr. Eduardo Souza! Sou Dra. Ana Lima, fisioterapeuta da paciente Maria Silva. " +
         "Segue o relatório de fisioterapia referente ao retorno de 10/08/2026. " +
         "Pedido/relatório: https://media.moocafisio.com.br/x.pdf. Fico à disposição!",
     );

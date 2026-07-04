@@ -4,6 +4,7 @@ export interface Doctor {
   id: string;
   name: string; // Nome completo do médico (obrigatório)
   specialty?: string; // Especialidade médica
+  gender?: "M" | "F" | null; // Sexo, para tratamento Dr./Dra.
   crm?: string; // Número do CRM
   crm_state?: string; // Estado do CRM (ex: SP, RJ)
   phone?: string; // Telefone de contato
