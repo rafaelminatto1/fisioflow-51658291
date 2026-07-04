@@ -17,6 +17,7 @@
  */
 
 import { isValid } from "date-fns";
+import DOMPurify from "dompurify";
 import {
   Activity,
   Bone,
@@ -25,11 +26,14 @@ import {
   ChevronUp,
   Clock,
   Copy,
+  Dumbbell,
   Eye,
   FileText,
   Filter,
   Image as ImageIcon,
+  Loader2,
   Maximize2,
+  Ruler,
   Search,
   Target,
   Trophy,
@@ -56,7 +60,7 @@ import {
   usePatientPathologies,
   usePatientSurgeries,
 } from "@/hooks/usePatientEvolution";
-import { type SoapRecord, useSessionAttachments, useSoapRecords } from "@/hooks/useSoapRecords";
+import { type SoapRecord, useSessionAttachments, useSoapRecords, useInfiniteSoapRecords } from "@/hooks/useSoapRecords";
 import { getAffectedSideAbbreviation } from "@/lib/constants/surgery";
 import { cn } from "@/lib/utils";
 import { stripHtml } from "@/lib/utils/stripHtml";
@@ -94,8 +98,19 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
   const [showSessionModal, setShowSessionModal] = useState(false);
   const [compactView, setCompactView] = useState(false);
 
-  // Buscar todos os dados do paciente
-  const { data: soapRecords = [] } = useSoapRecords(patientId, limit);
+  // Buscar todos os dados do paciente com paginação infinita
+  const {
+    data: infiniteSoapData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteSoapRecords(patientId, limit || 20);
+
+  const soapRecords = useMemo(() => {
+    if (!infiniteSoapData) return [];
+    return infiniteSoapData.pages.flat();
+  }, [infiniteSoapData]);
+
   const { data: surgeries = [] } = usePatientSurgeries(patientId);
   const { data: goals = [] } = usePatientGoals(patientId);
   const { data: pathologies = [] } = usePatientPathologies(patientId);
@@ -103,6 +118,35 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
     limit: 200,
   });
   const { data: attachments = [] } = useSessionAttachments(undefined, patientId);
+
+  // Ref para o elemento sentinela no fim da lista
+  const observerRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          fetchNextPage();
+        }
+      },
+      {
+        threshold: 0.1,
+      }
+    );
+
+    const currentTarget = observerRef.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   // Construir timeline de eventos (memoizado: só recomputa quando os dados mudam)
   const timelineEvents = useMemo<TimelineEvent[]>(() => {
@@ -535,8 +579,9 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
               )}
             </div>
           ) : viewMode === "timeline" ? (
-            <ScrollArea className={compactView ? "h-[500px] pr-4" : "h-[600px] pr-4"}>
-              <div className="relative">
+            (() => {
+              const timelineContent = (
+                <div className="relative">
                 {/* Linha central */}
                 <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
 
@@ -600,7 +645,7 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                                     </div>
                                   </div>
 
-                                  {event.description && (
+                                  {event.description && (event.type !== "session" || compactView) && (
                                     <p
                                       className={cn(
                                         "text-sm text-muted-foreground mt-1",
@@ -611,9 +656,9 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                                     </p>
                                   )}
 
-                                  {/* Detalhes expandidos */}
-                                  {!compactView && isExpanded && event.data && (
-                                    <div className="mt-3 pt-3 border-t border-border/50 space-y-2">
+                                  {/* Detalhes expandidos e completos por padrão */}
+                                  {!compactView && event.data && (
+                                    <div className="mt-3 pt-3 border-t border-border/50 space-y-3">
                                       {event.type === "session" && (
                                         <>
                                           <div className="grid grid-cols-2 gap-2 text-xs">
@@ -632,25 +677,180 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                                               </Badge>
                                             </div>
                                           </div>
+
                                           {(() => {
                                             const rec = event.data as SoapRecord;
-                                            const pain = rec.pain_scale ?? rec.pain_level;
-                                            return pain != null ? (
-                                              <div className="text-xs">
-                                                <span className="text-muted-foreground">EVA:</span>{" "}
-                                                <span className="font-medium">{pain}/10</span>
+                                            const pain = rec.pain_scale ?? (rec as any).pain_level;
+                                            if (pain == null) return null;
+                                            return (
+                                              <div className="flex items-center gap-2 text-xs mt-1">
+                                                <span className="text-muted-foreground">EVA:</span>
+                                                <Badge
+                                                  variant="outline"
+                                                  className={cn(
+                                                    "text-[10px] h-5 px-1.5 font-bold",
+                                                    pain >= 7
+                                                      ? "bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-300"
+                                                      : pain >= 4
+                                                        ? "bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300"
+                                                        : "bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-300",
+                                                  )}
+                                                >
+                                                  {pain}/10
+                                                </Badge>
                                               </div>
-                                            ) : null;
+                                            );
                                           })()}
 
                                           {(() => {
-                                            const obs = (event.data as SoapRecord).observacao;
-                                            if (!obs) return null;
-                                            const plain = stripHtml(obs);
-                                            if (!plain) return null;
+                                            const rec = event.data as SoapRecord;
+                                            const obs = rec.observacao;
+                                            if (obs) {
+                                              return (
+                                                <div className="mt-3 space-y-1.5">
+                                                  <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                                                    <FileText className="h-3.5 w-3.5" />
+                                                    Observação Clínica
+                                                  </p>
+                                                  <div className="bg-[#F7F6F3] dark:bg-zinc-900/50 border border-border/60 rounded-xl p-4">
+                                                    <div
+                                                      className="text-sm prose prose-sm max-w-none dark:prose-invert"
+                                                      dangerouslySetInnerHTML={{
+                                                        __html: DOMPurify.sanitize(obs),
+                                                      }}
+                                                    />
+                                                  </div>
+                                                </div>
+                                              );
+                                            }
+
+                                            // Fallback para campos SOAP individuais/legados
+                                            const soapFields = [
+                                              { label: "Subjetivo (S)", value: rec.subjective },
+                                              { label: "Objetivo (O)", value: rec.objective },
+                                              { label: "Avaliação (A)", value: rec.assessment },
+                                              { label: "Plano (P)", value: rec.plan },
+                                            ].filter(f => f.value);
+
+                                            if (soapFields.length > 0) {
+                                              return (
+                                                <div className="mt-3 space-y-2">
+                                                  <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                                                    <FileText className="h-3.5 w-3.5" />
+                                                    SOAP
+                                                  </p>
+                                                  <div className="grid gap-2 bg-[#F7F6F3] dark:bg-zinc-900/50 border border-border/60 rounded-xl p-4">
+                                                    {soapFields.map((field, idx) => (
+                                                      <div key={idx} className="text-xs space-y-0.5">
+                                                        <span className="font-semibold text-muted-foreground">{field.label}:</span>
+                                                        <p className="text-sm">{field.value}</p>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              );
+                                            }
+
+                                            return null;
+                                          })()}
+
+                                          {/* Exercícios */}
+                                          {(() => {
+                                            const rec = event.data as SoapRecord;
+                                            const sessionExercises = rec.exercises_performed || (rec as any).exercises || [];
+                                            if (sessionExercises.length === 0) return null;
                                             return (
-                                              <div className="mt-2 text-xs p-2 rounded-lg bg-[#F7F6F3] dark:bg-zinc-900 line-clamp-3">
-                                                {plain}
+                                              <div className="mt-3 space-y-1.5">
+                                                <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                                                  <Dumbbell className="h-3.5 w-3.5" />
+                                                  Exercícios Realizados ({sessionExercises.length})
+                                                </p>
+                                                <div className="grid gap-2">
+                                                  {sessionExercises.map((exercise: any, idx: number) => (
+                                                    <div key={idx} className="flex items-center justify-between text-xs p-2.5 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/20 rounded-lg">
+                                                      <span className="font-medium text-emerald-800 dark:text-emerald-300">{exercise.name}</span>
+                                                      <span className="text-muted-foreground">
+                                                        {exercise.sets ? `${exercise.sets} séries` : ""}{exercise.repetitions ? ` x ${exercise.repetitions} reps` : ""}{exercise.load && exercise.load !== "0 kg" ? ` (${exercise.load})` : ""}
+                                                      </span>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              </div>
+                                            );
+                                          })()}
+
+                                          {/* Medições */}
+                                          {(() => {
+                                            const rec = event.data as SoapRecord;
+                                            const sessionDateObj = new Date(rec.created_at);
+                                            const sessionDate = isValid(sessionDateObj) ? sessionDateObj.toISOString().split("T")[0] : null;
+                                            const sessionMeasurements = measurements.filter((m) => {
+                                              if (!sessionDate) return false;
+                                              const mDateObj = new Date(m.measured_at);
+                                              return isValid(mDateObj) && mDateObj.toISOString().split("T")[0] === sessionDate;
+                                            });
+                                            if (sessionMeasurements.length === 0) return null;
+                                            return (
+                                              <div className="mt-3 space-y-1.5">
+                                                <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                                                  <Ruler className="h-3.5 w-3.5" />
+                                                  Medições ({sessionMeasurements.length})
+                                                </p>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                  {sessionMeasurements.map((m: any) => (
+                                                    <div key={m.id} className="text-xs p-2.5 bg-teal-50/50 dark:bg-teal-950/20 border border-teal-100/50 dark:border-teal-900/20 rounded-lg flex justify-between items-center">
+                                                      <span className="text-muted-foreground truncate">{m.measurement_name}</span>
+                                                      <span className="font-bold text-teal-700 dark:text-teal-300">{m.value}{m.unit || ""}</span>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              </div>
+                                            );
+                                          })()}
+
+                                          {/* Anexos */}
+                                          {(() => {
+                                            const rec = event.data as SoapRecord;
+                                            const sessionAttachments = attachments.filter(
+                                              (a) => (a as any).soap_record_id === rec.id || (a as any).session_id === rec.id
+                                            );
+                                            if (sessionAttachments.length === 0) return null;
+                                            return (
+                                              <div className="mt-3 space-y-1.5">
+                                                <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                                                  <ImageIcon className="h-3.5 w-3.5" />
+                                                  Anexos ({sessionAttachments.length})
+                                                </p>
+                                                <div className="flex flex-wrap gap-2">
+                                                  {sessionAttachments.map((attachment: any) => (
+                                                    <div
+                                                      key={attachment.id}
+                                                      className="group relative w-20 h-20 rounded-lg overflow-hidden border border-border hover:shadow-md transition-all cursor-pointer bg-muted shrink-0"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        window.open(attachment.file_url, "_blank");
+                                                      }}
+                                                      title={attachment.original_name || attachment.file_name}
+                                                    >
+                                                      {attachment.file_type === "pdf" ? (
+                                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50">
+                                                          <FileText className="h-8 w-8 text-red-400" />
+                                                        </div>
+                                                      ) : attachment.thumbnail_url || attachment.file_url ? (
+                                                        <img
+                                                          src={attachment.thumbnail_url || attachment.file_url}
+                                                          alt={attachment.original_name || attachment.file_name}
+                                                          loading="lazy"
+                                                          className="w-full h-full object-cover"
+                                                        />
+                                                      ) : (
+                                                        <div className="w-full h-full flex items-center justify-center">
+                                                          <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                  ))}
+                                                </div>
                                               </div>
                                             );
                                           })()}
@@ -718,23 +918,6 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                                       <Maximize2 className="h-3.5 w-3.5" />
                                     </Button>
                                   )}
-                                  {!compactView && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleExpand(event.id);
-                                      }}
-                                    >
-                                      {isExpanded ? (
-                                        <ChevronUp className="h-4 w-4" />
-                                      ) : (
-                                        <ChevronDown className="h-4 w-4" />
-                                      )}
-                                    </Button>
-                                  )}
                                 </div>
                               </div>
                             </div>
@@ -744,10 +927,40 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                     </div>
                   ))}
                 </div>
+
+                {/* Elemento Sentinela para Infinite Scroll */}
+                <div ref={observerRef} className="h-10 flex items-center justify-center mt-6 border-t border-dashed pt-4">
+                  {isFetchingNextPage ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      <span>Carregando mais evoluções...</span>
+                    </div>
+                  ) : hasNextPage ? (
+                    <span className="text-xs text-muted-foreground/60">
+                      Role para carregar mais evoluções
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground/60">
+                      Todas as evoluções foram carregadas.
+                    </span>
+                  )}
+                </div>
               </div>
-            </ScrollArea>
-          ) : (
-            <ScrollArea className={compactView ? "h-[500px]" : "h-[600px]"}>
+            );
+
+            return compactView ? (
+              <ScrollArea className="h-[500px] pr-4">
+                {timelineContent}
+              </ScrollArea>
+            ) : (
+              <div className="pr-4">
+                {timelineContent}
+              </div>
+            );
+          })()
+        ) : (
+          (() => {
+            const listContent = (
               <div className="divide-y">
                 {filteredEvents.map((event) => {
                   const config = EVENT_TYPE_CONFIG[event.type];
@@ -790,9 +1003,38 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                     </div>
                   );
                 })}
+
+                {/* Elemento Sentinela para Infinite Scroll no modo Lista */}
+                <div ref={observerRef} className="h-10 flex items-center justify-center mt-4">
+                  {isFetchingNextPage ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      <span>Carregando mais...</span>
+                    </div>
+                  ) : hasNextPage ? (
+                    <span className="text-xs text-muted-foreground/60">
+                      Role para carregar mais
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground/60">
+                      Todos os registros foram carregados.
+                    </span>
+                  )}
+                </div>
               </div>
-            </ScrollArea>
-          )}
+            );
+
+            return compactView ? (
+              <ScrollArea className="h-[500px]">
+                {listContent}
+              </ScrollArea>
+            ) : (
+              <div>
+                {listContent}
+              </div>
+            );
+          })()
+        )}
         </CardContent>
       </Card>
 

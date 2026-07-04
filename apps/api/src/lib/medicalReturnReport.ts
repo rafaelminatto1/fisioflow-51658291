@@ -1,8 +1,11 @@
 export const MEDICAL_REPORT_TEMPLATE_NAME = "relatorio_fisioterapia";
 
+// Texto idêntico ao template aprovado na Meta (id 1049539834163719) —
+// variáveis não podem abrir nem fechar o corpo, por isso o fecho fixo.
 export const MEDICAL_REPORT_TEMPLATE_BODY =
   "Olá Dr(a). {{1}}! Sou Dr(a). {{2}}, fisioterapeuta do(a) paciente {{3}}. " +
-  "Segue o relatório de fisioterapia referente ao retorno de {{4}}. Pedido/relatório: {{5}}";
+  "Segue o relatório de fisioterapia referente ao retorno de {{4}}. " +
+  "Pedido/relatório: {{5}}. Fico à disposição!";
 
 export interface MedicalReportContext {
   doctorName: string;

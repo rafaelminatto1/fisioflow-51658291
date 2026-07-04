@@ -44,7 +44,7 @@ describe("buildMedicalReportText", () => {
     expect(text).toBe(
       "Olá Dr(a). Eduardo Souza! Sou Dr(a). Rafael Minatto, fisioterapeuta do(a) paciente Maria Silva. " +
         "Segue o relatório de fisioterapia referente ao retorno de 10/08/2026. " +
-        "Pedido/relatório: https://media.moocafisio.com.br/x.pdf",
+        "Pedido/relatório: https://media.moocafisio.com.br/x.pdf. Fico à disposição!",
     );
   });
 });

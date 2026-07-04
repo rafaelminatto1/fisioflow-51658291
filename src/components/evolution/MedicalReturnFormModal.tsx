@@ -300,7 +300,7 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
       `Olá Dr(a). ${v.doctor_name || "—"}! Sou Dr(a). ${therapistName || "—"}, ` +
       `fisioterapeuta do(a) paciente ${patientName || "—"}. ` +
       `Segue o relatório de fisioterapia referente ao retorno de ${formatDateBr(v.return_date)}. ` +
-      `Pedido/relatório: ${link}`
+      `Pedido/relatório: ${link}. Fico à disposição!`
     );
   };
 

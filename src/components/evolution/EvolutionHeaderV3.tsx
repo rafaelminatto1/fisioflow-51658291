@@ -2,22 +2,15 @@ import React, { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
-  Calendar,
-  FileText,
   Zap,
   Eye,
-  EyeOff,
   Save,
   Clock,
   Keyboard,
-  CheckCircle2,
   MoreVertical,
   Loader2,
-  Mic,
-  History,
   Check,
   Sparkles,
 } from "lucide-react";
@@ -31,7 +24,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PatientHelpers } from "@/types";
-import { parseResponseDate } from "@/utils/dateUtils";
 import type { Patient, Appointment } from "@/types";
 
 interface EvolutionHeaderV3Props {
@@ -86,15 +78,9 @@ export const EvolutionHeaderV3 = memo(
     isCompleting,
     autoSaveEnabled,
     toggleAutoSave,
-    lastSavedAt,
-    saveError,
-    onRetrySave,
-    offlineStatus,
     onShowTemplateModal,
     onShowKeyboardHelp,
-    onShowAIScribe,
     sessionNumber = 1,
-    onOpenHistoryDrawer,
     onShowAISummary,
   }: EvolutionHeaderV3Props) => {
     const navigate = useNavigate();
@@ -119,91 +105,6 @@ export const EvolutionHeaderV3 = memo(
       }
       return out;
     })();
-
-    const renderSaveStatus = () => {
-      const hasPending = (offlineStatus?.pendingActions ?? 0) > 0;
-      const isOffline = offlineStatus && !offlineStatus.isOnline;
-      
-      let statusContent = null;
-      let statusKey = "none";
-      
-      if (saveError && !isSaving) {
-        statusKey = "error";
-        statusContent = (
-          <span
-            className="flex items-center gap-1.5 text-[11px] font-bold text-rose-600"
-            title={saveError.message || "Erro ao salvar"}
-          >
-            <Clock className="h-3 w-3" />
-            Falha ao salvar
-            {onRetrySave && (
-              <button
-                type="button"
-                onClick={onRetrySave}
-                className="ml-1 inline-flex items-center rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700 hover:bg-rose-200 transition-colors"
-              >
-                Tentar de novo
-              </button>
-            )}
-          </span>
-        );
-      } else if (isSaving) {
-        statusKey = "saving";
-        statusContent = (
-          <span className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-teal-600" />
-            Salvando…
-          </span>
-        );
-      } else if (isOffline || hasPending) {
-        statusKey = "offline";
-        statusContent = (
-          <span
-            className="flex items-center gap-1.5 text-[11px] font-bold text-amber-600"
-            title={
-              isOffline
-                ? "Você está offline — as alterações serão enviadas quando a conexão voltar."
-                : `${offlineStatus?.pendingActions} alterações pendentes de sincronização.`
-            }
-          >
-            <Clock className="h-3.5 w-3.5" />
-            {isOffline ? "Offline" : "Aguardando rede"}
-            {hasPending && (
-              <span className="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-100 px-1 text-[10px] font-bold text-amber-700">
-                {offlineStatus!.pendingActions}
-              </span>
-            )}
-          </span>
-        );
-      } else if (lastSavedAt) {
-        statusKey = "saved";
-        statusContent = (
-          <span className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 whitespace-nowrap">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            Salvo {format(lastSavedAt, "HH:mm")}
-          </span>
-        );
-      }
-
-      return (
-        <div className="h-[30px] flex items-center justify-center overflow-hidden px-2 border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 rounded-full min-w-[100px]">
-          <AnimatePresence mode="wait">
-            {statusContent && (
-              <motion.div
-                key={statusKey}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
-                className="flex items-center justify-center"
-              >
-                {statusContent}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      );
-    };
 
     return (
       <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-card shrink-0 min-h-[50px]">
@@ -247,31 +148,6 @@ export const EvolutionHeaderV3 = memo(
 
         {/* Ações da Direita */}
         <div className="ml-auto flex items-center gap-2.5">
-          <button
-            onClick={onShowAIScribe}
-            className="hidden sm:inline-flex items-center gap-1.5 h-[30px] px-3 rounded-full border border-teal-200 bg-teal-50 text-teal-700 text-[10px] font-extrabold tracking-wider cursor-pointer transition-all hover:bg-teal-100/70 hover:border-teal-300"
-          >
-            <Mic className="w-[13px] h-[13px]" /> VOICE SCRIBE
-          </button>
-
-          <button
-            onClick={onOpenHistoryDrawer}
-            className="hidden sm:inline-flex items-center gap-1.5 h-[30px] px-3 rounded-full border border-teal-200 bg-teal-50 text-teal-700 text-[10px] font-extrabold tracking-wider cursor-pointer transition-all hover:bg-teal-100/70 hover:border-teal-300"
-          >
-            <History className="w-[13px] h-[13px]" /> HISTÓRICO
-          </button>
-
-          {onShowAISummary ? (
-            <button
-              onClick={onShowAISummary}
-              className="hidden sm:inline-flex items-center gap-1.5 h-[30px] px-3 rounded-full border border-emerald-200 bg-white text-emerald-700 text-[10px] font-extrabold tracking-wider cursor-pointer transition-all hover:bg-emerald-50 hover:border-emerald-300"
-            >
-              <Sparkles className="w-[13px] h-[13px]" /> RESUMO IA
-            </button>
-          ) : null}
-
-          {renderSaveStatus()}
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
