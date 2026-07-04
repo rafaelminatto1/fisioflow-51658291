@@ -9,6 +9,10 @@ type ConciergeSettings = {
   availabilityAutoReply: boolean;
   availabilityScope: ConciergeAvailabilityScope;
   availabilityProfileSlug: string;
+  /** Base de conhecimento custom da organização; vazio = default (CLINIC_KB). */
+  knowledgeBase: string;
+  attendantName: string;
+  clinicName: string;
 };
 type AvailabilityPeriod = "manha" | "tarde" | "noite" | null;
 type AvailabilityTimeWindow = {
@@ -27,11 +31,49 @@ type TherapistRow = { id: string };
 
 /** Assinatura estável da apresentação (independe da saudação por horário). */
 const GREETING_SIGNATURE = "Sou o Rafael da Activity Fisioterapia";
+const DEFAULT_ATTENDANT_NAME = "Rafael";
+const DEFAULT_CLINIC_NAME = "Activity Fisioterapia";
 const DEFAULT_CONCIERGE_SETTINGS: ConciergeSettings = {
   availabilityAutoReply: false,
   availabilityScope: "organization",
   availabilityProfileSlug: "",
+  knowledgeBase: "",
+  attendantName: DEFAULT_ATTENDANT_NAME,
+  clinicName: DEFAULT_CLINIC_NAME,
 };
+
+export interface ConciergeIdentity {
+  attendantName: string;
+  clinicName: string;
+  /** Frase de apresentação estável — usada p/ detectar/remover saudações. */
+  signature: string;
+}
+
+/**
+ * Identidade do concierge a partir da config crua (organizations.settings.
+ * crm_whatsapp.concierge). Defaults mantêm o comportamento atual da Activity.
+ */
+export function conciergeIdentity(raw: unknown): ConciergeIdentity {
+  let cfg: Record<string, unknown> | null = null;
+  if (typeof raw === "string") {
+    try {
+      cfg = JSON.parse(raw);
+    } catch {
+      cfg = null;
+    }
+  } else if (raw && typeof raw === "object") {
+    cfg = raw as Record<string, unknown>;
+  }
+  const attendantName =
+    (typeof cfg?.attendantName === "string" && cfg.attendantName.trim()) || DEFAULT_ATTENDANT_NAME;
+  const clinicName =
+    (typeof cfg?.clinicName === "string" && cfg.clinicName.trim()) || DEFAULT_CLINIC_NAME;
+  const signature =
+    attendantName === DEFAULT_ATTENDANT_NAME && clinicName === DEFAULT_CLINIC_NAME
+      ? GREETING_SIGNATURE
+      : `Sou ${attendantName} da ${clinicName}`;
+  return { attendantName, clinicName, signature };
+}
 const WEEKDAY_PATTERNS = [
   { index: 1, pattern: /segunda(?:-feira)?/i, label: "segunda" },
   { index: 2, pattern: /ter[cç]a(?:-feira)?/i, label: "terça" },
@@ -100,8 +142,8 @@ function parseHourWindow(message: string): AvailabilityTimeWindow | null {
 }
 
 /** True se a resposta é a apresentação/saudação padrão do concierge. */
-export function isGreetingReply(reply: string): boolean {
-  return typeof reply === "string" && reply.includes(GREETING_SIGNATURE);
+export function isGreetingReply(reply: string, signature: string = GREETING_SIGNATURE): boolean {
+  return typeof reply === "string" && reply.includes(signature);
 }
 
 /**
@@ -109,9 +151,13 @@ export function isGreetingReply(reply: string): boolean {
  * apresentação a cada mensagem: pula só quando a resposta é uma saudação E o
  * assistente já saudou antes nesta conversa.
  */
-export function shouldSkipGreeting(reply: string, history: ConciergeHistoryItem[]): boolean {
-  if (!isGreetingReply(reply)) return false;
-  return history.some((h) => h.role === "assistant" && isGreetingReply(h.content));
+export function shouldSkipGreeting(
+  reply: string,
+  history: ConciergeHistoryItem[],
+  signature: string = GREETING_SIGNATURE,
+): boolean {
+  if (!isGreetingReply(reply, signature)) return false;
+  return history.some((h) => h.role === "assistant" && isGreetingReply(h.content, signature));
 }
 
 /**
@@ -120,10 +166,11 @@ export function shouldSkipGreeting(reply: string, history: ConciergeHistoryItem[
  * conversa: respondemos a saudação de volta sem nos reapresentar (não ficamos
  * mudos). Fallback quando a resposta era só a apresentação.
  */
-export function stripGreetingIntro(reply: string): string {
-  if (!isGreetingReply(reply)) return reply;
+export function stripGreetingIntro(reply: string, signature: string = GREETING_SIGNATURE): string {
+  if (!isGreetingReply(reply, signature)) return reply;
+  const escaped = signature.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const stripped = reply
-    .replace(new RegExp(`[^.!?\\n]*${GREETING_SIGNATURE}[^.!?\\n]*[.!?]?`, "g"), "")
+    .replace(new RegExp(`[^.!?\\n]*${escaped}[^.!?\\n]*[.!?]?`, "g"), "")
     .replace(/[ \t]+/g, " ")
     .replace(/ ?\n ?/g, "\n")
     .replace(/\n{2,}/g, "\n")
@@ -603,11 +650,15 @@ async function loadConciergeSettings(
       [orgId],
     );
     const raw = (result.rows[0]?.concierge ?? {}) as Record<string, unknown>;
+    const identity = conciergeIdentity(raw);
     return {
       availabilityAutoReply: raw.availabilityAutoReply === true,
       availabilityScope: raw.availabilityScope === "public_profile" ? "public_profile" : "organization",
       availabilityProfileSlug:
         typeof raw.availabilityProfileSlug === "string" ? raw.availabilityProfileSlug.trim() : "",
+      knowledgeBase: typeof raw.knowledgeBase === "string" ? raw.knowledgeBase.trim() : "",
+      attendantName: identity.attendantName,
+      clinicName: identity.clinicName,
     };
   } catch (error) {
     console.warn("[AI Concierge] failed to load concierge settings:", error);
@@ -719,11 +770,11 @@ async function maybeAnswerAvailability(
   env: Env,
   orgId: string,
   message: string,
+  settings: ConciergeSettings,
 ): Promise<ConciergeResponse | null> {
   const request = parseAvailabilityRequest(message);
   if (!request) return null;
 
-  const settings = await loadConciergeSettings(env, orgId);
   if (!settings.availabilityAutoReply) return null;
 
   try {
@@ -813,16 +864,20 @@ export class AIConciergeService {
       return { reply: "", intent: "other", answerable: false };
     }
 
-    const availabilityReply = await maybeAnswerAvailability(env, orgId, trimmed);
+    const settings = await loadConciergeSettings(env, orgId);
+    const availabilityReply = await maybeAnswerAvailability(env, orgId, trimmed, settings);
     if (availabilityReply) return availabilityReply;
+
+    const identity = conciergeIdentity(settings);
+    const knowledgeBase = settings.knowledgeBase || CLINIC_KB;
 
     // Saudação conforme o horário de Brasília (UTC-3).
     const brtHour = (new Date().getUTCHours() - 3 + 24) % 24;
     const saudacao = brtHour >= 5 && brtHour < 12 ? "Bom dia" : brtHour < 18 ? "Boa tarde" : "Boa noite";
-    const apresentacao = `${saudacao}, tudo bem?\nSou o Rafael da Activity Fisioterapia.\nComo posso ajudar?`;
+    const apresentacao = `${saudacao}, tudo bem?\n${identity.signature}.\nComo posso ajudar?`;
 
     const systemPrompt = `
-Você é o atendente virtual da Activity Fisioterapia (assine como "Rafael" quando fizer sentido).
+Você é o atendente virtual da ${identity.clinicName} (assine como "${identity.attendantName}" quando fizer sentido).
 Atende leads e pacientes via WhatsApp e Instagram.
 
 REGRAS ABSOLUTAS:
@@ -837,7 +892,7 @@ NÃO adiante informações (valores, horário, endereço etc.) enquanto a pessoa
 7. Responda em português do Brasil, tom acolhedor e profissional, conciso para chat. Sem excesso de emojis.
 
 INFORMAÇÕES OFICIAIS (única fonte permitida):
-${CLINIC_KB}
+${knowledgeBase}
 
 Retorne APENAS um JSON válido neste formato, sem texto fora do JSON:
 {"reply": "string", "intent": "scheduling" | "information" | "urgent" | "other", "answerable": true | false}

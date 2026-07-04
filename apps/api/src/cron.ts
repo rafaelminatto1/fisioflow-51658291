@@ -515,8 +515,14 @@ async function refreshInstagramTokens(pool: any, env: Env) {
   }
 }
 
-async function dispatchInstagramConcierge(pool: any, env: Env) {
-  const { AIConciergeService } = await import("./services/ai-concierge");
+export async function dispatchInstagramConcierge(pool: any, env: Env) {
+  const {
+    AIConciergeService,
+    buildConciergeHistory,
+    conciergeIdentity,
+    shouldSkipGreeting,
+    stripGreetingIntro,
+  } = await import("./services/ai-concierge");
   const { sendInstagramText } = await import("./routes/instagram-webhook");
   const { needsHumanApproval } = await import("./lib/whatsappApproval");
 
@@ -571,13 +577,38 @@ async function dispatchInstagramConcierge(pool: any, env: Env) {
       })();
       if (!text || text.length < 2) continue;
 
-      const concierge = await AIConciergeService.processMessage(env, row.organization_id, text, []);
+      // Histórico recente p/ contexto multi-turno e p/ não repetir a apresentação.
+      let history: ReturnType<typeof buildConciergeHistory> = [];
+      try {
+        const histRes = await pool.query(
+          `SELECT direction, content FROM wa_messages
+             WHERE conversation_id = $1 AND message_type = 'text'
+               AND direction IN ('inbound', 'outbound')
+             ORDER BY created_at DESC LIMIT 10`,
+          [row.id],
+        );
+        history = buildConciergeHistory([...histRes.rows].reverse());
+        // A última mensagem é a inbound sendo respondida — passada à parte.
+        const last = history[history.length - 1];
+        if (last && last.role === "user" && last.content === text) history.pop();
+      } catch (histErr) {
+        console.warn("[IG Concierge] history load failed:", histErr);
+      }
+
+      const concierge = await AIConciergeService.processMessage(env, row.organization_id, text, history);
       // Só responde o que está coberto pelas informações oficiais; nunca inventa.
       if (!concierge.answerable || !concierge.reply) continue;
       // Urgências/sensíveis não são auto-respondidas — ficam para o humano.
       if (needsHumanApproval(concierge.intent, text)) continue;
 
-      const r = (await sendInstagramText(env, String(row.ig_account_id), row.igsid, concierge.reply, row.ig_token || undefined)) as any;
+      // Não repete a apresentação se já saudamos nesta conversa.
+      const signature = conciergeIdentity(cfg).signature;
+      const reply = shouldSkipGreeting(concierge.reply, history, signature)
+        ? stripGreetingIntro(concierge.reply, signature)
+        : concierge.reply;
+      if (!reply || reply.length < 2) continue;
+
+      const r = (await sendInstagramText(env, String(row.ig_account_id), row.igsid, reply, row.ig_token || undefined)) as any;
       if (r?.message_id) {
         await import("./lib/whatsapp-conversations").then(({ addMessage }) =>
           addMessage(
@@ -589,7 +620,7 @@ async function dispatchInstagramConcierge(pool: any, env: Env) {
             "system",
             "ai_concierge",
             "text",
-            concierge.reply,
+            reply,
             r.message_id,
           ).catch(() => {}),
         );

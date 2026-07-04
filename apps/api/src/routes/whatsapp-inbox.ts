@@ -80,6 +80,10 @@ const DEFAULT_CONCIERGE_CONFIG = {
   // Auto-reply do Concierge no Instagram (com atraso: dá chance do humano atender primeiro).
   instagramAutoReply: false,
   instagramReplyDelayMinutes: 3,
+  // Identidade + base de conhecimento do Concierge (vazio = defaults da Activity).
+  attendantName: "Rafael",
+  clinicName: "Activity Fisioterapia",
+  knowledgeBase: "",
 };
 
 const DEFAULT_FUNNEL_STAGES = [

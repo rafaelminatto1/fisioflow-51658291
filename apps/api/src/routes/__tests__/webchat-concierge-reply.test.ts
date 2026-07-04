@@ -124,6 +124,72 @@ describe("POST /api/webchat/message — saudação duplicada", () => {
 		expect(sent).toContain("Atendemos na Mooca");
 	});
 
+	it("mensagem clínica sensível: não envia a resposta do modelo, envia handoff e cria tarefa", async () => {
+		mockProcessMessage.mockResolvedValue({
+			answerable: true,
+			reply: "Tratamos dores no joelho com fisioterapia ortopédica.",
+			intent: "information",
+		});
+		const app = await buildApp();
+		await post(app, {
+			org: ORG,
+			visitorId: "v1",
+			text: "Estou com muita dor no joelho depois de uma cirurgia, vocês tratam?",
+		});
+		await vi.waitFor(() => expect(autoReplies()).toHaveLength(1));
+		const sent = String(autoReplies()[0][8]);
+		expect(sent).not.toContain("fisioterapia ortopédica");
+		expect(sent.length).toBeGreaterThan(10);
+		const tarefaInsert = mockQuery.mock.calls.find(([sql]) =>
+			String(sql).includes("INSERT INTO tarefas"),
+		);
+		expect(tarefaInsert).toBeTruthy();
+		expect(String(tarefaInsert?.[1]?.[2] ?? "")).toContain(
+			"Estou com muita dor no joelho",
+		);
+	});
+
+	it("pergunta fora do escopo (unanswerable): envia handoff e cria tarefa", async () => {
+		mockProcessMessage.mockResolvedValue({
+			answerable: false,
+			reply: "",
+			intent: "other",
+		});
+		const app = await buildApp();
+		await post(app, {
+			org: ORG,
+			visitorId: "v1",
+			text: "Vocês atendem crianças de 8 anos?",
+		});
+		await vi.waitFor(() => expect(autoReplies()).toHaveLength(1));
+		expect(
+			mockQuery.mock.calls.some(([sql]) => String(sql).includes("INSERT INTO tarefas")),
+		).toBe(true);
+	});
+
+	it("não repete o handoff se já enviou um há pouco na mesma conversa", async () => {
+		mockProcessMessage.mockResolvedValue({
+			answerable: false,
+			reply: "",
+			intent: "other",
+		});
+		mockQuery.mockImplementation(async (sql: string) => {
+			if (sql.includes("FROM organizations")) {
+				if (sql.includes("concierge"))
+					return {
+						rows: [{ concierge: { webchatAutoReply: true, webchatReplyDelaySeconds: 0 } }],
+					};
+				return { rows: [{ "?column?": 1 }] };
+			}
+			if (sql.includes("web_handoff_")) return { rows: [{ "?column?": 1 }] };
+			return { rows: [] };
+		});
+		const app = await buildApp();
+		await post(app, { org: ORG, visitorId: "v1", text: "E gestantes, atendem?" });
+		await new Promise((r) => setTimeout(r, 80));
+		expect(autoReplies()).toHaveLength(0);
+	});
+
 	it("responde normalmente a uma pergunta comum", async () => {
 		mockProcessMessage.mockResolvedValue({
 			answerable: true,

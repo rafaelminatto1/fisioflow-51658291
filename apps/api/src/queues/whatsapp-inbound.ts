@@ -14,11 +14,13 @@ import { writeEvent } from "../lib/analytics";
 import {
   AIConciergeService,
   buildConciergeHistory,
+  conciergeIdentity,
   shouldSkipGreeting,
   stripGreetingIntro,
 } from "../services/ai-concierge";
 import { WhatsAppService } from "../lib/whatsapp";
 import { mirrorWhatsAppMedia } from "../lib/media-mirror";
+import { needsHumanApproval } from "../lib/whatsappApproval";
 
 /**
  * Resolve organization ID from phone number ID (WhatsApp) or Instagram account ID.
@@ -327,7 +329,7 @@ export async function handleWhatsAppInboundQueue(
  * Process AI Concierge response asynchronously.
  * This does not block the queue processing.
  */
-async function processConciergeAsync(
+export async function processConciergeAsync(
   env: Env,
   pool: any,
   orgId: string,
@@ -390,10 +392,17 @@ async function processConciergeAsync(
 
     const concierge = await AIConciergeService.processMessage(env, orgId, text, history);
 
+    // Urgências/conteúdo clínico sensível não são auto-respondidos — humano assume.
+    if (needsHumanApproval(concierge.intent, text)) {
+      writeEvent(env, { orgId, event: "whatsapp_concierge_needs_human" });
+      return;
+    }
+
     // Não repete a apresentação se já saudamos nesta conversa: responde a
     // saudação de volta em versão curta, sem se reapresentar (nunca fica mudo).
-    const reply = shouldSkipGreeting(concierge.reply, history)
-      ? stripGreetingIntro(concierge.reply)
+    const signature = conciergeIdentity(cfg).signature;
+    const reply = shouldSkipGreeting(concierge.reply, history, signature)
+      ? stripGreetingIntro(concierge.reply, signature)
       : concierge.reply;
 
     if (concierge.answerable && reply && reply.length >= 2) {

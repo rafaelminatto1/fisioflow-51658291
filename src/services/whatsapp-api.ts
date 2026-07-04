@@ -869,6 +869,12 @@ export interface ConciergeConfig {
   webchatAutoReply: boolean;
   /** Delay antes de responder no chat do site (0–20s; dá chance do humano atender). */
   webchatReplyDelaySeconds: number;
+  /** Nome com que o Concierge se apresenta (default "Rafael"). */
+  attendantName: string;
+  /** Nome da clínica usado na apresentação e no prompt (default "Activity Fisioterapia"). */
+  clinicName: string;
+  /** Base de conhecimento oficial usada nas respostas; vazio = padrão da Activity. */
+  knowledgeBase: string;
 }
 
 export interface FunnelStage {

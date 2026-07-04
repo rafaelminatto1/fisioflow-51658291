@@ -1,0 +1,93 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const mockRunAi = vi.fn();
+const mockQuery = vi.fn();
+
+vi.mock("../../lib/ai-native", () => ({
+  runAi: (...args: unknown[]) => mockRunAi(...args),
+  readAiText: (r: any) => r?.text ?? "",
+}));
+
+vi.mock("../../lib/db", () => ({
+  createPool: vi.fn(() => ({ query: mockQuery })),
+}));
+
+const ENV = {} as any;
+
+function orgSettings(concierge: Record<string, unknown>) {
+  mockQuery.mockImplementation(async (sql: string) => {
+    if (sql.includes("FROM organizations")) return { rows: [{ concierge }] };
+    return { rows: [] };
+  });
+}
+
+beforeEach(() => {
+  mockQuery.mockReset();
+  mockRunAi.mockReset().mockResolvedValue({
+    text: JSON.stringify({ reply: "ok", intent: "information", answerable: true }),
+  });
+});
+
+describe("conciergeIdentity", () => {
+  it("padrão mantém a assinatura atual", async () => {
+    const { conciergeIdentity } = await import("../ai-concierge");
+    const id = conciergeIdentity(null);
+    expect(id.attendantName).toBe("Rafael");
+    expect(id.clinicName).toBe("Activity Fisioterapia");
+    expect(id.signature).toBe("Sou o Rafael da Activity Fisioterapia");
+  });
+
+  it("nomes customizados mudam a assinatura", async () => {
+    const { conciergeIdentity } = await import("../ai-concierge");
+    const id = conciergeIdentity({ attendantName: "Ana", clinicName: "Clínica Verde" });
+    expect(id.signature).toBe("Sou Ana da Clínica Verde");
+  });
+
+  it("aceita raw como string JSON (jsonb)", async () => {
+    const { conciergeIdentity } = await import("../ai-concierge");
+    expect(conciergeIdentity('{"attendantName":"Ana"}').attendantName).toBe("Ana");
+    expect(conciergeIdentity("not-json").attendantName).toBe("Rafael");
+  });
+});
+
+describe("greeting helpers com assinatura custom", () => {
+  it("stripGreetingIntro remove apresentação custom", async () => {
+    const { stripGreetingIntro } = await import("../ai-concierge");
+    const custom = "Sou Ana da Clínica Verde";
+    const reply = `Boa tarde, tudo bem? ${custom}. Atendemos das 8h às 18h.`;
+    const out = stripGreetingIntro(reply, custom);
+    expect(out).not.toContain(custom);
+    expect(out).toContain("8h às 18h");
+  });
+});
+
+describe("processMessage usa KB e identidade das settings da organização", () => {
+  it("KB custom entra no system prompt no lugar do default", async () => {
+    orgSettings({ knowledgeBase: "Clínica Verde — valores: sessão R$ 250,00." });
+    const { AIConciergeService } = await import("../ai-concierge");
+    await AIConciergeService.processMessage(ENV, "org-x", "quanto custa?", []);
+
+    expect(mockRunAi).toHaveBeenCalledTimes(1);
+    const messages = mockRunAi.mock.calls[0][2].messages;
+    const system = messages.find((m: any) => m.role === "system")?.content ?? "";
+    expect(system).toContain("sessão R$ 250,00");
+    expect(system).not.toContain("Rua Manuel Vieira de Sousa");
+  });
+
+  it("sem KB custom, usa o default da Activity", async () => {
+    orgSettings({});
+    const { AIConciergeService } = await import("../ai-concierge");
+    await AIConciergeService.processMessage(ENV, "org-x", "quanto custa?", []);
+    const system = mockRunAi.mock.calls[0][2].messages[0].content;
+    expect(system).toContain("Rua Manuel Vieira de Sousa");
+  });
+
+  it("identidade custom aparece na apresentação do prompt", async () => {
+    orgSettings({ attendantName: "Ana", clinicName: "Clínica Verde" });
+    const { AIConciergeService } = await import("../ai-concierge");
+    await AIConciergeService.processMessage(ENV, "org-x", "oi", []);
+    const system = mockRunAi.mock.calls[0][2].messages[0].content;
+    expect(system).toContain("Sou Ana da Clínica Verde");
+    expect(system).toContain('assine como "Ana"');
+  });
+});

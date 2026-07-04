@@ -11,9 +11,12 @@ import type { Env } from "../types/env";
 import {
 	AIConciergeService,
 	buildConciergeHistory,
+	conciergeIdentity,
 	resolveWebchatConciergeConfig,
 	stripGreetingIntro,
 } from "../services/ai-concierge";
+import { needsHumanApproval } from "../lib/whatsappApproval";
+import { rateLimit } from "../middleware/rateLimit";
 
 /**
  * Chat do site (canal `webchat`) — endpoints públicos para o widget embarcado.
@@ -24,6 +27,86 @@ import {
 const app = new Hono<{ Bindings: Env }>();
 
 const MAX_LEN = 2000;
+
+/**
+ * Resposta de handoff quando o concierge não pode responder (fora do escopo
+ * ou conteúdo clínico sensível): o visitante não fica no vácuo e o time é
+ * acionado via tarefa no CRM.
+ */
+const HANDOFF_MESSAGE =
+	"Boa pergunta! Essa eu vou deixar com a nossa equipe — já avisei aqui e em breve alguém te responde. Se preferir agilizar, chama a gente no WhatsApp: (11) 93433-5858.";
+
+/**
+ * Envia a mensagem de handoff (no máx. 1 a cada 30 min por conversa) e cria
+ * tarefa p/ o time responder (no máx. 1 por dia por conversa).
+ */
+async function sendWebchatHandoff(
+	env: Env,
+	pool: any,
+	orgId: string,
+	conversationId: string,
+	contactId: string,
+	visitorId: string,
+	visitorQuestion: string,
+): Promise<void> {
+	const recentHandoff = await pool.query(
+		`SELECT 1 FROM wa_messages
+     WHERE conversation_id = $1::uuid
+       AND meta_message_id LIKE 'web_handoff_%'
+       AND created_at > now() - interval '30 minutes'
+     LIMIT 1`,
+		[conversationId],
+	);
+	if (recentHandoff.rows.length > 0) return;
+
+	await addMessage(
+		pool,
+		conversationId,
+		orgId,
+		contactId,
+		"outbound",
+		"system",
+		contactId,
+		"text",
+		HANDOFF_MESSAGE,
+		`web_handoff_${crypto.randomUUID()}`,
+	);
+	await broadcastToOrg(env, orgId, {
+		type: "webchat_message",
+		conversationId,
+		message: { content: HANDOFF_MESSAGE, direction: "outbound" },
+		contact: { id: contactId, visitorId },
+	});
+	writeEvent(env, { orgId, event: "webchat_concierge_handoff" });
+
+	try {
+		const dupTask = await pool.query(
+			`SELECT 1 FROM tarefas
+       WHERE organization_id = $1 AND linked_entity_id = $2
+         AND titulo ILIKE 'Responder visitante do site%'
+         AND created_at > now() - interval '1 day'
+       LIMIT 1`,
+			[orgId, conversationId],
+		);
+		if (dupTask.rows.length === 0) {
+			await pool.query(
+				`INSERT INTO tarefas (organization_id, created_by, titulo, descricao, status, prioridade, tipo,
+           order_index, tags, label_ids, checklists, attachments, task_references, dependencies,
+           requires_acknowledgment, acknowledgments, linked_entity_type, linked_entity_id)
+         VALUES ($1, 'system', $2, $3, 'A_FAZER', 'ALTA', 'TAREFA',
+           0, '{}', '{}', '[]', '[]', '[]', '[]', false, '[]', 'conversation', $4)`,
+				[
+					orgId,
+					"Responder visitante do site — pergunta fora do escopo do concierge",
+					`O visitante perguntou no chat do site e o concierge não pôde responder automaticamente:\n\n"${visitorQuestion}"\n\nResponder pela conversa de webchat no CRM.`,
+					conversationId,
+				],
+			);
+		}
+	} catch (taskErr) {
+		console.warn("[Webchat] handoff task creation failed:", taskErr);
+	}
+}
 
 function textOf(content: unknown): string {
 	if (typeof content === "string") {
@@ -58,8 +141,29 @@ async function orgExists(pool: any, orgId: string): Promise<boolean> {
 	}
 }
 
+const webchatIpKey = (c: any) =>
+	c.req.header("CF-Connecting-IP") ??
+	c.req.header("X-Forwarded-For")?.split(",")[0].trim() ??
+	"unknown";
+
+// Endpoint público: cada mensagem grava no banco e pode disparar AI — limita por IP.
+const messageRateLimit = rateLimit({
+	limit: 30,
+	windowSeconds: 600,
+	endpoint: "webchat-message",
+	keyFn: webchatIpKey,
+});
+
+// Polling do widget (1 req/4s por aba) — teto generoso só contra abuso.
+const pollRateLimit = rateLimit({
+	limit: 600,
+	windowSeconds: 600,
+	endpoint: "webchat-poll",
+	keyFn: webchatIpKey,
+});
+
 // Recebe mensagem do visitante.
-app.post("/message", async (c: any) => {
+app.post("/message", messageRateLimit, async (c: any) => {
 	let body: {
 		org?: string;
 		visitorId?: string;
@@ -165,6 +269,9 @@ app.post("/message", async (c: any) => {
 			const webchatCfg = resolveWebchatConciergeConfig(
 				conciergeCfgRes.rows[0]?.concierge,
 			);
+			const greetingSignature = conciergeIdentity(
+				conciergeCfgRes.rows[0]?.concierge,
+			).signature;
 
 			if (webchatCfg.enabled && !isNameCapture) {
 				// Agenda resposta com delay - mantem o Worker vivo via waitUntil
@@ -220,12 +327,37 @@ app.post("/message", async (c: any) => {
 								history,
 							);
 
+							// Fora do escopo OU conteúdo clínico sensível → humano assume.
+							// O visitante recebe um handoff (não fica no vácuo) e o time
+							// é acionado por tarefa no CRM.
+							const needsHuman =
+								!concierge.answerable || needsHumanApproval(concierge.intent, text);
+							if (needsHuman) {
+								writeEvent(c.env, {
+									orgId,
+									event: concierge.answerable
+										? "webchat_concierge_needs_human"
+										: "webchat_concierge_unanswerable",
+								});
+								await sendWebchatHandoff(
+									c.env,
+									pool,
+									orgId,
+									conversation.id,
+									contact.id,
+									visitorId,
+									text,
+								);
+								resolve();
+								return;
+							}
+
 							// No webchat o widget SEMPRE se apresenta localmente (esse greet não
 							// vai ao banco, então o histórico não serve de sinal). Nunca nos
 							// reapresentamos: remove a frase de apresentação, mantendo o resto.
-							const reply = stripGreetingIntro(concierge.reply);
+							const reply = stripGreetingIntro(concierge.reply, greetingSignature);
 
-							if (concierge.answerable && reply && reply.length >= 2) {
+							if (reply && reply.length >= 2) {
 								// Insere a resposta do Concierge como mensagem outbound
 								await addMessage(
 									pool,
@@ -253,12 +385,6 @@ app.post("/message", async (c: any) => {
 									event: "webchat_concierge_replied",
 								});
 								console.log("[Webchat] Concierge respondeu apos delay.");
-							} else if (!concierge.answerable) {
-								// Resposta nao segura - nao envia nada, deixa para o humano
-								writeEvent(c.env, {
-									orgId,
-									event: "webchat_concierge_unanswerable",
-								});
 							}
 						} catch (delayedErr) {
 							console.error("[Webchat] Concierge delayed error:", delayedErr);
@@ -287,7 +413,7 @@ app.post("/message", async (c: any) => {
 });
 
 // Polling: respostas do atendente desde `after`.
-app.get("/poll", async (c) => {
+app.get("/poll", pollRateLimit, async (c) => {
 	const orgId = (c.req.query("org") ?? "").trim();
 	const visitorId = (c.req.query("visitorId") ?? "").trim();
 	const after = c.req.query("after") ?? "1970-01-01T00:00:00Z";

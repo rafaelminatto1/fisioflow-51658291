@@ -664,6 +664,59 @@ export default function CrmWhatsAppSettings() {
                   </div>
                 </div>
 
+                <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-bold">Identidade e base de conhecimento</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Como o concierge se apresenta e as informações oficiais que ele pode usar
+                      nas respostas. Alterações valem na próxima mensagem — sem deploy.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    <div>
+                      <Label className="text-sm font-bold">Nome do atendente</Label>
+                      <Input
+                        value={concierge.attendantName ?? "Rafael"}
+                        onChange={(e) =>
+                          setConcierge({ ...concierge, attendantName: e.target.value })
+                        }
+                        className="mt-1.5 w-48"
+                        placeholder="Rafael"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-bold">Nome da clínica</Label>
+                      <Input
+                        value={concierge.clinicName ?? "Activity Fisioterapia"}
+                        onChange={(e) =>
+                          setConcierge({ ...concierge, clinicName: e.target.value })
+                        }
+                        className="mt-1.5 w-64"
+                        placeholder="Activity Fisioterapia"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-bold">Informações oficiais da clínica</Label>
+                    <Textarea
+                      value={concierge.knowledgeBase ?? ""}
+                      onChange={(e) =>
+                        setConcierge({ ...concierge, knowledgeBase: e.target.value })
+                      }
+                      rows={10}
+                      className="mt-1.5 font-mono text-xs"
+                      placeholder={
+                        "Deixe vazio para usar o padrão da Activity.\n\nUma informação por linha, ex.:\n- Endereço: Rua X, 123 — Bairro, Cidade/UF\n- Valores: avaliação R$ 180,00; sessão avulsa R$ 180,00\n- Horário: segunda a sexta das 07h às 21h; sábado das 07h às 13h\n- Não aceita convênios; fornecemos nota fiscal para reembolso"
+                      }
+                    />
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      O concierge responde APENAS com o que estiver aqui (endereço, valores,
+                      horários, formas de pagamento etc.). Perguntas fora desta lista vão para um
+                      humano.
+                    </p>
+                  </div>
+                </div>
+
                 <div className="rounded-xl border border-border bg-card p-5">
                   <h3 className="text-sm font-bold">Exigir aprovação humana</h3>
                   <p className="mb-3 text-xs text-muted-foreground">
