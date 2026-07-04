@@ -999,7 +999,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
 
     const result = await db.query(
       `
-        SELECT mr.*, p.name AS patient_name, p.gender AS patient_gender
+        SELECT mr.*, p.full_name AS patient_name, p.gender AS patient_gender
         FROM patient_medical_returns mr
         JOIN patients p ON p.id = mr.patient_id
         WHERE mr.id = $1::uuid

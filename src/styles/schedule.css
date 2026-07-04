@@ -23,6 +23,9 @@
 :root {
   --agenda-slot-height: 12px; /* Compacto: 14h × 56 slots × 12px = 672px (7h–21h) */
   --agenda-header-height: 42px;
+  --agenda-grid-hour-line: hsl(var(--foreground) / 0.16);
+  --agenda-grid-minor-line: hsl(var(--foreground) / 0.07);
+  --agenda-grid-day-line: hsl(var(--foreground) / 0.2);
 }
 
 .fc .fc-timegrid-slot,
@@ -38,19 +41,19 @@
   height: 100% !important;
 }
 
-/* Separador tonal apenas nas horas cheias */
+/* Grade legível: horas cheias mais fortes, subdivisões discretas */
 .fc .fc-timegrid-slot-minor {
-  border-top: none !important;
+  border-top: 1px solid var(--agenda-grid-minor-line) !important;
 }
 
 .fc .fc-timegrid-slot:not(.fc-timegrid-slot-minor) {
-  border-top: 1px solid hsl(var(--border) / 0.4) !important;
+  border-top: 1px solid var(--agenda-grid-hour-line) !important;
 }
 
 /* 3. Header tonal */
 .fc .fc-col-header-cell {
   background: hsl(var(--muted)) !important;
-  border: none !important;
+  border-right: 1px solid var(--agenda-grid-day-line) !important;
   height: var(--agenda-header-height) !important;
 }
 
@@ -128,7 +131,12 @@
 
 /* 7. Camadas tonais das colunas */
 .fc .fc-timegrid-col {
-  border-right: 1px solid hsl(var(--border) / 0.3) !important;
+  border-right: 1px solid var(--agenda-grid-day-line) !important;
+}
+
+.fc .fc-timegrid-axis,
+.fc .fc-timegrid-slot-label {
+  border-right: 1px solid var(--agenda-grid-day-line) !important;
 }
 
 .fc .fc-day-today {
