@@ -398,6 +398,16 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 1000,
       rolldownOptions: {
         external: [],
+        // Marca console.log/console.debug como funções puras: como o valor de
+        // retorno de uma chamada de console nunca é usado, o tree-shaking do
+        // Rolldown/Oxc remove a chamada inteira no build de produção.
+        // console.error/console.warn ficam de fora — úteis para triagem em prod.
+        // (compress.dropConsole do Oxc é tudo-ou-nada; não permite manter apenas error/warn.)
+        ...(isProduction && {
+          treeshake: {
+            manualPureFunctions: ["console.log", "console.debug"],
+          },
+        }),
         // @scaleflex/ui (bundled into vendor-image-editor) references `React`
         // as a bare global (React.createElement, React.useRef…). When Rolldown
         // splits it into a separate chunk, the identifier resolves to undefined
