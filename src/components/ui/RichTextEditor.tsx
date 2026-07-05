@@ -134,6 +134,10 @@ interface RichTextEditorProps {
    * parent, including collaborative sessions where normal prop sync is disabled.
    */
   externalValueRevision?: number;
+  /** Notifica o pai sobre o status da conexão de colaboração (Yjs/DO). */
+  onCollabStatusChange?: (status: "connecting" | "connected" | "disconnected") => void;
+  /** Notifica o pai sobre a instância do provider (para presença via awareness). */
+  onCollabProviderChange?: (provider: YProvider | null) => void;
 }
 
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({
@@ -152,6 +156,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   userName = "Profissional",
   userColor = "#10b981",
   externalValueRevision,
+  onCollabStatusChange,
+  onCollabProviderChange,
 }) => {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingValue = useRef<string | null>(null);
@@ -159,6 +165,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const lastExternalValueRevision = useRef(externalValueRevision);
   const isUpdatingFromProp = useRef(false);
   const onValueChangeRef = useRef(onValueChange);
+  const onCollabStatusChangeRef = useRef(onCollabStatusChange);
+  const onCollabProviderChangeRef = useRef(onCollabProviderChange);
   const [isTyping, setIsTyping] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -168,6 +176,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   useEffect(() => {
     onValueChangeRef.current = onValueChange;
   }, [onValueChange]);
+
+  useEffect(() => {
+    onCollabStatusChangeRef.current = onCollabStatusChange;
+  }, [onCollabStatusChange]);
+
+  useEffect(() => {
+    onCollabProviderChangeRef.current = onCollabProviderChange;
+  }, [onCollabProviderChange]);
 
   const flushPendingValue = useCallback(() => {
     if (debounceTimer.current) {
@@ -193,6 +209,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     if (!collaborationId) {
       setYdoc(null);
       setProvider(null);
+      onCollabProviderChangeRef.current?.(null);
       return;
     }
 
@@ -213,11 +230,25 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       params: async () => ({ token: (await getNeonAccessToken()) ?? "" }),
     });
     setProvider(p);
+    onCollabProviderChangeRef.current?.(p);
+    onCollabStatusChangeRef.current?.("connecting");
+
+    const handleStatus = ({ status }: { status: "connecting" | "connected" | "disconnected" }) => {
+      onCollabStatusChangeRef.current?.(status);
+    };
+    const handleSynced = (isSynced: boolean) => {
+      if (isSynced) onCollabStatusChangeRef.current?.("connected");
+    };
+    p.on("status", handleStatus);
+    p.on("synced", handleSynced);
 
     return () => {
+      p.off("status", handleStatus);
+      p.off("synced", handleSynced);
       p.destroy();
       idb.destroy();
       doc.destroy();
+      onCollabProviderChangeRef.current?.(null);
     };
   }, [collaborationId]);
 

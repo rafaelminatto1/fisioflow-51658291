@@ -684,7 +684,7 @@ const PatientEvolution = () => {
           onChange={handleEvolutionV2Change}
           patientId={state.patientId}
           evolutionId={state.currentSoapRecordId}
-          collaborationId={undefined}
+          collaborationId={state.currentSoapRecordId}
           userName={user?.displayName || 'Profissional'}
           userColor="#10b981"
           lastSaved={lastSavedAt}

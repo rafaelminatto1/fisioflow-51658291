@@ -10,7 +10,8 @@
  *   - Enhanced accessibility
  *   - Micro-interactions
  */
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import type YProvider from "y-partyserver/provider";
 import {
   StickyNote,
   History,
@@ -57,6 +58,12 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAIClinicalCopilot } from "@/hooks/useAIClinicalCopilot";
 import { ClinicalCopilotPanel } from "./ClinicalCopilotPanel";
+import { CollaborationPresence } from "../CollaborationPresence";
+
+/** Tempo máximo de espera pela conexão do provider antes de cair no modo clássico. */
+const COLLAB_CONNECT_TIMEOUT_MS = 5000;
+
+export type CollabStatus = "connecting" | "connected" | "fallback";
 
 interface NotionEvolutionPanelProps {
   data: EvolutionV2Data;
@@ -98,6 +105,57 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
   const [measurementsExpanded, setMeasurementsExpanded] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [replicatedContentRevision, setReplicatedContentRevision] = useState(0);
+
+  // Máquina de dois estados da colaboração: "connecting" (tentando conectar
+  // ao Durable Object) → "connected" (DO é o dono da escrita, autosave
+  // clássico desligado) ou, em falha/timeout de conexão, "fallback" (editor
+  // remonta sem colaboração, autosave clássico volta a funcionar).
+  const [collabStatus, setCollabStatus] = useState<CollabStatus>(
+    collaborationId ? "connecting" : "fallback",
+  );
+  const [collabProvider, setCollabProvider] = useState<YProvider | null>(null);
+
+  useEffect(() => {
+    if (!collaborationId) {
+      setCollabStatus("fallback");
+      setCollabProvider(null);
+      return;
+    }
+
+    setCollabStatus("connecting");
+    setCollabProvider(null);
+
+    const timeout = setTimeout(() => {
+      setCollabStatus((current) => (current === "connected" ? current : "fallback"));
+    }, COLLAB_CONNECT_TIMEOUT_MS);
+
+    return () => clearTimeout(timeout);
+  }, [collaborationId]);
+
+  const handleCollabStatusChange = useCallback(
+    (status: "connecting" | "connected" | "disconnected") => {
+      if (status === "connected") {
+        setCollabStatus("connected");
+      }
+    },
+    [],
+  );
+
+  const handleCollabProviderChange = useCallback((provider: YProvider | null) => {
+    setCollabProvider(provider);
+  }, []);
+
+  // O DO é o dono da escrita enquanto a colaboração estiver ativa/conectando;
+  // o autosave clássico só roda de fato quando caímos no modo fallback.
+  const handleObservationsChange = useCallback(
+    (val: string) => {
+      if (collabStatus === "connected") return;
+      onChange({ ...data, evolutionText: val, observations: val });
+    },
+    [collabStatus, data, onChange],
+  );
+
+  const effectiveCollaborationId = collabStatus === "fallback" ? undefined : collaborationId;
 
   // Hook do Clinical Copilot
   const combinedText = data.evolutionText || data.observations || "";
@@ -286,7 +344,10 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 
   return (
     <>
-      <Card className={cn("flex flex-col border-none shadow-none bg-background", className)}>
+      <Card
+        data-collab-status={collaborationId ? collabStatus : undefined}
+        className={cn("flex flex-col border-none shadow-none bg-background", className)}
+      >
         <div className="flex-1 p-3 sm:p-4 xl:p-5">
           <div className="mx-auto flex w-full max-w-[1720px] flex-col gap-4 pb-12">
             {/* Banner: Replicar última sessão (1 clique) */}
@@ -343,6 +404,9 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                 </span>
               </div>
               <div className="flex items-center gap-2">
+                {collabStatus === "connected" && (
+                  <CollaborationPresence provider={collabProvider} />
+                )}
                 <Button
                   type="button"
                   variant="outline"
@@ -409,17 +473,18 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                     )}
                   >
                     <RichTextBlock
+                      key={collabStatus === "fallback" ? "classic" : "collab"}
                       placeholder="Orientações gerais, encaminhamentos, cuidados e notas da sessão..."
                       value={data.evolutionText || data.observations || ""}
-                      onValueChange={(val) => {
-                        onChange({ ...data, evolutionText: val, observations: val });
-                      }}
+                      onValueChange={handleObservationsChange}
                       disabled={disabled}
                       showToolbar={true}
-                      collaborationId={collaborationId}
+                      collaborationId={effectiveCollaborationId}
                       userName={userName}
                       userColor={userColor}
                       externalValueRevision={replicatedContentRevision}
+                      onCollabStatusChange={handleCollabStatusChange}
+                      onCollabProviderChange={handleCollabProviderChange}
                       className={cn(
                         "border-none bg-transparent shadow-none",
                         observationsFocus ? "min-h-[calc(100vh-23rem)]" : "min-h-[calc(100vh-25rem)]",

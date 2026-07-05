@@ -7,6 +7,7 @@
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
+import type YProvider from "y-partyserver/provider";
 
 interface RichTextBlockProps {
   placeholder: string;
@@ -20,6 +21,8 @@ interface RichTextBlockProps {
   userName?: string;
   userColor?: string;
   externalValueRevision?: number;
+  onCollabStatusChange?: (status: "connecting" | "connected" | "disconnected") => void;
+  onCollabProviderChange?: (provider: YProvider | null) => void;
 }
 
 export const RichTextBlock: React.FC<RichTextBlockProps> = ({
@@ -34,6 +37,8 @@ export const RichTextBlock: React.FC<RichTextBlockProps> = ({
   userName,
   userColor,
   externalValueRevision,
+  onCollabStatusChange,
+  onCollabProviderChange,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -50,6 +55,8 @@ export const RichTextBlock: React.FC<RichTextBlockProps> = ({
           userName={userName}
           userColor={userColor}
           externalValueRevision={externalValueRevision}
+          onCollabStatusChange={onCollabStatusChange}
+          onCollabProviderChange={onCollabProviderChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className={cn(
