@@ -23,7 +23,7 @@ describe('AI Model Policy', () => {
 
   it('deve permitir modelo cheap para correção gramatical', () => {
     expect(() => {
-      validateModelPolicy('@cf/meta/llama-3-8b-instruct', 'grammar_correction');
+      validateModelPolicy('@cf/meta/llama-3.1-8b-instruct-fast', 'grammar_correction');
     }).not.toThrow();
 
     expect(() => {

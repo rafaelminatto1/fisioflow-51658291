@@ -1,22 +1,16 @@
-export type ModelClass = 'cheap' | 'medium' | 'embeddings' | 'reranker' | 'forbidden';
+import { TaskType } from "./aiTasks";
 
-export type TaskType = 
-  | 'clinical_rag_query'
-  | 'no_show_risk_explanation'
-  | 'soap_evolution_generation'
-  | 'patient_longitudinal_summary'
-  | 'grammar_correction'
-  | 'json_extraction'
-  | 'protocol_knowledge_search';
+export type ModelClass = 'cheap' | 'medium' | 'embeddings' | 'reranker' | 'forbidden';
 
 export const FORBIDDEN_MODELS = [
   'GLM 5.2', 
+  'glm-5.2-pro',
   'gpt-4', // Exemplo: restrito por não ter BAA
   'gpt-4o'
 ];
 
 export const MODEL_REGISTRY: Record<string, ModelClass> = {
-  '@cf/meta/llama-3-8b-instruct': 'cheap',
+  '@cf/meta/llama-3.1-8b-instruct-fast': 'cheap',
   'gemini-1.5-flash': 'cheap',
   'gemini-1.5-pro': 'medium',
   '@cf/baai/bge-base-en-v1.5': 'embeddings',
@@ -33,6 +27,15 @@ export const TASK_MODEL_PERMISSIONS: Record<TaskType, ModelClass[]> = {
   'clinical_rag_query': ['cheap', 'medium', 'embeddings', 'reranker'],
   'patient_longitudinal_summary': ['medium', 'cheap'],
   'soap_evolution_generation': ['medium'],
+  'soap_draft': ['cheap', 'medium'],
+  'patient_message': ['cheap'],
+  'clinical_summary': ['medium'],
+  'clinical_reasoning': ['medium'],
+  'admin_report': ['cheap'],
+  'rag_answer': ['cheap', 'medium', 'embeddings'],
+  'exercise_suggestion': ['cheap', 'medium'],
+  'reengagement_message': ['cheap'],
+  'discharge_summary': ['medium'],
 };
 
 export class ModelPolicyError extends Error {

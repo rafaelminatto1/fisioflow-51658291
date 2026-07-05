@@ -7,7 +7,14 @@ export function redactPII(text: string): RedactionResult {
   let sanitized = text;
   const redactedEntities = new Set<string>();
 
-  // 1. CPF (matching formats like 123.456.789-00 or 12345678900)
+  // 1. Telefone (BR)
+  const phoneRegex = /(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\d{4}[-\s]?\d{4}|\d{4}[-\s]?\d{4})\b/g;
+  if (phoneRegex.test(sanitized)) {
+    sanitized = sanitized.replace(phoneRegex, "[TELEFONE REMOVIDO]");
+    redactedEntities.add("TELEFONE");
+  }
+
+  // 2. CPF (matching formats like 123.456.789-00 or 12345678900)
   const cpfRegex = /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g;
   if (cpfRegex.test(sanitized)) {
     sanitized = sanitized.replace(cpfRegex, "[CPF REMOVIDO]");
@@ -28,12 +35,7 @@ export function redactPII(text: string): RedactionResult {
     redactedEntities.add("EMAIL");
   }
 
-  // 4. Telefone (BR)
-  const phoneRegex = /(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\d{4}[-\s]?\d{4}|\d{4}[-\s]?\d{4})\b/g;
-  if (phoneRegex.test(sanitized)) {
-    sanitized = sanitized.replace(phoneRegex, "[TELEFONE REMOVIDO]");
-    redactedEntities.add("TELEFONE");
-  }
+
 
   return {
     text: sanitized,

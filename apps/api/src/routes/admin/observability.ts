@@ -67,7 +67,7 @@ app.get("/ai-cost", async (c) => {
       avgLatencyMs: 450
     },
     costByModel: [
-      { model: "@cf/meta/llama-3-8b-instruct", costBrl: 5.50 },
+      { model: "@cf/meta/llama-3.1-8b-instruct-fast", costBrl: 5.50 },
       { model: "gemini-1.5-flash", costBrl: 17.00 }
     ],
     costByTaskType: [

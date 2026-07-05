@@ -48,6 +48,9 @@ export async function upsertToVectorize(env: any, text: string, metadata: Vector
 
 export async function queryVectorize(env: any, query: string, options: VectorizeQueryOptions) {
   try {
+    if (!env.VECTORIZE_KNOWLEDGE_BASE) {
+      throw new Error("Vectorize binding missing");
+    }
     const queryVector = await generateEmbedding(env, query);
     
     const filterObj: Record<string, any> = {

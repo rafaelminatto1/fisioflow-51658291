@@ -7,6 +7,9 @@ const app = new Hono<{ Bindings: any }>();
 
 app.post("/", async (c) => {
   try {
+    if (c.env.RAG_CLINICAL_ENABLED !== "true") {
+      return c.json({ error: "RAG Clínico está desativado no ambiente atual." }, 403);
+    }
     const body = await c.req.json();
     const { organizationId, patientId, query } = body;
 
@@ -44,7 +47,7 @@ app.post("/", async (c) => {
         // já devem ter sido higienizados antes do embedding. 
       });
       
-      const model = c.env.AI_DEFAULT_CHEAP_MODEL || "@cf/meta/llama-3-8b-instruct";
+      const model = c.env.AI_DEFAULT_CHEAP_MODEL || "@cf/meta/llama-3.1-8b-instruct-fast";
       answer = await router.run(finalPrompt, model);
     }
 

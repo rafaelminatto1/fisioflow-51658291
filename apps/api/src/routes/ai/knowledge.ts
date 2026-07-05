@@ -71,7 +71,7 @@ ${query}
         // nível 'none', sem dados de paciente
     });
     
-    const answer = await router.run(prompt, c.env.AI_DEFAULT_CHEAP_MODEL || "@cf/meta/llama-3-8b-instruct");
+    const answer = await router.run(prompt, c.env.AI_DEFAULT_CHEAP_MODEL || "@cf/meta/llama-3.1-8b-instruct-fast");
     
     return c.json({
       answer,

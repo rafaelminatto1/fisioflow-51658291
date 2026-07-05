@@ -35,7 +35,7 @@ export async function runGemini(env: any, model: string, prompt: string): Promis
   // Here we would use fetch to the gateway or Google SDK
   // const res = await fetch(`${gatewayUrl}/v1/models/${model}:generateContent`, {...});
   
-  // Stubbing for the sake of the architectural implementation
+  // TODO(PRODUCTION-STUB): This is a stub for Gemini. Replace with actual fetch implementation for production.
   return {
     text: "Resposta gerada pelo Gemini (Stub)",
     inputTokens: Math.ceil(prompt.length / 4),

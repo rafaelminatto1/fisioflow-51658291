@@ -59,7 +59,7 @@ describe("Patient Risk Scoring (Heuristics)", () => {
       sessionsWithoutEvolution: 10,
       daysSinceLastSession: 50,
       hasFutureSession: false,
-      painVariation: 0,
+      painVariation: 5,
       totalSessions: 10
     };
 

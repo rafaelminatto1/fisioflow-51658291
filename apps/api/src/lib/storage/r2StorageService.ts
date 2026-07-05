@@ -87,7 +87,7 @@ export class R2StorageService {
       metadata.patientId = options.patientId;
     }
 
-    await bucket.put(objectKey, options.fileBuffer, {
+    await bucket.put(objectKey, options.fileBuffer as any, {
       httpMetadata: { contentType: options.contentType },
       customMetadata: metadata
     });

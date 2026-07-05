@@ -24,10 +24,15 @@ export class AIRouter {
     // In a real implementation, query `ai_usage_events` via Drizzle:
     // SELECT SUM(estimated_cost_brl) FROM ai_usage_events WHERE orgId = ? AND date = today
     // if sum > env.AI_DAILY_BUDGET_BRL throw Error
+    
+    if (this.config.env.AI_ROUTER_ENABLED === "false" || this.config.env.AI_ROUTER_ENABLED === false) {
+      throw new AIRouterError("AI Router está desativado por feature flag.", "FEATURE_DISABLED");
+    }
+
     const dailyLimit = parseFloat(this.config.env.AI_DAILY_BUDGET_BRL || "50.00");
     const monthlyLimit = parseFloat(this.config.env.AI_MONTHLY_BUDGET_BRL || "500.00");
     
-    // Stub logic
+    // TODO(PRODUCTION-STUB): Implement real budget check querying ai_usage_events via Drizzle
     const currentDailyUsage = 0; 
     if (currentDailyUsage >= dailyLimit) {
       throw new AIRouterError("Daily AI budget exceeded", "BUDGET_EXCEEDED");
@@ -51,7 +56,7 @@ export class AIRouter {
     await this.checkBudget();
 
     // 3. Model selection & Fallback
-    const primaryModel = forceModel || env.AI_DEFAULT_CHEAP_MODEL || "@cf/meta/llama-3-8b-instruct";
+    const primaryModel = forceModel || env.AI_DEFAULT_CHEAP_MODEL || "@cf/meta/llama-3.1-8b-instruct-fast";
     
     // Enforcement da Política de Modelos (Lança erro se GLM 5.2 ou classe proibida)
     validateModelPolicy(primaryModel, taskType as any);
@@ -91,7 +96,7 @@ export class AIRouter {
       }
     } catch (e: any) {
       // Fallback
-      const fallbackModel = env.AI_DEFAULT_CHEAP_MODEL || "@cf/meta/llama-3-8b-instruct";
+      const fallbackModel = env.AI_DEFAULT_CHEAP_MODEL || "@cf/meta/llama-3.1-8b-instruct-fast";
       try {
         // Redo sanitization check just in case the provider changed and blocked full_internal_only
         const fallbackProvider = "workers-ai";
@@ -119,7 +124,7 @@ export class AIRouter {
       // 4. Calculate cost
       const { estimatedCostUsd, estimatedCostBrl } = calculateCost(primaryModel, inputTokens, outputTokens);
 
-      // 5. Async Log to DB
+      // TODO(PRODUCTION-STUB): Async Log to DB
       // env.ctx.waitUntil(db.insert(aiUsageEvents).values({...}))
       console.log(`[AI_ROUTER] Logged usage: Org=${organizationId}, Task=${taskType}, CostBRL=${estimatedCostBrl}, Latency=${latencyMs}ms, Redacted=[${redactedLog.join(",")}]`);
     }

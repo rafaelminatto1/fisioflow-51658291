@@ -1,7 +1,7 @@
 export const COSTS_USD = {
   "gemini-1.5-flash-lite": { input: 0.000075, output: 0.0003 },
   "gemini-1.5-flash": { input: 0.00035, output: 0.00105 },
-  "@cf/meta/llama-3-8b-instruct": { input: 0, output: 0.0002 },
+  "@cf/meta/llama-3.1-8b-instruct-fast": { input: 0, output: 0.0002 },
   "@cf/baai/bge-base-en-v1.5": { input: 0.00001, output: 0 },
 };
 

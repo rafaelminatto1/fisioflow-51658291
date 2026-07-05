@@ -1,4 +1,3 @@
-import { Ai } from "@cloudflare/ai";
 
 export interface KnowledgeMetadata {
   organizationId: string;

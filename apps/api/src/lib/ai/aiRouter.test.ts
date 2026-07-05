@@ -8,7 +8,7 @@ describe("AIRouter", () => {
   const mockEnv = {
     AI_DAILY_BUDGET_BRL: "50.00",
     AI_MONTHLY_BUDGET_BRL: "500.00",
-    AI_DEFAULT_CHEAP_MODEL: "@cf/meta/llama-3-8b-instruct",
+    AI_DEFAULT_CHEAP_MODEL: "@cf/meta/llama-3.1-8b-instruct-fast",
     AI_GATEWAY_ENABLED: "true"
   };
 
@@ -31,7 +31,7 @@ describe("AIRouter", () => {
       taskType: "soap_draft"
     });
     
-    await expect(router.run("hello", "glm-5.2-pro")).rejects.toThrowError("GLM 5.2 is forbidden in production");
+    await expect(router.run("hello", "glm-5.2-pro")).rejects.toThrowError("proibido para uso no ambiente de produção");
   });
 
   it("should trigger fallback when primary provider fails", async () => {

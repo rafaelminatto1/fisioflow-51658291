@@ -35,7 +35,10 @@ app.get("/:patientId", async (c) => {
 app.post("/:patientId/explain", async (c) => {
   const patientId = c.req.param("patientId");
   const organizationId = c.req.header("x-organization-id") || "";
-  const { userId } = await c.req.json();
+    if (c.env.ML_RISK_SCORING_ENABLED !== "true") {
+      return c.json({ error: "ML Risk Scoring está desativado no ambiente atual." }, 403);
+    }
+    const { userId } = await c.req.json();
 
   const mockFeatures = {
     recentNoShows: 1,
