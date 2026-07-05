@@ -12,7 +12,8 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:unit": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "ai:eval": "npx tsx src/lib/ai/evaluation/evalRunner.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1016.0",

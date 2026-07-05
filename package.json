@@ -38,6 +38,10 @@
     "e2e": "cd e2e && npx playwright test",
     "test:resilience": "cd e2e && npx playwright test flows/resilience.spec.ts",
     "e2e:report": "cd e2e && npx playwright show-report",
+    "db:generate": "pnpm --filter @fisioflow/db exec drizzle-kit generate",
+    "db:migrate": "pnpm --filter @fisioflow/db exec drizzle-kit migrate",
+    "db:branch": "npx neonctl branches create",
+    "db:backup": "echo 'Run: npx neonctl projects restore' && npx neonctl projects restore",
     "prepare": "husky"
   },
   "dependencies": {

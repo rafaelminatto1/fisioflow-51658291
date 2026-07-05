@@ -8,6 +8,7 @@ import {
   varchar,
   integer,
   jsonb,
+  doublePrecision,
 } from "drizzle-orm/pg-core";
 import { organizations } from "./organizations";
 import { patients } from "./patients";
@@ -41,17 +42,24 @@ export const clinicalScribeLogs = pgTable("clinical_scribe_logs", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const aiUsage = pgTable("ai_usage", {
+export const aiUsageEvents = pgTable("ai_usage_events", {
   id: uuid("id").primaryKey().defaultRandom(),
   organizationId: uuid("organization_id").references(() => organizations.id),
   userId: uuid("user_id").references(() => profiles.userId),
+  patientId: uuid("patient_id").references(() => patients.id),
+  taskType: varchar("task_type", { length: 50 }).notNull(),
   model: varchar("model", { length: 100 }).notNull(),
-  provider: varchar("provider", { length: 50 }).notNull(), // google, ollama, openai, etc.
-  promptTokens: integer("prompt_tokens").default(0),
-  completionTokens: integer("completion_tokens").default(0),
+  provider: varchar("provider", { length: 50 }).notNull(), // google, workers-ai, openai, etc.
+  inputTokens: integer("input_tokens").default(0),
+  outputTokens: integer("output_tokens").default(0),
   totalTokens: integer("total_tokens").default(0),
+  estimatedCostUsd: doublePrecision("estimated_cost_usd").default(0),
+  estimatedCostBrl: doublePrecision("estimated_cost_brl").default(0),
   latencyMs: integer("latency_ms"),
   status: integer("status").default(200),
+  gatewayUsed: boolean("gateway_used").default(false),
+  cacheHit: boolean("cache_hit").default(false),
+  errorMessage: text("error_message"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

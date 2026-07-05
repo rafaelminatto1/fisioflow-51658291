@@ -57,7 +57,11 @@ database_id = "9eba3eb7-5486-49d0-9684-c325f8b1ddc2"
 binding = "ANALYTICS"
 dataset = "fisioflow_events"
 
-# ===== AI SEARCH =====
+# ===== AI SEARCH E VECTORIZE =====
+[[vectorize]]
+binding = "VECTORIZE_KNOWLEDGE_BASE"
+index_name = "fisioflow-knowledge-base"
+
 # A instancia fisioflow-rag deve ser criada como `wrangler ai-search create fisioflow-rag --type builtin`.
 # Nao apontar para o bucket R2 fisioflow-media: o crawler tenta indexar midia clinica e gera erros.
 [[ai_search]]
