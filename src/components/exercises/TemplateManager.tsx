@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Suspense, lazy, useState, useMemo } from "react";
 import { templatesApi } from "@/api/v2";
 import { useTemplateUIStore } from "@/stores/useTemplateUIStore";
@@ -127,8 +127,19 @@ export function TemplateManager() {
     setEditingTemplate(selectedTemplate);
     setEditFlowOpen(true);
   };
+  const deleteTemplateMutation = useMutation({
+    mutationFn: (id: string) => templatesApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["templates", {}] });
+      setSelectedTemplate(null);
+    },
+  });
+
   const handleDelete = () => {
-    // TODO: task 13 — open delete confirmation dialog
+    if (!selectedTemplate) return;
+    if (selectedTemplate.templateType === "system") return;
+
+    deleteTemplateMutation.mutate(selectedTemplate.id);
   };
 
   const handleExploreSystem = () => setActiveProfile("all");
