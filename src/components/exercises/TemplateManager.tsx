@@ -136,6 +136,7 @@ export function TemplateManager() {
   });
 
   const handleDelete = () => {
+    if (deleteTemplateMutation.isPending) return;
     if (!selectedTemplate) return;
     if (selectedTemplate.templateType === "system") return;
 

@@ -39,4 +39,16 @@ describe("isLowerBetterMetric", () => {
   it("Força is higher-is-better", () => {
     expect(isLowerBetterMetric("Força")).toBe(false);
   });
+
+  it("Dorsiflexão is NOT flagged as lower-is-better (substring false-positive)", () => {
+    expect(isLowerBetterMetric("Dorsiflexão")).toBe(false);
+  });
+
+  it("Elevação is NOT flagged as lower-is-better (substring false-positive)", () => {
+    expect(isLowerBetterMetric("Elevação")).toBe(false);
+  });
+
+  it("Índice funcional is NOT flagged as lower-is-better (substring false-positive)", () => {
+    expect(isLowerBetterMetric("Índice funcional")).toBe(false);
+  });
 });

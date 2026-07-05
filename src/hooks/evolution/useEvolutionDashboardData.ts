@@ -72,8 +72,12 @@ const LOWER_IS_BETTER_TOKENS = ["eva", "vas", "dor", "oswestry", "ndi", "dash", 
  * Determina se uma métrica clínica é "menor é melhor" (ex.: escalas de dor).
  */
 export function isLowerBetterMetric(measurementName: string): boolean {
-  const normalized = measurementName.toLowerCase().trim();
-  return LOWER_IS_BETTER_TOKENS.some((token) => normalized.includes(token));
+  const tokens = measurementName
+    .toLowerCase()
+    .trim()
+    .split(/[^\p{L}]+/u)
+    .filter(Boolean);
+  return tokens.some((token) => LOWER_IS_BETTER_TOKENS.includes(token));
 }
 
 /**
