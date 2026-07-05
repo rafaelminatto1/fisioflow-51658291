@@ -641,6 +641,9 @@ importers:
       '@fisioflow/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@fisioflow/evolution-editor-schema':
+        specifier: workspace:*
+        version: link:../../packages/evolution-editor-schema
       '@google/genai':
         specifier: ^1.50.1
         version: 1.52.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.4.3))
@@ -651,11 +654,11 @@ importers:
         specifier: ^1.0.2
         version: 1.1.0
       '@tiptap/core':
-        specifier: ^3.27.1
-        version: 3.27.1(@tiptap/pm@3.23.4)
+        specifier: 3.23.4
+        version: 3.23.4(@tiptap/pm@3.23.4)
       '@tiptap/static-renderer':
         specifier: 3.23.4
-        version: 3.23.4(@tiptap/core@3.27.1(@tiptap/pm@3.23.4))(@tiptap/pm@3.23.4)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 3.23.4(@tiptap/core@3.23.4(@tiptap/pm@3.23.4))(@tiptap/pm@3.23.4)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       agents:
         specifier: ^0.15.0
         version: 0.15.0(@babel/core@7.29.0)(@babel/plugin-transform-runtime@7.29.0(@babel/core@7.29.0))(@babel/runtime@7.29.7)(@cloudflare/workers-types@4.20260609.1)(ai@6.0.177(zod@4.4.3))(react@19.2.0)(rolldown@1.1.2)(vite@8.1.0(@types/node@25.6.2)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.4.3)
@@ -9505,11 +9508,6 @@ packages:
     resolution: {integrity: sha512-ni2LWE52bVeSt3L2HVBSmbBw+elc32ATej9C68EyKzN/8vR5ILxFn6RCdDTKm4asmwZyq2jys12dKmBdWMr9QA==}
     peerDependencies:
       '@tiptap/pm': 3.23.4
-
-  '@tiptap/core@3.27.1':
-    resolution: {integrity: sha512-rV6Qn4wmC6BxfF+4mu6bqGWj9vA4oXXhsrpXaJL2uhjxeHAGofjwcHof2X84VYzeyXgdlsGmqKie4TAppVXZUQ==}
-    peerDependencies:
-      '@tiptap/pm': 3.27.1
 
   '@tiptap/extension-blockquote@3.23.1':
     resolution: {integrity: sha512-FdVZLZOkL06j3WLXOC2UeX7++Cj3qI2vfohruMJiz4vk1Q5UUH7G4+AykFzjzBJHrdEpkiRUkRpU1KZIWdbluw==}
@@ -29049,10 +29047,6 @@ snapshots:
     dependencies:
       '@tiptap/pm': 3.23.4
 
-  '@tiptap/core@3.27.1(@tiptap/pm@3.23.4)':
-    dependencies:
-      '@tiptap/pm': 3.23.4
-
   '@tiptap/extension-blockquote@3.23.1(@tiptap/core@3.23.4(@tiptap/pm@3.23.4))':
     dependencies:
       '@tiptap/core': 3.23.4(@tiptap/pm@3.23.4)
@@ -29654,13 +29648,6 @@ snapshots:
   '@tiptap/static-renderer@3.23.4(@tiptap/core@3.23.4(@tiptap/pm@3.23.4))(@tiptap/pm@3.23.4)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
     dependencies:
       '@tiptap/core': 3.23.4(@tiptap/pm@3.23.4)
-      '@tiptap/pm': 3.23.4
-      react: 19.2.0
-      react-dom: 19.2.0(react@19.2.0)
-
-  '@tiptap/static-renderer@3.23.4(@tiptap/core@3.27.1(@tiptap/pm@3.23.4))(@tiptap/pm@3.23.4)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
-    dependencies:
-      '@tiptap/core': 3.27.1(@tiptap/pm@3.23.4)
       '@tiptap/pm': 3.23.4
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)

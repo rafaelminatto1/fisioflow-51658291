@@ -1,6 +1,8 @@
 import { DurableObject } from "cloudflare:workers";
 import type { Connection, ConnectionContext } from "partyserver";
 import { YServer } from "y-partyserver";
+import * as Y from "yjs";
+import { yDocToHtml } from "@fisioflow/evolution-editor-schema";
 import { resolveJwtCandidate, userHasRole } from "../lib/auth";
 import { getRawSql } from "../lib/db";
 import type { Env } from "../types/env";
@@ -26,7 +28,9 @@ async function loadSessionOrgId(env: Env, sessionId: string): Promise<string | n
  *
  * Servidor autoritativo: mantém o Y.Doc canônico da sessão, sincroniza os
  * clientes via protocolo y-websocket e entrega o estado atual a quem entra
- * depois. Persistência (onLoad/onSave) chega na Task 5.
+ * depois. Persistência (onLoad/onSave — Task 5): restaura o snapshot Yjs do
+ * Neon ao abrir a sala e grava snapshot + HTML renderizado (debounced pelo
+ * `callbackOptions` acima, ou ao esvaziar a sala).
  *
  * Autenticação (Task 4): o upgrade do WebSocket chega sem passar por
  * middleware HTTP normal, então a validação acontece aqui em `onConnect` —
@@ -76,6 +80,36 @@ export class EvolutionCollaborationSql extends YServer<Env> {
     connection.setState(state);
 
     await super.onConnect(connection, ctx);
+  }
+
+  async onLoad(): Promise<void> {
+    const sql = getRawSql(this.env, "read");
+    const res = await sql(`SELECT observacao_ydoc FROM sessions WHERE id = $1 LIMIT 1`, [
+      this.name,
+    ]);
+    const snapshot = res.rows?.[0]?.observacao_ydoc as Uint8Array | null | undefined;
+    if (snapshot && snapshot.byteLength > 0) {
+      Y.applyUpdate(this.document, snapshot);
+    }
+  }
+
+  async onSave(): Promise<void> {
+    const update = Y.encodeStateAsUpdate(this.document);
+    const html = yDocToHtml(this.document);
+    try {
+      const sql = getRawSql(this.env, "write");
+      await sql(`UPDATE sessions SET observacao_ydoc = $1, observacao = $2 WHERE id = $3`, [
+        update,
+        html,
+        this.name,
+      ]);
+    } catch (error) {
+      console.error("[EvolutionCollaboration] onSave falhou:", error);
+      this.env.ANALYTICS?.writeDataPoint?.({
+        blobs: ["collab_save_error", this.name],
+        doubles: [1],
+      });
+    }
   }
 }
 

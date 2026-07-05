@@ -4,6 +4,7 @@ import { defineConfig } from "vitest/config";
 const workersTest = [
   "src/agents/__tests__/EvolutionCollaboration.sync.test.ts",
   "src/agents/__tests__/EvolutionCollaboration.auth.test.ts",
+  "src/agents/__tests__/EvolutionCollaboration.persist.test.ts",
 ];
 
 export default defineConfig({
