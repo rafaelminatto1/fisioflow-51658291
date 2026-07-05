@@ -66,6 +66,33 @@ export function useEvolutionDashboardData(patientId: string, useMocks = false) {
   };
 }
 
+const LOWER_IS_BETTER_TOKENS = ["eva", "vas", "dor", "oswestry", "ndi", "dash", "pain"];
+
+/**
+ * Determina se uma métrica clínica é "menor é melhor" (ex.: escalas de dor).
+ */
+export function isLowerBetterMetric(measurementName: string): boolean {
+  const normalized = measurementName.toLowerCase().trim();
+  return LOWER_IS_BETTER_TOKENS.some((token) => normalized.includes(token));
+}
+
+/**
+ * Calcula o percentual de melhoria entre o primeiro e o último valor,
+ * respeitando a polaridade da métrica (menor-é-melhor vs maior-é-melhor).
+ */
+export function computeImprovementPct(values: number[], lowerIsBetter: boolean): number {
+  if (values.length < 2) return 0;
+  const initial = values[0];
+  const current = values[values.length - 1];
+  if (initial === 0) return 0;
+
+  const improvement = lowerIsBetter
+    ? ((initial - current) / initial) * 100
+    : ((current - initial) / initial) * 100;
+
+  return Math.max(0, Math.min(100, improvement));
+}
+
 /**
  * Processa dados reais vindos da API
  */
@@ -121,16 +148,9 @@ function processRealData(
 
   Object.keys(metricsByName).forEach((name) => {
     const values = metricsByName[name];
-    if (values.length >= 2) {
-      const initial = values[0];
-      const current = values[values.length - 1];
-      // Evitar divisão por zero e considerar melhoria (assumindo que maior é melhor na maioria dos testes físicos)
-      // TODO: No futuro, cada teste pode ter uma polaridade (menor é melhor ou maior é melhor)
-      if (initial !== 0) {
-        const improvement = ((current - initial) / initial) * 100;
-        totalImprovement += Math.max(0, Math.min(100, improvement)); // Cap 0-100 por métrica
-        measurableMetrics++;
-      }
+    if (values.length >= 2 && values[0] !== 0) {
+      totalImprovement += computeImprovementPct(values, isLowerBetterMetric(name));
+      measurableMetrics++;
     }
   });
 
