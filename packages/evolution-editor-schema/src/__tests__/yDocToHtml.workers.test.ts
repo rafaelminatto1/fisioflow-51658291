@@ -33,4 +33,23 @@ describe("yDocToHtml (spike gate — Yjs -> HTML no runtime de Workers)", () => 
     prosemirrorToYXmlFragment(pmDoc, doc.getXmlFragment("default"));
     expect(yDocToHtml(doc)).toBe(yDocToHtml(doc));
   });
+
+  it("renderiza o nó clinicalMedia (schema-only) como figure/img", () => {
+    const schema = getSchema(evolutionEditorExtensions);
+    const pmDoc = PMNode.fromJSON(schema, {
+      type: "doc",
+      content: [
+        {
+          type: "clinicalMedia",
+          attrs: { src: "https://media.moocafisio.com.br/foto.jpg", alt: "Postura" },
+        },
+      ],
+    });
+    const doc = new Y.Doc();
+    prosemirrorToYXmlFragment(pmDoc, doc.getXmlFragment("default"));
+    const html = yDocToHtml(doc);
+    expect(html).toContain('data-type="clinical-media"');
+    expect(html).toContain("<img");
+    expect(html).toContain("https://media.moocafisio.com.br/foto.jpg");
+  });
 });
