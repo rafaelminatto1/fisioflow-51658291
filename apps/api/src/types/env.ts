@@ -12,6 +12,7 @@ import type {
   BiomechanicsAnalysisWorkflow,
   AutomationExecutor,
 } from "../workflows";
+import type { EvolutionCollaborationSql } from "../agents/EvolutionCollaboration";
 
 /**
  * Cloudflare Stream binding (GA 2026-05-07).
@@ -195,7 +196,7 @@ export interface Env {
   ASSESSMENT_LIVE_SESSION?: DurableObjectNamespace;
   CLINIC_AGENT?: DurableObjectNamespace;
   VOICE_SCRIBE_AGENT?: DurableObjectNamespace;
-  EVOLUTION_COLLABORATION: DurableObjectNamespace;
+  EVOLUTION_COLLABORATION: DurableObjectNamespace<EvolutionCollaborationSql>;
 
   // Premium AI (opt-in): Gemini Live API para avaliações em tempo real
   GOOGLE_AI_PREMIUM_ENABLED?: string; // "true" para habilitar

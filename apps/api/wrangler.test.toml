@@ -1,0 +1,12 @@
+name = "fisioflow-api-collab-test"
+main = "src/agents/__tests__/collab-test-worker.ts"
+compatibility_date = "2026-06-06"
+compatibility_flags = ["nodejs_compat"]
+
+[[durable_objects.bindings]]
+name = "EVOLUTION_COLLABORATION"
+class_name = "EvolutionCollaborationSql"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["EvolutionCollaborationSql"]

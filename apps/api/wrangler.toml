@@ -171,7 +171,7 @@ class_name = "VoiceScribeAgent"
 
 [[durable_objects.bindings]]
 name = "EVOLUTION_COLLABORATION"
-class_name = "EvolutionCollaboration"
+class_name = "EvolutionCollaborationSql"
 
 [[migrations]]
 tag = "v1"
@@ -222,6 +222,16 @@ new_sqlite_classes = ["PatientAgentSql", "ClinicAgentSql"]
 [[migrations]]
 tag = "v12"
 deleted_classes = ["PatientAgent", "ClinicAgent"]
+
+# EvolutionCollaboration foi criada como KV (new_classes v10). YServer (y-partyserver)
+# exige backend SQLite e KV→SQLite in-place não é suportado — mesmo caso de
+# PatientAgent/ClinicAgent. Solução: EvolutionCollaborationSql (SQLite) assume o
+# binding. A classe KV antiga fica órfã (sem binding, dormante, sem dados) e só pode
+# ser removida via `deleted_classes` num deploy SEPARADO da troca de binding
+# (CF code 10061), como foi feito em v11 → v12.
+[[migrations]]
+tag = "v13"
+new_sqlite_classes = ["EvolutionCollaborationSql"]
 
 # ===== AI & BROWSER RENDERING =====
 [ai]
@@ -436,7 +446,7 @@ bindings = [
   { name = "ASSESSMENT_LIVE_SESSION", class_name = "AssessmentLiveSession" },
   { name = "CLINIC_AGENT", class_name = "ClinicAgentSql" },
   { name = "VOICE_SCRIBE_AGENT", class_name = "VoiceScribeAgent" },
-  { name = "EVOLUTION_COLLABORATION", class_name = "EvolutionCollaboration" },
+  { name = "EVOLUTION_COLLABORATION", class_name = "EvolutionCollaborationSql" },
 ]
 
 [[env.production.migrations]]
@@ -454,6 +464,12 @@ new_sqlite_classes = ["PatientAgentSql", "ClinicAgentSql"]
 [[env.production.migrations]]
 tag = "v12"
 deleted_classes = ["PatientAgent", "ClinicAgent"]
+
+# EvolutionCollaboration (KV) → EvolutionCollaborationSql (SQLite, YServer). Delete da
+# classe KV órfã fica para um deploy separado (v14), como v11 → v12 (CF code 10061).
+[[env.production.migrations]]
+tag = "v13"
+new_sqlite_classes = ["EvolutionCollaborationSql"]
 
 [env.production.ai]
 binding = "AI"

@@ -125,6 +125,7 @@ import { importRoutes } from "./routes/import";
 import { verifyToken } from "./lib/auth";
 import { getRawSql } from "./lib/db";
 import { routeAgentRequest } from "agents";
+import { getServerByName } from "partyserver";
 import { analyticsMiddleware } from "./lib/analytics";
 import { logToAxiom } from "./lib/axiom";
 
@@ -434,7 +435,10 @@ export { PatientAgent as PatientAgentSql } from "./agents/PatientAgent";
 export { AssessmentLiveSession } from "./agents/AssessmentLiveSession";
 export { ClinicAgent as ClinicAgentSql } from "./agents/ClinicAgent";
 export { VoiceScribeAgent } from "./agents/VoiceScribeAgent";
-export { EvolutionCollaboration } from "./agents/EvolutionCollaboration";
+export {
+  EvolutionCollaboration,
+  EvolutionCollaborationSql,
+} from "./agents/EvolutionCollaboration";
 
 export { SessionSummaryWorkflow } from "./workflows/sessionSummary";
 export {
@@ -583,8 +587,6 @@ async function handleCollaborationWS(request: Request, env: Env): Promise<Respon
 
   if (!sessionId) return new Response("Session ID required", { status: 400 });
 
-  const id = env.EVOLUTION_COLLABORATION.idFromName(sessionId);
-  const obj = env.EVOLUTION_COLLABORATION.get(id);
-
-  return obj.fetch(request);
+  const stub = await getServerByName(env.EVOLUTION_COLLABORATION, sessionId);
+  return stub.fetch(request);
 }
