@@ -2,16 +2,42 @@
 import { SELF } from "cloudflare:test";
 import * as decoding from "lib0/decoding";
 import * as encoding from "lib0/encoding";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as syncProtocol from "y-protocols/sync";
 import * as Y from "yjs";
 
+// EvolutionCollaboration.ts importa "../lib/auth" e "../lib/db" (Task 4) para
+// autenticar o upgrade do WebSocket. O módulo real de db.ts carrega o driver
+// `pg`, que não roda no bundler do vitest-pool-workers — por isso os dois são
+// mockados aqui (sem `importOriginal`) para todo teste de sincronização, que
+// segue sendo apenas sobre o protocolo Yjs, não sobre auth.
+vi.mock("../../lib/auth", () => ({
+  resolveJwtCandidate: vi.fn(async () => ({
+    uid: "sync-test-user",
+    organizationId: "sync-test-org",
+    role: "fisioterapeuta",
+  })),
+  userHasRole: (user: { role?: string } | null, roles: string[]) =>
+    Boolean(user?.role && roles.includes(user.role)),
+}));
+
+vi.mock("../../lib/db", () => ({
+  getRawSql: () => async () => ({
+    rows: [{ org_id: "sync-test-org" }],
+    rowCount: 1,
+  }),
+}));
+
 const messageSync = 0;
+const AUTH_TOKEN = "sync-test-token";
 
 async function openClient(sessionId: string): Promise<CollabClient> {
-  const res = await SELF.fetch(`https://collab.test/api/sessions/${sessionId}/collaboration`, {
-    headers: { Upgrade: "websocket" },
-  });
+  const res = await SELF.fetch(
+    `https://collab.test/api/sessions/${sessionId}/collaboration?token=${AUTH_TOKEN}`,
+    {
+      headers: { Upgrade: "websocket" },
+    },
+  );
   expect(res.status).toBe(101);
   const ws = res.webSocket;
   if (!ws) throw new Error("no webSocket on 101 response");

@@ -309,7 +309,7 @@ function getPreferredAuthOrigin(env: Env): string {
   return preferred || DEFAULT_AUTH_ORIGIN;
 }
 
-async function resolveJwtCandidate(env: Env, token: string): Promise<AuthUser | null> {
+export async function resolveJwtCandidate(env: Env, token: string): Promise<AuthUser | null> {
   const jwksUrl = env.NEON_AUTH_JWKS_URL;
   if (!jwksUrl || !looksLikeJwt(token)) return null;
 
