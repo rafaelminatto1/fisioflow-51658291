@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["src/main.tsx", "src/app/**/*.{ts,tsx}", "vite.config.ts"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "apps/api": {
+      "entry": ["src/index.ts", "src/cron.ts"],
+      "project": ["src/**/*.ts"]
+    }
+  },
+  "ignore": ["**/*.test.{ts,tsx}", "**/__tests__/**", "src/data/**"]
+}
