@@ -358,6 +358,10 @@ export default defineConfig(({ mode }) => {
         "@fisioflow/ui": path.resolve(repoRoot, "packages/ui/src"),
         "@fisioflow/core": path.resolve(repoRoot, "packages/core/src"),
         "@fisioflow/skills": path.resolve(repoRoot, "src/lib/skills"),
+        "@fisioflow/evolution-editor-schema": path.resolve(
+          repoRoot,
+          "packages/evolution-editor-schema/src",
+        ),
         "@capacitor/camera": path.resolve(repoRoot, "src/lib/stubs/capacitor.ts"),
         "@capacitor/core": path.resolve(repoRoot, "src/lib/stubs/capacitor.ts"),
         "@capacitor/device": path.resolve(repoRoot, "src/lib/stubs/capacitor.ts"),

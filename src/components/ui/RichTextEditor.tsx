@@ -6,23 +6,8 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import { Extension } from "@tiptap/core";
 import { StarterKit } from "@tiptap/starter-kit";
 import { Placeholder } from "@tiptap/extension-placeholder";
-import { Underline } from "@tiptap/extension-underline";
-import { TextAlign } from "@tiptap/extension-text-align";
-import { Highlight } from "@tiptap/extension-highlight";
-import { TaskList } from "@tiptap/extension-task-list";
 import { CustomTaskItem } from "./CustomTaskItem";
-import { Link } from "@tiptap/extension-link";
-import { Table } from "@tiptap/extension-table";
-import { TableRow } from "@tiptap/extension-table-row";
-import { TableCell } from "@tiptap/extension-table-cell";
-import { TableHeader } from "@tiptap/extension-table-header";
-import { Color } from "@tiptap/extension-color";
-import { TextStyle } from "@tiptap/extension-text-style";
-import { Subscript } from "@tiptap/extension-subscript";
-import { Superscript } from "@tiptap/extension-superscript";
-import { Youtube } from "@tiptap/extension-youtube";
-import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight";
-import { common, createLowlight } from "lowlight";
+import { evolutionEditorExtensions } from "@fisioflow/evolution-editor-schema";
 import {
   Dumbbell,
   Search,
@@ -84,14 +69,14 @@ import { toast } from "sonner";
 import { ImageEditDialog } from "@/components/ui/rich-text/ImageEditDialog";
 import { ResizableImage } from "@/components/ui/rich-text/ResizableImageExtension";
 import * as Y from "yjs";
-import { WebsocketProvider } from "y-websocket";
+import YProvider from "y-partyserver/provider";
+import { IndexeddbPersistence } from "y-indexeddb";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
 import { getWorkersApiUrl } from "@/lib/api/config";
+import { getNeonAccessToken } from "@/lib/auth/neon-token";
 import { shouldApplyExternalValue, normalizeEditorHtml, normalizeIncomingEditorHtml } from "./richTextSync";
 import "./rich-text-editor.css";
-
-const lowlight = createLowlight(common);
 
 const FONT_SIZE_OPTIONS = [
   { label: "14", value: "14px" },
@@ -123,28 +108,6 @@ const ForceListContinue = Extension.create({
         return commands.splitListItem("listItem");
       },
     };
-  },
-});
-
-const FontSize = Extension.create({
-  name: "fontSize",
-
-  addGlobalAttributes() {
-    return [
-      {
-        types: ["textStyle"],
-        attributes: {
-          fontSize: {
-            default: null,
-            parseHTML: (element) => element.style.fontSize?.replace(/["']/g, "") || null,
-            renderHTML: (attributes) => {
-              if (!attributes.fontSize) return {};
-              return { style: `font-size: ${attributes.fontSize}` };
-            },
-          },
-        },
-      },
-    ];
   },
 });
 
@@ -224,7 +187,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   // ── Colaboração Real-time (Yjs) ─────────────────────
   const [ydoc, setYdoc] = useState<Y.Doc | null>(null);
-  const [provider, setProvider] = useState<WebsocketProvider | null>(null);
+  const [provider, setProvider] = useState<YProvider | null>(null);
 
   useEffect(() => {
     if (!collaborationId) {
@@ -236,17 +199,24 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     const doc = new Y.Doc();
     setYdoc(doc);
 
-    const baseUrl = getWorkersApiUrl();
-    const wsUrl =
-      (baseUrl.startsWith("https")
-        ? baseUrl.replace("https", "wss")
-        : baseUrl.replace("http", "ws")) + `/api/sessions/${collaborationId}/collaboration`;
+    // Persistência offline: mantém as edições localmente (IndexedDB) mesmo
+    // sem conexão com o Durable Object, sincronizando ao reconectar.
+    const idb = new IndexeddbPersistence(collaborationId, doc);
 
-    const p = new WebsocketProvider(wsUrl, collaborationId, doc);
+    const host = new URL(getWorkersApiUrl()).host;
+    // O worker (apps/api) roteia manualmente `/api/sessions/:id/collaboration`
+    // para o Durable Object (getServerByName), sem usar o prefixo padrão
+    // "/parties/:party" do y-partyserver — por isso o `prefix` aponta
+    // diretamente para a rota real, e o room não é reapendado à URL.
+    const p = new YProvider(host, collaborationId, doc, {
+      prefix: `/api/sessions/${collaborationId}/collaboration`,
+      params: async () => ({ token: (await getNeonAccessToken()) ?? "" }),
+    });
     setProvider(p);
 
     return () => {
       p.destroy();
+      idb.destroy();
       doc.destroy();
     };
   }, [collaborationId]);
@@ -335,59 +305,44 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   };
 
   const extensions = useMemo(() => {
+    // Schema do documento compartilhado com o Durable Object de colaboração
+    // (packages/evolution-editor-schema). As versões "schema-only" de nós que
+    // no cliente precisam de NodeView React (ResizableImage/clinicalMedia,
+    // TaskItem) e o StarterKit (cujo history precisa ser desativado em modo
+    // colaborativo, já que o Yjs assume o undo/redo) são SUBSTITUÍDAS in-place
+    // — nunca duplicadas — para não registrar plugins ProseMirror colidentes
+    // (ex.: dois plugins de history com a mesma key).
+    const documentExtensions = evolutionEditorExtensions.map((extension) => {
+      if (extension.name === "clinicalMedia") {
+        return ResizableImage.configure({
+          allowBase64: true,
+          HTMLAttributes: {
+            class: "rounded-lg max-w-full h-auto my-4 mx-auto block",
+          },
+        });
+      }
+      if (extension.name === "taskItem") {
+        return CustomTaskItem.configure({
+          nested: true,
+          HTMLAttributes: { class: "notion-task-item" },
+        });
+      }
+      if (extension.name === "starterKit" && collaborationId) {
+        return StarterKit.configure({
+          heading: { levels: [1, 2, 3] },
+          link: false,
+          underline: false,
+          codeBlock: false,
+          history: false,
+        });
+      }
+      return extension;
+    });
+
     const base = [
       ForceListContinue,
-      StarterKit.configure({
-        heading: { levels: [1, 2, 3] },
-        link: false,
-        underline: false,
-        codeBlock: false,
-        // Se estiver em colaboração, desativamos o history do StarterKit
-        // para usar o history compartilhado do Yjs.
-        history: !collaborationId,
-      }),
+      ...documentExtensions,
       Placeholder.configure({ placeholder }),
-      Underline,
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
-      Highlight.configure({ multicolor: true }),
-      TextStyle,
-      FontSize,
-      Color,
-      Subscript,
-      Superscript,
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: { class: "text-primary underline cursor-pointer" },
-      }),
-      ResizableImage.configure({
-        allowBase64: true,
-        HTMLAttributes: {
-          class: "rounded-lg max-w-full h-auto my-4 mx-auto block",
-        },
-      }),
-      Youtube.configure({
-        HTMLAttributes: {
-          class: "rounded-lg max-w-full my-4 mx-auto block aspect-video",
-        },
-      }),
-      TaskList.configure({
-        HTMLAttributes: { class: "notion-task-list" },
-      }),
-      CustomTaskItem.configure({
-        nested: true,
-        HTMLAttributes: { class: "notion-task-item" },
-      }),
-      Table.configure({
-        resizable: true,
-        HTMLAttributes: { class: "notion-table" },
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      CodeBlockLowlight.configure({
-        lowlight,
-        HTMLAttributes: { class: "notion-code-block" },
-      }),
       SlashCommand.configure({
         suggestion: suggestionConfig(exercises, { imageUploadFolder }),
       }),

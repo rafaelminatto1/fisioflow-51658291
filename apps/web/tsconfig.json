@@ -14,6 +14,7 @@
       "@fisioflow/ui": ["../../packages/ui/src"],
       "@fisioflow/core": ["../../packages/core/src"],
       "@fisioflow/config": ["../../packages/config/src"],
+      "@fisioflow/evolution-editor-schema": ["../../packages/evolution-editor-schema/src"],
       "@fisioflow/skills": ["../../src/lib/skills"],
       "@fisioflow/skills-fase1": ["../../src/lib/skills/fase1-changelog"],
       "@fisioflow/skills-fase2": ["../../src/lib/skills/fase2-documentos"],

@@ -131,6 +131,10 @@ export default defineConfig({
       "@fisioflow/ui": path.resolve(repoRoot, "packages/ui/src"),
       "@fisioflow/core": path.resolve(repoRoot, "packages/core/src"),
       "@fisioflow/config": path.resolve(repoRoot, "packages/config/src"),
+      "@fisioflow/evolution-editor-schema": path.resolve(
+        repoRoot,
+        "packages/evolution-editor-schema/src",
+      ),
       "@fisioflow/skills": path.resolve(repoRoot, "src/lib/skills"),
       lodash: "lodash-es",
       "fast-check": path.resolve(repoRoot, "node_modules/fast-check"),
