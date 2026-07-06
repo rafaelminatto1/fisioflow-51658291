@@ -1,6 +1,17 @@
 # Evolução Colaborativa — Checklist de Ativação (pré-produção)
 
-A feature está **completa em código** (8 tasks, todas revisadas, mergeadas na `main`). A revisão final de branch (Opus) apontou 2 gaps transversais que precisam ser resolvidos/validados **antes de LIGAR em produção** (não bloqueiam o merge). Hoje são inofensivos porque o projeto **não tem dados reais**.
+A feature está **completa e funcional em código** (8 tasks + gates pós-revisão, na `main`). Os 2 gaps da revisão final foram tratados em 6/jul.
+
+## ⚠️ DESCOBERTA IMPORTANTE (6/jul): HÁ dados reais
+Ao investigar os gates, o banco de produção (`purple-union-72678311` / `ep-wandering-bonus`, São Paulo) tem **11.015 sessões, 11.014 com `observacao`** — NÃO está vazio. Portanto os gates eram riscos reais (não teóricos), e **o deploy que LIGA a colaboração mexe com 11k prontuários reais** → decisão do usuário, com validação em staging.
+
+## Status dos gates (RESOLVIDOS em código)
+- **Gate 2 (RLS): CLEARED.** `neondb_owner` (role do Worker) tem `rolbypassrls=true` → o DO lê a org da sessão sem contexto. Sem mudança de código.
+- **Gate 1 (seeding): FEITO.** O DO (`onLoad`) semeia o Y.Doc a partir do `observacao` HTML quando não há snapshot (zeed-dom→ProseMirror→Yjs, rodando no workerd; commit `8afe4f884`); o cliente parou de semear em modo colaborativo (evita duplicação; commit `4b991b03a` Part B). `<table>`/tasklist/codeblock seed corrigido + `onLoad` à prova de crash (try/catch + Analytics; commit `91a88f6d4`).
+- **BINDING (bug crítico descoberto e corrigido):** o editor do cliente NÃO estava de fato ligado ao Y.Doc (o `ySyncPlugin` nunca anexava) — digitar não chegava ao doc. Corrigido tornando o `Y.Doc` síncrono via `useMemo` (`4b991b03a`), com teste real de propagação. A **edição colaborativa de texto agora funciona de verdade.**
+
+## Remanescente antes de ligar
+- **Bump `@tiptap/extension-collaboration-cursor` 2.26.2 → ^3.x**: está incompatível com `@tiptap/core@3` e crasharia se os cursores in-editor montassem. Por isso os cursores coloridos dentro do texto ficam **inertes** por enquanto (a presença por avatar via awareness FUNCIONA). Bump simples resolve.
 
 ## 🔴 Gate 1 (Crítico) — seeding de sessões com conteúdo existente
 Sessões antigas têm `observacao` (HTML) mas `observacao_ydoc` NULL. O `onLoad` do DO só semeia a partir do snapshot binário; o cliente, em modo colaborativo, monta o editor com `content` do prop enquanto a extensão `Collaboration` está ligada a um fragmento vazio no servidor → padrão perigoso do TipTap+Yjs. Risco: descartar a `observacao` existente OU duplicar a nota se dois abrirem a mesma sessão nunca-colaborada ao mesmo tempo. Auto-corrige após o primeiro save single-user limpo.
