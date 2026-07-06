@@ -51,7 +51,10 @@ export class EvolutionCollaborationSql extends YServer<Env> {
     try {
       user = await resolveJwtCandidate(this.env, token);
     } catch (error) {
-      console.error("[EvolutionCollaboration] JWT verification failed:", error);
+      console.error(
+        "[EvolutionCollaboration] JWT verification failed:",
+        error instanceof Error ? error.name : "unknown",
+      );
       user = null;
     }
 

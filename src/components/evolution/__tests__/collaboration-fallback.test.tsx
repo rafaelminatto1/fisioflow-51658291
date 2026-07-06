@@ -404,4 +404,53 @@ describe("Colaboração na evolução — máquina de dois estados + fallback", 
     const seededHtml = yDocToHtml(provider.doc);
     expect(seededHtml).toContain("Digitando durante a transicao de sessao");
   });
+
+  it("queda de conexão após conectado mostra indicador de reconexão sem remontar em fallback", async () => {
+    const onChange = vi.fn();
+    render(
+      <NotionEvolutionPanel
+        data={baseData}
+        onChange={onChange}
+        patientId="patient-1"
+        evolutionId="session-5"
+        collaborationId="session-5"
+        userName="Dra. Ana"
+        userColor="#10b981"
+      />,
+    );
+
+    await waitFor(() => {
+      expect(MockYProvider.instances.length).toBe(1);
+    });
+
+    act(() => {
+      MockYProvider.instances[0].emitStatus("connected");
+    });
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-collab-status="connected"]')).toBeTruthy();
+    });
+
+    expect(document.body.textContent).not.toContain("Reconectando");
+
+    act(() => {
+      MockYProvider.instances[0].emitStatus("disconnected");
+    });
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain("Reconectando");
+    });
+
+    // Não deve ter remontado o editor em modo clássico/fallback.
+    expect(document.querySelector('[data-collab-status="fallback"]')).toBeFalsy();
+    expect(document.querySelector('[data-collab-status="connected"]')).toBeTruthy();
+
+    act(() => {
+      MockYProvider.instances[0].emitStatus("connected");
+    });
+
+    await waitFor(() => {
+      expect(document.body.textContent).not.toContain("Reconectando");
+    });
+  });
 });

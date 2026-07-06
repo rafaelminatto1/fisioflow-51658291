@@ -26,6 +26,7 @@ import {
   Minimize2,
   PanelRightClose,
   PanelRightOpen,
+  WifiOff,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -120,6 +121,11 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
     collaborationId ? "connecting" : "fallback",
   );
   const [collabProvider, setCollabProvider] = useState<YProvider | null>(null);
+  // Sinal separado de `collabStatus`: uma queda de conexão DEPOIS de já estar
+  // conectado não deve remontar o editor nem religar o autosave clássico (isso
+  // duplicaria a escrita quando o Durable Object reconectar) — só acende um
+  // aviso visível de que a sincronização está pausada.
+  const [isReconnecting, setIsReconnecting] = useState(false);
   const richTextRef = useRef<RichTextEditorHandle | null>(null);
 
   useEffect(() => {
@@ -151,6 +157,12 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
     (status: "connecting" | "connected" | "disconnected") => {
       if (status === "connected") {
         setCollabStatus("connected");
+        setIsReconnecting(false);
+      } else if (status === "disconnected") {
+        setCollabStatus((current) => {
+          if (current === "connected") setIsReconnecting(true);
+          return current;
+        });
       }
     },
     [],
@@ -432,6 +444,13 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                 </span>
               </div>
               <div className="flex items-center gap-2">
+                {collabStatus === "connected" && isReconnecting && (
+                  <span className="flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-800">
+                    <WifiOff className="h-3.5 w-3.5" />
+                    Reconectando… suas alterações estão salvas localmente e sincronizam
+                    automaticamente.
+                  </span>
+                )}
                 {collabStatus === "connected" && (
                   <CollaborationPresence provider={collabProvider} />
                 )}
