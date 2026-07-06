@@ -25,7 +25,15 @@ const EMAIL_A = process.env.E2E_EMAIL || process.env.STAGING_TEST_USER_EMAIL || 
 const PASSWORD_A = process.env.E2E_PASSWORD || process.env.STAGING_TEST_USER_PASSWORD || "";
 // Segundo terapeuta: usa credenciais dedicadas se existirem; senão reusa as
 // mesmas (ainda válido para exercitar 2 conexões/clientIds distintos no
-// mesmo Y.Doc, só não varia o nome exibido na presença).
+// mesmo Y.Doc, só não varia o nome exibido na presença). Sem E2E_EMAIL_B,
+// "A" e "B" são o mesmo usuário — a asserção de presença (passo 5, "2 pessoas
+// editando agora") ainda é válida nesse caso, porque o awareness do Yjs é
+// chaveado por `clientId` (uma entrada por CONEXÃO/socket, não por usuário):
+// dois BrowserContexts distintos abrem dois providers/sockets independentes,
+// logo dois clientIds aparecem em `awareness.getStates()` mesmo com o mesmo
+// login. O que se perde sem E2E_EMAIL_B é apenas a variação do nome exibido
+// no avatar/tooltip (ambos mostram a mesma inicial) — a contagem em si segue
+// provando que uma segunda conexão realmente entrou na sala.
 const EMAIL_B = process.env.E2E_EMAIL_B || EMAIL_A;
 const PASSWORD_B = process.env.E2E_PASSWORD_B || PASSWORD_A;
 
@@ -35,7 +43,10 @@ const COLLAB_CONNECT_TIMEOUT_MS = 5000;
 const CONNECT_WAIT_MS = COLLAB_CONNECT_TIMEOUT_MS + 5000;
 
 async function login(page: Page, email: string, password: string) {
-  await page.goto("/login");
+  // "/login" redireciona para "/auth" via <Navigate> (src/core.tsx) sem
+  // renderizar o form — navegar direto para "/auth/login", que é a rota que
+  // efetivamente renderiza o formulário (mesmo padrão de offline.spec.ts).
+  await page.goto("/auth/login");
   await page.waitForLoadState("networkidle").catch(() => {});
   if (!/\/login/.test(page.url())) return; // já estava logado (storage state)
 
@@ -175,9 +186,13 @@ test.describe("Evolução Colaborativa — convergência, presença e fallback",
         return;
       }
 
-      // 5) Presença: B deve aparecer no indicador de A (>= 1 colaborador)
+      // 5) Presença: B deve aparecer no indicador de A. `awareness.getStates()`
+      // inclui a conexão local, então "1 pessoa" já apareceria com A sozinho —
+      // isso não provaria que B entrou na sala. Exigimos o texto exato para 2
+      // colaboradores (CollaborationPresence.tsx: `${n} pessoas editando
+      // agora` quando n > 1), que só ocorre com as DUAS conexões ativas.
       await expect(
-        pageA.getByText(/\d+ pessoas? editando agora/i).first(),
+        pageA.getByText(/2 pessoas editando agora/i).first(),
       ).toBeVisible({ timeout: 10_000 });
 
       // 6) Convergência: A digita → B vê o mesmo texto
