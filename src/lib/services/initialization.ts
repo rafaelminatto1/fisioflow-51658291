@@ -4,11 +4,16 @@
  * Inicializa monitoramento, analytics e feature flags.
  */
 
-import { initPerformanceMonitoring } from "@/lib/monitoring/performance";
-import { initRemoteConfig } from "@/lib/config/remote-config";
-import { initAnalytics } from "@/lib/analytics/events";
-import { clearUser as clearSentryUser, initSentry, setUser } from "@/lib/monitoring/sentry";
 import { logger } from "@/lib/errors/logger";
+
+// Os módulos de monitoramento (Sentry/replay ~317KB, performance, analytics,
+// remote-config) são importados DINAMICAMENTE dentro das funções abaixo, e não
+// no topo. Motivo: este arquivo é importado eagerly pelo AuthContextProvider
+// (setup/clearUserTracking), então um import estático arrastaria o @sentry/react
+// inteiro para o bundle inicial da /agenda. Como a inicialização já roda após o
+// primeiro render (setTimeout no main.tsx), o import dinâmico não atrasa nada e
+// tira ~317KB do carregamento inicial. O ESM cacheia o módulo, então chamadas
+// seguintes (setUser no login) reaproveitam sem novo download.
 
 /**
  * Inicializa todos os serviços de plataforma
@@ -17,6 +22,14 @@ export async function initializeServices() {
   logger.info("[Init] Inicializando serviços de plataforma");
 
   try {
+    const [{ initSentry }, { initAnalytics }, { initPerformanceMonitoring }, { initRemoteConfig }] =
+      await Promise.all([
+        import("@/lib/monitoring/sentry"),
+        import("@/lib/analytics/events"),
+        import("@/lib/monitoring/performance"),
+        import("@/lib/config/remote-config"),
+      ]);
+
     // 1. Sentry (Error Tracking) - PRIMEIRO para capturar erros
     initSentry({
       environment: import.meta.env.MODE,
@@ -43,13 +56,13 @@ export async function initializeServices() {
 /**
  * Configura usuário para tracking
  */
-export function setupUserTracking(user: {
+export async function setupUserTracking(user: {
   uid: string;
   email?: string | null;
   displayName?: string | null;
 }) {
   try {
-    // Sentry
+    const { setUser } = await import("@/lib/monitoring/sentry");
     setUser({
       id: user.uid,
       email: user.email || undefined,
@@ -65,8 +78,9 @@ export function setupUserTracking(user: {
 /**
  * Limpa dados do usuário ao fazer logout
  */
-export function clearUserTracking() {
+export async function clearUserTracking() {
   try {
+    const { clearUser: clearSentryUser } = await import("@/lib/monitoring/sentry");
     clearSentryUser();
 
     logger.debug("[Init] Tracking do usuário limpo");
