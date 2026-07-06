@@ -436,7 +436,6 @@ export { AssessmentLiveSession } from "./agents/AssessmentLiveSession";
 export { ClinicAgent as ClinicAgentSql } from "./agents/ClinicAgent";
 export { VoiceScribeAgent } from "./agents/VoiceScribeAgent";
 export {
-  EvolutionCollaboration,
   EvolutionCollaborationSql,
 } from "./agents/EvolutionCollaboration";
 

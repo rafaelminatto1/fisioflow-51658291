@@ -233,6 +233,12 @@ deleted_classes = ["PatientAgent", "ClinicAgent"]
 tag = "v13"
 new_sqlite_classes = ["EvolutionCollaborationSql"]
 
+# v14: remove a classe KV órfã EvolutionCollaboration (v10), num deploy SEPARADO
+# do v13 (CF code 10061 proíbe delete+rebind no mesmo deploy). Sem dados/binding.
+[[migrations]]
+tag = "v14"
+deleted_classes = ["EvolutionCollaboration"]
+
 # ===== AI & BROWSER RENDERING =====
 [ai]
 binding = "AI"
@@ -470,6 +476,10 @@ deleted_classes = ["PatientAgent", "ClinicAgent"]
 [[env.production.migrations]]
 tag = "v13"
 new_sqlite_classes = ["EvolutionCollaborationSql"]
+
+[[env.production.migrations]]
+tag = "v14"
+deleted_classes = ["EvolutionCollaboration"]
 
 [env.production.ai]
 binding = "AI"
