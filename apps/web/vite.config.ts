@@ -430,6 +430,32 @@ export default defineConfig(({ mode }) => {
           // Priority: maior = avaliado primeiro (chunk mais específico vence).
           codeSplitting: {
             groups: [
+              // ── Utilitários compartilhados de baixo nível ──
+              // DEVEM ficar num chunk próprio e pequeno. Sem isto, o Rolldown
+              // os "estaciona" dentro de um vendor pesado (jspdf/tiptap/
+              // react-pdf) e QUALQUER código eager que use o util (ex.: radix
+              // usa tslib/use-sync-external-store; o entry usa @babel/runtime)
+              // acaba importando estaticamente o vendor pesado inteiro,
+              // arrastando ~1.2MB de jspdf+tiptap+react-pdf para o load inicial
+              // da /agenda (cross-link de chunks). Prioridade máxima (>100) para
+              // extrair estes módulos antes dos grupos de vendor pesado abaixo.
+              // Confirmado via stats.html (ANALYZE=true).
+              {
+                name: "vendor-runtime-helpers",
+                test: /[\\/]node_modules[\\/](@babel[\\/]runtime|@swc[\\/]helpers|tslib|use-sync-external-store|fast-equals|fast-deep-equal|base64-js|clsx|prop-types)[\\/]/,
+                priority: 101,
+              },
+              // O helper de modulepreload do Vite (__vitePreload) é usado por
+              // TODO chunk com import() dinâmico. Se o Rolldown o estaciona
+              // dentro de um vendor pesado (estava em vendor-jspdf), todos esses
+              // chunks — incluindo o entry — importam o vendor pesado só p/ ele,
+              // arrastando jspdf+react-pdf (~750KB) para o load inicial. Isolar
+              // num chunk minúsculo próprio. (Confirmado via stats.html.)
+              {
+                name: "vite-preload-helper",
+                test: /preload-helper/,
+                priority: 102,
+              },
               // react-pdf renderer — geração de PDFs por exportação
               {
                 name: "vendor-react-pdf-font",
