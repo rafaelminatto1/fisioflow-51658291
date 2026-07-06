@@ -219,30 +219,45 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
   useImperativeHandle(ref, () => ({ flushPendingValue }), [flushPendingValue]);
 
   // ── Colaboração Real-time (Yjs) ─────────────────────
-  const [ydoc, setYdoc] = useState<Y.Doc | null>(null);
+  // O Y.Doc precisa existir de forma SÍNCRONA na primeira renderização: o
+  // `useEditor` abaixo monta o editor já na primeira chamada e só inclui a
+  // extensão `Collaboration` (que registra o `ySyncPlugin`, o que de fato
+  // vincula o ProseMirror ao Yjs) se `ydoc` já estiver disponível nesse
+  // instante. Criar o doc dentro de um `useEffect` (como antes) deixa `ydoc`
+  // `null` no primeiro render — o editor nasce sem `ySyncPlugin` e o TipTap
+  // não o adiciona depois, pois `useEditor` não recria a instância quando só
+  // a lista de `extensions` muda (apenas quando os `deps` explícitos mudam).
+  // `Y.Doc` é uma classe simples e seu construtor não faz I/O, então criá-la
+  // em `useMemo` é seguro e síncrono.
+  const ydoc = useMemo(() => (collaborationId ? new Y.Doc() : null), [collaborationId]);
   const [provider, setProvider] = useState<YProvider | null>(null);
 
+  // Destrói o Y.Doc anterior quando `collaborationId` muda ou no unmount.
+  // Precisa ser um efeito separado (não o de conexão abaixo) porque o `ydoc`
+  // memoizado já existe antes de qualquer efeito rodar.
   useEffect(() => {
-    if (!collaborationId) {
-      setYdoc(null);
+    return () => {
+      ydoc?.destroy();
+    };
+  }, [ydoc]);
+
+  useEffect(() => {
+    if (!collaborationId || !ydoc) {
       setProvider(null);
       onCollabProviderChangeRef.current?.(null);
       return;
     }
 
-    const doc = new Y.Doc();
-    setYdoc(doc);
-
     // Persistência offline: mantém as edições localmente (IndexedDB) mesmo
     // sem conexão com o Durable Object, sincronizando ao reconectar.
-    const idb = new IndexeddbPersistence(collaborationId, doc);
+    const idb = new IndexeddbPersistence(collaborationId, ydoc);
 
     const host = new URL(getWorkersApiUrl()).host;
     // O worker (apps/api) roteia manualmente `/api/sessions/:id/collaboration`
     // para o Durable Object (getServerByName), sem usar o prefixo padrão
     // "/parties/:party" do y-partyserver — por isso o `prefix` aponta
     // diretamente para a rota real, e o room não é reapendado à URL.
-    const p = new YProvider(host, collaborationId, doc, {
+    const p = new YProvider(host, collaborationId, ydoc, {
       prefix: `/api/sessions/${collaborationId}/collaboration`,
       params: async () => ({ token: (await getNeonAccessToken()) ?? "" }),
     });
@@ -264,10 +279,9 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
       p.off("synced", handleSynced);
       p.destroy();
       idb.destroy();
-      doc.destroy();
       onCollabProviderChangeRef.current?.(null);
     };
-  }, [collaborationId]);
+  }, [collaborationId, ydoc]);
 
   // Limpeza dos timers no unmount para evitar leaks
   useEffect(() => {
@@ -481,7 +495,17 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
         return false;
       },
     },
-  });
+    // NÃO adicionar `provider` aos deps do useEditor: `@tiptap/extension-
+    // collaboration-cursor` está preso em v2.26.2 (o resto do TipTap é v3.23.x
+    // — mismatch pré-existente, não introduzido por este fix) e recriar o
+    // editor quando o provider chega para montar `CollaborationCursor` derruba
+    // o app (`ySyncPluginKey.getState` retorna undefined dentro do
+    // `yCursorPlugin` — incompatibilidade real de API v2/v3, reproduzida até
+    // sem React/PartyServer). `ydoc` já está presente desde o primeiro render
+    // (acima), então o binding `Collaboration`/`ySyncPlugin` ao Y.Doc não
+    // depende de recriação nenhuma — só o cursor remoto (accessório) fica sem
+    // efeito até essa dependência ser corrigida separadamente.
+  }, [collaborationId]);
 
   // ── Signal Listeners ─────────────────────────────────
   useEffect(() => {

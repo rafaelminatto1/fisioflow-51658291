@@ -46,6 +46,11 @@ export const RichTextBlock = forwardRef<RichTextEditorHandle, RichTextBlockProps
     <div className={cn("relative transition-all duration-300 group", className)}>
       <div className="pb-1">
         <RichTextEditor
+          // Força um remount completo (novo Y.Doc/provider) ao trocar entre
+          // modo clássico e colaborativo, ou entre sessões colaborativas —
+          // evita reaproveitar uma instância cujo `useEditor` já rodou sem a
+          // extensão Collaboration da nova sessão.
+          key={collaborationId ?? "classic"}
           ref={ref}
           value={value}
           onValueChange={onValueChange}

@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 import { render, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import * as Y from "yjs";
+import { Awareness } from "y-protocols/awareness";
 import { seedYDocFromHtml, yDocToHtml } from "@fisioflow/evolution-editor-schema";
 import { NotionEvolutionPanel } from "../v2-improved/NotionEvolutionPanel";
 import type { EvolutionV2Data } from "../v2-improved/types";
@@ -42,16 +43,16 @@ const { MockYProvider } = vi.hoisted(() => {
     room: string;
     doc: Y.Doc;
     handlers: Record<string, Array<(...args: unknown[]) => void>> = {};
-    awareness = {
-      getStates: () => new Map(),
-      on: vi.fn(),
-      off: vi.fn(),
-      setLocalStateField: vi.fn(),
-    };
+    // Instância real de `y-protocols/awareness`, não um objeto simulado —
+    // `CollaborationCursor`/`yCursorPlugin` (extension-collaboration-cursor)
+    // dependem de `.states` (Map), `.on`/`.off` ("change"/"update") e
+    // `.setLocalStateField`, contrato que um mock parcial não reproduz.
+    awareness: Awareness;
 
     constructor(_host: string, room: string, doc: Y.Doc) {
       this.room = room;
       this.doc = doc;
+      this.awareness = new Awareness(doc);
       MockYProvider.instances.push(this);
     }
 
@@ -71,7 +72,9 @@ const { MockYProvider } = vi.hoisted(() => {
       (this.handlers["synced"] || []).forEach((h) => h(isSynced));
     }
 
-    destroy() {}
+    destroy() {
+      this.awareness.destroy();
+    }
   }
   return { MockYProvider };
 });
