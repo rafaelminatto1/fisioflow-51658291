@@ -10,7 +10,7 @@
  *   - Enhanced accessibility
  *   - Micro-interactions
  */
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import type YProvider from "y-partyserver/provider";
 import {
   StickyNote,
@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { RichTextBlock } from "./RichTextBlock";
+import type { RichTextEditorHandle } from "@/components/ui/RichTextEditor";
 import { EvolutionBlockV3 } from "../v3-unified/EvolutionBlockV3";
 import { EvolutionItemV3 } from "../v3-unified/types";
 import { PainLevelBlock } from "./PainLevelBlock";
@@ -105,6 +106,11 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
   const [measurementsExpanded, setMeasurementsExpanded] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [replicatedContentRevision, setReplicatedContentRevision] = useState(0);
+  // Texto replicado enquanto conectado à colaboração: o Y.Doc é o único dono
+  // da escrita, então o texto entra no editor por este override local (nunca
+  // por `data.evolutionText`, que não muda nesse modo) e chega ao servidor
+  // via `setContent` no editor vinculado ao Yjs — não pelo `onChange` clássico.
+  const [pendingCollabText, setPendingCollabText] = useState<string | null>(null);
 
   // Máquina de dois estados da colaboração: "connecting" (tentando conectar
   // ao Durable Object) → "connected" (DO é o dono da escrita, autosave
@@ -114,6 +120,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
     collaborationId ? "connecting" : "fallback",
   );
   const [collabProvider, setCollabProvider] = useState<YProvider | null>(null);
+  const richTextRef = useRef<RichTextEditorHandle | null>(null);
 
   useEffect(() => {
     if (!collaborationId) {
@@ -121,6 +128,14 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
       setCollabProvider(null);
       return;
     }
+
+    // A transição fallback/undefined → colaborando remonta o editor (troca de
+    // `key` clássico↔colaborativo). Antes de remontar, força o flush do
+    // debounce clássico pendente (últimos ~300ms digitados) para que o
+    // conteúdo mais recente já esteja em `data` quando o novo editor montar
+    // — senão o `content` inicial do editor colaborativo usaria um `data`
+    // desatualizado e o texto digitado nesse intervalo se perderia.
+    richTextRef.current?.flushPendingValue();
 
     setCollabStatus("connecting");
     setCollabProvider(null);
@@ -324,22 +339,35 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
             )
           : data.homeCareExercises;
 
+      const isCollabConnected = collabStatus === "connected";
+
       onChange({
         ...data,
-        evolutionText: observacao || data.evolutionText,
-        observations: observacao || data.observations,
+        // Enquanto conectado, o DO é o único dono da escrita do texto: não
+        // duplicamos com uma escrita clássica (REST) do mesmo conteúdo — o
+        // texto entra pelo override local + `setContent` colaborativo abaixo.
+        ...(isCollabConnected
+          ? {}
+          : {
+              evolutionText: observacao || data.evolutionText,
+              observations: observacao || data.observations,
+            }),
         painLevel: record.pain_scale ?? data.painLevel,
         unifiedItems: replicatedItems.length > 0 ? replicatedItems : data.unifiedItems,
         measurements: (record.measurements as any) || data.measurements,
         homeCareExercises,
       });
+
+      if (isCollabConnected) {
+        setPendingCollabText(observacao || null);
+      }
       setReplicatedContentRevision((revision) => revision + 1);
 
       toast.success("Sessão replicada", {
         description: "Os dados foram carregados na evolução atual. Não esqueça de salvar.",
       });
     },
-    [data, onChange],
+    [data, onChange, collabStatus],
   );
 
   return (
@@ -473,9 +501,14 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                     )}
                   >
                     <RichTextBlock
+                      ref={richTextRef}
                       key={collabStatus === "fallback" ? "classic" : "collab"}
                       placeholder="Orientações gerais, encaminhamentos, cuidados e notas da sessão..."
-                      value={data.evolutionText || data.observations || ""}
+                      value={
+                        collabStatus === "connected" && pendingCollabText !== null
+                          ? pendingCollabText
+                          : data.evolutionText || data.observations || ""
+                      }
                       onValueChange={handleObservationsChange}
                       disabled={disabled}
                       showToolbar={true}

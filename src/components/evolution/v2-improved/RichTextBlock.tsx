@@ -4,9 +4,9 @@
  * Same visual wrapper as TextBlock (icon, title, accent colors, badges)
  * but renders RichTextEditor (Tiptap) instead of MagicTextarea.
  */
-import React, { useState } from "react";
+import React, { forwardRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { RichTextEditor } from "@/components/ui/RichTextEditor";
+import { RichTextEditor, type RichTextEditorHandle } from "@/components/ui/RichTextEditor";
 import type YProvider from "y-partyserver/provider";
 
 interface RichTextBlockProps {
@@ -25,7 +25,7 @@ interface RichTextBlockProps {
   onCollabProviderChange?: (provider: YProvider | null) => void;
 }
 
-export const RichTextBlock: React.FC<RichTextBlockProps> = ({
+export const RichTextBlock = forwardRef<RichTextEditorHandle, RichTextBlockProps>(({
   placeholder,
   value,
   onValueChange,
@@ -39,13 +39,14 @@ export const RichTextBlock: React.FC<RichTextBlockProps> = ({
   externalValueRevision,
   onCollabStatusChange,
   onCollabProviderChange,
-}) => {
+}, ref) => {
   const [isFocused, setIsFocused] = useState(false);
 
   return (
     <div className={cn("relative transition-all duration-300 group", className)}>
       <div className="pb-1">
         <RichTextEditor
+          ref={ref}
           value={value}
           onValueChange={onValueChange}
           placeholder={placeholder}
@@ -68,4 +69,6 @@ export const RichTextBlock: React.FC<RichTextBlockProps> = ({
       </div>
     </div>
   );
-};
+});
+
+RichTextBlock.displayName = "RichTextBlock";

@@ -92,7 +92,12 @@ vi.mock("@/hooks/usePatientEvolution", () => ({
   usePatientGoals: () => ({ data: [] }),
   usePatientPathologies: () => ({ data: [] }),
 }));
-vi.mock("@/hooks/useSoapRecords", () => ({ useSoapRecords: () => ({ data: [] }) }));
+const { mockSoapRecordsData } = vi.hoisted(() => ({
+  mockSoapRecordsData: { current: [] as unknown[] },
+}));
+vi.mock("@/hooks/useSoapRecords", () => ({
+  useSoapRecords: () => ({ data: mockSoapRecordsData.current }),
+}));
 vi.mock("@/hooks/useAIClinicalCopilot", () => ({
   useAIClinicalCopilot: () => ({ insights: [], isAnalyzing: false }),
 }));
@@ -126,6 +131,7 @@ const baseData: EvolutionV2Data = {
 describe("Colaboração na evolução — máquina de dois estados + fallback", () => {
   beforeEach(() => {
     MockYProvider.instances = [];
+    mockSoapRecordsData.current = [];
   });
 
   it("provider conecta (status connected) → autosave clássico NÃO é chamado ao editar", async () => {
@@ -214,4 +220,155 @@ describe("Colaboração na evolução — máquina de dois estados + fallback", 
     },
     12000,
   );
+
+  const emptyData: EvolutionV2Data = {
+    therapistName: "",
+    therapistCrefito: "",
+    sessionDate: new Date().toISOString(),
+    patientReport: "",
+    evolutionText: "",
+    procedures: [],
+    exercises: [],
+    unifiedItems: [],
+    observations: "",
+    homeCareExercises: "",
+    attachments: [],
+  } as unknown as EvolutionV2Data;
+
+  const lastSessionRecord = {
+    id: "previous-session",
+    record_date: new Date().toISOString(),
+    observacao: "Texto da sessão anterior a ser replicado",
+    pain_scale: 4,
+    procedures: [],
+    exercises: [],
+    home_exercises: [],
+    measurements: [],
+  };
+
+  it("replicar sessão com colaboração conectada NÃO escreve o texto pelo autosave clássico (só campos estruturados)", async () => {
+    const onChange = vi.fn();
+    mockSoapRecordsData.current = [lastSessionRecord];
+
+    render(
+      <NotionEvolutionPanel
+        data={emptyData}
+        onChange={onChange}
+        patientId="patient-1"
+        evolutionId="session-3"
+        collaborationId="session-3"
+        userName="Dra. Ana"
+        userColor="#10b981"
+      />,
+    );
+
+    await waitFor(() => {
+      expect(MockYProvider.instances.length).toBe(1);
+    });
+
+    act(() => {
+      MockYProvider.instances[0].emitStatus("connected");
+    });
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-collab-status="connected"]')).toBeTruthy();
+    });
+
+    onChange.mockClear();
+
+    const replicateButton = await waitFor(() => {
+      const btn = Array.from(document.querySelectorAll("button")).find((b) =>
+        b.textContent?.includes("Replicar agora"),
+      );
+      expect(btn).toBeTruthy();
+      return btn as HTMLButtonElement;
+    });
+
+    const user = userEvent.setup();
+    await user.click(replicateButton);
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    const payload = onChange.mock.calls[0][0];
+    expect(payload.evolutionText).not.toBe("Texto da sessão anterior a ser replicado");
+    expect(payload.observations).not.toBe("Texto da sessão anterior a ser replicado");
+    expect(payload.painLevel).toBe(4);
+
+    await waitFor(() => {
+      const editor = document.querySelector('[contenteditable="true"]') as HTMLElement;
+      expect(editor.textContent).toContain("Texto da sessão anterior a ser replicado");
+    });
+  });
+
+  it("replicar sessão em modo clássico/fallback ainda escreve o texto pelo autosave (comportamento cheio preservado)", async () => {
+    const onChange = vi.fn();
+    mockSoapRecordsData.current = [lastSessionRecord];
+
+    render(
+      <NotionEvolutionPanel
+        data={emptyData}
+        onChange={onChange}
+        patientId="patient-1"
+        evolutionId="session-4"
+      />,
+    );
+
+    const replicateButton = await waitFor(() => {
+      const btn = Array.from(document.querySelectorAll("button")).find((b) =>
+        b.textContent?.includes("Replicar agora"),
+      );
+      expect(btn).toBeTruthy();
+      return btn as HTMLButtonElement;
+    });
+
+    const user = userEvent.setup();
+    await user.click(replicateButton);
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    const payload = onChange.mock.calls[0][0];
+    expect(payload.evolutionText).toBe("Texto da sessão anterior a ser replicado");
+    expect(payload.observations).toBe("Texto da sessão anterior a ser replicado");
+    expect(payload.painLevel).toBe(4);
+  });
+
+  it("transição de collaborationId undefined→id no meio da digitação não perde o conteúdo digitado", async () => {
+    // Wrapper controlado como no app real: `onChange` atualiza o estado do
+    // pai e o novo `data` reflui como prop — diferente de um closure mutável,
+    // que não dispararia a re-renderização que o cenário real depende.
+    const HostPanel: React.FC<{ collaborationId?: string; evolutionId?: string }> = ({
+      collaborationId,
+      evolutionId,
+    }) => {
+      const [data, setData] = React.useState<EvolutionV2Data>({ ...emptyData });
+      return (
+        <NotionEvolutionPanel
+          data={data}
+          onChange={setData}
+          patientId="patient-1"
+          evolutionId={evolutionId}
+          collaborationId={collaborationId}
+          userName="Dra. Ana"
+          userColor="#10b981"
+        />
+      );
+    };
+
+    const { rerender } = render(<HostPanel collaborationId={undefined} evolutionId={undefined} />);
+
+    const editor = document.querySelector('[contenteditable="true"]') as HTMLElement;
+    expect(editor).toBeTruthy();
+
+    const user = userEvent.setup();
+    await user.click(editor);
+    await user.type(editor, "Digitando durante a transicao de sessao");
+
+    // Remonta com um collaborationId real, simulando o autosave que criou o
+    // registro ~1s depois de o usuário começar a digitar — sem esperar o
+    // debounce (300ms) do editor clássico terminar, o pior caso.
+    rerender(<HostPanel collaborationId="session-new" evolutionId="session-new" />);
+
+    await waitFor(() => {
+      const remountedEditor = document.querySelector('[contenteditable="true"]') as HTMLElement;
+      expect(remountedEditor.textContent).toContain("Digitando durante a transicao de sessao");
+    });
+  });
 });

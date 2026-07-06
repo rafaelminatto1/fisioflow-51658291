@@ -1,7 +1,15 @@
 /**
  * RichTextEditor - Reusable Tiptap-based rich text editor
  */
-import React, { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import { Extension } from "@tiptap/core";
 import { StarterKit } from "@tiptap/starter-kit";
@@ -140,7 +148,14 @@ interface RichTextEditorProps {
   onCollabProviderChange?: (provider: YProvider | null) => void;
 }
 
-export const RichTextEditor: React.FC<RichTextEditorProps> = ({
+/** Handle imperativo: permite ao pai forçar o flush do debounce pendente
+ * antes de uma remontagem controlada (ex.: transição classic → colaborativo),
+ * evitando perder o que o usuário digitou nos últimos ~300ms. */
+export interface RichTextEditorHandle {
+  flushPendingValue: () => void;
+}
+
+export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   value,
   onValueChange,
   placeholder = "",
@@ -158,7 +173,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   externalValueRevision,
   onCollabStatusChange,
   onCollabProviderChange,
-}) => {
+}, ref) => {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingValue = useRef<string | null>(null);
   const lastSentValue = useRef(normalizeIncomingEditorHtml(value));
@@ -200,6 +215,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     lastSentValue.current = nextValue;
     onValueChangeRef.current(nextValue);
   }, []);
+
+  useImperativeHandle(ref, () => ({ flushPendingValue }), [flushPendingValue]);
 
   // ── Colaboração Real-time (Yjs) ─────────────────────
   const [ydoc, setYdoc] = useState<Y.Doc | null>(null);
@@ -1058,4 +1075,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       </Dialog>
     </div>
   );
-};
+});
+
+RichTextEditor.displayName = "RichTextEditor";
