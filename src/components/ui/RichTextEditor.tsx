@@ -432,7 +432,11 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
 
   const editor = useEditor({
     extensions,
-    content: normalizeIncomingEditorHtml(value || ""),
+    // Em modo colaborativo o conteúdo vem exclusivamente do Y.Doc sincronizado
+    // (semeado pelo servidor autoritativo a partir do `observacao` — Gate 1).
+    // Inicializar o TipTap com `value` aqui semearia um fragmento compartilhado
+    // vazio em paralelo, arriscando duplicar ou sobrescrever a nota clínica.
+    content: collaborationId ? undefined : normalizeIncomingEditorHtml(value || ""),
     editable: !disabled,
     onUpdate: ({ editor: ed }) => {
       if (isUpdatingFromProp.current) return;

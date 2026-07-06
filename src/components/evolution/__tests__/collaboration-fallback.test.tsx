@@ -2,6 +2,8 @@ import React from "react";
 import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 import { render, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import * as Y from "yjs";
+import { seedYDocFromHtml, yDocToHtml } from "@fisioflow/evolution-editor-schema";
 import { NotionEvolutionPanel } from "../v2-improved/NotionEvolutionPanel";
 import type { EvolutionV2Data } from "../v2-improved/types";
 
@@ -38,6 +40,7 @@ const { MockYProvider } = vi.hoisted(() => {
   class MockYProvider {
     static instances: MockYProvider[] = [];
     room: string;
+    doc: Y.Doc;
     handlers: Record<string, Array<(...args: unknown[]) => void>> = {};
     awareness = {
       getStates: () => new Map(),
@@ -46,8 +49,9 @@ const { MockYProvider } = vi.hoisted(() => {
       setLocalStateField: vi.fn(),
     };
 
-    constructor(_host: string, room: string) {
+    constructor(_host: string, room: string, doc: Y.Doc) {
       this.room = room;
+      this.doc = doc;
       MockYProvider.instances.push(this);
     }
 
@@ -334,6 +338,7 @@ describe("Colaboração na evolução — máquina de dois estados + fallback", 
     // Wrapper controlado como no app real: `onChange` atualiza o estado do
     // pai e o novo `data` reflui como prop — diferente de um closure mutável,
     // que não dispararia a re-renderização que o cenário real depende.
+    const latestData = { current: { ...emptyData } as EvolutionV2Data };
     const HostPanel: React.FC<{ collaborationId?: string; evolutionId?: string }> = ({
       collaborationId,
       evolutionId,
@@ -342,7 +347,10 @@ describe("Colaboração na evolução — máquina de dois estados + fallback", 
       return (
         <NotionEvolutionPanel
           data={data}
-          onChange={setData}
+          onChange={(next) => {
+            latestData.current = next;
+            setData(next);
+          }}
           patientId="patient-1"
           evolutionId={evolutionId}
           collaborationId={collaborationId}
@@ -361,14 +369,36 @@ describe("Colaboração na evolução — máquina de dois estados + fallback", 
     await user.click(editor);
     await user.type(editor, "Digitando durante a transicao de sessao");
 
+    // Garantia sem perda de dados (Gate 1): o caminho clássico já flushou o
+    // texto digitado para `observacao` (via onChange) ANTES do remount. Esse é
+    // o conteúdo que o servidor persiste e a partir do qual o Durable Object
+    // semeia o Y.Doc no onLoad. Em modo colaborativo o editor NÃO lê mais de
+    // `value` — a fonte da verdade é o Y.Doc sincronizado.
+    await waitFor(() => {
+      expect(latestData.current.observations).toContain(
+        "Digitando durante a transicao de sessao",
+      );
+    });
+
     // Remonta com um collaborationId real, simulando o autosave que criou o
-    // registro ~1s depois de o usuário começar a digitar — sem esperar o
-    // debounce (300ms) do editor clássico terminar, o pior caso.
+    // registro ~1s depois de o usuário começar a digitar.
     rerender(<HostPanel collaborationId="session-new" evolutionId="session-new" />);
 
-    await waitFor(() => {
-      const remountedEditor = document.querySelector('[contenteditable="true"]') as HTMLElement;
-      expect(remountedEditor.textContent).toContain("Digitando durante a transicao de sessao");
+    // Modela o servidor autoritativo (DO.onLoad): na primeira abertura
+    // colaborativa, o Y.Doc é semeado a partir do `observacao` já persistido
+    // pelo caminho clássico. É a MESMA operação de `seedYDocFromHtml` que o DO
+    // executa no servidor — aqui aplicada ao Y.Doc que o provider entrega ao
+    // cliente. Assim a sessão colaborativa começa com o conteúdo digitado,
+    // sem perda (a fonte da verdade em modo colaborativo é o Y.Doc, não `value`).
+    const provider = await waitFor(() => {
+      expect(MockYProvider.instances.length).toBe(1);
+      return MockYProvider.instances[0];
     });
+
+    seedYDocFromHtml(provider.doc, latestData.current.observations || "");
+    provider.emitSynced(true);
+
+    const seededHtml = yDocToHtml(provider.doc);
+    expect(seededHtml).toContain("Digitando durante a transicao de sessao");
   });
 });

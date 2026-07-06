@@ -2,7 +2,7 @@ import { DurableObject } from "cloudflare:workers";
 import type { Connection, ConnectionContext } from "partyserver";
 import { YServer } from "y-partyserver";
 import * as Y from "yjs";
-import { yDocToHtml } from "@fisioflow/evolution-editor-schema";
+import { yDocToHtml, seedYDocFromHtml } from "@fisioflow/evolution-editor-schema";
 import { resolveJwtCandidate, userHasRole } from "../lib/auth";
 import { getRawSql } from "../lib/db";
 import type { Env } from "../types/env";
@@ -84,12 +84,27 @@ export class EvolutionCollaborationSql extends YServer<Env> {
 
   async onLoad(): Promise<void> {
     const sql = getRawSql(this.env, "read");
-    const res = await sql(`SELECT observacao_ydoc FROM sessions WHERE id = $1 LIMIT 1`, [
-      this.name,
-    ]);
-    const snapshot = res.rows?.[0]?.observacao_ydoc as Uint8Array | null | undefined;
+    const res = await sql(
+      `SELECT observacao_ydoc, observacao FROM sessions WHERE id = $1 LIMIT 1`,
+      [this.name],
+    );
+    const row = res.rows?.[0] as
+      | { observacao_ydoc?: Uint8Array | null; observacao?: string | null }
+      | undefined;
+    const snapshot = row?.observacao_ydoc;
     if (snapshot && snapshot.byteLength > 0) {
       Y.applyUpdate(this.document, snapshot);
+    }
+
+    // Semeadura inicial (Gate 1): na primeira abertura colaborativa de uma
+    // sessão com `observacao` HTML mas sem snapshot Yjs, o servidor autoritativo
+    // semeia o Y.Doc a partir do HTML ANTES de qualquer cliente sincronizar.
+    // onLoad roda uma única vez por instância do DO (single-threaded), então é
+    // determinístico — sem duplicação nem perda de conteúdo.
+    const isEmpty = this.document.getXmlFragment("default").length === 0;
+    const html = row?.observacao?.trim();
+    if (isEmpty && html) {
+      seedYDocFromHtml(this.document, html);
     }
   }
 

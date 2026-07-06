@@ -26,6 +26,7 @@ vi.mock("../../lib/auth", () => ({
 
 let savedUpdateParams: unknown[] | undefined;
 let loadSnapshot: Uint8Array | null = null;
+let loadObservacao: string | null = null;
 
 vi.mock("../../lib/db", () => ({
   getRawSql: vi.fn(
@@ -35,9 +36,9 @@ vi.mock("../../lib/db", () => ({
         if (/SELECT org_id FROM sessions/i.test(sql)) {
           return { rows: [{ org_id: "persist-test-org" }], rowCount: 1 };
         }
-        if (/SELECT observacao_ydoc FROM sessions/i.test(sql)) {
+        if (/SELECT observacao_ydoc(?:, observacao)? FROM sessions/i.test(sql)) {
           return {
-            rows: [{ observacao_ydoc: loadSnapshot }],
+            rows: [{ observacao_ydoc: loadSnapshot, observacao: loadObservacao }],
             rowCount: 1,
           };
         }
@@ -133,6 +134,7 @@ describe("EvolutionCollaboration — persistência onLoad/onSave", () => {
   it("onSave grava snapshot Yjs + HTML renderizado após edição (debounced)", async () => {
     savedUpdateParams = undefined;
     loadSnapshot = null;
+    loadObservacao = null;
     const sessionId = "persist-save";
     const client = await openClient(sessionId);
     await settle(100);
@@ -158,6 +160,7 @@ describe("EvolutionCollaboration — persistência onLoad/onSave", () => {
   it("onLoad restaura o Y.Doc a partir do snapshot salvo", async () => {
     savedUpdateParams = undefined;
     loadSnapshot = buildSnapshot("Olá");
+    loadObservacao = null;
     const sessionId = "persist-load";
 
     const client = await openClient(sessionId);
@@ -165,6 +168,39 @@ describe("EvolutionCollaboration — persistência onLoad/onSave", () => {
 
     const fragment = client.doc.getXmlFragment("default");
     expect(fragment.toString()).toContain("Olá");
+
+    client.close();
+  });
+
+  it("onLoad semeia o Y.Doc a partir do observacao HTML quando não há snapshot (Gate 1)", async () => {
+    savedUpdateParams = undefined;
+    loadSnapshot = null;
+    loadObservacao = "<p>Nota clínica <strong>existente</strong></p>";
+    const sessionId = "persist-seed-html";
+
+    const client = await openClient(sessionId);
+    await settle(300);
+
+    const fragment = client.doc.getXmlFragment("default");
+    const rendered = fragment.toString();
+    expect(rendered).toContain("Nota clínica");
+    expect(rendered).toContain("existente");
+
+    client.close();
+  });
+
+  it("onLoad prioriza o snapshot Yjs sobre observacao HTML (sem duplicar)", async () => {
+    savedUpdateParams = undefined;
+    loadSnapshot = buildSnapshot("Snapshot vence");
+    loadObservacao = "<p>HTML nao deve semear</p>";
+    const sessionId = "persist-seed-priority";
+
+    const client = await openClient(sessionId);
+    await settle(300);
+
+    const rendered = client.doc.getXmlFragment("default").toString();
+    expect(rendered).toContain("Snapshot vence");
+    expect(rendered).not.toContain("HTML nao deve semear");
 
     client.close();
   });
