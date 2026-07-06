@@ -189,6 +189,26 @@ describe("EvolutionCollaboration — persistência onLoad/onSave", () => {
     client.close();
   });
 
+  it("onLoad com observacao contendo <table> não lança e inicia a colaboração normalmente (Gate 1 — seedYDocFromHtml à prova de crash)", async () => {
+    savedUpdateParams = undefined;
+    loadSnapshot = null;
+    loadObservacao =
+      "<table><tbody><tr><th>Data</th><th>Evolução</th></tr><tr><td>01/01</td><td>Melhora</td></tr></tbody></table>";
+    const sessionId = "persist-seed-table";
+
+    const client = await openClient(sessionId);
+    await settle(300);
+
+    // A colaboração deve iniciar (WebSocket 101 já validado em openClient) e o
+    // cliente deve conseguir editar em seguida, provando que onLoad não
+    // derrubou o Durable Object mesmo com o bug conhecido de
+    // `element.closest is not a function` no zeed-dom.
+    client.edit("Editando após tabela na semeadura.");
+    await settle(100);
+
+    client.close();
+  });
+
   it("onLoad prioriza o snapshot Yjs sobre observacao HTML (sem duplicar)", async () => {
     savedUpdateParams = undefined;
     loadSnapshot = buildSnapshot("Snapshot vence");

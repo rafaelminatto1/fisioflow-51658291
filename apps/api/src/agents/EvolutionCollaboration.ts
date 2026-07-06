@@ -104,7 +104,20 @@ export class EvolutionCollaborationSql extends YServer<Env> {
     const isEmpty = this.document.getXmlFragment("default").length === 0;
     const html = row?.observacao?.trim();
     if (isEmpty && html) {
-      seedYDocFromHtml(this.document, html);
+      try {
+        seedYDocFromHtml(this.document, html);
+      } catch (error) {
+        // Nunca deixar a semeadura derrubar onLoad — sem isso, o onStart do
+        // y-partyserver propaga a exceção e a colaboração nem inicia para a
+        // sessão. Se seedYDocFromHtml falhar, o Y.Doc fica vazio e a
+        // `observacao` clássica continua sendo a fonte da verdade até o
+        // primeiro save colaborativo.
+        console.error("[EvolutionCollaboration] seedYDocFromHtml falhou:", error);
+        this.env.ANALYTICS?.writeDataPoint?.({
+          blobs: ["collab_seed_error", this.name],
+          doubles: [1],
+        });
+      }
     }
   }
 
