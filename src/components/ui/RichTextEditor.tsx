@@ -80,7 +80,7 @@ import * as Y from "yjs";
 import YProvider from "y-partyserver/provider";
 import { IndexeddbPersistence } from "y-indexeddb";
 import Collaboration from "@tiptap/extension-collaboration";
-import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
+import CollaborationCaret from "@tiptap/extension-collaboration-caret";
 import { getWorkersApiUrl } from "@/lib/api/config";
 import { getNeonAccessToken } from "@/lib/auth/neon-token";
 import { shouldApplyExternalValue, normalizeEditorHtml, normalizeIncomingEditorHtml } from "./richTextSync";
@@ -421,7 +421,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
       );
       if (provider) {
         base.push(
-          CollaborationCursor.configure({
+          CollaborationCaret.configure({
             provider,
             user: {
               name: userName,
@@ -495,17 +495,19 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
         return false;
       },
     },
-    // NÃO adicionar `provider` aos deps do useEditor: `@tiptap/extension-
-    // collaboration-cursor` está preso em v2.26.2 (o resto do TipTap é v3.23.x
-    // — mismatch pré-existente, não introduzido por este fix) e recriar o
-    // editor quando o provider chega para montar `CollaborationCursor` derruba
-    // o app (`ySyncPluginKey.getState` retorna undefined dentro do
-    // `yCursorPlugin` — incompatibilidade real de API v2/v3, reproduzida até
-    // sem React/PartyServer). `ydoc` já está presente desde o primeiro render
-    // (acima), então o binding `Collaboration`/`ySyncPlugin` ao Y.Doc não
-    // depende de recriação nenhuma — só o cursor remoto (accessório) fica sem
-    // efeito até essa dependência ser corrigida separadamente.
-  }, [collaborationId]);
+    // `@tiptap/extension-collaboration-cursor` (v2.26.2) foi trocado por
+    // `@tiptap/extension-collaboration-caret` (v3.23+), compatível com o
+    // resto do TipTap (v3.23.x) — o mismatch que impedia montar o plugin de
+    // cursor remoto (`ySyncPluginKey.getState` undefined dentro do
+    // `yCursorPlugin`) não existe mais. Por isso o editor agora PODE recriar
+    // quando o provider fica disponível: `hasProvider` entra nos deps e muda
+    // exatamente uma vez por sessão de colaboração (de `false` para `true`),
+    // então `CollaborationCaret` passa a fazer parte da lista de extensões e
+    // o cursor remoto passa a aparecer. Recriar o editor aqui não duplica nem
+    // reseta o documento: `ydoc` (acima) já existe desde o primeiro render e
+    // é reaproveitado — só a instância do ProseMirror view é recriada, lendo
+    // o estado atual do Y.Doc via `ySyncPlugin` de novo.
+  }, [collaborationId, Boolean(provider)]);
 
   // ── Signal Listeners ─────────────────────────────────
   useEffect(() => {

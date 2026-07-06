@@ -6,6 +6,8 @@ import * as Y from "yjs";
 import { Awareness } from "y-protocols/awareness";
 import { seedYDocFromHtml } from "@fisioflow/evolution-editor-schema";
 import { RichTextEditor } from "../RichTextEditor";
+import { RichTextProvider, useRichTextContext } from "@/contexts/RichTextContext";
+import type { Editor } from "@tiptap/react";
 
 const yProviderCtor = vi.fn();
 const idbPersistenceCtor = vi.fn();
@@ -200,5 +202,57 @@ describe("RichTextEditor — colaboração via y-partyserver", () => {
     await waitFor(() => {
       expect(document.body.textContent).toContain("texto do peer remoto");
     });
+  });
+
+  // ── Cursor de colaboração (CollaborationCaret v3) ─────────────────────────
+  // Antes do bump de `@tiptap/extension-collaboration-cursor@2.26.2` para
+  // `@tiptap/extension-collaboration-caret@^3.23`, montar o editor com um
+  // provider presente derrubava o app (mismatch de API v2/v3 no
+  // `yCursorPlugin`). Este teste prova as duas coisas: que o plugin de fato
+  // entra no schema quando o provider está pronto, e que montar não lança.
+  it("monta CollaborationCaret sem lançar quando o provider está disponível", async () => {
+    let capturedEditor: Editor | null = null;
+    const CaptureActiveEditor: React.FC = () => {
+      const ctx = useRichTextContext();
+      capturedEditor = ctx?.activeEditor ?? null;
+      return null;
+    };
+
+    render(
+      <RichTextProvider>
+        <CaptureActiveEditor />
+        <RichTextEditor
+          value=""
+          onValueChange={() => {}}
+          collaborationId="sess-cursor-1"
+          userName="Dra. Ana"
+          userColor="#f783ac"
+        />
+      </RichTextProvider>,
+    );
+
+    await waitFor(() => {
+      expect(yProviderCtor).toHaveBeenCalledTimes(1);
+    });
+
+    const editorEl = await waitFor(() => {
+      const el = document.querySelector('[contenteditable="true"]') as HTMLElement | null;
+      expect(el).toBeTruthy();
+      return el as HTMLElement;
+    });
+
+    // Foca o editor — dispara onFocus → setActiveEditor no contexto — para
+    // obter a instância real do TipTap e inspecionar suas extensões.
+    const user = userEvent.setup();
+    await expect(user.click(editorEl)).resolves.not.toThrow();
+
+    await waitFor(() => {
+      expect(capturedEditor).not.toBeNull();
+    });
+
+    const extensionNames = (capturedEditor as unknown as Editor).extensionManager.extensions.map(
+      (e) => e.name,
+    );
+    expect(extensionNames).toContain("collaborationCaret");
   });
 });
