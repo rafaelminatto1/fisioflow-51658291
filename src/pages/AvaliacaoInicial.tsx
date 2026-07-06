@@ -8,6 +8,7 @@
 import type { ReactNode } from "react";
 import { Check, CheckCircle2, ChevronRight, Plus, Printer } from "lucide-react";
 import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
+import { MedicationsSection } from "@/components/clinical/MedicationsSection";
 
 const ic = (Icon: typeof Check, size = 13) => <Icon style={{ width: size, height: size }} />;
 
@@ -226,6 +227,22 @@ export default function AvaliacaoInicial() {
                     <SelChip variant="add">+ adicionar</SelChip>
                   </div>
                 </div>
+              </section>
+
+              <section className="mb-[26px]">
+                <SectionHeading n="3">Antecedentes &amp; Medicamentos</SectionHeading>
+                <p className="mb-3.5 ml-[33px] text-xs font-medium text-muted-foreground">
+                  Histórico pregresso e medicamentos em uso atual.
+                </p>
+                <div className="mb-4">
+                  <FieldLabel>Histórico médico (Comorbidades, Cirurgias previas)</FieldLabel>
+                  <textarea
+                    rows={2}
+                    className={`${INPUT} resize-none border-primary/35 leading-normal`}
+                    placeholder="Sem comorbidades relatadas..."
+                  />
+                </div>
+                <MedicationsSection />
               </section>
 
               <section className="mb-[26px]">

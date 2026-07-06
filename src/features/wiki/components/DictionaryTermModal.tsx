@@ -2,6 +2,8 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Wand2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -60,6 +62,7 @@ const CATEGORIES = [
   { id: "bone", label: "Ossos" },
   { id: "nerve", label: "Nervos" },
   { id: "equipment", label: "Equipamentos" },
+  { id: "medicament", label: "Medicamentos" },
 ];
 
 export function DictionaryTermModal({
@@ -82,6 +85,33 @@ export function DictionaryTermModal({
       descriptionEn: "",
     },
   });
+
+  const [isGenerating, setIsGenerating] = React.useState(false);
+  const selectedCategory = form.watch("category");
+
+  const handleGenerateAI = async () => {
+    const termName = form.getValues("pt");
+    if (!termName) {
+      toast.error("Preencha o nome do medicamento (PT) primeiro");
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      const response = await fetch('/api/ai/generate-medication', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: termName })
+      });
+      const data = await response.json();
+      if (data.summary) form.setValue("descriptionPt", data.summary);
+      if (data.sideEffects) form.setValue("descriptionEn", data.sideEffects);
+      toast.success("Dados gerados com sucesso!");
+    } catch (e) {
+      toast.error("Erro ao gerar dados com IA");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   useEffect(() => {
     if (term) {
@@ -249,9 +279,42 @@ export function DictionaryTermModal({
               name="descriptionPt"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Descrição (PT)</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>
+                      {selectedCategory === "medicament" ? "Resumo / Indicação" : "Descrição (PT)"}
+                    </FormLabel>
+                    {selectedCategory === "medicament" && (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleGenerateAI}
+                        disabled={isGenerating}
+                        className="h-7 text-xs bg-orange-100 text-orange-700 hover:bg-orange-200"
+                      >
+                        <Wand2 className="h-3 w-3 mr-1" />
+                        {isGenerating ? "Gerando..." : "Gerar com IA"}
+                      </Button>
+                    )}
+                  </div>
                   <FormControl>
-                    <Textarea placeholder="Opcional..." {...field} />
+                    <Textarea placeholder="Opcional..." className="min-h-[100px]" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="descriptionEn"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {selectedCategory === "medicament" ? "Efeitos Colaterais" : "Description (EN)"}
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Opcional..." className="min-h-[100px]" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

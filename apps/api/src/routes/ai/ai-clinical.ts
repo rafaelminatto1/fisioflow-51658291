@@ -840,4 +840,41 @@ app.get("/medical-report/outcome", async (c) => {
   }
 });
 
+/**
+ * POST /api/ai/generate-medication
+ * Gera informações de um medicamento para o dicionário.
+ */
+app.post("/generate-medication", async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as {
+    name?: string;
+  };
+  const medicationName = body.name?.trim();
+  
+  if (!medicationName) {
+    return c.json({ error: "Nome do medicamento é obrigatório" }, 400);
+  }
+  
+  try {
+    const medicationSchema = z.object({
+      summary: z.string().describe("Resumo, indicação principal e classe terapêutica do medicamento"),
+      sideEffects: z.string().describe("Principais efeitos colaterais com foco no impacto para o tratamento fisioterapêutico (ex: sonolência, tontura, dor muscular)"),
+    });
+
+    const data = await unifiedStructured(c.env, {
+      schema: medicationSchema,
+      prompt: `Gere informações clínicas sobre o medicamento "${medicationName}". Responda em português brasileiro de forma técnica e concisa.`,
+      model: "gemini-3-flash-preview",
+      thinkingLevel: "LOW",
+      systemInstruction: "Você é um assistente de fisioterapia especialista em farmacologia clínica. Forneça o resumo e efeitos colaterais com foco prático para o tratamento.",
+      temperature: 0.2,
+      maxOutputTokens: 800,
+    });
+    
+    return c.json({ success: true, summary: data.summary, sideEffects: data.sideEffects });
+  } catch (error: any) {
+    console.error("[ai/generate-medication] Error:", error);
+    return c.json({ error: "Falha ao gerar dados do medicamento", details: error.message }, 500);
+  }
+});
+
 export { app as aiClinicalRoutes };

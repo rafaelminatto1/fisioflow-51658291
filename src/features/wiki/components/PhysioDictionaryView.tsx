@@ -36,6 +36,7 @@ const CATEGORIES = [
   { id: "movement", label: "Movimentos" },
   { id: "questionnaire", label: "Questionários" },
   { id: "procedure", label: "Protocolos" },
+  { id: "medicament", label: "Medicamentos" },
 ];
 
 export function PhysioDictionaryView() {
