@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { request } from "@/api/v2/base";
 import { PageLayout } from "@/components/layout/PageLayout";
 
@@ -15,34 +15,45 @@ interface LakeResponse {
   sections?: Record<string, Section>;
 }
 
-function firstNumber(rows?: Record<string, unknown>[]): string {
-  const row = rows?.[0];
-  if (!row) return "—";
-  const v = row.total ?? Object.values(row)[0];
-  return v == null ? "—" : String(v);
+/** Parseia a string JSON da coluna `value` e desembrulha o nível extra {value:{...}}. */
+function parseEvent(raw: unknown): Record<string, unknown> {
+  if (typeof raw !== "string") return (raw as Record<string, unknown>) ?? {};
+  try {
+    const obj = JSON.parse(raw) as Record<string, unknown>;
+    const inner = obj?.value;
+    return (inner && typeof inner === "object" ? inner : obj) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
 }
 
-/** Tabela simples label→n para seções agregadas (byEvent/byRoute/byOrg). */
-function AggTable({ section }: { section: Section }) {
-  if (section.error) {
-    return <p className="text-xs text-amber-600">{section.label}: indisponível ({section.error.slice(0, 80)})</p>;
+function topCounts(events: Record<string, unknown>[], field: string, limit = 15) {
+  const counts = new Map<string, number>();
+  for (const e of events) {
+    const k = e[field] == null ? "(vazio)" : String(e[field]);
+    counts.set(k, (counts.get(k) ?? 0) + 1);
   }
-  const rows = section.rows ?? [];
-  if (rows.length === 0) return <p className="text-xs text-muted-foreground">{section.label}: sem dados.</p>;
-  const keys = Object.keys(rows[0]);
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit);
+}
+
+function CountTable({ title, rows }: { title: string; rows: [string, number][] }) {
   return (
     <div className="rounded-xl border bg-card p-4">
-      <h2 className="mb-3 font-bold">{section.label}</h2>
-      <table className="w-full text-sm">
-        <tbody>
-          {rows.map((r, i) => (
-            <tr key={i} className="border-b last:border-0">
-              <td className="py-1">{String(r[keys[0]] ?? "—")}</td>
-              <td className="py-1 text-right font-semibold tabular-nums">{String(r[keys[1]] ?? "")}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <h2 className="mb-3 font-bold">{title}</h2>
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Sem dados.</p>
+      ) : (
+        <table className="w-full text-sm">
+          <tbody>
+            {rows.map(([k, n]) => (
+              <tr key={k} className="border-b last:border-0">
+                <td className="truncate py-1">{k}</td>
+                <td className="py-1 text-right font-semibold tabular-nums">{n}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
@@ -63,8 +74,15 @@ export default function EventsLakePage() {
     };
   }, []);
 
-  const s = data?.sections;
-  const recent = s?.recent;
+  const total = data?.sections?.total;
+  const recent = data?.sections?.recent;
+  const recentRows = recent?.rows ?? [];
+
+  const events = useMemo(() => recentRows.map((r) => parseEvent(r.value)), [recentRows]);
+  const byEvent = useMemo(() => topCounts(events, "event"), [events]);
+  const byRoute = useMemo(() => topCounts(events, "route"), [events]);
+
+  const totalCount = total?.rows?.[0]?.total ?? total?.rows?.[0]?.["total"] ?? "—";
 
   return (
     <PageLayout>
@@ -83,40 +101,44 @@ export default function EventsLakePage() {
           <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-800">
             <p className="font-semibold">Data lake ainda não configurado</p>
             <p className="mt-1 text-sm">{data.message}</p>
-            <p className="mt-2 text-sm">
-              Crie um token Cloudflare de R2 com <strong>Admin Read only</strong> (R2 → Manage API Tokens) e rode{" "}
-              <code className="rounded bg-amber-100 px-1">wrangler secret put R2_SQL_TOKEN --env production</code>.
-            </p>
           </div>
         )}
 
-        {data?.configured && s && (
+        {total?.error && <p className="text-amber-600">R2 SQL: {total.error.slice(0, 160)}</p>}
+
+        {data?.configured && total && !total.error && (
           <>
             <div className="rounded-xl border bg-card p-4">
               <p className="text-sm text-muted-foreground">Total de eventos no data lake</p>
-              <p className="text-3xl font-black">{firstNumber(s.total?.rows)}</p>
-              {s.total?.error && <p className="mt-1 text-xs text-amber-600">{s.total.error.slice(0, 120)}</p>}
+              <p className="text-3xl font-black">{String(totalCount)}</p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
-              {s.byEvent && <AggTable section={s.byEvent} />}
-              {s.byRoute && <AggTable section={s.byRoute} />}
-              {s.byOrg && <AggTable section={s.byOrg} />}
+            <div className="grid gap-4 md:grid-cols-2">
+              <CountTable title="Eventos por tipo (amostra recente)" rows={byEvent} />
+              <CountTable title="Eventos por rota (amostra recente)" rows={byRoute} />
             </div>
 
             <div className="overflow-x-auto rounded-xl border bg-card p-4">
               <h2 className="mb-3 font-bold">Eventos recentes</h2>
               {recent?.error ? (
                 <p className="text-xs text-amber-600">Indisponível: {recent.error.slice(0, 120)}</p>
-              ) : (recent?.rows ?? []).length === 0 ? (
+              ) : recentRows.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Sem eventos ainda (o batch do Iceberg grava a cada ~5 min).</p>
               ) : (
-                <ul className="flex flex-col gap-1 font-mono text-xs">
-                  {(recent?.rows ?? []).slice(0, 50).map((row, i) => (
-                    <li key={i} className="truncate border-b py-1">
-                      {JSON.stringify(row)}
-                    </li>
-                  ))}
+                <ul className="flex flex-col gap-1 text-xs">
+                  {recentRows.slice(0, 50).map((row, i) => {
+                    const ev = parseEvent(row.value);
+                    return (
+                      <li key={i} className="flex justify-between gap-3 border-b py-1">
+                        <span className="truncate font-mono">
+                          {String(ev.event ?? "—")} · {String(ev.route ?? "")}
+                        </span>
+                        <span className="whitespace-nowrap text-muted-foreground">
+                          {String(row.__ingest_ts ?? "").replace("T", " ").slice(0, 19)}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>

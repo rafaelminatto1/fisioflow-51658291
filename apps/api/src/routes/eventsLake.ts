@@ -45,6 +45,9 @@ async function r2Sql(token: string, query: string): Promise<Record<string, unkno
 }
 
 // Conjunto de queries de BI. Cada uma é isolada — se falhar, só ela some do painel.
+// A coluna `value` é uma STRING JSON e o R2 SQL não tem função de extração JSON
+// (json_extract_string/get_json_object não existem), então a agregação por
+// tipo/rota é feita no FRONTEND parseando o value dos eventos recentes.
 const BI_QUERIES: { key: string; label: string; sql: string }[] = [
   {
     key: "total",
@@ -52,24 +55,9 @@ const BI_QUERIES: { key: string; label: string; sql: string }[] = [
     sql: "SELECT COUNT(*) AS total FROM analytics.events",
   },
   {
-    key: "byEvent",
-    label: "Eventos por tipo",
-    sql: "SELECT value.event AS event, COUNT(*) AS n FROM analytics.events GROUP BY value.event ORDER BY n DESC LIMIT 20",
-  },
-  {
-    key: "byRoute",
-    label: "Eventos por rota",
-    sql: "SELECT value.route AS route, COUNT(*) AS n FROM analytics.events GROUP BY value.route ORDER BY n DESC LIMIT 20",
-  },
-  {
-    key: "byOrg",
-    label: "Eventos por organização",
-    sql: "SELECT value.org AS org, COUNT(*) AS n FROM analytics.events GROUP BY value.org ORDER BY n DESC LIMIT 20",
-  },
-  {
     key: "recent",
     label: "Eventos recentes",
-    sql: "SELECT * FROM analytics.events ORDER BY __ingest_ts DESC LIMIT 50",
+    sql: "SELECT __ingest_ts, value FROM analytics.events ORDER BY __ingest_ts DESC LIMIT 200",
   },
 ];
 
