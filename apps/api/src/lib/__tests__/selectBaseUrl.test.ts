@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { selectBaseUrl } from "../db";
+import { selectBaseUrl, isTcpConnection } from "../db";
 
 const REPLICA = "postgres://replica.neon.tech/db";
 const HYPER = "postgres://hyperdrive.internal/db";
@@ -28,5 +28,18 @@ describe("selectBaseUrl (roteamento de read replica)", () => {
   });
   it("em produção prefere Hyperdrive sobre o NEON_URL direto", () => {
     expect(selectBaseUrl(env(), "write")).toBe(HYPER);
+  });
+});
+
+describe("isTcpConnection (réplica usa neon-http, não pg-TCP, nos Workers)", () => {
+  it("prod: primário (Hyperdrive) usa TCP", () => {
+    expect(isTcpConnection(env(), "write")).toBe(true);
+  });
+  it("prod: réplica (URL Neon direta) NÃO usa TCP → cai no neon-http", () => {
+    expect(isTcpConnection(env({ NEON_REPLICA_URL: REPLICA }), "replica")).toBe(false);
+  });
+  it("dev: URL postgres direta usa TCP (pg funciona no Node local)", () => {
+    const e = env({ ENVIRONMENT: "development", HYPERDRIVE: undefined, NEON_URL: DIRECT });
+    expect(isTcpConnection(e, "write")).toBe(true);
   });
 });

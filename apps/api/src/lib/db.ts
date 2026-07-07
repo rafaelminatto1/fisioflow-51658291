@@ -75,10 +75,19 @@ function getUrl(env: Env, mode: DbMode = "write"): string {
   return url;
 }
 
-function isTcpConnection(env: Env, mode: DbMode = "write"): boolean {
+export function isTcpConnection(env: Env, mode: DbMode = "write"): boolean {
   const url = getUrl(env, mode);
   if (env.HYPERDRIVE?.connectionString && url === env.HYPERDRIVE.connectionString) return true;
-  if (url.startsWith("postgres://") || url.startsWith("postgresql://")) return true;
+  // URL postgres direta (ex.: read replica) — pg-over-TCP só funciona no Node
+  // (dev/local). Nos Workers, usar o driver neon-http (@neondatabase/serverless);
+  // sem esta guarda, o modo "replica" tentaria abrir TCP cru pro Neon (sem
+  // Hyperdrive) e falharia no runtime dos Workers.
+  if (
+    env.ENVIRONMENT === "development" &&
+    (url.startsWith("postgres://") || url.startsWith("postgresql://"))
+  ) {
+    return true;
+  }
   return false;
 }
 
