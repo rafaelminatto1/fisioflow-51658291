@@ -146,7 +146,7 @@ app.get("/stats", requireAuth, async (c) => {
        COUNT(l.id) FILTER (WHERE l.started_at >= $2 AND l.status <> 'success')::int AS failures,
        MAX(l.started_at) AS last_run_at
      FROM automations a
-     LEFT JOIN automation_logs l ON l.automation_id = a.id AND l.organization_id = $1
+     LEFT JOIN automation_logs l ON l.automation_id = a.id::text AND l.organization_id = $1
      WHERE a.org_id = $1
      GROUP BY a.id, a.name`,
     [user.organizationId, monthStart],

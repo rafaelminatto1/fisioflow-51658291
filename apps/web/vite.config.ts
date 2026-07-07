@@ -394,6 +394,7 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: path.resolve(__dirname, "dist"),
+      emptyOutDir: true,
       target: "es2022",
       cssTarget: "es2020",
       sourcemap: !isProduction,

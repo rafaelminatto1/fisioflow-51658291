@@ -10,3 +10,6 @@
 @source "../../pages/patients/NewEvaluationPage.tsx";
 @source "../../components/evolution/**/*.{ts,tsx,js,jsx}";
 
+/* Prevent empty bundle chunk discard by bundler */
+.evolution-bundle-force { display: none; }
+

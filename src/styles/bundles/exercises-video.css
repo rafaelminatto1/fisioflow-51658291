@@ -2,3 +2,6 @@
 @import "tailwindcss/utilities.css" layer(utilities) source(none);
 
 @source "../../components/exercises/ExerciseVideo*.tsx";
+
+/* Prevent empty bundle chunk discard by bundler */
+.exercises-video-bundle-force { display: none; }

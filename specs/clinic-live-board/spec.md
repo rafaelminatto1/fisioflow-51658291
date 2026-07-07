@@ -1,3 +1,5 @@
+> **⚠️ PARADO (Jul/2026 — decisão de produto):** o banco não rastreia 'chegou'/'em atendimento' e o cliente não tem recepcionista, então check-in manual atrapalharia o dia a dia. Este painel só faz sentido com captura automática de chegada (câmera/leitor biométrico). Fundação (reducer+hydrate) commitada na branch `feat/clinic-live-board`, NÃO mergeada. Reavaliar no futuro.
+
 # Spec — Clinic Live Board (painel de ocupação & check-in ao vivo)
 
 **Slug:** `clinic-live-board` · **Data:** 2026-07-06 · **Épico:** M1 — Dashboards de clínica em tempo real

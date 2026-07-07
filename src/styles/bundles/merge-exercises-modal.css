@@ -2,3 +2,6 @@
 @import "tailwindcss/utilities.css" layer(utilities) source(none);
 
 @source "../../components/exercises/MergeExercisesModal.tsx";
+
+/* Prevent empty bundle chunk discard by bundler */
+.merge-exercises-modal-bundle-force { display: none; }

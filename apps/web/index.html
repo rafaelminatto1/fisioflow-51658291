@@ -405,6 +405,15 @@
             });
           }
         }
+
+        // Monitorar erros de preload do Vite (quando chunks do app mudam)
+        window.addEventListener('vite:preloadError', (event) => {
+          console.warn('[Asset Recovery] Erro de preload detectado pelo Vite (possível atualização):', event);
+          failedAttempts.js++;
+          if (shouldAttemptRecovery()) {
+            forceReload();
+          }
+        });
       })();
     </script>
 

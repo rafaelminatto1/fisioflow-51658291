@@ -5,6 +5,8 @@
  */
 
 import { CohortComparison } from "@/components/admin/CohortComparison";
+import { PageLayout } from "@/components/layout/PageLayout";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 function CohortAnalysisPage() {
   return (

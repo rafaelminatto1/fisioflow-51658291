@@ -6,3 +6,6 @@
 @source "../../pages/configuracoes/CalendarSettings.tsx";
 @source "../../components/schedule/**/*.{ts,tsx,js,jsx}";
 
+/* Prevent empty bundle chunk discard by bundler */
+.schedule-bundle-force { display: none; }
+

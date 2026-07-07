@@ -16,6 +16,7 @@ import {
   Search,
   Sparkles,
   Target,
+  Video,
 } from "lucide-react";
 import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
 import { Card } from "@/components/ui/card";

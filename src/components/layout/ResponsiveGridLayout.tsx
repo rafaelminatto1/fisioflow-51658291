@@ -134,7 +134,7 @@ export function ResponsiveContainer({
 }) {
   return (
     <div className={cn("w-full overflow-x-hidden", className)}>
-      <div className="mx-auto w-full max-w-7xl px-3 sm:px-4 lg:px-6">{children}</div>
+      <div className="mx-auto w-full max-w-7xl xl:max-w-[1440px] 2xl:max-w-[1600px] px-3 sm:px-4 lg:px-6">{children}</div>
     </div>
   );
 }

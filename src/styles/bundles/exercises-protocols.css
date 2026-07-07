@@ -6,3 +6,6 @@
 @source "../../components/exercises/ProtocolDetailView.tsx";
 @source "../../components/protocols/**/*.tsx";
 @source "../../components/modals/NewProtocolModal.tsx";
+
+/* Prevent empty bundle chunk discard by bundler */
+.exercises-protocols-bundle-force { display: none; }

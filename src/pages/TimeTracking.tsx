@@ -20,6 +20,7 @@ import { TimeEntryModal } from "@/components/timetracking/TimeEntryModal";
 import { WeeklySummary } from "@/components/timetracking/WeeklySummary";
 import { TimeTrackingCalendarView } from "@/components/timetracking/TimeTrackingCalendarView";
 import { formatDuration, formatHoursDecimal } from "@/lib/timetracking/timeCalculator";
+import { TimeSeriesAreaChart } from "@/components/charts/TimeSeriesAreaChart";
 
 import type { ReportPeriod, TimeSheetView } from "@/types/timetracking";
 
@@ -135,6 +136,21 @@ export default function TimeTrackingPage() {
     };
   }, [filteredEntries]);
 
+  // Série temporal: horas registradas por dia no período selecionado
+  const dailyHours = useMemo(() => {
+    const byDay = new Map<string, number>();
+    for (const e of filteredEntries) {
+      const iso = new Date(e.start_time).toISOString().slice(0, 10);
+      byDay.set(iso, (byDay.get(iso) ?? 0) + e.duration_seconds);
+    }
+    return [...byDay.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([iso, seconds]) => {
+        const [, mm, dd] = iso.split("-");
+        return { label: `${dd}/${mm}`, value: Math.round((seconds / 3600) * 10) / 10 };
+      });
+  }, [filteredEntries]);
+
   const handleQuickStart = () => {
     const description = prompt("Descrição da atividade:");
     if (description) {
@@ -221,6 +237,23 @@ export default function TimeTrackingPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Série temporal: horas por dia */}
+          {dailyHours.length > 1 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Horas por dia</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TimeSeriesAreaChart
+                  data={dailyHours}
+                  valueName="horas"
+                  formatValue={(v) => `${v}h`}
+                  emptyMessage="Sem horas registradas no período."
+                />
+              </CardContent>
+            </Card>
+          )}
 
           {/* Main Content */}
           <Tabs

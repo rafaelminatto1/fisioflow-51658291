@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { request } from "@/api/v2/base";
 import { PageLayout } from "@/components/layout/PageLayout";
+import { TimeSeriesAreaChart, type TimeSeriesPoint } from "@/components/charts/TimeSeriesAreaChart";
 
 interface Section {
   key: string;
@@ -34,6 +35,46 @@ function topCounts(events: Record<string, unknown>[], field: string, limit = 15)
     counts.set(k, (counts.get(k) ?? 0) + 1);
   }
   return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit);
+}
+
+/** Normaliza as linhas da série temporal `byDay` (day, n) do R2 SQL → pontos {label,value}. */
+function parseByDay(rows: Record<string, unknown>[]): TimeSeriesPoint[] {
+  return rows
+    .map((r) => {
+      const iso = String(r.day ?? "").slice(0, 10);
+      const n = Number(r.n ?? 0);
+      if (!iso || Number.isNaN(n)) return null;
+      const [, mm, dd] = iso.split("-");
+      return { iso, label: dd && mm ? `${dd}/${mm}` : iso, value: n };
+    })
+    .filter((p): p is { iso: string; label: string; value: number } => p !== null)
+    .sort((a, b) => a.iso.localeCompare(b.iso))
+    .map(({ label, value }) => ({ label, value }));
+}
+
+function TimeSeriesCard({ points }: { points: TimeSeriesPoint[] }) {
+  const total = points.reduce((s, p) => s + p.value, 0);
+  const peak = points.reduce<TimeSeriesPoint | null>((m, p) => (!m || p.value > m.value ? p : m), null);
+
+  return (
+    <div className="rounded-xl border bg-card p-4">
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="font-bold">Eventos por dia</h2>
+        <p className="text-xs text-muted-foreground">
+          Série temporal · últimos {points.length} dias · agregada no R2 SQL sobre todo o histórico
+          {peak ? ` · pico ${peak.value} em ${peak.label}` : ""}
+        </p>
+      </div>
+      <TimeSeriesAreaChart
+        data={points}
+        valueName="eventos"
+        emptyMessage="Sem dados de série temporal ainda."
+      />
+      <p className="mt-2 text-right text-xs text-muted-foreground tabular-nums">
+        {total.toLocaleString("pt-BR")} eventos no período
+      </p>
+    </div>
+  );
 }
 
 function CountTable({ title, rows }: { title: string; rows: [string, number][] }) {
@@ -76,8 +117,10 @@ export default function EventsLakePage() {
 
   const total = data?.sections?.total;
   const recent = data?.sections?.recent;
+  const byDay = data?.sections?.byDay;
   const recentRows = recent?.rows ?? [];
 
+  const dayPoints = useMemo(() => parseByDay(byDay?.rows ?? []), [byDay?.rows]);
   const events = useMemo(() => recentRows.map((r) => parseEvent(r.value)), [recentRows]);
   const byEvent = useMemo(() => topCounts(events, "event"), [events]);
   const byRoute = useMemo(() => topCounts(events, "route"), [events]);
@@ -112,6 +155,12 @@ export default function EventsLakePage() {
               <p className="text-sm text-muted-foreground">Total de eventos no data lake</p>
               <p className="text-3xl font-black">{String(totalCount)}</p>
             </div>
+
+            {byDay?.error ? (
+              <p className="text-xs text-amber-600">Série temporal indisponível: {byDay.error.slice(0, 120)}</p>
+            ) : (
+              <TimeSeriesCard points={dayPoints} />
+            )}
 
             <div className="grid gap-4 md:grid-cols-2">
               <CountTable title="Eventos por tipo (amostra recente)" rows={byEvent} />

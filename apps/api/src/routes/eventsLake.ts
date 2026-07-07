@@ -55,6 +55,13 @@ const BI_QUERIES: { key: string; label: string; sql: string }[] = [
     sql: "SELECT COUNT(*) AS total FROM analytics.events",
   },
   {
+    // Série temporal: __ingest_ts é timestamp real, então o R2 SQL agrega por
+    // dia NO SERVIDOR (eficiente, sobre TODO o histórico — não só a amostra).
+    key: "byDay",
+    label: "Eventos por dia",
+    sql: "SELECT CAST(__ingest_ts AS DATE) AS day, COUNT(*) AS n FROM analytics.events GROUP BY day ORDER BY day LIMIT 90",
+  },
+  {
     key: "recent",
     label: "Eventos recentes",
     sql: "SELECT __ingest_ts, value FROM analytics.events ORDER BY __ingest_ts DESC LIMIT 200",

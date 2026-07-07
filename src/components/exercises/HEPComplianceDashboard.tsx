@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Brain, CheckCircle2, Loader2, XCircle, TrendingUp } from "lucide-react";
 import { getWorkersApiUrl } from "@/lib/api/config";
 import { toast } from "sonner";
+import { TimeSeriesAreaChart, type TimeSeriesPoint } from "@/components/charts/TimeSeriesAreaChart";
 
 interface ExercisePlan {
   id: string;
@@ -126,6 +127,19 @@ function HEPGenerateWithAI({ planId }: { planId: string }) {
   );
 }
 
+/** Série temporal: adesão acumulada (%) ao longo dos últimos 14 dias. */
+function toAdherenceTrend(last14Days: Array<{ date: string; completed: boolean }>): TimeSeriesPoint[] {
+  let done = 0;
+  return last14Days.map((day, i) => {
+    if (day.completed) done += 1;
+    const label = new Date(day.date + "T00:00:00").toLocaleDateString("pt-BR", {
+      day: "numeric",
+      month: "numeric",
+    });
+    return { label, value: Math.round((done / (i + 1)) * 100) };
+  });
+}
+
 function PlanComplianceCard({ planId }: { planId: string }) {
   const { data, isLoading } = useQuery<HEPComplianceData>({
     queryKey: ["hep-compliance", planId],
@@ -159,6 +173,20 @@ function PlanComplianceCard({ planId }: { planId: string }) {
         <p className="text-xs text-muted-foreground">
           {data.completedDays} de {data.totalDays} dias realizados
         </p>
+
+        {/* Série temporal: tendência de adesão acumulada nos últimos 14 dias */}
+        {data.last14Days.length > 1 && (
+          <div className="pt-1">
+            <p className="text-xs font-medium text-muted-foreground mb-1">Tendência de adesão (14 dias)</p>
+            <TimeSeriesAreaChart
+              data={toAdherenceTrend(data.last14Days)}
+              minHeight={140}
+              color="hsl(var(--primary))"
+              valueName="adesão"
+              formatValue={(v) => `${v}%`}
+            />
+          </div>
+        )}
 
         {/* Mini calendar dos últimos 14 dias */}
         <div className="flex gap-1 pt-1 overflow-x-auto pb-1">

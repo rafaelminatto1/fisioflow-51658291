@@ -6,3 +6,6 @@
 @source "../../components/exercises/DraggableExerciseCard.tsx";
 @source "../../components/exercises/DeleteExerciseDialog.tsx";
 @source "../../components/exercises/ExerciseLibraryModal.tsx";
+
+/* Prevent empty bundle chunk discard by bundler */
+.exercises-library-bundle-force { display: none; }

@@ -3,3 +3,6 @@
 
 @source "../../pages/Templates.tsx";
 @source "../../components/exercises/Template*.tsx";
+
+/* Prevent empty bundle chunk discard by bundler */
+.exercises-templates-bundle-force { display: none; }

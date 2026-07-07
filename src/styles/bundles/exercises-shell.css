@@ -2,3 +2,4 @@
 @import "tailwindcss/utilities.css" layer(utilities) source(none);
 
 @source "../../pages/Exercises.tsx";
+.exercises-bundle-force-unique { display: none; }
