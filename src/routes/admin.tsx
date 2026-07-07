@@ -12,6 +12,9 @@ const UserManagement = lazy(
   () => import(/* webpackChunkName: "admin-users" */ "@/pages/UserManagement"),
 );
 const AuditLogs = lazy(() => import(/* webpackChunkName: "admin-audit" */ "@/pages/AuditLogs"));
+const EventsLakePage = lazy(
+  () => import(/* webpackChunkName: "admin-events-lake" */ "@/pages/EventsLakePage"),
+);
 const SecurityMonitoring = lazy(
   () => import(/* webpackChunkName: "admin-security" */ "@/pages/SecurityMonitoring"),
 );
@@ -107,6 +110,14 @@ export const adminRoutes = (
       element={
         <ProtectedRoute allowedRoles={["admin", "fisioterapeuta"]}>
           <Admin />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/admin/events-lake"
+      element={
+        <ProtectedRoute allowedRoles={["admin"]}>
+          <EventsLakePage />
         </ProtectedRoute>
       }
     />

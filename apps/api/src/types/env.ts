@@ -174,6 +174,10 @@ export interface Env {
 
   // Analytics Engine (observabilidade em tempo real, free tier)
   ANALYTICS?: AnalyticsEngineDataset;
+  // Token da API de R2 SQL (perm "R2 Data Catalog Read" + "R2 Storage Read")
+  // p/ consultar a tabela Iceberg analytics.events no data lake. Setar via
+  // `wrangler secret put R2_SQL_TOKEN --env production`. Ausente = data lake off.
+  R2_SQL_TOKEN?: string;
 
   // AI Search (RAG gerenciado — wiki, protocolos, artigos científicos)
   // Bound via [[ai_search]] binding = "AI_SEARCH" instance_name = "fisioflow-rag".

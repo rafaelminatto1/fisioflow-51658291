@@ -35,6 +35,7 @@ import { notificationsRoutes } from "./routes/notifications";
 import { eventosRoutes } from "./routes/eventos";
 import { auditRoutes } from "./routes/auditRoutes";
 import { analyticsRoutes } from "./routes/analytics";
+import eventsLakeRoutes from "./routes/eventsLake";
 import { evolutionRoutes } from "./routes/evolution";
 import { evaluationFormsRoutes } from "./routes/evaluationForms";
 import { organizationsRoutes } from "./routes/organizations";
@@ -351,6 +352,7 @@ const apiRoutes = [
   ["/api/clinical-docs", clinicalDocsRoutes],
   ["/api/audit-logs", auditRoutes],
   ["/api/analytics", analyticsRoutes],
+  ["/api/events-lake", eventsLakeRoutes],
   ["/api/insights", analyticsRoutes],
   ["/api", eventosRoutes],
   ["/api/innovations", innovationsRoutes],
