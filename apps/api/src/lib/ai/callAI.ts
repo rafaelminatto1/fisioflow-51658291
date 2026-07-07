@@ -7,6 +7,7 @@ import {
 } from "./modelRegistry";
 import { zaiChat, zaiVision, zaiTranscribe, type ZAIChatResult } from "./providers/zai";
 import { runAi, readAiText } from "../ai-native";
+import { withAIRetry } from "./retry";
 import { neon } from "@neondatabase/serverless";
 
 export type AITask =
@@ -263,7 +264,17 @@ function buildMessages(
   return messages;
 }
 
-async function executeProvider(
+// Retry transitório no MESMO modelo antes de o callAI cair pro fallback.
+function executeProvider(
+  env: Env,
+  provider: AIProvider,
+  modelId: string,
+  opts: Parameters<typeof executeProviderOnce>[3],
+): Promise<ZAIChatResult> {
+  return withAIRetry(() => executeProviderOnce(env, provider, modelId, opts));
+}
+
+async function executeProviderOnce(
   env: Env,
   provider: AIProvider,
   modelId: string,
