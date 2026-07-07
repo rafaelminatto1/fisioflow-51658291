@@ -72,8 +72,26 @@ jobs:
       - name: Dry-run API deploy
         run: pnpm --dir apps/api exec wrangler deploy --dry-run --env production
 
+      # Retry: o registro dos 12 Workflow triggers via API do Cloudflare é
+      # intermitentemente instável (falha "Some triggers failed to deploy" mesmo
+      # com o Worker já enviado). O `wrangler deploy` é idempotente (re-envia +
+      # re-registra), então re-tentar com backoff limpa o soluço transitório em
+      # vez de derrubar o deploy inteiro (e, com ele, o deploy do web abaixo).
       - name: Deploy API (fisioflow-api)
-        run: pnpm --dir apps/api exec wrangler deploy --env production
+        run: |
+          for attempt in 1 2 3 4 5; do
+            echo "::group::Deploy API — tentativa $attempt/5"
+            if pnpm --dir apps/api exec wrangler deploy --env production; then
+              echo "::endgroup::"
+              echo "Deploy API OK na tentativa $attempt/5"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "::warning::Deploy API falhou na tentativa $attempt/5 (provável flakiness da API de triggers de Workflows do Cloudflare)"
+            if [ "$attempt" -lt 5 ]; then sleep $((attempt * 15)); fi
+          done
+          echo "::error::Deploy API falhou após 5 tentativas"
+          exit 1
 
       # 2. Build do web com env de produção. .env.production é gitignored, então
       #    as VITE_* vêm daqui. VITE_NEON_AUTH_URL é DELIBERADAMENTE omitida para
@@ -91,7 +109,20 @@ jobs:
           VITE_GOOGLE_AI_API_KEY: ${{ secrets.VITE_GOOGLE_AI_API_KEY || '' }}
 
       - name: Deploy web (fisioflow-web)
-        run: pnpm --dir apps/api exec wrangler deploy --config ../../wrangler.toml --env production
+        run: |
+          for attempt in 1 2 3; do
+            echo "::group::Deploy web — tentativa $attempt/3"
+            if pnpm --dir apps/api exec wrangler deploy --config ../../wrangler.toml --env production; then
+              echo "::endgroup::"
+              echo "Deploy web OK na tentativa $attempt/3"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "::warning::Deploy web falhou na tentativa $attempt/3"
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt * 10)); fi
+          done
+          echo "::error::Deploy web falhou após 3 tentativas"
+          exit 1
 
   smoke-test:
     name: Smoke Test
