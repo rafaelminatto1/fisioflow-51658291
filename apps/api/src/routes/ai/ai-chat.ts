@@ -656,10 +656,18 @@ app.post("/native/summarize", async (c) => {
 
 app.post("/native/translate", async (c) => {
   const { text, target } = await c.req.json();
-  const response = await runAi(c.env, "@cf/meta/m2m100-1.2b", {
-    text,
-    target_lang: target || "english",
-  });
+  // Tradução m2m100 é determinística (mesmo texto → mesma saída), então cacheia
+  // por 7 dias no AI Gateway em vez do default de 1h — corta custo/latência de
+  // traduções repetidas (ex.: PT→EN de queries recorrentes p/ PubMed).
+  const response = await runAi(
+    c.env,
+    "@cf/meta/m2m100-1.2b",
+    {
+      text,
+      target_lang: target || "english",
+    },
+    { cache: true, cacheTtl: 604800 },
+  );
   return c.json({ data: { translated: (response as any).translated_text } });
 });
 
