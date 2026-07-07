@@ -60,6 +60,10 @@ app.post("/", requireAuth, async (c) => {
       query,
       maxNumResults: 6,
       matchThreshold: ASK_MATCH_THRESHOLD,
+      // M3 — expande o contexto (chunks vizinhos) p/ o reranker + LLM não
+      // receberem trechos cortados no meio. O contexto ainda é limitado a 6000
+      // chars abaixo, então não infla a geração.
+      contextExpansion: 2,
     });
 
     // 2. Geração da resposta via callAI → roteada pelo AI Gateway, onde os

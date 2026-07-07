@@ -42,8 +42,11 @@ aiSearchApp.post("/", requireAuth, async (c) => {
           },
           { role: "user", content: query },
         ],
-        maxNumResults: 5,
+        maxNumResults: 8,
         matchThreshold: 0.25,
+        // M3 — mais candidatos p/ o reranker reordenar + expansão de contexto
+        // (chunks vizinhos) p/ respostas clínicas mais completas.
+        contextExpansion: 2,
       });
       return c.json({
         response: answer.answer,
