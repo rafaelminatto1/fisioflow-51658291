@@ -8,6 +8,7 @@ import {
 import { zaiChat, zaiVision, zaiTranscribe, type ZAIChatResult } from "./providers/zai";
 import { runAi, readAiText } from "../ai-native";
 import { withAIRetry } from "./retry";
+import { calculateCost } from "./aiCost";
 import { neon } from "@neondatabase/serverless";
 
 export type AITask =
@@ -391,6 +392,24 @@ function persistAIUsage(
     status: number;
   },
 ): void {
+  // M2 — observabilidade queryável (custo/latência/erro por modelo/task/org) via
+  // Analytics Engine, sem carga no OLTP. Consultável pela SQL API do AE.
+  // blobs: [model, provider, task, status, org]; doubles: [in, out, latency, custoUSD].
+  try {
+    const { estimatedCostUsd } = calculateCost(
+      usage.modelId,
+      usage.inputTokens,
+      usage.outputTokens,
+    );
+    env.ANALYTICS?.writeDataPoint({
+      indexes: [usage.orgId ?? "unknown"],
+      blobs: [usage.modelId, usage.provider, usage.task, String(usage.status), usage.orgId ?? ""],
+      doubles: [usage.inputTokens, usage.outputTokens, usage.latencyMs, estimatedCostUsd],
+    });
+  } catch {
+    // non-critical
+  }
+
   const url = env.NEON_URL || env.HYPERDRIVE?.connectionString;
   if (!url) return;
   try {
