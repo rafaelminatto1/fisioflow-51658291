@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { createPool } from "../lib/db";
+import { createReplicaPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { WORKERS_AI_MODELS } from "../lib/workersAi";
 import type { Env } from "../types/env";
@@ -51,7 +51,7 @@ export function mapOverdueSummaryRow(row?: OverdueSummaryAggregateRow) {
 
 app.get("/kpis", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = createPool(c.env);
+  const pool = createReplicaPool(c.env);
 
   try {
     // 1. Taxa de Ocupação (Slots preenchidos / total estimado)
@@ -134,7 +134,7 @@ app.get("/kpis", requireAuth, async (c) => {
  */
 app.get("/team-performance", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = createPool(c.env);
+  const pool = createReplicaPool(c.env);
 
   try {
     const result = await pool.query(
@@ -184,7 +184,7 @@ app.get("/team-performance", requireAuth, async (c) => {
 app.get("/patients/:id/digital-twin", requireAuth, async (c) => {
   const patientId = c.req.param("id");
   const user = c.get("user");
-  const pool = createPool(c.env);
+  const pool = createReplicaPool(c.env);
 
   try {
     const result = await pool.query(
@@ -206,7 +206,7 @@ app.get("/patients/:id/digital-twin", requireAuth, async (c) => {
  */
 app.get("/cohorts", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = createPool(c.env);
+  const pool = createReplicaPool(c.env);
 
   try {
     const result = await pool.query(
@@ -265,7 +265,7 @@ app.get("/cohorts", requireAuth, async (c) => {
  */
 app.get("/churn", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = createPool(c.env);
+  const pool = createReplicaPool(c.env);
 
   try {
     const result = await pool.query(
@@ -306,7 +306,7 @@ app.get("/churn", requireAuth, async (c) => {
 app.get("/patients/:id/ai-snapshot", requireAuth, async (c) => {
   const patientId = c.req.param("id");
   const user = c.get("user");
-  const pool = createPool(c.env);
+  const pool = createReplicaPool(c.env);
 
   try {
     // 1. Coletar dados clínicos recentes (últimas 10 evoluções).
@@ -395,7 +395,7 @@ app.get("/patients/:id/ai-snapshot", requireAuth, async (c) => {
  */
 app.get("/protocol-efficacy", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = createPool(c.env);
+  const pool = createReplicaPool(c.env);
 
   try {
     const result = await pool.query(
@@ -448,7 +448,7 @@ app.get("/protocol-efficacy", requireAuth, async (c) => {
  */
 app.get("/clinical-quality", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = createPool(c.env);
+  const pool = createReplicaPool(c.env);
 
   try {
     const result = await pool.query(
@@ -478,7 +478,7 @@ app.get("/clinical-quality", requireAuth, async (c) => {
  */
 app.get("/clinical-alerts", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = createPool(c.env);
+  const pool = createReplicaPool(c.env);
 
   try {
     const result = await pool.query(
@@ -506,7 +506,7 @@ app.get("/clinical-alerts", requireAuth, async (c) => {
  */
 app.get("/at-risk-patients", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = createPool(c.env);
+  const pool = createReplicaPool(c.env);
 
   try {
     const result = await pool.query(
@@ -558,7 +558,7 @@ app.get("/at-risk-patients", requireAuth, async (c) => {
  */
 app.get("/revenue-forecast", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = createPool(c.env);
+  const pool = createReplicaPool(c.env);
 
   try {
     // Pagamentos dos próximos 30 dias (baseado em paid_at)
@@ -623,7 +623,7 @@ app.get("/revenue-forecast", requireAuth, async (c) => {
  */
 app.get("/overdue-payments", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = createPool(c.env);
+  const pool = createReplicaPool(c.env);
 
   try {
     const result = await pool.query<OverduePatientAggregateRow>(
@@ -683,7 +683,7 @@ app.get("/overdue-payments", requireAuth, async (c) => {
  */
 app.get("/packages-expiring", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = createPool(c.env);
+  const pool = createReplicaPool(c.env);
 
   try {
     const result = await pool.query(

@@ -43,13 +43,25 @@ export function getOrgContext(): string | undefined {
   return rlsContext.getStore();
 }
 
-function getUrl(env: Env, mode: "read" | "write" = "write"): string {
-  // In deployed Workers, prefer Hyperdrive over NEON_URL so a stale direct secret
-  // cannot bypass the managed pooled binding and break the whole API.
+export type DbMode = "read" | "write" | "replica";
+
+/**
+ * Seleção pura da connection string base (sem os params de timeout). Exportada
+ * para teste. In deployed Workers, prefere Hyperdrive sobre NEON_URL para que um
+ * secret direto obsoleto não fure o binding pooled gerenciado. No modo "replica"
+ * usa NEON_REPLICA_URL quando presente; senão cai no primário.
+ */
+export function selectBaseUrl(env: Env, mode: DbMode): string | undefined {
   const hyperdriveUrl = env.HYPERDRIVE?.connectionString;
   const directUrl = env.NEON_URL || env.DATABASE_URL || process.env.DATABASE_URL;
   const shouldPreferHyperdrive = env.ENVIRONMENT !== "development" && Boolean(hyperdriveUrl);
-  let url = (shouldPreferHyperdrive ? hyperdriveUrl : directUrl) || hyperdriveUrl;
+  const primary = (shouldPreferHyperdrive ? hyperdriveUrl : directUrl) || hyperdriveUrl;
+  if (mode === "replica" && env.NEON_REPLICA_URL) return env.NEON_REPLICA_URL;
+  return primary;
+}
+
+function getUrl(env: Env, mode: DbMode = "write"): string {
+  let url = selectBaseUrl(env, mode);
 
   if (!url) throw new Error("Database configuration error: URL missing");
 
@@ -63,14 +75,14 @@ function getUrl(env: Env, mode: "read" | "write" = "write"): string {
   return url;
 }
 
-function isTcpConnection(env: Env, mode: "read" | "write" = "write"): boolean {
+function isTcpConnection(env: Env, mode: DbMode = "write"): boolean {
   const url = getUrl(env, mode);
   if (env.HYPERDRIVE?.connectionString && url === env.HYPERDRIVE.connectionString) return true;
   if (url.startsWith("postgres://") || url.startsWith("postgresql://")) return true;
   return false;
 }
 
-function createPgClient(env: Env, mode: "read" | "write" = "write"): Client {
+function createPgClient(env: Env, mode: DbMode = "write"): Client {
   return new Client({
     connectionString: getUrl(env, mode),
     connectionTimeoutMillis: 15000,
@@ -133,7 +145,7 @@ export type FisioDb = PgDatabase<any, typeof schema>;
 /**
  * Cria uma instância do Drizzle configurada para o ambiente atual.
  */
-export function createDb(env: Env, _mode: "read" | "write" = "write"): FisioDb {
+export function createDb(env: Env, _mode: DbMode = "write"): FisioDb {
   if (isTcpConnection(env, _mode)) {
     const client = {
       query: async (
@@ -251,7 +263,7 @@ export async function withRls<T>(
   env: Env,
   organizationId: string,
   fn: (sql: any) => Promise<T>,
-  mode: "read" | "write" = "write",
+  mode: DbMode = "write",
 ): Promise<T> {
   const url = getUrl(env, mode);
 
@@ -284,7 +296,7 @@ export async function withRls<T>(
 export function createPool(
   env: Env,
   defaultTimeout: number = DEFAULT_TIMEOUTS.query,
-  mode: "read" | "write" = "read",
+  mode: DbMode = "read",
 ): DbPool {
   const url = getUrl(env, mode);
   const orgId = getOrgContext();
@@ -398,7 +410,7 @@ export function createPool(
   } as DbPool;
 }
 
-export function getRawSql(env: Env, mode: "read" | "write" = "read"): DbQuery {
+export function getRawSql(env: Env, mode: DbMode = "read"): DbQuery {
   const url = getUrl(env, mode);
   const orgId = getOrgContext();
 
@@ -474,6 +486,16 @@ export function getRawSql(env: Env, mode: "read" | "write" = "read"): DbQuery {
 
 export async function createPoolForOrg(env: Env, organizationId: string, defaultTimeout?: number) {
   return await runWithOrg(organizationId, async () => createPool(env, defaultTimeout, "write"));
+}
+
+/**
+ * Pool para queries de ANALYTICS/RELATÓRIO (agregações read-only que toleram
+ * staleness). Roteia p/ a read replica do Neon (scale-to-zero) quando
+ * NEON_REPLICA_URL está setada; senão usa o primário. NUNCA usar p/
+ * read-after-write (a réplica é eventual-consistente).
+ */
+export function createReplicaPool(env: Env, defaultTimeout?: number): DbPool {
+  return createPool(env, defaultTimeout, "replica");
 }
 
 export async function getDbForOrg(organizationId: string, env: Env) {

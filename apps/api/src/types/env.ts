@@ -116,6 +116,11 @@ export interface Env {
   MONITOR_HEALTH_URL?: string; // URL verificada pelo cron de health monitor
   DATABASE_URL?: string;
   NEON_URL?: string;
+  // Connection string (pooled) da read replica do Neon — scale-to-zero, só p/
+  // leituras de analytics/relatório (eventual-consistente). Se ausente, o modo
+  // "replica" cai no primário. Provisionar no Console (projeto minatto/
+  // purple-union-72678311) e setar via `wrangler secret put NEON_REPLICA_URL`.
+  NEON_REPLICA_URL?: string;
   ALLOWED_ORIGINS: string; // CSV: "https://a.com,https://b.com"
   FRONTEND_URL?: string;
   PAGES_URL?: string;
