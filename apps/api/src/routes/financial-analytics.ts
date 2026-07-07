@@ -1315,3 +1315,8 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
     }
   });
 };
+
+const financialAnalyticsRoutes = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
+registerFinancialAnalyticsRoutes(financialAnalyticsRoutes);
+
+export { financialAnalyticsRoutes };

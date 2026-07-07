@@ -344,6 +344,10 @@ database_id = "9eba3eb7-5486-49d0-9684-c325f8b1ddc2"
 binding = "ANALYTICS"
 dataset = "fisioflow_events"
 
+[[env.production.vectorize]]
+binding = "VECTORIZE_KNOWLEDGE_BASE"
+index_name = "fisioflow-knowledge-base"
+
 [[env.production.ai_search]]
 binding = "AI_SEARCH"
 instance_name = "fisioflow-rag"

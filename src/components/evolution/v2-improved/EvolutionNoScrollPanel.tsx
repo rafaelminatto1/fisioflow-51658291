@@ -313,6 +313,15 @@ export const EvolutionNoScrollPanel = memo(
     );
 
     const observationsValue = data.evolutionText || data.observations || "";
+    
+    // Contagem de palavras simples (removendo tags HTML)
+    const plainText = observationsValue.replace(/<[^>]*>?/gm, '').trim();
+    const wordCount = plainText ? plainText.split(/\s+/).length : 0;
+    
+    // Placeholder dinâmico (com base na existência de evoluções anteriores)
+    const dynamicPlaceholder = previousRecords.length > 0
+      ? "Continue a evolução clínica (foco no acompanhamento e progressão)..."
+      : "Registre a evolução clínica: queixas, achados, intervenções e resposta do paciente...";
 
     return (
       <div className="evolution-main-grid">
@@ -342,15 +351,21 @@ export const EvolutionNoScrollPanel = memo(
               <Maximize2 className="h-3.5 w-3.5" /> Foco
             </button>
           </div>
-          <div className="custom-scrollbar flex-1 overflow-y-auto px-3 py-2">
+          <div className="flex flex-col flex-1 min-h-0 px-3 py-2">
             <RichTextBlock
               value={observationsValue}
               onValueChange={handleObservationsChange}
-              placeholder="Digite a evolução clínica aqui…"
+              placeholder={dynamicPlaceholder}
               showToolbar
               externalValueRevision={revisionRef.current}
-              className="clinical-observations-editor h-full [&_.ProseMirror]:min-h-[60vh]"
+              className="clinical-observations-editor flex-1 min-h-0"
             />
+          </div>
+          <div className="flex justify-between items-center px-4 py-1.5 border-t border-border bg-slate-50/50 text-[10px] font-semibold text-slate-500 rounded-b-2xl">
+            <span>{wordCount} {wordCount === 1 ? "palavra" : "palavras"}</span>
+            <span className="flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Autosave ativo
+            </span>
           </div>
         </motion.div>
 

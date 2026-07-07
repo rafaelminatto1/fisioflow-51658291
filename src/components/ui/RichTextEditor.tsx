@@ -10,7 +10,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, useEditorState } from "@tiptap/react";
 import { Extension } from "@tiptap/core";
 import { StarterKit } from "@tiptap/starter-kit";
 import { Placeholder } from "@tiptap/extension-placeholder";
@@ -452,6 +452,8 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
     // vazio em paralelo, arriscando duplicar ou sobrescrever a nota clínica.
     content: collaborationId ? undefined : normalizeIncomingEditorHtml(value || ""),
     editable: !disabled,
+    immediatelyRender: false,
+    shouldRerenderOnTransaction: false,
     onUpdate: ({ editor: ed }) => {
       if (isUpdatingFromProp.current) return;
       const html = ed.getHTML();
@@ -469,7 +471,12 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
       onBlur?.();
     },
     editorProps: {
-      attributes: { class: "outline-none" },
+      attributes: {
+        class: "outline-none",
+        role: "textbox",
+        "aria-label": "Campo de observações clínicas",
+        "aria-multiline": "true",
+      },
       handleDrop: (view, event, slice, moved) => {
         if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length > 0) {
           event.preventDefault();
@@ -612,13 +619,13 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
   // o texto" (ref: tiptap#4828 e o anti-padrão de controlled component).
   // Colaboração (Yjs) é dona do documento, então prop changes são ignoradas.
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || editor.isDestroyed || !editor.schema) return;
 
     const hasExplicitExternalUpdate =
       externalValueRevision !== undefined &&
       externalValueRevision !== lastExternalValueRevision.current;
 
-    const isCollaborationLoaded = editor.extensionManager.extensions.some(
+    const isCollaborationLoaded = editor.extensionManager?.extensions?.some(
       (e) => e.name === "collaboration",
     );
     if (collaborationId && isCollaborationLoaded && !hasExplicitExternalUpdate) {
@@ -745,6 +752,35 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
     setTestsOpen(false);
   };
 
+  const editorState = useEditorState({
+    editor,
+    selector: (ctx) => {
+      const e = ctx.editor;
+      if (!e) return {};
+      return {
+        fontSize: String(e.getAttributes("textStyle").fontSize ?? ""),
+        isBold: e.isActive("bold"),
+        isItalic: e.isActive("italic"),
+        isUnderline: e.isActive("underline"),
+        isStrike: e.isActive("strike"),
+        isSubscript: e.isActive("subscript"),
+        isSuperscript: e.isActive("superscript"),
+        isLink: e.isActive("link"),
+        isHeading2: e.isActive("heading", { level: 2 }),
+        isHeading3: e.isActive("heading", { level: 3 }),
+        isBulletList: e.isActive("bulletList"),
+        isOrderedList: e.isActive("orderedList"),
+        isTaskList: e.isActive("taskList"),
+        isBlockquote: e.isActive("blockquote"),
+        isHighlight: e.isActive("highlight"),
+        isAlignLeft: e.isActive({ textAlign: "left" }),
+        isAlignCenter: e.isActive({ textAlign: "center" }),
+        isAlignRight: e.isActive({ textAlign: "right" }),
+        isTable: e.isActive("table"),
+      };
+    },
+  });
+
   if (!editor) return null;
 
   return (
@@ -775,7 +811,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
             title="Tamanho da fonte"
             aria-label="Tamanho da fonte"
             disabled={disabled}
-            value={String(editor.getAttributes("textStyle").fontSize ?? "")}
+            value={editorState.fontSize || ""}
             onMouseDown={(e) => e.stopPropagation()}
             onChange={(e) => {
               const fontSize = e.target.value;
@@ -799,37 +835,37 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
             {
               icon: BoldIcon,
               action: () => editor.chain().focus().toggleBold().run(),
-              active: editor.isActive("bold"),
+              active: editorState.isBold,
               label: "Negrito",
             },
             {
               icon: ItalicIcon,
               action: () => editor.chain().focus().toggleItalic().run(),
-              active: editor.isActive("italic"),
+              active: editorState.isItalic,
               label: "Itálico",
             },
             {
               icon: UnderlineIcon,
               action: () => editor.chain().focus().toggleUnderline().run(),
-              active: editor.isActive("underline"),
+              active: editorState.isUnderline,
               label: "Sublinhado",
             },
             {
               icon: Strikethrough,
               action: () => editor.chain().focus().toggleStrike().run(),
-              active: editor.isActive("strike"),
+              active: editorState.isStrike,
               label: "Tachado",
             },
             {
               icon: SubscriptIcon,
               action: () => editor.chain().focus().toggleSubscript().run(),
-              active: editor.isActive("subscript"),
+              active: editorState.isSubscript,
               label: "Subscrito",
             },
             {
               icon: SuperscriptIcon,
               action: () => editor.chain().focus().toggleSuperscript().run(),
-              active: editor.isActive("superscript"),
+              active: editorState.isSuperscript,
               label: "Sobrescrito",
             },
             { sep: true },
@@ -845,52 +881,52 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
                 }
                 editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
               },
-              active: editor.isActive("link"),
+              active: editorState.isLink,
               label: "Inserir Link",
             },
             { sep: true },
             {
               icon: Heading2,
               action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
-              active: editor.isActive("heading", { level: 2 }),
+              active: editorState.isHeading2,
               label: "Título grande",
             },
             {
               icon: Heading3,
               action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
-              active: editor.isActive("heading", { level: 3 }),
+              active: editorState.isHeading3,
               label: "Subtítulo",
             },
             { sep: true },
             {
               icon: ListIcon,
               action: () => editor.chain().focus().toggleBulletList().run(),
-              active: editor.isActive("bulletList"),
+              active: editorState.isBulletList,
               label: "Lista",
             },
             {
               icon: ListOrdered,
               action: () => editor.chain().focus().toggleOrderedList().run(),
-              active: editor.isActive("orderedList"),
+              active: editorState.isOrderedList,
               label: "Lista numerada",
             },
             {
               icon: ListChecks,
               action: () => editor.chain().focus().toggleTaskList().run(),
-              active: editor.isActive("taskList"),
+              active: editorState.isTaskList,
               label: "Checklist",
             },
             { sep: true },
             {
               icon: Quote,
               action: () => editor.chain().focus().toggleBlockquote().run(),
-              active: editor.isActive("blockquote"),
+              active: editorState.isBlockquote,
               label: "Citação",
             },
             {
               icon: Highlighter,
               action: () => editor.chain().focus().toggleHighlight().run(),
-              active: editor.isActive("highlight"),
+              active: editorState.isHighlight,
               label: "Destacar",
             },
             { sep: true },
@@ -916,19 +952,19 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
             {
               icon: AlignLeft,
               action: () => editor.chain().focus().setTextAlign("left").run(),
-              active: editor.isActive({ textAlign: "left" }),
+              active: editorState.isAlignLeft,
               label: "Alinhar à esquerda",
             },
             {
               icon: AlignCenter,
               action: () => editor.chain().focus().setTextAlign("center").run(),
-              active: editor.isActive({ textAlign: "center" }),
+              active: editorState.isAlignCenter,
               label: "Centralizar",
             },
             {
               icon: AlignRight,
               action: () => editor.chain().focus().setTextAlign("right").run(),
-              active: editor.isActive({ textAlign: "right" }),
+              active: editorState.isAlignRight,
               label: "Alinhar à direita",
             },
             { sep: true },
@@ -946,7 +982,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
                   .focus()
                   .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
                   .run(),
-              active: editor.isActive("table"),
+              active: editorState.isTable,
               label: "Tabela",
             },
           ].map((tool, idx) => {

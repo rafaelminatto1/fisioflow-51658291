@@ -6,7 +6,7 @@ import {
   ReactNodeViewRenderer,
   type NodeViewProps,
 } from "@tiptap/react";
-import { GripVertical } from "lucide-react";
+import { GripVertical, Trash2 } from "lucide-react";
 import {
   buildClinicalMediaNode,
   DEFAULT_CLINICAL_MEDIA_ALIGN,
@@ -193,6 +193,12 @@ function ClinicalMediaNodeView({
             title={attrs.title || ""}
             draggable={false}
             className="clinical-media-image"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowMenu(true);
+            }}
+            onPointerDown={isAbsolute ? startAbsoluteDrag : undefined}
           />
           {showMenu && (
             <div className="clinical-media-toolbar" onClick={(e) => e.stopPropagation()}>

@@ -40,6 +40,8 @@ const { deleteMock, customTemplate } = vi.hoisted(() => {
   return { deleteMock: vi.fn().mockResolvedValue({ data: null }), customTemplate };
 });
 
+import React from "react";
+
 vi.mock("@/api/v2", () => ({
   templatesApi: {
     list: vi.fn().mockResolvedValue({ data: [customTemplate] }),
@@ -47,6 +49,29 @@ vi.mock("@/api/v2", () => ({
     delete: (...args: unknown[]) => deleteMock(...args),
   },
 }));
+
+vi.mock("../TemplateDetailPanel", () => {
+  return {
+    TemplateDetailPanel: ({ template, onDelete }: any) => {
+      const [open, setOpen] = React.useState(false);
+      if (!template) return null;
+      return (
+        <div>
+          <button>Editar</button>
+          <button onClick={() => setOpen(true)}>
+            <svg className="lucide-trash-2" />
+          </button>
+          {open && (
+            <div>
+              <span>Excluir template?</span>
+              <button onClick={onDelete}>Confirmar Exclusão</button>
+            </div>
+          )}
+        </div>
+      );
+    }
+  };
+});
 
 function renderManager() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });

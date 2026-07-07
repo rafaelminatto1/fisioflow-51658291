@@ -24,6 +24,7 @@ import { profileRoutes } from "./routes/profile";
 import { doctorsRoutes } from "./routes/doctors";
 import { goalProfilesRoutes } from "./routes/goalProfiles";
 import { financialRoutes } from "./routes/financial";
+import { financialAnalyticsRoutes } from "./routes/financial-analytics";
 import { schedulingRoutes } from "./routes/scheduling";
 import { crmRoutes } from "./routes/crm";
 import { contactsRoutes } from "./routes/contacts";
@@ -302,6 +303,7 @@ const apiRoutes = [
   ["/api/profile", profileRoutes],
   ["/api/doctors", doctorsRoutes],
   ["/api/goal-profiles", goalProfilesRoutes],
+  ["/api/financial-analytics", financialAnalyticsRoutes],
   ["/api/financial", financialRoutes],
   ["/api/scheduling", schedulingRoutes],
   ["/api/crm", crmRoutes],

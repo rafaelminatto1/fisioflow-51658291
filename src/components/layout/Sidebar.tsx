@@ -10,6 +10,7 @@ import {
   Calendar,
   CalendarDays,
   Activity,
+  Dumbbell,
   DollarSign,
   BarChart3,
   Settings,
@@ -32,6 +33,7 @@ import {
   Brain,
   Sparkles,
   Shield,
+  ShieldAlert,
   Receipt,
   BookOpen,
   FlaskConical,
@@ -41,7 +43,6 @@ import {
   Zap,
   Move,
   Calculator,
-  MessageCircle,
   Clock,
   TrendingUp,
 } from "lucide-react";
@@ -122,9 +123,7 @@ const mainMenuItems = [
 const clinicaMenuItems = [
   { icon: ClipboardList, label: "Avaliação Inicial", href: "/avaliacao-inicial" },
   { icon: Activity, label: "Evolução Clínica", href: "/evolucao-clinica" },
-  { icon: Activity, label: "Exercícios", href: APP_ROUTES.EXERCISES },
-  { icon: Sparkles, label: "Busca IA (Exercícios)", href: "/exercises/search-ai" },
-  { icon: ClipboardList, label: "Curadoria de Exercícios", href: "/exercises/curation" },
+  { icon: Dumbbell, label: "Exercícios", href: APP_ROUTES.EXERCISES },
   { icon: Target, label: "Protocolos", href: "/protocols" },
   { icon: FlaskConical, label: "Testes Clínicos", href: "/clinical-tests" },
   { icon: ClipboardList, label: "Avaliações", href: "/templates" },
@@ -164,18 +163,20 @@ const inteligenciaMenuItems = [
   { icon: Sparkles, label: "Base de Conhecimento", href: "/base-conhecimento", badge: "AI" },
 ];
 
-const operacionalMenuItems = [
+const rotinaSubmenu = [
   { icon: BarChart3, label: "Briefing do Dia", href: "/briefing" },
-  { icon: Zap, label: "Automações", href: "/automacoes" },
   { icon: Activity, label: "Monitor de Atividades", href: "/monitor" },
   { icon: CalendarDays, label: "Eventos", href: "/eventos" },
   { icon: LayoutGrid, label: "Boards", href: "/boards" },
-  { icon: FileText, label: "Cadastros", href: "/cadastros" },
-  { icon: BookOpen, label: "Wiki Clínica", href: "/wiki" },
-  { icon: Package, label: "Estoque", href: "/inventory" },
+  { icon: Zap, label: "Automações", href: "/automacoes" },
+];
+
+const clinicaGestaoSubmenu = [
   { icon: Video, label: "Telemedicina", href: "/telemedicine" },
   { icon: MessageSquare, label: "Comunicação", href: "/communications" },
-  { icon: MessageCircle, label: "WhatsApp", href: "/crm-whatsapp" },
+  { icon: Package, label: "Estoque", href: "/inventory" },
+  { icon: BookOpen, label: "Wiki Clínica", href: "/wiki" },
+  { icon: FileText, label: "Cadastros", href: "/cadastros" },
 ];
 
 const adminSubmenu = [
@@ -251,9 +252,11 @@ export function Sidebar() {
   const [biomecanicaOpen, setBiomecanicaOpen] = useState(false);
   const [financeiroOpen, setFinanceiroOpen] = useState(false);
   const [configuracoesOpen, setConfiguracoesOpen] = useState(false);
+  const [rotinaOpen, setRotinaOpen] = useState(false);
+  const [clinicaGestaoOpen, setClinicaGestaoOpen] = useState(false);
   const location = useLocation();
   const { toast } = useToast();
-  const { profile: sidebarProfile } = useAuth();
+  const { profile: sidebarProfile, signOut } = useAuth();
   const isAdmin =
     sidebarProfile?.role === "admin" ||
     (Array.isArray((sidebarProfile as any)?.roles) &&
@@ -272,9 +275,20 @@ export function Sidebar() {
     location.pathname === "/settings" ||
     location.pathname.startsWith("/configuracoes") ||
     location.pathname === "/integrations";
+  const isRotinaActive =
+    location.pathname === "/briefing" ||
+    location.pathname === "/monitor" ||
+    location.pathname === "/eventos" ||
+    location.pathname === "/boards" ||
+    location.pathname === "/automacoes";
+  const isClinicaGestaoActive =
+    location.pathname === "/telemedicine" ||
+    location.pathname === "/communications" ||
+    location.pathname === "/inventory" ||
+    location.pathname === "/wiki" ||
+    location.pathname === "/cadastros";
 
   const handleLogout = async () => {
-    const { signOut } = useAuth();
     try {
       await signOut();
       toast({ title: "Logout realizado", description: "Até breve!" });
@@ -506,7 +520,115 @@ export function Sidebar() {
             </SidebarSection>
 
             <SidebarSection label="Gestão & Operação" collapsed={collapsed}>
-              {operacionalMenuItems.map(renderMenuItem)}
+              <Collapsible
+                open={rotinaOpen || isRotinaActive}
+                onOpenChange={setRotinaOpen}
+              >
+                <CollapsibleTrigger asChild>
+                  <button
+                    className={cn(
+                      "flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group",
+                      isRotinaActive
+                        ? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black"
+                        : "text-slate-500",
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <CalendarDays className="h-5 w-5" />
+                      {!collapsed && (
+                        <span className="text-xs font-bold uppercase tracking-widest">
+                          Rotina Diária
+                        </span>
+                      )}
+                    </div>
+                    {!collapsed && (
+                      <ChevronDown
+                        className={cn(
+                          "h-3.5 w-3.5 transition-transform",
+                          (rotinaOpen || isRotinaActive) && "rotate-180",
+                        )}
+                      />
+                    )}
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pl-9 space-y-1 mt-1 animate-in slide-in-from-top-2">
+                  {rotinaSubmenu.map((item) => {
+                    const SubIcon = item.icon;
+                    const isSubActive = location.pathname === item.href;
+                    return (
+                      <Link
+                        key={item.href}
+                        to={item.href}
+                        onMouseEnter={() => preloadRoute(item.href)}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                          isSubActive
+                            ? "text-primary bg-primary/5"
+                            : "text-muted-foreground hover:text-foreground hover:pl-4",
+                        )}
+                      >
+                        <SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
+                        {!collapsed && item.label}
+                      </Link>
+                    );
+                  })}
+                </CollapsibleContent>
+              </Collapsible>
+
+              <Collapsible
+                open={clinicaGestaoOpen || isClinicaGestaoActive}
+                onOpenChange={setClinicaGestaoOpen}
+              >
+                <CollapsibleTrigger asChild>
+                  <button
+                    className={cn(
+                      "flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group",
+                      isClinicaGestaoActive
+                        ? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black"
+                        : "text-slate-500",
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Building2 className="h-5 w-5" />
+                      {!collapsed && (
+                        <span className="text-xs font-bold uppercase tracking-widest">
+                          Gestão da Clínica
+                        </span>
+                      )}
+                    </div>
+                    {!collapsed && (
+                      <ChevronDown
+                        className={cn(
+                          "h-3.5 w-3.5 transition-transform",
+                          (clinicaGestaoOpen || isClinicaGestaoActive) && "rotate-180",
+                        )}
+                      />
+                    )}
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pl-9 space-y-1 mt-1 animate-in slide-in-from-top-2">
+                  {clinicaGestaoSubmenu.map((item) => {
+                    const SubIcon = item.icon;
+                    const isSubActive = location.pathname === item.href;
+                    return (
+                      <Link
+                        key={item.href}
+                        to={item.href}
+                        onMouseEnter={() => preloadRoute(item.href)}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                          isSubActive
+                            ? "text-primary bg-primary/5"
+                            : "text-muted-foreground hover:text-foreground hover:pl-4",
+                        )}
+                      >
+                        <SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
+                        {!collapsed && item.label}
+                      </Link>
+                    );
+                  })}
+                </CollapsibleContent>
+              </Collapsible>
               <Collapsible
                 open={financeiroOpen || isFinanceiroActive}
                 onOpenChange={setFinanceiroOpen}
@@ -617,7 +739,7 @@ export function Sidebar() {
                 </CollapsibleContent>
               </Collapsible>
               {isAdmin && (
-                <Collapsible open={adminOpen} onOpenChange={setAdminOpen}>
+                <Collapsible open={adminOpen || isAdminActive} onOpenChange={setAdminOpen}>
                   <CollapsibleTrigger asChild>
                     <button
                       className={cn(
@@ -628,7 +750,7 @@ export function Sidebar() {
                       )}
                     >
                       <div className="flex items-center gap-3">
-                        <Settings className="h-5 w-5" />
+                        <ShieldAlert className="h-5 w-5" />
                         {!collapsed && (
                           <span className="text-xs font-bold uppercase tracking-widest">
                             Painel Admin
@@ -639,28 +761,32 @@ export function Sidebar() {
                         <ChevronDown
                           className={cn(
                             "h-3.5 w-3.5 transition-transform",
-                            adminOpen && "rotate-180",
+                            (adminOpen || isAdminActive) && "rotate-180",
                           )}
                         />
                       )}
                     </button>
                   </CollapsibleTrigger>
                   <CollapsibleContent className="pl-9 space-y-1 mt-1 animate-in slide-in-from-top-2">
-                    {adminSubmenu.map((item) => (
-                      <Link
-                        key={item.href}
-                        to={item.href}
-                        onMouseEnter={() => preloadRoute(item.href)}
-                        className={cn(
-                          "block px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                          location.pathname === item.href
-                            ? "text-primary bg-primary/5"
-                            : "text-muted-foreground hover:text-foreground hover:pl-4",
-                        )}
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
+                    {adminSubmenu.map((item) => {
+                      const AdminIcon = item.icon;
+                      return (
+                        <Link
+                          key={item.href}
+                          to={item.href}
+                          onMouseEnter={() => preloadRoute(item.href)}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                            location.pathname === item.href
+                              ? "text-primary bg-primary/5"
+                              : "text-muted-foreground hover:text-foreground hover:pl-4",
+                          )}
+                        >
+                          <AdminIcon className="h-3.5 w-3.5 flex-shrink-0" />
+                          {!collapsed && item.label}
+                        </Link>
+                      );
+                    })}
                   </CollapsibleContent>
                 </Collapsible>
               )}

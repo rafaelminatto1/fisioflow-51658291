@@ -43,8 +43,8 @@ export const RichTextBlock = forwardRef<RichTextEditorHandle, RichTextBlockProps
   const [isFocused, setIsFocused] = useState(false);
 
   return (
-    <div className={cn("relative transition-all duration-300 group", className)}>
-      <div className="pb-1">
+    <div className={cn("relative flex flex-col transition-all duration-300 group", className)}>
+      <div className="flex flex-col flex-1 min-h-0">
         <RichTextEditor
           // Força um remount completo (novo Y.Doc/provider) ao trocar entre
           // modo clássico e colaborativo, ou entre sessões colaborativas —
@@ -66,7 +66,7 @@ export const RichTextBlock = forwardRef<RichTextEditorHandle, RichTextBlockProps
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className={cn(
-            "transition-all duration-200 border-transparent hover:bg-slate-50",
+            "flex-1 transition-all duration-200 border-transparent hover:bg-slate-50",
             isFocused && "bg-white ring-1 ring-slate-200 shadow-sm",
             editorClassName,
           )}

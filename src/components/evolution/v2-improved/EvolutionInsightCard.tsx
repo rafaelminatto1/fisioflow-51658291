@@ -22,7 +22,7 @@ export const EvolutionInsightCard = React.memo(({ trendData, metaPain, currentLe
       </div>
 
       <div className="rounded-xl border border-border/50 bg-slate-50/50 p-2">
-        <PainTrendSparkline data={trendData} meta={metaPain} heightClass="h-14" />
+        <PainTrendSparkline data={trendData} meta={metaPain} heightClass="h-28" />
       </div>
     </div>
   );

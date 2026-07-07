@@ -76,15 +76,29 @@
   display: flow-root;
 }
 
-/* Observações clínicas: leitura principal, fonte maior por padrão. */
+/* Variante clínica: expande para preencher todo o espaço vertical do card */
+.rich-text-editor.clinical-observations-editor {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Tiptap gera uma div wrapper ao redor do ProseMirror — precisa herdar o flex */
+.rich-text-editor.clinical-observations-editor > div:not([class*="toolbar"]) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* O editor em si: font maior + ocupa todo o espaço + scroll interno */
 .rich-text-editor.clinical-observations-editor .ProseMirror {
   font-size: 16px;
   line-height: 1.75;
-}
-
-/* Variante alta — usada na caixa principal de Observações clínicas */
-.rich-text-editor.rte-tall .ProseMirror {
-  min-height: 800px;
+  flex: 1;
+  min-height: 200px;
+  overflow-y: auto;
 }
 
 .rich-text-editor .ProseMirror p {

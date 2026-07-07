@@ -14,6 +14,10 @@ function safeJsonArray(value: unknown, fallback: unknown[] = []): unknown[] {
   return Array.isArray(value) ? value : fallback;
 }
 
+function sqlColumn(columns: Set<string>, column: string, alias = "pk") {
+  return columns.has(column) ? `${alias}.${column}` : null;
+}
+
 app.get("/consents/:patientId", requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const user = c.get("user");
@@ -723,23 +727,83 @@ app.get("/ltv-maximizer/opportunities", requireAuth, async (c) => {
   const pool = await createPool(c.env);
 
   try {
+    const schemaResult = await pool.query<{ table_name: string; column_name: string }>(
+      `SELECT table_name, column_name
+         FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name IN (
+            'patient_packages',
+            'patient_longitudinal_summary',
+            'session_packages',
+            'session_package_templates'
+          )`,
+    );
+
+    const columnsByTable = new Map<string, Set<string>>();
+    for (const row of schemaResult.rows) {
+      const columns = columnsByTable.get(row.table_name) ?? new Set<string>();
+      columns.add(row.column_name);
+      columnsByTable.set(row.table_name, columns);
+    }
+
+    const packageColumns = columnsByTable.get("patient_packages") ?? new Set<string>();
+    const summaryColumns = columnsByTable.get("patient_longitudinal_summary") ?? new Set<string>();
+    const hasSessionPackages = columnsByTable.has("session_packages");
+    const hasSessionPackageTemplates = columnsByTable.has("session_package_templates");
+
+    const totalSessionsExpr = sqlColumn(packageColumns, "total_sessions") ?? "0";
+    const remainingSessionsExpr =
+      sqlColumn(packageColumns, "remaining_sessions") ??
+      (packageColumns.has("total_sessions") && packageColumns.has("used_sessions")
+        ? "GREATEST(pk.total_sessions - COALESCE(pk.used_sessions, 0), 0)"
+        : "0");
+    const statusFilter = packageColumns.has("status")
+      ? "AND pk.status::text IN ('active', 'ativo')"
+      : "";
+    const deletedFilter = packageColumns.has("deleted_at") ? "AND pk.deleted_at IS NULL" : "";
+
+    const joins: string[] = [];
+    const titleExpressions: string[] = [];
+    if (packageColumns.has("name")) titleExpressions.push("pk.name");
+    if (hasSessionPackages && packageColumns.has("package_id")) {
+      joins.push("LEFT JOIN session_packages sp ON sp.id = pk.package_id");
+      titleExpressions.push("sp.name");
+    }
+    if (hasSessionPackageTemplates && packageColumns.has("package_template_id")) {
+      joins.push("LEFT JOIN session_package_templates spt ON spt.id = pk.package_template_id");
+      titleExpressions.push("spt.name");
+    }
+    if (columnsByTable.has("patient_longitudinal_summary")) {
+      joins.push("LEFT JOIN patient_longitudinal_summary ls ON ls.patient_id = p.id");
+    }
+
+    const packageTitleExpr = titleExpressions.length
+      ? `COALESCE(${titleExpressions.join(", ")}, 'Pacote de sessões')`
+      : "'Pacote de sessões'";
+    const predictedRecoveryExpr = summaryColumns.has("predicted_recovery_weeks")
+      ? "ls.predicted_recovery_weeks"
+      : "NULL";
+    const adherenceExpr = summaryColumns.has("adherence_score") ? "ls.adherence_score" : "NULL";
+
     const opportunities = await pool.query(
       `WITH package_status AS (
         SELECT 
           p.id as patient_id,
           p.full_name,
           pk.id as package_id,
-          pk.title as package_title,
-          pk.remaining_sessions,
-          pk.total_sessions,
-          ls.predicted_recovery_weeks,
-          ls.adherence_score
+          ${packageTitleExpr} as package_title,
+          ${remainingSessionsExpr} as remaining_sessions,
+          ${totalSessionsExpr} as total_sessions,
+          ${predictedRecoveryExpr} as predicted_recovery_weeks,
+          ${adherenceExpr} as adherence_score
         FROM patients p
         JOIN patient_packages pk ON pk.patient_id = p.id
-        LEFT JOIN patient_longitudinal_summary ls ON ls.patient_id = p.id
+        ${joins.join("\n        ")}
         WHERE p.organization_id = $1
-          AND pk.status = 'active'
-          AND pk.remaining_sessions <= 2
+          AND pk.organization_id = $1
+          ${statusFilter}
+          ${deletedFilter}
+          AND (${remainingSessionsExpr}) <= 2
           AND p.deleted_at IS NULL
       )
       SELECT * FROM package_status
@@ -747,28 +811,39 @@ app.get("/ltv-maximizer/opportunities", requireAuth, async (c) => {
       [user.organizationId],
     );
 
-    const { runThinkingModel } = await import("../lib/ai-native");
+    if (opportunities.rows.length === 0) {
+      return c.json({ data: [] });
+    }
 
     const enrichedOpportunities = await Promise.all(
       opportunities.rows.map(async (opp: any) => {
-        // Usar IA para gerar um pitch personalizado
-        const prompt = `Gere uma sugestão de mensagem curta e acolhedora para o paciente ${opp.full_name}. 
+        try {
+          const { runThinkingModel } = await import("../lib/ai-native");
+          const prompt = `Gere uma sugestão de mensagem curta e acolhedora para o paciente ${opp.full_name}. 
       Ele está com apenas ${opp.remaining_sessions} sessões sobrando de um pacote de ${opp.total_sessions}.
-      Sua aderência clínica é de ${opp.adherence_score}%. 
+      Sua aderência clínica é de ${opp.adherence_score ?? "não informada"}%. 
       
       Objetivo: Sugerir um "Plano de Manutenção Preventiva" ou "Renovação de Ciclo" para consolidar os ganhos.
       Seja profissional, clínico e motivador.`;
 
-        const aiPitch = await runThinkingModel(c.env, {
-          prompt,
-          model: "gemini-1.5-flash",
-          temperature: 0.7,
-        });
+          const aiPitch = await runThinkingModel(c.env, {
+            prompt,
+            model: "gemini-1.5-flash",
+            temperature: 0.7,
+          });
 
-        return {
-          ...opp,
-          ai_suggestion: aiPitch.content,
-        };
+          return {
+            ...opp,
+            ai_suggestion: aiPitch.content,
+          };
+        } catch (error) {
+          console.error("[Marketing/LTV] AI pitch failed:", error);
+          return {
+            ...opp,
+            ai_suggestion:
+              "Paciente com poucas sessões restantes. Recomende renovação ou plano de manutenção para consolidar os ganhos clínicos.",
+          };
+        }
       }),
     );
 

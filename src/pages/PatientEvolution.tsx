@@ -811,15 +811,15 @@ const PatientEvolution = () => {
             }}
           />
 
-          <div className="flex-1 overflow-y-auto relative bg-background">
+          <div className="flex-1 overflow-y-auto md:overflow-hidden relative bg-background flex flex-col">
             <Tabs
               value={state.activeTab}
               onValueChange={(v) => state.setActiveTab(v as EvolutionTab)}
-              className="flex flex-col min-h-full"
+              className="flex flex-col min-h-full md:flex-1 md:min-h-0"
             >
               <TabsContent
                 value="evolucao"
-                className="m-0 h-full data-[state=active]:flex flex-col"
+                className="m-0 h-full md:flex-1 md:min-h-0 data-[state=active]:flex flex-col"
               >
                 <Suspense fallback={<LoadingSkeleton />}>
                   <EvolutionNoScrollPanel
