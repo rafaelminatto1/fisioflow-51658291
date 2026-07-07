@@ -1,0 +1,4 @@
+spawn npx drizzle-kit generate --config=drizzle.config.ts
+expect -re ".*(create table|rename table).*"
+send "\r"
+expect eof
