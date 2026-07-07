@@ -302,3 +302,6 @@ scripts/zenfisio-scraper/payload.json
 
 # Scratch / prompts locais
 claudehermes.md
+
+# debug/scratch DB scripts (nunca versionar — podem conter credenciais)
+test-db-*.cjs
