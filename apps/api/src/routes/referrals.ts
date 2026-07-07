@@ -5,6 +5,7 @@
  *   GET /api/referrals/codes       — lista códigos da org
  *   POST /api/referrals/codes      — cria código para paciente
  *   GET /api/referrals/fisio-links — fisio_links da org
+ *   GET /api/referrals/clicks-daily — cliques nos fisio_links por dia (série temporal)
  */
 import { Hono } from "hono";
 import { createPool } from "../lib/db";
@@ -102,6 +103,37 @@ app.get("/fisio-links", requireAuth, async (c) => {
     [user.organizationId],
   );
   return c.json({ data: result.rows });
+});
+
+app.get("/clicks-daily", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+  const { days = "30", slug = "" } = c.req.query();
+  const sinceDays = Math.min(Math.max(Number(days) || 30, 7), 180);
+
+  // Cliques por dia, preenchendo dias sem cliques com 0 (generate_series).
+  // Escopo de org via JOIN em fisio_links.slug (mesmo padrão do /fisio-links).
+  const result = await pool.query(
+    `SELECT to_char(d.day::date, 'YYYY-MM-DD') AS day, COALESCE(c.n, 0)::int AS clicks
+       FROM generate_series(
+              (CURRENT_DATE - ($1::int - 1)),
+              CURRENT_DATE,
+              INTERVAL '1 day'
+            ) AS d(day)
+       LEFT JOIN (
+         SELECT date_trunc('day', fla.clicked_at)::date AS day, COUNT(*) AS n
+           FROM fisio_link_analytics fla
+           JOIN fisio_links fl
+             ON fl.slug = fla.slug
+            AND fl.organization_id = $2
+          WHERE fla.clicked_at >= (CURRENT_DATE - ($1::int - 1))
+            AND ($3 = '' OR fla.slug = $3)
+          GROUP BY 1
+       ) c ON c.day = d.day::date
+      ORDER BY d.day`,
+    [sinceDays, user.organizationId, slug],
+  );
+  return c.json({ data: result.rows, days: sinceDays });
 });
 
 export const referralsRoutes = app;

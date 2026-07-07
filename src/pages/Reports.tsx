@@ -66,6 +66,52 @@ import { toast } from "sonner";
 import { useAppointments } from "@/hooks/useAppointments";
 import { usePatients } from "@/hooks/patients/usePatients";
 import { useFinancial } from "@/hooks/useFinancial";
+import { TimeSeriesAreaChart } from "@/components/charts/TimeSeriesAreaChart";
+
+/** Conta itens por dia nos últimos `days` dias, preenchendo dias vazios com 0. */
+function countByDay<T>(items: T[], getDate: (item: T) => unknown, days: number) {
+  const buckets = new Map<string, number>();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    buckets.set(d.toISOString().slice(0, 10), 0);
+  }
+  for (const item of items) {
+    const raw = getDate(item);
+    if (!raw) continue;
+    const iso = new Date(raw as string | number | Date).toISOString().slice(0, 10);
+    if (buckets.has(iso)) buckets.set(iso, (buckets.get(iso) ?? 0) + 1);
+  }
+  return [...buckets.entries()].map(([iso, value]) => {
+    const [, mm, dd] = iso.split("-");
+    return { label: `${dd}/${mm}`, value };
+  });
+}
+
+/** Conta itens por mês nos últimos `months` meses, preenchendo meses vazios com 0. */
+function countByMonth<T>(items: T[], getDate: (item: T) => unknown, months: number) {
+  const buckets = new Map<string, number>();
+  const now = new Date();
+  const monthNames = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    buckets.set(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`, 0);
+  }
+  for (const item of items) {
+    const raw = getDate(item);
+    if (!raw) continue;
+    const d = new Date(raw as string | number | Date);
+    if (Number.isNaN(d.getTime())) continue;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + 1);
+  }
+  return [...buckets.entries()].map(([key, value]) => {
+    const month = Number(key.split("-")[1]) - 1;
+    return { label: monthNames[month] ?? key, value };
+  });
+}
 
 const Reports = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("month");
@@ -113,6 +159,24 @@ const Reports = () => {
       },
     };
   }, [patients, data, finStats]);
+
+  // Séries temporais derivadas dos dados já carregados (sem chamada extra à API)
+  const appointmentsPerDay = useMemo(
+    () =>
+      countByDay(
+        data ?? [],
+        (a) =>
+          (a as { date?: unknown; start_time?: unknown; appointment_date?: unknown }).date ??
+          (a as { start_time?: unknown }).start_time ??
+          (a as { appointment_date?: unknown }).appointment_date,
+        30,
+      ),
+    [data],
+  );
+  const patientsPerMonth = useMemo(
+    () => countByMonth(patients ?? [], (p) => (p as { created_at?: unknown }).created_at, 6),
+    [patients],
+  );
 
   // Memoized report templates
   const reportTemplates = useMemo(
@@ -289,6 +353,35 @@ const Reports = () => {
                     <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-secondary-foreground" />
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Séries temporais */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
+            <Card className="bg-gradient-card border-border/50">
+              <CardHeader>
+                <CardTitle className="text-sm">Agendamentos por dia (últimos 30 dias)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TimeSeriesAreaChart
+                  data={appointmentsPerDay}
+                  valueName="agendamentos"
+                  emptyMessage="Sem agendamentos no período."
+                />
+              </CardContent>
+            </Card>
+            <Card className="bg-gradient-card border-border/50">
+              <CardHeader>
+                <CardTitle className="text-sm">Novos pacientes por mês (últimos 6 meses)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TimeSeriesAreaChart
+                  data={patientsPerMonth}
+                  color="hsl(var(--secondary))"
+                  valueName="pacientes"
+                  emptyMessage="Sem novos pacientes no período."
+                />
               </CardContent>
             </Card>
           </div>

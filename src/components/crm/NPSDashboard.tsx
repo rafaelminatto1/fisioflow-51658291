@@ -18,8 +18,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Award, Smile, Meh, Frown, MessageCircle } from "lucide-react";
+import { Loader2, Award, Smile, Meh, Frown, MessageCircle, TrendingUp } from "lucide-react";
 import { npsApi } from "@/api/v2/nps";
+import { TimeSeriesAreaChart, type TimeSeriesPoint } from "@/components/charts/TimeSeriesAreaChart";
+
+const MONTH_NAMES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+
+/** NPS por mês (promotores% − detratores%) a partir das respostas com data. */
+function npsMonthlyTrend(
+  surveys: Array<{ classification: string | null; responded_at?: string | null }>,
+): TimeSeriesPoint[] {
+  const buckets = new Map<string, { promoter: number; detractor: number; total: number }>();
+  for (const s of surveys) {
+    if (!s.responded_at || !s.classification) continue;
+    const d = new Date(s.responded_at);
+    if (Number.isNaN(d.getTime())) continue;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const b = buckets.get(key) ?? { promoter: 0, detractor: 0, total: 0 };
+    b.total += 1;
+    if (s.classification === "promoter") b.promoter += 1;
+    if (s.classification === "detractor") b.detractor += 1;
+    buckets.set(key, b);
+  }
+  return [...buckets.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([key, b]) => {
+      const month = Number(key.split("-")[1]) - 1;
+      const nps = b.total > 0 ? Math.round(((b.promoter - b.detractor) / b.total) * 100) : 0;
+      return { label: MONTH_NAMES[month] ?? key, value: nps };
+    });
+}
 
 const FILTER_LABEL: Record<string, string> = {
   all: "Todas",
@@ -68,8 +96,15 @@ export function NPSDashboard() {
       npsApi.list({ classification: filter === "all" ? undefined : filter, limit: 200 }),
   });
 
+  // Query dedicada (sem filtro) p/ a série temporal, para o seletor não distorcê-la
+  const { data: trendRes } = useQuery({
+    queryKey: ["nps", "trend"],
+    queryFn: () => npsApi.list({ limit: 200 }),
+  });
+
   const stats = statsRes?.data;
   const surveys = listRes?.data ?? [];
+  const npsTrend = useMemo(() => npsMonthlyTrend(trendRes?.data ?? []), [trendRes]);
 
   const totalRespondedPct = useMemo(() => {
     if (!stats?.total_sent) return 0;
@@ -149,6 +184,19 @@ export function NPSDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {npsTrend.length > 1 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-primary" /> Evolução do NPS por mês
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TimeSeriesAreaChart data={npsTrend} valueName="NPS" emptyMessage="Sem respostas ainda." />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader className="pb-2">

@@ -53,4 +53,14 @@ export const referralsApi = {
     }),
 
   fisioLinks: () => request<{ data: FisioLink[] }>(`/api/referrals/fisio-links`),
+
+  clicksDaily: (days = 30, slug?: string) =>
+    request<{ data: FisioLinkClickDay[]; days: number }>(
+      `/api/referrals/clicks-daily?days=${days}${slug ? `&slug=${encodeURIComponent(slug)}` : ""}`,
+    ),
 };
+
+export interface FisioLinkClickDay {
+  day: string; // "YYYY-MM-DD"
+  clicks: number;
+}

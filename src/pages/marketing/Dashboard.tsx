@@ -28,8 +28,33 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { ReviewsContent } from "./Reviews";
 import { ROICalculatorContent } from "./ROI";
+import { TimeSeriesAreaChart, type TimeSeriesPoint } from "@/components/charts/TimeSeriesAreaChart";
 
 type GoogleReview = GoogleBusinessReviewRecord;
+
+const MONTH_NAMES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+
+/** Avaliações por mês (últimos 6 meses) a partir do timestamp `time` das reviews. */
+function reviewsMonthlyTrend(reviews: Array<{ time?: number | null }>): TimeSeriesPoint[] {
+  const buckets = new Map<string, number>();
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    buckets.set(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`, 0);
+  }
+  for (const r of reviews) {
+    if (!r.time) continue;
+    const ms = r.time < 1e12 ? r.time * 1000 : r.time; // epoch em s → ms
+    const d = new Date(ms);
+    if (Number.isNaN(d.getTime())) continue;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + 1);
+  }
+  return [...buckets.entries()].map(([key, value]) => {
+    const month = Number(key.split("-")[1]) - 1;
+    return { label: MONTH_NAMES[month] ?? key, value };
+  });
+}
 
 const CAC_STORAGE_KEY = "fisioflow_cac_channels";
 
@@ -189,6 +214,7 @@ interface MarketingMetrics {
   rating2: number;
   rating1: number;
   recentReviews: GoogleReview[];
+  reviewsTimeline: TimeSeriesPoint[];
   totalExports: number;
   totalCampaigns: number;
   totalLeads: number;
@@ -253,6 +279,7 @@ export default function MarketingDashboard() {
           rating2,
           rating1,
           recentReviews: reviews.slice(0, 5),
+          reviewsTimeline: reviewsMonthlyTrend(reviews as Array<{ time?: number | null }>),
           totalExports,
           totalCampaigns,
           totalLeads,
@@ -445,6 +472,24 @@ export default function MarketingDashboard() {
                   color="blue"
                 />
               </div>
+
+              {metrics && metrics.reviewsTimeline.some((p) => p.value > 0) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-amber-500" /> Avaliações por mês (últimos 6 meses)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <TimeSeriesAreaChart
+                      data={metrics.reviewsTimeline}
+                      color="hsl(var(--primary))"
+                      valueName="avaliações"
+                      emptyMessage="Sem avaliações no período."
+                    />
+                  </CardContent>
+                </Card>
+              )}
 
               <div className="grid gap-6 md:grid-cols-2">
                 <CACByChannelCard />

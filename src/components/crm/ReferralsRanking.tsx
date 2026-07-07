@@ -15,8 +15,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Award, Link as LinkIcon, Loader2, MousePointerClick } from "lucide-react";
+import { Award, Link as LinkIcon, Loader2, MousePointerClick, TrendingUp } from "lucide-react";
 import { referralsApi } from "@/api/v2/referrals";
+import { TimeSeriesAreaChart, type TimeSeriesPoint } from "@/components/charts/TimeSeriesAreaChart";
 
 export function ReferralsRanking() {
   const { data: rankRes, isLoading: loadingRank } = useQuery({
@@ -27,9 +28,18 @@ export function ReferralsRanking() {
     queryKey: ["referrals", "fisio-links"],
     queryFn: () => referralsApi.fisioLinks(),
   });
+  const { data: clicksRes } = useQuery({
+    queryKey: ["referrals", "clicks-daily", 30],
+    queryFn: () => referralsApi.clicksDaily(30),
+  });
 
   const rank = rankRes?.data ?? [];
   const links = linksRes?.data ?? [];
+
+  const clicksSeries: TimeSeriesPoint[] = (clicksRes?.data ?? []).map((d) => {
+    const [, mm, dd] = d.day.split("-");
+    return { label: `${dd}/${mm}`, value: d.clicks };
+  });
 
   return (
     <div className="space-y-6">
@@ -95,6 +105,20 @@ export function ReferralsRanking() {
           )}
         </CardContent>
       </Card>
+
+      {clicksSeries.some((p) => p.value > 0) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-sky-500" /> Cliques por dia (últimos 30 dias)
+            </CardTitle>
+            <CardDescription>Soma dos cliques em todos os fisio_links da clínica.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TimeSeriesAreaChart data={clicksSeries} valueName="cliques" emptyMessage="Sem cliques no período." />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
