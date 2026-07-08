@@ -448,6 +448,9 @@ export const useAppointmentForm = ({
 
   const handleDelete = async () => {
     if (appointment?.id) {
+      if (!window.confirm("Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.")) {
+        return;
+      }
       try {
         await appointmentsApi.cancel(appointment.id);
         await invalidateAppointmentsCache(

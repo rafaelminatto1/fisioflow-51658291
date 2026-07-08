@@ -590,6 +590,7 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
           type: display.showType,
           phone: display.showPhone,
         }}
+        status={original?.status}
       />
     );
   };
@@ -623,7 +624,7 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
       <div className="flex min-h-0 flex-1 flex-col">
         <div
           ref={fcContainerRef}
-          className="relative flex h-full min-h-0 w-full flex-1 overflow-hidden border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 [&>.fc]:flex-1 [&>.fc]:h-full [&>.fc]:min-h-0 [&>.fc]:w-full [&_.fc-scrollgrid]:h-full [&_.fc-view-harness]:h-full [&_.fc-view-harness-active]:h-full"
+          className="relative flex h-full min-h-0 w-full flex-1 overflow-hidden border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 [&>.fc]:flex-1 [&>.fc]:h-full [&>.fc]:min-h-0 [&>.fc]:w-full"
         >
           <FullCalendar
             ref={calendarRef}

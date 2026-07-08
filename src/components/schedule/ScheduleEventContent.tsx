@@ -1,5 +1,5 @@
 import React from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, CheckCircle, Clock, XCircle, UserCheck } from "lucide-react";
 
 export interface ScheduleEventColors {
   background: string;
@@ -22,6 +22,7 @@ export interface ScheduleEventContentProps {
   typeLabel?: string;
   phone?: string;
   show?: { duration: boolean; type: boolean; phone: boolean };
+  status?: string;
 }
 
 /**
@@ -49,6 +50,7 @@ export function ScheduleEventContent({
   typeLabel,
   phone,
   show = { duration: true, type: true, phone: false },
+  status,
 }: ScheduleEventContentProps) {
   const safeColors = colors || {
     background: "transparent",
@@ -59,6 +61,15 @@ export function ScheduleEventContent({
   const startTime = timeText ? timeText.split(/[-–]/)[0].trim() : "";
   const baseLabel = isTask ? "Tarefa" : isGroup ? "Grupo" : startTime || "Consulta";
   const metaLabel = isGroup ? `${baseLabel} · ${groupCount}` : baseLabel;
+
+  const STATUS_LABELS: Record<string, string> = {
+    CONFIRMED: "Confirmado",
+    ATTENDED: "Compareceu",
+    CANCELLED: "Cancelado",
+    NO_SHOW: "Falta",
+    PENDING: "Pendente",
+  };
+  const statusLabel = status ? STATUS_LABELS[status] || "Agendado" : "";
 
   return (
     <div
@@ -85,13 +96,26 @@ export function ScheduleEventContent({
         </p>
       </div>
 
-      {/* Linha 2: dot de status + tipo + alerta de dor */}
+      {/* Linha 2: ícone de status + tipo + alerta de dor */}
       <div className="mt-auto flex items-center gap-1.5 pt-1 text-[10px] font-semibold opacity-70">
         <span
-          className="h-1.5 w-1.5 shrink-0 rounded-full"
-          style={{ backgroundColor: safeColors.accent }}
-          aria-hidden
-        />
+          className="flex h-3 w-3 shrink-0 items-center justify-center rounded-full"
+          style={{ color: safeColors.accent }}
+          title={statusLabel}
+        >
+          {status === "CONFIRMED" ? (
+            <CheckCircle className="h-3 w-3" />
+          ) : status === "ATTENDED" ? (
+            <UserCheck className="h-3 w-3" />
+          ) : status === "CANCELLED" || status === "NO_SHOW" ? (
+            <XCircle className="h-3 w-3" />
+          ) : status === "PENDING" ? (
+            <Clock className="h-3 w-3" />
+          ) : (
+            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: safeColors.accent }} />
+          )}
+          {statusLabel && <span className="sr-only">{statusLabel}</span>}
+        </span>
         <span className="min-w-0 truncate">{metaLabel}</span>
         {show.duration && durationLabel && (
           <span className="shrink-0 opacity-80">· {durationLabel}</span>
