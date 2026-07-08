@@ -19,7 +19,7 @@ interface NPSSurvey {
 export function NPSSentimentDashboard() {
   const { data: surveysRes, isLoading } = useQuery({
     queryKey: ["nps-sentiment-bi"],
-    queryFn: () => request<{ data: NPSSurvey[] }>("/api/satisfaction-surveys/latest-feedbacks"), // TODO: Criar este endpoint
+    queryFn: () => request<{ data: NPSSurvey[] }>("/api/satisfaction-surveys/latest-feedbacks"),
     staleTime: 1000 * 60 * 15, // 15 mins
   });
 

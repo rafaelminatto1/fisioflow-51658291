@@ -320,7 +320,7 @@ app.post(
  */
 app.get("/latest-feedbacks", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   try {
     const result = await pool.query(

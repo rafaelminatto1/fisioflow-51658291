@@ -119,6 +119,11 @@ const NfseBatchEmitter = lazy(() =>
     default: m.NfseBatchEmitter,
   })),
 );
+const CACLTVDashboard = lazy(() =>
+  import("@/components/analytics/CACLTVDashboard").then((m) => ({
+    default: m.CACLTVDashboard,
+  })),
+);
 
 const FinancialCommandCenterPage = () => {
   const { state, data, actions } = useFinancialCommandCenterLogic();
@@ -507,6 +512,7 @@ const FinancialCommandCenterPage = () => {
                 <Suspense fallback={<PageShellFallback />}>
                   <AnalyticsFiltersProvider>
                     <div className="space-y-8">
+                      <CACLTVDashboard />
                       <LTVMaximizerWidget />
                       <RevenueForecastChart />
                       <FinancialAnalytics />

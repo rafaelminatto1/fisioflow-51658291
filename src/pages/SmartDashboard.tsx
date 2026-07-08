@@ -19,12 +19,15 @@ import { RevenueForecastCard } from "@/components/dashboard/RevenueForecastCard"
 import { TeamPerformanceKPIs } from "@/components/dashboard/TeamPerformanceKPIs";
 import { ChurnReportCard } from "@/components/dashboard/ChurnReportCard";
 import { BusinessIntelligenceKPIs } from "@/components/dashboard/BusinessIntelligenceKPIs";
+import { ChurnAlertPanel } from "@/components/dashboard/ChurnAlertPanel";
+import { BenchmarkWidget } from "@/components/analytics/BenchmarkWidget";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { SmartDashboardWidgets } from "@/components/blocks/SmartDashboardWidgets";
+import { PostDischargeAlert } from "@/components/dashboard/PostDischargeAlert";
 
 type ViewMode = "today" | "week";
 
@@ -156,10 +159,23 @@ export function SmartDashboardContent() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <AtRiskPatientsAlert />
+              <PostDischargeAlert />
               <OverduePaymentsAlert />
               <PackagesExpiringAlert />
               <RevenueForecastCard />
+              <ChurnAlertPanel />
             </div>
+          </section>
+
+          {/* Market Position */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">
+                Posição de Mercado
+              </h2>
+            </div>
+            <BenchmarkWidget />
           </section>
 
           <section className="pt-8 border-t border-border/40">

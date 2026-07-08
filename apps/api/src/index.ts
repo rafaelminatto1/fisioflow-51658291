@@ -120,10 +120,13 @@ import { fisioBrainRoutes } from "./routes/fisiobrain";
 import { agentMemoryRoutes } from "./routes/agentMemory";
 import { cloudflareAnalyticsRoutes } from "./routes/cloudflareAnalytics";
 import { clinicMetricsRoutes } from "./routes/clinicMetrics";
+import { marketBenchmarkRoutes } from "./routes/marketBenchmark";
+import { churnPredictionRoutes } from "./routes/churnPrediction";
 import { enterpriseRoutes } from "./routes/enterprise-bi";
 import { aiInsightsRoutes } from "./routes/ai-insights";
 import { lgpdRoutes } from "./routes/lgpd";
 import { importRoutes } from "./routes/import";
+import { postDischargeReactivationRoutes } from "./routes/postDischargeReactivation";
 import { verifyToken } from "./lib/auth";
 import { getRawSql } from "./lib/db";
 import { routeAgentRequest } from "agents";
@@ -294,6 +297,7 @@ const apiRoutes = [
   ["/api/media", mediaRoutes],
   ["/api/patients", patientsRoutes],
   ["/api/appointments", appointmentsRoutes],
+  ["/api/post-discharge", postDischargeReactivationRoutes],
   ["/api/import", importRoutes],
   ["/api/documents", documentsRoutes],
   ["/api/exams", examsRoutes],
@@ -403,6 +407,8 @@ const apiRoutes = [
   ["/api/exercise-import", exerciseImportRoutes],
   ["/api/copilot", copilotRoutes],
   ["/api/briefing", briefingRoutes],
+  ["/api/benchmark", marketBenchmarkRoutes],
+  ["/api/churn-prediction", churnPredictionRoutes],
 ] as const;
 
 apiRoutes.forEach(([path, router]) => {

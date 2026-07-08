@@ -733,4 +733,167 @@ app.get("/packages-expiring", requireAuth, async (c) => {
   }
 });
 
+
+/**
+ * GET /api/clinic-metrics/cac-ltv
+ * Dashboard de métricas gerenciais: CAC, LTV, Payback e cohort analysis.
+ * Essencial para gestão baseada em dados de clínicas particulares.
+ */
+app.get("/cac-ltv", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createReplicaPool(c.env);
+  const { months = "3" } = c.req.query();
+  const periodMonths = Math.min(Math.max(parseInt(months, 10) || 3, 1), 24);
+
+  try {
+    // 1. CAC: Custo de Aquisição
+    const cacRes = await pool.query(
+      `WITH novos_pacientes AS (
+         SELECT COUNT(DISTINCT id) AS total
+         FROM patients
+         WHERE organization_id = $1
+           AND created_at >= NOW() - INTERVAL '1 month' * $2
+       ),
+       custo_marketing AS (
+         SELECT COALESCE(SUM(amount), 0) AS total
+         FROM financial_entries
+         WHERE organization_id = $1
+           AND type = 'expense'
+           AND category IN ('marketing', 'publicidade', 'captacao', 'ads')
+           AND date >= NOW() - INTERVAL '1 month' * $2
+       )
+       SELECT
+         np.total AS novos_pacientes,
+         cm.total AS custo_marketing,
+         CASE WHEN np.total > 0 THEN ROUND(cm.total / np.total, 2) ELSE 0 END AS cac
+       FROM novos_pacientes np, custo_marketing cm`,
+      [user.organizationId, periodMonths],
+    );
+
+    // 2. LTV: Valor do Ciclo de Vida
+    const ltvRes = await pool.query(
+      `SELECT
+         ROUND(AVG(pr.total_receita), 2) AS ltv_medio,
+         ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY pr.total_receita), 2) AS ltv_mediana,
+         MAX(pr.total_receita) AS ltv_max,
+         MIN(pr.total_receita) AS ltv_min,
+         COUNT(pr.patient_id) AS total_pacientes_com_receita
+       FROM (
+         SELECT ft.patient_id, SUM(ft.amount) AS total_receita
+         FROM financial_transactions ft
+         WHERE ft.organization_id = $1
+           AND ft.status IN ('paid', 'completed')
+           AND ft.patient_id IS NOT NULL
+         GROUP BY ft.patient_id
+       ) AS pr`,
+      [user.organizationId],
+    );
+
+    // 3. Cohort Analysis
+    const cohortRes = await pool.query(
+      `SELECT
+         TO_CHAR(DATE_TRUNC('month', p.created_at), 'YYYY-MM') AS cohort_mes,
+         COUNT(DISTINCT p.id) AS pacientes_no_cohort,
+         COALESCE(SUM(ft.amount), 0) AS receita_total_cohort,
+         COALESCE(ROUND(SUM(ft.amount) / NULLIF(COUNT(DISTINCT p.id), 0), 2), 0) AS ltv_cohort
+       FROM patients p
+       LEFT JOIN financial_transactions ft
+         ON ft.patient_id = p.id AND ft.status IN ('paid', 'completed')
+       WHERE p.organization_id = $1
+         AND p.created_at >= NOW() - INTERVAL '1 month' * $2
+       GROUP BY DATE_TRUNC('month', p.created_at)
+       ORDER BY cohort_mes DESC
+       LIMIT 12`,
+      [user.organizationId, periodMonths],
+    );
+
+    // 4. Top pacientes por receita
+    const topPatientsRes = await pool.query(
+      `SELECT
+         p.id, p.full_name, p.photo_url,
+         SUM(ft.amount) AS receita_total,
+         COUNT(ft.id) AS num_transacoes,
+         MIN(ft.payment_date) AS primeira_sessao,
+         MAX(ft.payment_date) AS ultima_sessao
+       FROM patients p
+       JOIN financial_transactions ft ON ft.patient_id = p.id
+       WHERE p.organization_id = $1
+         AND ft.status IN ('paid', 'completed')
+       GROUP BY p.id, p.full_name, p.photo_url
+       ORDER BY receita_total DESC
+       LIMIT 10`,
+      [user.organizationId],
+    );
+
+    // 5. Ticket Médio
+    const ticketRes = await pool.query(
+      `SELECT
+         ROUND(AVG(ft.amount), 2) AS ticket_medio,
+         COUNT(ft.id) AS total_transacoes,
+         SUM(ft.amount) AS receita_total_periodo
+       FROM financial_transactions ft
+       WHERE ft.organization_id = $1
+         AND ft.status IN ('paid', 'completed')
+         AND ft.payment_date >= NOW() - INTERVAL '1 month' * $2`,
+      [user.organizationId, periodMonths],
+    );
+
+    const cacRow = cacRes.rows[0] ?? {};
+    const ltvRow = ltvRes.rows[0] ?? {};
+    const ticketRow = ticketRes.rows[0] ?? {};
+
+    const cac = toNumber(cacRow.cac);
+    const ltvMedio = toNumber(ltvRow.ltv_medio);
+    const ticketMedio = toNumber(ticketRow.ticket_medio);
+
+    const paybackSessoes = ticketMedio > 0 && cac > 0 ? Math.ceil(cac / ticketMedio) : null;
+    const ltvCacRatio = cac > 0 && ltvMedio > 0 ? Math.round((ltvMedio / cac) * 10) / 10 : null;
+    const ltvCacStatus =
+      ltvCacRatio === null
+        ? "unknown"
+        : ltvCacRatio >= 10
+          ? "excellent"
+          : ltvCacRatio >= 3
+            ? "healthy"
+            : ltvCacRatio >= 1
+              ? "warning"
+              : "critical";
+
+    return c.json({
+      data: {
+        periodo_meses: periodMonths,
+        cac: {
+          valor: cac,
+          novos_pacientes: toNumber(cacRow.novos_pacientes),
+          custo_marketing: toNumber(cacRow.custo_marketing),
+          nota: cac === 0 ? "Sem despesas de marketing registradas no periodo" : null,
+        },
+        ltv: {
+          medio: ltvMedio,
+          mediana: toNumber(ltvRow.ltv_mediana),
+          maximo: toNumber(ltvRow.ltv_max),
+          minimo: toNumber(ltvRow.ltv_min),
+          total_pacientes: toNumber(ltvRow.total_pacientes_com_receita),
+        },
+        ticket_medio: ticketMedio,
+        receita_total_periodo: toNumber(ticketRow.receita_total_periodo),
+        total_transacoes: toNumber(ticketRow.total_transacoes),
+        payback: {
+          sessoes: paybackSessoes,
+          valor_estimado: paybackSessoes ? paybackSessoes * ticketMedio : null,
+        },
+        ltv_cac: {
+          ratio: ltvCacRatio,
+          status: ltvCacStatus,
+          meta: "Saudavel se >= 3:1 | Excelente se >= 10:1",
+        },
+        cohorts: cohortRes.rows,
+        top_pacientes: topPatientsRes.rows,
+      },
+    });
+  } catch (error) {
+    console.error("[Metrics] CAC/LTV error:", error);
+    return c.json({ error: "Failed to compute CAC/LTV metrics" }, 500);
+  }
+});
 export { app as clinicMetricsRoutes };
