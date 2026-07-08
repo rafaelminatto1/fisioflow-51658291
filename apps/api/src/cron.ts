@@ -890,23 +890,16 @@ async function dispatchScheduledReminders(pool: any, env: Env) {
       const firstName = (row.patient_name || "paciente").split(" ")[0];
 
       if (env.BACKGROUND_QUEUE) {
-        // #3 — com botões (Confirmar/Remarcar) se configurado e template aprovado; senão o simples.
-        const payload = cfg.useButtons
-          ? {
-              templateName: "lembrete_consulta_botoes",
-              bodyParameters: [
-                { type: "text", text: firstName },
-                { type: "text", text: timeStr },
-                { type: "text", text: therapistStr },
-              ],
-            }
-          : {
-              templateName: "lembrete_sessao",
-              bodyParameters: [
-                { type: "text", text: timeStr },
-                { type: "text", text: therapistStr },
-              ],
-            };
+        // lembrete_consulta_botoes é o único template de lembrete APROVADO na
+        // WABA ("lembrete_sessao" não existe lá) — usado nos dois modos.
+        const payload = {
+          templateName: "lembrete_consulta_botoes",
+          bodyParameters: [
+            { type: "text", text: firstName },
+            { type: "text", text: timeStr },
+            { type: "text", text: therapistStr },
+          ],
+        };
         await env.BACKGROUND_QUEUE.send({
           type: "SEND_WHATSAPP",
           payload: {
@@ -1003,17 +996,22 @@ async function sendAppointmentReminders(pool: any, env: Env, _ctx: ExecutionCont
         if (dedup.rows.length > 0) {
           const timeStr = row.time?.substring(0, 5) ?? "";
           const therapistStr = row.therapist_name || "Fisioterapeuta";
+          const firstName = (row.patient_name as string).split(" ")[0];
+          // "lembrete_sessao" não existe na WABA; reusa o aprovado
+          // lembrete_consulta_botoes ({{2}} livre = "amanhã às HH:MM").
+          const whenStr = `amanhã às ${timeStr}`;
           const queuePayload: WhatsAppQueuePayload = {
             to: row.patient_phone,
-            templateName: "lembrete_sessao",
+            templateName: "lembrete_consulta_botoes",
             languageCode: "pt_BR",
             bodyParameters: [
-              { type: "text", text: timeStr },
+              { type: "text", text: firstName },
+              { type: "text", text: whenStr },
               { type: "text", text: therapistStr },
             ],
             organizationId: row.organization_id,
             patientId: row.patient_id,
-            messageText: `Lembrete automático: sua sessão será às ${timeStr} com ${therapistStr}.`,
+            messageText: `Lembrete automático: sua sessão é ${whenStr} com ${therapistStr}.`,
             appointmentId: row.id,
           };
           await env.BACKGROUND_QUEUE.send({ type: "SEND_WHATSAPP", payload: queuePayload });
@@ -1187,7 +1185,7 @@ async function triggerNpsSurveys(pool: any, env: Env) {
   try {
     // Find organizations that became active ~7 days ago and haven't received NPS yet
     const result = await pool.query(`
-      SELECT o.id AS org_id, o.name, u.id AS user_id, u.email, p.phone AS user_phone
+      SELECT o.id AS org_id, o.name, u.id AS user_id, u.email, u.full_name AS user_name, p.phone AS user_phone
       FROM organizations o
       JOIN user_profiles u ON u.organization_id = o.id AND u.role = 'admin'
       LEFT JOIN patients p ON p.id = u.patient_id
@@ -1205,13 +1203,16 @@ async function triggerNpsSurveys(pool: any, env: Env) {
       if (row.user_phone && env.BACKGROUND_QUEUE) {
         const npsUrl = `${env.FRONTEND_URL ?? "https://moocafisio.com.br"}/surveys?nps=1&org=${row.org_id}`;
         const messageText = `Olá! 👋 Já faz uma semana que você está usando o FisioFlow. Como foi sua experiência até agora?\n\nResposta rápida (0-10): ${npsUrl}`;
+        const firstName = ((row.user_name as string) || "Gestor").split(" ")[0];
         await env.BACKGROUND_QUEUE.send({
           type: "SEND_WHATSAPP",
           payload: {
             to: row.user_phone,
-            templateName: "nps_survey",
+            // "nps_survey" não existe na WABA (e Meta não aceita URL/emoji em
+            // param) — reusa feedback_atendimento ({{1}} nome + botões).
+            templateName: "feedback_atendimento",
             languageCode: "pt_BR",
-            bodyParameters: [{ type: "text", text: messageText }],
+            bodyParameters: [{ type: "text", text: firstName }],
             organizationId: row.org_id,
             patientId: row.user_id,
             messageText,
@@ -1256,15 +1257,18 @@ async function triggerPatientNpsSurveys(pool: any, env: Env) {
     for (const row of result.rows) {
       if (row.phone && env.BACKGROUND_QUEUE) {
         const npsUrl = `${env.FRONTEND_URL ?? "https://moocafisio.com.br"}/satisfacao?p=${row.patient_id}`;
-        const messageText = `Olá, ${row.full_name.split(" ")[0]}! 👋 Já faz uma semana desde sua primeira sessão na clínica. Como foi sua experiência?\n\nLeve 1 minuto para nos avaliar: ${npsUrl}`;
+        const firstName = (row.full_name as string).split(" ")[0];
+        const messageText = `Olá, ${firstName}! 👋 Já faz uma semana desde sua primeira sessão na clínica. Como foi sua experiência?\n\nLeve 1 minuto para nos avaliar: ${npsUrl}`;
 
         await env.BACKGROUND_QUEUE.send({
           type: "SEND_WHATSAPP",
           payload: {
             to: row.phone,
-            templateName: "patient_nps",
+            // "patient_nps" não existe na WABA — reusa feedback_atendimento
+            // ({{1}} nome + botões Ótimo/Bom/Pode melhorar).
+            templateName: "feedback_atendimento",
             languageCode: "pt_BR",
-            bodyParameters: [{ type: "text", text: messageText }],
+            bodyParameters: [{ type: "text", text: firstName }],
             organizationId: row.organization_id,
             patientId: row.patient_id,
             messageText,
@@ -1342,7 +1346,9 @@ async function processRecallCampaigns(pool: any, env: Env, _ctx: ExecutionContex
 
         const queuePayload: WhatsAppQueuePayload = {
           to: phone,
-          templateName: "recall_paciente",
+          // "recall_paciente" não existe na WABA — reusa recuperacao_inativo
+          // ({{1}} nome, "sentimos sua falta... que tal agendar?").
+          templateName: "recuperacao_inativo",
           languageCode: "pt_BR",
           bodyParameters: [{ type: "text", text: firstName }],
           organizationId: campaign.organization_id,
@@ -1404,13 +1410,14 @@ async function send48hConfirmationRequests(pool: any, env: Env) {
 
       const queuePayload: WhatsAppQueuePayload = {
         to: row.patient_phone,
-        templateName: "confirmacao_sessao",
+        // "confirmacao_sessao" não existe na WABA — reusa lembrete_consulta_v1
+        // ({{1}} nome, {{2}} data, {{3}} hora + botões Confirmar/Remarcar/Cancelar).
+        templateName: "lembrete_consulta_v1",
         languageCode: "pt_BR",
         bodyParameters: [
           { type: "text", text: firstName },
           { type: "text", text: row.formatted_date },
           { type: "text", text: timeStr },
-          { type: "text", text: therapistStr },
         ],
         organizationId: row.organization_id,
         patientId: row.patient_id,
@@ -1478,11 +1485,14 @@ async function sendSameDayUnconfirmedReminders(pool: any, env: Env) {
 
       const queuePayload: WhatsAppQueuePayload = {
         to: row.patient_phone,
-        templateName: "lembrete_dia_sessao",
+        // "lembrete_dia_sessao" não existe na WABA — reusa lembrete_consulta_botoes
+        // ({{2}} livre = "hoje às HH:MM").
+        templateName: "lembrete_consulta_botoes",
         languageCode: "pt_BR",
         bodyParameters: [
           { type: "text", text: firstName },
-          { type: "text", text: timeStr },
+          { type: "text", text: `hoje às ${timeStr}` },
+          { type: "text", text: row.therapist_name || "sua fisioterapeuta" },
         ],
         organizationId: row.organization_id,
         patientId: row.patient_id,

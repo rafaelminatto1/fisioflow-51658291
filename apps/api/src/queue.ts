@@ -1105,7 +1105,9 @@ async function handleAppointmentCreated(data: any, env: Env) {
   await processWhatsAppMessage(
     {
       to: patientPhone,
-      templateName: "confirmacao_agendamento", // Template para envio imediato
+      // "confirmacao_agendamento" não existe na WABA — consulta_confirmada é o
+      // aprovado com a mesma assinatura ({{1}} nome, {{2}} data, {{3}} hora).
+      templateName: "consulta_confirmada",
       languageCode: "pt_BR",
       bodyParameters: [
         { type: "text", text: firstName },
