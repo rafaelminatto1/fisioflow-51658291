@@ -786,20 +786,47 @@ export async function updateTemplate(id: string, data: Partial<Template>) {
   return unwrapData(res);
 }
 
+export function buildCreateTemplatePayload(data: {
+  name: string;
+  category: "MARKETING" | "UTILITY" | "AUTHENTICATION";
+  language?: string;
+  headerText?: string;
+  body: string;
+  bodyExample?: string[];
+  footer?: string;
+  buttons?: Array<{ type: string; text: string; url?: string; phone?: string }>;
+}) {
+  return {
+    name: data.name,
+    category: data.category,
+    language: data.language ?? "pt_BR",
+    ...(data.headerText ? { headerText: data.headerText } : {}),
+    body: data.body,
+    ...(data.bodyExample?.length ? { bodyExample: data.bodyExample } : {}),
+    ...(data.footer ? { footer: data.footer } : {}),
+    ...(data.buttons?.length ? { buttons: data.buttons } : {}),
+  };
+}
+
 export async function createTemplate(data: {
   name: string;
   category: "MARKETING" | "UTILITY" | "AUTHENTICATION";
   language?: string;
   headerText?: string;
   body: string;
+  bodyExample?: string[];
   footer?: string;
-  buttons?: Array<{ type: string; text: string; url?: string }>;
+  buttons?: Array<{ type: string; text: string; url?: string; phone?: string }>;
 }) {
   const res = await request<{ data: unknown }>("/api/whatsapp/templates", {
     method: "POST",
-    body: JSON.stringify(data),
+    body: JSON.stringify(buildCreateTemplatePayload(data)),
   });
   return unwrapData(res);
+}
+
+export async function deleteTemplate(id: string): Promise<void> {
+  await request(`/api/whatsapp/templates/${id}`, { method: "DELETE" });
 }
 
 export async function bulkAction(
@@ -865,6 +892,11 @@ export interface ConciergeConfig {
   slaMinutes: number;
   instagramAutoReply: boolean;
   instagramReplyDelayMinutes: number;
+  /**
+   * Horas de silêncio do Concierge após um atendente humano responder na
+   * conversa. 0 = pausa até a conversa ser resolvida/fechada (o humano é o dono).
+   */
+  humanReplyPauseHours: number;
   /** Auto-resposta do Concierge no chat do site (independente do WhatsApp). */
   webchatAutoReply: boolean;
   /** Delay antes de responder no chat do site (0–20s; dá chance do humano atender). */

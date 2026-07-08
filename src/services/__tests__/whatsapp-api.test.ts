@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeTemplate } from "../whatsapp-api";
+import { normalizeTemplate, buildCreateTemplatePayload } from "../whatsapp-api";
 
 describe("normalizeTemplate", () => {
   it("maps legacy stored WhatsApp templates to the UI shape", () => {
@@ -46,6 +46,25 @@ describe("normalizeTemplate", () => {
       language: "pt_BR",
       body: "Consulta confirmada.",
       isLocal: false,
+    });
+  });
+});
+
+describe("buildCreateTemplatePayload", () => {
+  it("inclui bodyExample e mantém phone nos botões", () => {
+    const payload = buildCreateTemplatePayload({
+      name: "retorno_medico",
+      category: "UTILITY",
+      body: "Olá {{1}}",
+      bodyExample: ["Maria"],
+      buttons: [{ type: "PHONE_NUMBER", text: "Ligar", phone: "+5511998888888" }],
+    });
+    expect(payload).toMatchObject({
+      name: "retorno_medico",
+      category: "UTILITY",
+      body: "Olá {{1}}",
+      bodyExample: ["Maria"],
+      buttons: [{ type: "PHONE_NUMBER", text: "Ligar", phone: "+5511998888888" }],
     });
   });
 });
