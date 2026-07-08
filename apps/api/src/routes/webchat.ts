@@ -11,10 +11,14 @@ import type { Env } from "../types/env";
 import {
 	AIConciergeService,
 	buildConciergeHistory,
+	conciergeHandoffMessage,
 	conciergeIdentity,
 	createConciergeBookingTask,
+	createConciergeHandoffTask,
+	humanOwnsConversation,
 	resolveWebchatConciergeConfig,
 	stripGreetingIntro,
+	wantsHumanAgent,
 } from "../services/ai-concierge";
 import { needsHumanApproval } from "../lib/whatsappApproval";
 import { rateLimit } from "../middleware/rateLimit";
@@ -273,28 +277,84 @@ app.post("/message", messageRateLimit, async (c: any) => {
 			const greetingSignature = conciergeIdentity(
 				conciergeCfgRes.rows[0]?.concierge,
 			).signature;
+			const rawConciergeCfg = (() => {
+				const raw = conciergeCfgRes.rows[0]?.concierge;
+				if (typeof raw === "string") {
+					try {
+						return JSON.parse(raw);
+					} catch {
+						return {};
+					}
+				}
+				return raw ?? {};
+			})();
 
 			if (webchatCfg.enabled && !isNameCapture) {
 				// Agenda resposta com delay - mantem o Worker vivo via waitUntil
 				const delayedReply = new Promise<void>((resolve) => {
 					setTimeout(async () => {
 						try {
-							// Re-check: atendente ja respondeu nesse meio-tempo?
-							const recentAgentReply = await pool.query(
-								`SELECT id FROM wa_messages
-                 WHERE conversation_id = $1::uuid
-                   AND direction = 'outbound'
-                   AND sender_type = 'agent'
-                   AND created_at > NOW() - INTERVAL '15 minutes'
-                 LIMIT 1`,
+							// Re-check: um humano assumiu a conversa? (unificado com
+							// WhatsApp/Instagram via humanOwnsConversation + humanReplyPauseHours).
+							const takeover = await pool.query(
+								`SELECT
+                   GREATEST(
+                     (SELECT MAX(created_at) FROM wa_messages
+                        WHERE conversation_id = $1::uuid
+                          AND direction = 'outbound'
+                          AND sender_type = 'agent'),
+                     (SELECT (metadata->>'concierge_handoff_at')::timestamptz
+                        FROM wa_conversations WHERE id = $1::uuid)
+                   ) AS last_agent_at,
+                   (SELECT status FROM wa_conversations WHERE id = $1::uuid) AS conv_status`,
 								[conversation.id],
 							);
 
-							if (recentAgentReply.rows.length > 0) {
-								// Humano assumiu recentemente - nao envia resposta automatica
+							if (
+								humanOwnsConversation(
+									takeover.rows[0]?.last_agent_at,
+									takeover.rows[0]?.conv_status,
+									rawConciergeCfg,
+								)
+							) {
+								// Humano é o dono da conversa - nao envia resposta automatica
 								console.log(
-									"[Webchat] Atendente assumiu recentemente - Concierge pulando.",
+									"[Webchat] Atendente assumiu a conversa - Concierge pulando.",
 								);
+								resolve();
+								return;
+							}
+
+							// Handoff determinístico (antes do LLM): o visitante pediu um humano.
+							if (wantsHumanAgent(text)) {
+								const bridge = conciergeHandoffMessage(rawConciergeCfg);
+								await addMessage(
+									pool,
+									conversation.id,
+									orgId,
+									contact.id,
+									"outbound",
+									"system",
+									contact.id,
+									"text",
+									bridge,
+									`web_handoff_${crypto.randomUUID()}`,
+								);
+								await pool.query(
+									`UPDATE wa_conversations
+                     SET metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{concierge_handoff_at}', to_jsonb(now()::text)),
+                         status = 'pending', updated_at = now()
+                   WHERE id = $1::uuid`,
+									[conversation.id],
+								);
+								await createConciergeHandoffTask(pool, orgId, conversation.id, text);
+								await broadcastToOrg(c.env, orgId, {
+									type: "webchat_message",
+									conversationId: conversation.id,
+									message: { content: bridge, direction: "outbound" },
+									contact: { id: contact.id, visitorId },
+								});
+								writeEvent(c.env, { orgId, event: "webchat_concierge_handoff" });
 								resolve();
 								return;
 							}

@@ -520,24 +520,31 @@ export async function dispatchInstagramConcierge(pool: any, env: Env) {
     AIConciergeService,
     buildConciergeHistory,
     conciergeIdentity,
+    conciergeHandoffMessage,
     createConciergeBookingTask,
+    createConciergeHandoffTask,
+    humanOwnsConversation,
     shouldSkipGreeting,
     stripGreetingIntro,
+    wantsHumanAgent,
   } = await import("./services/ai-concierge");
+  const { addMessage } = await import("./lib/whatsapp-conversations");
   const { sendInstagramText } = await import("./routes/instagram-webhook");
   const { needsHumanApproval } = await import("./lib/whatsappApproval");
 
   const res = await pool.query(`
-    SELECT c.id, c.organization_id, c.contact_id, wc.wa_id AS igsid,
+    SELECT c.id, c.organization_id, c.contact_id, c.status AS conv_status, wc.wa_id AS igsid,
            lm.created_at AS last_at, lm.content::text AS last_content,
            lm.message_type AS last_message_type, lm.media_url AS last_media_url,
            o.settings->'crm_whatsapp'->'concierge' AS concierge,
            o.settings->>'instagram_business_account_id' AS ig_account_id,
            o.settings->>'instagram_access_token' AS ig_token,
-           (SELECT count(*) FROM wa_messages mo
-              WHERE mo.conversation_id = c.id AND mo.direction = 'outbound'
-                AND mo.sender_type = 'agent'
-                AND mo.created_at > now() - interval '15 minutes') AS recent_out
+           GREATEST(
+             (SELECT max(mo.created_at) FROM wa_messages mo
+                WHERE mo.conversation_id = c.id AND mo.direction = 'outbound'
+                  AND mo.sender_type = 'agent'),
+             (c.metadata->>'concierge_handoff_at')::timestamptz
+           ) AS last_agent_at
     FROM wa_conversations c
     JOIN whatsapp_contacts wc ON wc.id = c.contact_id
     JOIN organizations o ON o.id = c.organization_id
@@ -557,11 +564,10 @@ export async function dispatchInstagramConcierge(pool: any, env: Env) {
     try {
       const cfg = (typeof row.concierge === "string" ? JSON.parse(row.concierge) : row.concierge) ?? {};
       if (cfg.instagramAutoReply !== true) continue;
-      // Janela unificada com WhatsApp/webchat: se um humano (sender_type='agent')
-      // respondeu nos últimos 15 min, o bot não entra. Respostas mais antigas não
-      // bloqueiam: o bot cobre o "gap" da última pergunta não respondida
-      // (a query garante que a última mensagem é inbound).
-      if (Number(row.recent_out) > 0) continue;
+      // Takeover unificado com WhatsApp/webchat: se um humano (sender_type='agent')
+      // assumiu a conversa, o bot fica em silêncio conforme humanReplyPauseHours
+      // (default 0 = até resolver/fechar; a query já filtra open/pending).
+      if (humanOwnsConversation(row.last_agent_at, row.conv_status, cfg)) continue;
       if (!row.ig_account_id || !(row.ig_token || env.IG_ACCESS_TOKEN)) continue;
 
       const delayMin = typeof cfg.instagramReplyDelayMinutes === "number" ? cfg.instagramReplyDelayMinutes : 3;
@@ -579,6 +585,42 @@ export async function dispatchInstagramConcierge(pool: any, env: Env) {
         return t.startsWith('"') && t.endsWith('"') ? JSON.parse(t) : t;
       })();
       if (!text || text.length < 2) continue;
+
+      // Handoff determinístico (antes do LLM): o lead pediu falar com um humano.
+      if (wantsHumanAgent(text)) {
+        const bridge = conciergeHandoffMessage(cfg);
+        const r = (await sendInstagramText(
+          env,
+          String(row.ig_account_id),
+          row.igsid,
+          bridge,
+          row.ig_token || undefined,
+        )) as any;
+        if (r?.message_id) {
+          await addMessage(
+            pool,
+            row.id,
+            row.organization_id,
+            row.contact_id,
+            "outbound",
+            "system",
+            "ai_concierge",
+            "text",
+            bridge,
+            r.message_id,
+          ).catch(() => {});
+        }
+        await pool.query(
+          `UPDATE wa_conversations
+             SET metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{concierge_handoff_at}', to_jsonb(now()::text)),
+                 status = 'pending', updated_at = now()
+           WHERE id = $1`,
+          [row.id],
+        );
+        await createConciergeHandoffTask(pool, row.organization_id, row.id, text);
+        sent++;
+        continue;
+      }
 
       // Histórico recente p/ contexto multi-turno e p/ não repetir a apresentação.
       let history: ReturnType<typeof buildConciergeHistory> = [];

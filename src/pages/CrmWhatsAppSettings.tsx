@@ -664,6 +664,40 @@ export default function CrmWhatsAppSettings() {
                   </div>
                 </div>
 
+                <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+                  <div>
+                    <Label className="text-sm font-bold">Silêncio após atendimento humano</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Quando um atendente humano responde a conversa, o concierge para de
+                      responder automaticamente para não atropelar o atendimento. Aqui você
+                      define por quanto tempo ele fica em silêncio.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Label className="text-sm">Pausar por</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={720}
+                      value={concierge.humanReplyPauseHours ?? 0}
+                      disabled={!concierge.enabled}
+                      onChange={(e) =>
+                        setConcierge({
+                          ...concierge,
+                          humanReplyPauseHours: Math.min(
+                            Math.max(Number(e.target.value) || 0, 0),
+                            720,
+                          ),
+                        })
+                      }
+                      className="w-20"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      horas (0 = até a conversa ser resolvida/fechada)
+                    </span>
+                  </div>
+                </div>
+
                 <div className="rounded-xl border border-border bg-card p-5 space-y-4">
                   <div>
                     <h3 className="text-sm font-bold">Identidade e base de conhecimento</h3>
@@ -695,6 +729,19 @@ export default function CrmWhatsAppSettings() {
                         placeholder="Activity Fisioterapia"
                       />
                     </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-bold">Divulgar que é um assistente virtual</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Na 1ª saudação, apresenta-se como "assistente virtual da clínica"
+                        (transparência). Desligue para manter a persona humana ("Sou o Rafael…").
+                      </p>
+                    </div>
+                    <Switch
+                      checked={concierge.discloseAi !== false}
+                      onCheckedChange={(v) => setConcierge({ ...concierge, discloseAi: v })}
+                    />
                   </div>
                   <div>
                     <Label className="text-sm font-bold">Informações oficiais da clínica</Label>

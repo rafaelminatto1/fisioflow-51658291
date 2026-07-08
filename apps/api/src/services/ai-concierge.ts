@@ -13,6 +13,8 @@ type ConciergeSettings = {
   knowledgeBase: string;
   attendantName: string;
   clinicName: string;
+  /** Divulga que é assistente virtual na apresentação (default true). */
+  discloseAi: boolean;
 };
 type AvailabilityPeriod = "manha" | "tarde" | "noite" | null;
 type AvailabilityTimeWindow = {
@@ -31,6 +33,15 @@ type TherapistRow = { id: string };
 
 /** Assinatura estável da apresentação (independe da saudação por horário). */
 const GREETING_SIGNATURE = "Sou o Rafael da Activity Fisioterapia";
+
+/**
+ * Saudação genérica no início da mensagem ("Boa tarde, tudo bem?", "Olá!",
+ * "Oi, tudo bem?"...), independente da assinatura. Usada para não repetir a
+ * saudação quando já houve uma na conversa (por humano OU pelo bot).
+ * Sem flag `g` para poder usar em .test() e .replace() sem estado de lastIndex.
+ */
+const LEADING_GREETING_RE =
+  /^\s*(bom dia|boa tarde|boa noite|ol[áa]|oi|opa)(?=[\s,!.…?-]|$)[\s,!.…?-]*(tudo bem|tudo certo|tudo j[óo]ia|como vai|como voc[êe] est[áa])?[\s,!.…?-]*/i;
 const DEFAULT_ATTENDANT_NAME = "Rafael";
 const DEFAULT_CLINIC_NAME = "Activity Fisioterapia";
 const DEFAULT_CONCIERGE_SETTINGS: ConciergeSettings = {
@@ -40,6 +51,7 @@ const DEFAULT_CONCIERGE_SETTINGS: ConciergeSettings = {
   knowledgeBase: "",
   attendantName: DEFAULT_ATTENDANT_NAME,
   clinicName: DEFAULT_CLINIC_NAME,
+  discloseAi: true,
 };
 
 export interface ConciergeIdentity {
@@ -68,10 +80,18 @@ export function conciergeIdentity(raw: unknown): ConciergeIdentity {
     (typeof cfg?.attendantName === "string" && cfg.attendantName.trim()) || DEFAULT_ATTENDANT_NAME;
   const clinicName =
     (typeof cfg?.clinicName === "string" && cfg.clinicName.trim()) || DEFAULT_CLINIC_NAME;
-  const signature =
-    attendantName === DEFAULT_ATTENDANT_NAME && clinicName === DEFAULT_CLINIC_NAME
-      ? GREETING_SIGNATURE
-      : `Sou ${attendantName} da ${clinicName}`;
+  // Disclosure de IA (default ON): o bot se apresenta como assistente virtual, 1x.
+  // Recomendado pelas referências (transparência); pode ser desligado p/ manter
+  // a persona humana ("Sou o Rafael...").
+  const discloseAi = (cfg?.discloseAi ?? true) !== false;
+  let signature: string;
+  if (discloseAi) {
+    signature = `Sou o assistente virtual da ${clinicName}`;
+  } else if (attendantName === DEFAULT_ATTENDANT_NAME && clinicName === DEFAULT_CLINIC_NAME) {
+    signature = GREETING_SIGNATURE;
+  } else {
+    signature = `Sou ${attendantName} da ${clinicName}`;
+  }
   return { attendantName, clinicName, signature };
 }
 const WEEKDAY_PATTERNS = [
@@ -141,9 +161,14 @@ function parseHourWindow(message: string): AvailabilityTimeWindow | null {
   return null;
 }
 
-/** True se a resposta é a apresentação/saudação padrão do concierge. */
+/**
+ * True se a resposta abre com uma saudação: a apresentação padrão (assinatura)
+ * OU qualquer saudação genérica ("Boa tarde, tudo bem?", "Olá!", "Oi"...).
+ */
 export function isGreetingReply(reply: string, signature: string = GREETING_SIGNATURE): boolean {
-  return typeof reply === "string" && reply.includes(signature);
+  if (typeof reply !== "string") return false;
+  if (signature && reply.includes(signature)) return true;
+  return LEADING_GREETING_RE.test(reply);
 }
 
 /**
@@ -161,21 +186,99 @@ export function shouldSkipGreeting(
 }
 
 /**
- * Remove a frase/linha da apresentação de uma saudação, mantendo o resto
- * ("Boa noite, tudo bem? Como posso ajudar?"). Usado quando já saudamos nesta
- * conversa: respondemos a saudação de volta sem nos reapresentar (não ficamos
- * mudos). Fallback quando a resposta era só a apresentação.
+ * Remove a saudação de uma resposta — tanto a apresentação (assinatura "Sou o
+ * Rafael...") quanto a saudação genérica inicial ("Boa tarde, tudo bem?") —
+ * mantendo o conteúdo útil ("Como posso ajudar?", "Atendemos das 8h às 18h").
+ * Usado quando já houve uma saudação na conversa: não repetimos "Boa tarde" nem
+ * nos reapresentamos. Nunca fica mudo: cai no fallback se sobrar vazio.
  */
 export function stripGreetingIntro(reply: string, signature: string = GREETING_SIGNATURE): string {
-  if (!isGreetingReply(reply, signature)) return reply;
-  const escaped = signature.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const stripped = reply
-    .replace(new RegExp(`[^.!?\\n]*${escaped}[^.!?\\n]*[.!?]?`, "g"), "")
+  if (typeof reply !== "string") return reply;
+  let out = reply;
+  // 1. Remove a apresentação (assinatura), se houver.
+  if (signature && out.includes(signature)) {
+    const escaped = signature.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    out = out.replace(new RegExp(`[^.!?\\n]*${escaped}[^.!?\\n]*[.!?]?`, "g"), "");
+  }
+  // 2. Remove a saudação genérica inicial ("Boa tarde, tudo bem?", "Olá!"...).
+  out = out.replace(LEADING_GREETING_RE, "");
+  // 3. Limpa espaços/linhas remanescentes.
+  out = out
     .replace(/[ \t]+/g, " ")
     .replace(/ ?\n ?/g, "\n")
     .replace(/\n{2,}/g, "\n")
     .trim();
-  return stripped || "Como posso ajudar?";
+  return out || "Como posso ajudar?";
+}
+
+/**
+ * Decide se um humano "assumiu" a conversa e o concierge deve ficar em silêncio.
+ * Sinal confiável: existe mensagem outbound com sender_type='agent' (concierge é
+ * 'system', paciente é 'contact'). `humanReplyPauseHours` (settings.crm_whatsapp
+ * .concierge) controla a duração: <= 0 (default) = até a conversa ser
+ * resolvida/fechada; > 0 = janela rolante em horas desde a última fala humana.
+ * Unificado entre WhatsApp, Instagram e webchat.
+ */
+export function humanOwnsConversation(
+  lastAgentAt: string | number | Date | null | undefined,
+  conversationStatus: string | null | undefined,
+  cfg: unknown,
+): boolean {
+  if (!lastAgentAt) return false;
+  const raw = (cfg as { humanReplyPauseHours?: unknown } | null | undefined)?.humanReplyPauseHours;
+  const pauseHours = typeof raw === "number" && Number.isFinite(raw) && raw > 0 ? raw : 0;
+  if (pauseHours > 0) {
+    return Date.now() - new Date(lastAgentAt).getTime() < pauseHours * 3_600_000;
+  }
+  const status = String(conversationStatus ?? "").toLowerCase();
+  const closed = status === "resolved" || status === "closed";
+  return !closed; // 0 = pausa até a conversa ser resolvida/fechada
+}
+
+// ─── Handoff por pedido explícito de humano (gatilho #1 das referências) ───
+// Em PT-BR o gatilho é "atendente/humano/pessoa/recepção/alguém" — NÃO usamos a
+// palavra "agente" (evita falso-positivo "sou corretor/agente da Caixa").
+const HANDOFF_HUMAN_NOUN =
+  "(atendentes?|human[oa]|uma pessoa|pessoa de verdade|pessoa real|recep[çc][aã]o|recepcionista|secret[aá]ri[oa]|algu[eé]m|respons[aá]vel)";
+const HANDOFF_WANT =
+  "(falar|conversar|transfer\\w*|me\\s+passa\\w*|passar|chama\\w*|quero|queria|gostaria|preciso|prefiro|poderia)";
+const WANTS_HUMAN_RE = new RegExp(
+  `\\b${HANDOFF_WANT}\\b[\\s\\S]{0,25}\\b${HANDOFF_HUMAN_NOUN}\\b`,
+  "i",
+);
+const HUMAN_DIRECT_RE =
+  /\b(atend(?:imento|ente)\s+human[oa]|human[oa]\s+de\s+verdade|quero\s+um\s+human[oa]|falar\s+com\s+gente|ser\s+atendid[oa]\s+por\s+(uma\s+pessoa|um\s+human[oa]))\b/i;
+const HUMAN_AVAIL_RE =
+  /\b(tem|t[eê]m|cad[êe]|h[áa])\s+(?:o|a|os|as|um|uma)?\s*(algu[eé]m|atendentes?|recepcionista|recep[çc][aã]o)\b/i;
+const HUMAN_STANDALONE_RE =
+  /^\s*(atendentes?|humano|human[oa]|recep[çc][aã]o|recepcionista)(\s+(por\s+favor|pfv|pf))?\s*[?!.]*$/i;
+const NOT_HANDOFF_RE =
+  /\b(sou|s[oó]u|trabalho\s+(como|de|no|na)|atuo\s+como|virei|me\s+tornei|era)\s+\w*\s*(atendentes?|recepcionista|secret[aá]ri[oa]|corretor|personal)/i;
+
+/**
+ * True quando o lead pede explicitamente falar com um humano/atendente. Usado
+ * ANTES do LLM p/ handoff determinístico. Heurístico PT-BR com guardas contra
+ * falsos-positivos ("sou atendente", "sou corretor", "vocês atendem alguém?").
+ */
+export function wantsHumanAgent(text: string): boolean {
+  if (typeof text !== "string") return false;
+  const t = text.trim();
+  if (t.length < 2) return false;
+  if (NOT_HANDOFF_RE.test(t)) return false;
+  return (
+    HUMAN_STANDALONE_RE.test(t) ||
+    HUMAN_DIRECT_RE.test(t) ||
+    HUMAN_AVAIL_RE.test(t) ||
+    WANTS_HUMAN_RE.test(t)
+  );
+}
+
+/**
+ * Mensagem-ponte curta e acolhedora quando o lead pede um humano: sinaliza que
+ * uma pessoa vai assumir (não fica no vácuo). Referências: "warm bridge".
+ */
+export function conciergeHandoffMessage(_cfg?: unknown): string {
+  return "Claro! Já estou passando você para alguém da nossa equipe. Em instantes uma pessoa continua o atendimento por aqui. 🙂";
 }
 
 /**
@@ -659,6 +762,7 @@ async function loadConciergeSettings(
       knowledgeBase: typeof raw.knowledgeBase === "string" ? raw.knowledgeBase.trim() : "",
       attendantName: identity.attendantName,
       clinicName: identity.clinicName,
+      discloseAi: raw.discloseAi !== false,
     };
   } catch (error) {
     console.warn("[AI Concierge] failed to load concierge settings:", error);
@@ -912,6 +1016,44 @@ export async function createConciergeBookingTask(
     );
   } catch (error) {
     console.warn("[AI Concierge] booking task creation failed:", error);
+  }
+}
+
+/**
+ * Tarefa p/ a equipe quando o lead pede explicitamente falar com um humano
+ * (dedup 1h por conversa). Usada pelos 3 canais junto com a mensagem-ponte.
+ */
+export async function createConciergeHandoffTask(
+  pool: { query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[] }> },
+  orgId: string,
+  conversationId: string,
+  originalMessage: string,
+): Promise<void> {
+  try {
+    const dup = await pool.query(
+      `SELECT 1 FROM tarefas
+       WHERE organization_id = $1 AND linked_entity_id = $2
+         AND titulo ILIKE 'Assumir conversa%'
+         AND created_at > now() - interval '1 hour'
+       LIMIT 1`,
+      [orgId, conversationId],
+    );
+    if (dup.rows.length > 0) return;
+    await pool.query(
+      `INSERT INTO tarefas (organization_id, created_by, titulo, descricao, status, prioridade, tipo,
+         order_index, tags, label_ids, checklists, attachments, task_references, dependencies,
+         requires_acknowledgment, acknowledgments, linked_entity_type, linked_entity_id)
+       VALUES ($1, 'system', $2, $3, 'A_FAZER', 'ALTA', 'TAREFA',
+         0, '{}', '{}', '[]', '[]', '[]', '[]', false, '[]', 'conversation', $4)`,
+      [
+        orgId,
+        "Assumir conversa — lead pediu atendimento humano",
+        `O lead pediu para falar com uma pessoa:\n\n"${originalMessage}"\n\nAssuma a conversa pelo CRM o quanto antes.`,
+        conversationId,
+      ],
+    );
+  } catch (error) {
+    console.warn("[AI Concierge] handoff task creation failed:", error);
   }
 }
 

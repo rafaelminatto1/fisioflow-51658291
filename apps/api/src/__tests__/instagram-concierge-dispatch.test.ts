@@ -28,7 +28,7 @@ vi.mock("../lib/whatsappApproval", () => ({
 }));
 
 const GREETING =
-  "Boa tarde, tudo bem?\nSou o Rafael da Activity Fisioterapia.\nComo posso ajudar?";
+  "Boa tarde, tudo bem?\nSou o assistente virtual da Activity Fisioterapia.\nComo posso ajudar?";
 
 const CONV_ROW = {
   id: "conv-ig-1",
@@ -42,7 +42,8 @@ const CONV_ROW = {
   concierge: { instagramAutoReply: true },
   ig_account_id: "178414000000",
   ig_token: "tok",
-  recent_out: 0,
+  last_agent_at: null,
+  conv_status: "pending",
 };
 
 function makePool(historyRows: Array<{ direction: string; content: string }>) {
@@ -100,7 +101,7 @@ describe("dispatchInstagramConcierge", () => {
 
     expect(mockSendInstagramText).toHaveBeenCalledTimes(1);
     const sent = String(mockSendInstagramText.mock.calls[0][3]);
-    expect(sent).not.toContain("Sou o Rafael da Activity Fisioterapia");
+    expect(sent).not.toContain("Sou o assistente virtual da Activity Fisioterapia");
     expect(sent.length).toBeGreaterThan(1);
   });
 
@@ -112,7 +113,7 @@ describe("dispatchInstagramConcierge", () => {
     expect(String(mockSendInstagramText.mock.calls[0][3])).toContain("180");
   });
 
-  it("janela 'humano atendendo' unificada: a query filtra sender_type='agent' em 15 min", async () => {
+  it("takeover unificado: a query traz last_agent_at (sender_type='agent') + status, sem janela fixa", async () => {
     const { dispatchInstagramConcierge } = await import("../cron");
     const pool = makePool([]);
     await dispatchInstagramConcierge(pool, ENV);
@@ -122,8 +123,53 @@ describe("dispatchInstagramConcierge", () => {
       )?.[0] ?? "",
     );
     expect(mainSql).toContain("sender_type = 'agent'");
-    expect(mainSql).toContain("'15 minutes'");
-    expect(mainSql).not.toContain("'5 minutes'");
+    expect(mainSql).toContain("last_agent_at");
+    expect(mainSql).toContain("conv_status");
+    // A decisão de silêncio agora é do humanOwnsConversation (humanReplyPauseHours),
+    // não de uma janela fixa embutida na SQL.
+    expect(mainSql).not.toContain("'15 minutes'");
+  });
+
+  it("fica em silêncio quando um humano assumiu a conversa (default: até resolver)", async () => {
+    const { dispatchInstagramConcierge } = await import("../cron");
+    const pool = {
+      query: vi.fn(async (sql: string) => {
+        if (sql.includes("c.channel = 'instagram'"))
+          return {
+            rows: [
+              {
+                ...CONV_ROW,
+                last_agent_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+                conv_status: "pending",
+              },
+            ],
+          };
+        return { rows: [] };
+      }),
+    };
+    await dispatchInstagramConcierge(pool as any, ENV);
+    expect(mockSendInstagramText).not.toHaveBeenCalled();
+  });
+
+  it("pedido explícito de humano: envia ponte, NÃO chama o LLM e cria tarefa", async () => {
+    const { dispatchInstagramConcierge } = await import("../cron");
+    const seen: string[] = [];
+    const pool = {
+      query: vi.fn(async (sql: string) => {
+        seen.push(sql);
+        if (sql.includes("c.channel = 'instagram'"))
+          return { rows: [{ ...CONV_ROW, last_content: '"quero falar com um atendente"' }] };
+        return { rows: [] };
+      }),
+    };
+    await dispatchInstagramConcierge(pool as any, ENV);
+
+    expect(mockProcessMessage).not.toHaveBeenCalled();
+    expect(mockSendInstagramText).toHaveBeenCalledTimes(1);
+    const bridge = String(mockSendInstagramText.mock.calls[0][3]);
+    expect(/equipe|pessoa|algu[eé]m/i.test(bridge)).toBe(true);
+    expect(seen.some((s) => /concierge_handoff_at/.test(s))).toBe(true);
+    expect(seen.some((s) => /INSERT INTO tarefas/.test(s))).toBe(true);
   });
 
   it("cria tarefa 'Efetivar reserva' quando a resposta traz bookingRequest", async () => {

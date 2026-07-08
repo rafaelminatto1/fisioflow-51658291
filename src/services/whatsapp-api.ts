@@ -907,6 +907,11 @@ export interface ConciergeConfig {
   clinicName: string;
   /** Base de conhecimento oficial usada nas respostas; vazio = padrão da Activity. */
   knowledgeBase: string;
+  /**
+   * Divulga que é um assistente virtual na 1ª saudação (default true). Desligue
+   * para manter a persona humana ("Sou o Rafael...").
+   */
+  discloseAi: boolean;
 }
 
 export interface FunnelStage {

@@ -29,17 +29,21 @@ beforeEach(() => {
 });
 
 describe("conciergeIdentity", () => {
-  it("padrão mantém a assinatura atual", async () => {
+  it("padrão divulga IA (assistente virtual)", async () => {
     const { conciergeIdentity } = await import("../ai-concierge");
     const id = conciergeIdentity(null);
     expect(id.attendantName).toBe("Rafael");
     expect(id.clinicName).toBe("Activity Fisioterapia");
-    expect(id.signature).toBe("Sou o Rafael da Activity Fisioterapia");
+    expect(id.signature).toBe("Sou o assistente virtual da Activity Fisioterapia");
   });
 
-  it("nomes customizados mudam a assinatura", async () => {
+  it("discloseAi=false mantém a persona humana (nomes customizados)", async () => {
     const { conciergeIdentity } = await import("../ai-concierge");
-    const id = conciergeIdentity({ attendantName: "Ana", clinicName: "Clínica Verde" });
+    const id = conciergeIdentity({
+      attendantName: "Ana",
+      clinicName: "Clínica Verde",
+      discloseAi: false,
+    });
     expect(id.signature).toBe("Sou Ana da Clínica Verde");
   });
 
@@ -172,12 +176,20 @@ describe("processMessage usa KB e identidade das settings da organização", () 
     expect(system).toContain("Rua Manuel Vieira de Sousa");
   });
 
-  it("identidade custom aparece na apresentação do prompt", async () => {
-    orgSettings({ attendantName: "Ana", clinicName: "Clínica Verde" });
+  it("identidade custom aparece na apresentação do prompt (persona humana, discloseAi=false)", async () => {
+    orgSettings({ attendantName: "Ana", clinicName: "Clínica Verde", discloseAi: false });
     const { AIConciergeService } = await import("../ai-concierge");
     await AIConciergeService.processMessage(ENV, "org-x", "oi", []);
     const system = mockRunAi.mock.calls[0][2].messages[0].content;
     expect(system).toContain("Sou Ana da Clínica Verde");
     expect(system).toContain('assine como "Ana"');
+  });
+
+  it("por padrão (disclosure ON) a apresentação divulga o assistente virtual", async () => {
+    orgSettings({ clinicName: "Clínica Verde" });
+    const { AIConciergeService } = await import("../ai-concierge");
+    await AIConciergeService.processMessage(ENV, "org-x", "oi", []);
+    const system = mockRunAi.mock.calls[0][2].messages[0].content;
+    expect(system).toContain("Sou o assistente virtual da Clínica Verde");
   });
 });

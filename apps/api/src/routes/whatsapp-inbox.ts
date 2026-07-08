@@ -80,10 +80,16 @@ const DEFAULT_CONCIERGE_CONFIG = {
   // Auto-reply do Concierge no Instagram (com atraso: dá chance do humano atender primeiro).
   instagramAutoReply: false,
   instagramReplyDelayMinutes: 3,
+  // Tempo (em horas) que o Concierge fica em silêncio depois que um atendente
+  // humano responde na conversa. 0 = pausa até a conversa ser resolvida/fechada.
+  humanReplyPauseHours: 0,
   // Identidade + base de conhecimento do Concierge (vazio = defaults da Activity).
   attendantName: "Rafael",
   clinicName: "Activity Fisioterapia",
   knowledgeBase: "",
+  // Divulga que é um assistente virtual na 1ª saudação (transparência). Desligue
+  // para manter a persona humana ("Sou o Rafael...").
+  discloseAi: true,
 };
 
 const DEFAULT_FUNNEL_STAGES = [
@@ -127,6 +133,13 @@ export function readCrmConfig(settings: Record<string, unknown>) {
       typeof conciergeRaw.availabilityProfileSlug === "string"
         ? conciergeRaw.availabilityProfileSlug.trim()
         : "",
+    humanReplyPauseHours:
+      typeof conciergeRaw.humanReplyPauseHours === "number" &&
+      Number.isFinite(conciergeRaw.humanReplyPauseHours) &&
+      conciergeRaw.humanReplyPauseHours >= 0
+        ? conciergeRaw.humanReplyPauseHours
+        : DEFAULT_CONCIERGE_CONFIG.humanReplyPauseHours,
+    discloseAi: conciergeRaw.discloseAi !== false,
   };
   const funnel = Array.isArray(crm.funnel) && crm.funnel.length ? crm.funnel : DEFAULT_FUNNEL_STAGES;
   const reminders = resolveReminderConfig(crm.reminders);

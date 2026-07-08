@@ -50,7 +50,7 @@ const ENV = { ENVIRONMENT: "development" } as any;
 const ORG = "00000000-0000-0000-0000-000000000001";
 
 const GREETING =
-	"Boa noite, tudo bem? Sou o Rafael da Activity Fisioterapia. Como posso ajudar?";
+	"Boa noite, tudo bem? Sou o assistente virtual da Activity Fisioterapia. Como posso ajudar?";
 
 function post(app: any, body: Record<string, unknown>) {
 	return app.request(
@@ -120,7 +120,7 @@ describe("POST /api/webchat/message — saudação duplicada", () => {
 		expect(res.status).toBe(200);
 		await vi.waitFor(() => expect(autoReplies()).toHaveLength(1));
 		const sent = String(autoReplies()[0][8]);
-		expect(sent).not.toContain("Sou o Rafael da Activity Fisioterapia");
+		expect(sent).not.toContain("Sou o assistente virtual da Activity Fisioterapia");
 		expect(sent).toContain("Atendemos na Mooca");
 	});
 
@@ -147,6 +147,26 @@ describe("POST /api/webchat/message — saudação duplicada", () => {
 		expect(String(tarefaInsert?.[1]?.[2] ?? "")).toContain(
 			"Estou com muita dor no joelho",
 		);
+	});
+
+	it("pedido explícito de humano: envia ponte, NÃO chama o LLM e cria tarefa", async () => {
+		const app = await buildApp();
+		await post(app, {
+			org: ORG,
+			visitorId: "v1",
+			text: "quero falar com um atendente",
+		});
+		await vi.waitFor(() => expect(autoReplies()).toHaveLength(1));
+		// Handoff é determinístico: não consulta o modelo.
+		expect(mockProcessMessage).not.toHaveBeenCalled();
+		const sent = String(autoReplies()[0][8]);
+		expect(/equipe|pessoa|algu[eé]m/i.test(sent)).toBe(true);
+		expect(
+			mockQuery.mock.calls.some(([sql]) => String(sql).includes("concierge_handoff_at")),
+		).toBe(true);
+		expect(
+			mockQuery.mock.calls.some(([sql]) => String(sql).includes("INSERT INTO tarefas")),
+		).toBe(true);
 	});
 
 	it("pergunta fora do escopo (unanswerable): envia handoff e cria tarefa", async () => {

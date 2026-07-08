@@ -14,10 +14,14 @@ import { writeEvent } from "../lib/analytics";
 import {
   AIConciergeService,
   buildConciergeHistory,
+  conciergeHandoffMessage,
   conciergeIdentity,
   createConciergeBookingTask,
+  createConciergeHandoffTask,
+  humanOwnsConversation,
   shouldSkipGreeting,
   stripGreetingIntro,
+  wantsHumanAgent,
 } from "../services/ai-concierge";
 import { WhatsAppService } from "../lib/whatsapp";
 import { mirrorWhatsAppMedia } from "../lib/media-mirror";
@@ -356,19 +360,68 @@ export async function processConciergeAsync(
       return;
     }
 
-    // 2. Check if a human agent has replied recently (within 15 minutes)
-    const recentAgentReply = await pool.query(
-      `SELECT id FROM wa_messages
-       WHERE conversation_id = $1::uuid
-         AND direction = 'outbound'
-         AND sender_type = 'agent'
-         AND created_at > NOW() - INTERVAL '15 minutes'
-       LIMIT 1`,
+    // 2. Defer to a human who has taken over the conversation (unificado com
+    // Instagram/webchat via humanOwnsConversation): se um atendente humano
+    // (sender_type='agent') respondeu, o bot fica em silêncio conforme
+    // `humanReplyPauseHours` (default 0 = até a conversa ser resolvida/fechada).
+    const takeover = await pool.query(
+      `SELECT
+         GREATEST(
+           (SELECT MAX(created_at) FROM wa_messages
+              WHERE conversation_id = $1::uuid
+                AND direction = 'outbound'
+                AND sender_type = 'agent'),
+           (SELECT (metadata->>'concierge_handoff_at')::timestamptz
+              FROM wa_conversations WHERE id = $1::uuid)
+         ) AS last_agent_at,
+         (SELECT status FROM wa_conversations WHERE id = $1::uuid) AS conv_status`,
       [conversationId],
     );
 
-    if (recentAgentReply.rows.length > 0) {
-      console.log(`[WA Queue] Human agent replied recently in conversation ${conversationId}. Concierge skipping.`);
+    if (humanOwnsConversation(takeover.rows[0]?.last_agent_at, takeover.rows[0]?.conv_status, cfg)) {
+      console.log(`[WA Queue] Human agent owns conversation ${conversationId}. Concierge skipping.`);
+      return;
+    }
+
+    // 3. Handoff determinístico (antes do LLM): o lead pediu falar com um humano.
+    // Envia uma ponte curta, cria tarefa e pausa o bot (marca concierge_handoff_at
+    // → a guarda de takeover acima silencia o bot nas próximas mensagens).
+    if (wantsHumanAgent(text)) {
+      const bridge = conciergeHandoffMessage(cfg);
+      const whatsapp = new WhatsAppService(env);
+      const sendResult = (await whatsapp.sendTextMessage(recipient, bridge)) as {
+        messages?: { id?: string }[];
+        error?: unknown;
+      };
+      const metaMessageId = sendResult?.messages?.[0]?.id ?? null;
+      const sendStatus = metaMessageId ? "sent" : "failed";
+      await addMessage(
+        pool,
+        conversationId,
+        orgId,
+        contactId,
+        "outbound",
+        "system",
+        contactId,
+        "text",
+        bridge,
+        metaMessageId ?? `handoff_${Date.now()}`,
+        { status: sendStatus, metadata: { autoReply: true, handoff: true } },
+      );
+      await pool.query(
+        `UPDATE wa_conversations
+           SET metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{concierge_handoff_at}', to_jsonb(now()::text)),
+               status = 'pending', updated_at = now()
+         WHERE id = $1::uuid`,
+        [conversationId],
+      );
+      await createConciergeHandoffTask(pool, orgId, conversationId, text);
+      await broadcastToOrg(env, orgId, {
+        type: sendStatus === "failed" ? "whatsapp_message_failed" : "whatsapp_message",
+        conversationId,
+        message: { content: bridge, direction: "outbound", messageType: "text", status: sendStatus },
+      });
+      writeEvent(env, { orgId, event: "whatsapp_concierge_handoff" });
       return;
     }
 
