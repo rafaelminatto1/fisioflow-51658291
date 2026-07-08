@@ -77,6 +77,12 @@ describe("validateTemplateDraft", () => {
     );
     expect(errs).toContain('O botão "Ligar" precisa de um telefone.');
   });
+  it("rejeita botão sem texto", () => {
+    const errs = validateTemplateDraft(
+      baseDraft({ buttons: [{ type: "QUICK_REPLY", text: "" }] }),
+    );
+    expect(errs).toContain("Todo botão precisa de um texto.");
+  });
 });
 
 describe("renderTemplatePreview", () => {

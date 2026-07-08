@@ -54,6 +54,9 @@ export function validateTemplateDraft(draft: TemplateDraft): string[] {
   }
 
   for (const button of draft.buttons) {
+    if (!button.text?.trim()) {
+      errors.push("Todo botão precisa de um texto.");
+    }
     if (button.type === "URL" && !button.url?.trim()) {
       errors.push(`O botão "${button.text || "sem nome"}" precisa de uma URL válida.`);
     }

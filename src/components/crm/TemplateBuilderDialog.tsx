@@ -280,7 +280,7 @@ export function TemplateBuilderDialog({
         </div>
 
         <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Cancelar</Button>
+          <Button variant="outline" onClick={() => { reset(); onOpenChange(false); }} disabled={submitting}>Cancelar</Button>
           <Button onClick={handleSubmit} disabled={submitting}>
             {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Enviar para aprovação

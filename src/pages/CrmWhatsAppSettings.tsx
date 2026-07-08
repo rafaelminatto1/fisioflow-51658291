@@ -206,11 +206,12 @@ export default function CrmWhatsAppSettings() {
   const handleDeleteTemplate = async (id: string) => {
     try {
       await deleteTemplate(id);
-      setConfirmDeleteId(null);
       await loadTemplates();
       toast({ title: "Template removido" });
     } catch {
       toast({ variant: "destructive", title: "Falha ao remover o template" });
+    } finally {
+      setConfirmDeleteId(null);
     }
   };
 
