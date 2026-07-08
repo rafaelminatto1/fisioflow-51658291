@@ -53,6 +53,7 @@ export interface SchedulePageData {
 
 type ScheduleAppointmentRow = AppointmentRow & {
   type?: string | null;
+  patient_phone?: string | null;
   payment_amount?: number | string | null;
   payment_method?: string | null;
   room_id?: string | null;
@@ -81,7 +82,7 @@ const mapAppointmentRowToCalendarAppointment = (row: ScheduleAppointmentRow): Ap
   id: row.id,
   patientId: row.patient_id,
   patientName: row.patient_name || "Paciente",
-  phone: undefined,
+  phone: row.patient_phone || undefined,
   date: parseAppointmentDate(row.date),
   time: row.start_time?.slice(0, 5) || "00:00",
   duration: calculateDurationMinutes(row.start_time, row.end_time),

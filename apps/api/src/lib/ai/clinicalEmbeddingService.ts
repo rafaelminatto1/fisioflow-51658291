@@ -10,7 +10,7 @@ export interface EmbeddingServiceEnv {
  * Gera um embedding usando Workers AI.
  * Recomendado: @cf/baai/bge-large-en-v1.5 (retorna vetor)
  */
-export async function generateEmbedding(env: EmbeddingServiceEnv, text: string): Promise<number[]> {
+export async function generateEmbedding(_env: EmbeddingServiceEnv, _text: string): Promise<number[]> {
   try {
     // Mocking the call since we can't run env.AI natively in test
     // No ambiente real:
@@ -18,8 +18,8 @@ export async function generateEmbedding(env: EmbeddingServiceEnv, text: string):
     // const res = await ai.run('@cf/baai/bge-large-en-v1.5', { text: [text] });
     // return res.data[0];
     
-    return new Array(1536).fill(0).map(() => Math.random());
-  } catch (error) {
+    return Array.from({ length: 1536 }, () => Math.random());
+  } catch {
     throw new Error("Falha ao gerar embedding clínico.");
   }
 }

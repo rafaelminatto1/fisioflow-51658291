@@ -30,7 +30,7 @@ export async function runWorkersAI(env: any, model: string, prompt: string): Pro
 }
 
 export async function runGemini(env: any, model: string, prompt: string): Promise<AIProviderResponse> {
-  const gatewayUrl = getGatewayUrl(env, "google-ai-studio");
+  getGatewayUrl(env, "google-ai-studio");
   
   // Here we would use fetch to the gateway or Google SDK
   // const res = await fetch(`${gatewayUrl}/v1/models/${model}:generateContent`, {...});

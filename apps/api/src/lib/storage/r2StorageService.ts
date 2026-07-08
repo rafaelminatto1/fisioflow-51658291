@@ -45,7 +45,7 @@ export class R2StorageService {
   /**
    * Validação rígida anti-malware e excesso de uso
    */
-  private validateFile(fileName: string, size: number, contentType: string) {
+  private validateFile(fileName: string, size: number, _contentType: string) {
     const BLOCKED_EXTENSIONS = [".exe", ".sh", ".bat", ".cmd", ".msi", ".vbs", ".js", ".ts"];
     const lowerName = fileName.toLowerCase();
 

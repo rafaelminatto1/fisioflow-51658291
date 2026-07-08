@@ -19,6 +19,8 @@ import {
   NotepadText,
   CreditCard,
   Calendar,
+  UserRound,
+  Dumbbell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
@@ -103,6 +105,10 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
     showNoShowConfirmDialog,
     setShowNoShowConfirmDialog,
     handleStartAttendance,
+    handleOpenProfile,
+    handleOpenEvolution,
+    handleOpenEvaluation,
+    handleOpenPrescription,
     handleStatusChange,
     handleNoShowConfirm,
     handleNoShowReschedule,
@@ -111,6 +117,8 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
     handlePaymentSuccess,
     patientPackages,
     isUpdatingStatus,
+    isUpdatingAppointment,
+    pendingAppointmentField,
   } = logic;
 
   const { statusConfig: statusConfigMap, allStatuses } = useStatusConfig();
@@ -193,10 +201,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 truncate leading-tight tracking-tight">
               <button
                 type="button"
-                onClick={() => {
-                  window.location.href = `/patients/${appointment.patientId}`;
-                  onOpenChange?.(false);
-                }}
+                onClick={handleOpenProfile}
                 className="block w-full truncate text-left hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-sm"
               >
                 {appointment.patientName}
@@ -232,15 +237,66 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
         <Separator className="bg-border/50" />
 
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-10 rounded-xl px-2 text-xs font-bold text-slate-600 hover:text-primary"
+            onClick={handleOpenProfile}
+          >
+            <UserRound className="mr-1.5 h-3.5 w-3.5" />
+            Perfil
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-10 rounded-xl px-2 text-xs font-bold text-slate-600 hover:text-primary"
+            onClick={handleOpenEvolution}
+          >
+            <Play className="mr-1.5 h-3.5 w-3.5" />
+            Evolução
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-10 rounded-xl px-2 text-xs font-bold text-slate-600 hover:text-primary"
+            onClick={handleOpenEvaluation}
+          >
+            <FileText className="mr-1.5 h-3.5 w-3.5" />
+            Avaliação
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-10 rounded-xl px-2 text-xs font-bold text-slate-600 hover:text-primary"
+            onClick={handleOpenPrescription}
+          >
+            <Dumbbell className="mr-1.5 h-3.5 w-3.5" />
+            Prescrever
+          </Button>
+        </div>
+
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
-              <Users className="h-3 w-3" />
-              Fisioterapeuta
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                <Users className="h-3 w-3" />
+                Fisioterapeuta
+              </div>
+              {pendingAppointmentField === "therapist" && (
+                <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                  Atualizando...
+                </span>
+              )}
             </div>
             <Select
               value={localTherapistId || THERAPIST_SELECT_NONE}
               onValueChange={(v) => handleTherapistChange(v === THERAPIST_SELECT_NONE ? "" : v)}
+              disabled={isUpdatingAppointment}
             >
               <SelectTrigger className="h-9 w-full bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors text-sm">
                 <SelectValue>
@@ -260,14 +316,21 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
-                <div
-                  className={cn(
-                    "w-1.5 h-1.5 rounded-full",
-                    statusConfig.iconColor.replace("text-", "bg-"),
-                  )}
-                />
-                Status
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                  <div
+                    className={cn(
+                      "w-1.5 h-1.5 rounded-full",
+                      statusConfig.iconColor.replace("text-", "bg-"),
+                    )}
+                  />
+                  Status
+                </div>
+                {isUpdatingStatus && (
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                    Atualizando...
+                  </span>
+                )}
               </div>
               <Select
                 value={localStatus}
@@ -305,11 +368,22 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
-                <CreditCard className="h-3 w-3" />
-                Financeiro
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                  <CreditCard className="h-3 w-3" />
+                  Financeiro
+                </div>
+                {pendingAppointmentField === "payment" && (
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                    Atualizando...
+                  </span>
+                )}
               </div>
-              <Select value={isPaid ? "paid" : "pending"} onValueChange={handlePaymentStatusChange}>
+              <Select
+                value={isPaid ? "paid" : "pending"}
+                onValueChange={handlePaymentStatusChange}
+                disabled={isUpdatingAppointment}
+              >
                 <SelectTrigger
                   className={cn(
                     "h-9 w-full border-slate-200 dark:border-slate-800",

@@ -13,9 +13,9 @@ export interface SearchResult {
 /**
  * Busca Semântica na Base de Conhecimento Pública (Vectorize)
  */
-export async function searchKnowledge(env: any, query: string, filters: SearchFilters, topK: number = 3): Promise<SearchResult[]> {
+export async function searchKnowledge(env: any, query: string, filters: SearchFilters, _topK: number = 3): Promise<SearchResult[]> {
   // 1. Gera Embedding da Query
-  const queryVector = await generateEmbedding(env, query);
+  await generateEmbedding(env, query);
 
   // 2. Montagem dos Filtros de Metadata (Vectorize Filter)
   const filterObj: Record<string, any> = {
@@ -56,7 +56,7 @@ export async function searchKnowledge(env: any, query: string, filters: SearchFi
   ];
 }
 
-async function generateEmbedding(env: any, text: string): Promise<number[]> {
+async function generateEmbedding(_env: any, _text: string): Promise<number[]> {
   // Stub
-  return new Array(1536).fill(0.1);
+  return Array.from({ length: 1536 }, () => 0.1);
 }

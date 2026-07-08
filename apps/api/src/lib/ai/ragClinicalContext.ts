@@ -28,8 +28,8 @@ export async function retrieveClinicalContext(
     throw new Error("OrganizationId e PatientId são obrigatórios para RAG Clínico.");
   }
 
-  const queryVector = await generateEmbedding(env, params.query);
-  const topK = params.topK || 5;
+  const _queryVector = await generateEmbedding(env, params.query);
+  const _topK = params.topK || 5;
 
   // Busca de Similaridade com Drizzle + pgvector (<=> operador de cosseno)
   /*

@@ -51,7 +51,7 @@ export async function queryVectorize(env: any, query: string, options: Vectorize
     if (!env.VECTORIZE_KNOWLEDGE_BASE) {
       throw new Error("Vectorize binding missing");
     }
-    const queryVector = await generateEmbedding(env, query);
+    await generateEmbedding(env, query);
     
     const filterObj: Record<string, any> = {
       organizationId: options.organizationId
@@ -90,13 +90,13 @@ export async function queryVectorize(env: any, query: string, options: Vectorize
   }
 }
 
-async function generateEmbedding(env: any, text: string): Promise<number[]> {
+async function generateEmbedding(_env: any, _text: string): Promise<number[]> {
   try {
     // const ai = new Ai(env.AI);
     // const res = await ai.run('@cf/baai/bge-large-en-v1.5', { text: [text] });
     // return res.data[0];
-    return new Array(1536).fill(0.5); // Stub
-  } catch (err) {
+    return Array.from({ length: 1536 }, () => 0.5); // Stub
+  } catch {
     throw new Error("Failed to generate embeddings in Workers AI.");
   }
 }

@@ -43,6 +43,8 @@ The quick view also exposes secondary clinical shortcuts:
 - **Prescrever**: `/exercises?patientId=:patientId`;
 - **WhatsApp**: `https://wa.me/55...` when phone is available.
 
+`Prescrever` intentionally lands on the exercises library with patient context selected. It is not a new prescription builder in this pass.
+
 ## UI Design
 
 Use the existing `AppointmentQuickView` popover/drawer as the integration point.
@@ -62,7 +64,8 @@ Button labels must stay short and clinical: `Perfil`, `Evolucao`, `Avaliacao`, `
 Appointment-side updates should communicate local pending state:
 
 - status update pending: disable the status select and show a subtle updating label near status;
-- therapist or payment update pending: disable only the changed control where feasible;
+- therapist or payment update pending: track the changed field and show the updating label next to that field;
+- while the appointment update mutation is pending, avoid starting a second therapist/payment mutation from the quick view;
 - failed update: restore the previous local value and show a concise toast.
 
 Existing optimistic update protections in `useAppointmentQuickViewLogic` must remain intact. Do not add broad query resets or manual refetches from the quick view.
@@ -78,9 +81,10 @@ Likely implementation shape:
 
 - Add explicit navigation helpers in `useAppointmentQuickViewLogic` for profile, evolution, evaluation, and prescription.
 - Keep route prefetch for evolution and evaluation where it already exists.
-- Expose `isUpdatingAppointment` from the logic hook so the UI can show pending state for therapist/payment updates.
+- Expose `isUpdatingAppointment` and a small pending-field marker from the logic hook so the UI can show therapist/payment pending state precisely.
 - Add the action band in `AppointmentQuickView`.
 - Keep phone normalization local to the existing WhatsApp action.
+- Map `patient_phone` from Agenda rows into `appointment.phone`; the Worker already returns this value, so no backend change is needed.
 
 ## Data Flow
 
@@ -91,7 +95,7 @@ Inputs come from the existing `appointment` prop:
 - `appointment.id`;
 - `appointment.patientId`;
 - `appointment.patientName`;
-- `appointment.phone`;
+- `appointment.phone`, mapped from `patient_phone` in the Agenda response when available;
 - `appointment.status`;
 - `appointment.payment_status`;
 - `appointment.therapistId`.
@@ -119,11 +123,13 @@ Focused validation:
 
 - Type-check the web app.
 - Run a targeted component or unit test if an existing quick view test is available.
+- Run `src/utils/__tests__/cacheInvalidation.test.ts`; it is the automated anti-flicker guard that ensures Agenda invalidation keeps existing calendar data instead of clearing to a skeleton state.
 - Manual verification in the Agenda:
   - open appointment quick view;
   - use profile/evolution/evaluation/prescription shortcuts;
   - change status and confirm pending/disabled behavior;
   - change therapist or payment and confirm rollback/error path remains coherent.
+  - confirm these updates do not unmount the calendar or replace it with a skeleton/flicker.
 
 ## Risks
 

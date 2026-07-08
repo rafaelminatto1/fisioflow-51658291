@@ -13,9 +13,6 @@ function clean(s) {
     .replace(/\n\s*\n+/g, '\n')
     .trim();
 }
-function htmlToText(html) {
-  return clean(String(html || '').replace(/<br\s*\/?\s*>/gi, '\n').replace(/<[^>]*>/g, ' '));
-}
 function extractClinicalFromBodyText(body) {
   let text = clean(body);
   const startMarkers = ['AVALIAÇÃO FÍSICA', 'Inspeção', 'HMA:', 'HDA:', 'Diagnóstico', 'Queixa principal'];

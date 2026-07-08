@@ -8,8 +8,7 @@ const app = new Hono<{ Bindings: any }>();
 
 app.get("/:patientId", async (c) => {
   const patientId = c.req.param("patientId");
-  const organizationId = c.req.header("x-organization-id") || "";
-  
+
   // Real life: Buscar do Neon `patientRiskScores`
   // Para fins do endpoint agora, geramos on-the-fly um mock the features
   const mockFeatures = {

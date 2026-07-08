@@ -30,8 +30,7 @@ export class AIRouter {
     }
 
     const dailyLimit = parseFloat(this.config.env.AI_DAILY_BUDGET_BRL || "50.00");
-    const monthlyLimit = parseFloat(this.config.env.AI_MONTHLY_BUDGET_BRL || "500.00");
-    
+
     // TODO(PRODUCTION-STUB): Implement real budget check querying ai_usage_events via Drizzle
     const currentDailyUsage = 0; 
     if (currentDailyUsage >= dailyLimit) {
@@ -40,7 +39,7 @@ export class AIRouter {
   }
 
   async run(prompt: string, forceModel?: string): Promise<string> {
-    const { env, taskType, organizationId, userId, patientId } = this.config;
+    const { env, taskType, organizationId } = this.config;
 
     // 1. TaskType Check
     const tokenLimit = AI_TASK_LIMITS[taskType];
@@ -62,13 +61,10 @@ export class AIRouter {
     validateModelPolicy(primaryModel, taskType as any);
 
     let provider = primaryModel.includes("gemini") ? "google" : "workers-ai";
-    const gatewayUsed = env.AI_GATEWAY_ENABLED === "true";
     let responseText = "";
     let inputTokens = 0;
     let outputTokens = 0;
     let latencyMs = 0;
-    let status = 200;
-    let errorMessage = "";
     let redactedLog: string[] = [];
 
     // 4. Sanitização LGPD (Falha Seguro - Aborta se der erro)
@@ -94,7 +90,7 @@ export class AIRouter {
         inputTokens = res.inputTokens;
         outputTokens = res.outputTokens;
       }
-    } catch (e: any) {
+    } catch {
       // Fallback
       const fallbackModel = env.AI_DEFAULT_CHEAP_MODEL || "@cf/meta/llama-3.1-8b-instruct-fast";
       try {
@@ -111,18 +107,14 @@ export class AIRouter {
         responseText = res.text;
         inputTokens = res.inputTokens;
         outputTokens = res.outputTokens;
-        status = 200; // recovered
-        errorMessage = `Fallback from ${primaryModel} to ${fallbackModel} due to: ${e.message}`;
       } catch (fallbackError: any) {
-        status = 500;
-        errorMessage = `Primary failed: ${e.message}. Fallback failed: ${fallbackError.message}`;
         throw new AIRouterError("All AI providers failed", "PROVIDERS_FAILED", fallbackError);
       }
     } finally {
       latencyMs = Date.now() - startTime;
       
       // 4. Calculate cost
-      const { estimatedCostUsd, estimatedCostBrl } = calculateCost(primaryModel, inputTokens, outputTokens);
+      const { estimatedCostBrl } = calculateCost(primaryModel, inputTokens, outputTokens);
 
       // TODO(PRODUCTION-STUB): Async Log to DB
       // env.ctx.waitUntil(db.insert(aiUsageEvents).values({...}))

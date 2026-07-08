@@ -22,8 +22,6 @@ import {
   Activity,
   Bone,
   Calendar,
-  ChevronDown,
-  ChevronUp,
   Clock,
   Copy,
   Dumbbell,
@@ -60,7 +58,7 @@ import {
   usePatientPathologies,
   usePatientSurgeries,
 } from "@/hooks/usePatientEvolution";
-import { type SoapRecord, useSessionAttachments, useSoapRecords, useInfiniteSoapRecords } from "@/hooks/useSoapRecords";
+import { type SoapRecord, useSessionAttachments, useInfiniteSoapRecords } from "@/hooks/useSoapRecords";
 import { getAffectedSideAbbreviation } from "@/lib/constants/surgery";
 import { cn } from "@/lib/utils";
 import { stripHtml } from "@/lib/utils/stripHtml";
@@ -93,7 +91,7 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
   const [filterType, setFilterType] = useState<TimelineEventType | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"timeline" | "list">("timeline");
-  const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set());
+  const [expandedEvents] = useState<Set<string>>(new Set());
   const [selectedSession, setSelectedSession] = useState<SoapRecord | null>(null);
   const [showSessionModal, setShowSessionModal] = useState(false);
   const [compactView, setCompactView] = useState(false);
@@ -341,18 +339,6 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
     }),
     [soapRecords, surgeries, goals, measurements, attachments],
   );
-
-  const toggleExpand = useCallback((eventId: string) => {
-    setExpandedEvents((prev) => {
-      const newExpanded = new Set(prev);
-      if (newExpanded.has(eventId)) {
-        newExpanded.delete(eventId);
-      } else {
-        newExpanded.add(eventId);
-      }
-      return newExpanded;
-    });
-  }, []);
 
   const handleViewSessionDetails = useCallback((session: SoapRecord) => {
     setSelectedSession(session);

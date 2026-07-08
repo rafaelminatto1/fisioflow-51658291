@@ -40,7 +40,7 @@ function ClinicalMediaNodeView({
   const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = () => {
       if (showMenu) {
         setShowMenu(false);
       }

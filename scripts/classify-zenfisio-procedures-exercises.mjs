@@ -12,14 +12,6 @@ const SUMMARY_MD = path.join(SOURCE_DIR, 'procedimentos_exercicios_relatorio.md'
 
 if (!DATABASE_URL) throw new Error('DATABASE_URL não informado');
 
-function normalizeText(text) {
-  return String(text ?? '')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/\u00a0/g, ' ')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
-}
 function cleanText(text) {
   return String(text ?? '')
     .replace(/&nbsp;/gi, ' ')
@@ -134,7 +126,7 @@ function findAnchors(text) {
 
 function compactNote(value, kind) {
   let note = cleanText(value)
-    .replace(/^[:\-–—\/\s]+/, '')
+    .replace(/^[:–—/\s-]+/, '')
     .replace(/\s*&times;\s*$/i, '')
     .replace(/\s+/g, ' ')
     .trim();

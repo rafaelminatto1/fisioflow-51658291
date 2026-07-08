@@ -10,8 +10,6 @@ const app = new Hono<{ Bindings: any }>();
  * GET /api/admin/observability/ai-cost
  */
 app.get("/ai-cost", async (c) => {
-  const organizationId = c.req.header("x-organization-id") || "";
-  
   // Exemplo de como a Query ficaria usando Drizzle no Neon Postgres:
   /*
   const now = new Date();
@@ -85,8 +83,6 @@ app.get("/ai-cost", async (c) => {
  * GET /api/admin/observability/jobs
  */
 app.get("/jobs", async (c) => {
-  const organizationId = c.req.header("x-organization-id") || "";
-  
   // Real life Drizzle query:
   /*
   const jobsStats = await db.select({ 

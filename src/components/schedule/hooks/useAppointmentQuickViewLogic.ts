@@ -6,6 +6,7 @@ import { useAppointmentActions } from "@/hooks/useAppointmentActions";
 import { useWaitlistMatch } from "@/hooks/useWaitlistMatch";
 import { usePatientPackages } from "@/hooks/usePackages";
 import { useUpdateAppointment } from "@/hooks/useAppointments";
+import { APP_ROUTES, patientRoutes } from "@/lib/routing/appRoutes";
 import { prefetchRoute, RouteKeys } from "@/lib/routing/routePrefetch";
 import { appointmentsApi } from "@/api/v2";
 import { normalizeStatus } from "../shared/appointment-status";
@@ -34,6 +35,9 @@ export const useAppointmentQuickViewLogic = ({
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showNoShowConfirmDialog, setShowNoShowConfirmDialog] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
+  const [pendingAppointmentField, setPendingAppointmentField] = useState<
+    "therapist" | "payment" | null
+  >(null);
 
   // Local state for optimistic updates
   const [localStatus, setLocalStatus] = useState(() => normalizeStatus(appointment.status));
@@ -98,34 +102,55 @@ export const useAppointmentQuickViewLogic = ({
   const interestCount = getInterestCount(appointmentDate, appointment.time);
   const hasWaitlistInterest = interestCount > 0;
 
+  const prefetchEvolution = useCallback(() => {
+    prefetchRoute(() => import("../../../pages/PatientEvolution"), RouteKeys.PATIENT_EVOLUTION);
+    void queryClient.prefetchQuery({
+      queryKey: ["appointment", appointment.id],
+      queryFn: () => appointmentsApi.get(appointment.id),
+      staleTime: 1000 * 60 * 2,
+    });
+  }, [appointment.id, queryClient]);
+
+  const handleOpenProfile = useCallback(() => {
+    navigate(patientRoutes.profile(appointment.patientId));
+    onOpenChange?.(false);
+  }, [appointment.patientId, navigate, onOpenChange]);
+
+  const handleOpenEvolution = useCallback(() => {
+    prefetchEvolution();
+    navigate(`/patient-evolution/${appointment.id}`, {
+      state: {
+        patientId: appointment.patientId,
+        patientName: appointment.patientName,
+      },
+    });
+    onOpenChange?.(false);
+  }, [appointment, navigate, onOpenChange, prefetchEvolution]);
+
+  const handleOpenEvaluation = useCallback(() => {
+    prefetchRoute(() => import("../../../pages/patients/NewEvaluationPage"), "evaluation-new");
+    navigate(`/patients/${appointment.patientId}/evaluations/new?appointmentId=${appointment.id}`);
+    onOpenChange?.(false);
+  }, [appointment.id, appointment.patientId, navigate, onOpenChange]);
+
+  const handleOpenPrescription = useCallback(() => {
+    navigate(`${APP_ROUTES.EXERCISES}?patientId=${appointment.patientId}`);
+    onOpenChange?.(false);
+  }, [appointment.patientId, navigate, onOpenChange]);
+
   const handleStartAttendance = useCallback(() => {
     if (localStatus === "avaliacao") {
-      prefetchRoute(() => import("../../../pages/patients/NewEvaluationPage"), "evaluation-new");
-      navigate(
-        `/patients/${appointment.patientId}/evaluations/new?appointmentId=${appointment.id}`,
-      );
+      handleOpenEvaluation();
       toast.success("Iniciando avaliação", {
         description: `Avaliação de ${appointment.patientName}`,
       });
     } else {
-      prefetchRoute(() => import("../../../pages/PatientEvolution"), RouteKeys.PATIENT_EVOLUTION);
-      queryClient.prefetchQuery({
-        queryKey: ["appointment", appointment.id],
-        queryFn: () => appointmentsApi.get(appointment.id),
-        staleTime: 1000 * 60 * 2,
-      });
-      navigate(`/patient-evolution/${appointment.id}`, {
-        state: {
-          patientId: appointment.patientId,
-          patientName: appointment.patientName,
-        },
-      });
+      handleOpenEvolution();
       toast.success("Iniciando atendimento", {
         description: `Atendimento de ${appointment.patientName}`,
       });
     }
-    onOpenChange?.(false);
-  }, [localStatus, appointment, navigate, queryClient, onOpenChange]);
+  }, [localStatus, appointment.patientName, handleOpenEvaluation, handleOpenEvolution]);
 
   const handleStatusChange = useCallback(
     (newStatus: string) => {
@@ -173,6 +198,7 @@ export const useAppointmentQuickViewLogic = ({
     async (therapistId: string) => {
       if (therapistId === localTherapistId) return;
       pendingTherapistChangeRef.current = therapistId;
+      setPendingAppointmentField("therapist");
       setLocalTherapistId(therapistId);
       try {
         await updateAppointment({
@@ -181,6 +207,11 @@ export const useAppointmentQuickViewLogic = ({
         });
       } catch {
         setLocalTherapistId(appointment.therapistId ?? "");
+        toast.error("Não foi possível atualizar o fisioterapeuta", {
+          description: "A alteração foi desfeita. Tente novamente.",
+        });
+      } finally {
+        setPendingAppointmentField(null);
       }
     },
     [localTherapistId, appointment, updateAppointment],
@@ -195,6 +226,7 @@ export const useAppointmentQuickViewLogic = ({
       }
       if (newStatus === localPaymentStatus) return;
       pendingPaymentStatusChangeRef.current = newStatus;
+      setPendingAppointmentField("payment");
       setLocalPaymentStatus(newStatus);
       try {
         await updateAppointment({
@@ -203,6 +235,11 @@ export const useAppointmentQuickViewLogic = ({
         });
       } catch {
         setLocalPaymentStatus(((appointment.payment_status ?? "pending") as string).toLowerCase());
+        toast.error("Não foi possível atualizar o financeiro", {
+          description: "A alteração foi desfeita. Tente novamente.",
+        });
+      } finally {
+        setPendingAppointmentField(null);
       }
     },
     [localPaymentStatus, appointment, updateAppointment],
@@ -228,6 +265,10 @@ export const useAppointmentQuickViewLogic = ({
     showNoShowConfirmDialog,
     setShowNoShowConfirmDialog,
     handleStartAttendance,
+    handleOpenProfile,
+    handleOpenEvolution,
+    handleOpenEvaluation,
+    handleOpenPrescription,
     handleStatusChange,
     handleNoShowConfirm,
     handleNoShowReschedule,
@@ -236,5 +277,7 @@ export const useAppointmentQuickViewLogic = ({
     handlePaymentSuccess,
     patientPackages,
     isUpdatingStatus,
+    isUpdatingAppointment,
+    pendingAppointmentField,
   };
 };

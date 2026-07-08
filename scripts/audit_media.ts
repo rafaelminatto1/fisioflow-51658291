@@ -23,7 +23,7 @@ async function checkYoutube(url: string) {
       return false; // Broken
     }
     return true; // OK
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -33,7 +33,7 @@ async function checkImage(url: string) {
   try {
     const res = await fetch(url, { method: 'HEAD' });
     return res.ok;
-  } catch (e) {
+  } catch {
     return false;
   }
 }

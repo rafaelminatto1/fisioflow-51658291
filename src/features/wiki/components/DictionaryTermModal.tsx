@@ -106,7 +106,7 @@ export function DictionaryTermModal({
       if (data.summary) form.setValue("descriptionPt", data.summary);
       if (data.sideEffects) form.setValue("descriptionEn", data.sideEffects);
       toast.success("Dados gerados com sucesso!");
-    } catch (e) {
+    } catch {
       toast.error("Erro ao gerar dados com IA");
     } finally {
       setIsGenerating(false);

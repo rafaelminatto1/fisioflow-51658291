@@ -49,15 +49,15 @@ export async function removeKnowledge(env: any, docId: string) {
   return true;
 }
 
-async function generateEmbedding(env: any, text: string): Promise<number[]> {
+async function generateEmbedding(_env: any, _text: string): Promise<number[]> {
   try {
     // const ai = new Ai(env.AI);
     // const { data } = await ai.run('@cf/baai/bge-large-en-v1.5', { text: [text] });
     // return data[0];
     
     // Stub para testes se não tiver o env.AI real:
-    return new Array(1536).fill(0).map(() => Math.random());
-  } catch (error) {
+    return Array.from({ length: 1536 }, () => Math.random());
+  } catch {
     throw new Error("Falha ao gerar embedding no Workers AI.");
   }
 }

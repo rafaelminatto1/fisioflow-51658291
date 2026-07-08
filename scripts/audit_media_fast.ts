@@ -19,7 +19,7 @@ async function checkYoutube(url: string) {
     const oembed = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}`;
     const res = await fetch(oembed);
     return res.ok;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -29,7 +29,7 @@ async function checkImage(url: string) {
   try {
     const res = await fetch(url, { method: 'HEAD' });
     return res.ok;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
