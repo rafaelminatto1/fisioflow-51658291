@@ -119,6 +119,12 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         const pool = createPool(env);
         await performDatabaseCleanup(pool, env);
         await sendSameDayUnconfirmedReminders(pool, env);
+        // D-1: segunda tentativa urgente para quem recebeu D-2 mas não confirmou
+        try {
+          await send24hUrgentConfirmationRequests(pool, env);
+        } catch (e) {
+          console.warn("[Cron] D-1 urgent confirmations failed:", e);
+        }
         if (env.EDGE_CACHE) {
           const deleted = await cleanupRateLimits(env.EDGE_CACHE);
           console.log(`[Cron] D1 rate_limits cleanup: ${deleted} rows deleted.`);
@@ -1507,6 +1513,87 @@ async function sendSameDayUnconfirmedReminders(pool: any, env: Env) {
     console.warn("[Cron] Same-day reminders failed (non-critical):", error);
   }
 }
+/**
+ * Segunda tentativa D-1: envia mensagem mais urgente para appointments
+ * com status 'agendado'/'scheduled', lembrete D-2 já enviado (reminder_sent_at NOT NULL)
+ * mas que ainda não foram confirmados (confirmed_at IS NULL) e acontecem amanhã.
+ *
+ * NOTA: Não usa nova coluna — detecta D-1 via:
+ *   date = CURRENT_DATE + 1 day AND reminder_sent_at IS NOT NULL AND confirmed_at IS NULL
+ */
+async function send24hUrgentConfirmationRequests(pool: any, env: Env) {
+  console.log("[Cron] Sending D-1 urgent confirmation requests...");
+  try {
+    const result = await pool.query(`
+      SELECT
+        a.id,
+        a.organization_id,
+        a.patient_id,
+        a.start_time::text AS time,
+        TO_CHAR(a.date, 'DD/MM/YYYY') AS formatted_date,
+        p.full_name AS patient_name,
+        p.phone AS patient_phone,
+        prof.full_name AS therapist_name
+      FROM appointments a
+      JOIN patients p ON p.id = a.patient_id
+      LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::uuid
+      WHERE a.date = CURRENT_DATE + INTERVAL '1 day'
+        AND a.status::text IN ('agendado', 'scheduled')
+        AND a.reminder_sent_at IS NOT NULL
+        AND a.confirmed_at IS NULL
+        AND a.deleted_at IS NULL
+    `);
+
+    let sent = 0;
+    for (const row of result.rows) {
+      if (!row.patient_phone || !env.BACKGROUND_QUEUE) continue;
+
+      // Dedup atômico (mesmo padrão do D-2): só envia se a linha foi inserida agora.
+      const dedup = await pool.query(
+        `INSERT INTO appointment_reminder_log (appointment_id, kind)
+         VALUES ($1::uuid, 'urgent_d1')
+         ON CONFLICT (appointment_id, kind) DO NOTHING RETURNING 1`,
+        [row.id],
+      );
+      if (dedup.rows.length === 0) continue;
+
+      const timeStr = row.time?.substring(0, 5) ?? "";
+      const therapistStr = row.therapist_name || "sua fisioterapeuta";
+      const firstName = (row.patient_name as string).split(" ")[0];
+      const whenStr = `amanhã (${row.formatted_date}) às ${timeStr}`;
+
+      const message = `${firstName}, sua sessão é ${whenStr} com ${therapistStr}. Podemos confirmar sua presença?`;
+
+      // Reusa o template já APROVADO na Meta (mesmo do D-2, com botões
+      // Confirmar/Remarcar): "Olá {{1}}! Sua sessão é {{2}} com {{3}}...".
+      // `confirmacao_urgente_d1` não existe na WABA; se um template dedicado
+      // for criado e aprovado, basta trocar o nome aqui.
+      const queuePayload: WhatsAppQueuePayload = {
+        to: row.patient_phone,
+        templateName: "lembrete_consulta_botoes",
+        languageCode: "pt_BR",
+        bodyParameters: [
+          { type: "text", text: firstName },
+          { type: "text", text: whenStr },
+          { type: "text", text: therapistStr },
+        ],
+        organizationId: row.organization_id,
+        patientId: row.patient_id,
+        messageText: message,
+        appointmentId: row.id,
+      };
+
+      await env.BACKGROUND_QUEUE.send({ type: "SEND_WHATSAPP", payload: queuePayload });
+
+      sent++;
+    }
+
+    console.log(`[Cron] D-1 urgent confirmations: ${sent} messages queued.`);
+  } catch (error) {
+    console.warn("[Cron] D-1 urgent confirmations failed (non-critical):", error);
+  }
+}
+
 async function processWearableRTMAlerts(pool: any, env: Env) {
   console.log("[Cron] Processing Wearable RTM Alerts...");
   try {

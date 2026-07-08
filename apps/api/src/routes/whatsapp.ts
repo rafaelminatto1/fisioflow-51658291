@@ -1255,4 +1255,86 @@ app.post("/admin/test-send", async (c) => {
   }
 });
 
+// ===== CONFIRMAÇÃO VIA WHATSAPP =====
+
+/**
+ * PATCH /api/whatsapp/appointment-confirmation-response
+ * Processa a resposta de confirmação/cancelamento de um agendamento via WhatsApp.
+ * Atualiza o status do appointment e valida o tenant (organizationId).
+ */
+app.patch("/appointment-confirmation-response", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+
+  let body: { appointmentId?: string; response?: string; phone?: string };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "Invalid JSON body" }, 400);
+  }
+
+  const { appointmentId, response, phone } = body;
+
+  if (!appointmentId || !response) {
+    return c.json({ error: "appointmentId e response são obrigatórios" }, 400);
+  }
+
+  if (!["confirmed", "cancelled", "reschedule"].includes(response)) {
+    return c.json({ error: "response deve ser 'confirmed', 'cancelled' ou 'reschedule'" }, 400);
+  }
+
+  // Verificar que o appointment pertence à organização do usuário (multi-tenant)
+  const checkRes = await pool.query(
+    `SELECT id, status FROM appointments WHERE id = $1::uuid AND organization_id = $2 AND deleted_at IS NULL LIMIT 1`,
+    [appointmentId, user.organizationId],
+  );
+
+  if (checkRes.rows.length === 0) {
+    return c.json({ error: "Agendamento não encontrado" }, 404);
+  }
+
+  let newStatus: string;
+  let extraFields = "";
+
+  if (response === "confirmed") {
+    newStatus = "confirmed";
+    extraFields = ", confirmed_at = NOW()";
+  } else if (response === "cancelled") {
+    newStatus = "cancelled_by_patient";
+    extraFields = "";
+  } else {
+    // reschedule — mantém pending mas marca que paciente solicitou reagendamento
+    newStatus = "reschedule_requested";
+    extraFields = "";
+  }
+
+  await pool.query(
+    `UPDATE appointments SET status = $1, updated_at = NOW()${extraFields} WHERE id = $2::uuid AND organization_id = $3`,
+    [newStatus, appointmentId, user.organizationId],
+  );
+
+  // Log na tabela de mensagens WhatsApp para rastreabilidade
+  if (phone) {
+    await pool.query(
+      `INSERT INTO whatsapp_messages (organization_id, from_phone, to_phone, message, type, status, metadata, created_at, updated_at)
+       VALUES ($1, $2, 'clinic', $3, 'incoming', 'received', $4, NOW(), NOW())`,
+      [
+        user.organizationId,
+        phone,
+        `Resposta de confirmação: ${response}`,
+        JSON.stringify({ appointment_id: appointmentId, confirmation_response: response }),
+      ],
+    );
+  }
+
+  writeEvent(c.env, {
+    orgId: user.organizationId,
+    event: `appointment_${response}`,
+    route: "whatsapp/appointment-confirmation-response",
+  });
+
+  return c.json({ ok: true, status: "updated", appointmentStatus: newStatus });
+});
+
 export { app as whatsappRoutes };
+
