@@ -6,6 +6,7 @@ import {
   Bot,
   CheckCircle2,
   Hash,
+  LayoutTemplate,
   Loader2,
   MessageSquareText,
   Plug,
@@ -36,11 +37,14 @@ import {
   createTag,
   deleteQuickReply,
   deleteTag,
+  deleteTemplate,
   fetchAutomationLog,
   fetchCrmSettings,
   fetchQuickReplies,
   fetchTags,
+  fetchTemplates,
   sendTestMessage,
+  syncTemplatesWithMeta,
   updateCrmSettings,
   updateQuickReply,
   type AutomationLogEntry,
@@ -51,8 +55,10 @@ import {
   type QuickReplyRow,
   type ReminderConfig,
   type Tag,
+  type Template,
 } from "@/services/whatsapp-api";
 import { cn } from "@/lib/utils";
+import { TemplateBuilderDialog } from "@/components/crm/TemplateBuilderDialog";
 
 // Espelho client-side de computeReminderSendAt (apenas para o preview da aba Lembretes).
 function previewReminderSendAt(apptDateStr: string, apptTimeStr: string, cfg: ReminderConfig): Date {
@@ -106,6 +112,15 @@ const AUTOMATION_TEMPLATE_LABELS: Record<string, string> = {
   lembrete_exercicios_v1: "Lembrete de exercícios",
 };
 
+const TEMPLATE_STATUS_BADGE: Record<string, { label: string; className: string }> = {
+  APPROVED: { label: "Aprovado", className: "bg-[hsl(142_70%_94%)] text-[hsl(142_60%_28%)]" },
+  PENDING: { label: "Em análise", className: "bg-amber-100 text-amber-800" },
+  REJECTED: { label: "Rejeitado", className: "bg-destructive/10 text-destructive" },
+  PAUSED: { label: "Pausado", className: "bg-muted text-muted-foreground" },
+  DISABLED: { label: "Desativado", className: "bg-muted text-muted-foreground" },
+  ACTIVE: { label: "Ativo (local)", className: "bg-muted text-muted-foreground" },
+};
+
 function formatLogTime(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
@@ -153,6 +168,51 @@ export default function CrmWhatsAppSettings() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState("#0A84FF");
+
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [builderOpen, setBuilderOpen] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const loadTemplates = useCallback(async () => {
+    setTemplatesLoading(true);
+    try {
+      setTemplates(await fetchTemplates());
+    } catch {
+      toast({ variant: "destructive", title: "Não foi possível carregar os templates" });
+    } finally {
+      setTemplatesLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    void loadTemplates();
+  }, [loadTemplates]);
+
+  const handleSyncTemplates = async () => {
+    setSyncing(true);
+    try {
+      await syncTemplatesWithMeta();
+      await loadTemplates();
+      toast({ title: "Status sincronizado com a Meta" });
+    } catch {
+      toast({ variant: "destructive", title: "Falha ao sincronizar com a Meta" });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleDeleteTemplate = async (id: string) => {
+    try {
+      await deleteTemplate(id);
+      setConfirmDeleteId(null);
+      await loadTemplates();
+      toast({ title: "Template removido" });
+    } catch {
+      toast({ variant: "destructive", title: "Falha ao remover o template" });
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -374,6 +434,9 @@ export default function CrmWhatsAppSettings() {
               </TabsTrigger>
               <TabsTrigger value="respostas" className="gap-1.5">
                 <MessageSquareText className="h-4 w-4" /> Respostas rápidas
+              </TabsTrigger>
+              <TabsTrigger value="templates" className="gap-1.5">
+                <LayoutTemplate className="h-4 w-4" /> Templates
               </TabsTrigger>
               <TabsTrigger value="funil" className="gap-1.5">
                 <Hash className="h-4 w-4" /> Funil + Etiquetas
@@ -852,6 +915,73 @@ export default function CrmWhatsAppSettings() {
                   ))}
                 </div>
               </div>
+            </TabsContent>
+
+            {/* ── Templates ── */}
+            <TabsContent value="templates">
+              <div className="max-w-3xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-base font-bold">Templates de mensagem</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Modelos aprovados pela Meta para iniciar conversas fora da janela de 24h.
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={handleSyncTemplates} disabled={syncing}>
+                      {syncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                      Sincronizar com Meta
+                    </Button>
+                    <Button onClick={() => setBuilderOpen(true)}>
+                      <Plus className="mr-2 h-4 w-4" /> Novo template
+                    </Button>
+                  </div>
+                </div>
+
+                {templatesLoading ? (
+                  <div className="flex h-32 items-center justify-center text-muted-foreground">
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Carregando…
+                  </div>
+                ) : templates.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                    Nenhum template ainda. Clique em “Novo template” para criar o primeiro.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {templates.map((tpl) => {
+                      const badge = TEMPLATE_STATUS_BADGE[tpl.status] ?? TEMPLATE_STATUS_BADGE.ACTIVE;
+                      return (
+                        <div key={tpl.id} className="rounded-xl border border-border bg-card p-4">
+                          <div className="mb-2 flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold">{tpl.name}</span>
+                              <span className={cn("rounded-full px-2 py-0.5 text-xs font-bold", badge.className)}>{badge.label}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span>{tpl.category}</span>
+                              <span>·</span>
+                              <span>{tpl.language}</span>
+                              {confirmDeleteId === tpl.id ? (
+                                <>
+                                  <Button size="sm" variant="destructive" onClick={() => handleDeleteTemplate(tpl.id)}>Confirmar</Button>
+                                  <Button size="sm" variant="ghost" onClick={() => setConfirmDeleteId(null)}>Cancelar</Button>
+                                </>
+                              ) : (
+                                <Button size="icon" variant="ghost" onClick={() => setConfirmDeleteId(tpl.id)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                          <p className="whitespace-pre-wrap text-sm text-muted-foreground">{tpl.body}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <TemplateBuilderDialog open={builderOpen} onOpenChange={setBuilderOpen} onCreated={loadTemplates} />
             </TabsContent>
 
             {/* ── Funil + Etiquetas ── */}
