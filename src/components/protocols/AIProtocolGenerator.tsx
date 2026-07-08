@@ -16,6 +16,33 @@ import { useExerciseProtocols } from "@/hooks/useExerciseProtocols";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 
+// ---------------------------------------------------------------------------
+// Helper: extrai grupos musculares mencionados no texto gerado pela IA
+// ---------------------------------------------------------------------------
+const MUSCLE_KEYWORDS: Record<string, string[]> = {
+  Quadríceps: ["quadriceps", "quadríceps", "extensores do joelho", "reto femoral", "vasto"],
+  Isquiotibiais: ["isquiotibiais", "flexores do joelho", "bíceps femoral", "semimembranoso", "semitendinoso"],
+  Glúteos: ["glúteo", "gluteo", "glúteos", "gluteos", "grande glúteo", "médio glúteo"],
+  "Core/Abdômen": ["core", "abdômen", "abdomen", "transverso", "multífido", "multifido", "estabilizadores"],
+  Panturrilha: ["panturrilha", "gastrocnêmio", "gastrocnemio", "sóleo", "soleo", "tríceps sural"],
+  Ombro: ["manguito rotador", "deltóide", "deltoide", "supraespinhal", "infraespinhal", "subescapular"],
+  Lombar: ["lombar", "paravertebral", "eretores da espinha", "coluna lombar"],
+  Cervical: ["cervical", "trapézio", "trapezio", "esternocleidomastóideo", "escalenos"],
+  Adutores: ["adutores", "grácil", "pectineo"],
+  Tibial: ["tibial anterior", "fibular", "peroneiros", "extensores dos dedos"],
+};
+
+function extractMusclesFromText(text: string): string[] {
+  const lower = text.toLowerCase();
+  const found: string[] = [];
+  for (const [muscle, keywords] of Object.entries(MUSCLE_KEYWORDS)) {
+    if (keywords.some((kw) => lower.includes(kw))) {
+      found.push(muscle);
+    }
+  }
+  return found;
+}
+
 interface AIProtocolGeneratorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -41,7 +68,7 @@ export const AIProtocolGenerator: React.FC<AIProtocolGeneratorProps> = ({ open, 
         setGeneratedProtocol(res.data);
         toast.success("Protocolo gerado pela IA com sucesso!");
       }
-    } catch {
+    } catch (error) {
       console.error("Erro ao gerar protocolo:", error);
       toast.error("Falha ao gerar protocolo. Tente novamente.");
     } finally {
@@ -54,11 +81,22 @@ export const AIProtocolGenerator: React.FC<AIProtocolGeneratorProps> = ({ open, 
 
     try {
       // Converte o formato da IA para o formato do banco
+      // Monta texto completo para extração de músculos
+      const fullText = [
+        generatedProtocol.title,
+        generatedProtocol.objective,
+        ...(generatedProtocol.phases ?? []).flatMap((p: any) => [
+          p.name,
+          p.description,
+          ...(p.exercises ?? []),
+        ]),
+      ].join(" ");
+
       await createProtocol({
         name: generatedProtocol.title,
         description: generatedProtocol.objective,
         category: "rehabilitation",
-        muscles: [], // TODO: IA poderia extrair isso
+        muscles: extractMusclesFromText(fullText),
         exercises: generatedProtocol.phases.flatMap((p: any) =>
           p.exercises.map((e: string) => ({
             name: e,

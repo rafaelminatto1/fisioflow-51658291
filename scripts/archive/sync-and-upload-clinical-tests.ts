@@ -3,7 +3,7 @@ import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { builtinClinicalTestsCatalog } from "../src/data/clinicalTestsCatalog";
+import { builtinClinicalTestsCatalog } from "../../src/data/clinicalTestsCatalog";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -65,7 +65,7 @@ async function run() {
           try {
             console.log(`   📤 Uploading ${baseFile} to R2...`);
             execSync(
-              `npx wrangler r2 object put ${BUCKET_NAME}/${r2Key} --file "${localPath}" --content-type "image/png"`,
+              `npx wrangler r2 object put ${BUCKET_NAME}/${r2Key} --file "${localPath}" --content-type "image/avif" --remote`,
               { cwd: path.join(__dirname, ".."), stdio: "pipe" },
             );
             console.log(`   ✅ Upload OK -> ${publicUrl}`);

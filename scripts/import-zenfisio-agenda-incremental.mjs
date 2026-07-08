@@ -28,11 +28,22 @@ function appointmentType(event) {
 }
 function appointmentStatus(event) {
   const tipo = String(event?.tipo ?? '').toLowerCase();
+  const status = String(event?.status ?? '').toLowerCase();
+  const combined = `${tipo} ${status}`
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
   const text = String(event?.conteudo_texto ?? '').trim();
-  if (tipo.includes('cancel')) return 'cancelado';
-  if (tipo.includes('falt')) return 'faltou';
-  if (tipo.includes('não atendido') || tipo.includes('nao atendido')) return 'nao_atendido';
-  if ((tipo.includes('evolu') || tipo.includes('avalia')) && text.length > 0) return 'atendido';
+  if (combined.includes('cancel')) return 'cancelado';
+  if (combined.includes('faltou') && (combined.includes('aviso previo') || combined.includes('com aviso'))) return 'faltou_com_aviso';
+  if (combined.includes('faltou') && (combined.includes('sem aviso') || combined.includes('sem cobranca'))) return 'faltou_sem_aviso';
+  if (combined.includes('falt')) return 'faltou';
+  if (combined.includes('nao atendido') && combined.includes('sem cobranca')) return 'nao_atendido_sem_cobranca';
+  if (combined.includes('nao atendido')) return 'nao_atendido';
+  if (combined.includes('remarcar')) return 'remarcar';
+  if (combined.includes('presenca confirmada')) return 'presenca_confirmada';
+  if (tipo.includes('avalia')) return 'avaliacao';
+  if (tipo.includes('evolu') && text.length > 0) return 'atendido';
   return 'agendado';
 }
 function endTime(startTime, duration = 60) {

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useGamification, Achievement } from "@/hooks/useGamification";
 import { useAuth } from "@/contexts/AuthContext";
-import { TrendingUp, Star, Crown, Medal, Award, CheckCircle2, Flame, Search } from "lucide-react";
+import { TrendingUp, Star, Crown, Award, CheckCircle2, Flame, Search, Zap, Trophy } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
@@ -31,8 +31,6 @@ interface LeaderboardEntry {
   title: string;
 }
 
-const _RANK_ICONS = [Crown, Medal, Award];
-const _RANK_COLORS = ["text-yellow-500", "text-gray-500", "text-amber-600"];
 
 const container = {
   hidden: { opacity: 0 },
@@ -50,7 +48,7 @@ const item = {
 };
 
 export default function PatientGamificationPage() {
-  const { user, profile: _userProfile } = useAuth();
+  const { user } = useAuth();
   const {
     profile,
     dailyQuests,
@@ -107,6 +105,63 @@ export default function PatientGamificationPage() {
       <PageContainer>
         <div className="min-h-screen bg-gray-50/50 pb-20">
           <div className="max-w-md mx-auto md:max-w-6xl p-4 md:p-6 space-y-6">
+
+            {/* Patient Summary Card */}
+            {profile && (
+              <motion.div
+                initial={{ opacity: 0, y: -16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="premium-glass rounded-[2rem] p-6 border border-primary/20 shadow-xl"
+              >
+                <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground mb-4">
+                  Resumo do Paciente
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {/* Level */}
+                  <div className="flex flex-col items-center gap-1 p-4 rounded-2xl bg-white/60 dark:bg-slate-800/60 shadow-sm">
+                    <Crown className="w-5 h-5 text-yellow-500 mb-1" />
+                    <span className="text-3xl font-black text-slate-900 dark:text-white">
+                      {profile.level ?? 1}
+                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      Level
+                    </span>
+                  </div>
+                  {/* Total XP */}
+                  <div className="flex flex-col items-center gap-1 p-4 rounded-2xl bg-white/60 dark:bg-slate-800/60 shadow-sm">
+                    <Zap className="w-5 h-5 text-blue-500 mb-1" />
+                    <span className="text-3xl font-black text-slate-900 dark:text-white">
+                      {(profile.total_points ?? 0).toLocaleString("pt-BR")}
+                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      XP Total
+                    </span>
+                  </div>
+                  {/* Streak */}
+                  <div className="flex flex-col items-center gap-1 p-4 rounded-2xl bg-white/60 dark:bg-slate-800/60 shadow-sm">
+                    <Flame className="w-5 h-5 text-orange-500 fill-orange-500 mb-1" />
+                    <span className="text-3xl font-black text-slate-900 dark:text-white">
+                      {profile.current_streak ?? 0}
+                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      Sequência
+                    </span>
+                  </div>
+                  {/* Conquistas */}
+                  <div className="flex flex-col items-center gap-1 p-4 rounded-2xl bg-white/60 dark:bg-slate-800/60 shadow-sm">
+                    <Trophy className="w-5 h-5 text-emerald-500 mb-1" />
+                    <span className="text-3xl font-black text-slate-900 dark:text-white">
+                      {unlockedAchievements?.length ?? 0}
+                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      Conquistas
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {/* 1. Hero / Header Section */}
             <GamificationHeader
               level={profile?.level || 1}

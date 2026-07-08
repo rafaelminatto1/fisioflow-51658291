@@ -111,7 +111,7 @@ async function processBatch(client, patients) {
             if (m) dataCompleta = m[1];
           }
           if (!dataCompleta) continue;
-          let tipo = 'Agendado', appointmentId = null;
+          let tipo = 'Agendado', status = null, appointmentId = null;
           const link = el.querySelector('a[href*="/appointments/details/"]');
           if (link) {
             const href = link.href || link.getAttribute('href') || '';
@@ -119,13 +119,24 @@ async function processBatch(client, patients) {
             if (m) appointmentId = m[1];
             const lt = (link.innerText || '').toLowerCase();
             if (lt.includes('evolu')) tipo = 'Evolução'; else if (lt.includes('avalia')) tipo = 'Avaliação';
-          } else {
-            if (texto.includes('Evolução')) tipo = 'Evolução'; else if (texto.includes('Avaliação')) tipo = 'Avaliação'; else if (texto.includes('Faltou')) tipo = 'Faltou'; else if (texto.includes('Não atendido')) tipo = 'Não atendido'; else if (texto.includes('Cancelado')) tipo = 'Cancelado';
           }
+          const normalizedText = texto.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();
+          if (normalizedText.includes('evolucao')) tipo = 'Evolução';
+          else if (normalizedText.includes('avaliacao')) tipo = 'Avaliação';
+          else if (normalizedText.includes('faltou')) tipo = 'Faltou';
+          else if (normalizedText.includes('nao atendido')) tipo = 'Não atendido';
+          else if (normalizedText.includes('cancelado')) tipo = 'Cancelado';
+          if (normalizedText.includes('faltou') && (normalizedText.includes('aviso previo') || normalizedText.includes('com aviso'))) status = 'faltou_com_aviso';
+          else if (normalizedText.includes('faltou') && normalizedText.includes('sem aviso')) status = 'faltou_sem_aviso';
+          else if (normalizedText.includes('faltou')) status = 'faltou';
+          else if (normalizedText.includes('nao atendido') && normalizedText.includes('sem cobranca')) status = 'nao_atendido_sem_cobranca';
+          else if (normalizedText.includes('nao atendido')) status = 'nao_atendido';
+          else if (normalizedText.includes('cancelado')) status = 'cancelado';
+          else if (normalizedText.includes('remarcar')) status = 'remarcar';
           let profissional = null;
           for (const linha of linhas) if (linha.includes('Fisioterapeuta:') || linha.includes('Profissional:')) { profissional = linha.replace(/Fisioterapeuta:|Profissional:/g, '').trim().replace(/\\s*\\(.*?\\)\\s*/g, '').trim(); break; }
           if (appointmentId && eventos.some(e => e.appointment_id === appointmentId)) continue;
-          eventos.push({ data: dataCompleta.split(' ')[0], data_completa: dataCompleta, tipo, profissional, appointment_id: appointmentId, conteudo_texto: '', anexos: [] });
+          eventos.push({ data: dataCompleta.split(' ')[0], data_completa: dataCompleta, tipo, status, profissional, appointment_id: appointmentId, conteudo_texto: '', anexos: [] });
         }
         return eventos;
       }
