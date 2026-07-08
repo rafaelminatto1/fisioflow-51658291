@@ -151,9 +151,9 @@ export function LiveTextEvolution({
       {/* 🔴 EVA */}
       <section
         aria-label="Escala de dor"
-        className="col-span-12 md:col-span-3 rounded-xl border-2 border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950 p-3"
+        className="col-span-12 md:col-span-3 rounded-xl border bg-card p-4 shadow-sm border-l-4 border-l-red-500"
       >
-        <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-red-700 dark:text-red-300">
+        <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
           <span className="inline-block w-2 h-2 rounded-full bg-red-500" /> Dor (EVA)
           {data.painScale != null ? (
             <span className="ml-auto text-xs font-bold text-red-600 dark:text-red-200 tabular-nums">
@@ -171,9 +171,9 @@ export function LiveTextEvolution({
       {/* 🟡 Observações */}
       <section
         aria-label="Observações"
-        className="col-span-12 md:col-span-9 rounded-xl border-2 border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950 p-3 min-h-[180px]"
+        className="col-span-12 md:col-span-9 rounded-xl border bg-card p-4 shadow-sm min-h-[180px]"
       >
-        <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-amber-800 dark:text-amber-200">
+        <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
           <span className="inline-block w-2 h-2 rounded-full bg-amber-500" /> Observações clínicas
         </header>
         <RichTextBlock
@@ -190,9 +190,9 @@ export function LiveTextEvolution({
       {/* 🔵 Histórico de evoluções */}
       <section
         aria-label="Histórico de evoluções"
-        className="col-span-12 rounded-xl border-2 border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950 p-3"
+        className="col-span-12 rounded-xl border bg-card p-4 shadow-sm"
       >
-        <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-blue-700 dark:text-blue-300">
+        <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
           <span className="inline-block w-2 h-2 rounded-full bg-blue-500" /> Histórico de evoluções
           <span className="ml-auto text-xs font-normal text-muted-foreground">
             {previousEvolutions.length} sessões
@@ -227,7 +227,7 @@ export function LiveTextEvolution({
       {/* 🟢 Procedimentos + Exercícios (unificado) */}
       <section
         aria-label="Procedimentos e exercícios"
-        className="col-span-12 md:col-span-7 rounded-xl border-2 border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950 p-3"
+        className="col-span-12 md:col-span-7 rounded-xl border bg-card p-4 shadow-sm border-l-4 border-l-emerald-500"
       >
         <Tabs value={groupTab} onValueChange={(v) => setGroupTab(v as typeof groupTab)}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
@@ -282,9 +282,9 @@ export function LiveTextEvolution({
       {/* 🟣 Medições */}
       <section
         aria-label="Medições"
-        className="col-span-12 md:col-span-5 rounded-xl border-2 border-pink-200 bg-pink-50 dark:border-pink-900 dark:bg-pink-950 p-3"
+        className="col-span-12 md:col-span-5 rounded-xl border bg-card p-4 shadow-sm"
       >
-        <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-pink-700 dark:text-pink-300">
+        <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
           <span className="inline-block w-2 h-2 rounded-full bg-pink-500" /> Medições
         </header>
         <MeasurementsBlock
@@ -297,9 +297,9 @@ export function LiveTextEvolution({
       {/* ⚪ Exercícios para casa */}
       <section
         aria-label="Exercícios para casa"
-        className="col-span-12 md:col-span-7 rounded-xl border-2 border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-900 p-3"
+        className="col-span-12 md:col-span-7 rounded-xl border bg-card p-4 shadow-sm"
       >
-        <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
+        <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
           <span className="inline-block w-2 h-2 rounded-full bg-slate-500" /> Exercícios para casa
         </header>
         <HomeCareBlock
@@ -312,10 +312,10 @@ export function LiveTextEvolution({
       {/* ⚫ Anexos */}
       <section
         aria-label="Anexos"
-        className="col-span-12 md:col-span-5 rounded-xl border-2 border-zinc-300 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 p-3"
+        className="col-span-12 md:col-span-5 rounded-xl border bg-card p-4 shadow-sm"
       >
-        <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-          <span className="inline-block w-2 h-2 rounded-full bg-zinc-900" /> Anexos
+        <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+          <span className="inline-block w-2 h-2 rounded-full bg-zinc-900 dark:bg-zinc-100" /> Anexos
         </header>
         <AttachmentsBlock
           patientId={patientId}

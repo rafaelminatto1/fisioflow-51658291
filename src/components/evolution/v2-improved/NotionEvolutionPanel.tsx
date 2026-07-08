@@ -10,7 +10,7 @@
  *   - Enhanced accessibility
  *   - Micro-interactions
  */
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type YProvider from "y-partyserver/provider";
 import {
   StickyNote,
@@ -27,6 +27,8 @@ import {
   PanelRightClose,
   PanelRightOpen,
   WifiOff,
+  Undo2,
+  Redo2,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -271,6 +273,37 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
     },
     [data, onChange],
   );
+
+  type PainData = Pick<EvolutionV2Data, "painLevel" | "painLocation">;
+  const [painPast, setPainPast] = useState<PainData[]>([]);
+  const [painFuture, setPainFuture] = useState<PainData[]>([]);
+
+  const currentPainData: PainData = useMemo(() => ({
+    painLevel: data.painLevel,
+    painLocation: data.painLocation
+  }), [data.painLevel, data.painLocation]);
+
+  const commitPainChange = useCallback((newPainData: Partial<EvolutionV2Data>) => {
+    setPainPast(p => [...p, currentPainData].slice(-50));
+    setPainFuture([]);
+    onChange({ ...data, ...newPainData });
+  }, [currentPainData, data, onChange]);
+
+  const handlePainUndo = useCallback(() => {
+    if (painPast.length === 0) return;
+    const prev = painPast[painPast.length - 1];
+    setPainPast(p => p.slice(0, -1));
+    setPainFuture(f => [currentPainData, ...f]);
+    onChange({ ...data, ...prev });
+  }, [painPast, currentPainData, data, onChange]);
+
+  const handlePainRedo = useCallback(() => {
+    if (painFuture.length === 0) return;
+    const next = painFuture[0];
+    setPainFuture(f => f.slice(1));
+    setPainPast(p => [...p, currentPainData]);
+    onChange({ ...data, ...next });
+  }, [painFuture, currentPainData, data, onChange]);
 
   const unifiedItems = data.unifiedItems || [];
   const procedureCount = unifiedItems.filter((item) => item.type === "procedure").length;
@@ -651,15 +684,35 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                     subtitle="Escala Visual Analógica (EVA)"
                     flushContent
                     density="compact"
+                    actions={
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={handlePainUndo}
+                          disabled={painPast.length === 0}
+                          className="p-1.5 text-rose-400 hover:bg-rose-100/50 rounded-md disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                          title="Desfazer exclusão/edição"
+                        >
+                          <Undo2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handlePainRedo}
+                          disabled={painFuture.length === 0}
+                          className="p-1.5 text-rose-400 hover:bg-rose-100/50 rounded-md disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                          title="Refazer"
+                        >
+                          <Redo2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    }
                   >
                     <div className="px-4 pb-4">
                       <PainLevelBlock
                         painLevel={data.painLevel}
                         painLocation={data.painLocation}
-                        onPainLevelChange={(level) => handleFieldChange("painLevel", level)}
-                        onPainLocationChange={(location) =>
-                          handleFieldChange("painLocation", location)
-                        }
+                        onPainLevelChange={(level) => commitPainChange({ painLevel: level })}
+                        onPainLocationChange={(location) => commitPainChange({ painLocation: location })}
                         disabled={disabled}
                       />
                     </div>

@@ -238,6 +238,10 @@ export function usePatientEvolutionHandlers({
       return;
     }
 
+    if (!window.confirm("Deseja realmente concluir o atendimento? A sessão será fechada e os dados salvos definitivamente.")) {
+      return;
+    }
+
     await handleSave();
 
     if (appointmentId) {

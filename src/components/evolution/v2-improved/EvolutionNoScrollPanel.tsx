@@ -17,6 +17,8 @@ import {
   Waves,
   X,
   Zap,
+  Undo2,
+  Redo2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -171,6 +173,7 @@ export const EvolutionNoScrollPanel = memo(
     const [measurementModalOpen, setMeasurementModalOpen] = useState(false);
     const [focusSection, setFocusSection] = useState<null | "obs" | "condutas">(null);
     const [saveFeedback, setSaveFeedback] = useState<null | "saved" | "error">(null);
+    const [activePainMode, setActivePainMode] = useState<"arrival" | "discharge">("discharge");
 
     // Atalhos de teclado (T013)
     useEffect(() => {
@@ -226,16 +229,50 @@ export const EvolutionNoScrollPanel = memo(
     const quality = data.painQuality ?? [];
     const delta = arrival != null ? discharge - arrival : null;
 
+    type PainData = Pick<EvolutionV2Data, "painLevelArrival" | "painLevelDischarge" | "painLevel" | "painQuality" | "painLocation">;
+    const [painPast, setPainPast] = useState<PainData[]>([]);
+    const [painFuture, setPainFuture] = useState<PainData[]>([]);
+
+    const currentPainData: PainData = useMemo(() => ({
+      painLevelArrival: data.painLevelArrival,
+      painLevelDischarge: data.painLevelDischarge,
+      painLevel: data.painLevel,
+      painQuality: data.painQuality,
+      painLocation: data.painLocation
+    }), [data.painLevelArrival, data.painLevelDischarge, data.painLevel, data.painQuality, data.painLocation]);
+
+    const commitPainChange = useCallback((newPainData: Partial<EvolutionV2Data>) => {
+      setPainPast(p => [...p, currentPainData].slice(-50));
+      setPainFuture([]);
+      onChange({ ...data, ...newPainData });
+    }, [currentPainData, data, onChange]);
+
+    const handlePainUndo = useCallback(() => {
+      if (painPast.length === 0) return;
+      const prev = painPast[painPast.length - 1];
+      setPainPast(p => p.slice(0, -1));
+      setPainFuture(f => [currentPainData, ...f]);
+      onChange({ ...data, ...prev });
+    }, [painPast, currentPainData, data, onChange]);
+
+    const handlePainRedo = useCallback(() => {
+      if (painFuture.length === 0) return;
+      const next = painFuture[0];
+      setPainFuture(f => f.slice(1));
+      setPainPast(p => [...p, currentPainData]);
+      onChange({ ...data, ...next });
+    }, [painFuture, currentPainData, data, onChange]);
+
     const handleObservationsChange = (text: string) => {
       onChange({ ...data, observations: text, evolutionText: text });
     };
     const handleUnifiedItemsChange = (items: any[]) => {
       onChange({ ...data, unifiedItems: items });
     };
-    const setArrival = (v: number) => onChange({ ...data, painLevelArrival: v });
+    const setArrival = (v: number) => commitPainChange({ painLevelArrival: v });
     const setDischarge = (v: number) =>
-      onChange({ ...data, painLevelDischarge: v, painLevel: v });
-    const setLocation = (v: string) => onChange({ ...data, painLocation: v });
+      commitPainChange({ painLevelDischarge: v, painLevel: v });
+    const setLocation = (v: string) => commitPainChange({ painLocation: v });
     const toggleQuality = (type: string) => {
       const exists = quality.find((q) => q.type === type);
       let nextQuality;
@@ -253,7 +290,7 @@ export const EvolutionNoScrollPanel = memo(
           );
         }
       }
-      onChange({ ...data, painQuality: nextQuality });
+      commitPainChange({ painQuality: nextQuality });
     };
 
     const handleReplicate = (oldData: Partial<EvolutionV2Data>) => {
@@ -435,6 +472,26 @@ export const EvolutionNoScrollPanel = memo(
                 </div>
               </div>
               <div className="ml-auto flex items-center gap-1.5">
+                <div className="flex items-center gap-1 mr-1">
+                  <button
+                    type="button"
+                    onClick={handlePainUndo}
+                    disabled={painPast.length === 0}
+                    className="p-1.5 text-rose-400 hover:bg-rose-100/50 rounded-md disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                    title="Desfazer exclusão/edição"
+                  >
+                    <Undo2 className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handlePainRedo}
+                    disabled={painFuture.length === 0}
+                    className="p-1.5 text-rose-400 hover:bg-rose-100/50 rounded-md disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                    title="Refazer"
+                  >
+                    <Redo2 className="h-4 w-4" />
+                  </button>
+                </div>
                 {saveFeedback === "saved" && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-extrabold text-emerald-700 animate-pulse">
                     ✓ Salvo
@@ -454,7 +511,16 @@ export const EvolutionNoScrollPanel = memo(
               </div>
             </div>
 
-            <PainGauge value={discharge} arrival={arrival} compact onChange={setDischarge} showDeltaArc showTooltips />
+            <PainGauge
+              value={discharge}
+              arrival={arrival}
+              compact
+              onChange={activePainMode === "arrival" ? setArrival : setDischarge}
+              showDeltaArc
+              showTooltips
+              activeMode={activePainMode}
+              onModeChange={setActivePainMode}
+            />
 
             <div className="mt-1 flex gap-2">
               <div className="flex-1 min-w-0">

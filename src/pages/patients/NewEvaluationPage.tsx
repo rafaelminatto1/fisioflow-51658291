@@ -196,6 +196,19 @@ export default function NewEvaluationPage() {
 
   // History Data for Comparison & Trends
   const { data: allEvaluations = [] } = usePatientEvaluationResponses(patientId);
+  const linkedEvaluationForAppointment = useMemo(() => {
+    if (!appointmentId || evaluationId) return null;
+    return allEvaluations.find((evaluation) => evaluation.appointment_id === appointmentId) ?? null;
+  }, [allEvaluations, appointmentId, evaluationId]);
+
+  useEffect(() => {
+    if (!patientId || !appointmentId || evaluationId || !linkedEvaluationForAppointment) return;
+    navigate(
+      `/patients/${patientId}/evaluations/new?appointmentId=${appointmentId}&evaluationId=${linkedEvaluationForAppointment.id}`,
+      { replace: true },
+    );
+  }, [appointmentId, evaluationId, linkedEvaluationForAppointment, navigate, patientId]);
+
   const lastCompletedEvaluation = useMemo(() => {
     if (!selectedTemplate || !allEvaluations.length) return null;
     return allEvaluations

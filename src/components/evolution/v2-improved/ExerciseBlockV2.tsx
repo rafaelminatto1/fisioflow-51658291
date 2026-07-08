@@ -319,8 +319,7 @@ const ExerciseV2Row: React.FC<{
           {/* Name */}
           <span
             className={cn(
-              "flex-1 text-sm font-medium",
-              exercise.completed && "line-through text-muted-foreground",
+              "flex-1 text-sm font-medium"
             )}
           >
             {exercise.name}

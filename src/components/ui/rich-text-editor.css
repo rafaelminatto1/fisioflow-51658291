@@ -210,8 +210,8 @@
 }
 
 .rich-text-editor .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div {
-  text-decoration: line-through;
-  opacity: 0.6;
+  /* text-decoration: line-through; */
+  /* opacity: 0.6; */
 }
 
 .rich-text-editor .ProseMirror li p {

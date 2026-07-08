@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 // Deployment trigger comment
 import { createPortal } from "react-dom";
 
@@ -17,6 +17,8 @@ import {
   X,
   BookOpen,
   Eye,
+  Undo2,
+  Redo2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
@@ -260,9 +262,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
               >
                 <span
                   className={cn(
-                    "min-w-0 flex-1 text-sm font-semibold transition-all duration-300 flex items-center gap-2",
-                    item.completed &&
-                      "text-muted-foreground/70 line-through decoration-muted-foreground/30 font-medium",
+                    "min-w-0 flex-1 text-sm font-semibold transition-all duration-300 flex items-center gap-2"
                   )}
                 >
                   {type === "unified" &&
@@ -528,6 +528,34 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
   className,
   variant = "card",
 }) => {
+  const [past, setPast] = useState<EvolutionItemV3[][]>([]);
+  const [future, setFuture] = useState<EvolutionItemV3[][]>([]);
+
+  const commitChange = useCallback(
+    (newItems: EvolutionItemV3[]) => {
+      setPast((prev) => [...prev, items].slice(-50));
+      setFuture([]);
+      onChange(newItems);
+    },
+    [items, onChange]
+  );
+
+  const handleUndo = useCallback(() => {
+    if (past.length === 0) return;
+    const previous = past[past.length - 1];
+    setPast((prev) => prev.slice(0, -1));
+    setFuture((prev) => [items, ...prev]);
+    onChange(previous);
+  }, [past, items, onChange]);
+
+  const handleRedo = useCallback(() => {
+    if (future.length === 0) return;
+    const next = future[0];
+    setFuture((prev) => prev.slice(1));
+    setPast((prev) => [...prev, items]);
+    onChange(next);
+  }, [future, items, onChange]);
+
   const [newItemName, setNewItemName] = useState("");
   const [newItemDialogOpen, setNewItemDialogOpen] = useState(false);
   const [pendingItemName, setPendingItemName] = useState("");
@@ -584,7 +612,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
       };
     });
     
-    onChange([...nonProcs, ...newProcs]);
+    commitChange([...nonProcs, ...newProcs]);
     setProcedureLibraryOpen(false);
   };
 
@@ -610,7 +638,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
       };
     });
     
-    onChange([...nonExs, ...newExs]);
+    commitChange([...nonExs, ...newExs]);
     setExerciseLibraryOpen(false);
   };
 
@@ -685,7 +713,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
       ...item,
     };
 
-    onChange([...items, newItem]);
+    commitChange([...items, newItem]);
     setNewItemName("");
     setPendingItemName("");
     setForceHideSuggestions(true);
@@ -704,17 +732,17 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
   };
 
   const handleToggleItem = (id: string) => {
-    onChange(
+    commitChange(
       items.map((item) => (item.id === id ? { ...item, completed: !item.completed } : item)),
     );
   };
 
   const handleRemoveItem = (id: string) => {
-    onChange(items.filter((item) => item.id !== id));
+    commitChange(items.filter((item) => item.id !== id));
   };
 
   const handleUpdateItem = (id: string, updates: Partial<EvolutionItemV3>) => {
-    onChange(items.map((item) => (item.id === id ? { ...item, ...updates } : item)));
+    commitChange(items.map((item) => (item.id === id ? { ...item, ...updates } : item)));
   };
 
   const onDragEnd = (result: DropResult) => {
@@ -731,7 +759,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
       order: index,
     }));
 
-    onChange(finalItems);
+    commitChange(finalItems);
   };
 
   const trimmedQuery = newItemName.trim();
@@ -969,6 +997,29 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
             </div>
           </div>
 
+          <div className="flex items-center gap-3">
+            <div className="flex items-center">
+              <button
+                type="button"
+                onClick={handleUndo}
+                disabled={past.length === 0}
+                className="p-1.5 text-muted-foreground hover:bg-muted/50 rounded-md disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                title="Desfazer exclusão/edição"
+              >
+                <Undo2 className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleRedo}
+                disabled={future.length === 0}
+                className="p-1.5 text-muted-foreground hover:bg-muted/50 rounded-md disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                title="Refazer"
+              >
+                <Redo2 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+            
           {totalCount > 0 && (
             <div className="flex items-center gap-3">
               <div className="flex flex-col items-end gap-1.5">

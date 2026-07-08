@@ -45,15 +45,28 @@ interface PainGaugeProps {
   showDeltaArc?: boolean;
   /** Tooltip com valores exatos ao passar o mouse nos marcadores. */
   showTooltips?: boolean;
+  /** Qual valor exibir em destaque e alterar no onChange. */
+  activeMode?: 'arrival' | 'discharge';
+  /** Callback para alterar modo ativo (Entrada / Saída). */
+  onModeChange?: (mode: 'arrival' | 'discharge') => void;
 }
 
 /** Medidor radial da EVA (Layout E — dor-cêntrico). */
-export const PainGauge = memo(({ value, arrival, compact, onChange, showDeltaArc = true, showTooltips = true }: PainGaugeProps) => {
-  const v = Math.max(0, Math.min(10, value));
+export const PainGauge = memo(({ value, arrival, compact, onChange, showDeltaArc = true, showTooltips = true, activeMode, onModeChange }: PainGaugeProps) => {
+  const arrV = arrival != null ? Math.max(0, Math.min(10, arrival)) : null;
+  const disV = Math.max(0, Math.min(10, value));
+
+  const isArrivalActive = activeMode === "arrival";
+  const v = isArrivalActive && arrV != null ? arrV : disV;
   const f = v / 10;
   const dash = `${(ARC_LEN * f).toFixed(1)} ${ARC_LEN.toFixed(1)}`;
-  const saida = pointAt(f);
-  const chegada = arrival != null ? pointAt(Math.max(0, Math.min(10, arrival)) / 10) : null;
+  const activePoint = pointAt(f);
+
+  const ghostV = isArrivalActive ? disV : arrV;
+  const ghostPoint = ghostV != null ? pointAt(ghostV / 10) : null;
+
+  const arrPoint = arrV != null ? pointAt(arrV / 10) : null;
+  const disPoint = pointAt(disV / 10);
 
   const svgRef = useRef<SVGSVGElement>(null);
   const draggingRef = useRef(false);
@@ -120,11 +133,11 @@ export const PainGauge = memo(({ value, arrival, compact, onChange, showDeltaArc
           style={{ transition: "stroke-dasharray .35s ease, stroke .35s ease" }}
         />
         {/* Arco de conexão Chegada → Saída (T009, T010) */}
-        {showDeltaArc && chegada && arrival != null && arrival !== v && (
+        {showDeltaArc && arrPoint && arrV !== disV && (
           <path
-            d={`M ${chegada.x} ${chegada.y} Q ${(chegada.x + saida.x) / 2} ${(chegada.y + saida.y) / 2 - 20} ${saida.x} ${saida.y}`}
+            d={`M ${arrPoint.x} ${arrPoint.y} Q ${(arrPoint.x + disPoint.x) / 2} ${(arrPoint.y + disPoint.y) / 2 - 20} ${disPoint.x} ${disPoint.y}`}
             fill="none"
-            stroke={v <= arrival ? "hsl(142 71% 45%)" : "hsl(0 84% 60%)"}
+            stroke={disV <= (arrV ?? 0) ? "hsl(142 71% 45%)" : "hsl(0 84% 60%)"}
             strokeWidth={4}
             strokeLinecap="round"
             strokeDasharray="6 3"
@@ -132,44 +145,44 @@ export const PainGauge = memo(({ value, arrival, compact, onChange, showDeltaArc
             style={{ transition: "stroke .35s ease" }}
           />
         )}
-        {/* marcador chegada (fantasma, colorido pelo próprio nível) */}
-        {chegada && arrival != null && (
+        {/* marcador secundário (fantasma, colorido pelo próprio nível) */}
+        {ghostPoint && ghostV != null && (
           <g>
             {showTooltips && (
-              <title>Chegada: {arrival}/10 ({painLabel(arrival)})</title>
+              <title>{isArrivalActive ? "Saída" : "Chegada"}: {ghostV}/10 ({painLabel(ghostV)})</title>
             )}
             <circle
-              cx={chegada.x}
-              cy={chegada.y}
+              cx={ghostPoint.x}
+              cy={ghostPoint.y}
               r={9}
               fill="#fff"
-              stroke={painColor(arrival)}
+              stroke={painColor(ghostV)}
               strokeWidth={3}
             />
-            {arrival !== v && (
+            {ghostV !== v && (
               <text
-                x={chegada.x}
-                y={chegada.y + 1}
+                x={ghostPoint.x}
+                y={ghostPoint.y + 1}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fontSize="7"
                 fontWeight="bold"
-                fill={painColor(arrival)}
+                fill={painColor(ghostV)}
               >
-                {arrival}
+                {ghostV}
               </text>
             )}
           </g>
         )}
-        {/* marcador saída */}
+        {/* marcador ativo */}
         <g>
           {showTooltips && (
-            <title>Saída: {v}/10 ({painLabel(v)})</title>
+            <title>{isArrivalActive ? "Chegada" : "Saída"}: {v}/10 ({painLabel(v)})</title>
           )}
-          <circle cx={saida.x} cy={saida.y} r={9} fill={painColor(v)} stroke="#fff" strokeWidth={3} />
+          <circle cx={activePoint.x} cy={activePoint.y} r={9} fill={painColor(v)} stroke="#fff" strokeWidth={3} />
         </g>
       </svg>
-      <div className={cn("pointer-events-none absolute inset-x-0 text-center", compact ? "bottom-1.5" : "bottom-0.5")}>
+      <div className={cn("pointer-events-none absolute inset-x-0 text-center flex flex-col items-center", compact ? "bottom-1.5" : "bottom-0.5")}>
         <div
           className={cn(
             "font-extrabold leading-none tracking-tight tabular-nums",
@@ -184,12 +197,32 @@ export const PainGauge = memo(({ value, arrival, compact, onChange, showDeltaArc
             /10
           </span>
         </div>
-        <div
-          className={cn("font-extrabold", compact ? "text-[9px]" : "mt-0.5 text-xs")}
-          style={{ color: painColor(v) }}
-        >
-          {painLabel(v)}
-        </div>
+        
+        {activeMode && onModeChange && (
+          <div className="mt-1 pointer-events-auto flex items-center bg-slate-100 rounded-full p-0.5">
+            <button
+              onClick={() => onModeChange('arrival')}
+              className={cn("px-2 py-[1px] rounded-full text-[9px] font-bold transition-colors", isArrivalActive ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700")}
+            >
+              ENTRADA
+            </button>
+            <button
+              onClick={() => onModeChange('discharge')}
+              className={cn("px-2 py-[1px] rounded-full text-[9px] font-bold transition-colors", !isArrivalActive ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700")}
+            >
+              SAÍDA
+            </button>
+          </div>
+        )}
+
+        {!activeMode && (
+          <div
+            className={cn("font-extrabold", compact ? "text-[9px]" : "mt-0.5 text-xs")}
+            style={{ color: painColor(v) }}
+          >
+            {painLabel(v)}
+          </div>
+        )}
       </div>
     </div>
   );

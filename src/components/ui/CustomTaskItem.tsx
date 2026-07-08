@@ -30,7 +30,8 @@ const TaskItemView = (props: any) => {
         <NodeViewContent
           className={cn(
             "outline-none text-slate-700 min-h-[1.5em]",
-            isChecked && "line-through opacity-50 text-slate-400",
+            // Removed line-through and opacity-50 for readability
+            isChecked && "",
           )}
         />
       </div>

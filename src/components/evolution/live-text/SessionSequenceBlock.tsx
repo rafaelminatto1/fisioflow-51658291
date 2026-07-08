@@ -247,8 +247,7 @@ function SequenceRow({
             </Badge>
             <span
               className={cn(
-                "truncate text-sm font-medium",
-                entry.item.completed && "line-through text-muted-foreground",
+                "truncate text-sm font-medium"
               )}
             >
               {entry.item.name}

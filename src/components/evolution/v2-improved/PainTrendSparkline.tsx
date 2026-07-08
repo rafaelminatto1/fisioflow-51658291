@@ -37,11 +37,21 @@ export const PainTrendSparkline = memo(({ data, meta, heightClass = "h-24" }: Pa
 
   const n = data.length;
   const step = n > 1 ? (W - PAD_X * 2) / (n - 1) : 0;
-  const pts = data.map((d, i) => ({ ...d, x: PAD_X + i * step, cy: y(d.level) }));
-  const line = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.cy.toFixed(1)}`).join(" ");
-  const last = pts[pts.length - 1];
-  const area = `${line} L ${last.x.toFixed(1)} ${(H - 4).toFixed(1)} L ${pts[0].x.toFixed(1)} ${(H - 4).toFixed(1)} Z`;
-  const metaPoint = meta != null ? { x: Math.min(W - 5, last.x + step * 0.6), cy: y(meta) } : null;
+  
+  // Filter out any undefined or null data points before mapping to avoid sparse arrays or missing properties
+  const validData = data.filter(d => d != null);
+  const pts = validData.map((d, i) => ({ ...d, x: PAD_X + i * step, cy: y(d.level ?? 0) }));
+  
+  const line = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${(p?.x ?? 0).toFixed(1)} ${(p?.cy ?? 0).toFixed(1)}`).join(" ");
+  
+  const last = pts.length > 0 ? pts[pts.length - 1] : null;
+  const first = pts.length > 0 ? pts[0] : null;
+  
+  const area = last && first 
+    ? `${line} L ${last.x.toFixed(1)} ${(H - 4).toFixed(1)} L ${first.x.toFixed(1)} ${(H - 4).toFixed(1)} Z`
+    : "";
+    
+  const metaPoint = meta != null && last != null ? { x: Math.min(W - 5, last.x + step * 0.6), cy: y(meta) } : null;
 
   return (
     <div>
@@ -77,9 +87,13 @@ export const PainTrendSparkline = memo(({ data, meta, heightClass = "h-24" }: Pa
             strokeLinecap="round"
           />
         )}
-        {pts.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.cy} r={i === n - 1 ? 5 : 4} fill={painColor(p.level)} />
-        ))}
+        {/* Pontos da evolução */}
+        {pts.map((p, i) => {
+          if (!p) return null;
+          return (
+            <circle key={i} cx={p.x} cy={p.cy} r={i === n - 1 ? 5 : 4} fill={painColor(p.level)} />
+          );
+        })}
       </svg>
       <div className="mt-1 flex justify-between text-[10px] font-bold text-muted-foreground">
         {data.map((d, i) => (

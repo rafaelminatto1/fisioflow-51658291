@@ -382,16 +382,19 @@ export function PainMapCanvas({
   const [view, setView] = useState<"front" | "back">("front");
 
   // Convert PainMapPoint to BodyMap PainPoint format
-  const bodyMapPoints: PainPoint[] = painPoints.map((p) => ({
-    id: `point-${p.x}-${p.y}`,
-    regionCode: p.region,
-    region: p.region,
-    intensity: p.intensity,
-    painType: p.painType as PainPoint["painType"],
-    notes: p.description,
-    x: p.x,
-    y: p.y,
-  }));
+  const bodyMapPoints: PainPoint[] = painPoints.map((p) => {
+    if (!p) return null;
+    return {
+      id: `point-${p.x}-${p.y}`,
+      regionCode: p.region,
+      region: p.region,
+      intensity: p.intensity,
+      painType: p.painType as PainPoint["painType"],
+      notes: p.description,
+      x: p.x,
+      y: p.y,
+    };
+  }).filter(Boolean) as PainPoint[];
 
   const handleBodyMapPointAdd = (point: Omit<PainPoint, "id">) => {
     // Convert back to PainMapPoint

@@ -268,9 +268,7 @@ export function ProcedureChecklistBlock({ procedures, onChange }: ProcedureCheck
                       <span
                         className={cn(
                           "text-sm font-medium transition-all duration-500 truncate",
-                          procedure.completed
-                            ? "text-muted-foreground/80 line-through decoration-emerald-500/50 decoration-2"
-                            : "text-foreground",
+                          "text-foreground"
                         )}
                       >
                         {procedure.name}

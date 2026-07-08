@@ -547,8 +547,7 @@ const MeasurementCard: React.FC<{
                 <>
                   <span
                     className={cn(
-                      "text-sm font-medium truncate",
-                      measurement.completed && "line-through text-muted-foreground",
+                      "text-sm font-medium truncate"
                     )}
                   >
                     {measurement.measurement_name}

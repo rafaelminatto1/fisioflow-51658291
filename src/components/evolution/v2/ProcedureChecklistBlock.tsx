@@ -467,8 +467,7 @@ const ProcedureRow: React.FC<{
         {/* Name */}
         <span
           className={cn(
-            "flex-1 text-sm font-medium",
-            procedure.completed && "line-through text-muted-foreground",
+            "flex-1 text-sm font-medium"
           )}
         >
           {procedure.name}
