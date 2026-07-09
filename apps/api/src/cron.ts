@@ -136,6 +136,12 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         // UTC 12h = BRT 09h — Automações por vencimento de tarefa
         const pool = createPool(env);
         await processDueDateAutomations(pool);
+        // Tarefas URGENTES vencendo hoje → notifica responsável (in-app + WhatsApp gated)
+        try {
+          await notifyUrgentTasksDueToday(pool, env);
+        } catch (err) {
+          console.error("[Cron] notifyUrgentTasksDueToday error:", err);
+        }
         break;
       }
 
@@ -1178,6 +1184,41 @@ async function processDueDateAutomations(pool: any) {
   } catch (error) {
     console.error("[Cron] processDueDateAutomations error:", error);
   }
+}
+
+/**
+ * Tarefas URGENTES vencendo hoje (ou já vencidas) e não concluídas:
+ * in-app + WhatsApp ao responsável (gate de automações + template aprovado).
+ * Dedup diário em tarefa_notification_log (specs/tarefas-integracoes US-01 AC3).
+ */
+async function notifyUrgentTasksDueToday(pool: any, env: Env) {
+  const { notifyUrgentTaskDue } = await import("./lib/tarefaNotifications");
+  const res = await pool.query(`
+    SELECT t.id, t.titulo, t.prioridade, t.responsavel_id, t.data_vencimento,
+           t.board_id, t.organization_id
+    FROM tarefas t
+    WHERE t.prioridade = 'URGENTE'
+      AND t.status NOT IN ('CONCLUIDO', 'ARQUIVADO')
+      AND t.responsavel_id IS NOT NULL
+      AND t.data_vencimento::date <= CURRENT_DATE
+  `);
+
+  let sent = 0;
+  for (const task of res.rows) {
+    try {
+      const dedup = await pool.query(
+        `INSERT INTO tarefa_notification_log (tarefa_id, kind)
+         VALUES ($1::uuid, 'urgent_due') ON CONFLICT DO NOTHING RETURNING 1`,
+        [task.id],
+      );
+      if (dedup.rows.length === 0) continue;
+      await notifyUrgentTaskDue(pool, env, task.organization_id, task, task.responsavel_id);
+      sent++;
+    } catch (err) {
+      console.error(`[Cron] urgent task notify failed for ${task.id}:`, err);
+    }
+  }
+  if (res.rows.length) console.log(`[Cron] urgent tasks due: ${sent}/${res.rows.length} notified.`);
 }
 
 async function triggerNpsSurveys(pool: any, env: Env) {
