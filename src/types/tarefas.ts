@@ -110,6 +110,34 @@ export interface TarefaTimeTracking {
   }[];
 }
 
+export type TarefaRecurrenceFreq = "daily" | "weekly" | "biweekly" | "monthly";
+
+export interface TarefaRecurrence {
+  freq: TarefaRecurrenceFreq;
+  interval?: number;
+}
+
+export const RECURRENCE_LABELS: Record<TarefaRecurrenceFreq, string> = {
+  daily: "Diária",
+  weekly: "Semanal",
+  biweekly: "Quinzenal",
+  monthly: "Mensal",
+};
+
+export interface TarefaTemplate {
+  id: string;
+  organization_id?: string;
+  name: string;
+  titulo: string;
+  descricao?: string | null;
+  tipo: TarefaTipo;
+  prioridade: TarefaPrioridade;
+  tags: string[];
+  checklists: TarefaChecklist[];
+  created_by?: string;
+  created_at: string;
+}
+
 export interface Tarefa {
   id: string;
   titulo: string;
@@ -126,6 +154,10 @@ export interface Tarefa {
   data_vencimento?: string;
   hora_vencimento?: string;
   completed_at?: string;
+
+  // Recorrência (nova instância criada ao concluir)
+  recurrence?: TarefaRecurrence | null;
+  recurrence_parent_id?: string | null;
 
   // Organization
   organization_id?: string;

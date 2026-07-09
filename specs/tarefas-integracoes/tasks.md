@@ -22,12 +22,12 @@ Status: ⏳ pendente · 🔨 em andamento · ✅ feito
 
 ## Onda 2 — P1 frontend
 
-- [ ] T009 `src/lib/tarefasGrouping.ts` (Atrasadas/Hoje/Em breve/Sem data) + testes.
-- [ ] T010 View "Minhas Tarefas" em TarefasV2.
-- [ ] T011 Comentários + @menção no TaskDetailModal (hook useTarefaComments).
-- [ ] T012 Bulk actions bar + duplicar/arquivar reais (substituir console.log).
-- [ ] T013 Recorrência na criação/edição de tarefa (UI).
-- [ ] T014 Templates de tarefa (salvar como / criar a partir de) na UI.
+- [x] T009 `src/lib/tarefasGrouping.ts` (Atrasadas/Hoje/Em breve/Sem data) + testes.
+- [x] T010 View "Minhas Tarefas" em TarefasV2.
+- [x] T011 Comentários + @menção no TaskDetailModal (hook useTarefaComments).
+- [x] T012 Bulk actions bar + duplicar/arquivar reais (substituir console.log).
+- [x] T013 Recorrência na criação/edição de tarefa (UI).
+- [x] T014 Templates de tarefa (salvar como / criar a partir de) na UI.
 
 ## Onda 3 — P2 integrações
 

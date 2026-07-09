@@ -78,7 +78,15 @@ import {
   PRIORIDADE_LABELS,
   TIPO_LABELS,
 } from "@/types/tarefas";
-import { useTarefas, useDeleteTarefa } from "@/hooks/useTarefas";
+import {
+  useTarefas,
+  useDeleteTarefa,
+  useDuplicateTarefa,
+  useUpdateTarefa,
+  useBulkUpdateTarefas,
+} from "@/hooks/useTarefas";
+import { MinhasTarefasView } from "@/components/tarefas/v2/MinhasTarefasView";
+import { BulkActionsBar } from "@/components/tarefas/v2/BulkActionsBar";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
 import { useAuth } from "@/contexts/AuthContext";
 import { safeFormat } from "@/lib/utils";
@@ -87,12 +95,15 @@ import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 const TaskInsights = lazy(() => import("@/components/tarefas/v2/TaskInsights"));
 
-type ViewMode = "kanban" | "table" | "timeline" | "insights";
+type ViewMode = "kanban" | "table" | "minhas" | "timeline" | "insights";
 
 export default function TarefasV2() {
   const { data: tarefas, isLoading, refetch } = useTarefas();
   const { data: teamMembers } = useTeamMembers();
   const deleteTarefa = useDeleteTarefa();
+  const duplicateTarefa = useDuplicateTarefa();
+  const updateTarefa = useUpdateTarefa();
+  const bulkUpdate = useBulkUpdateTarefas();
   const effectiveTarefas = tarefas ?? [];
 
   const [viewMode, setViewMode] = useState<ViewMode>("kanban");
@@ -329,6 +340,28 @@ export default function TarefasV2() {
       newSelected.add(id);
     }
     setSelectedTasks(newSelected);
+  };
+
+  const handleArchiveTask = (id: string) => {
+    updateTarefa.mutate({ id, status: "ARQUIVADO" });
+  };
+
+  const applyBulk = (
+    fields: Partial<{
+      status: TarefaStatus;
+      prioridade: TarefaPrioridade;
+      responsavel_id: string;
+    }>,
+  ) => {
+    bulkUpdate.mutate(
+      Array.from(selectedTasks).map((id) => ({ id, ...fields })),
+      { onSuccess: () => setSelectedTasks(new Set()) },
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    await Promise.all(Array.from(selectedTasks).map((id) => deleteTarefa.mutateAsync(id)));
+    setSelectedTasks(new Set());
   };
 
   if (isLoading) {
@@ -697,6 +730,13 @@ export default function TarefasV2() {
                     Tabela
                   </TabsTrigger>
                   <TabsTrigger
+                    value="minhas"
+                    className="rounded-lg h-9 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Minhas
+                  </TabsTrigger>
+                  <TabsTrigger
                     value="timeline"
                     className="rounded-lg h-9 data-[state=active]:bg-white data-[state=active]:shadow-sm"
                   >
@@ -767,11 +807,30 @@ export default function TarefasV2() {
                     onViewTask={handleViewTask}
                     onEditTask={handleViewTask}
                     onDeleteTask={handleDeleteTask}
-                    onDuplicateTask={(tarefa) => console.log("Duplicate task:", tarefa)}
-                    onArchiveTask={(id) => console.log("Archive task:", id)}
+                    onDuplicateTask={(tarefa) => duplicateTarefa.mutate(tarefa.id)}
+                    onArchiveTask={handleArchiveTask}
                   />
                 </ScrollArea>
+                <BulkActionsBar
+                  count={selectedTasks.size}
+                  teamMembers={teamMembers || []}
+                  onSetStatus={(status) => applyBulk({ status })}
+                  onSetPrioridade={(prioridade) => applyBulk({ prioridade })}
+                  onSetResponsavel={(responsavel_id) => applyBulk({ responsavel_id })}
+                  onArchive={() => applyBulk({ status: "ARQUIVADO" })}
+                  onDelete={handleBulkDelete}
+                  onClear={() => setSelectedTasks(new Set())}
+                />
               </Card>
+            )}
+
+            {/* Minhas Tarefas View */}
+            {viewMode === "minhas" && (
+              <MinhasTarefasView
+                tarefas={effectiveTarefas}
+                userId={user?.uid ?? ""}
+                onViewTask={handleViewTask}
+              />
             )}
 
             {/* Timeline View */}

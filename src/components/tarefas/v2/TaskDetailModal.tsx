@@ -34,6 +34,7 @@ import {
   Target,
   Dumbbell,
   Eye,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -64,6 +65,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
+import { TaskCommentsSection } from "./TaskCommentsSection";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -522,6 +524,13 @@ export function TaskDetailModal({ open, onOpenChange, tarefa, teamMembers }: Tas
           >
             <BookOpen className="h-4 w-4 mr-2" />
             Wiki / Refs
+          </TabsTrigger>
+          <TabsTrigger
+            value="comments"
+            className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-t-lg h-9 mt-auto"
+          >
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Comentários
           </TabsTrigger>
           <TabsTrigger
             value="audit"
@@ -1466,6 +1475,10 @@ export function TaskDetailModal({ open, onOpenChange, tarefa, teamMembers }: Tas
                         </Card>
                       ))}
                     </div>
+                  </TabsContent>
+
+                  <TabsContent value="comments" className="mt-0">
+                    <TaskCommentsSection tarefaId={tarefa?.id} teamMembers={teamMembers} />
                   </TabsContent>
 
                   <TabsContent value="audit" className="m-0 mt-4 px-6 pb-6">
