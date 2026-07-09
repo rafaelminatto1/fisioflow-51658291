@@ -25,11 +25,6 @@ app.get("/", requireAuth, async (c) => {
     },
   ];
 
-  // Para clínica única, se for o ID padrão, retornamos o fallback imediatamente
-  if (organizationId === "00000000-0000-0000-0000-000000000001") {
-    return c.json({ data: fallback, total: 1 });
-  }
-
   try {
     const result = await pool.query(
       `SELECT om.*, json_build_object('full_name', p.full_name, 'email', p.email, 'phone', p.phone) AS profiles
