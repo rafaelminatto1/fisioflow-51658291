@@ -283,7 +283,6 @@ app.get("/by-entity/:type/:entityId", requireAuth, async (c) => {
 // ─── IA (US-13): sugestão de prioridade + resumo semanal ────────────────────
 app.post("/ai/suggest-priority", requireAuth, async (c) => {
   try {
-    const user = c.get("user");
     const body = await c.req.json();
     const titulo = String(body.titulo ?? "").trim();
     if (!titulo) return c.json({ error: "titulo é obrigatório" }, 400);
