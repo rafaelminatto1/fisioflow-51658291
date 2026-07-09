@@ -4,7 +4,15 @@ import { useNavigate } from "react-router-dom";
 import { TimelineEntry, usePatientTimeline } from "@/hooks/usePatientTimeline";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Mail, MessageSquare, Phone, Stethoscope, Clock } from "lucide-react";
+import {
+  Calendar,
+  Mail,
+  MessageSquare,
+  Phone,
+  Stethoscope,
+  Clock,
+  ClipboardList,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatClinicalText } from "@/lib/evolution/formatters";
 
@@ -53,6 +61,16 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
         return "Entregue";
       case "read":
         return "Lido";
+      case "a_fazer":
+        return "A fazer";
+      case "em_progresso":
+        return "Em progresso";
+      case "revisao":
+        return "Em revisão";
+      case "concluido":
+        return "Concluída";
+      case "backlog":
+        return "Backlog";
       default:
         return status ? status.charAt(0).toUpperCase() + status.slice(1) : "";
     }
@@ -123,6 +141,10 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
         return <Phone className="h-4 w-4" />;
       case "evolution":
         return <Stethoscope className="h-4 w-4" />;
+      case "task":
+        return <ClipboardList className="h-4 w-4" />;
+      case "whatsapp_message":
+        return <MessageSquare className="h-4 w-4" />;
       default:
         return <Clock className="h-4 w-4" />;
     }
@@ -130,6 +152,7 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
 
   const getEntryColor = (entry: TimelineEntry) => {
     if (entry.category === "clinical") return "bg-blue-500/10 text-blue-600 border-blue-200";
+    if (entry.category === "task") return "bg-amber-500/10 text-amber-600 border-amber-200";
     return "bg-emerald-500/10 text-emerald-600 border-emerald-200";
   };
 
@@ -212,13 +235,21 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
                     ? "Agendamento"
                     : entry.entry_type === "evolution"
                       ? "Evolução SOAP"
-                      : `Mensagem: ${entry.entry_type}`}
+                      : entry.entry_type === "task"
+                        ? "Tarefa"
+                        : entry.entry_type === "whatsapp_message"
+                          ? `WhatsApp ${entry.direction === "inbound" ? "(recebida)" : "(enviada)"}`
+                          : `Mensagem: ${entry.entry_type}`}
                 </h4>
                 <Badge
                   variant="outline"
                   className="text-[9px] font-black uppercase tracking-tighter h-4 px-1.5"
                 >
-                  {entry.category === "clinical" ? "Clínico" : "Comunicação"}
+                  {entry.category === "clinical"
+                    ? "Clínico"
+                    : entry.category === "task"
+                      ? "Tarefa"
+                      : "Comunicação"}
                 </Badge>
               </div>
               <time className="text-[10px] font-bold text-muted-foreground uppercase whitespace-nowrap">

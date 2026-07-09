@@ -31,14 +31,14 @@ Status: ⏳ pendente · 🔨 em andamento · ✅ feito
 
 ## Onda 3 — P2 integrações
 
-- [ ] T015 Agenda: tarefas com vencimento no FullCalendar (toggle) + "Criar tarefa"
+- [x] T015 Agenda: tarefas com vencimento no FullCalendar (toggle) + "Criar tarefa"
       no quick view (`linked_entity_type='appointment'`) + link de volta.
-- [ ] T016 Inbox CRM: botão "Criar tarefa" na conversa + contexto (últimas msgs) na
+- [x] T016 Inbox CRM: botão "Criar tarefa" na conversa + contexto (últimas msgs) na
       tarefa vinculada.
-- [ ] T017 `GET /api/patients/:id/activity-timeline` + painel no perfil do paciente.
-- [ ] T018 Cron: sessão sem evolução >24h → tarefa (dedup por sessão).
-- [ ] T019 Cron: pagamento em atraso → tarefa de cobrança (dedup por pagamento).
-- [ ] T020 Morning Briefing inclui tarefas (hoje/atrasadas/aguardando ciente).
+- [x] T017 `GET /api/patients/:id/activity-timeline` + painel no perfil do paciente.
+- [x] T018 Cron: sessão sem evolução >24h → tarefa (dedup por sessão).
+- [x] T019 Cron: pagamento em atraso → tarefa de cobrança (dedup por pagamento).
+- [x] T020 Morning Briefing inclui tarefas (hoje/atrasadas/aguardando ciente).
 
 ## Onda 4 — P3 avançado
 

@@ -1,6 +1,6 @@
 import { Fragment, memo, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Bell,
   BellOff,
@@ -502,6 +502,17 @@ export default function CrmWhatsApp() {
   const [search, setSearch] = useState("");
   const [pipelineFilter, setPipelineFilter] = useState<PipelineFilter>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Deep-link: /crm-whatsapp?conversation=<id> (link de volta das tarefas)
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const deepLinked = searchParams.get("conversation");
+    if (deepLinked) {
+      setSelectedId(deepLinked);
+      searchParams.delete("conversation");
+      setSearchParams(searchParams, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [composer, setComposer] = useState("");
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>([]);
@@ -514,7 +525,12 @@ export default function CrmWhatsApp() {
   const [savingStage, setSavingStage] = useState(false);
   const [replyMessage, setReplyMessage] = useState<Message | null>(null);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
-  const [taskInitialData, setTaskInitialData] = useState<{ titulo: string; descricao: string } | null>(null);
+  const [taskInitialData, setTaskInitialData] = useState<{
+    titulo: string;
+    descricao: string;
+    linked_entity_type?: string;
+    linked_entity_id?: string;
+  } | null>(null);
   const [messageMenu, setMessageMenu] = useState<{
     message: Message;
     x: number;
@@ -903,6 +919,19 @@ export default function CrmWhatsApp() {
     setTaskInitialData({
       titulo: `Retornar ${contactName}`,
       descricao: buildQuotedMessageText(message) + (text ? "\n\nPróximo passo:\n" : ""),
+      linked_entity_type: selectedId ? "conversation" : undefined,
+      linked_entity_id: selectedId ?? undefined,
+    });
+    setTaskModalOpen(true);
+  };
+
+  const handleOpenTaskFromConversation = () => {
+    const contactName = selectedConversationVm?.name || "contato";
+    setTaskInitialData({
+      titulo: `Follow-up — ${contactName}`,
+      descricao: "",
+      linked_entity_type: selectedId ? "conversation" : undefined,
+      linked_entity_id: selectedId ?? undefined,
     });
     setTaskModalOpen(true);
   };
@@ -1220,6 +1249,7 @@ export default function CrmWhatsApp() {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={handleOpenTaskFromConversation}>Criar tarefa</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleStatusAction("pending")}>Marcar como pendente</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleStatusAction("resolved")}>Marcar como resolvida</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleStatusAction("closed")}>Fechar conversa</DropdownMenuItem>
@@ -1995,6 +2025,8 @@ export default function CrmWhatsApp() {
               ? {
                   titulo: taskInitialData.titulo,
                   descricao: taskInitialData.descricao,
+                  linked_entity_type: taskInitialData.linked_entity_type,
+                  linked_entity_id: taskInitialData.linked_entity_id,
                 }
               : undefined
           }

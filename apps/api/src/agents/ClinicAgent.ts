@@ -39,14 +39,20 @@ export class ClinicAgent extends Agent<Env, ClinicState> {
       const url = this.env.NEON_URL || this.env.HYPERDRIVE?.connectionString;
       if (url) {
         const sql = neon(url);
-        const [risks, renewals] = await Promise.all([
+        const [risks, renewals, tasksToday, tasksOverdue, tasksAwaitingAck] = await Promise.all([
           sql`SELECT p.full_name, ls.ai_risk_level FROM patient_longitudinal_summary ls JOIN patients p ON p.id = ls.patient_id WHERE ls.organization_id = ${orgId} AND ls.ai_risk_level = 'high' LIMIT 3`,
           sql`SELECT p.full_name, pk.remaining_sessions FROM patient_packages pk JOIN patients p ON p.id = pk.patient_id WHERE pk.organization_id = ${orgId} AND pk.status = 'active' AND pk.remaining_sessions <= 2 LIMIT 3`,
+          sql`SELECT titulo, prioridade FROM tarefas WHERE organization_id = ${orgId} AND status NOT IN ('CONCLUIDO','ARQUIVADO') AND data_vencimento::date = CURRENT_DATE ORDER BY prioridade = 'URGENTE' DESC LIMIT 5`,
+          sql`SELECT titulo FROM tarefas WHERE organization_id = ${orgId} AND status NOT IN ('CONCLUIDO','ARQUIVADO') AND data_vencimento::date < CURRENT_DATE ORDER BY data_vencimento ASC LIMIT 5`,
+          sql`SELECT titulo FROM tarefas WHERE organization_id = ${orgId} AND status NOT IN ('CONCLUIDO','ARQUIVADO') AND requires_acknowledgment = true AND (acknowledgments IS NULL OR jsonb_array_length(acknowledgments) = 0) LIMIT 5`,
         ]);
 
         aiContext = `
           PACIENTES EM RISCO (Digital Twin): ${risks.map((r) => r.full_name).join(", ")}
           RENOVAÇÕES PENDENTES (LTV): ${renewals.map((r) => `${r.full_name} (${r.remaining_sessions} sessões)`).join(", ")}
+          TAREFAS QUE VENCEM HOJE: ${tasksToday.map((t) => `${t.titulo}${t.prioridade === "URGENTE" ? " (URGENTE)" : ""}`).join("; ") || "nenhuma"}
+          TAREFAS ATRASADAS: ${tasksOverdue.map((t) => t.titulo).join("; ") || "nenhuma"}
+          TAREFAS AGUARDANDO CIENTE DA EQUIPE: ${tasksAwaitingAck.map((t) => t.titulo).join("; ") || "nenhuma"}
         `;
       }
     } catch (e) {
@@ -60,8 +66,9 @@ export class ClinicAgent extends Agent<Env, ClinicState> {
       CONTEXTO IA:
       ${aiContext}
 
-      Inclua: prioridades de reativação de pacientes em risco, lembrete de renovação de pacotes e motivação para o dia. 
-      Máximo 150 palavras. Responda em português.
+      Inclua: prioridades de reativação de pacientes em risco, lembrete de renovação de pacotes,
+      tarefas do dia (destaque as URGENTES/atrasadas/aguardando ciente) e motivação para o dia.
+      Máximo 180 palavras. Responda em português.
     `;
 
     const result = await callAI(this.env, {

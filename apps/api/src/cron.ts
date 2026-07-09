@@ -142,6 +142,17 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         } catch (err) {
           console.error("[Cron] notifyUrgentTasksDueToday error:", err);
         }
+        // Pendências clínicas → tarefas (sessão sem evolução; pagamento em atraso)
+        try {
+          await createEvolutionPendingTasks(pool);
+        } catch (err) {
+          console.error("[Cron] createEvolutionPendingTasks error:", err);
+        }
+        try {
+          await createOverduePaymentTasks(pool);
+        } catch (err) {
+          console.error("[Cron] createOverduePaymentTasks error:", err);
+        }
         break;
       }
 
@@ -1219,6 +1230,100 @@ async function notifyUrgentTasksDueToday(pool: any, env: Env) {
     }
   }
   if (res.rows.length) console.log(`[Cron] urgent tasks due: ${sent}/${res.rows.length} notified.`);
+}
+
+/**
+ * Sessões realizadas há >24h (até 7 dias) sem evolução registrada viram tarefa
+ * ALTA para o fisioterapeuta da sessão. Dedup por linked_entity session.
+ * (specs/tarefas-integracoes US-10)
+ */
+async function createEvolutionPendingTasks(pool: any) {
+  const res = await pool.query(`
+    SELECT s.id, s.organization_id, s.therapist_id, s.date, p.full_name AS patient_name
+    FROM sessions s
+    JOIN patients p ON p.id = s.patient_id
+    WHERE s.date < NOW() - INTERVAL '24 hours'
+      AND s.date > NOW() - INTERVAL '7 days'
+      AND (s.observacao IS NULL OR btrim(s.observacao) = '')
+      AND (s.blocks IS NULL OR jsonb_array_length(s.blocks) = 0)
+      AND s.organization_id IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM tarefas t
+        WHERE t.linked_entity_type = 'session' AND t.linked_entity_id = s.id
+      )
+    LIMIT 50
+  `);
+
+  let created = 0;
+  for (const row of res.rows) {
+    try {
+      await pool.query(
+        `INSERT INTO tarefas
+           (organization_id, created_by, responsavel_id, titulo, descricao, status, prioridade, tipo,
+            data_vencimento, order_index, tags, label_ids, checklists, attachments, task_references,
+            dependencies, acknowledgments, linked_entity_type, linked_entity_id)
+         VALUES ($1,'automation',$2,$3,$4,'A_FAZER','ALTA','TAREFA',CURRENT_DATE,0,'{}','{}','[]','[]','[]','[]','[]','session',$5)`,
+        [
+          row.organization_id,
+          row.therapist_id ? String(row.therapist_id) : null,
+          `Evolução pendente — ${row.patient_name}`,
+          `Sessão de ${new Date(row.date).toLocaleDateString("pt-BR")} sem evolução registrada. Registre a observação clínica.`,
+          row.id,
+        ],
+      );
+      created++;
+    } catch (err) {
+      console.error(`[Cron] evolution pending task failed for session ${row.id}:`, err);
+    }
+  }
+  if (created) console.log(`[Cron] evolution pending: ${created} tasks created.`);
+}
+
+/**
+ * Agendamentos realizados com pagamento pendente há >7 dias viram tarefa de
+ * cobrança vinculada ao paciente. Dedup por linked_entity payment_due.
+ * (specs/tarefas-integracoes US-11)
+ */
+async function createOverduePaymentTasks(pool: any) {
+  const res = await pool.query(`
+    SELECT a.id, a.organization_id, a.date, a.payment_amount, p.id AS patient_id,
+           p.full_name AS patient_name
+    FROM appointments a
+    JOIN patients p ON p.id = a.patient_id
+    WHERE a.payment_status = 'pending'
+      AND a.status IN ('completed', 'concluido', 'realizada')
+      AND a.date < CURRENT_DATE - INTERVAL '7 days'
+      AND a.date > CURRENT_DATE - INTERVAL '60 days'
+      AND NOT EXISTS (
+        SELECT 1 FROM tarefas t
+        WHERE t.linked_entity_type = 'payment_due' AND t.linked_entity_id = a.id
+      )
+    LIMIT 50
+  `);
+
+  let created = 0;
+  for (const row of res.rows) {
+    try {
+      const valor = row.payment_amount ? ` (R$ ${Number(row.payment_amount).toFixed(2)})` : "";
+      await pool.query(
+        `INSERT INTO tarefas
+           (organization_id, created_by, titulo, descricao, status, prioridade, tipo,
+            data_vencimento, order_index, tags, label_ids, checklists, attachments, task_references,
+            dependencies, acknowledgments, linked_entity_type, linked_entity_id)
+         VALUES ($1,'automation',$2,$3,'A_FAZER','ALTA','TAREFA',CURRENT_DATE,0,'{cobranca}','{}','[]','[]','[]','[]','[]','payment_due',$4)`,
+        [
+          row.organization_id,
+          `Cobrança pendente — ${row.patient_name}${valor}`,
+          `Atendimento de ${new Date(row.date).toLocaleDateString("pt-BR")} com pagamento pendente há mais de 7 dias. Entrar em contato com o paciente.`,
+          row.id,
+        ],
+      );
+      created++;
+    } catch (err) {
+      console.error(`[Cron] overdue payment task failed for appointment ${row.id}:`, err);
+    }
+  }
+  if (created) console.log(`[Cron] overdue payments: ${created} tasks created.`);
 }
 
 async function triggerNpsSurveys(pool: any, env: Env) {

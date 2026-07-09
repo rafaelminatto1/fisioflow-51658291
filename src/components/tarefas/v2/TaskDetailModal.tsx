@@ -66,6 +66,7 @@ import {
 } from "@/components/ui/select";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { TaskCommentsSection } from "./TaskCommentsSection";
+import { TaskConversationContext } from "./TaskConversationContext";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -1010,7 +1011,39 @@ export function TaskDetailModal({ open, onOpenChange, tarefa, teamMembers }: Tas
                           <span className="text-xs text-muted-foreground font-mono truncate">
                             {tarefa.linked_entity_id}
                           </span>
+                          {tarefa.linked_entity_type === "appointment" && (
+                            <a
+                              href="/agenda"
+                              className="ml-auto flex shrink-0 items-center gap-1 text-xs font-bold text-primary hover:underline"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              Abrir agenda
+                            </a>
+                          )}
+                          {tarefa.linked_entity_type === "patient" && tarefa.linked_entity_id && (
+                            <a
+                              href={`/patients/${tarefa.linked_entity_id}`}
+                              className="ml-auto flex shrink-0 items-center gap-1 text-xs font-bold text-primary hover:underline"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              Abrir perfil
+                            </a>
+                          )}
+                          {tarefa.linked_entity_type === "conversation" &&
+                            tarefa.linked_entity_id && (
+                              <a
+                                href={`/crm-whatsapp?conversation=${tarefa.linked_entity_id}`}
+                                className="ml-auto flex shrink-0 items-center gap-1 text-xs font-bold text-primary hover:underline"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                                Abrir conversa
+                              </a>
+                            )}
                         </div>
+                        {tarefa.linked_entity_type === "conversation" &&
+                          tarefa.linked_entity_id && (
+                            <TaskConversationContext conversationId={tarefa.linked_entity_id} />
+                          )}
                       </div>
                     )}
                   </TabsContent>
