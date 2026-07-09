@@ -243,6 +243,11 @@ export const organizationMembersApi = {
     request<{ success: boolean }>(`/api/organization-members/${id}`, {
       method: "DELETE",
     }),
+  updatePhone: (userId: string, phone: string) =>
+    request<{ data: { user_id: string; phone: string | null } }>(
+      `/api/organization-members/${encodeURIComponent(userId)}/phone`,
+      { method: "PATCH", body: JSON.stringify({ phone }) },
+    ),
 };
 
 export const invitationsApi = {

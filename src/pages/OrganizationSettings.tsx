@@ -42,6 +42,8 @@ import {
 } from "lucide-react";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { useOrganizationMembers } from "@/hooks/useOrganizationMembers";
+import { useAuth } from "@/contexts/AuthContext";
+import { MemberPhoneInline } from "@/components/organization/MemberPhoneInline";
 import type { OrganizationMember } from "@/api/v2";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -66,9 +68,13 @@ export default function OrganizationSettings() {
     isLoading: isMembersLoading,
     addMember,
     removeMember,
+    updateMemberPhone,
+    isUpdatingPhone,
     isAdding,
     isRemoving,
   } = useOrganizationMembers(currentOrganization?.id);
+  const { user: authUser } = useAuth();
+  const isAdmin = String(authUser?.role ?? "").toLowerCase() === "admin";
 
   // Form state — clinic data
   const [orgName, setOrgName] = useState("");
@@ -281,11 +287,27 @@ export default function OrganizationSettings() {
                             </div>
                             <div>
                               <p className="font-medium text-sm">
-                                {member.user?.name ?? member.user_id}
+                                {member.user?.name ??
+                                  (member as { profiles?: { full_name?: string } }).profiles
+                                    ?.full_name ??
+                                  member.user_id}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                {member.user?.email ?? ""}
+                                {member.user?.email ??
+                                  (member as { profiles?: { email?: string } }).profiles?.email ??
+                                  ""}
                               </p>
+                              <MemberPhoneInline
+                                phone={
+                                  (member as { profiles?: { phone?: string | null } }).profiles
+                                    ?.phone
+                                }
+                                canEdit={isAdmin}
+                                isSaving={isUpdatingPhone}
+                                onSave={(phone) =>
+                                  updateMemberPhone({ userId: member.user_id, phone })
+                                }
+                              />
                             </div>
                           </div>
                           <div className="flex items-center gap-2">

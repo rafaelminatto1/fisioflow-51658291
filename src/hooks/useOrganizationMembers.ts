@@ -69,6 +69,22 @@ export const useOrganizationMembers = (organizationId?: string) => {
     },
   });
 
+  // Mutation para telefone do membro (WhatsApp de tarefas URGENTES)
+  const updateMemberPhone = useMutation({
+    mutationFn: async ({ userId, phone }: { userId: string; phone: string }) => {
+      const res = await organizationMembersApi.updatePhone(userId, phone);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["organization-members"] });
+      queryClient.invalidateQueries({ queryKey: ["team-members"] });
+      toast.success("Telefone atualizado");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao atualizar telefone: " + error.message);
+    },
+  });
+
   // Mutation para remover membro
   const removeMember = useMutation({
     mutationFn: async (memberId: string) => {
@@ -89,9 +105,11 @@ export const useOrganizationMembers = (organizationId?: string) => {
     error,
     addMember: addMember.mutate,
     updateMemberRole: updateMemberRole.mutate,
+    updateMemberPhone: updateMemberPhone.mutate,
     removeMember: removeMember.mutate,
     isAdding: addMember.isPending,
     isUpdating: updateMemberRole.isPending,
+    isUpdatingPhone: updateMemberPhone.isPending,
     isRemoving: removeMember.isPending,
   };
 };
