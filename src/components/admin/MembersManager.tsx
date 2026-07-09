@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useOrganizationMembers } from "@/hooks/useOrganizationMembers";
+import { useOrganizations } from "@/hooks/useOrganizations";
+import { useAuth } from "@/contexts/AuthContext";
+import { MemberPhoneInline } from "@/components/organization/MemberPhoneInline";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { Search, UserPlus } from "lucide-react";
 
@@ -11,11 +14,37 @@ interface MembersManagerProps {
   onInviteClick?: () => void;
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Administrador",
+  fisioterapeuta: "Fisioterapeuta",
+  estagiario: "Estagiário",
+  paciente: "Paciente",
+};
+
+type MemberRow = {
+  id: string;
+  user_id: string;
+  role: string;
+  profiles?: { full_name?: string | null; email?: string | null; phone?: string | null };
+};
+
 export function MembersManager({ onInviteClick }: MembersManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const { data: members, isLoading } = useOrganizationMembers();
+  const { currentOrganization } = useOrganizations();
+  const { members, isLoading, updateMemberPhone, isUpdatingPhone } = useOrganizationMembers(
+    currentOrganization?.id,
+  );
+  const { user: authUser } = useAuth();
+  const isAdmin = String(authUser?.role ?? "").toLowerCase() === "admin";
 
-  const filteredMembers = members?.filter(
+  const rows = ((members ?? []) as MemberRow[]).map((member) => ({
+    ...member,
+    name: member.profiles?.full_name ?? member.profiles?.email ?? member.user_id,
+    email: member.profiles?.email ?? "",
+    phone: member.profiles?.phone ?? null,
+  }));
+
+  const filteredMembers = rows.filter(
     (member) =>
       member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.email?.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -45,11 +74,11 @@ export function MembersManager({ onInviteClick }: MembersManagerProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Membros Ativos ({filteredMembers?.length || 0})</CardTitle>
+          <CardTitle>Membros Ativos ({filteredMembers.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {filteredMembers?.map((member) => (
+            {filteredMembers.map((member) => (
               <div
                 key={member.id}
                 className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
@@ -61,6 +90,12 @@ export function MembersManager({ onInviteClick }: MembersManagerProps) {
                   <div>
                     <p className="font-medium">{member.name}</p>
                     <p className="text-sm text-muted-foreground">{member.email}</p>
+                    <MemberPhoneInline
+                      phone={member.phone}
+                      canEdit={isAdmin}
+                      isSaving={isUpdatingPhone}
+                      onSave={(phone) => updateMemberPhone({ userId: member.user_id, phone })}
+                    />
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -68,16 +103,13 @@ export function MembersManager({ onInviteClick }: MembersManagerProps) {
                     variant={member.role === "admin" ? "default" : "secondary"}
                     className="capitalize"
                   >
-                    {member.role === "admin" ? "Administrador" : member.role}
+                    {ROLE_LABELS[member.role] ?? member.role}
                   </Badge>
-                  <Button variant="outline" size="sm">
-                    Editar
-                  </Button>
                 </div>
               </div>
             ))}
 
-            {!filteredMembers?.length && (
+            {!filteredMembers.length && (
               <div className="text-center py-12 border-2 border-dashed rounded-lg bg-muted/30">
                 <p className="text-muted-foreground font-medium">Nenhum usuário encontrado</p>
                 <p className="text-sm text-muted-foreground mt-1">
