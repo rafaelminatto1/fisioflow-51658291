@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { Suspense, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
@@ -21,7 +21,9 @@ import {
   Calendar,
   UserRound,
   Dumbbell,
+  ClipboardList,
 } from "lucide-react";
+import { LazyTaskQuickCreateModal } from "@/components/tarefas/v2/LazyComponents";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
 import {
@@ -82,6 +84,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const { therapists = [] } = useTherapists();
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
 
   const logic = useAppointmentQuickViewLogic({
     appointment,
@@ -247,6 +250,16 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           >
             <UserRound className="mr-1.5 h-3.5 w-3.5" />
             Perfil
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-10 rounded-xl px-2 text-xs font-bold text-slate-600 hover:text-primary"
+            onClick={() => setTaskModalOpen(true)}
+          >
+            <ClipboardList className="mr-1.5 h-3.5 w-3.5" />
+            Tarefa
           </Button>
           <Button
             type="button"
@@ -660,6 +673,20 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         appointment={appointment}
         onSuccess={handlePaymentSuccess}
       />
+
+      {taskModalOpen && (
+        <Suspense fallback={null}>
+          <LazyTaskQuickCreateModal
+            open={taskModalOpen}
+            onOpenChange={setTaskModalOpen}
+            initialData={{
+              titulo: `Follow-up — ${appointment.patientName ?? "paciente"}`,
+              linked_entity_type: "appointment",
+              linked_entity_id: appointment.id,
+            }}
+          />
+        </Suspense>
+      )}
     </>
   );
 };

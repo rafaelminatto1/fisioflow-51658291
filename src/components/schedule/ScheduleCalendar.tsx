@@ -171,6 +171,24 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
 
   const [quickViewAppointment, setQuickViewAppointment] = useState<RawAppointment | null>(null);
   const [popoverAnchorRect, setPopoverAnchorRect] = useState<DOMRect | null>(null);
+  // Tarefas com vencimento na agenda (toggle persistido)
+  const [showTasks, setShowTasks] = useState(() => {
+    try {
+      return localStorage.getItem("agenda:show-tasks") !== "0";
+    } catch {
+      return true;
+    }
+  });
+  const toggleShowTasks = () => {
+    setShowTasks((v) => {
+      try {
+        localStorage.setItem("agenda:show-tasks", v ? "0" : "1");
+      } catch {
+        // storage indisponível — só alterna em memória
+      }
+      return !v;
+    });
+  };
 
   useEffect(() => {
     const api = calendarRef.current?.getApi();
@@ -350,8 +368,8 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
       });
     }
 
-    const taskEvents: EventInput[] = (tarefas ?? [])
-      .filter((t) => !!t.data_vencimento)
+    const taskEvents: EventInput[] = (showTasks ? (tarefas ?? []) : [])
+      .filter((t) => !!t.data_vencimento && t.status !== "CONCLUIDO" && t.status !== "ARQUIVADO")
       .map((t) => ({
         id: `task-${t.id}`,
         title: t.titulo,
@@ -386,7 +404,7 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
     });
 
     return [...apptEvents, ...taskEvents, ...blockedEvents];
-  }, [appointments, tarefas, blockedTimes, statusConfig, selectedIds, selectionOn]);
+  }, [appointments, tarefas, blockedTimes, statusConfig, selectedIds, selectionOn, showTasks]);
 
   useEffect(() => {
     const api = calendarRef.current?.getApi();
@@ -622,6 +640,19 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
       />
 
       <div className="flex min-h-0 flex-1 flex-col">
+        <button
+          type="button"
+          onClick={toggleShowTasks}
+          title={showTasks ? "Ocultar tarefas na agenda" : "Mostrar tarefas na agenda"}
+          className={
+            "absolute bottom-3 left-3 z-40 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-wider shadow-sm transition-colors " +
+            (showTasks
+              ? "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+              : "border-slate-200 bg-white text-slate-400 hover:bg-slate-50")
+          }
+        >
+          Tarefas {showTasks ? "on" : "off"}
+        </button>
         <div
           ref={fcContainerRef}
           className="relative flex h-full min-h-0 w-full flex-1 overflow-hidden border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 [&>.fc]:flex-1 [&>.fc]:h-full [&>.fc]:min-h-0 [&>.fc]:w-full"

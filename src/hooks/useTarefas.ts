@@ -31,7 +31,18 @@ export {
   TIPO_COLORS,
 } from "@/types/tarefas";
 
-import type { Tarefa, TarefaStatus } from "@/types/tarefas";
+import type { Tarefa, TarefaStatus, TarefaTemplate } from "@/types/tarefas";
+
+/** Linha de tarefa_comments (mentions = user_ids). */
+export interface TarefaCommentRow {
+  id: string;
+  tarefa_id: string;
+  author_id: string;
+  author_name: string | null;
+  content: string;
+  mentions: string[];
+  created_at: string;
+}
 
 export const TAREFAS_QUERY_KEY = ["tarefas"] as const;
 
@@ -89,6 +100,10 @@ export function useCreateTarefa() {
         dependencies: tarefa.dependencies || [],
         start_date: tarefa.start_date,
         responsavel_id: tarefa.responsavel_id,
+        requires_acknowledgment: tarefa.requires_acknowledgment ?? false,
+        recurrence: tarefa.recurrence ?? null,
+        linked_entity_type: tarefa.linked_entity_type,
+        linked_entity_id: tarefa.linked_entity_id,
       });
       return result.data as unknown as Tarefa;
     },
@@ -187,6 +202,118 @@ export function useDeleteTarefa() {
   });
 }
 
+export function useDuplicateTarefa() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const result = await tarefasApi.duplicate(id);
+      return result.data as unknown as Tarefa;
+    },
+    onSuccess: (created) => {
+      queryClient.setQueryData(["tarefas"], (old: Tarefa[] | undefined) =>
+        old ? [...old, created] : old,
+      );
+      toast.success("Tarefa duplicada!");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao duplicar tarefa: " + error.message);
+    },
+  });
+}
+
+export function useTarefaComments(tarefaId: string | undefined) {
+  return useQuery({
+    queryKey: ["tarefas", tarefaId, "comments"],
+    queryFn: async () => {
+      const result = await tarefasApi.listComments(tarefaId!);
+      return (result.data ?? []) as unknown as TarefaCommentRow[];
+    },
+    enabled: !!tarefaId,
+    staleTime: 1000 * 30,
+  });
+}
+
+export function useCreateTarefaComment(tarefaId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: { content: string; mentions?: string[] }) => {
+      const result = await tarefasApi.createComment(tarefaId!, data);
+      return result.data as unknown as TarefaCommentRow;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tarefas", tarefaId, "comments"] });
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao comentar: " + error.message);
+    },
+  });
+}
+
+export function useDeleteTarefaComment(tarefaId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (commentId: string) => {
+      await tarefasApi.deleteComment(tarefaId!, commentId);
+      return commentId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tarefas", tarefaId, "comments"] });
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao excluir comentário: " + error.message);
+    },
+  });
+}
+
+export function useTarefaTemplates() {
+  return useQuery({
+    queryKey: ["tarefa-templates"],
+    queryFn: async () => {
+      const result = await tarefasApi.listTemplates();
+      return (result.data ?? []) as unknown as TarefaTemplate[];
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useCreateTarefaTemplate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: Partial<TarefaTemplate> & { name: string; titulo: string }) => {
+      const result = await tarefasApi.createTemplate(data as Record<string, unknown>);
+      return result.data as unknown as TarefaTemplate;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tarefa-templates"] });
+      toast.success("Template salvo!");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao salvar template: " + error.message);
+    },
+  });
+}
+
+export function useDeleteTarefaTemplate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (templateId: string) => {
+      await tarefasApi.deleteTemplate(templateId);
+      return templateId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tarefa-templates"] });
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao excluir template: " + error.message);
+    },
+  });
+}
+
 export function useBulkUpdateTarefas() {
   const queryClient = useQueryClient();
 
@@ -196,6 +323,9 @@ export function useBulkUpdateTarefas() {
         id: string;
         status?: TarefaStatus;
         order_index?: number;
+        prioridade?: string;
+        responsavel_id?: string | null;
+        column_id?: string | null;
       }>,
     ) => {
       await tarefasApi.bulk(tarefas);

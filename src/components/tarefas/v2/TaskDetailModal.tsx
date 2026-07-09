@@ -34,6 +34,7 @@ import {
   Target,
   Dumbbell,
   Eye,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -64,6 +65,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
+import { TaskCommentsSection } from "./TaskCommentsSection";
+import { TaskConversationContext } from "./TaskConversationContext";
+import { SubtasksSection } from "./SubtasksSection";
+import { TaskCalendarSyncButton } from "./TaskCalendarSyncButton";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -522,6 +527,13 @@ export function TaskDetailModal({ open, onOpenChange, tarefa, teamMembers }: Tas
           >
             <BookOpen className="h-4 w-4 mr-2" />
             Wiki / Refs
+          </TabsTrigger>
+          <TabsTrigger
+            value="comments"
+            className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-t-lg h-9 mt-auto"
+          >
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Comentários
           </TabsTrigger>
           <TabsTrigger
             value="audit"
@@ -1001,9 +1013,48 @@ export function TaskDetailModal({ open, onOpenChange, tarefa, teamMembers }: Tas
                           <span className="text-xs text-muted-foreground font-mono truncate">
                             {tarefa.linked_entity_id}
                           </span>
+                          {tarefa.linked_entity_type === "appointment" && (
+                            <a
+                              href="/agenda"
+                              className="ml-auto flex shrink-0 items-center gap-1 text-xs font-bold text-primary hover:underline"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              Abrir agenda
+                            </a>
+                          )}
+                          {tarefa.linked_entity_type === "patient" && tarefa.linked_entity_id && (
+                            <a
+                              href={`/patients/${tarefa.linked_entity_id}`}
+                              className="ml-auto flex shrink-0 items-center gap-1 text-xs font-bold text-primary hover:underline"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              Abrir perfil
+                            </a>
+                          )}
+                          {tarefa.linked_entity_type === "conversation" &&
+                            tarefa.linked_entity_id && (
+                              <a
+                                href={`/crm-whatsapp?conversation=${tarefa.linked_entity_id}`}
+                                className="ml-auto flex shrink-0 items-center gap-1 text-xs font-bold text-primary hover:underline"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                                Abrir conversa
+                              </a>
+                            )}
                         </div>
+                        {tarefa.linked_entity_type === "conversation" &&
+                          tarefa.linked_entity_id && (
+                            <TaskConversationContext conversationId={tarefa.linked_entity_id} />
+                          )}
                       </div>
                     )}
+
+                    <div className="flex justify-end">
+                      <TaskCalendarSyncButton tarefa={tarefa} />
+                    </div>
+
+                    {/* Subtarefas (US-18) */}
+                    <SubtasksSection parentId={tarefa?.id} />
                   </TabsContent>
 
                   {/* Checklists Tab */}
@@ -1466,6 +1517,10 @@ export function TaskDetailModal({ open, onOpenChange, tarefa, teamMembers }: Tas
                         </Card>
                       ))}
                     </div>
+                  </TabsContent>
+
+                  <TabsContent value="comments" className="mt-0">
+                    <TaskCommentsSection tarefaId={tarefa?.id} teamMembers={teamMembers} />
                   </TabsContent>
 
                   <TabsContent value="audit" className="m-0 mt-4 px-6 pb-6">

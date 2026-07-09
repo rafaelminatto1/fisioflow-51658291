@@ -1579,8 +1579,58 @@ app.get("/:id/timeline", async (c) => {
       };
     });
 
+    // 4. Tarefas vinculadas ao paciente (specs/tarefas-integracoes US-09)
+    const taskRows = await db
+      .select({
+        id: sql`id`,
+        entry_type: sql`'task'`,
+        category: sql`'task'`,
+        subject: sql`titulo`,
+        status: sql`status`,
+        prioridade: sql`prioridade`,
+        responsavel_id: sql`responsavel_id`,
+        data_vencimento: sql`data_vencimento`,
+        created_at: sql`created_at`,
+      })
+      .from(sql`tarefas`)
+      .where(
+        and(
+          sql`linked_entity_type = 'patient'`,
+          sql`linked_entity_id = ${id}::uuid`,
+          sql`organization_id = ${user.organizationId}::uuid`,
+        ),
+      );
+
+    // 5. Mensagens WhatsApp — só para admins (fisios/estagiários não acessam CRM)
+    let waMessages: Array<Record<string, unknown>> = [];
+    if (String(user.role ?? "").toLowerCase() === "admin") {
+      try {
+        waMessages = await db
+          .select({
+            id: sql`m.id`,
+            entry_type: sql`'whatsapp_message'`,
+            category: sql`'communication'`,
+            body: sql`m.content->>'text'`,
+            direction: sql`m.direction`,
+            status: sql`m.status`,
+            created_at: sql`m.created_at`,
+          })
+          .from(sql`wa_messages m`)
+          .where(
+            and(
+              sql`m.organization_id = ${user.organizationId}::uuid`,
+              sql`m.conversation_id IN (SELECT id FROM wa_conversations WHERE patient_id = ${id}::uuid)`,
+            ),
+          )
+          .orderBy(sql`m.created_at DESC`)
+          .limit(30);
+      } catch (err) {
+        console.error("[Patients/Timeline] wa_messages fetch failed (non-fatal):", err);
+      }
+    }
+
     // Combine and Sort
-    const timeline = [...comms, ...appointments, ...evolutions].sort(
+    const timeline = [...comms, ...appointments, ...evolutions, ...taskRows, ...waMessages].sort(
       (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
 

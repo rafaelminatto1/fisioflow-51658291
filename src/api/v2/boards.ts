@@ -30,7 +30,16 @@ export const tarefasApi = {
     request<{ ok: boolean }>(`/api/tarefas/${encodeURIComponent(id)}`, {
       method: "DELETE",
     }),
-  bulk: (updates: Array<{ id: string; status?: string; order_index?: number }>) =>
+  bulk: (
+    updates: Array<{
+      id: string;
+      status?: string;
+      order_index?: number;
+      prioridade?: string;
+      responsavel_id?: string | null;
+      column_id?: string | null;
+    }>,
+  ) =>
     request<{ ok: boolean }>("/api/tarefas/bulk", {
       method: "POST",
       body: JSON.stringify({ updates }),
@@ -39,6 +48,35 @@ export const tarefasApi = {
     request<{ data: Record<string, unknown>[] }>(
       `/api/tarefas/by-entity/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}`,
     ),
+  duplicate: (id: string) =>
+    request<{ data: Record<string, unknown> }>(
+      `/api/tarefas/${encodeURIComponent(id)}/duplicate`,
+      { method: "POST" },
+    ),
+  listComments: (id: string) =>
+    request<{ data: Record<string, unknown>[] }>(
+      `/api/tarefas/${encodeURIComponent(id)}/comments`,
+    ),
+  createComment: (id: string, data: { content: string; mentions?: string[] }) =>
+    request<{ data: Record<string, unknown> }>(`/api/tarefas/${encodeURIComponent(id)}/comments`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  deleteComment: (id: string, commentId: string) =>
+    request<{ ok: boolean }>(
+      `/api/tarefas/${encodeURIComponent(id)}/comments/${encodeURIComponent(commentId)}`,
+      { method: "DELETE" },
+    ),
+  listTemplates: () => request<{ data: Record<string, unknown>[] }>("/api/tarefas/templates"),
+  createTemplate: (data: Record<string, unknown>) =>
+    request<{ data: Record<string, unknown> }>("/api/tarefas/templates", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  deleteTemplate: (templateId: string) =>
+    request<{ ok: boolean }>(`/api/tarefas/templates/${encodeURIComponent(templateId)}`, {
+      method: "DELETE",
+    }),
 };
 
 export const boardsApi = {

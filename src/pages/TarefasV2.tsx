@@ -21,6 +21,8 @@ import {
   ShieldAlert,
   Filter,
   Users,
+  Bookmark,
+  Trash2,
 } from "lucide-react";
 import {
   startOfWeek,
@@ -47,6 +49,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuCheckboxItem,
@@ -78,7 +81,15 @@ import {
   PRIORIDADE_LABELS,
   TIPO_LABELS,
 } from "@/types/tarefas";
-import { useTarefas, useDeleteTarefa } from "@/hooks/useTarefas";
+import {
+  useTarefas,
+  useDeleteTarefa,
+  useDuplicateTarefa,
+  useUpdateTarefa,
+  useBulkUpdateTarefas,
+} from "@/hooks/useTarefas";
+import { MinhasTarefasView } from "@/components/tarefas/v2/MinhasTarefasView";
+import { BulkActionsBar } from "@/components/tarefas/v2/BulkActionsBar";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
 import { useAuth } from "@/contexts/AuthContext";
 import { safeFormat } from "@/lib/utils";
@@ -87,12 +98,15 @@ import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 const TaskInsights = lazy(() => import("@/components/tarefas/v2/TaskInsights"));
 
-type ViewMode = "kanban" | "table" | "timeline" | "insights";
+type ViewMode = "kanban" | "table" | "minhas" | "timeline" | "insights";
 
 export default function TarefasV2() {
   const { data: tarefas, isLoading, refetch } = useTarefas();
   const { data: teamMembers } = useTeamMembers();
   const deleteTarefa = useDeleteTarefa();
+  const duplicateTarefa = useDuplicateTarefa();
+  const updateTarefa = useUpdateTarefa();
+  const bulkUpdate = useBulkUpdateTarefas();
   const effectiveTarefas = tarefas ?? [];
 
   const [viewMode, setViewMode] = useState<ViewMode>("kanban");
@@ -329,6 +343,83 @@ export default function TarefasV2() {
       newSelected.add(id);
     }
     setSelectedTasks(newSelected);
+  };
+
+  const handleArchiveTask = (id: string) => {
+    updateTarefa.mutate({ id, status: "ARQUIVADO" });
+  };
+
+  const applyBulk = (
+    fields: Partial<{
+      status: TarefaStatus;
+      prioridade: TarefaPrioridade;
+      responsavel_id: string;
+    }>,
+  ) => {
+    bulkUpdate.mutate(
+      Array.from(selectedTasks).map((id) => ({ id, ...fields })),
+      { onSuccess: () => setSelectedTasks(new Set()) },
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    await Promise.all(Array.from(selectedTasks).map((id) => deleteTarefa.mutateAsync(id)));
+    setSelectedTasks(new Set());
+  };
+
+  // Views salvas por usuário (US-18) — filtros nomeados em localStorage
+  const savedViewsKey = `tarefas:saved-views:${user?.uid ?? "anon"}`;
+  const [savedViews, setSavedViews] = useState<
+    Array<{
+      name: string;
+      viewMode: ViewMode;
+      searchTerm: string;
+      filterPriority: TarefaPrioridade[];
+      filterType: TarefaTipo[];
+      filterAssignee: string[];
+      filterPendingAck: boolean;
+    }>
+  >(() => {
+    try {
+      return JSON.parse(localStorage.getItem(savedViewsKey) ?? "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  const persistViews = (views: typeof savedViews) => {
+    setSavedViews(views);
+    try {
+      localStorage.setItem(savedViewsKey, JSON.stringify(views));
+    } catch {
+      // storage indisponível — mantém só em memória
+    }
+  };
+
+  const saveCurrentView = () => {
+    const name = window.prompt("Nome da view:");
+    if (!name?.trim()) return;
+    persistViews([
+      ...savedViews.filter((v) => v.name !== name.trim()),
+      {
+        name: name.trim(),
+        viewMode,
+        searchTerm,
+        filterPriority,
+        filterType,
+        filterAssignee,
+        filterPendingAck,
+      },
+    ]);
+  };
+
+  const applyView = (view: (typeof savedViews)[number]) => {
+    setViewMode(view.viewMode);
+    setSearchTerm(view.searchTerm);
+    setFilterPriority(view.filterPriority);
+    setFilterType(view.filterType);
+    setFilterAssignee(view.filterAssignee);
+    setFilterPendingAck(view.filterPendingAck);
   };
 
   if (isLoading) {
@@ -677,6 +768,48 @@ export default function TarefasV2() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}
+
+                {/* Views salvas */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="rounded-xl gap-2 h-10 px-4 text-slate-500">
+                      <Bookmark className="h-4 w-4" />
+                      <span className="text-xs font-bold uppercase tracking-tight">Views</span>
+                      {savedViews.length > 0 && (
+                        <Badge variant="secondary" className="ml-1 h-4 px-1">
+                          {savedViews.length}
+                        </Badge>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="rounded-xl">
+                    <DropdownMenuLabel>Views salvas</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {savedViews.map((view) => (
+                      <DropdownMenuItem
+                        key={view.name}
+                        onClick={() => applyView(view)}
+                        className="flex items-center justify-between gap-3"
+                      >
+                        {view.name}
+                        <button
+                          type="button"
+                          className="text-muted-foreground hover:text-red-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            persistViews(savedViews.filter((v) => v.name !== view.name));
+                          }}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </DropdownMenuItem>
+                    ))}
+                    {savedViews.length > 0 && <DropdownMenuSeparator />}
+                    <DropdownMenuItem onClick={saveCurrentView}>
+                      Salvar filtros atuais…
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               {/* View Toggle */}
@@ -695,6 +828,13 @@ export default function TarefasV2() {
                   >
                     <LayoutList className="h-4 w-4 mr-2" />
                     Tabela
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="minhas"
+                    className="rounded-lg h-9 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Minhas
                   </TabsTrigger>
                   <TabsTrigger
                     value="timeline"
@@ -767,11 +907,30 @@ export default function TarefasV2() {
                     onViewTask={handleViewTask}
                     onEditTask={handleViewTask}
                     onDeleteTask={handleDeleteTask}
-                    onDuplicateTask={(tarefa) => console.log("Duplicate task:", tarefa)}
-                    onArchiveTask={(id) => console.log("Archive task:", id)}
+                    onDuplicateTask={(tarefa) => duplicateTarefa.mutate(tarefa.id)}
+                    onArchiveTask={handleArchiveTask}
                   />
                 </ScrollArea>
+                <BulkActionsBar
+                  count={selectedTasks.size}
+                  teamMembers={teamMembers || []}
+                  onSetStatus={(status) => applyBulk({ status })}
+                  onSetPrioridade={(prioridade) => applyBulk({ prioridade })}
+                  onSetResponsavel={(responsavel_id) => applyBulk({ responsavel_id })}
+                  onArchive={() => applyBulk({ status: "ARQUIVADO" })}
+                  onDelete={handleBulkDelete}
+                  onClear={() => setSelectedTasks(new Set())}
+                />
               </Card>
+            )}
+
+            {/* Minhas Tarefas View */}
+            {viewMode === "minhas" && (
+              <MinhasTarefasView
+                tarefas={effectiveTarefas}
+                userId={user?.uid ?? ""}
+                onViewTask={handleViewTask}
+              />
             )}
 
             {/* Timeline View */}
@@ -920,7 +1079,11 @@ export default function TarefasV2() {
             {/* Insights View */}
             {viewMode === "insights" && stats && (
               <Suspense fallback={<LoadingSkeleton type="card" className="h-[500px] w-full" />}>
-                <TaskInsights stats={stats} effectiveTarefas={effectiveTarefas} />
+                <TaskInsights
+                  stats={stats}
+                  effectiveTarefas={effectiveTarefas}
+                  teamMembers={teamMembers || []}
+                />
               </Suspense>
             )}
           </div>

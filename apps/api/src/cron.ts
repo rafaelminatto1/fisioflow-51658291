@@ -136,6 +136,28 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         // UTC 12h = BRT 09h — Automações por vencimento de tarefa
         const pool = createPool(env);
         await processDueDateAutomations(pool);
+        // Tarefas URGENTES vencendo hoje → notifica responsável (in-app + WhatsApp gated)
+        try {
+          await notifyUrgentTasksDueToday(pool, env);
+        } catch (err) {
+          console.error("[Cron] notifyUrgentTasksDueToday error:", err);
+        }
+        // Pendências clínicas → tarefas (sessão sem evolução; pagamento em atraso)
+        try {
+          await createEvolutionPendingTasks(pool);
+        } catch (err) {
+          console.error("[Cron] createEvolutionPendingTasks error:", err);
+        }
+        try {
+          await createOverduePaymentTasks(pool);
+        } catch (err) {
+          console.error("[Cron] createOverduePaymentTasks error:", err);
+        }
+        try {
+          await processStalledTaskAutomations(pool);
+        } catch (err) {
+          console.error("[Cron] processStalledTaskAutomations error:", err);
+        }
         break;
       }
 
@@ -1177,6 +1199,218 @@ async function processDueDateAutomations(pool: any) {
     console.log(`[Cron] due_date_approaching: checked ${tasksRes.rows.length} tasks.`);
   } catch (error) {
     console.error("[Cron] processDueDateAutomations error:", error);
+  }
+}
+
+/**
+ * Tarefas URGENTES vencendo hoje (ou já vencidas) e não concluídas:
+ * in-app + WhatsApp ao responsável (gate de automações + template aprovado).
+ * Dedup diário em tarefa_notification_log (specs/tarefas-integracoes US-01 AC3).
+ */
+async function notifyUrgentTasksDueToday(pool: any, env: Env) {
+  const { notifyUrgentTaskDue } = await import("./lib/tarefaNotifications");
+  const res = await pool.query(`
+    SELECT t.id, t.titulo, t.prioridade, t.responsavel_id, t.data_vencimento,
+           t.board_id, t.organization_id
+    FROM tarefas t
+    WHERE t.prioridade = 'URGENTE'
+      AND t.status NOT IN ('CONCLUIDO', 'ARQUIVADO')
+      AND t.responsavel_id IS NOT NULL
+      AND t.data_vencimento::date <= CURRENT_DATE
+  `);
+
+  let sent = 0;
+  for (const task of res.rows) {
+    try {
+      const dedup = await pool.query(
+        `INSERT INTO tarefa_notification_log (tarefa_id, kind)
+         VALUES ($1::uuid, 'urgent_due') ON CONFLICT DO NOTHING RETURNING 1`,
+        [task.id],
+      );
+      if (dedup.rows.length === 0) continue;
+      await notifyUrgentTaskDue(pool, env, task.organization_id, task, task.responsavel_id);
+      sent++;
+    } catch (err) {
+      console.error(`[Cron] urgent task notify failed for ${task.id}:`, err);
+    }
+  }
+  if (res.rows.length) console.log(`[Cron] urgent tasks due: ${sent}/${res.rows.length} notified.`);
+}
+
+/**
+ * Sessões realizadas há >24h (até 7 dias) sem evolução registrada viram tarefa
+ * ALTA para o fisioterapeuta da sessão. Dedup por linked_entity session.
+ * (specs/tarefas-integracoes US-10)
+ */
+async function createEvolutionPendingTasks(pool: any) {
+  const res = await pool.query(`
+    SELECT s.id, s.organization_id, s.therapist_id, s.date, p.full_name AS patient_name
+    FROM sessions s
+    JOIN patients p ON p.id = s.patient_id
+    WHERE s.date < NOW() - INTERVAL '24 hours'
+      AND s.date > NOW() - INTERVAL '7 days'
+      AND (s.observacao IS NULL OR btrim(s.observacao) = '')
+      AND (s.blocks IS NULL OR jsonb_array_length(s.blocks) = 0)
+      AND s.organization_id IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM tarefas t
+        WHERE t.linked_entity_type = 'session' AND t.linked_entity_id = s.id
+      )
+    LIMIT 50
+  `);
+
+  let created = 0;
+  for (const row of res.rows) {
+    try {
+      await pool.query(
+        `INSERT INTO tarefas
+           (organization_id, created_by, responsavel_id, titulo, descricao, status, prioridade, tipo,
+            data_vencimento, order_index, tags, label_ids, checklists, attachments, task_references,
+            dependencies, acknowledgments, linked_entity_type, linked_entity_id)
+         VALUES ($1,'automation',$2,$3,$4,'A_FAZER','ALTA','TAREFA',CURRENT_DATE,0,'{}','{}','[]','[]','[]','[]','[]','session',$5)`,
+        [
+          row.organization_id,
+          row.therapist_id ? String(row.therapist_id) : null,
+          `Evolução pendente — ${row.patient_name}`,
+          `Sessão de ${new Date(row.date).toLocaleDateString("pt-BR")} sem evolução registrada. Registre a observação clínica.`,
+          row.id,
+        ],
+      );
+      created++;
+    } catch (err) {
+      console.error(`[Cron] evolution pending task failed for session ${row.id}:`, err);
+    }
+  }
+  if (created) console.log(`[Cron] evolution pending: ${created} tasks created.`);
+}
+
+/**
+ * Agendamentos realizados com pagamento pendente há >7 dias viram tarefa de
+ * cobrança vinculada ao paciente. Dedup por linked_entity payment_due.
+ * (specs/tarefas-integracoes US-11)
+ */
+async function createOverduePaymentTasks(pool: any) {
+  const res = await pool.query(`
+    SELECT a.id, a.organization_id, a.date, a.payment_amount, p.id AS patient_id,
+           p.full_name AS patient_name
+    FROM appointments a
+    JOIN patients p ON p.id = a.patient_id
+    WHERE a.payment_status = 'pending'
+      AND a.status IN ('completed', 'concluido', 'realizada')
+      AND a.date < CURRENT_DATE - INTERVAL '7 days'
+      AND a.date > CURRENT_DATE - INTERVAL '60 days'
+      AND NOT EXISTS (
+        SELECT 1 FROM tarefas t
+        WHERE t.linked_entity_type = 'payment_due' AND t.linked_entity_id = a.id
+      )
+    LIMIT 50
+  `);
+
+  let created = 0;
+  for (const row of res.rows) {
+    try {
+      const valor = row.payment_amount ? ` (R$ ${Number(row.payment_amount).toFixed(2)})` : "";
+      await pool.query(
+        `INSERT INTO tarefas
+           (organization_id, created_by, titulo, descricao, status, prioridade, tipo,
+            data_vencimento, order_index, tags, label_ids, checklists, attachments, task_references,
+            dependencies, acknowledgments, linked_entity_type, linked_entity_id)
+         VALUES ($1,'automation',$2,$3,'A_FAZER','ALTA','TAREFA',CURRENT_DATE,0,'{cobranca}','{}','[]','[]','[]','[]','[]','payment_due',$4)`,
+        [
+          row.organization_id,
+          `Cobrança pendente — ${row.patient_name}${valor}`,
+          `Atendimento de ${new Date(row.date).toLocaleDateString("pt-BR")} com pagamento pendente há mais de 7 dias. Entrar em contato com o paciente.`,
+          row.id,
+        ],
+      );
+      created++;
+    } catch (err) {
+      console.error(`[Cron] overdue payment task failed for appointment ${row.id}:`, err);
+    }
+  }
+  if (created) console.log(`[Cron] overdue payments: ${created} tasks created.`);
+}
+
+/**
+ * Automações de board com trigger "stalled" (tarefa parada há X dias sem
+ * update). Ações suportadas: send_notification, assign_label, change_status,
+ * move_column. Dedup diário via tarefa_notification_log.
+ * (specs/tarefas-integracoes US-20)
+ */
+async function processStalledTaskAutomations(pool: any) {
+  const autoRes = await pool.query(
+    `SELECT id, board_id, organization_id, trigger, actions FROM board_automations
+     WHERE is_active = true AND (trigger->>'type') = 'stalled'`,
+  );
+  if (!autoRes.rows.length) return;
+
+  for (const automation of autoRes.rows) {
+    const days = Math.max(1, Number(automation.trigger?.days ?? 3));
+    const tasksRes = await pool.query(
+      `SELECT id, titulo, responsavel_id, created_by, board_id, organization_id
+       FROM tarefas
+       WHERE board_id = $1 AND organization_id = $2
+         AND status NOT IN ('CONCLUIDO','ARQUIVADO')
+         AND updated_at < NOW() - ($3 || ' days')::interval
+       LIMIT 50`,
+      [automation.board_id, automation.organization_id, String(days)],
+    );
+
+    for (const task of tasksRes.rows) {
+      // Dedup: 1 execução por tarefa+automação por dia
+      const dedup = await pool.query(
+        `INSERT INTO tarefa_notification_log (tarefa_id, kind)
+         VALUES ($1::uuid, $2) ON CONFLICT DO NOTHING RETURNING 1`,
+        [task.id, `stalled_${automation.id}`],
+      );
+      if (dedup.rows.length === 0) continue;
+
+      for (const action of automation.actions ?? []) {
+        try {
+          if (action.type === "send_notification") {
+            const targetUserId = task.responsavel_id ?? task.created_by;
+            if (!targetUserId) continue;
+            await pool.query(
+              `INSERT INTO notifications (organization_id, user_id, type, title, message, link, metadata)
+               VALUES ($1,$2,'automation',$3,$4,$5,$6::jsonb)`,
+              [
+                task.organization_id,
+                targetUserId,
+                action.message ?? `Tarefa parada há ${days} dias`,
+                `"${task.titulo}" está sem atualização há mais de ${days} dia(s).`,
+                `/boards/${task.board_id}`,
+                JSON.stringify({ task_id: task.id, automation_id: automation.id }),
+              ],
+            );
+          } else if (action.type === "assign_label" && action.label_id) {
+            await pool.query(
+              `UPDATE tarefas SET label_ids = array_append(label_ids, $1::uuid), updated_at = NOW()
+               WHERE id = $2 AND NOT ($1::uuid = ANY(label_ids))`,
+              [action.label_id, task.id],
+            );
+          } else if (action.type === "change_status" && action.status) {
+            await pool.query(`UPDATE tarefas SET status = $1, updated_at = NOW() WHERE id = $2`, [
+              action.status,
+              task.id,
+            ]);
+          } else if (action.type === "move_column" && action.column_id) {
+            await pool.query(
+              `UPDATE tarefas SET column_id = $1, updated_at = NOW() WHERE id = $2`,
+              [action.column_id, task.id],
+            );
+          }
+        } catch (err) {
+          console.error(`[Cron][Stalled] action ${action.type} failed for ${task.id}:`, err);
+        }
+      }
+
+      await pool
+        .query(
+          `UPDATE board_automations SET execution_count = execution_count + 1, last_executed_at = NOW() WHERE id = $1`,
+          [automation.id],
+        )
+        .catch(() => null);
+    }
   }
 }
 

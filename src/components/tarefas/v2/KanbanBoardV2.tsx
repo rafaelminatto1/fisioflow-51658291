@@ -45,12 +45,14 @@ import {
   LazyTaskDetailModal,
   LazyTaskQuickCreateModal,
 } from "./LazyComponents";
+import { toast } from "sonner";
 import {
   Tarefa,
   TarefaStatus,
   TarefaPrioridade,
   TarefaTipo,
   PRIORIDADE_LABELS,
+  STATUS_LABELS,
   TIPO_LABELS,
   TaskFilter as BaseTaskFilter,
 } from "@/types/tarefas";
@@ -246,6 +248,18 @@ export function KanbanBoardV2({
       const sourceStatus = source.droppableId as TarefaStatus;
       const destStatus = destination.droppableId as TarefaStatus;
 
+      // WIP limit: bloqueia o drop quando a coluna de destino já está no limite
+      if (sourceStatus !== destStatus) {
+        const wipLimit = wipLimits[destStatus];
+        const destCount = (groupedTarefas[destStatus] || []).length;
+        if (wipLimit && destCount >= wipLimit) {
+          toast.warning(
+            `Limite WIP atingido em "${STATUS_LABELS[destStatus]}" (${wipLimit}). Conclua ou mova tarefas antes de adicionar novas.`,
+          );
+          return;
+        }
+      }
+
       // Create new arrays
       const sourceTasks = [...(groupedTarefas[sourceStatus] || [])];
       const destTasks =
@@ -284,7 +298,7 @@ export function KanbanBoardV2({
         await bulkUpdate.mutateAsync(updates);
       }
     },
-    [groupedTarefas, updateTarefa, bulkUpdate],
+    [groupedTarefas, updateTarefa, bulkUpdate, wipLimits],
   );
 
   const handleAddTask = (status: TarefaStatus) => {

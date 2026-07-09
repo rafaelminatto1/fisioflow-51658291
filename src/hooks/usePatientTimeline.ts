@@ -4,7 +4,7 @@ import { request } from "@/api/v2/base";
 export interface TimelineEntry {
   id: string;
   entry_type: string;
-  category: "communication" | "clinical";
+  category: "communication" | "clinical" | "task";
   subject?: string;
   body?: string;
   status?: string;
@@ -17,6 +17,10 @@ export interface TimelineEntry {
   objective?: string;
   assessment?: string;
   plan?: string;
+  prioridade?: string;
+  responsavel_id?: string;
+  data_vencimento?: string;
+  direction?: string;
 }
 
 export function usePatientTimeline(patientId: string | undefined) {

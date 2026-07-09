@@ -19,7 +19,8 @@ export type AutomationTemplateKey =
   | "boas_vindas_paciente"
   | "feedback_atendimento"
   | "lembrete_exercicios_v1"
-  | "avaliacao_google";
+  | "avaliacao_google"
+  | "tarefa_urgente_equipe";
 
 export const AUTOMATION_TEMPLATES: Record<AutomationTemplateKey, AutomationTemplate> = {
   // Já existe APROVADO na Meta como MARKETING e SEM variáveis. Espelhamos aqui
@@ -47,6 +48,16 @@ export const AUTOMATION_TEMPLATES: Record<AutomationTemplateKey, AutomationTempl
     body:
       "Oi {{1}}! 💪 Passando para lembrar dos seus exercícios em casa. " +
       "Manter a constância acelera sua recuperação. Conte com a gente se precisar!",
+  },
+  // Interno (equipe): tarefa URGENTE atribuída/vencendo. Variáveis nunca no
+  // início/fim do body (regra da Meta).
+  tarefa_urgente_equipe: {
+    name: "tarefa_urgente_equipe",
+    language: "pt_BR",
+    category: "UTILITY",
+    body:
+      "Olá {{1}}! Você tem uma tarefa URGENTE no FisioFlow: {{2}} (prazo: {{3}}). " +
+      "Acesse o painel de tarefas para ver os detalhes.",
   },
   avaliacao_google: {
     name: "avaliacao_google",
