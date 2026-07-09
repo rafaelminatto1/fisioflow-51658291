@@ -42,11 +42,11 @@ Status: ⏳ pendente · 🔨 em andamento · ✅ feito
 
 ## Onda 4 — P3 avançado
 
-- [ ] T021 IA: sugestão de prioridade no create + resumo semanal do board.
-- [ ] T022 Google Calendar sync de tarefas com vencimento.
-- [ ] T023 Gamificação: pontos p/ conclusão no prazo (leaderboard).
-- [ ] T024 Workload view por membro.
-- [ ] T025 Dependências: bloquear conclusão com blocked_by aberta; WIP limit no kanban.
-- [ ] T026 Views salvas por usuário + subtarefas na UI (parent_id).
-- [ ] T027 Relatórios burndown/velocity/CFD na view Insights.
-- [ ] T028 Automações: triggers "parada há X dias" e atribuição; action WhatsApp.
+- [x] T021 IA: sugestão de prioridade no create + resumo semanal do board.
+- [x] T022 Google Calendar sync de tarefas com vencimento.
+- [x] T023 Gamificação: pontos p/ conclusão no prazo (leaderboard).
+- [x] T024 Workload view por membro.
+- [x] T025 Dependências: bloquear conclusão com blocked_by aberta; WIP limit no kanban.
+- [x] T026 Views salvas por usuário + subtarefas na UI (parent_id).
+- [x] T027 Relatórios burndown/velocity/CFD na view Insights.
+- [x] T028 Automações: triggers "parada há X dias" e atribuição; action WhatsApp.

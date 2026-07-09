@@ -1,6 +1,33 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { appointmentToGoogleEvent } from "../mapEvent";
+import { appointmentToGoogleEvent, taskToGoogleEvent } from "../mapEvent";
 import { refreshAccessToken, insertCalendarEvent } from "../client";
+
+describe("taskToGoogleEvent", () => {
+  it("mapeia tarefa com prazo para bloco de 30min às 09h", () => {
+    const ev = taskToGoogleEvent({
+      id: "t1",
+      titulo: "Cobrar convênio",
+      data_vencimento: "2026-07-15",
+    });
+    expect(ev.summary).toBe("Tarefa — Cobrar convênio");
+    expect(ev.start).toEqual({ dateTime: "2026-07-15T09:00:00", timeZone: "America/Sao_Paulo" });
+    expect(ev.end.dateTime).toBe("2026-07-15T09:30:00");
+    expect(ev.description).toContain("#t1");
+  });
+
+  it("usa hora_vencimento quando presente e limpa HTML da descrição", () => {
+    const ev = taskToGoogleEvent({
+      titulo: "Relatório",
+      data_vencimento: "2026-07-15T00:00:00.000Z",
+      hora_vencimento: "14:30",
+      descricao: "<p>Enviar <b>hoje</b></p>",
+    });
+    expect(ev.start.dateTime).toBe("2026-07-15T14:30:00");
+    expect(ev.end.dateTime).toBe("2026-07-15T15:00:00");
+    expect(ev.description).toContain("Enviar hoje");
+    expect(ev.description).not.toContain("<p>");
+  });
+});
 
 describe("appointmentToGoogleEvent", () => {
   it("maps date + start/end to a São Paulo event", () => {

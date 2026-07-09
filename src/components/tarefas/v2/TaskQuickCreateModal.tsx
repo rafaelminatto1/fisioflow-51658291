@@ -54,7 +54,10 @@ import {
 } from "@/hooks/useTarefas";
 import { useProjects } from "@/hooks/useProjects";
 import { useState } from "react";
-import { Repeat, LayoutTemplate, Trash2, Save } from "lucide-react";
+import { Repeat, LayoutTemplate, Trash2, Save, Sparkles, Loader2 } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { request } from "@/api/v2/base";
 
 const quickCreateSchema = z.object({
   titulo: z.string().min(1, "Título é obrigatório"),
@@ -142,6 +145,25 @@ export function TaskQuickCreateModal({
     form.setValue("prioridade", template.prioridade);
     setTemplateChecklists(template.checklists ?? []);
   };
+
+  const suggestPriority = useMutation({
+    mutationFn: async () => {
+      const values = form.getValues();
+      const res = await request<{ data: { prioridade: TarefaPrioridade } }>(
+        "/api/tarefas/ai/suggest-priority",
+        {
+          method: "POST",
+          body: JSON.stringify({ titulo: values.titulo, descricao: values.descricao }),
+        },
+      );
+      return res.data.prioridade;
+    },
+    onSuccess: (prioridade) => {
+      form.setValue("prioridade", prioridade);
+      toast.success(`IA sugeriu prioridade: ${PRIORIDADE_LABELS[prioridade]}`);
+    },
+    onError: (err: Error) => toast.error("Falha na sugestão: " + err.message),
+  });
 
   const saveAsTemplate = () => {
     const values = form.getValues();
@@ -327,7 +349,22 @@ export function TaskQuickCreateModal({
                 name="prioridade"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Prioridade</FormLabel>
+                    <FormLabel className="flex items-center justify-between">
+                      Prioridade
+                      <button
+                        type="button"
+                        onClick={() => suggestPriority.mutate()}
+                        disabled={suggestPriority.isPending || !form.watch("titulo")}
+                        className="flex items-center gap-1 text-[10px] font-bold text-violet-600 hover:underline disabled:opacity-40"
+                      >
+                        {suggestPriority.isPending ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-3 w-3" />
+                        )}
+                        Sugerir
+                      </button>
+                    </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>

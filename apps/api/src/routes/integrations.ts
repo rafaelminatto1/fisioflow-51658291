@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
-import { appointmentToGoogleEvent } from "../lib/googleCalendar/mapEvent";
+import { appointmentToGoogleEvent, taskToGoogleEvent } from "../lib/googleCalendar/mapEvent";
 import { refreshAccessToken, insertCalendarEvent } from "../lib/googleCalendar/client";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -472,6 +472,64 @@ app.post("/google/calendar/sync-appointment", async (c) => {
       [integration.id],
     );
   }
+
+  return c.json({ data: { success: status === "success", status, externalEventId, message } });
+});
+
+// Tarefa com vencimento → Google Calendar do usuário (specs/tarefas-integracoes US-14)
+app.post("/google/calendar/sync-task", async (c) => {
+  const user = c.get("user");
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!body.data_vencimento || !body.titulo)
+    return c.json({ error: "titulo e data_vencimento são obrigatórios" }, 400);
+
+  const pool = await createPool(c.env);
+  const integration = await ensureGoogleIntegration(
+    c.env,
+    user.uid,
+    user.organizationId,
+    user.email ?? null,
+  );
+  const tokens = (integration.tokens ?? {}) as { refresh_token?: string; access_token?: string };
+  const calendarId =
+    ((integration.settings ?? {}) as { default_calendar_id?: string }).default_calendar_id ??
+    "primary";
+
+  let externalEventId = "";
+  let status: "success" | "error" | "pending" = "pending";
+  let message = "Sem conexão Google: tarefa não enviada";
+
+  if (tokens.refresh_token || tokens.access_token) {
+    try {
+      const accessToken =
+        (tokens.refresh_token && (await refreshAccessToken(c.env, tokens.refresh_token))) ||
+        tokens.access_token ||
+        "";
+      if (!accessToken) throw new Error("sem access_token");
+      const event = taskToGoogleEvent(body);
+      const created = await insertCalendarEvent(accessToken, calendarId, event);
+      externalEventId = created.id;
+      status = "success";
+      message = "Tarefa enviada ao Google Calendar";
+    } catch (e) {
+      status = "error";
+      message = `Falha ao enviar ao Google Calendar: ${(e as Error).message}`;
+    }
+  }
+
+  await pool.query(
+    `INSERT INTO google_sync_logs (
+       integration_id, action, status, event_type, event_id, external_event_id, message, metadata
+     ) VALUES ($1, 'sync', $2, 'task', $3, $4, $5, $6::jsonb)`,
+    [
+      integration.id,
+      status,
+      String(body.id ?? ""),
+      externalEventId,
+      message,
+      JSON.stringify({ titulo: body.titulo, dueDate: body.data_vencimento }),
+    ],
+  );
 
   return c.json({ data: { success: status === "success", status, externalEventId, message } });
 });

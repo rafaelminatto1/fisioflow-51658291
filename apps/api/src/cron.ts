@@ -153,6 +153,11 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         } catch (err) {
           console.error("[Cron] createOverduePaymentTasks error:", err);
         }
+        try {
+          await processStalledTaskAutomations(pool);
+        } catch (err) {
+          console.error("[Cron] processStalledTaskAutomations error:", err);
+        }
         break;
       }
 
@@ -1324,6 +1329,89 @@ async function createOverduePaymentTasks(pool: any) {
     }
   }
   if (created) console.log(`[Cron] overdue payments: ${created} tasks created.`);
+}
+
+/**
+ * Automações de board com trigger "stalled" (tarefa parada há X dias sem
+ * update). Ações suportadas: send_notification, assign_label, change_status,
+ * move_column. Dedup diário via tarefa_notification_log.
+ * (specs/tarefas-integracoes US-20)
+ */
+async function processStalledTaskAutomations(pool: any) {
+  const autoRes = await pool.query(
+    `SELECT id, board_id, organization_id, trigger, actions FROM board_automations
+     WHERE is_active = true AND (trigger->>'type') = 'stalled'`,
+  );
+  if (!autoRes.rows.length) return;
+
+  for (const automation of autoRes.rows) {
+    const days = Math.max(1, Number(automation.trigger?.days ?? 3));
+    const tasksRes = await pool.query(
+      `SELECT id, titulo, responsavel_id, created_by, board_id, organization_id
+       FROM tarefas
+       WHERE board_id = $1 AND organization_id = $2
+         AND status NOT IN ('CONCLUIDO','ARQUIVADO')
+         AND updated_at < NOW() - ($3 || ' days')::interval
+       LIMIT 50`,
+      [automation.board_id, automation.organization_id, String(days)],
+    );
+
+    for (const task of tasksRes.rows) {
+      // Dedup: 1 execução por tarefa+automação por dia
+      const dedup = await pool.query(
+        `INSERT INTO tarefa_notification_log (tarefa_id, kind)
+         VALUES ($1::uuid, $2) ON CONFLICT DO NOTHING RETURNING 1`,
+        [task.id, `stalled_${automation.id}`],
+      );
+      if (dedup.rows.length === 0) continue;
+
+      for (const action of automation.actions ?? []) {
+        try {
+          if (action.type === "send_notification") {
+            const targetUserId = task.responsavel_id ?? task.created_by;
+            if (!targetUserId) continue;
+            await pool.query(
+              `INSERT INTO notifications (organization_id, user_id, type, title, message, link, metadata)
+               VALUES ($1,$2,'automation',$3,$4,$5,$6::jsonb)`,
+              [
+                task.organization_id,
+                targetUserId,
+                action.message ?? `Tarefa parada há ${days} dias`,
+                `"${task.titulo}" está sem atualização há mais de ${days} dia(s).`,
+                `/boards/${task.board_id}`,
+                JSON.stringify({ task_id: task.id, automation_id: automation.id }),
+              ],
+            );
+          } else if (action.type === "assign_label" && action.label_id) {
+            await pool.query(
+              `UPDATE tarefas SET label_ids = array_append(label_ids, $1::uuid), updated_at = NOW()
+               WHERE id = $2 AND NOT ($1::uuid = ANY(label_ids))`,
+              [action.label_id, task.id],
+            );
+          } else if (action.type === "change_status" && action.status) {
+            await pool.query(`UPDATE tarefas SET status = $1, updated_at = NOW() WHERE id = $2`, [
+              action.status,
+              task.id,
+            ]);
+          } else if (action.type === "move_column" && action.column_id) {
+            await pool.query(
+              `UPDATE tarefas SET column_id = $1, updated_at = NOW() WHERE id = $2`,
+              [action.column_id, task.id],
+            );
+          }
+        } catch (err) {
+          console.error(`[Cron][Stalled] action ${action.type} failed for ${task.id}:`, err);
+        }
+      }
+
+      await pool
+        .query(
+          `UPDATE board_automations SET execution_count = execution_count + 1, last_executed_at = NOW() WHERE id = $1`,
+          [automation.id],
+        )
+        .catch(() => null);
+    }
+  }
 }
 
 async function triggerNpsSurveys(pool: any, env: Env) {

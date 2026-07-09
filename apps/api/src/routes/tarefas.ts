@@ -12,6 +12,8 @@ import {
   extractMentionIds,
 } from "../lib/tarefaNotifications";
 import { parseRecurrence, computeNextDueDate } from "../lib/tarefaRecurrence";
+import { runAi, readAiText } from "../lib/ai-native";
+import { WORKERS_AI_MODELS } from "../lib/workersAi";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -20,7 +22,7 @@ type DbClient = Awaited<ReturnType<typeof createPool>>;
 
 interface AutomationRow {
   id: string;
-  trigger: { type: string; from?: string; to?: string; label_id?: string };
+  trigger: { type: string; from?: string; to?: string; label_id?: string; user_id?: string };
   actions: Array<{
     type: string;
     column_id?: string;
@@ -37,6 +39,7 @@ async function executeAutomations(
   orgId: string,
   taskBefore: Record<string, unknown>,
   taskAfter: Record<string, unknown>,
+  env?: Env,
 ) {
   if (!taskAfter.board_id) return;
 
@@ -53,10 +56,16 @@ async function executeAutomations(
   }
 
   for (const automation of automations) {
-    const { type, from, to, label_id } = automation.trigger;
+    const { type, from, to, label_id, user_id } = automation.trigger;
     let triggered = false;
 
-    if (type === "task_created") {
+    if (type === "user_assigned") {
+      // Dispara quando o responsável muda (opcionalmente para um user_id específico)
+      triggered =
+        !!taskAfter.responsavel_id &&
+        taskBefore.responsavel_id !== taskAfter.responsavel_id &&
+        (!user_id || taskAfter.responsavel_id === user_id);
+    } else if (type === "task_created") {
       triggered = (taskAfter as Record<string, unknown>)._trigger === "task_created";
     } else if (type === "status_changed") {
       triggered =
@@ -118,6 +127,27 @@ async function executeAutomations(
              VALUES ($1,$2,$3,$4,$5,'A_FAZER','MEDIA','TAREFA',0,'automation','{}','{}','[]','[]','[]','[]','[]')`,
             [orgId, taskAfter.board_id, taskAfter.column_id ?? null, taskAfter.id, action.titulo],
           );
+        } else if (action.type === "send_whatsapp") {
+          // WhatsApp ao responsável (gate de automações + template aprovado + phone)
+          const targetUserId = (taskAfter.responsavel_id ?? taskAfter.created_by) as
+            | string
+            | null;
+          if (targetUserId && env) {
+            const prof = await db.query(
+              `SELECT COALESCE(full_name, name) AS name, phone FROM profiles
+               WHERE user_id = $1 AND organization_id = $2 LIMIT 1`,
+              [targetUserId, orgId],
+            );
+            const row = prof.rows[0] as { name?: string; phone?: string } | undefined;
+            const { sendAutomationTemplate } = await import("../lib/whatsappAutomations");
+            await sendAutomationTemplate(env, orgId, row?.phone ?? null, "tarefa_urgente_equipe", [
+              (row?.name || "colega").split(" ")[0],
+              String(taskAfter.titulo ?? "").slice(0, 200),
+              taskAfter.data_vencimento
+                ? String(taskAfter.data_vencimento).slice(0, 10)
+                : "sem prazo",
+            ]);
+          }
         } else if (action.type === "send_notification") {
           // Notify the responsible user (or creator) via in-app notification
           const targetUserId = (taskAfter.responsavel_id ?? taskAfter.created_by) as string | null;
@@ -247,6 +277,135 @@ app.get("/by-entity/:type/:entityId", requireAuth, async (c) => {
   } catch (error) {
     console.error("[Tarefas] GET /by-entity error:", error);
     return c.json({ error: "Erro ao buscar tarefas", data: [] }, 500);
+  }
+});
+
+// ─── IA (US-13): sugestão de prioridade + resumo semanal ────────────────────
+app.post("/ai/suggest-priority", requireAuth, async (c) => {
+  try {
+    const user = c.get("user");
+    const body = await c.req.json();
+    const titulo = String(body.titulo ?? "").trim();
+    if (!titulo) return c.json({ error: "titulo é obrigatório" }, 400);
+    const descricao = String(body.descricao ?? "").slice(0, 1000);
+
+    const response = await runAi(
+      c.env,
+      WORKERS_AI_MODELS.llama_3_1_8b,
+      {
+        messages: [
+          {
+            role: "system",
+            content:
+              "Você classifica tarefas de uma clínica de fisioterapia. Responda APENAS com uma palavra entre: BAIXA, MEDIA, ALTA, URGENTE. Considere impacto clínico (paciente esperando, cobrança, prazo legal = mais urgente) e prazo implícito no texto.",
+          },
+          { role: "user", content: `Tarefa: ${titulo}\n${descricao ? `Detalhes: ${descricao}` : ""}` },
+        ],
+        temperature: 0.1,
+      },
+      { cache: false },
+    );
+    const text = readAiText(response).trim().toUpperCase();
+    const prioridade = ["BAIXA", "MEDIA", "ALTA", "URGENTE"].find((p) => text.includes(p));
+    if (!prioridade) return c.json({ error: "IA não retornou prioridade válida" }, 502);
+    return c.json({ data: { prioridade } });
+  } catch (err) {
+    console.error("[Tarefas] AI suggest-priority error:", err);
+    return c.json({ error: "Falha ao consultar a IA" }, 500);
+  }
+});
+
+app.post("/ai/weekly-summary", requireAuth, async (c) => {
+  try {
+    const user = c.get("user");
+    const db = createPool(c.env, DEFAULT_TIMEOUTS.query, "read");
+    const res = await db.query(
+      `SELECT titulo, status, prioridade, responsavel_id, data_vencimento,
+              completed_at, created_at
+       FROM tarefas
+       WHERE organization_id = $1
+         AND (updated_at > NOW() - INTERVAL '7 days' OR status NOT IN ('CONCLUIDO','ARQUIVADO'))
+       ORDER BY updated_at DESC LIMIT 120`,
+      [user.organizationId],
+    );
+    if (!res.rows.length) return c.json({ error: "Sem tarefas para resumir" }, 400);
+
+    const linhas = res.rows
+      .map(
+        (t: Record<string, unknown>) =>
+          `- [${t.status}/${t.prioridade}] ${t.titulo}${t.data_vencimento ? ` (vence ${String(t.data_vencimento).slice(0, 10)})` : ""}`,
+      )
+      .join("\n");
+
+    const response = await runAi(
+      c.env,
+      WORKERS_AI_MODELS.llama_3_3_70b,
+      {
+        messages: [
+          {
+            role: "system",
+            content:
+              "Você é o gerente de operações de uma clínica de fisioterapia. Resuma o estado do board de tarefas da semana em português: o que foi concluído, o que está atrasado/em risco, gargalos por prioridade e as 3 próximas ações recomendadas. Máximo 200 palavras, tom direto.",
+          },
+          { role: "user", content: `Tarefas (últimos 7 dias + abertas):\n${linhas}` },
+        ],
+        temperature: 0.3,
+      },
+      { cache: false },
+    );
+    const text = readAiText(response).trim();
+    if (!text) return c.json({ error: "IA não retornou texto" }, 502);
+    return c.json({ data: { text } });
+  } catch (err) {
+    console.error("[Tarefas] AI weekly-summary error:", err);
+    return c.json({ error: "Falha ao consultar a IA" }, 500);
+  }
+});
+
+// ─── Relatórios de fluxo (US-19): burnup diário + velocity semanal ───────────
+app.get("/reports/flow", requireAuth, async (c) => {
+  try {
+    const user = c.get("user");
+    const days = Math.min(90, Math.max(7, Number(c.req.query("days") ?? 30)));
+    const db = createPool(c.env, DEFAULT_TIMEOUTS.query, "read");
+
+    const [daily, weekly, backlog] = await Promise.all([
+      db.query(
+        `WITH dias AS (
+           SELECT generate_series(CURRENT_DATE - ($2 - 1) * INTERVAL '1 day', CURRENT_DATE, '1 day')::date AS dia
+         )
+         SELECT d.dia::text AS date,
+                COALESCE((SELECT COUNT(*) FROM tarefas t
+                  WHERE t.organization_id = $1 AND t.created_at::date = d.dia), 0)::int AS created,
+                COALESCE((SELECT COUNT(*) FROM tarefas t
+                  WHERE t.organization_id = $1 AND t.completed_at::date = d.dia), 0)::int AS completed
+         FROM dias d ORDER BY d.dia`,
+        [user.organizationId, days],
+      ),
+      db.query(
+        `SELECT date_trunc('week', completed_at)::date::text AS week, COUNT(*)::int AS completed
+         FROM tarefas
+         WHERE organization_id = $1 AND completed_at > NOW() - INTERVAL '42 days'
+         GROUP BY 1 ORDER BY 1`,
+        [user.organizationId],
+      ),
+      db.query(
+        `SELECT COUNT(*)::int AS open FROM tarefas
+         WHERE organization_id = $1 AND status NOT IN ('CONCLUIDO','ARQUIVADO')`,
+        [user.organizationId],
+      ),
+    ]);
+
+    return c.json({
+      data: {
+        daily: daily.rows,
+        velocity: weekly.rows,
+        open_now: backlog.rows[0]?.open ?? 0,
+      },
+    });
+  } catch (error) {
+    console.error("[Tarefas] GET /reports/flow error:", error);
+    return c.json({ error: "Erro ao gerar relatório" }, 500);
   }
 });
 
@@ -405,6 +564,7 @@ app.post("/", requireAuth, async (c) => {
         user.organizationId,
         {},
         { ...createdTask, _trigger: "task_created" },
+        c.env,
       ).catch(() => null);
     }
 
@@ -491,10 +651,39 @@ app.patch("/:id", requireAuth, async (c) => {
 
     // Snapshot before state for automation diffing
     const beforeRes = await db.query(
-      `SELECT status, column_id, board_id, label_ids, checklists, responsavel_id FROM tarefas WHERE id = $1 AND organization_id = $2`,
+      `SELECT status, column_id, board_id, label_ids, checklists, responsavel_id, dependencies
+       FROM tarefas WHERE id = $1 AND organization_id = $2`,
       [id, user.organizationId],
     );
     const taskBefore = beforeRes.rows[0] as Record<string, unknown> | undefined;
+
+    // Dependências: não concluir com bloqueios abertos (a menos de force=true)
+    if (
+      body.status === "CONCLUIDO" &&
+      taskBefore?.status !== "CONCLUIDO" &&
+      body._force !== true
+    ) {
+      const deps = (
+        Array.isArray(taskBefore?.dependencies) ? taskBefore.dependencies : []
+      ).filter((d): d is string => typeof d === "string" && isUuid(d));
+      if (deps.length > 0) {
+        const openDeps = await db.query(
+          `SELECT id, titulo FROM tarefas
+           WHERE organization_id = $1 AND id = ANY($2::uuid[])
+             AND status NOT IN ('CONCLUIDO','ARQUIVADO')`,
+          [user.organizationId, deps],
+        );
+        if (openDeps.rows.length > 0) {
+          return c.json(
+            {
+              error: "Tarefa bloqueada por dependências abertas",
+              blocked_by: openDeps.rows,
+            },
+            409,
+          );
+        }
+      }
+    }
 
     sets.push(`updated_at = NOW()`);
     params.push(id, user.organizationId);
@@ -508,7 +697,7 @@ app.patch("/:id", requireAuth, async (c) => {
 
     // Fire automations asynchronously (non-blocking)
     if (taskBefore) {
-      executeAutomations(db, user.organizationId, taskBefore, taskAfter).catch((err) =>
+      executeAutomations(db, user.organizationId, taskBefore, taskAfter, c.env).catch((err) =>
         console.error("[Automation] engine error:", err),
       );
     }
@@ -537,16 +726,23 @@ app.patch("/:id", requireAuth, async (c) => {
           ? String(taskAfter.linked_entity_id)
           : null;
 
+      // Bônus de pontualidade: concluída até o vencimento vale mais (US-15)
+      const dueRaw = taskAfter.data_vencimento ? String(taskAfter.data_vencimento).slice(0, 10) : null;
+      const onTime = !dueRaw || new Date().toISOString().slice(0, 10) <= dueRaw;
+      const xpAmount = onTime ? 15 : 10;
+
       if (linkedPatientId)
         db.query(
           `INSERT INTO xp_transactions (organization_id, patient_id, amount, reason, description, source, metadata, created_by)
-         VALUES ($1, $2, 10, 'task_completed', 'Tarefa concluída', 'tarefa', $3::jsonb, $4)
+         VALUES ($1, $2, $5, 'task_completed', $6, 'tarefa', $3::jsonb, $4)
          ON CONFLICT DO NOTHING`,
           [
             user.organizationId,
             linkedPatientId,
-            jsonSerialize({ task_id: id }),
+            jsonSerialize({ task_id: id, on_time: onTime }),
             isUuid(completedBy) ? completedBy : null,
+            xpAmount,
+            onTime ? "Tarefa concluída no prazo" : "Tarefa concluída",
           ],
         ).catch(() => null);
     }

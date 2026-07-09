@@ -41,6 +41,30 @@ export type GoogleCalendarEvent = {
   end: { dateTime: string; timeZone: string };
 };
 
+export type TaskLike = {
+  id?: string;
+  titulo?: string;
+  descricao?: string;
+  data_vencimento?: string; // YYYY-MM-DD ou ISO
+  hora_vencimento?: string; // HH:MM opcional
+};
+
+/**
+ * Tarefa → evento Google (specs/tarefas-integracoes US-14). Sem hora de
+ * vencimento vira bloco de 30min às 09h do dia do prazo.
+ */
+export function taskToGoogleEvent(task: TaskLike): GoogleCalendarEvent {
+  const date = dateOnly(task.data_vencimento ?? "");
+  const start = task.hora_vencimento ? hhmm(task.hora_vencimento) : "09:00";
+  const end = addMinutes(start, 30);
+  return {
+    summary: `Tarefa — ${task.titulo ?? "FisioFlow"}`,
+    description: `FisioFlow${task.id ? ` · tarefa #${task.id}` : ""}${task.descricao ? `\n${task.descricao.replace(/<[^>]+>/g, "")}` : ""}`,
+    start: { dateTime: `${date}T${start}:00`, timeZone: TZ },
+    end: { dateTime: `${date}T${end}:00`, timeZone: TZ },
+  };
+}
+
 export function appointmentToGoogleEvent(appt: AppointmentLike): GoogleCalendarEvent {
   const name = appt.patientName ?? appt.patient_name ?? "Paciente";
   const date = dateOnly(appt.date ?? "");

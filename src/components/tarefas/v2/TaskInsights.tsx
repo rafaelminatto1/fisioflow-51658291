@@ -1,4 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { request } from "@/api/v2/base";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   ResponsiveContainer,
   BarChart,
@@ -22,6 +26,9 @@ import {
   AlertCircle,
   Zap,
   CheckCircle2,
+  Users,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { cn, safeFormat } from "@/lib/utils";
@@ -30,6 +37,7 @@ import {
   Tarefa,
   TarefaStatus,
   TarefaPrioridade,
+  TeamMember,
   STATUS_LABELS,
   PRIORIDADE_LABELS,
   TaskStats,
@@ -38,9 +46,84 @@ import {
 interface TaskInsightsProps {
   stats: TaskStats;
   effectiveTarefas: Tarefa[];
+  teamMembers?: TeamMember[];
 }
 
-export default function TaskInsights({ stats, effectiveTarefas }: TaskInsightsProps) {
+export default function TaskInsights({
+  stats,
+  effectiveTarefas,
+  teamMembers = [],
+}: TaskInsightsProps) {
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const weeklySummary = useMutation({
+    mutationFn: async () => {
+      const res = await request<{ data: { text: string } }>("/api/tarefas/ai/weekly-summary", {
+        method: "POST",
+      });
+      return res.data.text;
+    },
+    onSuccess: setAiSummary,
+    onError: (err: Error) => toast.error("Falha no resumo semanal: " + err.message),
+  });
+
+  // Carga de trabalho por membro (tarefas abertas)
+  const workload = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const byMember = new Map<
+      string,
+      { total: number; emProgresso: number; atrasadas: number; urgentes: number }
+    >();
+    for (const t of effectiveTarefas) {
+      if (t.status === "CONCLUIDO" || t.status === "ARQUIVADO") continue;
+      const key = t.responsavel_id || "__sem__";
+      const entry = byMember.get(key) ?? { total: 0, emProgresso: 0, atrasadas: 0, urgentes: 0 };
+      entry.total++;
+      if (t.status === "EM_PROGRESSO") entry.emProgresso++;
+      if (t.data_vencimento && String(t.data_vencimento).slice(0, 10) < today) entry.atrasadas++;
+      if (t.prioridade === "URGENTE") entry.urgentes++;
+      byMember.set(key, entry);
+    }
+    const memberName = (id: string) =>
+      id === "__sem__"
+        ? "Sem responsável"
+        : (teamMembers.find((m) => m.id === id)?.full_name ?? "Membro");
+    return Array.from(byMember.entries())
+      .map(([id, data]) => ({ id, name: memberName(id), ...data }))
+      .sort((a, b) => b.total - a.total);
+  }, [effectiveTarefas, teamMembers]);
+
+  const maxWorkload = Math.max(1, ...workload.map((w) => w.total));
+
+  // Relatório de fluxo (burnup + velocity) — US-19
+  const { data: flowReport } = useQuery({
+    queryKey: ["tarefas-flow-report"],
+    queryFn: async () => {
+      const res = await request<{
+        data: {
+          daily: Array<{ date: string; created: number; completed: number }>;
+          velocity: Array<{ week: string; completed: number }>;
+          open_now: number;
+        };
+      }>("/api/tarefas/reports/flow?days=30");
+      return res.data;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const burnupData = useMemo(() => {
+    if (!flowReport?.daily) return [];
+    let createdAcc = 0;
+    let completedAcc = 0;
+    return flowReport.daily.map((d) => {
+      createdAcc += d.created;
+      completedAcc += d.completed;
+      return {
+        date: d.date.slice(5),
+        criadas: createdAcc,
+        concluidas: completedAcc,
+      };
+    });
+  }, [flowReport]);
   // Chart data for insights
   const chartData = useMemo(() => {
     if (!stats) return { status: [], priority: [], weekly: [] };
@@ -326,6 +409,146 @@ export default function TaskInsights({ stats, effectiveTarefas }: TaskInsightsPr
             )}
           </div>
         </CardContent>
+      </Card>
+
+      {/* Carga por membro (US-16) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-blue-500" />
+            Carga de trabalho por membro
+          </CardTitle>
+          <CardDescription>Tarefas abertas por responsável</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {workload.length === 0 && (
+            <p className="text-sm text-muted-foreground">Nenhuma tarefa aberta.</p>
+          )}
+          {workload.map((w) => (
+            <div key={w.id} className="space-y-1">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">{w.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {w.total} aberta{w.total > 1 ? "s" : ""}
+                  {w.atrasadas > 0 && (
+                    <span className="ml-2 font-bold text-red-600">{w.atrasadas} atrasadas</span>
+                  )}
+                  {w.urgentes > 0 && (
+                    <span className="ml-2 font-bold text-orange-600">{w.urgentes} urgentes</span>
+                  )}
+                </span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className={cn(
+                    "h-full rounded-full",
+                    w.atrasadas > 0 ? "bg-red-500" : "bg-blue-500",
+                  )}
+                  style={{ width: `${(w.total / maxWorkload) * 100}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Burnup + Velocity (US-19) */}
+      {burnupData.length > 0 && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-emerald-500" />
+                Burnup (30 dias)
+              </CardTitle>
+              <CardDescription>
+                Criadas vs concluídas acumuladas · {flowReport?.open_now ?? 0} abertas hoje
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={220}>
+                <AreaChart data={burnupData}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                  <RechartsTooltip />
+                  <Area
+                    type="monotone"
+                    dataKey="criadas"
+                    stroke="#3b82f6"
+                    fill="#3b82f6"
+                    fillOpacity={0.15}
+                    name="Criadas"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="concluidas"
+                    stroke="#22c55e"
+                    fill="#22c55e"
+                    fillOpacity={0.25}
+                    name="Concluídas"
+                  />
+                  <Legend />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-yellow-500" />
+                Velocity semanal
+              </CardTitle>
+              <CardDescription>Tarefas concluídas por semana (6 semanas)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={(flowReport?.velocity ?? []).map((v) => ({ ...v, week: v.week.slice(5) }))}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis dataKey="week" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                  <RechartsTooltip />
+                  <Bar dataKey="completed" name="Concluídas" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Resumo semanal por IA (US-13) */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-violet-500" />
+                Resumo semanal (IA)
+              </CardTitle>
+              <CardDescription>Estado do board nos últimos 7 dias</CardDescription>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5 rounded-xl"
+              onClick={() => weeklySummary.mutate()}
+              disabled={weeklySummary.isPending}
+            >
+              {weeklySummary.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+              Gerar resumo
+            </Button>
+          </div>
+        </CardHeader>
+        {aiSummary && (
+          <CardContent>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed">{aiSummary}</p>
+          </CardContent>
+        )}
       </Card>
     </div>
   );

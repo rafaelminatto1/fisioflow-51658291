@@ -16,6 +16,12 @@ vi.mock("../../lib/tarefaNotifications", async (importOriginal) => {
   };
 });
 
+const mockRunAi = vi.fn();
+vi.mock("../../lib/ai-native", () => ({
+  runAi: (...args: unknown[]) => mockRunAi(...args),
+  readAiText: (r: unknown) => (r as { response?: string })?.response ?? "",
+}));
+
 let mockUserRole = "fisioterapeuta";
 let mockUserId = "user-fisio-001";
 
@@ -284,6 +290,96 @@ describe("Templates de tarefa", () => {
     const res = await app.fetch(makeRequest("GET", "/api/tarefas/templates"), BASE_ENV as any);
     expect(res.status).toBe(200);
     expect((mockQuery.mock.calls[0][1] as unknown[])[0]).toBe("org-test-001");
+  });
+});
+
+describe("POST /api/tarefas/ai/suggest-priority (US-13)", () => {
+  it("extrai prioridade válida da resposta da IA", async () => {
+    mockRunAi.mockResolvedValueOnce({ response: "URGENTE" });
+    const app = await buildApp();
+    const res = await app.fetch(
+      makeRequest("POST", "/api/tarefas/ai/suggest-priority", {
+        titulo: "Cobrar convênio hoje",
+      }),
+      BASE_ENV as any,
+    );
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as any;
+    expect(json.data.prioridade).toBe("URGENTE");
+  });
+
+  it("400 sem titulo e 502 com resposta inválida", async () => {
+    const app = await buildApp();
+    const res1 = await app.fetch(
+      makeRequest("POST", "/api/tarefas/ai/suggest-priority", {}),
+      BASE_ENV as any,
+    );
+    expect(res1.status).toBe(400);
+
+    mockRunAi.mockResolvedValueOnce({ response: "não sei" });
+    const res2 = await app.fetch(
+      makeRequest("POST", "/api/tarefas/ai/suggest-priority", { titulo: "x" }),
+      BASE_ENV as any,
+    );
+    expect(res2.status).toBe(502);
+  });
+});
+
+describe("PATCH — bloqueio por dependências abertas (US-17)", () => {
+  it("retorna 409 ao concluir tarefa com blocked_by aberta", async () => {
+    mockQuery
+      .mockResolvedValueOnce({
+        rows: [{ status: "EM_PROGRESSO", responsavel_id: null, dependencies: [UUID2] }],
+      })
+      .mockResolvedValueOnce({ rows: [{ id: UUID2, titulo: "Bloqueadora" }] }); // deps abertas
+
+    const app = await buildApp();
+    const res = await app.fetch(
+      makeRequest("PATCH", `/api/tarefas/${UUID}`, { status: "CONCLUIDO" }),
+      BASE_ENV as any,
+    );
+    expect(res.status).toBe(409);
+    const json = (await res.json()) as any;
+    expect(json.blocked_by).toHaveLength(1);
+  });
+
+  it("permite concluir com _force=true", async () => {
+    mockQuery
+      .mockResolvedValueOnce({
+        rows: [{ status: "EM_PROGRESSO", responsavel_id: null, dependencies: [UUID2] }],
+      })
+      .mockResolvedValueOnce({
+        rowCount: 1,
+        rows: [{ id: UUID, titulo: "T", status: "CONCLUIDO" }],
+      })
+      .mockResolvedValue({ rows: [] });
+
+    const app = await buildApp();
+    const res = await app.fetch(
+      makeRequest("PATCH", `/api/tarefas/${UUID}`, { status: "CONCLUIDO", _force: true }),
+      BASE_ENV as any,
+    );
+    expect(res.status).toBe(200);
+  });
+
+  it("permite concluir quando dependências já estão concluídas", async () => {
+    mockQuery
+      .mockResolvedValueOnce({
+        rows: [{ status: "EM_PROGRESSO", responsavel_id: null, dependencies: [UUID2] }],
+      })
+      .mockResolvedValueOnce({ rows: [] }) // nenhuma dependência aberta
+      .mockResolvedValueOnce({
+        rowCount: 1,
+        rows: [{ id: UUID, titulo: "T", status: "CONCLUIDO" }],
+      })
+      .mockResolvedValue({ rows: [] });
+
+    const app = await buildApp();
+    const res = await app.fetch(
+      makeRequest("PATCH", `/api/tarefas/${UUID}`, { status: "CONCLUIDO" }),
+      BASE_ENV as any,
+    );
+    expect(res.status).toBe(200);
   });
 });
 

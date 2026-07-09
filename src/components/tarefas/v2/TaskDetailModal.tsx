@@ -67,6 +67,8 @@ import {
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { TaskCommentsSection } from "./TaskCommentsSection";
 import { TaskConversationContext } from "./TaskConversationContext";
+import { SubtasksSection } from "./SubtasksSection";
+import { TaskCalendarSyncButton } from "./TaskCalendarSyncButton";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -1046,6 +1048,13 @@ export function TaskDetailModal({ open, onOpenChange, tarefa, teamMembers }: Tas
                           )}
                       </div>
                     )}
+
+                    <div className="flex justify-end">
+                      <TaskCalendarSyncButton tarefa={tarefa} />
+                    </div>
+
+                    {/* Subtarefas (US-18) */}
+                    <SubtasksSection parentId={tarefa?.id} />
                   </TabsContent>
 
                   {/* Checklists Tab */}
