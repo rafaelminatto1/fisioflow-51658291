@@ -42,7 +42,7 @@ import {
 } from "lucide-react";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { useOrganizationMembers } from "@/hooks/useOrganizationMembers";
-import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "@/hooks/usePermissions";
 import { MemberPhoneInline } from "@/components/organization/MemberPhoneInline";
 import type { OrganizationMember } from "@/api/v2";
 
@@ -73,8 +73,7 @@ export default function OrganizationSettings() {
     isAdding,
     isRemoving,
   } = useOrganizationMembers(currentOrganization?.id);
-  const { user: authUser } = useAuth();
-  const isAdmin = String(authUser?.role ?? "").toLowerCase() === "admin";
+  const { isAdmin } = usePermissions();
 
   // Form state — clinic data
   const [orgName, setOrgName] = useState("");

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useOrganizationMembers } from "@/hooks/useOrganizationMembers";
 import { useOrganizations } from "@/hooks/useOrganizations";
-import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "@/hooks/usePermissions";
 import { MemberPhoneInline } from "@/components/organization/MemberPhoneInline";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { Search, UserPlus } from "lucide-react";
@@ -34,8 +34,7 @@ export function MembersManager({ onInviteClick }: MembersManagerProps) {
   const { members, isLoading, updateMemberPhone, isUpdatingPhone } = useOrganizationMembers(
     currentOrganization?.id,
   );
-  const { user: authUser } = useAuth();
-  const isAdmin = String(authUser?.role ?? "").toLowerCase() === "admin";
+  const { isAdmin } = usePermissions();
 
   const rows = ((members ?? []) as MemberRow[]).map((member) => ({
     ...member,
