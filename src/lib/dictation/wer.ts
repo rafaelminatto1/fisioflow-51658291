@@ -17,9 +17,8 @@ export function wordErrorRate(reference: string, hypothesis: string): { wer: num
   const hyp = normalizeForWer(hypothesis).split(" ").filter(Boolean);
   if (ref.length === 0) throw new Error("referência vazia");
 
-  const prev = new Array<number>(hyp.length + 1);
-  const curr = new Array<number>(hyp.length + 1);
-  for (let j = 0; j <= hyp.length; j++) prev[j] = j;
+  const prev: number[] = Array.from({ length: hyp.length + 1 }, (_, j) => j);
+  const curr: number[] = Array.from({ length: hyp.length + 1 }, () => 0);
   for (let i = 1; i <= ref.length; i++) {
     curr[0] = i;
     for (let j = 1; j <= hyp.length; j++) {

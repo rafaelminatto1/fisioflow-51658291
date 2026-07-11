@@ -15,7 +15,6 @@ type ScribeState = {
   organizationId: string | null;
   patientId: string | null;
   therapistId: string | null;
-  section: "S" | "O" | "A" | "P";
   captureMode: AudioCaptureMode;
   captureReason: AudioCaptureReason;
   budgetBlocked: boolean;
@@ -36,7 +35,6 @@ export class VoiceScribeAgent extends VoiceAgentBase<Env, ScribeState> {
     organizationId: null,
     patientId: null,
     therapistId: null,
-    section: "S",
     captureMode: 30,
     captureReason: "soap_section",
     budgetBlocked: false,
@@ -48,7 +46,6 @@ export class VoiceScribeAgent extends VoiceAgentBase<Env, ScribeState> {
     organizationId: string;
     patientId: string;
     therapistId: string;
-    section?: "S" | "O" | "A" | "P";
     captureMode?: AudioCaptureMode;
     captureReason?: AudioCaptureReason;
   }) {
@@ -63,7 +60,6 @@ export class VoiceScribeAgent extends VoiceAgentBase<Env, ScribeState> {
       organizationId: input.organizationId,
       patientId: input.patientId,
       therapistId: input.therapistId,
-      section: input.section ?? "S",
       captureMode: budget.allowed ? capturePolicy.captureMode : 0,
       captureReason: capturePolicy.captureReason,
       budgetBlocked: !budget.allowed,
@@ -89,7 +85,6 @@ export class VoiceScribeAgent extends VoiceAgentBase<Env, ScribeState> {
         organizationId: String(payload.organizationId ?? ""),
         patientId: String(payload.patientId ?? ""),
         therapistId: String(payload.therapistId ?? ""),
-        section: payload.section as "S" | "O" | "A" | "P" | undefined,
         captureMode: payload.captureMode as AudioCaptureMode | undefined,
         captureReason: payload.captureReason as AudioCaptureReason | undefined,
       });
@@ -111,7 +106,9 @@ export class VoiceScribeAgent extends VoiceAgentBase<Env, ScribeState> {
   }
 
   async flush() {
-    const { organizationId, patientId, therapistId, section, turns } = this.state;
+    const { organizationId, patientId, therapistId, turns } = this.state;
+    // Coluna legada do modelo SOAP — valor fixo até a migração de limpeza (Fase C).
+    const section = "observacao";
     if (!organizationId || !patientId || !therapistId || turns.length === 0) {
       return { ok: false, reason: "missing-context-or-empty" };
     }

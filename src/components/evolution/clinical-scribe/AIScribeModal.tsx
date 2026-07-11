@@ -17,7 +17,7 @@ import {
   Sparkles,
   FileText,
 } from "lucide-react";
-import { useVoiceScribe, type SoapFields } from "@/hooks/useVoiceScribe";
+import { useVoiceScribe } from "@/hooks/useVoiceScribe";
 import { useDictationEnabled } from "@/hooks/useDictationEnabled";
 import { AIScribeModalV2 } from "./AIScribeModalV2";
 import { cn } from "@/lib/utils";
@@ -26,7 +26,7 @@ import { toast } from "sonner";
 interface AIScribeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onApply: (soap: SoapFields) => void;
+  onApply: (text: string) => void;
   patientId?: string;
 }
 
@@ -47,7 +47,7 @@ const AIScribeModalV1: React.FC<AIScribeModalProps> = ({
   const {
     voiceState,
     transcribedText: _transcribedText,
-    soapFields,
+    result,
     error,
     isRecording,
     startRecording,
@@ -84,8 +84,8 @@ const AIScribeModalV1: React.FC<AIScribeModalProps> = ({
   };
 
   const handleApply = () => {
-    if (soapFields) {
-      onApply(soapFields);
+    if (result?.observacao) {
+      onApply(result.observacao);
       onOpenChange(false);
       reset();
     }
@@ -197,24 +197,15 @@ const AIScribeModalV1: React.FC<AIScribeModalProps> = ({
           </div>
 
           {/* Result Preview (Optional) */}
-          {soapFields && (
+          {result?.observacao && (
             <div className="max-h-48 overflow-y-auto p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="flex items-center gap-2 mb-3 border-b border-slate-100 dark:border-slate-800 pb-2">
                 <FileText className="w-4 h-4 text-blue-600" />
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                  Preview SOAP
+                  Transcrição
                 </span>
               </div>
-              <div className="space-y-3">
-                {Object.entries(soapFields).map(([key, value]) => (
-                  <div key={key}>
-                    <span className="text-[9px] font-black uppercase text-blue-600/60">{key}</span>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">
-                      {value}
-                    </p>
-                  </div>
-                ))}
-              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400 whitespace-pre-wrap">{result.observacao}</p>
             </div>
           )}
 

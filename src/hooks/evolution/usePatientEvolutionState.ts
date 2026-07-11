@@ -72,13 +72,7 @@ export function usePatientEvolutionState() {
   // Canonical state (modelo único do sistema)
   const [evolutionData, setEvolutionData] = useState<EvolutionData>(emptyEvolutionData);
   // Legacy mirrors — kept transitorily for components não refatorados (Fase 3 limpa).
-  const [soapData, setSoapData] = useState({
-    subjective: "",
-    objective: "",
-    assessment: "",
-    plan: "",
-  });
-  const [painScale, setPainScale] = useState<PainScaleData>({ level: 0 });
+    const [painScale, setPainScale] = useState<PainScaleData>({ level: 0 });
   const [sessionExercises, setSessionExercises] = useState<any[]>([]);
   // P2.3: evolutionV2Data agora é DERIVADO do canonical evolutionData via useMemo.
   // Eliminado useState dual para fonte única da verdade — antes mirror manual
@@ -203,7 +197,6 @@ export function usePatientEvolutionState() {
 
     if (isFirstSeed) {
       // P2.3: V2 mirror agora é derivado via useMemo — sync manual eliminado.
-      setSoapData({ subjective: "", objective: "", assessment: "", plan: "" });
       if (painScaleValue != null) {
         setPainScale({ level: painScaleValue });
       }
@@ -507,8 +500,6 @@ export function usePatientEvolutionState() {
     evolutionData,
     setEvolutionData,
     // Legacy mirrors (Fase 3 elimina)
-    soapData,
-    setSoapData,
     painScale,
     setPainScale,
     sessionExercises,

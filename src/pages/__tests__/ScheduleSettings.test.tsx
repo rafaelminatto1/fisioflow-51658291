@@ -51,7 +51,7 @@ function renderAt(path: string) {
 describe("ScheduleSettings shell", () => {
   it("renderiza o título e as 5 abas da navegação", () => {
     renderAt("/agenda/settings");
-    expect(screen.getByText("Configurações da Agenda")).toBeInTheDocument();
+    expect(screen.getByText("Configurações")).toBeInTheDocument();
     expect(screen.getAllByText("Funcionamento").length).toBeGreaterThan(0);
     expect(screen.getByText("Atendimentos")).toBeInTheDocument();
     expect(screen.getByText("Disponibilidade")).toBeInTheDocument();

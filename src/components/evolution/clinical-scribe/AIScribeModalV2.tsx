@@ -22,12 +22,11 @@ import { useVoiceScribeV2 } from "@/hooks/useVoiceScribeV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import type { SoapFields } from "@/hooks/useVoiceScribe";
 
 interface AIScribeModalV2Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onApply: (soap: SoapFields) => void;
+  onApply: (text: string) => void;
   patientId?: string;
 }
 
@@ -57,7 +56,6 @@ export const AIScribeModalV2: React.FC<AIScribeModalV2Props> = ({
     organizationId,
     patientId: patientId ?? "",
     therapistId,
-    section: "S",
   });
 
   const [elapsed, setElapsed] = useState(0);
@@ -105,7 +103,7 @@ export const AIScribeModalV2: React.FC<AIScribeModalV2Props> = ({
       toast.warning("Nada para aplicar.");
       return;
     }
-    onApply({ subjective: text, objective: "", assessment: "", plan: "" });
+    onApply(text);
     onOpenChange(false);
   };
 

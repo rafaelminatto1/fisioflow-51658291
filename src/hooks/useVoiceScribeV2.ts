@@ -6,10 +6,9 @@ export interface UseVoiceScribeV2Options {
   organizationId: string;
   patientId: string;
   therapistId: string;
-  section?: "S" | "O" | "A" | "P";
   captureMode?: AudioCaptureMode;
   captureReason?: AudioCaptureReason;
-  /** Persiste a mesma instância DO entre reloads. Default: `${patientId}:${section}`. */
+  /** Persiste a mesma instância DO entre reloads. Default: `${patientId}:observacao`. */
   sessionName?: string;
   /** Override do host. Default: `VITE_WORKERS_API_URL` (sem `https://`). */
   host?: string;
@@ -26,7 +25,7 @@ const DEFAULT_HOST = (() => {
  * Histórico persiste no DO entre reloads quando `sessionName` é estável.
  */
 export function useVoiceScribeV2(opts: UseVoiceScribeV2Options) {
-  const sessionName = opts.sessionName ?? `${opts.patientId}:${opts.section ?? "S"}`;
+  const sessionName = opts.sessionName ?? `${opts.patientId}:observacao`;
 
   const voice = useVoiceAgent({
     agent: "voice-scribe-agent",
@@ -41,7 +40,6 @@ export function useVoiceScribeV2(opts: UseVoiceScribeV2Options) {
       organizationId: opts.organizationId,
       patientId: opts.patientId,
       therapistId: opts.therapistId,
-      section: opts.section ?? "S",
       captureMode: opts.captureMode ?? 30,
       captureReason: opts.captureReason ?? "soap_section",
     });
@@ -51,7 +49,6 @@ export function useVoiceScribeV2(opts: UseVoiceScribeV2Options) {
     opts.organizationId,
     opts.patientId,
     opts.therapistId,
-    opts.section,
     opts.captureMode,
     opts.captureReason,
   ]);

@@ -20,20 +20,10 @@ export interface VoiceTranscriptionResult {
   observacao: string;
 }
 
-/** @deprecated mantido para consumidores legados — usar `VoiceTranscriptionResult`. */
-export interface SoapFields {
-  subjective: string;
-  objective: string;
-  assessment: string;
-  plan: string;
-}
-
 export interface UseVoiceScribeResult {
   voiceState: VoiceScribeState;
   transcribedText: string;
   result: VoiceTranscriptionResult | null;
-  /** @deprecated use `result`. */
-  soapFields: SoapFields | null;
   error: string | null;
   isRecording: boolean;
   startRecording: () => Promise<void>;
@@ -115,16 +105,10 @@ export function useVoiceScribe(): UseVoiceScribeResult {
     setError(null);
   }, []);
 
-  // Back-compat: monta um pseudo-SOAP onde tudo cai em `subjective`.
-  const soapFields: SoapFields | null = result
-    ? { subjective: result.observacao, objective: "", assessment: "", plan: "" }
-    : null;
-
   return {
     voiceState,
     transcribedText,
     result,
-    soapFields,
     error,
     isRecording,
     startRecording,
