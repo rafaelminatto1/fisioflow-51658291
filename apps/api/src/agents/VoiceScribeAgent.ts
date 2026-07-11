@@ -131,14 +131,12 @@ export class VoiceScribeAgent extends VoiceAgentBase<Env, ScribeState> {
       await this.setState({ ...this.state, turns: [], startedAt: null, budgetBlocked: true });
       return { ok: false, reason: budget.reason ?? "transcription-budget-exceeded", budget };
     }
-    const url = this.env.NEON_URL || this.env.HYPERDRIVE?.connectionString;
-    if (!url) {
+    if (!this.env.NEON_URL && !this.env.HYPERDRIVE?.connectionString) {
       return { ok: false, reason: "no-db-url" };
     }
 
-    const { neon } = await import("@neondatabase/serverless");
-    const sql = neon(url);
-    const [row] = await sql`
+    const { getRawSql } = await import("../lib/db");
+    const result = await getRawSql(this.env, "write")`
       INSERT INTO clinical_scribe_logs
         (
           organization_id, patient_id, therapist_id, section, raw_text, consent_source,
@@ -154,6 +152,7 @@ export class VoiceScribeAgent extends VoiceAgentBase<Env, ScribeState> {
         )
       RETURNING id
     `;
+    const row = (result as { rows?: Array<{ id?: string }> }).rows?.[0];
 
     await this.setState({ ...this.state, turns: [], startedAt: null });
     return { ok: true, id: row?.id };

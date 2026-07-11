@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useVoiceAgent } from "@cloudflare/voice/react";
+import { getWorkersApiUrl } from "@/lib/api/config";
 import type { AudioCaptureMode, AudioCaptureReason } from "@fisioflow/core";
 
 export interface UseVoiceScribeV2Options {
@@ -14,10 +15,9 @@ export interface UseVoiceScribeV2Options {
   host?: string;
 }
 
-const DEFAULT_HOST = (() => {
-  const url = import.meta.env?.VITE_WORKERS_API_URL ?? "";
-  return url.replace(/^https?:\/\//, "").replace(/\/$/, "");
-})();
+// getWorkersApiUrl tem fallback hardcoded — sem ele, build sem VITE_WORKERS_API_URL
+// gera host vazio e o WS vira wss://agents/... (visto em prod 11/jul).
+const DEFAULT_HOST = getWorkersApiUrl().replace(/^https?:\/\//, "").replace(/\/$/, "");
 
 /**
  * S6.3 Voice Scribe v2 — WebSocket contínuo com `VoiceScribeAgent` (Cloudflare Voice).

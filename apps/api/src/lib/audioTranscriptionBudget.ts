@@ -1,5 +1,5 @@
-import { neon } from "@neondatabase/serverless";
 import type { Env } from "../types/env";
+import { getRawSql, type DbMode } from "./db";
 import { estimateTranscriptionMinutes } from "@fisioflow/core";
 
 export type TranscriptionBudgetCheck = {
@@ -30,6 +30,17 @@ type BudgetRow = {
 
 const DEFAULT_ORG_LIMIT_MINUTES = 1200;
 
+const hasDbUrl = (env: Env) => Boolean(env.NEON_URL || env.HYPERDRIVE?.connectionString);
+
+/** Tagged template sobre getRawSql (pg/Hyperdrive) devolvendo rows (substitui o driver HTTP). */
+const rowsSql =
+  (env: Env, mode: DbMode) =>
+  async (strings: TemplateStringsArray, ...values: unknown[]): Promise<any[]> => {
+    const res = await getRawSql(env, mode)(strings as any, ...values);
+    return (res as { rows?: any[] }).rows ?? [];
+  };
+
+
 export async function checkAudioTranscriptionBudget(
   env: Env,
   input: {
@@ -38,10 +49,9 @@ export async function checkAudioTranscriptionBudget(
     requestedSeconds: number;
   },
 ): Promise<TranscriptionBudgetCheck> {
-  const url = env.NEON_URL || env.HYPERDRIVE?.connectionString;
-  if (!url) return buildFallbackCheck(input.requestedSeconds, "no-db-url");
+  if (!hasDbUrl(env)) return buildFallbackCheck(input.requestedSeconds, "no-db-url");
 
-  const sql = neon(url);
+  const sql = rowsSql(env, "read");
   const requestedMinutes = estimateTranscriptionMinutes(input.requestedSeconds);
 
   try {
@@ -125,9 +135,8 @@ export async function listAudioTranscriptionBudgets(
 ): Promise<
   Array<BudgetRow & { id: string; professional_user_id: string | null; updated_at: string }>
 > {
-  const url = env.NEON_URL || env.HYPERDRIVE?.connectionString;
-  if (!url) return [];
-  const sql = neon(url);
+  if (!hasDbUrl(env)) return [];
+  const sql = rowsSql(env, "read");
   const rows = await sql`
     SELECT id, professional_user_id, monthly_limit_minutes, warn_at_percent, hard_stop, updated_at
     FROM audio_transcription_budgets
@@ -149,9 +158,8 @@ export async function upsertAudioTranscriptionBudget(
     hardStop: boolean;
   },
 ): Promise<unknown> {
-  const url = env.NEON_URL || env.HYPERDRIVE?.connectionString;
-  if (!url) throw new Error("Database URL not configured");
-  const sql = neon(url);
+  if (!hasDbUrl(env)) throw new Error("Database URL not configured");
+  const sql = rowsSql(env, "write");
   const professionalUserId = input.professionalUserId?.trim() || null;
 
   const rows = professionalUserId
@@ -216,9 +224,8 @@ export async function deleteAudioTranscriptionBudget(
   env: Env,
   input: { organizationId: string; professionalUserId?: string | null },
 ): Promise<number> {
-  const url = env.NEON_URL || env.HYPERDRIVE?.connectionString;
-  if (!url) throw new Error("Database URL not configured");
-  const sql = neon(url);
+  if (!hasDbUrl(env)) throw new Error("Database URL not configured");
+  const sql = rowsSql(env, "write");
   const professionalUserId = input.professionalUserId?.trim() || null;
 
   const rows = professionalUserId
@@ -242,9 +249,8 @@ export async function getAudioTranscriptionMonthlyUsage(
   env: Env,
   organizationId: string,
 ): Promise<Array<{ therapist_id: string | null; used_minutes: number; captured_seconds: number }>> {
-  const url = env.NEON_URL || env.HYPERDRIVE?.connectionString;
-  if (!url) return [];
-  const sql = neon(url);
+  if (!hasDbUrl(env)) return [];
+  const sql = rowsSql(env, "read");
   const rows = await sql`
     SELECT therapist_id, CEIL(COALESCE(SUM(captured_seconds), 0) / 60.0)::integer AS used_minutes,
            COALESCE(SUM(captured_seconds), 0)::integer AS captured_seconds
