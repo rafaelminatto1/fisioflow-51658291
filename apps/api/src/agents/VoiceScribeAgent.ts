@@ -1,5 +1,6 @@
 import { Agent } from "agents";
-import { withVoice, WorkersAIFluxSTT, type VoiceTurnContext } from "@cloudflare/voice";
+import { withVoice, type VoiceTurnContext } from "@cloudflare/voice";
+import { createScribeTranscriber } from "./scribeConfig";
 import type { Env } from "../types/env";
 import {
   normalizeAudioCapturePolicy,
@@ -29,21 +30,7 @@ type ScribeState = {
  * Uni-direcional: sem TTS — Scribe transcreve sem responder ao fisioterapeuta.
  */
 export class VoiceScribeAgent extends VoiceAgentBase<Env, ScribeState> {
-  transcriber = new WorkersAIFluxSTT(this.env.AI, {
-    eotThreshold: 0.7,
-    keyterms: [
-      "fisioterapia",
-      "ombro",
-      "joelho",
-      "lombar",
-      "cervical",
-      "EVA",
-      "ADM",
-      "Mulligan",
-      "Maitland",
-      "neurodinâmica",
-    ],
-  });
+  transcriber = createScribeTranscriber(this.env.AI);
 
   initialState: ScribeState = {
     organizationId: null,

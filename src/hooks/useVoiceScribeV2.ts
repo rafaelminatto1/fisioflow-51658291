@@ -79,5 +79,3 @@ export function useVoiceScribeV2(opts: UseVoiceScribeV2Options) {
     flush: () => voice.sendJSON({ type: "flush" }),
   };
 }
-
-export const VOICE_SCRIBE_V2_ENABLED = import.meta.env?.VITE_VOICE_SCRIBE_V2 === "true";

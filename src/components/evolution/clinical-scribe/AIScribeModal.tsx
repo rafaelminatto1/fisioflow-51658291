@@ -18,7 +18,7 @@ import {
   FileText,
 } from "lucide-react";
 import { useVoiceScribe, type SoapFields } from "@/hooks/useVoiceScribe";
-import { VOICE_SCRIBE_V2_ENABLED } from "@/hooks/useVoiceScribeV2";
+import { useDictationEnabled } from "@/hooks/useDictationEnabled";
 import { AIScribeModalV2 } from "./AIScribeModalV2";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -31,7 +31,8 @@ interface AIScribeModalProps {
 }
 
 export const AIScribeModal: React.FC<AIScribeModalProps> = (props) => {
-  if (VOICE_SCRIBE_V2_ENABLED) {
+  const dictationEnabled = useDictationEnabled();
+  if (dictationEnabled) {
     return <AIScribeModalV2 {...props} />;
   }
   return <AIScribeModalV1 {...props} />;

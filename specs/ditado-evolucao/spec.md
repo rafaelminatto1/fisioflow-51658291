@@ -52,24 +52,29 @@ Como fisioterapeuta, quero um botão opcional que reestrutura meu ditado corrido
 2. Regra de spend limit no `fisioflow-gateway` para `deepgram/nova-3` (mesmo padrão da regra `glm52-daily`).
 3. Glossário de keyterms editável em configurações (lista de termos de fisioterapia).
 
-## Arquitetura
+## Arquitetura (REVISADA pós-auditoria: reuso do Voice Scribe v2 / S6.3)
+
+Auditoria de 11/jul revelou que ~70% já existia, desligado por flag. A implementação **adapta** em vez de construir:
 
 ```
-WEB   AudioWorklet PCM 16kHz ──WS──► Worker (auth JWT+org+RBAC)
-                                        │ env.AI.run("@cf/deepgram/nova-3",
-                                        │   { language:"pt-BR", interim_results:true,
-                                        │     punctuate:true, smart_format:true, keyterms },
-                                        │   { websocket:true })
-      parciais → decoration TipTap  ◄──┘ finais → transação Yjs no doc colaborativo
-                                          (persistência/undo/multiuser já existentes)
+WEB   AIScribeModal (já em PatientEvolution.tsx)
+        └─ useDictationEnabled() → organizations.settings.dictation_enabled (runtime)
+             true  → AIScribeModalV2 (streaming) — useVoiceScribeV2/@cloudflare/voice
+             false → AIScribeModalV1 (batch Whisper, comportamento atual)
+      AIScribeModalV2 ──WS──► VoiceScribeAgent (DO, agents SDK, já deployado)
+        transcriber = createScribeTranscriber(env.AI)   ← agents/scribeConfig.ts
+          = WorkersAINova3STT { language:"pt-BR", punctuate, smartFormat,
+                                keyterms: SCRIBE_KEYTERMS (20 termos de fisio) }
+        (antes: WorkersAIFluxSTT — inglês, motivo do v2 nunca ter sido ligado)
+      budget: checkAudioTranscriptionBudget (já existia) · persiste SÓ TEXTO
+      em clinical_scribe_logs (nunca áudio) · apply → texto livre em observação
 
 iOS   expo-speech-recognition (SFSpeechRecognizer on-device, pt-BR)
-      → texto no campo do evolution-form → save pela API existente
+      → texto no campo do evolution-form → save pela API existente (plano separado)
 ```
 
-- Componente web: hook `useDictation` agnóstico de engine (padrão VoiceDraft) + barra de mic; engine plugável para eventual troca (gpt-4o etc.).
-- O Worker de ponte não bufferiza áudio além do necessário para o frame WS; sem `console.log` de payload de áudio.
-- Timeout de sessão de ditado (ex.: 10 min) + keepalive (gotcha: Deepgram WS derruba após ~60s de silêncio).
+- Flag: `settings.dictation_enabled` por organização (runtime); `VITE_VOICE_SCRIBE_V2=true` permanece como override de dev.
+- Melhorias futuras (YAGNI por ora): inserção inline com ghost text no TipTap em vez do modal; migrar p/ `withVoiceInput`/`useVoiceInput` (API recomendada p/ ditado) quando o set-context/budget tiver equivalente.
 
 ## Fases e gates
 
