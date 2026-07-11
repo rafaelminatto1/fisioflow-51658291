@@ -161,7 +161,7 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
 
     if (sections.length === 0) {
       return (
-        <p className="text-xs text-muted-foreground leading-relaxed">
+        <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
           {entry.body || "Sem detalhes"}
         </p>
       );
@@ -266,7 +266,7 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
               {entry.entry_type === "evolution" ? (
                 renderEvolutionSections(entry)
               ) : (
-                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
+                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3 whitespace-pre-wrap">
                   {entry.body ||
                     (entry.entry_type === "appointment"
                       ? formatAppointmentLabel(entry)

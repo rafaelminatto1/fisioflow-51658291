@@ -356,6 +356,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                 >
                   <div className="px-10 pb-4 pt-1 space-y-4">
                     {item.type === "exercise" ? (
+                      <div className="grid gap-4 lg:grid-cols-12">
                         <div className="space-y-4 lg:col-span-8">
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-1.5 px-1">
@@ -1058,10 +1059,31 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
       )}
 
       {/* Input Section */}
+      {isEmbedded && totalCount > 0 && disabled && (
+        <div className="flex justify-end mb-3 mt-2">
+          <div className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900/40 rounded-full border border-slate-100 dark:border-slate-800/80 shadow-sm shrink-0">
+            <span className="text-[10px] font-extrabold text-muted-foreground/80 uppercase tracking-wider hidden sm:inline">
+              Concluído: {completedCount}/{totalCount}
+            </span>
+            <div className="flex items-center gap-1.5 sm:ml-2">
+              <span className="text-[10px] font-black text-slate-700 dark:text-slate-300">{Math.round(progress)}%</span>
+              <div className="h-1.5 w-16 sm:w-20 bg-slate-200 dark:bg-slate-800 overflow-hidden rounded-full">
+                <div
+                  className="h-full bg-gradient-to-r from-orange-500 to-emerald-500 transition-all duration-500 ease-out rounded-full"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {!disabled && (
         <div className="flex flex-col gap-2 mt-2">
-          {type === "unified" && (
-            <div className="relative flex p-1 bg-slate-100/80 dark:bg-slate-800/40 rounded-full w-fit mb-3 border border-slate-200/50 dark:border-slate-800/50">
+          {/* Header Row: Toggle & Progress */}
+          <div className="flex flex-wrap items-center justify-between gap-3 w-full mb-3">
+            {type === "unified" ? (
+              <div className="relative flex p-1 bg-slate-100/80 dark:bg-slate-800/40 rounded-full w-fit border border-slate-200/50 dark:border-slate-800/50">
               <button
                 type="button"
                 onClick={() => selectItemType("procedure")}
@@ -1151,7 +1173,27 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                 )}
               </button>
             </div>
-          )}
+            ) : (
+              <div />
+            )}
+            
+            {isEmbedded && totalCount > 0 && (
+              <div className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900/40 rounded-full border border-slate-100 dark:border-slate-800/80 shadow-sm shrink-0">
+                <span className="text-[10px] font-extrabold text-muted-foreground/80 uppercase tracking-wider hidden sm:inline">
+                  Concluído: {completedCount}/{totalCount}
+                </span>
+                <div className="flex items-center gap-1.5 sm:ml-2">
+                  <span className="text-[10px] font-black text-slate-700 dark:text-slate-300">{Math.round(progress)}%</span>
+                  <div className="h-1.5 w-16 sm:w-20 bg-slate-200 dark:bg-slate-800 overflow-hidden rounded-full">
+                    <div
+                      className="h-full bg-gradient-to-r from-orange-500 to-emerald-500 transition-all duration-500 ease-out rounded-full"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
           <div ref={inputWrapRef} className="relative flex items-center group/input">
             <Input
               data-evolution-input={type}
@@ -1327,22 +1369,6 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
 
       {/* Items List with DND and Animations */}
       <div className={cn("mt-2", isEmbedded && "flex min-h-0 flex-1 flex-col")}>
-        {isEmbedded && totalCount > 0 && (
-          <div className="flex items-center justify-between px-1.5 py-2 mb-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-100 dark:border-slate-800/80">
-            <span className="text-[10px] font-extrabold text-muted-foreground/80 uppercase tracking-wider">
-              Conclusão da sessão: {completedCount} de {totalCount} itens
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-black text-slate-700 dark:text-slate-300">{Math.round(progress)}%</span>
-              <div className="h-1.5 w-24 bg-slate-200 dark:bg-slate-800 overflow-hidden rounded-full">
-                <div
-                  className="h-full bg-gradient-to-r from-orange-500 to-emerald-500 transition-all duration-500 ease-out rounded-full"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="evolution-items">
             {(provided) => (
