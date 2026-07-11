@@ -518,10 +518,10 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
               className={cn(
                 "grid grid-cols-1 gap-4 items-start",
                 showClinicalPanel &&
-                  "min-[1180px]:grid-cols-[minmax(420px,1.25fr)_minmax(360px,0.95fr)_320px] 2xl:grid-cols-[minmax(520px,1.35fr)_minmax(420px,1fr)_340px]",
+                  "min-[1180px]:grid-cols-12 2xl:grid-cols-12",
               )}
             >
-              <div className="min-w-0">
+              <div className="min-w-0 min-[1180px]:col-span-5 2xl:col-span-5">
                 <EvolutionSectionCard
                   accent="amber"
                   icon={StickyNote}
@@ -599,7 +599,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                 </EvolutionSectionCard>
               </div>
 
-              <div className="min-w-0 space-y-4">
+              <div className="min-w-0 space-y-4 min-[1180px]:col-span-4 2xl:col-span-4">
                 <EvolutionSectionCard
                   accent="emerald"
                   icon={Activity}
@@ -676,7 +676,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
               </div>
 
               {showClinicalPanel && (
-                <aside className="min-w-0 space-y-4 min-[1180px]:pr-1">
+                <aside className="min-w-0 space-y-4 min-[1180px]:pr-1 min-[1180px]:col-span-3 2xl:col-span-3">
                   <EvolutionSectionCard
                     accent="rose"
                     icon={Activity}

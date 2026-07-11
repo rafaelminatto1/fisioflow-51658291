@@ -76,8 +76,9 @@ export function WikiDatabaseBlockEditor({
 
         <div className="space-y-2">
           {database.columns.map((column) => (
-            <div key={column.id} className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_130px_40px]">
-              <Input
+            <div key={column.id} className="grid grid-cols-1 gap-2 md:grid-cols-12">
+              <div className="md:col-span-8">
+                <Input
                 value={column.name}
                 onChange={(event) => {
                   const nextColumns = database.columns.map((currentColumn) =>
@@ -89,8 +90,10 @@ export function WikiDatabaseBlockEditor({
                 }}
                 placeholder="Nome da coluna"
               />
-              <select
-                className="h-10 rounded-md border bg-background px-2 text-sm"
+              </div>
+              <div className="md:col-span-3">
+                <select
+                  className="h-10 rounded-md border bg-background px-2 text-sm w-full"
                 value={column.type}
                 onChange={(event) => {
                   const nextColumns = database.columns.map((currentColumn) =>
@@ -107,9 +110,11 @@ export function WikiDatabaseBlockEditor({
                 <option value="text">Texto</option>
                 <option value="number">Numero</option>
                 <option value="date">Data</option>
-              </select>
-              <Button
-                variant="ghost"
+                </select>
+              </div>
+              <div className="md:col-span-1 flex justify-center">
+                <Button
+                  variant="ghost"
                 size="icon"
                 onClick={() => {
                   const nextColumns = database.columns.filter(
@@ -134,7 +139,8 @@ export function WikiDatabaseBlockEditor({
                 disabled={database.columns.length <= 1}
               >
                 <Trash2 className="h-4 w-4" />
-              </Button>
+                </Button>
+              </div>
             </div>
           ))}
         </div>

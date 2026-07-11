@@ -1166,8 +1166,8 @@ export default function CrmWhatsApp() {
               </button>
             </div>
           </div>
-          <div className="grid min-h-0 flex-1 grid-rows-1 grid-cols-[340px_minmax(0,1fr)_320px] overflow-hidden bg-muted/20">
-            <aside className="flex min-h-0 flex-col border-r border-border/50 bg-background/50">
+          <div className="grid min-h-0 flex-1 grid-rows-1 lg:grid-cols-12 overflow-hidden bg-muted/20">
+            <aside className="flex min-h-0 flex-col border-r border-border/50 bg-background/50 lg:col-span-3">
               <div className="p-4">
                 <div className="flex items-center gap-2.5 rounded-xl bg-muted/80 px-3.5 py-2.5 transition-colors focus-within:bg-muted focus-within:ring-2 focus-within:ring-primary/20">
                   <Search className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -1199,7 +1199,7 @@ export default function CrmWhatsApp() {
               </div>
             </aside>
 
-            <section className="flex min-h-0 flex-col bg-[hsl(40_30%_96%)]">
+            <section className="flex min-h-0 flex-col bg-[hsl(40_30%_96%)] lg:col-span-6">
               {selectedConversationVm ? (
                 <>
                   <div className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
@@ -1482,7 +1482,7 @@ export default function CrmWhatsApp() {
               )}
             </section>
 
-            <aside className="flex min-h-0 flex-col overflow-y-auto border-l border-border bg-muted/30">
+            <aside className="flex min-h-0 flex-col overflow-y-auto border-l border-border bg-muted/30 lg:col-span-3">
               {selectedConversationVm ? (
                 <>
                   <div className="border-b border-border bg-card px-4 pb-4 pt-5 text-center">

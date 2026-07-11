@@ -500,28 +500,32 @@ function WaitEditor({
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-[1fr_auto] items-end gap-2">
-        <TextField
-          label="Duração"
-          value={String(amount || "")}
-          onChange={(v) => {
-            const n = Number(v) || 0;
-            const seconds = n * unit.factor;
-            onChange({ seconds: seconds, label: `Aguardar ${n} ${n === 1 ? unit.label.slice(0, -1) : unit.label}` });
-          }}
-          placeholder="1"
-          type="number"
-        />
-        <SelectField
-          label="Unidade"
-          value={unit.unit}
-          options={WAIT_UNITS.map((u) => ({ label: u.label, value: u.unit }))}
-          onChange={(v) => {
-            const u = WAIT_UNITS.find((x) => x.unit === v)!;
-            const n = Math.round((data.seconds ?? 0) / unit.factor) || 1;
-            onChange({ seconds: n * u.factor, label: `Aguardar ${n} ${n === 1 ? u.label.slice(0, -1) : u.label}` });
-          }}
-        />
+      <div className="grid grid-cols-12 items-end gap-2">
+        <div className="col-span-8">
+          <TextField
+            label="Duração"
+            value={String(amount || "")}
+            onChange={(v) => {
+              const n = Number(v) || 0;
+              const seconds = n * unit.factor;
+              onChange({ seconds: seconds, label: `Aguardar ${n} ${n === 1 ? unit.label.slice(0, -1) : unit.label}` });
+            }}
+            placeholder="1"
+            type="number"
+          />
+        </div>
+        <div className="col-span-4">
+          <SelectField
+            label="Unidade"
+            value={unit.unit}
+            options={WAIT_UNITS.map((u) => ({ label: u.label, value: u.unit }))}
+            onChange={(v) => {
+              const u = WAIT_UNITS.find((x) => x.unit === v)!;
+              const n = Math.round((data.seconds ?? 0) / unit.factor) || 1;
+              onChange({ seconds: n * u.factor, label: `Aguardar ${n} ${n === 1 ? u.label.slice(0, -1) : u.label}` });
+            }}
+          />
+        </div>
       </div>
       <ParamHelper>O fluxo pausa até continuar. Máximo 30 dias.</ParamHelper>
     </div>

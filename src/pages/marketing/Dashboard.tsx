@@ -108,11 +108,11 @@ function CACByChannelCard() {
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          <div className="grid grid-cols-[1fr_90px_90px_70px] gap-2 text-xs text-muted-foreground px-1 pb-1 border-b">
-            <span>Canal</span>
-            <span className="text-right">Gasto (R$)</span>
-            <span className="text-right">Pacientes</span>
-            <span className="text-right">CAC</span>
+          <div className="grid grid-cols-12 gap-2 text-xs text-muted-foreground px-1 pb-1 border-b">
+            <span className="col-span-6">Canal</span>
+            <span className="col-span-2 text-right">Gasto (R$)</span>
+            <span className="col-span-2 text-right">Pacientes</span>
+            <span className="col-span-2 text-right">CAC</span>
           </div>
           {channels.map((ch) => {
             const cac = ch.newPatients > 0 ? ch.spend / ch.newPatients : null;
@@ -120,41 +120,43 @@ function CACByChannelCard() {
             return (
               <div
                 key={ch.id}
-                className="grid grid-cols-[1fr_90px_90px_70px] gap-2 items-center py-1 px-1 rounded hover:bg-muted/40 group"
+                className="grid grid-cols-12 gap-2 items-center py-1 px-1 rounded hover:bg-muted/40 group"
               >
-                <span className="text-xs font-medium truncate">{ch.label}</span>
+                <span className="col-span-6 text-xs font-medium truncate">{ch.label}</span>
                 {isEditing ? (
                   <>
                     <Input
                       type="number"
                       min={0}
                       defaultValue={ch.spend || ""}
-                      className="h-6 text-xs text-right px-1"
+                      className="col-span-2 h-6 text-xs text-right px-1"
                       onChange={(e) => updateChannel(ch.id, "spend", e.target.value)}
                     />
                     <Input
                       type="number"
                       min={0}
                       defaultValue={ch.newPatients || ""}
-                      className="h-6 text-xs text-right px-1"
+                      className="col-span-2 h-6 text-xs text-right px-1"
                       onChange={(e) => updateChannel(ch.id, "newPatients", e.target.value)}
                     />
-                    <button
-                      className="flex justify-end text-green-600"
-                      onClick={() => setEditing(null)}
-                    >
-                      <Check className="h-3.5 w-3.5" />
-                    </button>
+                    <div className="col-span-2 flex justify-end">
+                      <button
+                        className="text-green-600"
+                        onClick={() => setEditing(null)}
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </>
                 ) : (
                   <>
-                    <span className="text-xs text-right">
+                    <span className="col-span-2 text-xs text-right">
                       {ch.spend > 0 ? `R$ ${ch.spend.toLocaleString("pt-BR")}` : "-"}
                     </span>
-                    <span className="text-xs text-right">
+                    <span className="col-span-2 text-xs text-right">
                       {ch.newPatients > 0 ? ch.newPatients : "-"}
                     </span>
-                    <div className="flex justify-end items-center gap-1">
+                    <div className="col-span-2 flex justify-end items-center gap-1">
                       <span
                         className={cn(
                           "text-xs font-mono",
@@ -181,13 +183,13 @@ function CACByChannelCard() {
               </div>
             );
           })}
-          <div className="grid grid-cols-[1fr_90px_90px_70px] gap-2 text-xs font-semibold border-t pt-2 px-1">
-            <span>Total</span>
-            <span className="text-right">R$ {totalSpend.toLocaleString("pt-BR")}</span>
-            <span className="text-right">{totalPatients}</span>
+          <div className="grid grid-cols-12 gap-2 text-xs font-semibold border-t pt-2 px-1">
+            <span className="col-span-6">Total</span>
+            <span className="col-span-2 text-right">R$ {totalSpend.toLocaleString("pt-BR")}</span>
+            <span className="col-span-2 text-right">{totalPatients}</span>
             <span
               className={cn(
-                "text-right font-mono",
+                "col-span-2 text-right font-mono",
                 totalPatients > 0 && totalSpend / totalPatients < 300
                   ? "text-green-600"
                   : "text-amber-600",

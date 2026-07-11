@@ -82,9 +82,9 @@ export default function BoardDetail() {
       <div className="min-h-screen bg-background">
         <LoadingSkeleton type="card" className="h-[220px] w-full rounded-none" />
         <div className="px-4 py-6 sm:px-6 lg:px-8">
-          <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-            <LoadingSkeleton type="card" className="h-[640px] rounded-[28px]" />
-            <LoadingSkeleton type="card" className="h-[640px] rounded-[28px]" />
+          <div className="grid gap-6 lg:grid-cols-12">
+            <LoadingSkeleton type="card" className="h-[640px] rounded-[28px] lg:col-span-3" />
+            <LoadingSkeleton type="card" className="h-[640px] rounded-[28px] lg:col-span-9" />
           </div>
         </div>
       </div>

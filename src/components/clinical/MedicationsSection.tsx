@@ -129,8 +129,9 @@ export function MedicationsSection({
       )}
 
       <div className="flex flex-col gap-3 p-3 bg-muted/10 rounded-xl border border-border/50">
-        <div className="grid grid-cols-[1fr_80px_80px_auto] gap-2 items-center">
-          <Popover open={open} onOpenChange={setOpen}>
+        <div className="grid grid-cols-12 gap-2 items-center">
+          <div className="col-span-12 md:col-span-5">
+            <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -183,27 +184,33 @@ export function MedicationsSection({
               </Command>
             </PopoverContent>
           </Popover>
-
-          <Input
+          </div>
+          <div className="col-span-4 md:col-span-3">
+            <Input
             placeholder="Dosagem"
             value={dosage}
             onChange={(e) => setDosage(e.target.value)}
             className="h-9 text-xs bg-card"
-          />
-          <Input
+            />
+          </div>
+          <div className="col-span-4 md:col-span-3">
+            <Input
             placeholder="Frequência"
             value={frequency}
             onChange={(e) => setFrequency(e.target.value)}
             className="h-9 text-xs bg-card"
-          />
-          <Button
+            />
+          </div>
+          <div className="col-span-4 md:col-span-1 flex justify-end">
+            <Button
             size="icon"
             onClick={handleAdd}
             disabled={!search.trim() || isCreating}
             className="h-9 w-9 bg-primary text-white"
           >
             <Plus className="h-4 w-4" />
-          </Button>
+            </Button>
+          </div>
         </div>
       </div>
     </div>

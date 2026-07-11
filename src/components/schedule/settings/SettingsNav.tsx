@@ -26,7 +26,7 @@ export function SettingsNav({
   onSelect: (v: TabValue) => void;
 }) {
   return (
-    <nav className="flex flex-col space-y-4">
+    <nav className="flex flex-col space-y-1">
       {NAV_ITEMS.map((item) => {
         const isActive = active === item.value;
         return (
@@ -35,15 +35,22 @@ export function SettingsNav({
             type="button"
             onClick={() => onSelect(item.value)}
             className={cn(
-              "group relative flex items-center text-left transition-all",
-              isActive ? "opacity-100" : "opacity-40 hover:opacity-100",
+              "group flex flex-col items-start gap-0.5 text-left transition-all py-2.5 border-l-2 pl-4",
+              isActive
+                ? "border-slate-900 dark:border-slate-50 opacity-100"
+                : "border-transparent opacity-60 hover:opacity-100 hover:border-slate-200 dark:hover:border-slate-800",
             )}
           >
-            {isActive && (
-              <span className="absolute -left-6 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-slate-900 dark:bg-slate-50" />
-            )}
-            <span className={cn("text-base font-medium tracking-tight", isActive ? "text-slate-900 dark:text-slate-50" : "text-slate-600 dark:text-slate-400")}>
+            <span
+              className={cn(
+                "text-sm font-semibold tracking-tight",
+                isActive ? "text-slate-900 dark:text-slate-50" : "text-slate-600 dark:text-slate-400"
+              )}
+            >
               {item.label}
+            </span>
+            <span className="text-[11px] font-medium text-slate-500">
+              {item.description}
             </span>
           </button>
         );

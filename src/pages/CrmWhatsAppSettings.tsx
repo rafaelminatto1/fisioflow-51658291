@@ -1111,7 +1111,7 @@ export default function CrmWhatsAppSettings() {
                       envie no horário definido (evita disparo de madrugada).
                     </p>
                     <div className="space-y-2">
-                      <div className="grid grid-cols-[1fr_1fr_auto_1fr_1fr] items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                      <div className="grid grid-cols-5 items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                         <span>Sessão das</span>
                         <span>até</span>
                         <span className="text-center">enviar</span>
@@ -1119,7 +1119,7 @@ export default function CrmWhatsAppSettings() {
                         <span>min</span>
                       </div>
                       {reminders.bands.map((band, index) => (
-                        <div key={index} className="grid grid-cols-[1fr_1fr_auto_1fr_1fr] items-center gap-2">
+                        <div key={index} className="grid grid-cols-5 items-center gap-2">
                           <Input
                             type="number"
                             min={0}

@@ -174,8 +174,8 @@ export function BoardHeader({
           </div>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-          <div className="space-y-3">
+        <div className="grid gap-4 lg:grid-cols-12 lg:items-end">
+          <div className="space-y-3 lg:col-span-8">
             {isRenaming ? (
               <form onSubmit={handleRenameSubmit} className="max-w-xl">
                 <Input
@@ -215,7 +215,7 @@ export function BoardHeader({
           </div>
 
           {stats && (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:col-span-4">
               <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
                 <div className="text-xs uppercase tracking-[0.16em] text-white/65">Tarefas</div>
                 <div className="mt-2 text-2xl font-semibold text-white">{stats.taskCount}</div>

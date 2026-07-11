@@ -178,14 +178,14 @@ const Index = () => {
           {profile?.role !== "paciente" && <SetupChecklist />}
 
           <div
-            className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]"
+            className="grid gap-5 xl:grid-cols-12"
             data-testid="today-schedule"
           >
             {/* Dashboard content */}
-            <div className="min-w-0">{renderDashboard()}</div>
+            <div className="min-w-0 xl:col-span-9">{renderDashboard()}</div>
 
             {/* Right panel — notifications + activity */}
-            <aside className="xl:sticky xl:top-20 xl:self-start space-y-4 min-w-0">
+            <aside className="xl:sticky xl:top-20 xl:self-start space-y-4 min-w-0 xl:col-span-3">
               <DashboardNotificationWidget />
               <RealtimeActivityFeed />
             </aside>

@@ -304,8 +304,8 @@ export function ProtocolDetailView({
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_340px]">
-        <div className="space-y-6">
+      <div className="grid gap-6 xl:grid-cols-12">
+        <div className="space-y-6 xl:col-span-8">
           <Card className="overflow-hidden border-primary/10 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.12),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.98))] p-6 shadow-sm dark:bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.18),transparent_34%),linear-gradient(180deg,rgba(2,6,23,0.96),rgba(15,23,42,0.96))]">
             <div className="flex items-start gap-3">
               <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -688,7 +688,7 @@ export function ProtocolDetailView({
           })()}
         </div>
 
-        <div className="space-y-6 xl:sticky xl:top-24 xl:self-start">
+        <div className="space-y-6 xl:sticky xl:top-24 xl:self-start xl:col-span-4">
           <Card className="border-border/60 bg-card p-5 shadow-sm">
             <div className="flex items-center justify-between gap-2">
               <div>

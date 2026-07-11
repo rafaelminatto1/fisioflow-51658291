@@ -109,14 +109,14 @@ const WeekViewSkeleton = memo(() => {
   return (
     <div className="flex flex-col h-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-hidden">
       {/* Header — idêntico ao weekHeaderRef real */}
-      <div className="grid grid-cols-[60px_repeat(6,1fr)] border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
-        <div className="h-12 border-r border-slate-200 dark:border-slate-800 flex items-center justify-center">
+      <div className="flex w-full border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
+        <div className="w-[60px] flex-shrink-0 h-12 border-r border-slate-200 dark:border-slate-800 flex items-center justify-center">
           <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 animate-pulse" />
         </div>
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="h-12 flex flex-col items-center justify-center border-r border-slate-100 dark:border-slate-800/50 gap-1"
+            className="flex-1 h-12 flex flex-col items-center justify-center border-r border-slate-100 dark:border-slate-800/50 gap-1"
           >
             <div className="w-6 h-2 rounded bg-slate-100 dark:bg-slate-800 animate-pulse" />
             <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 animate-pulse" />
@@ -131,12 +131,12 @@ const WeekViewSkeleton = memo(() => {
           return (
             <div
               key={row}
-              className="grid grid-cols-[60px_repeat(6,1fr)]"
+              className="flex w-full"
               style={{ height: ROW_HEIGHT }}
             >
               <div
                 className={cn(
-                  "border-r border-slate-100 dark:border-slate-800 flex items-start justify-end pr-2 pt-0.5",
+                  "w-[60px] flex-shrink-0 border-r border-slate-100 dark:border-slate-800 flex items-start justify-end pr-2 pt-0.5",
                   isHour ? "" : "border-t-0",
                 )}
               >
@@ -148,7 +148,7 @@ const WeekViewSkeleton = memo(() => {
                 <div
                   key={col}
                   className={cn(
-                    "border-r border-slate-50 dark:border-slate-900/50",
+                    "flex-1 border-r border-slate-50 dark:border-slate-900/50",
                     isHour && "border-t border-slate-100 dark:border-slate-800",
                   )}
                 />

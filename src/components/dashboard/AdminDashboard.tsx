@@ -275,9 +275,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = "hoje" 
 
       {/* ── 1c. Business Health Metrics (BI) ── */}
       <section aria-label="Saúde do Negócio">
-        <div className="grid gap-5 xl:grid-cols-[2fr_1fr]">
-          <ClinicHealthKPIs />
-          <ClinicalAlertsWidget />
+        <div className="grid gap-5 xl:grid-cols-3">
+          <div className="xl:col-span-2">
+            <ClinicHealthKPIs />
+          </div>
+          <div className="xl:col-span-1">
+            <ClinicalAlertsWidget />
+          </div>
         </div>
       </section>
 
@@ -579,10 +583,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = "hoje" 
 
       {/* ── 5. AI Insights + Eventos ── */}
       <section>
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">
-          <AIInsightsWidget metrics={metrics} />
+        <div className="grid gap-5 xl:grid-cols-12">
+          <div className="xl:col-span-8">
+            <AIInsightsWidget metrics={metrics} />
+          </div>
 
-          <div className="space-y-5">
+          <div className="space-y-5 xl:col-span-4">
             <ClinicalAlertsWidget />
             <InventoryAlertsWidget />
             <Card className="rounded-[2rem] border-border/60 bg-card shadow-sm">

@@ -137,9 +137,9 @@ export default function AvaliacaoInicial() {
           </div>
 
           {/* Body */}
-          <div className="grid min-h-0 flex-1 grid-cols-[196px_1fr_290px]">
+          <div className="grid min-h-0 flex-1 lg:grid-cols-12">
             {/* Section nav */}
-            <div className="overflow-y-auto border-r border-border bg-muted/25 px-3 py-[18px]">
+            <div className="overflow-y-auto border-r border-border bg-muted/25 px-3 py-[18px] lg:col-span-2">
               <div className="mb-3 flex items-center gap-2.5 border-b border-border px-1.5 pb-3.5">
                 <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full bg-gradient-to-br from-[hsl(264_55%_62%)] to-[hsl(264_55%_48%)] text-[13px] font-extrabold text-white">
                   MA
@@ -177,7 +177,7 @@ export default function AvaliacaoInicial() {
             </div>
 
             {/* Form */}
-            <div className="overflow-y-auto px-[26px] py-[22px]">
+            <div className="overflow-y-auto px-[26px] py-[22px] lg:col-span-7">
               <section className="mb-[26px]">
                 <SectionHeading n="2">Queixa principal &amp; HMA</SectionHeading>
                 <p className="mb-3.5 ml-[33px] text-xs font-medium text-muted-foreground">
@@ -369,7 +369,7 @@ export default function AvaliacaoInicial() {
             </div>
 
             {/* Summary */}
-            <div className="overflow-y-auto border-l border-border bg-muted/30 px-[18px] py-5">
+            <div className="overflow-y-auto border-l border-border bg-muted/30 px-[18px] py-5 lg:col-span-3">
               <h3 className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.06em] text-muted-foreground">
                 Escala de dor (EVA)
               </h3>

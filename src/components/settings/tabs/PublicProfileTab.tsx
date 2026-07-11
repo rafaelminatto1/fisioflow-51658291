@@ -274,32 +274,40 @@ export function PublicProfileTab() {
             </p>
           )}
           {form.public_services.map((svc) => (
-            <div key={svc.id} className="grid grid-cols-[1fr_100px_100px_36px] gap-2 items-center">
-              <Input
+            <div key={svc.id} className="grid grid-cols-12 gap-2 items-center">
+              <div className="col-span-6 md:col-span-5">
+                <Input
                 value={svc.name}
                 onChange={(e) => updateService(svc.id, "name", e.target.value)}
                 placeholder="Nome do serviço"
-              />
-              <Input
+                />
+              </div>
+              <div className="col-span-3 md:col-span-3">
+                <Input
                 type="number"
                 value={svc.duration_minutes}
                 onChange={(e) => updateService(svc.id, "duration_minutes", Number(e.target.value))}
                 placeholder="Min"
-              />
-              <Input
+                />
+              </div>
+              <div className="col-span-3 md:col-span-3">
+                <Input
                 type="number"
                 value={svc.price}
                 onChange={(e) => updateService(svc.id, "price", Number(e.target.value))}
                 placeholder="R$"
-              />
-              <Button
+                />
+              </div>
+              <div className="col-span-12 md:col-span-1 flex justify-end">
+                <Button
                 variant="ghost"
                 size="icon"
                 className="h-9 w-9 text-destructive hover:text-destructive"
                 onClick={() => removeService(svc.id)}
               >
                 <Trash2 className="h-4 w-4" />
-              </Button>
+                </Button>
+              </div>
             </div>
           ))}
           {form.public_services.length > 0 && (

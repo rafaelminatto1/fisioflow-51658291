@@ -45,8 +45,8 @@ export function RouterErrorElement() {
           <div className="absolute right-0 top-0 h-44 w-44 translate-x-12 -translate-y-12 rounded-full bg-primary/10 blur-3xl" />
           <div className="absolute bottom-0 left-0 h-40 w-40 -translate-x-10 translate-y-10 rounded-full bg-amber-400/10 blur-3xl" />
 
-          <div className="relative grid gap-8 md:grid-cols-[1.1fr_0.9fr] md:items-center">
-            <div className="space-y-6">
+          <div className="relative grid gap-8 md:grid-cols-12 md:items-center">
+            <div className="space-y-6 md:col-span-7">
               <div className="inline-flex items-center gap-2 rounded-full border bg-muted/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
                 Rota em recuperação
@@ -58,15 +58,16 @@ export function RouterErrorElement() {
                 </h1>
                 <p className="max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
                   Esta rota encontrou um erro durante a renderização. Você pode recarregar a tela,
-                  voltar ao painel inicial ou enviar os detalhes abaixo para análise técnica.
+                  voltar para onde estava, ou tentar limpar o cache.
                 </p>
               </div>
 
-              <div className="rounded-2xl border bg-muted/40 p-4 text-left">
-                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Detalhe técnico
-                </p>
-                <code className="block break-words rounded-xl bg-background p-3 text-xs text-foreground">
+              <div className="rounded-2xl border border-red-500/10 bg-red-500/5 p-4 md:p-5">
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-red-500">
+                  <Ban className="h-3.5 w-3.5" />
+                  Detalhes técnicos
+                </div>
+                <code className="mt-2 block rounded-xl bg-card p-3 text-xs text-red-500 shadow-inner">
                   {message}
                 </code>
               </div>
@@ -85,7 +86,7 @@ export function RouterErrorElement() {
               </div>
             </div>
 
-            <div className="relative hidden md:block">
+            <div className="relative hidden md:block md:col-span-5">
               <div className="rounded-[2rem] border bg-muted/30 p-6">
                 <div className="rounded-[1.5rem] bg-background p-5 shadow-sm">
                   <div className="mb-6 flex items-center justify-between">

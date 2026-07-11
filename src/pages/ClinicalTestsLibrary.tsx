@@ -238,8 +238,8 @@ export default function ClinicalTestsLibrary() {
                 filteredCount={filteredTests.length}
               />
 
-              <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
-                <div className="rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+              <section className="grid gap-4 lg:grid-cols-12">
+                <div className="rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm lg:col-span-8 xl:col-span-9">
                   <div className="flex flex-wrap items-center gap-3">
                     <div className="inline-flex items-center gap-2 rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">
                       <BookOpenCheck className="h-4 w-4" />
@@ -252,7 +252,7 @@ export default function ClinicalTestsLibrary() {
                   </div>
                 </div>
 
-                <div className="rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+                <div className="rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm flex items-center lg:col-span-4 xl:col-span-3">
                   <div className="inline-flex items-center gap-2 text-sm font-medium text-slate-600">
                     <ScrollText className="h-4 w-4 text-teal-600" />
                     {filteredTests.length} resultados visíveis

@@ -54,6 +54,8 @@ export interface ScheduleToolbarProps {
   onPatientFilterChange: (value: string) => void;
   therapists?: TherapistSummary[];
   onCancelAllToday?: () => void;
+  showTasks: boolean;
+  onToggleTasks: () => void;
 }
 
 const VIEW_LABELS = {
@@ -83,6 +85,8 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
   onPatientFilterChange,
   therapists,
   onCancelAllToday: _onCancelAllToday,
+  showTasks,
+  onToggleTasks,
 }) => {
   const isMobile = useIsMobile();
 
@@ -231,6 +235,20 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
           )}
         </div>
 
+        <Button
+          variant="outline"
+          onClick={onToggleTasks}
+          title={showTasks ? "Ocultar tarefas na agenda" : "Mostrar tarefas na agenda"}
+          className={cn(
+            "h-9 px-3 rounded-lg font-bold text-[10px] uppercase tracking-widest shadow-sm transition-colors hidden sm:flex",
+            showTasks
+              ? "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+              : "border-slate-200 bg-white text-slate-400 hover:bg-slate-50"
+          )}
+        >
+          Tarefas {showTasks ? "on" : "off"}
+        </Button>
+
         <AdvancedFilters
           filters={filters}
           onChange={onFiltersChange}
@@ -343,7 +361,20 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
           containerClassName: "flex items-center gap-1.5 whitespace-nowrap",
           buttonClassName: "h-8 px-3 rounded-lg font-bold text-[10px] uppercase tracking-widest",
         })}
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={onToggleTasks}
+            title={showTasks ? "Ocultar tarefas na agenda" : "Mostrar tarefas na agenda"}
+            className={cn(
+              "h-8 px-3 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-colors",
+              showTasks
+                ? "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                : "border-slate-200 bg-white text-slate-400 hover:bg-slate-50"
+            )}
+          >
+            Tarefas {showTasks ? "on" : "off"}
+          </Button>
           <AdvancedFilters filters={filters} onChange={onFiltersChange} onClear={onClearFilters} />
         </div>
       </div>

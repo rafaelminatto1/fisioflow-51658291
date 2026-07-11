@@ -234,8 +234,8 @@ export function PatientsPageHeader({
             "mt-0 rounded-2xl border border-slate-200/60 bg-card p-4 md:p-6 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/60",
         )}
       >
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(150px,0.8fr))] 2xl:grid-cols-[minmax(0,1.6fr)_repeat(5,minmax(140px,0.72fr))]">
-          <div className="relative">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-3">
+          <div className="relative md:col-span-2 lg:col-span-1">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               id="search-patients"

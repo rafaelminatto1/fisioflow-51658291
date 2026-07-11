@@ -137,8 +137,8 @@ export function FinancialCommandCenterSummary({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-3 xl:grid-cols-[1.6fr_1fr]">
-        <Card className="overflow-hidden rounded-[28px] border-primary/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(241,248,255,0.94),rgba(238,252,246,0.88))] shadow-[0_30px_90px_-55px_rgba(37,99,235,0.45)] dark:border-primary/20 dark:bg-[linear-gradient(135deg,rgba(15,23,42,0.94),rgba(17,24,39,0.92),rgba(6,78,59,0.18))]">
+      <div className="grid gap-3 xl:grid-cols-12">
+        <Card className="overflow-hidden rounded-[28px] border-primary/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(241,248,255,0.94),rgba(238,252,246,0.88))] shadow-[0_30px_90px_-55px_rgba(37,99,235,0.45)] dark:border-primary/20 dark:bg-[linear-gradient(135deg,rgba(15,23,42,0.94),rgba(17,24,39,0.92),rgba(6,78,59,0.18))] xl:col-span-7">
           <CardContent className="flex h-full flex-col justify-between gap-6 p-5 md:p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="space-y-3">
@@ -250,7 +250,7 @@ export function FinancialCommandCenterSummary({
               </div>
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-2 xl:col-span-5">
               <QuickAction
                 to={APP_ROUTES.AGENDA}
                 label="Agenda"
@@ -325,8 +325,8 @@ export function FinancialCommandCenterSummary({
         />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.6fr_0.95fr]">
-        <div className="grid gap-4">
+      <div className="grid gap-4 xl:grid-cols-12">
+        <div className="grid gap-4 xl:col-span-7">
           <Card className="rounded-[28px] border-white/70 bg-card shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
             <CardHeader className="flex flex-row items-start justify-between gap-3 pb-2">
               <div>
@@ -521,7 +521,7 @@ export function FinancialCommandCenterSummary({
           </Card>
         </div>
 
-        <div className="grid gap-4">
+        <div className="grid gap-4 xl:col-span-5">
           <Card className="rounded-[28px] border-white/70 bg-card shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base font-black text-slate-950 dark:text-white">

@@ -703,39 +703,47 @@ export function KnowledgeArticleDialog({
                 <Label className="font-bold text-sm uppercase tracking-wider text-slate-500">
                   Anexos e Documentos Suplementares
                 </Label>
-                <div className="grid grid-cols-1 md:grid-cols-[1fr_1.2fr_1.8fr_auto] gap-2">
-                  <Select value={attachmentType} onValueChange={setAttachmentType}>
-                    <SelectTrigger className="h-10 text-xs">
-                      <SelectValue placeholder="Tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="file">Arquivo</SelectItem>
-                      <SelectItem value="image">Imagem</SelectItem>
-                      <SelectItem value="url">URL / Link</SelectItem>
-                      <SelectItem value="guideline">Diretriz</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    value={attachmentName}
-                    onChange={(e) => setAttachmentName(e.target.value)}
-                    placeholder="Nome"
-                    className="h-10 text-sm"
-                  />
-                  <Input
-                    value={attachmentUrl}
-                    onChange={(e) => setAttachmentUrl(e.target.value)}
-                    placeholder="URL ou Caminho"
-                    className="h-10 text-sm"
-                  />
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="outline"
-                    className="h-10 w-10 shrink-0"
-                    onClick={addAttachment}
-                  >
-                    <Plus className="h-5 w-5" />
-                  </Button>
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
+                  <div className="md:col-span-3">
+                    <Select value={attachmentType} onValueChange={setAttachmentType}>
+                      <SelectTrigger className="h-10 text-xs w-full">
+                        <SelectValue placeholder="Tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="file">Arquivo</SelectItem>
+                        <SelectItem value="image">Imagem</SelectItem>
+                        <SelectItem value="url">URL / Link</SelectItem>
+                        <SelectItem value="guideline">Diretriz</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="md:col-span-4">
+                    <Input
+                      value={attachmentName}
+                      onChange={(e) => setAttachmentName(e.target.value)}
+                      placeholder="Nome"
+                      className="h-10 text-sm"
+                    />
+                  </div>
+                  <div className="md:col-span-4">
+                    <Input
+                      value={attachmentUrl}
+                      onChange={(e) => setAttachmentUrl(e.target.value)}
+                      placeholder="URL ou Caminho"
+                      className="h-10 text-sm"
+                    />
+                  </div>
+                  <div className="md:col-span-1">
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      className="h-10 w-full shrink-0 md:w-10"
+                      onClick={addAttachment}
+                    >
+                      <Plus className="h-5 w-5" />
+                    </Button>
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {(formData.metadata?.attachments || []).map((att: any, idx: number) => (

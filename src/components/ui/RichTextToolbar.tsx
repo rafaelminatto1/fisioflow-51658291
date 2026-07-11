@@ -591,8 +591,8 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({
           <DialogHeader>
             <DialogTitle>Comandos e Blocos</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4">
-            <div className="border rounded-lg p-2 max-h-[60vh] overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+            <div className="border rounded-lg p-2 max-h-[60vh] overflow-y-auto md:col-span-4">
               {commandItems.map((item) => (
                 <button
                   key={item.id}
@@ -608,7 +608,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({
                 </button>
               ))}
             </div>
-            <div className="border rounded-lg p-4 bg-white">
+            <div className="border rounded-lg p-4 bg-white md:col-span-8">
               <div className="text-xs text-muted-foreground mb-2">Pré-visualização</div>
               <div
                 className="command-preview rich-text-editor"

@@ -60,8 +60,8 @@ export function BiomechanicsAnalysisLayout({
       <PageContainer>
         <MedicalDisclaimer className="mb-6" />
 
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6">
-          <div className="space-y-6">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+          <div className="space-y-6 xl:col-span-8">
             <div className="grid gap-4 md:grid-cols-3">
               <Card className="border-none shadow-sm bg-white">
                 <CardContent className="space-y-2 p-5">
@@ -95,7 +95,7 @@ export function BiomechanicsAnalysisLayout({
             {children}
           </div>
 
-          <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+          <div className="space-y-6 lg:sticky lg:top-6 lg:self-start xl:col-span-4">
             <BiomechanicsProtocolGuidePanel mode={mode} />
             <BiomechanicsTemplateLibraryPanel mode={mode} />
             <BiomechanicsEvidencePanel mode={mode} />

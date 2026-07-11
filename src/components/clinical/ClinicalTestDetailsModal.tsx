@@ -222,8 +222,8 @@ export function ClinicalTestDetailsModal({
       </CustomModalHeader>
 
       <CustomModalBody className="p-0 sm:p-0">
-        <div className="grid gap-8 p-6 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-10">
-          <div className="space-y-5">
+        <div className="grid gap-8 p-6 md:grid-cols-12 lg:gap-10">
+          <div className="space-y-5 md:col-span-6 lg:col-span-7">
             {primaryImage ? (
               <button
                 type="button"
@@ -304,7 +304,7 @@ export function ClinicalTestDetailsModal({
             </div>
           </div>
 
-          <div className="flex h-full flex-col gap-6">
+          <div className="flex h-full flex-col gap-6 md:col-span-6 lg:col-span-5">
             <div>
               <h3 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-800">
                 <CheckSquare className="h-4 w-4 text-teal-600" />

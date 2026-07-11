@@ -638,22 +638,11 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
         patientFilter={patientFilter || ""}
         onPatientFilterChange={onPatientFilterChange || (() => {})}
         therapists={therapists}
+        showTasks={showTasks}
+        onToggleTasks={toggleShowTasks}
       />
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <button
-          type="button"
-          onClick={toggleShowTasks}
-          title={showTasks ? "Ocultar tarefas na agenda" : "Mostrar tarefas na agenda"}
-          className={
-            "absolute bottom-3 left-3 z-40 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-wider shadow-sm transition-colors " +
-            (showTasks
-              ? "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
-              : "border-slate-200 bg-white text-slate-400 hover:bg-slate-50")
-          }
-        >
-          Tarefas {showTasks ? "on" : "off"}
-        </button>
         <div
           ref={fcContainerRef}
           className="relative flex h-full min-h-0 w-full flex-1 overflow-hidden border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 [&>.fc]:flex-1 [&>.fc]:h-full [&>.fc]:min-h-0 [&>.fc]:w-full"
@@ -683,6 +672,7 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
             allDaySlot={false}
             dayMaxEvents={3}
             slotEventOverlap={false}
+            expandRows={true}
             editable
             selectable
             selectMirror

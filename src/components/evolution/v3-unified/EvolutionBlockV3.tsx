@@ -372,9 +372,9 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                 >
                   <div className="px-10 pb-4 pt-1 space-y-4">
                     {item.type === "exercise" ? (
-                      <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
+                      <div className="grid gap-4 lg:grid-cols-12">
                         {(thumbSrc || canOpenExerciseModal) && (
-                          <div className="space-y-2">
+                          <div className="space-y-2 lg:col-span-4">
                             <div className="flex items-center gap-1.5 px-1">
                               <Eye className="h-3 w-3 text-emerald-500" />
                               <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
@@ -431,7 +431,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                           </div>
                         )}
 
-                        <div className="space-y-4">
+                        <div className="space-y-4 lg:col-span-8">
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-1.5 px-1">
                               <Dumbbell className="h-3 w-3 text-emerald-500" />

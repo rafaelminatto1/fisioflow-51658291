@@ -32,8 +32,8 @@ export function BoardsEmptyState({ onCreate }: BoardsEmptyStateProps) {
       {/* Decorative background pattern */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_40%)] pointer-events-none" />
 
-      <div className="grid gap-8 px-6 py-10 sm:px-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center relative z-10">
-        <div className="space-y-6">
+      <div className="grid gap-8 px-6 py-10 sm:px-10 lg:grid-cols-12 lg:items-center relative z-10">
+        <div className="space-y-6 lg:col-span-8">
           <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/80">
             <Sparkles className="mr-2 h-3 w-3 text-blue-400" />
             Workspace de boards
@@ -62,7 +62,7 @@ export function BoardsEmptyState({ onCreate }: BoardsEmptyStateProps) {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl">
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl lg:col-span-4">
           <div className="flex items-center justify-between">
             <div className="rounded-2xl bg-white/10 p-3 text-white/80 border border-white/5">
               <LayoutGrid className="h-6 w-6" />

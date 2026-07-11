@@ -237,9 +237,9 @@ export function FisioBrainAnalyticsDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.5 }}
-            className="grid gap-6 lg:grid-cols-[2fr_1fr]"
+            className="grid gap-6 lg:grid-cols-3"
           >
-            <Card className="rounded-[2rem] border-border/40 bg-card/60 backdrop-blur-xl shadow-lg overflow-hidden relative">
+            <Card className="rounded-[2rem] border-border/40 bg-card/60 backdrop-blur-xl shadow-lg overflow-hidden relative lg:col-span-2">
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-cyan-500/5 pointer-events-none" />
               <CardHeader className="border-b border-border/30 pb-4 bg-background/30 backdrop-blur-sm z-10 relative">
                 <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -332,7 +332,7 @@ export function FisioBrainAnalyticsDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-[2rem] border-border/40 bg-card/60 backdrop-blur-xl shadow-lg relative overflow-hidden">
+            <Card className="rounded-[2rem] border-border/40 bg-card/60 backdrop-blur-xl shadow-lg relative overflow-hidden lg:col-span-1">
               <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-orange-500/5 pointer-events-none" />
               <CardHeader className="border-b border-border/30 pb-4 bg-background/30 backdrop-blur-sm z-10 relative">
                 <CardTitle className="text-lg font-bold flex items-center gap-2">

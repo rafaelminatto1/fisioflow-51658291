@@ -55,7 +55,7 @@
   }
 
   .fc .fc-timegrid-slot {
-    height: var(--fc-event-min-height);
+    min-height: var(--fc-event-min-height);
   }
 
   /* Month view can occasionally initialize with inline width:0 on the

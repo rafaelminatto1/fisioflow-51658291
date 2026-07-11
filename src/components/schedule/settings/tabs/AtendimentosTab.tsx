@@ -117,92 +117,83 @@ export function AtendimentosTab({ registerHandle }: TabComponentProps) {
             items={types}
             onReorder={handleReorderTypes}
             renderItem={(t, dragHandle) => (
-              <div className="grid gap-3 rounded-lg border border-slate-100 p-4 dark:border-slate-800 sm:grid-cols-[auto_auto_1fr_auto]">
-                <div className="flex items-center">{dragHandle}</div>
-                <label className="relative h-9 w-9 cursor-pointer overflow-hidden rounded-md border border-slate-200 dark:border-slate-700">
-                  <span className="block h-full w-full" style={{ backgroundColor: t.color }} />
-                  <input
-                    type="color"
-                    value={t.color}
-                    onChange={(e) => updateType(t.id, { color: e.target.value })}
-                    className="absolute inset-0 cursor-pointer opacity-0"
-                  />
-                </label>
+              <div className="flex flex-col gap-3 rounded-lg border border-border/40 p-3 hover:border-border/80 transition-colors sm:flex-row sm:items-center">
+                <div className="flex shrink-0 items-center gap-3">
+                  <div className="flex items-center text-muted-foreground">{dragHandle}</div>
+                  <label className="relative h-8 w-8 cursor-pointer overflow-hidden rounded-full border border-border/50">
+                    <span className="block h-full w-full" style={{ backgroundColor: t.color }} />
+                    <input
+                      type="color"
+                      value={t.color}
+                      onChange={(e) => updateType(t.id, { color: e.target.value })}
+                      className="absolute inset-0 cursor-pointer opacity-0"
+                    />
+                  </label>
+                </div>
 
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                  <div className="lg:col-span-2">
-                    <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Nome
-                    </Label>
+                <div className="flex flex-1 flex-wrap items-center gap-3">
+                  <div className="min-w-[120px] flex-1">
                     <Input
                       value={t.name}
                       onChange={(e) => updateType(t.id, { name: e.target.value })}
-                      className="h-8"
+                      className="h-8 text-sm"
+                      placeholder="Nome do Tipo"
                     />
                   </div>
-                  <div>
-                    <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Duração (min)
-                    </Label>
+                  <div className="w-20">
                     <Input
                       type="number"
                       min={5}
                       max={240}
                       value={t.durationMinutes}
                       onChange={(e) => updateType(t.id, { durationMinutes: Number(e.target.value) })}
-                      className="h-8"
+                      className="h-8 text-sm text-center"
+                      placeholder="Min"
+                      title="Duração (min)"
                     />
                   </div>
-                  <div>
-                    <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Buffer antes
-                    </Label>
+                  <div className="w-20">
                     <Input
                       type="number"
                       min={0}
                       max={60}
                       value={t.bufferBeforeMinutes}
-                      onChange={(e) =>
-                        updateType(t.id, { bufferBeforeMinutes: Number(e.target.value) })
-                      }
-                      className="h-8"
+                      onChange={(e) => updateType(t.id, { bufferBeforeMinutes: Number(e.target.value) })}
+                      className="h-8 text-sm text-center"
+                      placeholder="Antes"
+                      title="Buffer antes"
                     />
                   </div>
-                  <div>
-                    <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Buffer depois
-                    </Label>
+                  <div className="w-20">
                     <Input
                       type="number"
                       min={0}
                       max={60}
                       value={t.bufferAfterMinutes}
-                      onChange={(e) =>
-                        updateType(t.id, { bufferAfterMinutes: Number(e.target.value) })
-                      }
-                      className="h-8"
+                      onChange={(e) => updateType(t.id, { bufferAfterMinutes: Number(e.target.value) })}
+                      className="h-8 text-sm text-center"
+                      placeholder="Depois"
+                      title="Buffer depois"
                     />
                   </div>
-                  <div className="lg:col-span-2">
-                    <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Limite por dia (vazio = sem limite)
-                    </Label>
+                  <div className="w-28">
                     <Input
                       type="number"
                       min={0}
                       max={50}
                       value={t.maxPerDay ?? ""}
-                      placeholder="Sem limite"
                       onChange={(e) => {
                         const v = e.target.value;
                         updateType(t.id, { maxPerDay: v === "" ? null : Number(v) });
                       }}
-                      className="h-8"
+                      className="h-8 text-sm text-center"
+                      placeholder="Sem limite"
+                      title="Limite por dia"
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex shrink-0 items-center justify-end gap-1 border-t border-border/40 pt-3 sm:border-0 sm:pt-0">
                   <button
                     type="button"
                     onClick={() => updateType(t.id, { isDefault: !t.isDefault })}
@@ -218,7 +209,7 @@ export function AtendimentosTab({ registerHandle }: TabComponentProps) {
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8"
+                    className="h-8 w-8 ml-1"
                     onClick={() => duplicateType(t.id)}
                   >
                     <Copy className="h-3.5 w-3.5" />
@@ -269,7 +260,7 @@ export function AtendimentosTab({ registerHandle }: TabComponentProps) {
             items={allStatusRows}
             onReorder={handleReorderStatus}
             renderItem={(row, dragHandle) => (
-              <div className="grid grid-cols-[auto_auto_minmax(0,1fr)_auto_auto_auto_auto] items-center gap-3 rounded-lg border border-slate-100 px-3 py-2.5 dark:border-slate-800">
+              <div className="flex flex-wrap items-center gap-3 rounded-lg border border-slate-100 px-3 py-2.5 dark:border-slate-800">
                 {dragHandle}
 
                 <label className="relative h-7 w-7 cursor-pointer overflow-hidden rounded-md border border-slate-200 dark:border-slate-700">
@@ -284,7 +275,7 @@ export function AtendimentosTab({ registerHandle }: TabComponentProps) {
                   />
                 </label>
 
-                <div className="min-w-0">
+                <div className="flex-1 min-w-0">
                   <Input
                     value={row.label}
                     onChange={(e) => updateStatus(row.id, { label: e.target.value })}

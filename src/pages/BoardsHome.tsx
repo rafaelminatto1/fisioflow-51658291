@@ -115,9 +115,9 @@ export default function BoardsHome() {
     return (
       <div className="w-full space-y-6 px-4 py-6 sm:px-6 lg:px-8">
         <LoadingSkeleton type="card" className="h-[220px] rounded-[32px]" />
-        <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
-          <LoadingSkeleton type="card" className="h-[460px] rounded-[28px]" />
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-6 xl:grid-cols-12">
+          <LoadingSkeleton type="card" className="xl:col-span-3 h-[460px] rounded-[28px]" />
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 xl:col-span-9">
             {Array.from({ length: 6 }).map((_, index) => (
               <LoadingSkeleton key={index} type="card" className="h-[212px] rounded-[28px]" />
             ))}
@@ -131,8 +131,8 @@ export default function BoardsHome() {
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.12),transparent_28%),linear-gradient(180deg,rgba(248,250,252,0.96),rgba(248,250,252,1))]">
       <div className="w-full space-y-6 px-4 py-6 sm:px-6 lg:px-8">
         <section className="overflow-hidden rounded-[32px] border border-slate-800/70 bg-[linear-gradient(135deg,#0f172a,#111827,#1e293b)] text-white shadow-2xl">
-          <div className="grid gap-8 px-6 py-7 sm:px-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
-            <div className="space-y-6">
+          <div className="grid gap-8 px-6 py-7 sm:px-8 lg:grid-cols-12 lg:items-end">
+            <div className="space-y-6 lg:col-span-8">
               <div className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-white/78">
                 <Sparkles className="mr-2 h-3.5 w-3.5" />
                 Workspace de boards
@@ -172,7 +172,7 @@ export default function BoardsHome() {
               </div>
             </div>
 
-            <div className="space-y-4 rounded-[28px] border border-white/12 bg-white/10 p-5">
+            <div className="space-y-4 rounded-[28px] border border-white/12 bg-white/10 p-5 lg:col-span-4">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-lg font-semibold">Acesse rápido</div>
@@ -239,8 +239,8 @@ export default function BoardsHome() {
         {allBoards.length === 0 ? (
           <BoardsEmptyState onCreate={() => setCreateOpen(true)} />
         ) : (
-          <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
-            <aside className="space-y-4">
+          <div className="grid gap-6 xl:grid-cols-12">
+            <aside className="space-y-4 xl:col-span-3">
               <Card className="rounded-[28px] border-border/60 shadow-sm">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-semibold">Coleções</CardTitle>
@@ -367,7 +367,7 @@ export default function BoardsHome() {
               </Card>
             </aside>
 
-            <div className="space-y-6">
+            <div className="space-y-6 xl:col-span-9">
               {starredBoards.length > 0 && collection === "all" && !search && (
                 <section className="space-y-3">
                   <div className="flex items-center justify-between">

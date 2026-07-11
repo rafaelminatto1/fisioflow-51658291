@@ -94,19 +94,23 @@ export function AssistenteTab({
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.75fr)_minmax(360px,0.95fr)]">
-        <Suspense fallback={<LoadingSkeleton type="card" />}>
-          <LazyTreatmentAssistant
-            patientId={patientId}
-            patientName={patientName}
-            currentObservation={currentObservation}
-            onApplyToSoap={onApplyToSoap}
-          />
-        </Suspense>
+      <div className="grid gap-4 xl:grid-cols-12">
+        <div className="xl:col-span-8">
+          <Suspense fallback={<LoadingSkeleton type="card" />}>
+            <LazyTreatmentAssistant
+              patientId={patientId}
+              patientName={patientName}
+              currentObservation={currentObservation}
+              onApplyToSoap={onApplyToSoap}
+            />
+          </Suspense>
+        </div>
 
-        <Suspense fallback={<LoadingSkeleton type="card" />}>
-          <LazyWhatsAppIntegration patientId={patientId} patientPhone={patientPhone} />
-        </Suspense>
+        <div className="xl:col-span-4">
+          <Suspense fallback={<LoadingSkeleton type="card" />}>
+            <LazyWhatsAppIntegration patientId={patientId} patientPhone={patientPhone} />
+          </Suspense>
+        </div>
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">

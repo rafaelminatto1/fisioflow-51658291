@@ -630,10 +630,10 @@ export function NewExerciseModal({
             <form
               id="exercise-form"
               onSubmit={form.handleSubmit(handleSubmit)}
-              className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-0"
+              className="grid grid-cols-1 lg:grid-cols-12 gap-0"
             >
               {/* ===== COLUNA ESQUERDA: campos textuais e clínicos ===== */}
-              <div className="p-5 sm:p-6 space-y-5 min-w-0">
+              <div className="p-5 sm:p-6 space-y-5 min-w-0 lg:col-span-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -1245,7 +1245,7 @@ export function NewExerciseModal({
                 </div>
               </div>
               {/* ===== COLUNA DIREITA: Mídia (sticky) ===== */}
-              <aside className="border-t lg:border-t-0 lg:border-l bg-slate-50/40 dark:bg-slate-900/40 lg:sticky lg:top-0 lg:self-start lg:max-h-[calc(92vh-130px)] overflow-y-auto">
+              <aside className="border-t lg:border-t-0 lg:border-l bg-slate-50/40 dark:bg-slate-900/40 lg:sticky lg:top-0 lg:self-start lg:max-h-[calc(92vh-130px)] overflow-y-auto lg:col-span-4">
                 <div className="p-5 space-y-4">
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="text-sm font-semibold flex items-center gap-2">

@@ -18,21 +18,21 @@ export function SectionCard({
   className,
 }: SectionCardProps) {
   return (
-    <section className={cn("py-4 mb-8", className)}>
-      <header className="mb-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
+    <section className={cn("py-4 mb-6 border-b border-border/40 pb-8 last:border-0", className)}>
+      <header className="mb-6 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-900 dark:text-slate-50 md:text-5xl">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
             {title}
           </h2>
           {description && (
-            <p className="mt-3 max-w-lg text-sm font-medium leading-relaxed text-slate-500 dark:text-slate-400">
+            <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
               {description}
             </p>
           )}
         </div>
         {action && <div className="shrink-0">{action}</div>}
       </header>
-      <div className="space-y-6">{children}</div>
+      <div className="space-y-4">{children}</div>
     </section>
   );
 }
