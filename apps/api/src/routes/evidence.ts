@@ -5,7 +5,7 @@ import { requireAuth } from "../lib/auth";
 import { getRawSql } from "../lib/db";
 import { SearchParamsSchema, SummarizeBodySchema, SaveBodySchema } from "../lib/evidence/types";
 import { searchPubmed } from "../lib/evidence/sources/pubmed";
-import { fetchOpenAccessFullText } from "../lib/evidence/sources/europepmc";
+import { fetchOpenAccessPlainText } from "../lib/evidence/sources/europepmc";
 import { rankArticles } from "../lib/evidence/rank";
 import { queryCacheKey, getCachedSearch, setCachedSearch, upsertArticles } from "../lib/evidence/cache";
 import { summarizeArticles } from "../lib/evidence/summarize";
@@ -46,7 +46,7 @@ app.get("/article/:pmid/fulltext", requireAuth, async (c) => {
   const sql = getRawSql(c.env, "read");
   const res = await sql(`SELECT pmc_id FROM evidence_articles WHERE pmid = $1`, [pmid]);
   const pmcId = res.rows?.[0]?.pmc_id ?? null;
-  const text = await fetchOpenAccessFullText(pmcId);
+  const text = await fetchOpenAccessPlainText(pmcId);
   if (!text) return c.json({ available: false, url: `https://pubmed.ncbi.nlm.nih.gov/${pmid}/` });
   return c.json({ available: true, source: "europepmc", text });
 });
@@ -54,9 +54,23 @@ app.get("/article/:pmid/fulltext", requireAuth, async (c) => {
 app.post("/summarize", requireAuth, async (c) => {
   const body = SummarizeBodySchema.parse(await c.req.json());
   const sql = getRawSql(c.env, "read");
-  const res = await sql(`SELECT pmid, title, abstract FROM evidence_articles WHERE pmid = ANY($1)`, [body.pmids]);
-  const summary = await summarizeArticles(c.env, res.rows ?? []);
-  return c.json({ summary });
+  const res = await sql(
+    `SELECT pmid, title, abstract, pmc_id FROM evidence_articles WHERE pmid = ANY($1)`,
+    [body.pmids],
+  );
+  const rows: Array<{ pmid: string; title: string; abstract: string | null; pmc_id: string | null }> =
+    res.rows ?? [];
+  let articles: Array<{ pmid: string; title: string; abstract: string | null; fullText?: string | null }> = rows;
+  if (body.includeFullText) {
+    articles = await Promise.all(
+      rows.map(async (r) => ({
+        ...r,
+        fullText: await fetchOpenAccessPlainText(r.pmc_id).catch(() => null),
+      })),
+    );
+  }
+  const { summary, model } = await summarizeArticles(c.env, articles, { model: body.model });
+  return c.json({ summary, model });
 });
 
 app.post("/save", requireAuth, async (c) => {

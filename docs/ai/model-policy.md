@@ -15,10 +15,10 @@ Esta política descreve as regras de governança, custo e segurança no uso de I
 | Categoria | Descrição | Exemplos Aceitos | Uso Permitido (TaskTypes) |
 | --- | --- | --- | --- |
 | **`cheap`** | Modelos rápidos e de baixo custo. | `@cf/meta/llama-3-8b-instruct`, `gemini-1.5-flash` | Correção gramatical, extração de JSON simples, explicações de risco. |
-| **`medium`** | Modelos mais inteligentes para raciocínio clínico. | `gemini-1.5-pro` | Evolução SOAP complexa, resumos longitudinais, planos de tratamento. |
+| **`medium`** | Modelos mais inteligentes para raciocínio clínico. | `gemini-1.5-pro`, `@cf/zai-org/glm-5.2` (hospedado no Workers AI) | Evolução SOAP complexa, resumos longitudinais, planos de tratamento, resumo de evidência científica (conteúdo público). |
 | **`embeddings`** | Geração de vetores numéricos. | `@cf/baai/bge-base-en-v1.5`, `text-embedding-004` | RAG Clínico (Neon), AutoRAG (Vectorize). |
 | **`reranker`** | Ordenação semântica final. | `@cf/baai/bge-reranker-v2-m3` | RAG, IA Search. |
-| **`forbidden`** | **BLOQUEADOS EM PRODUÇÃO.** | `GLM 5.2`, `gpt-4` (se não houver BAA assinado) | Nenhum. O sistema deve emitir erro 403. |
+| **`forbidden`** | **BLOQUEADOS EM PRODUÇÃO.** | `GLM 5.2` (endpoint externo z.ai — a variante `@cf/zai-org/glm-5.2` do Workers AI é permitida), `gpt-4` (se não houver BAA assinado) | Nenhum. O sistema deve emitir erro 403. |
 
 ## 3. Segurança e Privacidade (LGPD)
 

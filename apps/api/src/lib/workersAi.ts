@@ -19,6 +19,8 @@ export const WORKERS_AI_MODELS = {
   llama_3_3_70b: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
   /** Llama 4 Scout — multimodal (visão), análise de imagens clínicas. */
   llama_4_scout: "@cf/meta/llama-4-scout-17b-16e-instruct",
+  /** GLM-5.2 (Z.ai, hospedado no Workers AI) — contexto 262K, reasoning, tool calling. Conteúdo público (evidência) apenas. */
+  glm_5_2: "@cf/zai-org/glm-5.2",
   /** Llama Guard 3 — moderação de saída. */
   llama_guard: "@cf/meta/llama-guard-3-8b",
   /** Whisper turbo — transcrição PT-BR (primário). */

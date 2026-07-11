@@ -2,14 +2,17 @@ import { TaskType } from "./aiTasks";
 
 export type ModelClass = 'cheap' | 'medium' | 'embeddings' | 'reranker' | 'forbidden';
 
+// Endpoints EXTERNOS (z.ai/OpenAI direto, sem BAA/DPA). A variante hospedada no
+// Workers AI (@cf/zai-org/glm-5.2) NÃO é proibida: os dados ficam no perímetro Cloudflare.
 export const FORBIDDEN_MODELS = [
-  'GLM 5.2', 
+  'GLM 5.2',
   'glm-5.2-pro',
   'gpt-4', // Exemplo: restrito por não ter BAA
   'gpt-4o'
 ];
 
 export const MODEL_REGISTRY: Record<string, ModelClass> = {
+  '@cf/zai-org/glm-5.2': 'medium',
   '@cf/meta/llama-3.1-8b-instruct-fast': 'cheap',
   'gemini-1.5-flash': 'cheap',
   'gemini-1.5-pro': 'medium',

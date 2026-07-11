@@ -39,6 +39,8 @@ export type SearchParams = z.infer<typeof SearchParamsSchema>;
 
 export const SummarizeBodySchema = z.object({
   pmids: z.array(z.string().regex(/^\d+$/)).min(1).max(20),
+  model: z.enum(["llama-3.3-70b", "glm-5.2"]).default("llama-3.3-70b"),
+  includeFullText: z.boolean().default(false),
 });
 
 export const SaveBodySchema = z.object({

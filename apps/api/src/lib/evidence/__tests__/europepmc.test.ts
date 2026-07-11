@@ -1,5 +1,23 @@
 import { describe, it, expect, vi } from "vitest";
-import { fetchOpenAccessFullText } from "../sources/europepmc";
+import { fetchOpenAccessFullText, xmlToPlainText } from "../sources/europepmc";
+
+describe("xmlToPlainText", () => {
+  it("strips tags, decodes entities and collapses whitespace", () => {
+    const xml = `<article><front><title>Ti&amp;tle</title></front>
+      <body><sec><p>First   paragraph.</p><p>Second &lt;p&gt;.</p></sec></body></article>`;
+    const txt = xmlToPlainText(xml);
+    expect(txt).toContain("Ti&tle");
+    expect(txt).toContain("First paragraph.");
+    expect(txt).toContain("Second <p>.");
+    expect(txt).not.toContain("<sec>");
+  });
+  it("drops non-content sections like references", () => {
+    const xml = `<article><body><p>Real text</p></body><back><ref-list><ref>Doe J et al</ref></ref-list></back></article>`;
+    const txt = xmlToPlainText(xml);
+    expect(txt).toContain("Real text");
+    expect(txt).not.toContain("Doe J et al");
+  });
+});
 
 describe("fetchOpenAccessFullText", () => {
   it("returns text when OA full text exists", async () => {

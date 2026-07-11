@@ -1,5 +1,21 @@
 import { describe, it, expect } from "vitest";
-import { SearchParamsSchema, type EvidenceArticle } from "../types";
+import { SearchParamsSchema, SummarizeBodySchema, type EvidenceArticle } from "../types";
+
+describe("SummarizeBodySchema", () => {
+  it("defaults model to llama-3.3-70b and includeFullText to false", () => {
+    const parsed = SummarizeBodySchema.parse({ pmids: ["123"] });
+    expect(parsed.model).toBe("llama-3.3-70b");
+    expect(parsed.includeFullText).toBe(false);
+  });
+  it("accepts glm-5.2 with includeFullText", () => {
+    const parsed = SummarizeBodySchema.parse({ pmids: ["123"], model: "glm-5.2", includeFullText: true });
+    expect(parsed.model).toBe("glm-5.2");
+    expect(parsed.includeFullText).toBe(true);
+  });
+  it("rejects unknown models", () => {
+    expect(() => SummarizeBodySchema.parse({ pmids: ["123"], model: "gpt-4" })).toThrow();
+  });
+});
 
 describe("SearchParamsSchema", () => {
   it("accepts a minimal query", () => {

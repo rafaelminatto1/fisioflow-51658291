@@ -1,5 +1,6 @@
 import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from "cloudflare:workers";
 import type { Env } from "../types/env";
+import { apiRetries } from "./retryPolicy";
 import { createPool } from "../lib/db";
 import { envioRPS, cancelamentoNFe } from "../lib/nfseSPClient";
 import { sendNfseToAccounting } from "../lib/email";
@@ -39,7 +40,7 @@ export class NFSeWorkflow extends WorkflowEntrypoint<Env, NFSeWorkflowParams> {
     const result = await step.do(
       "emit-nfse",
       {
-        retries: { limit: 5, delay: "1 minute", backoff: "exponential" },
+        retries: apiRetries(5),
       },
       async () => {
         await pool.query(

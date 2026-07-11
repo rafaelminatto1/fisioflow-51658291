@@ -2,6 +2,7 @@ import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from "cloudflare:work
 import type { Env } from "../types/env";
 import { WORKERS_AI_MODELS } from "../lib/workersAi";
 import { runAi, readAiText } from "../lib/ai-native";
+import { apiRetries, throwIfMetaError } from "./retryPolicy";
 
 export type AppointmentReminderParams = {
   appointmentId: string;
@@ -62,7 +63,7 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
       await step.sleepUntil("wait-d3", new Date(d3));
     }
 
-    await step.do("send-d3-reminder", async () => {
+    await step.do("send-d3-reminder", { retries: apiRetries() }, async () => {
       await this.sendReminder(
         appointmentId,
         patientPhone,
@@ -81,7 +82,7 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
       await step.sleepUntil("wait-d1", new Date(d1));
     }
 
-    await step.do("send-d1-reminder", async () => {
+    await step.do("send-d1-reminder", { retries: apiRetries() }, async () => {
       await this.sendReminder(
         appointmentId,
         patientPhone,
@@ -100,7 +101,7 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
       await step.sleepUntil("wait-d0", new Date(d0));
     }
 
-    await step.do("send-d0-reminder", async () => {
+    await step.do("send-d0-reminder", { retries: apiRetries() }, async () => {
       await this.sendReminder(
         appointmentId,
         patientPhone,
@@ -163,7 +164,7 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
 
     if (daysAhead === 0) {
       // Mensagem informativa em texto simples 2h antes
-      await fetch(`https://graph.facebook.com/v25.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
+      const res = await fetch(`https://graph.facebook.com/v25.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -176,9 +177,10 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
           text: { body: msg },
         }),
       });
+      await throwIfMetaError(res, "reminder-text");
     } else {
       // Mensagem interativa com botões de confirmar/remarcar
-      await fetch(`https://graph.facebook.com/v25.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
+      const res = await fetch(`https://graph.facebook.com/v25.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -213,6 +215,7 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
           },
         }),
       });
+      await throwIfMetaError(res, "reminder-interactive");
     }
   }
 
