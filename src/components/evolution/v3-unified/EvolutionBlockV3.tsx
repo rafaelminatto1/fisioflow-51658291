@@ -220,22 +220,24 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                 }
               }}
             >
-              {/* Order number */}
-              <span
-                className="shrink-0 w-5 text-center text-[10px] font-bold text-muted-foreground/40 select-none"
-                aria-label={`Item ${index + 1}`}
-              >
-                {index + 1}
-              </span>
-              <div
-                {...provided.dragHandleProps}
-                className={cn(
-                  "flex h-7 w-5 shrink-0 items-center justify-center text-muted-foreground/35 transition-colors duration-150",
-                  !disabled ? "cursor-grab active:cursor-grabbing hover:text-muted-foreground/60" : "opacity-40",
-                )}
-                aria-hidden="true"
-              >
-                <GripVertical className="h-3.5 w-3.5" />
+              {/* Order number and drag handle */}
+              <div className="flex flex-col items-center justify-center shrink-0 w-5 gap-0.5">
+                <span
+                  className="text-center text-[10px] font-bold text-muted-foreground/40 select-none"
+                  aria-label={`Item ${index + 1}`}
+                >
+                  {index + 1}
+                </span>
+                <div
+                  {...provided.dragHandleProps}
+                  className={cn(
+                    "flex shrink-0 items-center justify-center text-muted-foreground/35 transition-colors duration-150",
+                    !disabled ? "cursor-grab active:cursor-grabbing hover:text-muted-foreground/60" : "opacity-40",
+                  )}
+                  aria-hidden="true"
+                >
+                  <GripVertical className="h-3.5 w-3.5" />
+                </div>
               </div>
 
               <Checkbox
@@ -285,32 +287,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                   <span className="truncate">{item.name}</span>
                 </span>
 
-                {itemDetails.length > 0 && (
-                  <div className="flex max-w-[42%] shrink-0 items-center gap-1.5 overflow-hidden">
-                    {itemDetails.slice(0, 2).map((detail) => (
-                      <Badge
-                        key={detail.key}
-                        variant="outline"
-                        title={detail.label}
-                        className={cn(
-                          "h-5 min-w-0 max-w-[9rem] shrink-0 truncate border px-1.5 text-[10px] font-semibold",
-                          item.type === "exercise" && detail.key === "prescription" && "font-mono",
-                          detail.className,
-                        )}
-                      >
-                        <span className="truncate">{detail.label}</span>
-                      </Badge>
-                    ))}
-                    {itemDetails.length > 2 && (
-                      <Badge
-                        variant="outline"
-                        className="h-5 shrink-0 border-slate-200 bg-slate-50 px-1.5 text-[10px] font-semibold text-slate-600"
-                      >
-                        +{itemDetails.length - 2}
-                      </Badge>
-                    )}
-                  </div>
-                )}
+
 
                 {/* Indicators */}
                 <div className="ml-2 flex items-center gap-1.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
@@ -471,7 +448,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                     ) : (
                       <div className="flex gap-2">
                         <div className="flex-1 space-y-1.5">
-                          <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider px-1">
+                          <label className="text-[8px] font-bold text-muted-foreground/70 uppercase tracking-wider px-1">
                             Intensidade / Parâmetros
                           </label>
                           <Input
@@ -485,7 +462,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                           />
                         </div>
                         <div className="flex-1 space-y-1.5">
-                          <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider px-1">
+                          <label className="text-[8px] font-bold text-muted-foreground/70 uppercase tracking-wider px-1">
                             Notas do Procedimento
                           </label>
                           <Input
