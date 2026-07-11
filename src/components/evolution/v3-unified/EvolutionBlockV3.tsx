@@ -1485,7 +1485,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                             onCheckedChange={() => {}} // handled by onClick on wrapper
                             className="rounded border-slate-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
                           />
-                          <span className="text-xs font-semibold leading-none">{proc.name}</span>
+                          <span className="text-sm font-semibold leading-snug">{proc.name}</span>
                         </div>
                       );
                     })}
