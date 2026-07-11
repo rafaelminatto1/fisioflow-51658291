@@ -155,9 +155,16 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
   const prevHasContentRef = useRef(false);
 
   const exerciseFromLibrary = useMemo(() => {
-    if (item.type !== "exercise" || !item.exerciseId) return null;
-    return libraryExercises?.find(ex => ex.id === item.exerciseId);
-  }, [item.exerciseId, item.type, libraryExercises]);
+    if (item.type !== "exercise") return null;
+    if (item.exerciseId) {
+      const found = libraryExercises?.find(ex => ex.id === item.exerciseId);
+      if (found) return found;
+    }
+    // Fallback: match by name
+    return libraryExercises?.find(
+      ex => ex.name.toLowerCase().trim() === item.name.toLowerCase().trim()
+    );
+  }, [item.exerciseId, item.name, item.type, libraryExercises]);
 
   const thumbSrc =
     item.thumbnail_url ||
@@ -349,65 +356,6 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                 >
                   <div className="px-10 pb-4 pt-1 space-y-4">
                     {item.type === "exercise" ? (
-                      <div className="grid gap-4 lg:grid-cols-12">
-                        {(thumbSrc || canOpenExerciseModal) && (
-                          <div className="space-y-2 lg:col-span-4">
-                            <div className="flex items-center gap-1.5 px-1">
-                              <Eye className="h-3 w-3 text-emerald-500" />
-                              <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
-                                Visual do Exercício
-                              </label>
-                            </div>
-
-                            {canOpenExerciseModal ? (
-                              <button
-                                type="button"
-                                onClick={() => onOpenExercise?.(exerciseFromLibrary)}
-                                className="group relative flex h-[160px] w-full overflow-hidden rounded-2xl border border-emerald-200/60 bg-emerald-50/40 text-left transition-all hover:border-emerald-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30"
-                              >
-                                {thumbSrc ? (
-                                  <>
-                                    <OptimizedImage
-                                      src={thumbSrc}
-                                      alt={item.name}
-                                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                                      aspectRatio="1:1"
-                                      fallbackSrcs={previewFallbackSrcs}
-                                    />
-                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/75 via-slate-950/20 to-transparent p-3">
-                                      <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 text-[10px] font-bold text-emerald-700 shadow-sm">
-                                        <Eye className="h-3 w-3" />
-                                        Abrir detalhes
-                                      </span>
-                                    </div>
-                                  </>
-                                ) : (
-                                  <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-emerald-50 to-teal-50 px-4 text-center">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-emerald-600 shadow-sm">
-                                      <Dumbbell className="h-6 w-6" />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <p className="text-sm font-semibold text-slate-800">Abrir exercício</p>
-                                      <p className="text-xs text-muted-foreground">
-                                        Ver vídeo, descrição e instruções
-                                      </p>
-                                    </div>
-                                  </div>
-                                )}
-                              </button>
-                            ) : thumbSrc ? (
-                              <div className="relative flex h-[160px] w-full overflow-hidden rounded-2xl border border-slate-200/70 bg-slate-50">
-                                <OptimizedImage
-                                  src={thumbSrc}
-                                  alt={item.name}
-                                  className="h-full w-full object-cover"
-                                  aspectRatio="1:1"
-                                />
-                              </div>
-                            ) : null}
-                          </div>
-                        )}
-
                         <div className="space-y-4 lg:col-span-8">
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-1.5 px-1">
@@ -443,6 +391,69 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                               disabled={disabled}
                             />
                           </div>
+                        </div>
+
+                        <div className="space-y-2 lg:col-span-4">
+                          <div className="flex items-center gap-1.5 px-1">
+                            <Eye className="h-3 w-3 text-emerald-500" />
+                            <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
+                              Visual do Exercício
+                            </label>
+                          </div>
+
+                          {canOpenExerciseModal ? (
+                            <button
+                              type="button"
+                              onClick={() => onOpenExercise?.(exerciseFromLibrary)}
+                              className="group relative flex h-[160px] w-full overflow-hidden rounded-2xl border border-emerald-200/60 bg-emerald-50/40 text-left transition-all hover:border-emerald-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30"
+                            >
+                              {thumbSrc ? (
+                                <>
+                                  <OptimizedImage
+                                    src={thumbSrc}
+                                    alt={item.name}
+                                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                                    aspectRatio="1:1"
+                                    fallbackSrcs={previewFallbackSrcs}
+                                  />
+                                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/75 via-slate-950/20 to-transparent p-3">
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 text-[10px] font-bold text-emerald-700 shadow-sm">
+                                      <Eye className="h-3 w-3" />
+                                      Abrir detalhes
+                                    </span>
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-emerald-50 to-teal-50 px-4 text-center">
+                                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-emerald-600 shadow-sm">
+                                    <Dumbbell className="h-6 w-6" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <p className="text-sm font-semibold text-slate-800">Abrir exercício</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      Ver vídeo, descrição e instruções
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </button>
+                          ) : thumbSrc ? (
+                            <div className="relative flex h-[160px] w-full overflow-hidden rounded-2xl border border-slate-200/70 bg-slate-50">
+                              <OptimizedImage
+                                src={thumbSrc}
+                                alt={item.name}
+                                className="h-full w-full object-cover"
+                                aspectRatio="1:1"
+                              />
+                            </div>
+                          ) : (
+                            <div className="relative flex h-[160px] w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border border-slate-200/70 bg-slate-50 px-4 text-center">
+                              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm">
+                                <Dumbbell className="h-6 w-6" />
+                              </div>
+                              <p className="text-xs text-muted-foreground">Sem visual disponível</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ) : (
@@ -547,6 +558,8 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
   const [procedureLibraryOpen, setProcedureLibraryOpen] = useState(false);
   const [exerciseLibraryOpen, setExerciseLibraryOpen] = useState(false);
   const [librarySearchQuery, setLibrarySearchQuery] = useState("");
+  const [libraryDifficultyFilter, setLibraryDifficultyFilter] = useState("all");
+  const [libraryBodyPartFilter, setLibraryBodyPartFilter] = useState("all");
   const [tempSelectedProcedures, setTempSelectedProcedures] = useState<string[]>([]);
   const [tempSelectedExercises, setTempSelectedExercises] = useState<string[]>([]);
   const [viewExercise, setViewExercise] = useState<Exercise | null>(null);
@@ -633,11 +646,25 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
     return groups;
   }, [librarySearchQuery]);
 
+  const availableBodyParts = useMemo(() => {
+    const parts = new Set<string>();
+    libraryExercises.forEach(ex => {
+      if (Array.isArray(ex.body_parts)) {
+        ex.body_parts.forEach(p => parts.add(p));
+      }
+    });
+    return Array.from(parts).sort();
+  }, [libraryExercises]);
+
   const filteredExercises = useMemo(() => {
-    return libraryExercises.filter((e) =>
-      accentIncludes(e.name, librarySearchQuery)
-    );
-  }, [libraryExercises, librarySearchQuery]);
+    return libraryExercises.filter((e) => {
+      const matchesSearch = accentIncludes(e.name, librarySearchQuery);
+      const matchesDifficulty = libraryDifficultyFilter === "all" || e.difficulty === libraryDifficultyFilter;
+      const matchesBodyPart = libraryBodyPartFilter === "all" || (Array.isArray(e.body_parts) && e.body_parts.includes(libraryBodyPartFilter));
+      
+      return matchesSearch && matchesDifficulty && matchesBodyPart;
+    });
+  }, [libraryExercises, librarySearchQuery, libraryDifficultyFilter, libraryBodyPartFilter]);
 
   const [activeIndex, setActiveIndex] = useState(-1);
   const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
@@ -1519,15 +1546,40 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="px-6 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/10">
-            <div className="relative flex items-center">
+          <div className="px-6 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/10 flex flex-col sm:flex-row gap-3">
+            <div className="relative flex items-center flex-1">
               <Search className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar exercícios..."
                 value={librarySearchQuery}
                 onChange={(e) => setLibrarySearchQuery(e.target.value)}
-                className="pl-10 h-10 rounded-xl bg-background border-slate-200"
+                className="pl-10 h-10 rounded-xl bg-background border-slate-200 w-full"
               />
+            </div>
+            <div className="flex gap-2">
+              <select
+                className="h-10 rounded-xl bg-background border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-700 dark:text-slate-200 min-w-[140px]"
+                value={libraryDifficultyFilter}
+                onChange={(e) => setLibraryDifficultyFilter(e.target.value)}
+              >
+                <option value="all">Todas Dificuldades</option>
+                <option value="iniciante">Iniciante</option>
+                <option value="intermediario">Intermediário</option>
+                <option value="avancado">Avançado</option>
+              </select>
+
+              <select
+                className="h-10 rounded-xl bg-background border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-700 dark:text-slate-200 min-w-[140px]"
+                value={libraryBodyPartFilter}
+                onChange={(e) => setLibraryBodyPartFilter(e.target.value)}
+              >
+                <option value="all">Todos Membros</option>
+                {availableBodyParts.map((part) => (
+                  <option key={part} value={part}>
+                    {part.charAt(0).toUpperCase() + part.slice(1)}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

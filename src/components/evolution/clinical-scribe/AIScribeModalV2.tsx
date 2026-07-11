@@ -72,6 +72,12 @@ export const AIScribeModalV2: React.FC<AIScribeModalV2Props> = ({
     if (!open && voice.status !== "idle") voice.stopRecording();
   }, [open, voice]);
 
+  // Nova sessão de ditado começa limpa (sem texto da gravação anterior).
+  useEffect(() => {
+    if (open) voice.reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   const isRecording = voice.status === "listening" || voice.status === "thinking";
 
   const handleStart = async () => {

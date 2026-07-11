@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useVoiceAgent } from "@cloudflare/voice/react";
 import { getWorkersApiUrl } from "@/lib/api/config";
 import type { AudioCaptureMode, AudioCaptureReason } from "@fisioflow/core";
@@ -20,9 +20,11 @@ export interface UseVoiceScribeV2Options {
 const DEFAULT_HOST = getWorkersApiUrl().replace(/^https?:\/\//, "").replace(/\/$/, "");
 
 /**
- * S6.3 Voice Scribe v2 — WebSocket contínuo com `VoiceScribeAgent` (Cloudflare Voice).
- * STT em tempo real via `WorkersAIFluxSTT`, sem TTS (uni-direcional).
- * Histórico persiste no DO entre reloads quando `sessionName` é estável.
+ * Voice Scribe v2 — ditado contínuo com `VoiceScribeAgent` (Nova-3 pt-BR, sem TTS).
+ *
+ * O texto é ACUMULADO localmente (não recalculado do buffer da conexão):
+ * reconexões do WS zeram `voice.transcript` e perdiam trechos já ditados.
+ * `reset()` limpa o acumulado — chamar ao abrir uma nova sessão de ditado.
  */
 export function useVoiceScribeV2(opts: UseVoiceScribeV2Options) {
   const sessionName = opts.sessionName ?? `${opts.patientId}:observacao`;
@@ -32,6 +34,22 @@ export function useVoiceScribeV2(opts: UseVoiceScribeV2Options) {
     name: sessionName,
     host: opts.host ?? DEFAULT_HOST,
   });
+
+  const [transcribedText, setTranscribedText] = useState("");
+  const seenRef = useRef(0);
+
+  useEffect(() => {
+    const userMsgs = voice.transcript.filter((m) => m.role === "user");
+    // Buffer da conexão encolheu = reconexão; recomeça a contagem sem perder o acumulado.
+    if (userMsgs.length < seenRef.current) seenRef.current = 0;
+    const fresh = userMsgs
+      .slice(seenRef.current)
+      .map((m) => m.text.trim())
+      .filter(Boolean)
+      .join(" ");
+    seenRef.current = userMsgs.length;
+    if (fresh) setTranscribedText((prev) => (prev ? `${prev} ${fresh}` : fresh));
+  }, [voice.transcript]);
 
   useEffect(() => {
     if (!voice.connected) return;
@@ -53,14 +71,10 @@ export function useVoiceScribeV2(opts: UseVoiceScribeV2Options) {
     opts.captureReason,
   ]);
 
-  const transcribedText = useMemo(
-    () =>
-      voice.transcript
-        .filter((m) => m.role === "user")
-        .map((m) => m.text)
-        .join(" "),
-    [voice.transcript],
-  );
+  const reset = useCallback(() => {
+    seenRef.current = 0;
+    setTranscribedText("");
+  }, []);
 
   return {
     status: voice.status,
@@ -73,6 +87,7 @@ export function useVoiceScribeV2(opts: UseVoiceScribeV2Options) {
     startRecording: voice.startCall,
     stopRecording: voice.endCall,
     toggleMute: voice.toggleMute,
+    reset,
     flush: () => voice.sendJSON({ type: "flush" }),
   };
 }

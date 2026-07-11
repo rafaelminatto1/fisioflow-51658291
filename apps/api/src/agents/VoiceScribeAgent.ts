@@ -1,5 +1,5 @@
 import { Agent } from "agents";
-import { withVoice, type VoiceTurnContext } from "@cloudflare/voice";
+import { withVoiceInput } from "@cloudflare/voice";
 import { createScribeTranscriber } from "./scribeConfig";
 import type { Env } from "../types/env";
 import {
@@ -9,7 +9,11 @@ import {
 } from "@fisioflow/core";
 import { checkAudioTranscriptionBudget } from "../lib/audioTranscriptionBudget";
 
-const VoiceAgentBase = withVoice(Agent);
+// withVoiceInput: STT puro (recomendado p/ ditado). withVoice rodava o pipeline
+// conversacional inteiro por frase (thinking/TTS vazio/"No response generated"/
+// barge-in abortando pipelines) e persistia histórico de chat — causa de trechos
+// perdidos e de texto velho reaparecendo ao regravar.
+const VoiceAgentBase = withVoiceInput(Agent);
 
 type ScribeState = {
   organizationId: string | null;
@@ -24,7 +28,7 @@ type ScribeState = {
 
 /**
  * VoiceScribeAgent — S6.3
- * STT contínuo (WorkersAI Flux) com persistência em SQLite do DO + flush para
+ * STT contínuo (Nova-3 pt-BR) com persistência em SQLite do DO + flush para
  * `clinical_scribe_logs` no Neon via Hyperdrive ao finalizar a sessão.
  * Uni-direcional: sem TTS — Scribe transcreve sem responder ao fisioterapeuta.
  */
@@ -93,16 +97,11 @@ export class VoiceScribeAgent extends VoiceAgentBase<Env, ScribeState> {
     }
   }
 
-  async onTurn(transcript: string, _context: VoiceTurnContext): Promise<string> {
+  async onTranscript(transcript: string): Promise<void> {
     const trimmed = transcript.trim();
-    if (this.state.budgetBlocked) return "";
-    if (this.state.captureMode === 0) return "";
-    if (!trimmed) return "";
-
+    if (this.state.budgetBlocked || this.state.captureMode === 0 || !trimmed) return;
     const turn = { text: trimmed, ts: new Date().toISOString() };
     await this.setState({ ...this.state, turns: [...this.state.turns, turn] });
-
-    return "";
   }
 
   async flush() {
