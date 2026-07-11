@@ -13,6 +13,7 @@ import {
   Loader2,
   Check,
   Sparkles,
+  Mic,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -80,6 +81,7 @@ export const EvolutionHeaderV3 = memo(
     toggleAutoSave,
     onShowTemplateModal,
     onShowKeyboardHelp,
+    onShowAIScribe,
     sessionNumber = 1,
     onShowAISummary,
   }: EvolutionHeaderV3Props) => {
@@ -148,6 +150,15 @@ export const EvolutionHeaderV3 = memo(
 
         {/* Ações da Direita */}
         <div className="ml-auto flex items-center gap-2.5">
+          <Button
+            onClick={onShowAIScribe}
+            variant="outline"
+            title="Ditar evolução por voz (Voice Scribe)"
+            className="h-[30px] px-3 rounded-[14px] border-border text-[13px] font-semibold text-brand-blue hover:bg-brand-blue/10 transition-colors"
+          >
+            <Mic className="w-3.5 h-3.5 mr-1.5" />
+            DITAR
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
