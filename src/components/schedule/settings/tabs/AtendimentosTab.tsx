@@ -117,10 +117,10 @@ export function AtendimentosTab({ registerHandle }: TabComponentProps) {
             items={types}
             onReorder={handleReorderTypes}
             renderItem={(t, dragHandle) => (
-              <div className="flex flex-col gap-3 rounded-lg border border-border/40 p-3 hover:border-border/80 transition-colors sm:flex-row sm:items-center">
-                <div className="flex shrink-0 items-center gap-3">
+              <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-slate-300 dark:border-slate-800 dark:bg-slate-950/50 xl:flex-row xl:items-start">
+                <div className="flex shrink-0 items-center gap-3 xl:mt-7">
                   <div className="flex items-center text-muted-foreground">{dragHandle}</div>
-                  <label className="relative h-8 w-8 cursor-pointer overflow-hidden rounded-full border border-border/50">
+                  <label className="relative h-9 w-9 cursor-pointer overflow-hidden rounded-full border border-border/50 shadow-sm transition-transform hover:scale-105">
                     <span className="block h-full w-full" style={{ backgroundColor: t.color }} />
                     <input
                       type="color"
@@ -131,52 +131,66 @@ export function AtendimentosTab({ registerHandle }: TabComponentProps) {
                   </label>
                 </div>
 
-                <div className="flex flex-1 flex-wrap items-center gap-3">
-                  <div className="min-w-[120px] flex-1">
+                <div className="flex flex-1 flex-wrap items-start gap-4">
+                  <div className="min-w-[200px] flex-1">
+                    <Label className="mb-1.5 block text-xs font-semibold text-slate-500 dark:text-slate-400">Nome do Serviço</Label>
                     <Input
                       value={t.name}
                       onChange={(e) => updateType(t.id, { name: e.target.value })}
-                      className="h-8 text-sm"
-                      placeholder="Nome do Tipo"
+                      className="h-9 font-medium"
+                      placeholder="Ex: Avaliação Inicial"
                     />
                   </div>
-                  <div className="w-20">
-                    <Input
-                      type="number"
-                      min={5}
-                      max={240}
-                      value={t.durationMinutes}
-                      onChange={(e) => updateType(t.id, { durationMinutes: Number(e.target.value) })}
-                      className="h-8 text-sm text-center"
-                      placeholder="Min"
-                      title="Duração (min)"
-                    />
+                  <div className="w-24">
+                    <Label className="mb-1.5 block text-xs font-semibold text-slate-500 dark:text-slate-400">Duração</Label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min={5}
+                        max={240}
+                        value={t.durationMinutes}
+                        onChange={(e) => updateType(t.id, { durationMinutes: Number(e.target.value) })}
+                        className="h-9 pr-8 text-right font-medium"
+                      />
+                      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase text-muted-foreground">
+                        min
+                      </span>
+                    </div>
                   </div>
-                  <div className="w-20">
-                    <Input
-                      type="number"
-                      min={0}
-                      max={60}
-                      value={t.bufferBeforeMinutes}
-                      onChange={(e) => updateType(t.id, { bufferBeforeMinutes: Number(e.target.value) })}
-                      className="h-8 text-sm text-center"
-                      placeholder="Antes"
-                      title="Buffer antes"
-                    />
+                  <div className="w-24">
+                    <Label className="mb-1.5 block text-xs font-semibold text-slate-500 dark:text-slate-400" title="Tempo bloqueado antes do agendamento">Pausa Antes</Label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={60}
+                        value={t.bufferBeforeMinutes}
+                        onChange={(e) => updateType(t.id, { bufferBeforeMinutes: Number(e.target.value) })}
+                        className="h-9 pr-8 text-right font-medium"
+                      />
+                      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase text-muted-foreground">
+                        min
+                      </span>
+                    </div>
                   </div>
-                  <div className="w-20">
-                    <Input
-                      type="number"
-                      min={0}
-                      max={60}
-                      value={t.bufferAfterMinutes}
-                      onChange={(e) => updateType(t.id, { bufferAfterMinutes: Number(e.target.value) })}
-                      className="h-8 text-sm text-center"
-                      placeholder="Depois"
-                      title="Buffer depois"
-                    />
+                  <div className="w-24">
+                    <Label className="mb-1.5 block text-xs font-semibold text-slate-500 dark:text-slate-400" title="Tempo bloqueado após o agendamento">Pausa Depois</Label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={60}
+                        value={t.bufferAfterMinutes}
+                        onChange={(e) => updateType(t.id, { bufferAfterMinutes: Number(e.target.value) })}
+                        className="h-9 pr-8 text-right font-medium"
+                      />
+                      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase text-muted-foreground">
+                        min
+                      </span>
+                    </div>
                   </div>
-                  <div className="w-28">
+                  <div className="w-32">
+                    <Label className="mb-1.5 block text-xs font-semibold text-slate-500 dark:text-slate-400">Limite Diário</Label>
                     <Input
                       type="number"
                       min={0}
@@ -186,44 +200,56 @@ export function AtendimentosTab({ registerHandle }: TabComponentProps) {
                         const v = e.target.value;
                         updateType(t.id, { maxPerDay: v === "" ? null : Number(v) });
                       }}
-                      className="h-8 text-sm text-center"
+                      className="h-9 text-center font-medium placeholder:text-xs placeholder:font-normal"
                       placeholder="Sem limite"
-                      title="Limite por dia"
                     />
                   </div>
                 </div>
 
-                <div className="flex shrink-0 items-center justify-end gap-1 border-t border-border/40 pt-3 sm:border-0 sm:pt-0">
-                  <button
-                    type="button"
-                    onClick={() => updateType(t.id, { isDefault: !t.isDefault })}
-                    title={t.isDefault ? "Tipo padrão" : "Definir como padrão"}
-                    className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-md",
-                      t.isDefault ? "text-amber-500" : "text-muted-foreground hover:text-amber-500",
-                    )}
-                  >
-                    <Star className={cn("h-4 w-4", t.isDefault && "fill-amber-500")} />
-                  </button>
-                  <Switch checked={t.isActive} onCheckedChange={() => toggleActive(t.id)} />
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 ml-1"
-                    onClick={() => duplicateType(t.id)}
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
-                    onClick={() => {
-                      if (confirm(`Remover tipo "${t.name}"?`)) removeType(t.id);
-                    }}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                <div className="flex shrink-0 flex-col items-start gap-3 border-t border-slate-100 pt-4 dark:border-slate-800 xl:mt-7 xl:items-end xl:border-0 xl:pt-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => updateType(t.id, { isDefault: !t.isDefault })}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+                        t.isDefault
+                          ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-400"
+                          : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400",
+                      )}
+                    >
+                      <Star className={cn("h-3.5 w-3.5", t.isDefault && "fill-amber-500 text-amber-500")} />
+                      {t.isDefault ? "Padrão" : "Tornar padrão"}
+                    </button>
+                    <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-1 pr-3 dark:border-slate-700 dark:bg-slate-900">
+                      <Switch checked={t.isActive} onCheckedChange={() => toggleActive(t.id)} className="scale-75 origin-left" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                        {t.isActive ? "Ativo" : "Off"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2.5 text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => duplicateType(t.id)}
+                    >
+                      <Copy className="mr-1.5 h-3.5 w-3.5" />
+                      Duplicar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2.5 text-xs text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/50"
+                      onClick={() => {
+                        if (confirm(`Remover tipo "${t.name}"?`)) removeType(t.id);
+                      }}
+                    >
+                      <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                      Remover
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
