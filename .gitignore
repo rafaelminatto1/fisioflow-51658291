@@ -305,3 +305,4 @@ claudehermes.md
 
 # debug/scratch DB scripts (nunca versionar — podem conter credenciais)
 test-db-*.cjs
+specs/**/.~lock*
