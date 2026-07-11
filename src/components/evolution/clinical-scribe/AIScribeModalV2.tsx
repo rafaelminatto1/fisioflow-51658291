@@ -241,7 +241,7 @@ export const AIScribeModalV2: React.FC<AIScribeModalV2Props> = ({
 
         <div className="px-8 py-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex justify-center">
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
-            Cloudflare Voice · Workers AI Flux STT
+            Cloudflare Voice · Deepgram Nova-3 pt-BR
           </p>
         </div>
       </DialogContent>

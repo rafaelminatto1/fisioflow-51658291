@@ -46,6 +46,7 @@ import { EvolutionHeaderV3 } from '@/components/evolution/EvolutionHeaderV3';
 import { EvolutionTabsBar } from '@/components/evolution/EvolutionTabsBar';
 import { EvolutionNoScrollPanel } from '@/components/evolution/v2-improved/EvolutionNoScrollPanel';
 import { AIScribeModal } from '@/components/evolution/clinical-scribe/AIScribeModal';
+import { soapToObservacaoHtml } from '@/components/evolution/clinical-scribe/soapToObservacao';
 import { AISoapSummaryDialog } from '@/components/evolution/AISoapSummaryDialog';
 import { FloatingActionBar } from '@/components/evolution/FloatingActionBar';
 import { EvolutionKeyboardShortcuts } from '@/components/evolution/EvolutionKeyboardShortcuts';
@@ -1005,12 +1006,13 @@ const PatientEvolution = () => {
             onOpenChange={state.setShowAIScribe}
             patientId={state.patientId}
             onApply={(soap) => {
-              state.setSoapData((prev: any) => ({
+              // Evolução atual é observação livre — o ditado entra no editor
+              // principal (mesmo caminho do ApplyTemplateModal), não no SOAP legado.
+              const html = soapToObservacaoHtml(soap);
+              if (!html) return;
+              state.setEvolutionData((prev) => ({
                 ...prev,
-                subjective: prev.subjective + '\n' + soap.subjective,
-                objective: prev.objective + '\n' + soap.objective,
-                assessment: prev.assessment + '\n' + soap.assessment,
-                plan: prev.plan + '\n' + soap.plan,
+                observacao: (prev.observacao || '') + html,
               }));
             }}
           />
