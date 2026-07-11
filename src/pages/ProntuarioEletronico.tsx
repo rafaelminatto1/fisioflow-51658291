@@ -410,9 +410,9 @@ export default function ProntuarioEletronico() {
           }
         />
 
-        <div className="mt-8 grid lg:grid-cols-[280px_1fr] gap-6">
+        <div className="mt-8 grid lg:grid-cols-4 gap-6">
           {/* Session list sidebar */}
-          <div className="space-y-2">
+          <div className="space-y-2 lg:col-span-1">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Evoluções ({sessions.length})
             </p>
@@ -445,7 +445,7 @@ export default function ProntuarioEletronico() {
           </div>
 
           {/* Session detail */}
-          <Card className="border shadow-sm">
+          <Card className="border shadow-sm lg:col-span-3">
             <CardContent className="p-4">
               {!selectedSession ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-3 text-center text-muted-foreground">

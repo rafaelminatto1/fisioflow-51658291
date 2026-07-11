@@ -336,6 +336,30 @@ export function useAgendaAppearancePersistence(
     [baseHook, debouncedSave],
   );
 
+  const setColorTheme = useCallback(
+    (theme: any) => {
+      baseHook.setColorTheme?.(theme);
+      debouncedSave();
+    },
+    [baseHook, debouncedSave],
+  );
+
+  const setBorderRadius = useCallback(
+    (radius: any) => {
+      baseHook.setBorderRadius?.(radius);
+      debouncedSave();
+    },
+    [baseHook, debouncedSave],
+  );
+
+  const setBorderStyle = useCallback(
+    (style: any) => {
+      baseHook.setBorderStyle?.(style);
+      debouncedSave();
+    },
+    [baseHook, debouncedSave],
+  );
+
   const save = useCallback(() => {
     debouncedSave.flush();
   }, [debouncedSave]);
@@ -394,6 +418,9 @@ export function useAgendaAppearancePersistence(
     setTimeFontScale,
     setTypeFontScale,
     setPaddingScale,
+    setColorTheme,
+    setBorderRadius,
+    setBorderStyle,
     save,
     setAll,
     applyToAllViews,

@@ -15,7 +15,6 @@ import {
   Plus,
   Search,
   Sparkles,
-  Target,
   Video,
 } from "lucide-react";
 import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
@@ -24,7 +23,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useExercises, type Exercise } from "@/hooks/useExercises";
 import { useExerciseFavorites } from "@/hooks/useExerciseFavorites";
-import { useExerciseProtocols } from "@/hooks/useExerciseProtocols";
 import { useExerciseTemplates } from "@/hooks/useExerciseTemplates";
 import { useActivePatients } from "@/hooks/patients/usePatients";
 import type { Patient } from "@/types";
@@ -44,7 +42,6 @@ const NewExerciseModal = lazy(() =>
 const SECTION_NAV = [
   { key: "library", label: "Biblioteca", icon: BookOpen, href: "/exercises" },
   { key: "templates", label: "Templates", icon: FileText, href: "/exercises/templates" },
-  { key: "protocols", label: "Protocolos", icon: Target, href: "/exercises/protocols" },
   { key: "search-ai", label: "Busca IA", icon: Search, href: "/exercises/search-ai", badge: "IA" },
   { key: "ai", label: "IA Assistente", icon: Sparkles, href: "/exercises/ai" },
   { key: "curation", label: "Curadoria", icon: ClipboardList, href: "/exercises/curation" },
@@ -55,7 +52,7 @@ const LEGACY_TAB_TO_PATH: Record<string, string> = {
   library: "/exercises",
   videos: "/exercises/videos",
   templates: "/exercises/templates",
-  protocols: "/exercises/protocols",
+  protocols: "/protocols",
   "search-ai": "/exercises/search-ai",
   ai: "/exercises/ai",
   curation: "/exercises/curation",
@@ -99,7 +96,6 @@ function toExerciseAIPatient(patient?: Patient): ExerciseAIPatientSummary | unde
 function resolveActiveSection(pathname: string) {
   if (pathname.startsWith("/exercises/videos")) return "videos";
   if (pathname.startsWith("/exercises/templates")) return "templates";
-  if (pathname.startsWith("/exercises/protocols")) return "protocols";
   if (pathname.startsWith("/exercises/search-ai")) return "search-ai";
   if (pathname.startsWith("/exercises/ai")) return "ai";
   if (pathname.startsWith("/exercises/curation")) return "curation";
@@ -133,7 +129,6 @@ export default function Exercises() {
     isUpdating,
   } = useExercises();
   useExerciseFavorites();
-  const { protocols, loading: loadingProtocols } = useExerciseProtocols();
   const { templates, loading: loadingTemplates } = useExerciseTemplates();
 
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
@@ -153,7 +148,7 @@ export default function Exercises() {
 
   const exercisesWithoutVideo = useMemo(() => exercises.filter((ex) => !ex.video_url), [exercises]);
   const exercisesWithVideo = useMemo(() => exercises.filter((ex) => ex.video_url), [exercises]);
-  const isLoadingSummary = loadingExercises || loadingProtocols || loadingTemplates;
+  const isLoadingSummary = loadingExercises || loadingTemplates;
 
   useEffect(() => {
     const patientIdFromUrl = searchParams.get("patientId") || "";
@@ -299,12 +294,6 @@ export default function Exercises() {
                 <span className="text-slate-900">{templates.length}</span> Templates
               </span>
             </div>
-            <div className="flex items-center gap-1.5 whitespace-nowrap">
-              <span className="h-2 w-2 rounded-full bg-amber-500" />
-              <span className="text-xs font-medium text-slate-600">
-                <span className="text-slate-900">{protocols.length}</span> Protocolos
-              </span>
-            </div>
           </div>
         )}
       </PageHeader>
@@ -317,7 +306,6 @@ export default function Exercises() {
                 const Icon = item.icon;
                 const isLibrary = item.key === "library";
                 const isTemplates = item.key === "templates";
-                const isProtocols = item.key === "protocols";
 
                 return (
                   <NavLink
@@ -329,9 +317,7 @@ export default function Exercises() {
                         ? "tab-library"
                         : item.key === "templates"
                           ? "tab-templates"
-                          : item.key === "protocols"
-                            ? "tab-protocols"
-                            : undefined
+                          : undefined
                     }
                     className={({ isActive }) =>
                       `flex min-w-max items-center gap-1.5 rounded-lg px-3 text-xs sm:px-4 md:px-6 sm:text-sm font-medium transition-colors ${
@@ -361,14 +347,6 @@ export default function Exercises() {
                         className="ml-0.5 sm:ml-1 h-4 sm:h-5 text-[10px] sm:text-xs"
                       >
                         {templates.length}
-                      </Badge>
-                    )}
-                    {isProtocols && (
-                      <Badge
-                        variant="secondary"
-                        className="ml-0.5 sm:ml-1 h-4 sm:h-5 text-[10px] sm:text-xs"
-                      >
-                        {protocols.length}
                       </Badge>
                     )}
                     {item.badge && (

@@ -12,13 +12,13 @@ export function FieldRow({ label, description, control, className }: FieldRowPro
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-4 py-3 border-b border-slate-100 dark:border-slate-800 last:border-b-0",
+        "flex flex-col gap-4 py-4 md:flex-row md:items-center md:justify-between border-b border-slate-200/50 dark:border-slate-800/50",
         className,
       )}
     >
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium">{label}</p>
-        {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
+      <div className="min-w-0 flex-1 pr-6">
+        <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{label}</p>
+        {description && <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">{description}</p>}
       </div>
       <div className="shrink-0">{control}</div>
     </div>

@@ -1,13 +1,11 @@
 import type React from "react";
 import { cn } from "@/lib/utils";
-import { PageBreadcrumbs } from "@/components/ui/page-breadcrumbs";
 
 interface PageHeaderProps {
   title: string;
   subtitle?: string;
   icon?: React.ElementType;
   actions?: React.ReactNode;
-  breadcrumbs?: boolean;
   className?: string;
 }
 
@@ -16,18 +14,12 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   subtitle,
   icon: Icon,
   actions,
-  breadcrumbs = true,
   className,
 }) => {
   return (
     <div className={cn("flex flex-col gap-4 mb-6 animate-fade-in", className)}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
-          {breadcrumbs && (
-            <div className="mb-2">
-              <PageBreadcrumbs />
-            </div>
-          )}
           <div className="flex items-center gap-3">
             {Icon && (
               <div className="p-2.5 rounded-2xl bg-primary/10 text-primary shadow-inner-border">

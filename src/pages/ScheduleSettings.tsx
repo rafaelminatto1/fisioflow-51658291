@@ -1,14 +1,11 @@
 import "@/styles/bundles/schedule.css";
 import { useCallback, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Menu } from "lucide-react";
-import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
+import { ArrowLeft } from "lucide-react";
+import { PageLayout, PageContainer } from "@/components/layout/PageLayout";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { resolveTab, type TabValue } from "@/components/schedule/settings/tabRedirects";
-import { SettingsNav, NAV_ITEMS } from "@/components/schedule/settings/SettingsNav";
-import { OverviewStrip } from "@/components/schedule/settings/OverviewStrip";
+import { SettingsNav } from "@/components/schedule/settings/SettingsNav";
 import { SettingsSaveBar } from "@/components/schedule/settings/SettingsSaveBar";
 import type { TabSaveHandle } from "@/components/schedule/settings/types";
 import { FuncionamentoTab } from "@/components/schedule/settings/tabs/FuncionamentoTab";
@@ -26,20 +23,15 @@ const TAB_COMPONENTS: Record<TabValue, React.ComponentType<{ registerHandle: (h:
 };
 
 export default function ScheduleSettings() {
-  const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [handle, setHandle] = useState<TabSaveHandle | null>(null);
 
   const activeTab = useMemo(() => resolveTab(searchParams.get("tab")), [searchParams]);
-  const activeMeta = NAV_ITEMS.find((t) => t.value === activeTab) ?? NAV_ITEMS[0];
-  const ActiveIcon = activeMeta.icon;
   const ActiveComponent = TAB_COMPONENTS[activeTab];
 
   const handleSelect = useCallback(
     (value: TabValue) => {
       if (value === activeTab) {
-        setSheetOpen(false);
         return;
       }
       if (handle?.isDirty && !window.confirm("Descartar alterações não salvas?")) {
@@ -54,73 +46,37 @@ export default function ScheduleSettings() {
         },
         { replace: true },
       );
-      setSheetOpen(false);
     },
     [activeTab, handle, setSearchParams],
   );
 
   return (
     <PageLayout>
-      <PageContainer>
-        <PageHeader
-          title="Configurações da Agenda"
-          subtitle="Funcionamento, atendimentos, disponibilidade, políticas e aparência."
-          actions={
-            <Button asChild variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-lg">
-              <Link to="/agenda" aria-label="Voltar para agenda">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-          }
-        />
+      <PageContainer className="max-w-6xl py-12">
+        <div className="mb-12 flex items-center justify-between">
+          <Button asChild variant="outline" size="sm" className="rounded-full border-slate-300 dark:border-slate-700">
+            <Link to="/agenda" aria-label="Voltar para agenda">
+              <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+            </Link>
+          </Button>
+        </div>
 
-        <div className="space-y-5">
-          <OverviewStrip onJump={handleSelect} />
+        <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-4 lg:gap-16">
+          {/* Menu Lateral Ultraminimalista */}
+          <aside className="w-full lg:col-span-1">
+            <div className="sticky top-8">
+              <h1 className="mb-8 text-sm font-bold uppercase tracking-widest text-slate-400">
+                Configurações
+              </h1>
+              <SettingsNav active={activeTab} onSelect={handleSelect} />
+            </div>
+          </aside>
 
-          <div className="grid gap-5 lg:grid-cols-[16rem_minmax(0,1fr)]">
-            {isMobile ? (
-              <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="outline" className="h-11 justify-between rounded-lg">
-                    <span className="flex items-center gap-2">
-                      <ActiveIcon className="h-4 w-4 text-blue-600" />
-                      {activeMeta.label}
-                    </span>
-                    <Menu className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-80 p-0">
-                  <SheetHeader className="border-b p-4">
-                    <SheetTitle>Configurações</SheetTitle>
-                  </SheetHeader>
-                  <div className="p-3">
-                    <SettingsNav active={activeTab} onSelect={handleSelect} />
-                  </div>
-                </SheetContent>
-              </Sheet>
-            ) : (
-              <aside className="hidden lg:block">
-                <div className="sticky top-4 rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-950">
-                  <SettingsNav active={activeTab} onSelect={handleSelect} />
-                </div>
-              </aside>
-            )}
-
-            <main className="min-w-0 space-y-4">
-              <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-950">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                  <ActiveIcon className="h-4 w-4" />
-                </div>
-                <div className="min-w-0">
-                  <h2 className="truncate text-base font-semibold">{activeMeta.label}</h2>
-                  <p className="text-sm text-muted-foreground">{activeMeta.description}</p>
-                </div>
-              </div>
-
-              <ActiveComponent key={activeTab} registerHandle={setHandle} />
-              <SettingsSaveBar handle={handle} />
-            </main>
-          </div>
+          {/* Conteúdo Principal Borderless */}
+          <main className="min-w-0 pb-32 lg:col-span-3">
+            <ActiveComponent key={activeTab} registerHandle={setHandle} />
+            <SettingsSaveBar handle={handle} />
+          </main>
         </div>
       </PageContainer>
     </PageLayout>

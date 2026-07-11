@@ -350,9 +350,9 @@ export default function EvolucaoClinica() {
         </div>
 
         {/* Body */}
-        <div className="grid min-h-0 flex-1 grid-cols-[1fr_340px]">
+        <div className="grid min-h-0 flex-1 lg:grid-cols-4">
           {/* Timeline */}
-          <div className="overflow-y-auto px-6 py-5">
+          <div className="overflow-y-auto px-6 py-5 lg:col-span-3">
             {/* Composer */}
             <div className="mb-5 rounded-2xl border border-border bg-card px-4 py-3.5">
               <div className="mb-2.5 flex items-center gap-2">
@@ -391,7 +391,7 @@ export default function EvolucaoClinica() {
           </div>
 
           {/* Side */}
-          <div className="flex flex-col gap-[18px] overflow-y-auto border-l border-border bg-muted/30 p-[18px]">
+          <div className="flex flex-col gap-[18px] overflow-y-auto border-l border-border bg-muted/30 p-[18px] lg:col-span-1">
             <Widget title="Dor (VAS) — evolução">
               <div className="mb-2 flex items-baseline justify-between">
                 <span className="text-[28px] font-extrabold tabular-nums tracking-[-0.02em]">

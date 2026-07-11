@@ -302,6 +302,14 @@ export const coreRoutes = (
       }
     />
     <Route
+      path="/protocols/:id"
+      element={
+        <ProtectedRoute>
+          <ProtocolsPage />
+        </ProtectedRoute>
+      }
+    />
+    <Route
       path="/templates"
       element={
         <ProtectedRoute>

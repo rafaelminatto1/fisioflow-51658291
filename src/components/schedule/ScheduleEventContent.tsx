@@ -23,6 +23,7 @@ export interface ScheduleEventContentProps {
   phone?: string;
   show?: { duration: boolean; type: boolean; phone: boolean };
   status?: string;
+  theme?: string;
 }
 
 /**
@@ -51,12 +52,30 @@ export function ScheduleEventContent({
   phone,
   show = { duration: true, type: true, phone: false },
   status,
+  theme = "status",
 }: ScheduleEventContentProps) {
   const safeColors = colors || {
     background: "transparent",
     accent: "currentColor",
     text: "inherit",
   };
+
+  let bgThemeColor = safeColors.background !== "transparent" ? safeColors.background : "hsl(var(--card))";
+  let textThemeColor = safeColors.text;
+  let accentThemeColor = safeColors.accent;
+
+  if (theme === "pastel") {
+    // Modify slightly or rely on external color maps, or just apply opacity
+    bgThemeColor = safeColors.background !== "transparent" ? `color-mix(in srgb, ${safeColors.background} 40%, transparent)` : bgThemeColor;
+    textThemeColor = "var(--tw-prose-body)"; // standard text
+  } else if (theme === "vibrant") {
+    bgThemeColor = safeColors.accent;
+    textThemeColor = "#ffffff"; // usually vibrant needs white text
+  } else if (theme === "monochrome") {
+    bgThemeColor = "hsl(var(--secondary))";
+    textThemeColor = "hsl(var(--secondary-foreground))";
+    accentThemeColor = "hsl(var(--primary))";
+  }
 
   const startTime = timeText ? timeText.split(/[-–]/)[0].trim() : "";
   const baseLabel = isTask ? "Tarefa" : isGroup ? "Grupo" : startTime || "Consulta";
@@ -73,17 +92,19 @@ export function ScheduleEventContent({
 
   return (
     <div
-      className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-l-4 border-white shadow-sm transition-shadow duration-200 hover:shadow-md"
+      className="flex h-full w-full flex-col overflow-hidden border-white shadow-sm transition-shadow duration-200 hover:shadow-md"
       style={{
-        borderLeftColor: safeColors.accent,
-        backgroundColor:
-          safeColors.background !== "transparent" ? safeColors.background : "hsl(var(--card))",
-        color: safeColors.text,
+        borderLeftColor: accentThemeColor,
+        backgroundColor: bgThemeColor,
+        color: textThemeColor,
         // CSS vars injetadas pelo useAgendaAppearance — refletem os sliders
         // de Fonte, Espaçamento e Opacidade na aba de Aparência.
         opacity: isSelected ? 0.9 : "var(--agenda-card-opacity, 1)" as unknown as number,
         fontSize: "calc(12px * var(--agenda-font-scale, 1))" as unknown as number,
         padding: "var(--agenda-card-padding, 0.25rem 0.5rem)",
+        borderRadius: "var(--agenda-card-radius, 0.25rem)",
+        borderWidth: "var(--agenda-border-width, 0)",
+        borderLeftWidth: "var(--agenda-border-left-width, 4px)",
       } as React.CSSProperties}
     >
       {/* Linha 1: nome dominante */}
@@ -100,7 +121,7 @@ export function ScheduleEventContent({
       <div className="mt-auto flex items-center gap-1.5 pt-1 text-[10px] font-semibold opacity-70">
         <span
           className="flex h-3 w-3 shrink-0 items-center justify-center rounded-full"
-          style={{ color: safeColors.accent }}
+          style={{ color: accentThemeColor }}
           title={statusLabel}
         >
           {status === "CONFIRMED" ? (
@@ -112,7 +133,7 @@ export function ScheduleEventContent({
           ) : status === "PENDING" ? (
             <Clock className="h-3 w-3" />
           ) : (
-            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: safeColors.accent }} />
+            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: accentThemeColor }} />
           )}
           {statusLabel && <span className="sr-only">{statusLabel}</span>}
         </span>

@@ -68,6 +68,7 @@ export default [
       route("exercicios/curadoria", "pages/exercises/ExercisesLegacyRedirect.tsx"),
       route("exercicios/:id/evidencia", "pages/exercises/ExercisesLegacyRedirect.tsx"),
       route("protocols", "pages/Protocols.tsx"),
+      route("protocols/:id", "pages/Protocols.tsx"),
 
       // WhatsApp Inbox — /whatsapp/inbox unificado em /crm-whatsapp (CrmWhatsApp.tsx)
       route("crm-whatsapp", "pages/CrmWhatsApp.tsx"),

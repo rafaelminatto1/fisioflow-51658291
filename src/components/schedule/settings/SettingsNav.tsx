@@ -26,9 +26,8 @@ export function SettingsNav({
   onSelect: (v: TabValue) => void;
 }) {
   return (
-    <nav className="flex flex-col gap-1">
+    <nav className="flex flex-col space-y-4">
       {NAV_ITEMS.map((item) => {
-        const Icon = item.icon;
         const isActive = active === item.value;
         return (
           <button
@@ -36,27 +35,15 @@ export function SettingsNav({
             type="button"
             onClick={() => onSelect(item.value)}
             className={cn(
-              "group flex w-full items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 text-left transition",
-              isActive
-                ? "border-blue-200 bg-blue-50 text-blue-950 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100"
-                : "hover:bg-slate-50 dark:hover:bg-slate-900",
+              "group relative flex items-center text-left transition-all",
+              isActive ? "opacity-100" : "opacity-40 hover:opacity-100",
             )}
           >
-            <span
-              className={cn(
-                "flex h-8 w-8 shrink-0 items-center justify-center rounded-md",
-                isActive
-                  ? "bg-blue-600 text-white"
-                  : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
-              )}
-            >
-              <Icon className="h-4 w-4" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold">{item.label}</span>
-              <span className="mt-0.5 block truncate text-[11px] font-normal text-muted-foreground">
-                {item.description}
-              </span>
+            {isActive && (
+              <span className="absolute -left-6 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-slate-900 dark:bg-slate-50" />
+            )}
+            <span className={cn("text-base font-medium tracking-tight", isActive ? "text-slate-900 dark:text-slate-50" : "text-slate-600 dark:text-slate-400")}>
+              {item.label}
             </span>
           </button>
         );

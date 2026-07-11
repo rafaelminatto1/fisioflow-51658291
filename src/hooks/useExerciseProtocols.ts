@@ -26,8 +26,20 @@ export interface ExerciseProtocol {
   id: string;
   name: string;
   condition_name: string;
-  protocol_type: "pos_operatorio" | "patologia" | "esportivo" | "conservador" | "geriatria";
+  protocol_type:
+    | "pos_operatorio"
+    | "patologia"
+    | "preventivo"
+    | "esportivo"
+    | "funcional"
+    | "neurologico"
+    | "respiratorio"
+    | "conservador"
+    | "geriatria";
   evidence_level?: string;
+  description?: string;
+  tags?: string[];
+  icd10_codes?: string[];
   weeks_total?: number;
   phases?: Array<{
     name: string;
@@ -67,6 +79,9 @@ const mapWorkerToAppProtocol = (p: WorkersProtocol): ExerciseProtocol => ({
   condition_name: p.conditionName || "",
   protocol_type: p.protocolType as any,
   evidence_level: p.evidenceLevel || undefined,
+  description: p.description || undefined,
+  tags: p.tags || [],
+  icd10_codes: p.icd10Codes || [],
   weeks_total: p.weeksTotal || undefined,
   phases: p.phases || [],
   milestones: p.milestones || [],

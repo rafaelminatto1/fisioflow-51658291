@@ -609,6 +609,7 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
           phone: display.showPhone,
         }}
         status={original?.status}
+        theme={appearance.colorTheme}
       />
     );
   };

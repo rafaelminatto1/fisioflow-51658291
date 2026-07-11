@@ -36,7 +36,7 @@
     --fc-bg-event-color: hsl(var(--destructive));
     --fc-bg-event-opacity: 0.12;
 
-    --fc-event-min-height: var(--schedule-card-min-height, 28px);
+    --fc-event-min-height: var(--agenda-slot-height, 28px);
 
     font-family: inherit;
     color: hsl(var(--foreground));

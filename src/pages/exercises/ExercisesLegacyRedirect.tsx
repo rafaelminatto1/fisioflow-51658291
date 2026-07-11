@@ -4,7 +4,7 @@ const PATH_ALIASES: Array<[from: RegExp, to: string]> = [
   [/^\/exercicios$/, "/exercises"],
   [/^\/exercicios\/videos$/, "/exercises/videos"],
   [/^\/exercicios\/templates$/, "/exercises/templates"],
-  [/^\/exercicios\/protocolos$/, "/exercises/protocols"],
+  [/^\/exercicios\/protocolos$/, "/protocols"],
   [/^\/exercicios\/ia$/, "/exercises/ai"],
   [/^\/exercicios\/analytics$/, "/exercises/analytics"],
   [/^\/exercicios\/busca-ia$/, "/exercises/search-ai"],

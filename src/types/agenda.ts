@@ -152,6 +152,9 @@ export interface WeeklyCalendarData {
 
 // Card size options for calendar display
 export type CardSize = "extra_small" | "small" | "medium" | "large";
+export type AgendaColorTheme = "status" | "pastel" | "vibrant" | "monochrome";
+export type AgendaBorderRadius = "none" | "sm" | "md" | "lg" | "full";
+export type AgendaBorderStyle = "none" | "left" | "full";
 
 // Card size configuration
 export interface CardSizeConfig {
@@ -192,6 +195,9 @@ export interface AgendaViewAppearance {
   timeFontScale: number;
   typeFontScale: number;
   paddingScale: number;
+  colorTheme?: AgendaColorTheme;
+  borderRadius?: AgendaBorderRadius;
+  borderStyle?: AgendaBorderStyle;
 }
 
 export interface AgendaDisplayOptions {

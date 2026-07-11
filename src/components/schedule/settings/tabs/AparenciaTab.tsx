@@ -92,6 +92,9 @@ function ViewControls({
   onFontScale: (val: number) => void;
   onPaddingScale: (val: number) => void;
   onOpacity: (val: number) => void;
+  onTheme: (val: string) => void;
+  onBorderRadius: (val: string) => void;
+  onBorderStyle: (val: string) => void;
   onApplyToAll: () => void;
   onResetView: () => void;
 }) {
@@ -102,11 +105,14 @@ function ViewControls({
   const fontScale = appearance.fontScale ?? 5;
   const paddingScale = appearance.paddingScale ?? 5;
   const opacity = appearance.opacity ?? 100;
+  const colorTheme = appearance.colorTheme ?? "status";
+  const borderRadius = appearance.borderRadius ?? "lg";
+  const borderStyle = appearance.borderStyle ?? "left";
   const preview = PREVIEW_BY_SIZE[cardSize];
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_16rem]">
-      <div className="space-y-5">
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-4 lg:gap-12">
+      <div className="space-y-5 lg:col-span-3">
         {/* Density selector */}
         <div>
           <div className="mb-2 flex items-center justify-between">
@@ -140,10 +146,10 @@ function ViewControls({
                   type="button"
                   onClick={() => onDensity(opt.value)}
                   className={cn(
-                    "rounded-lg border p-3 text-left transition",
+                    "border-l-4 p-3 text-left transition-all",
                     active
-                      ? "border-blue-600 bg-blue-50 text-blue-900 dark:bg-blue-950/40 dark:text-blue-100"
-                      : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/50 dark:border-slate-700 dark:bg-slate-900",
+                      ? "border-slate-900 bg-slate-50 dark:border-slate-50 dark:bg-slate-900/50"
+                      : "border-transparent bg-white hover:bg-slate-50 dark:bg-transparent dark:hover:bg-slate-900",
                   )}
                 >
                   <p className="text-sm font-semibold">{opt.label}</p>
@@ -227,12 +233,60 @@ function ViewControls({
                   />
                 }
               />
+              <FieldRow
+                label="Tema de Cores"
+                description="Como as cores dos status são aplicadas"
+                control={
+                  <select
+                    value={colorTheme}
+                    onChange={(e) => onTheme(e.target.value)}
+                    className="w-48 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+                  >
+                    <option value="status">Padrão (Forte)</option>
+                    <option value="pastel">Pastel (Suave)</option>
+                    <option value="vibrant">Vibrante</option>
+                    <option value="monochrome">Monocromático</option>
+                  </select>
+                }
+              />
+              <FieldRow
+                label="Estilo da Borda"
+                description="Borda de destaque do card"
+                control={
+                  <select
+                    value={borderStyle}
+                    onChange={(e) => onBorderStyle(e.target.value)}
+                    className="w-48 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+                  >
+                    <option value="left">Apenas Esquerda</option>
+                    <option value="full">Contorno Completo</option>
+                    <option value="none">Sem Borda</option>
+                  </select>
+                }
+              />
+              <FieldRow
+                label="Arredondamento"
+                description="Formato dos cantos dos cards"
+                control={
+                  <select
+                    value={borderRadius}
+                    onChange={(e) => onBorderRadius(e.target.value)}
+                    className="w-48 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+                  >
+                    <option value="none">Quadrado (0px)</option>
+                    <option value="sm">Suave (2px)</option>
+                    <option value="md">Médio (4px)</option>
+                    <option value="lg">Arredondado (8px)</option>
+                    <option value="full">Pílula (Total)</option>
+                  </select>
+                }
+              />
             </div>
           )}
         </div>
 
         {/* Apply to all views */}
-        <div className="flex items-center justify-between rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/40">
+        <div className="mt-8 flex items-center justify-between border-t border-slate-200 pt-8 dark:border-slate-800">
           <div>
             <p className="text-sm font-medium">Aplicar a todas as visões</p>
             <p className="text-[11px] text-muted-foreground">
@@ -249,7 +303,7 @@ function ViewControls({
       {/* Preview */}
       <div
         data-testid="aparencia-preview"
-        className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/40"
+        className="border-t border-slate-200 pt-8 dark:border-slate-800 lg:col-span-1 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0"
         style={{ opacity: opacity / 100 }}
       >
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -264,6 +318,9 @@ function ViewControls({
                 minHeight: preview.minHeight,
                 fontSize: preview.fontSize * (fontScale / 5),
                 padding: `${2 * (paddingScale / 5)}px 8px`,
+                borderWidth: borderStyle === "full" ? "1px" : "0",
+                borderLeftWidth: borderStyle === "left" || borderStyle === "full" ? "4px" : "0",
+                borderRadius: borderRadius === "none" ? "0" : borderRadius === "sm" ? "2px" : borderRadius === "lg" ? "8px" : borderRadius === "full" ? "9999px" : "4px",
               }}
             >
               <span className="truncate font-semibold leading-tight">{c.name}</span>
@@ -276,6 +333,12 @@ function ViewControls({
       </div>
     </div>
   );
+}
+
+function SaveIndicator({ isSaving, lastSavedAt }: { isSaving: boolean; lastSavedAt: Date | null }) {
+  if (isSaving) return <span className="flex items-center gap-1.5 text-xs text-blue-500"><span className="h-2 w-2 animate-ping rounded-full bg-blue-500"></span> Salvando...</span>;
+  if (lastSavedAt) return <span className="flex items-center gap-1 text-xs text-slate-500"><Check className="h-3.5 w-3.5 text-green-500" /> Salvo</span>;
+  return null;
 }
 
 export function AparenciaTab({ registerHandle }: TabComponentProps) {
@@ -348,6 +411,9 @@ export function AparenciaTab({ registerHandle }: TabComponentProps) {
       opacity: curr.opacity,
       timeFontScale: curr.timeFontScale,
       typeFontScale: curr.typeFontScale,
+      colorTheme: curr.colorTheme,
+      borderRadius: curr.borderRadius,
+      borderStyle: curr.borderStyle,
     });
   };
 
@@ -361,10 +427,13 @@ export function AparenciaTab({ registerHandle }: TabComponentProps) {
       title="Aparência da Agenda"
       description="Configure a densidade e altura dos cards. Cada visão pode ter configuração independente."
       action={
-        <Button variant="outline" size="sm" onClick={handleReset}>
-          <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-          Restaurar padrões
-        </Button>
+        <div className="flex items-center gap-4">
+          <SaveIndicator isSaving={isSyncing} lastSavedAt={lastSyncedAt} />
+          <Button variant="outline" size="sm" onClick={handleReset}>
+            <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+            Restaurar padrões
+          </Button>
+        </div>
       }
     >
       <div className="space-y-5">
@@ -389,10 +458,10 @@ export function AparenciaTab({ registerHandle }: TabComponentProps) {
                     activeHook.setAll(p.patch);
                   }}
                   className={cn(
-                    "rounded-lg border p-3 text-left transition",
+                    "border-l-4 p-3 text-left transition-all",
                     active
-                      ? "border-blue-600 bg-blue-50 text-blue-900 dark:bg-blue-950/40 dark:text-blue-100"
-                      : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/50 dark:border-slate-700 dark:bg-slate-900",
+                      ? "border-slate-900 bg-slate-50 dark:border-slate-50 dark:bg-slate-900/50"
+                      : "border-transparent bg-white hover:bg-slate-50 dark:bg-transparent dark:hover:bg-slate-900",
                   )}
                 >
                   <p className="text-sm font-semibold">{p.label}</p>
@@ -418,7 +487,7 @@ export function AparenciaTab({ registerHandle }: TabComponentProps) {
               Configurar visão
             </p>
           </div>
-          <div className="flex gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-slate-800 dark:bg-slate-900/40">
+          <div className="flex gap-4 border-b border-slate-200 pb-2 dark:border-slate-800">
             {VIEW_CONFIG.map(({ view, label }) => {
               // Check override for each view tab
               const isActive = activeView === view;
@@ -444,6 +513,9 @@ export function AparenciaTab({ registerHandle }: TabComponentProps) {
           onFontScale={(v) => activeHook.setFontScale(v)}
           onPaddingScale={(v) => activeHook.setPaddingScale(v)}
           onOpacity={(v) => activeHook.setOpacity(v)}
+          onTheme={(v) => activeHook.setColorTheme(v)}
+          onBorderRadius={(v) => activeHook.setBorderRadius(v)}
+          onBorderStyle={(v) => activeHook.setBorderStyle(v)}
           onApplyToAll={handleApplyToAll}
           onResetView={handleResetView}
         />
@@ -555,10 +627,10 @@ function ViewTabButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "relative flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-all",
+        "relative flex items-center justify-center gap-1.5 pb-2 text-sm font-bold uppercase tracking-widest transition-all",
         isActive
-          ? "bg-white text-foreground shadow-sm dark:bg-slate-800"
-          : "text-muted-foreground hover:text-foreground",
+          ? "border-b-2 border-slate-900 text-slate-900 dark:border-slate-50 dark:text-slate-50"
+          : "border-b-2 border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300",
       )}
     >
       {label}
