@@ -19,6 +19,7 @@ import {
   Zap,
   Undo2,
   Redo2,
+  Scissors,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -42,6 +43,7 @@ import {
   type PainQualityIntensity,
 } from "@/lib/evolution/painDetail";
 import { useSoapRecords } from "@/hooks/useSoapRecords";
+import { usePatientSurgeries } from "@/hooks/usePatientEvolution";
 import {
   Sheet,
   SheetContent,
@@ -159,6 +161,39 @@ function extractRom(measurements: any[] = []): number | null {
   return Number.isNaN(n) ? null : n;
 }
 
+function formatSurgeryDuration(date: string) {
+  if (!date) return "Data não informada";
+  const d1 = new Date(date);
+  d1.setHours(0, 0, 0, 0);
+  const d2 = new Date();
+  d2.setHours(0, 0, 0, 0);
+  
+  const diffMs = d2.getTime() - d1.getTime();
+  const totalDays = Math.abs(Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+  
+  if (totalDays === 0) return "Hoje";
+  
+  const years = Math.floor(totalDays / 365);
+  const remainingDaysAfterYears = totalDays % 365;
+  const months = Math.floor(remainingDaysAfterYears / 30);
+  const remainingDaysAfterMonths = remainingDaysAfterYears % 30;
+  const weeks = Math.floor(remainingDaysAfterMonths / 7);
+  const days = remainingDaysAfterMonths % 7;
+  
+  const parts = [];
+  if (years > 0) parts.push(`${years} ${years === 1 ? 'ano' : 'anos'}`);
+  if (months > 0) parts.push(`${months} ${months === 1 ? 'mês' : 'meses'}`);
+  if (weeks > 0) parts.push(`${weeks} ${weeks === 1 ? 'semana' : 'semanas'}`);
+  if (days > 0) parts.push(`${days} ${days === 1 ? 'dia' : 'dias'}`);
+  
+  if (parts.length === 0) return "Hoje";
+  if (parts.length > 1) {
+    const last = parts.pop();
+    return parts.join(", ") + " e " + last;
+  }
+  return parts[0];
+}
+
 export const EvolutionNoScrollPanel = memo(
   ({
     data,
@@ -169,6 +204,7 @@ export const EvolutionNoScrollPanel = memo(
     pathologies = [],
     onNavigateToTab,
   }: EvolutionNoScrollPanelProps) => {
+    const { data: surgeries = [] } = usePatientSurgeries(patientId || "");
     const [historyOpen, setHistoryOpen] = useState(false);
     const [measurementModalOpen, setMeasurementModalOpen] = useState(false);
     const [focusSection, setFocusSection] = useState<null | "obs" | "condutas">(null);
@@ -698,22 +734,25 @@ export const EvolutionNoScrollPanel = memo(
             )}
           </SideCard>
 
-          {/* histórico de sessões */}
-          <SideCard
-            icon={History}
-            title="Histórico de sessões"
-            accent="border-t-blue-500"
-            onClick={() => setHistoryOpen(true)}
-            action={<ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />}
-          >
-            <p className="text-[11.5px] font-semibold text-muted-foreground">
-              {previousRecords.length > 0
-                ? `${previousRecords.length} ${previousRecords.length === 1 ? "sessão" : "sessões"} · clique para replicar conduta`
-                : "Abra o histórico completo deste paciente."}
-            </p>
-          </SideCard>
-
-
+          {/* cirurgias (condicional) */}
+          {surgeries.length > 0 && (
+            <SideCard
+              icon={Scissors}
+              title="Cirurgias"
+              accent="border-t-orange-500"
+            >
+              <div className="space-y-2">
+                {surgeries.map((s: any) => (
+                  <div key={s.id} className="flex flex-col gap-0.5">
+                    <span className="text-[12px] font-bold text-slate-700">{s.surgery_name}</span>
+                    <span className="text-[11px] font-medium text-muted-foreground">
+                      {s.surgery_date ? formatSurgeryDuration(s.surgery_date) : "Data não informada"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </SideCard>
+          )}
 
           {/* sinais vitais — condicional */}
           {showVitals && (

@@ -423,7 +423,7 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
                               form.setValue("doctor_phone", doctor.phone || "", {
                                 shouldDirty: true,
                               });
-                              form.trigger("doctor_name");
+                              form.clearErrors("doctor_name");
                             } else {
                               field.onChange("");
                             }
@@ -725,7 +725,7 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
           form.setValue("doctor_phone", doctor.phone || "", {
             shouldDirty: true,
           });
-          form.trigger(["doctor_name", "doctor_phone"]);
+          form.clearErrors(["doctor_name", "doctor_phone"]);
           setDoctorModalOpen(false);
           setSuggestedDoctorName("");
         }}
