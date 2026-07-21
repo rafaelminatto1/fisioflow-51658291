@@ -9,7 +9,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -53,9 +53,11 @@ export const InternalChat = () => {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      requestAnimationFrame(() => {
+        scrollRef.current!.scrollTop = scrollRef.current!.scrollHeight;
+      });
     }
-  }, [messages]);
+  }, [messages, selectedParticipantId]);
 
   const handleSend = async () => {
     if (!messageText.trim() || !selectedParticipantId) return;
@@ -309,7 +311,7 @@ export const InternalChat = () => {
             {/* Chat Input */}
             <div className="p-4 border-t bg-card">
               <div className="flex gap-3 bg-card p-2 rounded-2xl border border-border/40 shadow-inner focus-within:border-primary/50 transition-all">
-                <Input
+                <Textarea
                   placeholder="Digite sua mensagem..."
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
@@ -319,9 +321,10 @@ export const InternalChat = () => {
                       handleSend();
                     }
                   }}
-                  className="flex-1 border-0 bg-transparent focus-visible:ring-0 shadow-none h-10"
+                  className="flex-1 border-0 bg-transparent focus-visible:ring-0 shadow-none min-h-[44px] max-h-[200px] resize-none px-0 py-1"
                 />
                 <Button
+                  type="button"
                   onClick={handleSend}
                   disabled={!messageText.trim() || sendMessage.isPending}
                   className="rounded-xl h-10 w-10 p-0 shadow-premium-sm hover:scale-[1.05] active:scale-95 transition-all"
