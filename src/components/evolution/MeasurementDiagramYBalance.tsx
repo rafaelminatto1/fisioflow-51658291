@@ -40,6 +40,7 @@ const DIRECTIONS: Array<{
     bg: "bg-emerald-50",
     border: "border-emerald-200",
     focusRing: "focus-within:ring-emerald-100",
+    position: { x: 50, y: 15 },
   },
   {
     key: "posteromedial",
@@ -49,6 +50,7 @@ const DIRECTIONS: Array<{
     bg: "bg-emerald-50",
     border: "border-emerald-200",
     focusRing: "focus-within:ring-emerald-100",
+    position: { x: 22, y: 78 },
   },
   {
     key: "posterolateral",
@@ -58,6 +60,7 @@ const DIRECTIONS: Array<{
     bg: "bg-amber-50",
     border: "border-amber-200",
     focusRing: "focus-within:ring-amber-100",
+    position: { x: 78, y: 78 },
   },
 ];
 
