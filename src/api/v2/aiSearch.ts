@@ -14,10 +14,21 @@ export type AskResponse = {
   topScore?: number;
 };
 
+export type ReindexResponse = {
+  success: boolean;
+  enqueued: Record<string, number>;
+};
+
 export const aiSearchApi = {
   ask: (query: string) =>
     request<AskResponse>("/api/ai-search/ask", {
       method: "POST",
       body: JSON.stringify({ query }),
+    }),
+  /** Enfileira a reindexação assíncrona da base (protocolos, exercícios, wiki). */
+  reindex: (types?: Array<"protocols" | "exercises" | "wiki">) =>
+    request<ReindexResponse>("/api/ai-search/reindex", {
+      method: "POST",
+      body: JSON.stringify(types ? { types } : {}),
     }),
 };

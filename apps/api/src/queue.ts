@@ -9,6 +9,7 @@ import { R2Service } from "./lib/storage/R2Service";
 import { sendPrescriptionEmail } from "./lib/email";
 import { sendAutomationTemplate } from "./lib/whatsappAutomations";
 import type { AutomationTemplateKey } from "./lib/whatsappAutomationTemplates";
+import { reindexKbItem, type ReindexKbItemPayload } from "./lib/kbReindex";
 
 export type WhatsAppQueuePayload = {
   to: string;
@@ -104,7 +105,8 @@ export type QueueTask =
         templateKey: AutomationTemplateKey;
         vars: string[];
       };
-    };
+    }
+  | { type: "REINDEX_KB_ITEM"; payload: ReindexKbItemPayload };
 
 export type QueueTaskSummary = {
   taskType: QueueTask["type"];
@@ -207,6 +209,10 @@ export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Pro
 
         case "GENERATE_NFSE":
           await generateNFSeForSession(task.payload, env);
+          break;
+
+        case "REINDEX_KB_ITEM":
+          await reindexKbItem(task.payload, env);
           break;
 
         // Event-driven triggers (from triggerInngestEvent)

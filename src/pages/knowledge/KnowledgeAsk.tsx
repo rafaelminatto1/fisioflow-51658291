@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { BrainCircuit, Search, FileText } from "lucide-react";
+import { BrainCircuit, Search, FileText, RefreshCw } from "lucide-react";
 import { aiSearchApi, type AskResponse } from "@/api/v2/aiSearch";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const SUGGESTIONS = [
   "exercícios para dor lombar crônica",
@@ -9,10 +10,28 @@ const SUGGESTIONS = [
 ];
 
 export default function KnowledgeAsk() {
+  const { isAdmin } = usePermissions();
   const [q, setQ] = useState("");
   const [res, setRes] = useState<AskResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reindexing, setReindexing] = useState(false);
+  const [reindexMsg, setReindexMsg] = useState<string | null>(null);
+
+  async function reindex() {
+    if (reindexing) return;
+    setReindexing(true);
+    setReindexMsg(null);
+    try {
+      const r = await aiSearchApi.reindex();
+      const total = Object.values(r.enqueued).reduce((a, b) => a + b, 0);
+      setReindexMsg(`Reindexação enfileirada: ${total} itens processando em segundo plano.`);
+    } catch (e) {
+      setReindexMsg((e as Error).message ?? "Falha ao enfileirar reindexação");
+    } finally {
+      setReindexing(false);
+    }
+  }
 
   async function ask(text: string) {
     const query = text.trim();
@@ -36,11 +55,28 @@ export default function KnowledgeAsk() {
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
           <BrainCircuit className="h-5 w-5" />
         </span>
-        <div>
+        <div className="flex-1">
           <h1 className="text-lg font-extrabold text-slate-800">Base de Conhecimento (IA)</h1>
           <p className="text-sm text-slate-500">RAG sobre a wiki e exercícios da clínica (AutoRAG).</p>
         </div>
+        {isAdmin && (
+          <button
+            onClick={reindex}
+            disabled={reindexing}
+            title="Reindexa protocolos, exercícios e wiki em segundo plano"
+            className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:border-blue-300 hover:bg-blue-50 disabled:opacity-40"
+          >
+            <RefreshCw className={`h-4 w-4 ${reindexing ? "animate-spin" : ""}`} />
+            {reindexing ? "Enfileirando…" : "Reindexar base"}
+          </button>
+        )}
       </header>
+
+      {reindexMsg && (
+        <p className="mb-4 rounded-lg bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-800">
+          {reindexMsg}
+        </p>
+      )}
 
       <form
         onSubmit={(e) => {

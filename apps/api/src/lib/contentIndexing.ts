@@ -77,6 +77,21 @@ export function protocolIndexFilename(id: string): string {
   return `protocol-${id}.md`;
 }
 
+export function wikiIndexFilename(id: string): string {
+  return `wiki/${id}.md`;
+}
+
+function buildWikiIndexDoc(row: {
+  title: string;
+  content: string | null;
+  category: string | null;
+}): string {
+  const parts: string[] = [`# ${row.title}`];
+  if (row.category) parts.push(`**Categoria:** ${row.category}`);
+  if (row.content) parts.push(`\n${row.content}`);
+  return parts.join("\n");
+}
+
 export type ExerciseIndexRow = {
   id: string;
   name: string;
@@ -199,6 +214,47 @@ export async function syncProtocolToIndex(env: Env, protocolId: string): Promise
   } catch (error) {
     console.error(`[contentIndexing] protocol sync failed for ${protocolId}:`, error);
   }
+}
+
+export async function syncWikiToIndex(env: Env, wikiId: string): Promise<void> {
+  if (!env.AI_SEARCH?.items) return;
+  try {
+    const pool = createPool(env);
+    const res = await pool.query<{
+      id: string;
+      title: string;
+      content: string | null;
+      category: string | null;
+    }>(
+      `SELECT wp.id, wp.title, LEFT(wp.content, 3000) AS content, wc.name AS category
+       FROM wiki_pages wp
+       LEFT JOIN wiki_categories wc ON wc.id = wp.category_id
+       WHERE wp.id = $1`,
+      [wikiId],
+    );
+    const row = res.rows[0];
+    if (!row) {
+      await removeWikiFromIndex(env, wikiId);
+      return;
+    }
+    const base = wikiIndexFilename(row.id);
+    const files = buildIndexChunks(
+      base,
+      buildWikiIndexDoc(row),
+      { status: "current", sourceType: "wiki", specialty: row.category ?? undefined },
+      { source: "wiki", id: row.id, title: row.title, category: row.category ?? "" },
+    );
+    await deleteChunkFiles(env, base);
+    await uploadChunks(env, files);
+  } catch (error) {
+    console.error(`[contentIndexing] wiki sync failed for ${wikiId}:`, error);
+  }
+}
+
+export async function removeWikiFromIndex(env: Env, wikiId: string): Promise<void> {
+  const base = wikiIndexFilename(wikiId);
+  await deleteChunkFiles(env, base);
+  await deleteIndexedItemsByFilenames(env, [base]);
 }
 
 export async function removeExerciseFromIndex(env: Env, exerciseId: string): Promise<void> {

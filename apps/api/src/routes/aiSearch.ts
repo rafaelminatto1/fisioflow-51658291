@@ -12,6 +12,7 @@ import {
 } from "../lib/contentIndexing";
 import { deleteIndexedItemsByFilenames } from "../lib/wikiIndexing";
 import type { DocMeta } from "../lib/ai/sectionChunker";
+import { enqueueKbReindex, type KbSource } from "../lib/kbReindex";
 import {
   ASK_MATCH_THRESHOLD,
   isInternalRole,
@@ -441,6 +442,25 @@ export async function syncAutoRAGContent(
 
   return results;
 }
+
+// Reindex ASSÍNCRONO: enfileira 1 item por mensagem (Queue) e retorna na hora.
+// Robusto p/ conjuntos grandes — não depende de um request HTTP longo.
+aiSearchApp.post("/reindex", requireAuth, async (c) => {
+  if (!isInternalRole(c.get("user").role)) {
+    return c.json({ error: "Acesso restrito a profissionais da clínica" }, 403);
+  }
+  if (!c.env.BACKGROUND_QUEUE) {
+    return c.json({ error: "Fila de tarefas indisponível neste ambiente" }, 503);
+  }
+  const body = (await c.req.json().catch(() => ({}))) as { types?: KbSource[] };
+  try {
+    const enqueued = await enqueueKbReindex(c.env, body.types);
+    return c.json({ success: true, enqueued });
+  } catch (err: any) {
+    console.error("[AI Search] reindex enqueue error:", err);
+    return c.json({ error: "Falha ao enfileirar reindexação", details: err.message }, 500);
+  }
+});
 
 aiSearchApp.post("/sync", requireAuth, async (c) => {
   if (!isInternalRole(c.get("user").role)) {
