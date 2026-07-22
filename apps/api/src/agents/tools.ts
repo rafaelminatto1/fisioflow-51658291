@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { getRawSql } from "../lib/db";
 import { runSearch } from "../routes/evidence";
+import { searchAiSearch } from "../lib/cloudflareAiSearch";
 import { runAi } from "../lib/ai-native";
 import { WORKERS_AI_MODELS } from "../lib/workersAi";
 import type { CopilotTool } from "../lib/copilot/types";
@@ -44,6 +45,36 @@ export function buildRegistry(): CopilotTool[] {
       execute: async (ctx, args) => {
         const q = await toEnglishQuery(ctx.env, String(args.q));
         return runSearch(ctx.env, { ...args, q });
+      },
+    },
+    {
+      name: "search_clinical_knowledge",
+      description:
+        "Busca na base de conhecimento clínico da clínica (wiki e protocolos indexados). " +
+        "Use para fundamentar condutas em protocolos internos. Retorna trechos com o título da fonte para citação.",
+      parameters: z.object({
+        q: z.string().min(3),
+        limit: z.coerce.number().int().min(1).max(10).optional(),
+      }),
+      execute: async (ctx, args) => {
+        if (!ctx.env.AI_SEARCH) return { sources: [] };
+        try {
+          const { sources } = await searchAiSearch(ctx.env, {
+            query: String(args.q),
+            maxNumResults: Math.min(Number(args.limit ?? 6), 10),
+            // reranking já é default-on no helper; recupera mais candidatos p/ reordenar.
+          });
+          return {
+            sources: sources.map((s) => ({
+              title: (s.metadata?.title as string) ?? s.filename,
+              source: (s.metadata?.source as string) ?? "kb",
+              score: s.score ?? null,
+              content: s.content ?? "",
+            })),
+          };
+        } catch {
+          return { sources: [] };
+        }
       },
     },
     {

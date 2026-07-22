@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
+import { createPool } from "../lib/db";
+import { isPatientKnowledgeEnabled } from "../lib/patientKnowledgeFlag";
 import { searchAiSearchOn } from "../lib/cloudflareAiSearch";
 import { callAI } from "../lib/ai/callAI";
 import {
@@ -28,6 +30,24 @@ app.post("/", requireAuth, async (c) => {
   const query = String(body.query ?? "").trim();
   if (query.length < 3) return c.json({ error: "Pergunta muito curta" }, 400);
   if (query.length > 500) return c.json({ error: "Pergunta muito longa" }, 400);
+
+  // Portão de acesso do paciente: DESLIGADO por padrão. Só o admin liga
+  // (settings.patient_knowledge_enabled). Enquanto off, não consulta KB alguma.
+  const pool = await createPool(c.env);
+  const settingsRes = await pool.query<{ settings: unknown }>(
+    `SELECT settings FROM organizations WHERE id = $1 LIMIT 1`,
+    [user.organizationId],
+  );
+  if (!isPatientKnowledgeEnabled(settingsRes.rows[0]?.settings)) {
+    return c.json({
+      answered: false,
+      enabled: false,
+      answer:
+        "O assistente de orientações ainda não está disponível. Fale com o seu fisioterapeuta na próxima sessão ou pelo WhatsApp da clínica.",
+      sources: [],
+      disclaimer: PATIENT_ASSISTANT_DISCLAIMER,
+    });
+  }
 
   const promptGuardrail = guardPatientAssistantPrompt(query);
   if (promptGuardrail.blocked) {

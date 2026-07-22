@@ -65,3 +65,38 @@ português (PT-BR). Com base no histórico, escreva UMA sugestão de resposta cu
 cordial e natural para a última mensagem do cliente. Responda apenas com o texto
 da mensagem sugerida, sem aspas e sem comentários.
 `.trim();
+
+/**
+ * Variante fundamentada na base de conhecimento clínico. O rascunho é para um
+ * ATENDENTE revisar antes de enviar a um paciente/lead — por isso é seguro:
+ * linguagem leiga, sem diagnóstico nem prescrição, orientando a confirmar com o
+ * fisioterapeuta quando a dúvida for clínica específica.
+ */
+export const SUGGEST_KB_SYSTEM_PROMPT = `
+Você é um atendente de uma clínica de fisioterapia respondendo no WhatsApp em
+português (PT-BR). Use os trechos da base de conhecimento da clínica (fornecidos
+abaixo) apenas como APOIO para escrever UMA resposta curta, cordial e em linguagem
+simples para a última mensagem do cliente. Regras de segurança: NÃO dê diagnóstico,
+NÃO prescreva exercícios, cargas, doses ou condutas específicas, e NÃO copie jargão
+técnico. Se a dúvida for clínica específica, oriente de forma geral e sugira
+confirmar com o fisioterapeuta ou agendar uma avaliação. Se os trechos não ajudarem,
+responda apenas de forma cordial e acolhedora. Responda apenas com o texto da
+mensagem sugerida, sem aspas e sem comentários.
+`.trim();
+
+/** Texto da última mensagem recebida do cliente (role "user"); "" se não houver. */
+export function lastInboundText(history: AiHistoryItem[]): string {
+  for (let i = history.length - 1; i >= 0; i--) {
+    if (history[i].role === "user") return history[i].content;
+  }
+  return "";
+}
+
+/** Formata trechos da KB para o prompt; retorna "" quando não há trechos. */
+export function buildKbContextBlock(snippets: string[]): string {
+  const clean = snippets.map((s) => s.trim()).filter((s) => s !== "");
+  if (clean.length === 0) return "";
+  return `Trechos da base de conhecimento da clínica (apoio):\n${clean
+    .map((s) => `- ${s}`)
+    .join("\n")}`;
+}

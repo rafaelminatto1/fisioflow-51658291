@@ -1,6 +1,64 @@
 import type { Env } from "../types/env";
 import { createPool } from "./db";
 import { deleteIndexedItemsByFilenames } from "./wikiIndexing";
+import { chunkClinicalDoc, type DocMeta } from "./ai/sectionChunker";
+
+export interface IndexChunkFile {
+  filename: string;
+  text: string;
+  metadata: Record<string, unknown>;
+}
+
+/**
+ * Aplica chunking section-aware a um documento e produz um arquivo indexável por
+ * chunk (`{base}--{n}.md`), cada um com breadcrumb no texto e a metadata mesclada
+ * (status/especialidade + source/id/title + heading da seção).
+ */
+export function buildIndexChunks(
+  baseFilename: string,
+  doc: string,
+  meta: DocMeta,
+  extra: Record<string, unknown> = {},
+): IndexChunkFile[] {
+  const base = baseFilename.replace(/\.md$/, "");
+  return chunkClinicalDoc(doc, meta).map((chunk, i) => ({
+    filename: `${base}--${i}.md`,
+    text: chunk.text,
+    metadata: { ...extra, ...chunk.metadata, heading: chunk.heading },
+  }));
+}
+
+/** Prefixo de busca para localizar todos os chunks de um documento no índice. */
+function chunkFilePrefix(baseFilename: string): string {
+  return `${baseFilename.replace(/\.md$/, "")}--`;
+}
+
+/** Remove todos os chunks antigos de um documento antes de reupload (upsert). */
+export async function deleteChunkFiles(
+  env: Env,
+  baseFilename: string,
+  binding = env.AI_SEARCH,
+): Promise<void> {
+  if (!binding?.items) return;
+  const prefix = chunkFilePrefix(baseFilename);
+  try {
+    const listing = await binding.items.list({ search: prefix, per_page: 100 });
+    const items: Array<{ id: string; key?: string; filename?: string }> =
+      listing?.result ?? listing?.items ?? [];
+    const matches = items.filter((it) => (it.key ?? it.filename ?? "").startsWith(prefix));
+    await Promise.all(matches.map((it) => binding.items.delete(it.id)));
+  } catch (error) {
+    console.warn(`[contentIndexing] chunk cleanup failed for ${baseFilename}:`, error);
+  }
+}
+
+/** Sobe os chunks de um documento no índice (após limpar os antigos). */
+async function uploadChunks(env: Env, files: IndexChunkFile[]): Promise<void> {
+  if (!env.AI_SEARCH?.items) return;
+  await Promise.all(
+    files.map((f) => env.AI_SEARCH!.items.upload(f.filename, f.text, { metadata: f.metadata })),
+  );
+}
 
 export function exerciseIndexFilename(id: string): string {
   return `exercise-${id}.md`;
@@ -85,9 +143,15 @@ export async function syncExerciseToIndex(env: Env, exerciseId: string): Promise
       await removeExerciseFromIndex(env, exerciseId);
       return;
     }
-    await env.AI_SEARCH.items.upload(exerciseIndexFilename(row.id), buildExerciseDoc(row), {
-      metadata: { source: "exercises", id: row.id, title: row.name, category: row.category ?? "" },
-    });
+    const base = exerciseIndexFilename(row.id);
+    const files = buildIndexChunks(
+      base,
+      buildExerciseDoc(row),
+      { status: "current", sourceType: "exercise", specialty: row.category ?? undefined },
+      { source: "exercises", id: row.id, title: row.name, category: row.category ?? "" },
+    );
+    await deleteChunkFiles(env, base);
+    await uploadChunks(env, files);
   } catch (error) {
     console.error(`[contentIndexing] exercise sync failed for ${exerciseId}:`, error);
   }
@@ -109,23 +173,33 @@ export async function syncProtocolToIndex(env: Env, protocolId: string): Promise
       await removeProtocolFromIndex(env, protocolId);
       return;
     }
-    await env.AI_SEARCH.items.upload(protocolIndexFilename(row.id), buildProtocolDoc(row), {
-      metadata: {
+    const base = protocolIndexFilename(row.id);
+    const files = buildIndexChunks(
+      base,
+      buildProtocolDoc(row),
+      { status: "current", sourceType: "protocol", specialty: row.protocol_type ?? undefined },
+      {
         source: "protocols",
         id: row.id,
         title: row.name,
         condition: row.condition_name ?? "",
       },
-    });
+    );
+    await deleteChunkFiles(env, base);
+    await uploadChunks(env, files);
   } catch (error) {
     console.error(`[contentIndexing] protocol sync failed for ${protocolId}:`, error);
   }
 }
 
 export async function removeExerciseFromIndex(env: Env, exerciseId: string): Promise<void> {
-  await deleteIndexedItemsByFilenames(env, [exerciseIndexFilename(exerciseId)]);
+  const base = exerciseIndexFilename(exerciseId);
+  await deleteChunkFiles(env, base); // chunks section-aware
+  await deleteIndexedItemsByFilenames(env, [base]); // doc legado single-file
 }
 
 export async function removeProtocolFromIndex(env: Env, protocolId: string): Promise<void> {
-  await deleteIndexedItemsByFilenames(env, [protocolIndexFilename(protocolId)]);
+  const base = protocolIndexFilename(protocolId);
+  await deleteChunkFiles(env, base);
+  await deleteIndexedItemsByFilenames(env, [base]);
 }

@@ -37,7 +37,11 @@ import {
   SUMMARY_SYSTEM_PROMPT,
   SUGGEST_SYSTEM_PROMPT,
   NEXT_ACTION_SYSTEM_PROMPT,
+  SUGGEST_KB_SYSTEM_PROMPT,
+  lastInboundText,
+  buildKbContextBlock,
 } from "../lib/inboxAi";
+import { searchAiSearch } from "../lib/cloudflareAiSearch";
 import { writeEvent } from "../lib/analytics";
 import { WhatsAppService } from "../lib/whatsapp";
 import { AUTOMATION_TEMPLATES, automationTemplatePayload } from "../lib/whatsappAutomationTemplates";
@@ -792,9 +796,53 @@ app.post("/conversations/:id/ai/summary", requireAuth, (c) =>
   runInboxAi(c, SUMMARY_SYSTEM_PROMPT, "inbox_ai_summary"),
 );
 
-app.post("/conversations/:id/ai/suggest-reply", requireAuth, (c) =>
-  runInboxAi(c, SUGGEST_SYSTEM_PROMPT, "inbox_ai_suggest"),
-);
+// Sugerir resposta ao atendente, fundamentada na base de conhecimento clínico.
+// O rascunho é revisado pelo humano antes de enviar; o prompt seguro impede
+// diagnóstico/prescrição/jargão no texto voltado ao paciente. Fallback gracioso
+// para o prompt padrão quando a KB não retorna apoio.
+app.post("/conversations/:id/ai/suggest-reply", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { id } = c.req.param();
+  const pool = await createPool(c.env);
+  try {
+    const convo = await getConversationWithMessages(pool, id, user.organizationId, 40);
+    if (!convo) return c.json({ error: "Conversation not found" }, 404);
+    const history = buildAiHistory(convo.messages || [], 20);
+    if (history.length === 0) return c.json({ error: "Sem mensagens para analisar" }, 400);
+
+    let system = SUGGEST_SYSTEM_PROMPT;
+    const query = lastInboundText(history);
+    if (c.env.AI_SEARCH && query.length >= 3) {
+      try {
+        const { sources } = await searchAiSearch(c.env, { query, maxNumResults: 4 });
+        const block = buildKbContextBlock(sources.map((s) => String(s.content ?? "").slice(0, 500)));
+        if (block) system = `${SUGGEST_KB_SYSTEM_PROMPT}\n\n${block}`;
+      } catch {
+        /* mantém o prompt padrão */
+      }
+    }
+
+    const response = await runAi(
+      c.env,
+      WORKERS_AI_MODELS.llama_3_1_8b,
+      { messages: [{ role: "system", content: system }, ...history], temperature: 0.3 },
+      { cache: false },
+    );
+    const text = readAiText(response).trim();
+    writeEvent(c.env, {
+      event: "inbox_ai_suggest",
+      orgId: user.organizationId,
+      route: "/api/whatsapp/inbox/ai",
+      method: "POST",
+      status: text ? 200 : 502,
+    });
+    if (!text) return c.json({ error: "IA não retornou texto" }, 502);
+    return c.json({ data: { text } });
+  } catch (err) {
+    console.error("[WhatsApp Inbox] inbox_ai_suggest error:", err);
+    return c.json({ error: "Falha ao consultar a IA" }, 500);
+  }
+});
 
 // Next-best-action: gera a sugestão E persiste em metadata.nextAction (o adapter
 // já consome esse campo no card do lead).

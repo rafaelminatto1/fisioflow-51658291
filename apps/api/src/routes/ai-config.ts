@@ -3,6 +3,7 @@ import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { createModelRegistry } from "../lib/ai/modelRegistry";
 import { getRawSql } from "../lib/db";
+import { isPatientKnowledgeEnabled, PATIENT_KNOWLEDGE_FLAG } from "../lib/patientKnowledgeFlag";
 
 export const aiConfigRoutes = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -76,6 +77,37 @@ aiConfigRoutes.put("/config", async (c) => {
 
   const config = await registry.setConfig(orgId, updates);
   return c.json({ config });
+});
+
+// ── Flags de funcionalidade de IA (ex.: acesso do paciente à base) ───────────
+
+aiConfigRoutes.get("/features", async (c) => {
+  const orgId = c.get("user").organizationId;
+  const sql = getRawSql(c.env, "read");
+  const res = await sql(`SELECT settings FROM organizations WHERE id = $1 LIMIT 1`, [orgId]);
+  return c.json({
+    patientKnowledgeEnabled: isPatientKnowledgeEnabled(res.rows?.[0]?.settings),
+  });
+});
+
+// Toggle admin: acesso do paciente à base de conhecimento. DESLIGADO por padrão.
+// Merge no jsonb (não sobrescreve o restante de settings).
+aiConfigRoutes.put("/features/patient-knowledge", async (c) => {
+  const user = c.get("user");
+  if (user.role !== "admin") {
+    return c.json({ error: "Apenas administradores podem alterar esta configuração" }, 403);
+  }
+  const body = await c.req.json<{ enabled?: unknown }>().catch(() => ({}) as { enabled?: unknown });
+  const enabled = body.enabled === true;
+  const sql = getRawSql(c.env);
+  await sql(
+    `UPDATE organizations
+        SET settings = COALESCE(settings, '{}'::jsonb) || jsonb_build_object($2::text, $3::boolean),
+            updated_at = now()
+      WHERE id = $1`,
+    [user.organizationId, PATIENT_KNOWLEDGE_FLAG, enabled],
+  );
+  return c.json({ patientKnowledgeEnabled: enabled });
 });
 
 aiConfigRoutes.get("/usage", async (c) => {

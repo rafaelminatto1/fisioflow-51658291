@@ -19,13 +19,14 @@ const ctx = {
 describe("copilot tools registry", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("exposes the four tools", () => {
+  it("exposes the clinical tools", () => {
     const names = buildRegistry()
       .map((t) => t.name)
       .sort();
     expect(names).toEqual([
       "get_patient_history",
       "schedule_session",
+      "search_clinical_knowledge",
       "search_evidence",
       "search_exercises",
     ]);

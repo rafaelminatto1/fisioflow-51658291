@@ -2,6 +2,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockSearchAiSearchOn = vi.fn();
 const mockCallAI = vi.fn();
+const mockQuery = vi.fn();
+
+vi.mock("../../lib/db", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../lib/db")>();
+  return {
+    ...actual,
+    createPool: vi.fn(async () => ({ query: (...args: any[]) => mockQuery(...args) })),
+  };
+});
 
 vi.mock("../../lib/auth", () => ({
   requireAuth: vi.fn(async (c: any, next: any) => {
@@ -60,6 +69,22 @@ function sources(content: string, score: number, id: string, title: string) {
 describe("patient assistant guardrails", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Por padrão nos testes, a flag do paciente está LIGADA (admin habilitou).
+    mockQuery.mockResolvedValue({ rows: [{ settings: { patient_knowledge_enabled: true } }] });
+  });
+
+  it("stays disabled by default (flag off) and never touches the knowledge base", async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [{ settings: {} }] });
+    const app = await buildApp();
+    const res = await app.fetch(
+      makeRequest({ query: "Como ajustar minha postura no trabalho?" }),
+      BASE_ENV as any,
+    );
+
+    expect(res.status).toBe(200);
+    expect(mockSearchAiSearchOn).not.toHaveBeenCalled();
+    expect(mockCallAI).not.toHaveBeenCalled();
+    await expect(res.json()).resolves.toMatchObject({ answered: false, enabled: false });
   });
 
   it("blocks emergency prompts before calling AI Search", async () => {

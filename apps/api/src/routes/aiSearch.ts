@@ -4,7 +4,14 @@ import { requireAuth, type AuthVariables } from "../lib/auth";
 import { createPool } from "../lib/db";
 import { chatAiSearch, searchAiSearch } from "../lib/cloudflareAiSearch";
 import { upsertWikiPageInIndex } from "../lib/wikiIndexing";
-import { buildExerciseDoc, buildProtocolDoc } from "../lib/contentIndexing";
+import {
+  buildExerciseDoc,
+  buildProtocolDoc,
+  buildIndexChunks,
+  deleteChunkFiles,
+} from "../lib/contentIndexing";
+import { deleteIndexedItemsByFilenames } from "../lib/wikiIndexing";
+import type { DocMeta } from "../lib/ai/sectionChunker";
 import {
   ASK_MATCH_THRESHOLD,
   isInternalRole,
@@ -38,7 +45,7 @@ aiSearchApp.post("/", requireAuth, async (c) => {
           {
             role: "system",
             content:
-              "Você é um assistente clínico da FisioFlow. Responda em Português do Brasil com base na wiki, protocolos e exercícios indexados.",
+              "Você é um assistente clínico da FisioFlow para profissionais da clínica. Responda em Português do Brasil usando SOMENTE o conteúdo recuperado da wiki, protocolos e exercícios indexados. Cite a origem (título do protocolo/página) quando possível. Se o conteúdo recuperado não cobrir a pergunta, diga claramente que não encontrou nos protocolos indexados e oriente conferir a fonte — nunca invente condutas, doses ou níveis de evidência.",
           },
           { role: "user", content: query },
         ],
@@ -306,6 +313,24 @@ export async function syncAutoRAGContent(
     await api!(`/autorag/rags/${AUTORAG_NAME}/files`, { method: "POST", body: form });
   }
 
+  // Chunking section-aware: 1 arquivo por seção, com breadcrumb + metadata status.
+  // Upsert seguro: limpa chunks antigos e o doc legado single-file antes de subir.
+  async function indexChunked(
+    baseFilename: string,
+    markdown: string,
+    meta: DocMeta,
+    extra: Record<string, any>,
+  ): Promise<void> {
+    const files = buildIndexChunks(baseFilename, markdown, meta, extra);
+    if (env.AI_SEARCH) {
+      await deleteChunkFiles(env, baseFilename);
+      await deleteIndexedItemsByFilenames(env, [baseFilename]);
+    }
+    for (const f of files) {
+      await uploadDoc(f.filename, f.text, f.metadata);
+    }
+  }
+
   if (types.includes("exercises")) {
     const res = await pool.query<{
       id: string;
@@ -334,12 +359,12 @@ export async function syncAutoRAGContent(
     for (let i = 0; i < res.rows.length; i += 5) {
       await Promise.all(
         res.rows.slice(i, i + 5).map((row) =>
-          uploadDoc(`exercise-${row.id}.md`, buildExerciseDoc(row), {
-            source: "exercises",
-            id: row.id,
-            title: row.name,
-            category: row.category,
-          }),
+          indexChunked(
+            `exercise-${row.id}.md`,
+            buildExerciseDoc(row),
+            { status: "current", sourceType: "exercise", specialty: row.category ?? undefined },
+            { source: "exercises", id: row.id, title: row.name, category: row.category },
+          ),
         ),
       );
       count += Math.min(5, res.rows.length - i);
@@ -369,12 +394,12 @@ export async function syncAutoRAGContent(
     for (let i = 0; i < res.rows.length; i += 5) {
       await Promise.all(
         res.rows.slice(i, i + 5).map((row) =>
-          uploadDoc(`protocol-${row.id}.md`, buildProtocolDoc(row), {
-            source: "protocols",
-            id: row.id,
-            title: row.name,
-            condition: row.condition_name,
-          }),
+          indexChunked(
+            `protocol-${row.id}.md`,
+            buildProtocolDoc(row),
+            { status: "current", sourceType: "protocol", specialty: row.protocol_type ?? undefined },
+            { source: "protocols", id: row.id, title: row.name, condition: row.condition_name },
+          ),
         ),
       );
       count += Math.min(5, res.rows.length - i);
@@ -399,12 +424,12 @@ export async function syncAutoRAGContent(
     for (let i = 0; i < res.rows.length; i += 5) {
       await Promise.all(
         res.rows.slice(i, i + 5).map((row) =>
-          uploadDoc(`wiki/${row.id}.md`, buildWikiDoc(row), {
-            source: "wiki",
-            id: row.id,
-            title: row.title,
-            category: row.category,
-          }),
+          indexChunked(
+            `wiki/${row.id}.md`,
+            buildWikiDoc(row),
+            { status: "current", sourceType: "wiki", specialty: row.category ?? undefined },
+            { source: "wiki", id: row.id, title: row.title, category: row.category },
+          ),
         ),
       );
       count += Math.min(5, res.rows.length - i);
@@ -416,6 +441,9 @@ export async function syncAutoRAGContent(
 }
 
 aiSearchApp.post("/sync", requireAuth, async (c) => {
+  if (!isInternalRole(c.get("user").role)) {
+    return c.json({ error: "Acesso restrito a profissionais da clínica" }, 403);
+  }
   const body = (await c.req.json().catch(() => ({}))) as {
     types?: Array<"exercises" | "protocols" | "wiki">;
   };

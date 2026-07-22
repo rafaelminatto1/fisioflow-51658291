@@ -5,7 +5,34 @@ import {
   SUMMARY_SYSTEM_PROMPT,
   SUGGEST_SYSTEM_PROMPT,
   NEXT_ACTION_SYSTEM_PROMPT,
+  lastInboundText,
+  buildKbContextBlock,
+  SUGGEST_KB_SYSTEM_PROMPT,
 } from "../inboxAi";
+
+describe("inbox KB-grounded suggestion", () => {
+  it("returns the last inbound (patient) message as the retrieval query", () => {
+    expect(
+      lastInboundText([
+        { role: "user", content: "tenho dor no joelho" },
+        { role: "assistant", content: "olá, tudo bem?" },
+        { role: "user", content: "posso fazer agachamento?" },
+      ]),
+    ).toBe("posso fazer agachamento?");
+    expect(lastInboundText([{ role: "assistant", content: "oi" }])).toBe("");
+  });
+
+  it("KB suggestion prompt forbids diagnosis/prescription", () => {
+    const p = SUGGEST_KB_SYSTEM_PROMPT.toLowerCase();
+    expect(p).toMatch(/diagn|prescr/);
+    expect(p).toContain("fisioterapeuta");
+  });
+
+  it("builds an empty context block when there are no snippets, otherwise lists them", () => {
+    expect(buildKbContextBlock([])).toBe("");
+    expect(buildKbContextBlock(["Protocolo LCA: progressão de carga"])).toContain("Protocolo LCA");
+  });
+});
 
 describe("inboxAi", () => {
   it("extractText lida com string, JSON e objetos {text,body}", () => {
