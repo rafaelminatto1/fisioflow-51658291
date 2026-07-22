@@ -28,6 +28,8 @@ export interface Chunk {
 export interface ChunkOptions {
   /** Acima disso, a seção é subdividida em parágrafos. Default 1600. */
   maxChars?: number;
+  /** Abaixo disso, a seção é fundida no chunk anterior (evita fragmentos). Default 40. */
+  minChars?: number;
 }
 
 interface Section {
@@ -38,6 +40,7 @@ interface Section {
 const HEADING_RE = /^#{2,6}\s+(.*)$/;
 const TITLE_RE = /^#\s+(.*)$/;
 const DEFAULT_MAX_CHARS = 1600;
+const DEFAULT_MIN_CHARS = 40;
 
 /**
  * Empacota parágrafos (blocos separados por linha em branco) em pedaços de até
@@ -71,6 +74,7 @@ export function chunkClinicalDoc(
   opts: ChunkOptions = {},
 ): Chunk[] {
   const maxChars = opts.maxChars ?? DEFAULT_MAX_CHARS;
+  const minChars = opts.minChars ?? DEFAULT_MIN_CHARS;
   const lines = markdown.split("\n");
 
   const titleIdx = lines.findIndex((l) => TITLE_RE.test(l));
@@ -100,7 +104,13 @@ export function chunkClinicalDoc(
     const breadcrumb = sec.heading ? `> ${title} > ${sec.heading}` : `> ${title}`;
     const body = sec.body.join("\n").trim();
     if (!body) {
-      chunks.push({ text: breadcrumb, heading: sec.heading, breadcrumb, metadata: { ...meta } });
+      continue; // seção vazia não vira chunk
+    }
+    // Seção pequena: funde no chunk anterior para não emitir fragmento solto.
+    if (body.length < minChars && chunks.length > 0) {
+      const last = chunks[chunks.length - 1];
+      const inline = sec.heading ? `${sec.heading}\n${body}` : body;
+      last.text = `${last.text}\n\n${inline}`;
       continue;
     }
     const pieces = body.length > maxChars ? packParagraphs(body, maxChars) : [body];

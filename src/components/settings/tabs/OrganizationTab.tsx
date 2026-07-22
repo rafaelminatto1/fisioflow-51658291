@@ -8,6 +8,7 @@ import { useOrganizations } from "@/hooks/useOrganizations";
 import { useOrganizationMembers } from "@/hooks/useOrganizationMembers";
 import { Building2, Users, Settings, Plus, Mail, MessageSquare, Loader2, Save } from "lucide-react";
 import { InviteUserModal } from "@/components/admin/InviteUserModal";
+import { PatientKnowledgeToggle } from "@/components/settings/PatientKnowledgeToggle";
 import { Badge } from "@/components/ui/badge";
 import { safeFormat } from "@/lib/utils";
 
@@ -184,6 +185,9 @@ export function OrganizationTab() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Acesso do paciente à base de conhecimento (admin, default off) */}
+      <PatientKnowledgeToggle />
 
       {/* Membros da Equipe */}
       <Card className="bg-gradient-card border-border shadow-card overflow-hidden">

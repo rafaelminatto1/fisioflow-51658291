@@ -41,12 +41,21 @@ export async function deleteChunkFiles(
 ): Promise<void> {
   if (!binding?.items) return;
   const prefix = chunkFilePrefix(baseFilename);
+  const seen = new Set<string>();
   try {
-    const listing = await binding.items.list({ search: prefix, per_page: 100 });
-    const items: Array<{ id: string; key?: string; filename?: string }> =
-      listing?.result ?? listing?.items ?? [];
-    const matches = items.filter((it) => (it.key ?? it.filename ?? "").startsWith(prefix));
-    await Promise.all(matches.map((it) => binding.items.delete(it.id)));
+    // Drena todos os chunks do doc mesmo além de 1 página. Cada página deletada
+    // some da próxima listagem; `seen` + cap evitam qualquer loop infinito.
+    for (let page = 1; page <= 20; page++) {
+      const listing = await binding.items.list({ search: prefix, per_page: 100, page });
+      const items: Array<{ id: string; key?: string; filename?: string }> =
+        listing?.result ?? listing?.items ?? [];
+      const matches = items.filter(
+        (it) => (it.key ?? it.filename ?? "").startsWith(prefix) && !seen.has(it.id),
+      );
+      if (matches.length === 0) break;
+      matches.forEach((it) => seen.add(it.id));
+      await Promise.all(matches.map((it) => binding.items.delete(it.id)));
+    }
   } catch (error) {
     console.warn(`[contentIndexing] chunk cleanup failed for ${baseFilename}:`, error);
   }

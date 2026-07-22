@@ -43,7 +43,6 @@ import {
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { useOrganizationMembers } from "@/hooks/useOrganizationMembers";
 import { usePermissions } from "@/hooks/usePermissions";
-import { PatientKnowledgeToggle } from "@/components/settings/PatientKnowledgeToggle";
 import { MemberPhoneInline } from "@/components/organization/MemberPhoneInline";
 import type { OrganizationMember } from "@/api/v2";
 
@@ -256,10 +255,6 @@ export default function OrganizationSettings() {
                   </Button>
                 </CardContent>
               </Card>
-
-              <div className="mt-6 max-w-2xl">
-                <PatientKnowledgeToggle />
-              </div>
             </TabsContent>
 
             {/* ─── Tab 2: Equipe ─── */}

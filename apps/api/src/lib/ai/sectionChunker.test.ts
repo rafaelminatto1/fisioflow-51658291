@@ -69,6 +69,21 @@ describe("sectionChunker.chunkClinicalDoc", () => {
     }
   });
 
+  it("merges a tiny section into the previous chunk instead of emitting a fragment", () => {
+    const doc = [
+      "# Protocolo Z",
+      "## Descrição",
+      "Texto suficientemente grande para formar um chunk de conteúdo clínico real aqui.",
+      "",
+      "## Nota",
+      "Curto.",
+    ].join("\n");
+    const chunks = chunkClinicalDoc(doc);
+    expect(chunks.some((c) => c.heading === "Nota")).toBe(false);
+    const desc = chunks.find((c) => c.heading === "Descrição")!;
+    expect(desc.text).toContain("Curto.");
+  });
+
   it("never separates a recommendation from its evidence level when splitting", () => {
     const doc = [
       "# Protocolo Y",

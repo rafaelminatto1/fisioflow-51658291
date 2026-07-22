@@ -231,6 +231,7 @@ export interface Env {
       aiSearch(options: {
         query: string;
         model?: string;
+        system_prompt?: string;
         rewrite_query?: boolean;
         max_num_results?: number;
         ranking_options?: {

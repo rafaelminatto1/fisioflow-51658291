@@ -66,6 +66,8 @@ aiSearchApp.post("/", requireAuth, async (c) => {
     const answer = await rag.aiSearch({
       query,
       model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      system_prompt:
+        "Você é um assistente clínico da FisioFlow para profissionais. Responda em Português do Brasil usando SOMENTE o conteúdo recuperado (wiki, protocolos e exercícios). Cite a origem quando possível. Se o conteúdo não cobrir a pergunta, diga que não encontrou nos protocolos indexados — nunca invente condutas, doses ou níveis de evidência.",
       rewrite_query: true,
       max_num_results: 5,
       ranking_options: { score_threshold: 0.25 },
