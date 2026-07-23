@@ -10,6 +10,7 @@ import { sendPrescriptionEmail } from "./lib/email";
 import { sendAutomationTemplate } from "./lib/whatsappAutomations";
 import type { AutomationTemplateKey } from "./lib/whatsappAutomationTemplates";
 import { reindexKbItem, type ReindexKbItemPayload } from "./lib/kbReindex";
+import { backoffDelay } from "./lib/queueBackoff";
 
 export type WhatsAppQueuePayload = {
   to: string;
@@ -284,7 +285,7 @@ export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Pro
       message.ack();
     } catch (error) {
       console.error(`[Queue] Error processing task ${task.type}:`, error);
-      message.retry();
+      message.retry({ delaySeconds: backoffDelay(message.attempts) });
     }
   }
 }
