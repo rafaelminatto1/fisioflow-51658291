@@ -68,7 +68,7 @@ export async function getBookedSlots(
   }
 }
 
-function buildSlotGrid(): string[] {
+export function buildSlotGrid(): string[] {
   const allSlots: string[] = [];
   for (let h = 8; h < 18; h++) {
     allSlots.push(`${String(h).padStart(2, "0")}:00`);

@@ -24,9 +24,9 @@ export async function getNextScreen(
   }
 
   if (action === "data_exchange") {
-    // Seleção de fisio+data -> devolve horários livres na mesma tela.
-    if (screen === "APPOINTMENT" && data?.therapist && data?.date) {
-      return { screen: "APPOINTMENT", data: await buildSlotsData(pool, env, data.therapist, data.date) };
+    // Seleção de tipo+data -> devolve horários livres (por capacidade/avaliação).
+    if (screen === "APPOINTMENT" && data?.date) {
+      return { screen: "APPOINTMENT", data: await buildSlotsData(pool, env, data.type || "session", data.date) };
     }
   }
 

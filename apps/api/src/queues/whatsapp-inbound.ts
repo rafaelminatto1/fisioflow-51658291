@@ -28,8 +28,10 @@ import { mirrorWhatsAppMedia } from "../lib/media-mirror";
 import { needsHumanApproval } from "../lib/whatsappApproval";
 import { sendFlowMessage } from "../lib/whatsapp-interactive";
 import {
-  createBookingRequestFromFlow,
+  createConfirmedAppointmentFromFlow,
   isBookingIntent,
+  sendSlotsListFallback,
+  parseBookListId,
   DEFAULT_BOOKING_FLOW_ID,
 } from "../lib/flowsBookingCompletion";
 
@@ -207,32 +209,45 @@ export async function handleWhatsAppInboundQueue(
                     || rawPayload?.interactive?.button_reply?.id
                     || rawPayload?.button_reply?.id;
 
-      // 9.1b. Conclusão do Flow de agendamento (nfm_reply): cria pedido + confirma.
+      // 9.1b. Conclusão do agendamento: Flow (nfm_reply) OU lista de fallback (list_reply "book|...").
       const nfmReply = rawPayload?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.interactive?.nfm_reply
                     ?? rawPayload?.interactive?.nfm_reply;
+      const listReplyId = rawPayload?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.interactive?.list_reply?.id
+                    ?? rawPayload?.interactive?.list_reply?.id
+                    ?? rawPayload?.list_reply?.id;
+      let bookingPayload: any = null;
       if (nfmReply?.response_json) {
+        try { bookingPayload = JSON.parse(nfmReply.response_json); } catch { /* payload inválido */ }
+      } else {
+        bookingPayload = parseBookListId(listReplyId);
+      }
+      if (bookingPayload?.date && bookingPayload?.slot) {
         skipConcierge = true;
-        let flowData: any = null;
-        try { flowData = JSON.parse(nfmReply.response_json); } catch { /* payload inválido */ }
-        if (flowData?.therapist) {
-          const result = await createBookingRequestFromFlow(
-            pool, orgId, contact.display_name || "", msg.from || msg.waId, flowData,
-          );
-          if (result) {
-            const whatsapp = new WhatsAppService(env);
-            await whatsapp.sendTextMessage(msg.from || msg.waId, result.confirmationText);
-            await addMessage(
-              pool, conversation.id, orgId, contact.id, "outbound", "system", contact.id,
-              "text", result.confirmationText, `flow_booking_${Date.now()}`,
-              { status: "sent", metadata: { autoReply: true, flowBooking: true } },
-            );
-            await broadcastToOrg(env, orgId, {
-              type: "whatsapp_message",
-              conversationId: conversation.id,
-              message: { content: result.confirmationText, direction: "outbound", messageType: "text", status: "sent" },
-            });
-            writeEvent(env, { orgId, event: "flow_booking_request" });
-          }
+        const whatsapp = new WhatsAppService(env);
+        const result = await createConfirmedAppointmentFromFlow(
+          pool,
+          orgId,
+          { id: contact.id, display_name: contact.display_name, patient_id: contact.patient_id },
+          msg.from || msg.waId,
+          bookingPayload,
+        );
+        const replyText = result
+          ? result.confirmationText
+          : "Ops, esse horário acabou de ficar indisponível. 😅 Responda *agendar* para ver os horários novamente.";
+        await whatsapp.sendTextMessage(msg.from || msg.waId, replyText);
+        await addMessage(
+          pool, conversation.id, orgId, contact.id, "outbound", "system", contact.id,
+          "text", replyText, `flow_booking_${Date.now()}`,
+          { status: "sent", metadata: { autoReply: true, flowBooking: true } },
+        );
+        await broadcastToOrg(env, orgId, {
+          type: "whatsapp_message",
+          conversationId: conversation.id,
+          message: { content: replyText, direction: "outbound", messageType: "text", status: "sent" },
+        });
+        if (result) {
+          await broadcastToOrg(env, orgId, { type: "appointment_created", appointmentId: result.appointmentId });
+          writeEvent(env, { orgId, event: "flow_booking_confirmed" });
         }
       }
 
@@ -340,7 +355,7 @@ export async function handleWhatsAppInboundQueue(
         skipConcierge = true; // Pular concierge já que o agendamento foi confirmado automaticamente
       }
 
-      // 9.4. Intenção clara de agendar -> envia o Flow nativo e pula o concierge.
+      // 9.4. Intenção clara de agendar -> envia o Flow nativo; se falhar, lista de horários.
       if (!skipConcierge && isBookingIntent(msg.text)) {
         const flowId = env.FLOWS_BOOKING_FLOW_ID || DEFAULT_BOOKING_FLOW_ID;
         const sent = await sendFlowMessage(
@@ -348,7 +363,7 @@ export async function handleWhatsAppInboundQueue(
           msg.from || msg.waId,
           flowId,
           "Agendar",
-          "Vamos agendar seu atendimento? Toque no botão abaixo para escolher tipo de atendimento, profissional, data e horário.",
+          "Vamos agendar seu atendimento? Toque no botão abaixo para escolher o tipo (avaliação ou sessão), a data e o horário.",
           { flowAction: "data_exchange", flowToken: `book_${conversation.id}_${Date.now()}` },
         );
         if (!(sent as any)?.error) {
@@ -359,6 +374,18 @@ export async function handleWhatsAppInboundQueue(
             { status: "sent", metadata: { autoReply: true, flowSend: true } },
           );
           writeEvent(env, { orgId, event: "flow_booking_sent" });
+        } else {
+          // Fallback: paciente pode não conseguir abrir o Flow -> lista de horários.
+          const okList = await sendSlotsListFallback(env, pool, orgId, msg.from || msg.waId, Date.now());
+          if (okList) {
+            skipConcierge = true;
+            await addMessage(
+              pool, conversation.id, orgId, contact.id, "outbound", "system", contact.id,
+              "interactive", "Horários disponíveis", `flow_fallback_${Date.now()}`,
+              { status: "sent", metadata: { autoReply: true, flowFallbackList: true } },
+            );
+            writeEvent(env, { orgId, event: "flow_booking_fallback_list" });
+          }
         }
       }
 
