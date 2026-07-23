@@ -138,10 +138,18 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
       const events = (entry.messaging as any[]) ?? [];
       for (const ev of events) {
         const message = ev.message;
-        if (!message || message.is_echo) continue; // ignora ecos (saídas)
+        if (!message) continue;
 
-        const senderId = String(ev.sender?.id ?? "");
-        if (!senderId) continue;
+        // Echo = mensagem SAÍDA da conta (respondida pelo app nativo do IG no
+        // celular OU eco da mensagem que o próprio CRM enviou via API). Nesse
+        // caso o contato é o DESTINATÁRIO (recipient), não o remetente.
+        const isEcho = Boolean(message.is_echo);
+        const contactIgsid = isEcho
+          ? String(ev.recipient?.id ?? "")
+          : String(ev.sender?.id ?? "");
+        if (!contactIgsid) continue;
+        // Eco cujo destinatário é a própria conta (auto-mensagem) — ignora.
+        if (isEcho && contactIgsid === igAccountId) continue;
 
         // Texto da mensagem; menção em Stories ganha rótulo amigável.
         const att = Array.isArray(message.attachments) ? message.attachments[0] : null;
@@ -169,11 +177,11 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
           messageType = "attachment";
         }
 
-        // Busca o perfil (@username + nome) do remetente — uma vez por IGSID.
-        let prof = profileCache.get(senderId);
+        // Busca o perfil (@username + nome) do contato — uma vez por IGSID.
+        let prof = profileCache.get(contactIgsid);
         if (prof === undefined) {
-          prof = await fetchInstagramProfile(senderId, igToken);
-          profileCache.set(senderId, prof);
+          prof = await fetchInstagramProfile(contactIgsid, igToken);
+          profileCache.set(contactIgsid, prof);
         }
         const username = prof?.username ?? null;
         const avatarUrl = (await mirrorToR2(env, prof?.profilePic ?? undefined, "crm/instagram/avatars")) ?? null;
@@ -185,7 +193,7 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
         const contact = await resolveOrCreateContact(
           pool,
           orgId,
-          senderId, // IGSID como identificador do contato
+          contactIgsid, // IGSID como identificador do contato
           null,
           null,
           username,
@@ -197,6 +205,52 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
         const conversation = await findOrCreateConversation(pool, orgId, contact.id, "instagram");
         if (!conversation) continue;
 
+        const mid = message.mid ? String(message.mid) : undefined;
+
+        if (isEcho) {
+          // Dedup: o eco de uma mensagem que o CRM já enviou via API chega com o
+          // MESMO id (meta_message_id). Se já gravamos, não duplica.
+          if (mid) {
+            const dup = await pool.query(
+              `SELECT 1 FROM wa_messages WHERE organization_id = $1 AND meta_message_id = $2 LIMIT 1`,
+              [orgId, mid],
+            );
+            if (dup.rows.length > 0) continue;
+          }
+
+          const savedEcho = await addMessage(
+            pool,
+            conversation.id,
+            orgId,
+            contact.id,
+            "outbound",
+            "agent",
+            igAccountId, // marcador: enviado pela conta (app nativo do IG)
+            messageType,
+            text,
+            mid,
+            {
+              mediaUrl,
+              mediaType,
+              status: "sent",
+              metadata: {
+                source: "instagram_app_echo",
+                ...(attType ? { attachmentType: attType, mediaUrl } : {}),
+              },
+            },
+          );
+
+          await broadcastToOrg(env, orgId, {
+            type: "instagram_message",
+            conversationId: conversation.id,
+            message: savedEcho,
+            contact: { id: contact.id, igsid: contactIgsid },
+          });
+
+          writeEvent(env, { orgId, event: "instagram_echo", route: `type:${messageType}` });
+          continue;
+        }
+
         const savedMsg = await addMessage(
           pool,
           conversation.id,
@@ -207,7 +261,7 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
           contact.id,
           messageType,
           text,
-          message.mid,
+          mid,
           {
             mediaUrl,
             mediaType,
@@ -224,7 +278,7 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
           type: "instagram_message",
           conversationId: conversation.id,
           message: savedMsg,
-          contact: { id: contact.id, igsid: senderId },
+          contact: { id: contact.id, igsid: contactIgsid },
         });
 
         writeEvent(env, { orgId, event: "instagram_received", route: `type:${messageType}` });

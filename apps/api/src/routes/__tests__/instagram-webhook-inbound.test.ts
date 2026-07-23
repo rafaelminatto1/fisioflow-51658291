@@ -188,4 +188,62 @@ describe("POST /api/instagram/webhook (inbound DMs)", () => {
     const opts = addArgs[addArgs.length - 1] as { mediaType?: string };
     expect(opts.mediaType).toBe(type);
   });
+
+  // Echo = mensagem enviada pela conta (respondida pelo app nativo do Instagram
+  // no celular). O contato é o DESTINATÁRIO (recipient), e a mensagem entra como
+  // outbound para aparecer no CRM.
+  function makeEchoPayload(mid = "ig_mid_echo") {
+    return {
+      object: "instagram",
+      entry: [
+        {
+          id: "17841400000000000",
+          messaging: [
+            {
+              sender: { id: "17841400000000000" }, // a conta
+              recipient: { id: "igsid_123" }, // o contato
+              message: { mid, text: "Oi, temos horário amanhã às 10h", is_echo: true },
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+  it("persists Instagram echoes (replies sent from the phone) as OUTBOUND messages", async () => {
+    const res = await postWebhook(makeEchoPayload());
+
+    expect(res.status).toBe(200);
+    expect(mockFindOrCreateConversation).toHaveBeenCalledWith(
+      expect.anything(),
+      "org-1",
+      "contact-1",
+      "instagram",
+    );
+    expect(mockAddMessage).toHaveBeenCalled();
+    const addArgs = mockAddMessage.mock.calls[0];
+    // direction "outbound" e o texto do eco
+    expect(addArgs).toContain("outbound");
+    expect(addArgs).toContain("Oi, temos horário amanhã às 10h");
+  });
+
+  it("does NOT duplicate an echo of a message the CRM already sent (dedup by meta_message_id)", async () => {
+    mockQuery.mockImplementation((sql: string) => {
+      if (/instagram_business_account_id/.test(sql)) {
+        return Promise.resolve({ rows: [{ id: "org-1" }] });
+      }
+      if (/instagram_access_token/.test(sql)) {
+        return Promise.resolve({ rows: [{ t: "ig-token" }] });
+      }
+      if (/meta_message_id/.test(sql)) {
+        return Promise.resolve({ rows: [{ "?column?": 1 }] }); // já existe
+      }
+      return Promise.resolve({ rows: [] });
+    });
+
+    const res = await postWebhook(makeEchoPayload("ig_mid_already_saved"));
+
+    expect(res.status).toBe(200);
+    expect(mockAddMessage).not.toHaveBeenCalled();
+  });
 });
