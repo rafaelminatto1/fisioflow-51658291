@@ -39,9 +39,10 @@ export function buildAiSearchRequest(params: SearchParams): Record<string, unkno
 
   request.ai_search_options = {
     retrieval: {
-      // Instâncias built-in (storage interno) só têm índice vetorial — keyword
-      // indexing fica desabilitado, então "hybrid" retorna erro. Default vector.
-      retrieval_type: params.retrievalType ?? "vector",
+      // Instância com hybrid habilitado (vetor + BM25 keyword, fusão RRF, match "and").
+      // Default hybrid p/ precisão em termos clínicos exatos (CID, teste, fármaco);
+      // o reranker cross-encoder reordena por cima. Callers podem forçar "vector".
+      retrieval_type: params.retrievalType ?? "hybrid",
       max_num_results: params.maxNumResults ?? 10,
       context_expansion: params.contextExpansion ?? 0,
       ...(params.matchThreshold !== undefined ? { match_threshold: params.matchThreshold } : {}),
