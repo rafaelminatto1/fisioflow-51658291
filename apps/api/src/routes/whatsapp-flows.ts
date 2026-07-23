@@ -40,6 +40,8 @@ app.post("/data", async (c) => {
   if (secret) {
     const ok = await verifyMetaSignature(secret, rawBody, signature);
     if (!ok) return c.text("", 432 as ContentfulStatusCode); // 432 força o cliente a re-baixar a chave/retry
+  } else {
+    console.warn("[Flows] WHATSAPP_APP_SECRET ausente — verificação de assinatura desabilitada");
   }
 
   const privateKey = c.env.FLOWS_PRIVATE_KEY;

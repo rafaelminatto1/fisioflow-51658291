@@ -32,6 +32,7 @@ export async function buildAppointmentScreen(
   return {
     therapists: therapists.map((t: any) => ({ id: t.id, title: t.full_name })),
     is_therapist_enabled: therapists.length > 0,
+    slots: [],
   };
 }
 
@@ -41,6 +42,8 @@ export async function buildSlotsData(
   therapistId: string,
   date: string,
 ): Promise<object> {
-  const slots = await computeAvailableSlots(pool, therapistId, date);
+  // WhatsApp Flows DatePicker devolve a data como epoch millis em string.
+  const iso = /^\d+$/.test(String(date)) ? new Date(Number(date)).toISOString().slice(0, 10) : date;
+  const slots = await computeAvailableSlots(pool, therapistId, iso);
   return { slots: slots.map((s) => ({ id: s, title: s })) };
 }

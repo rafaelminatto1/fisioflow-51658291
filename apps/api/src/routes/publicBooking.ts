@@ -68,18 +68,22 @@ export async function getBookedSlots(
   }
 }
 
-export async function computeAvailableSlots(
-  pool: ReturnType<typeof createPool>,
-  therapistId: string,
-  date: string,
-): Promise<string[]> {
+function buildSlotGrid(): string[] {
   const allSlots: string[] = [];
   for (let h = 8; h < 18; h++) {
     allSlots.push(`${String(h).padStart(2, "0")}:00`);
     allSlots.push(`${String(h).padStart(2, "0")}:30`);
   }
+  return allSlots;
+}
+
+export async function computeAvailableSlots(
+  pool: ReturnType<typeof createPool>,
+  therapistId: string,
+  date: string,
+): Promise<string[]> {
   const bookedSlots = await getBookedSlots(pool, therapistId, date);
-  return allSlots.filter((s) => !bookedSlots.includes(s));
+  return buildSlotGrid().filter((s) => !bookedSlots.includes(s));
 }
 
 // GET /api/public-booking/booking/:slug — Profile info (no Turnstile)
@@ -129,10 +133,8 @@ app.get("/booking/:slug/availability", bookingRateLimit, async (c) => {
 
   const profile = profileResult.rows[0] as { id: string; organization_id: string };
 
-  const [slots, bookedSlots] = await Promise.all([
-    computeAvailableSlots(pool, profile.id, date),
-    getBookedSlots(pool, profile.id, date),
-  ]);
+  const bookedSlots = await getBookedSlots(pool, profile.id, date);
+  const slots = buildSlotGrid().filter((s) => !bookedSlots.includes(s));
   return c.json({ slots, bookedSlots });
 });
 

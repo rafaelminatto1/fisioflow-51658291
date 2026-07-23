@@ -15,4 +15,17 @@ describe("flowsBooking.buildSlotsData", () => {
     expect(ids).toContain("08:30");
     expect((data as any).slots[0]).toHaveProperty("title");
   });
+
+  it("normaliza data epoch-millis do DatePicker para YYYY-MM-DD antes da query", async () => {
+    const query = vi.fn(async (sql: string, params?: unknown[]) => {
+      if (/appointments/.test(sql)) {
+        expect(params?.[1]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        return { rows: [] };
+      }
+      return { rows: [] };
+    });
+    const pool = { query } as any;
+    await buildSlotsData(pool, {} as any, "therapist-1", "1754006400000");
+    expect(query).toHaveBeenCalled();
+  });
 });
