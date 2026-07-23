@@ -55,6 +55,8 @@
 | `0100_fix_capacity_and_hyphenated_rls_policies.sql` | Corrige políticas de RLS com hífens (schedule_capacity e outras)               | ⏳      | ⏳   | ✅   | Criada para resolver falha de salvamento de capacidade da agenda                                                   |
 | `0118_sessions_last_edited_device.sql`              | Adiciona last_edited_device_id em sessions para conflitos de autosave          |
 | `0130_whatsapp_raw_event_observability.sql`        | Observabilidade de eventos WA (processing_state, failure_reason, etc.)     | —       | ✅   | ✅   | Aplicada em 2026-06-25. Novas colunas e 3 índices confirmados em produção                                          | ✅      | ✅   | ✅   | Aplicada via psql na master em 2026-06-16                                                                          |
+| `0140_tarefas_integracoes.sql`                     | Integrações de tarefas (Jira/Asana/Monday parity)                              | —       | ✅   | ✅   | Aplicada ~2026-07-09                                                                                               |
+| `0141_kb_index_chunks.sql`                          | Contagem de chunks por doc p/ limpeza determinística do reindex de RAG        | —       | ✅   | ✅   | Aplicada via Neon MCP em 2026-07-23 (purple-union). Tabela `kb_index_chunks` confirmada em prod                    |
 
 ---
 

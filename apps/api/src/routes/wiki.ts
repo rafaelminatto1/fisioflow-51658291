@@ -12,11 +12,8 @@ import { requireAuth, verifyToken, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 import { wikiPages, wikiPageVersions, wikiDictionary } from "@fisioflow/db";
 import { searchFilter } from "../lib/db-utils";
-import {
-  removeWikiPageFromIndex,
-  syncWikiPagePatientIndex,
-  upsertWikiPageInIndex,
-} from "../lib/wikiIndexing";
+import { removeWikiPageFromIndex, syncWikiPagePatientIndex } from "../lib/wikiIndexing";
+import { syncWikiToIndex, removeWikiFromIndex } from "../lib/contentIndexing";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -522,18 +519,11 @@ app.put("/:slug", requireAuth, async (c) => {
   };
 
   if (updatedPage.isPublished) {
+    // Índice profissional: chunking section-aware (mesmo caminho do reindex).
     c.executionCtx.waitUntil(
-      upsertWikiPageInIndex(c.env, indexablePage)
-        .then((r) => {
-          if (r.ok) return;
-          console.warn("[wiki PUT] AI Search upsert failed:", r.error);
-          // Fallback: deixa o WikiSyncWorkflow reindexar fora do request
-          return c.env.WORKFLOW_WIKI_SYNC?.create({
-            id: `wiki-sync-page-${updatedPage.id}-v${nextVersion}`,
-            params: { triggerType: "publish", wikiPageId: updatedPage.id },
-          }).then(() => undefined);
-        })
-        .catch((err) => console.warn("[wiki PUT] AI Search upsert fallback failed:", err)),
+      syncWikiToIndex(c.env, updatedPage.id).catch((err) =>
+        console.warn("[wiki PUT] AI Search index failed:", err),
+      ),
     );
     // Instância do paciente só precisa de sync quando a página está publicada;
     // no unpublish, removeWikiPageFromIndex já limpa as duas instâncias.
@@ -544,9 +534,10 @@ app.put("/:slug", requireAuth, async (c) => {
     );
   } else {
     c.executionCtx.waitUntil(
-      removeWikiPageFromIndex(c.env, updatedPage.id, updatedPage.slug).catch((err) =>
-        console.warn("[wiki PUT] AI Search remove failed:", err),
-      ),
+      Promise.all([
+        removeWikiFromIndex(c.env, updatedPage.id),
+        removeWikiPageFromIndex(c.env, updatedPage.id, updatedPage.slug),
+      ]).catch((err) => console.warn("[wiki PUT] AI Search remove failed:", err)),
     );
   }
 
@@ -570,9 +561,10 @@ app.delete("/:slug", requireAuth, async (c) => {
   if (!row) return c.json({ error: "Página não encontrada" }, 404);
 
   c.executionCtx.waitUntil(
-    removeWikiPageFromIndex(c.env, row.id, slug).catch((err) =>
-      console.warn("[wiki DELETE] AI Search remove failed:", err),
-    ),
+    Promise.all([
+      removeWikiFromIndex(c.env, row.id),
+      removeWikiPageFromIndex(c.env, row.id, slug),
+    ]).catch((err) => console.warn("[wiki DELETE] AI Search remove failed:", err)),
   );
 
   return c.json({ ok: true });
