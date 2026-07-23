@@ -48,6 +48,32 @@ async function hasColumn(
   return result.rows.length > 0;
 }
 
+export async function computeAvailableSlots(
+  pool: ReturnType<typeof createPool>,
+  therapistId: string,
+  date: string,
+): Promise<string[]> {
+  const allSlots: string[] = [];
+  for (let h = 8; h < 18; h++) {
+    allSlots.push(`${String(h).padStart(2, "0")}:00`);
+    allSlots.push(`${String(h).padStart(2, "0")}:30`);
+  }
+  let bookedSlots: string[] = [];
+  try {
+    const booked = await pool.query(
+      `SELECT start_time FROM appointments
+       WHERE therapist_id = $1 AND appointment_date = $2
+         AND status NOT IN ('cancelado', 'falta')
+         AND deleted_at IS NULL`,
+      [therapistId, date],
+    );
+    bookedSlots = booked.rows.map((r: any) => String(r.start_time).substring(0, 5));
+  } catch {
+    // colunas ausentes -> devolve todos
+  }
+  return allSlots.filter((s) => !bookedSlots.includes(s));
+}
+
 // GET /api/public-booking/booking/:slug — Profile info (no Turnstile)
 app.get("/booking/:slug", bookingRateLimit, async (c) => {
   const pool = createPool(c.env);
@@ -95,30 +121,8 @@ app.get("/booking/:slug/availability", bookingRateLimit, async (c) => {
 
   const profile = profileResult.rows[0] as { id: string; organization_id: string };
 
-  // Default business slots (08:00–18:00, 30-min intervals)
-  const allSlots: string[] = [];
-  for (let h = 8; h < 18; h++) {
-    allSlots.push(`${String(h).padStart(2, "0")}:00`);
-    allSlots.push(`${String(h).padStart(2, "0")}:30`);
-  }
-
-  // Get already-booked slots for this therapist on this date
-  let bookedSlots: string[] = [];
-  try {
-    const booked = await pool.query(
-      `SELECT start_time FROM appointments
-       WHERE therapist_id = $1 AND appointment_date = $2
-         AND status NOT IN ('cancelado', 'falta')
-         AND deleted_at IS NULL`,
-      [profile.id, date],
-    );
-    bookedSlots = booked.rows.map((r: any) => String(r.start_time).substring(0, 5));
-  } catch {
-    // Table might not have expected columns — return all slots
-  }
-
-  const slots = allSlots.filter((s) => !bookedSlots.includes(s));
-  return c.json({ slots, bookedSlots });
+  const slots = await computeAvailableSlots(pool, profile.id, date);
+  return c.json({ slots });
 });
 
 // POST /api/public-booking/booking — Create booking request (Turnstile required)

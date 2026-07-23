@@ -2,21 +2,33 @@ import { Hono } from "hono";
 import { createPool } from "../lib/db";
 import { decryptFlowRequest, encryptFlowResponse } from "../lib/flowsCrypto";
 import { verifyMetaSignature } from "./whatsapp";
+import { buildAppointmentScreen, buildSlotsData } from "../lib/flowsBooking";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env }>();
 
-// Preenchido na Task 4. Recebe o payload decifrado e devolve a próxima tela.
+// Recebe o payload decifrado e devolve a próxima tela.
 export async function getNextScreen(
   decrypted: any,
-  _env: Env,
-  _pool: ReturnType<typeof createPool>,
+  env: Env,
+  pool: ReturnType<typeof createPool>,
 ): Promise<object> {
-  // Health check
-  if (decrypted.action === "ping") {
-    return { data: { status: "active" } };
+  const { action, screen, data } = decrypted;
+
+  if (action === "ping") return { data: { status: "active" } };
+
+  // Abertura do Flow -> tela APPOINTMENT com serviços/fisios.
+  if (action === "INIT") {
+    return { screen: "APPOINTMENT", data: await buildAppointmentScreen(pool, env) };
   }
-  // INIT / data_exchange / BACK — implementados na Task 4.
+
+  if (action === "data_exchange") {
+    // Seleção de fisio+data -> devolve horários livres na mesma tela.
+    if (screen === "APPOINTMENT" && data?.therapist && data?.date) {
+      return { screen: "APPOINTMENT", data: await buildSlotsData(pool, env, data.therapist, data.date) };
+    }
+  }
+
   return { data: { acknowledged: true } };
 }
 
