@@ -23,7 +23,7 @@ export const whatsappRoutes = (
     <Route
       path="/crm-whatsapp"
       element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["admin", "recepcionista"]}>
           <CrmWhatsAppPage />
         </ProtectedRoute>
       }
@@ -31,7 +31,7 @@ export const whatsappRoutes = (
     <Route
       path="/crm-whatsapp/configuracoes"
       element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["admin", "recepcionista"]}>
           <CrmWhatsAppSettingsPage />
         </ProtectedRoute>
       }
@@ -40,7 +40,7 @@ export const whatsappRoutes = (
     <Route
       path="/whatsapp/dashboard"
       element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["admin", "recepcionista"]}>
           <WhatsAppDashboardPage />
         </ProtectedRoute>
       }
@@ -48,7 +48,7 @@ export const whatsappRoutes = (
     <Route
       path="/whatsapp/automations"
       element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["admin", "recepcionista"]}>
           <WhatsAppAutomationsPage />
         </ProtectedRoute>
       }
@@ -56,7 +56,7 @@ export const whatsappRoutes = (
     <Route
       path="/whatsapp/templates"
       element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["admin", "recepcionista"]}>
           <WhatsAppTemplatesPage />
         </ProtectedRoute>
       }

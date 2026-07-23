@@ -261,6 +261,12 @@ export function Sidebar() {
     sidebarProfile?.role === "admin" ||
     (Array.isArray((sidebarProfile as any)?.roles) &&
       (sidebarProfile as any).roles.includes("admin"));
+  const isRecepcionista =
+    sidebarProfile?.role === "recepcionista" ||
+    (Array.isArray((sidebarProfile as any)?.roles) &&
+      (sidebarProfile as any).roles.includes("recepcionista"));
+  // CRM/WhatsApp: admin + recepcionista (fisio/estagiário não veem).
+  const canSeeCrm = isAdmin || isRecepcionista;
 
   const { preloadRoute } = useNavPreload();
   const whatsappUnread = useWhatsAppUnreadCount();
@@ -440,7 +446,9 @@ export function Sidebar() {
         <ScrollArea className="flex-1 px-3 py-2">
           <div className="space-y-3">
             <SidebarSection label="Atendimento" collapsed={collapsed}>
-              {mainMenuItems.map(renderMenuItem)}
+              {mainMenuItems
+                .filter((item) => item.href !== "/crm-whatsapp" || canSeeCrm)
+                .map(renderMenuItem)}
             </SidebarSection>
 
             <SidebarSection label="Clínica" collapsed={collapsed}>
