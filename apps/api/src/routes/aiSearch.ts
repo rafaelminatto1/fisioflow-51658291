@@ -412,10 +412,9 @@ export async function syncAutoRAGContent(
       content: string | null;
       category: string | null;
     }>(
-      `SELECT wp.id, wp.title, LEFT(wp.content, 3000) AS content, wc.name AS category
-       FROM wiki_pages wp
-       LEFT JOIN wiki_categories wc ON wc.id = wp.category_id
-       WHERE wp.is_public = true
+      `SELECT id, title, LEFT(content, 3000) AS content, category
+       FROM wiki_pages
+       WHERE is_public = true
        LIMIT 200`,
     );
     let count = 0;

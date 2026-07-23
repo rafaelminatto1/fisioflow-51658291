@@ -210,10 +210,9 @@ export async function indexWiki(env: Env, wikiId: string): Promise<void> {
   if (!env.AI_SEARCH?.items) return;
   const pool = createPool(env);
   const res = await pool.query<{ id: string; title: string; content: string | null; category: string | null }>(
-    `SELECT wp.id, wp.title, LEFT(wp.content, 3000) AS content, wc.name AS category
-     FROM wiki_pages wp
-     LEFT JOIN wiki_categories wc ON wc.id = wp.category_id
-     WHERE wp.id = $1`,
+    `SELECT id, title, LEFT(content, 3000) AS content, category
+     FROM wiki_pages
+     WHERE id = $1`,
     [wikiId],
   );
   const row = res.rows[0];
