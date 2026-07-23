@@ -282,6 +282,7 @@ export interface Env {
   WHATSAPP_ACCESS_TOKEN?: string;
   WHATSAPP_VERIFY_TOKEN?: string;
   WHATSAPP_APP_SECRET?: string; // App Secret para validação HMAC dos webhooks
+  FLOWS_PRIVATE_KEY?: string; // Chave privada RSA-2048 PKCS#8 (PEM) p/ WhatsApp Flows endpoint
 
   // Instagram Direct (Messaging API) — mesmo Meta App do WhatsApp
   IG_ACCESS_TOKEN?: string; // token da conta IG/Página (System User)
