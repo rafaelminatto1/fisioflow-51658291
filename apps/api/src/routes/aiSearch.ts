@@ -5,7 +5,6 @@ import { createPool } from "../lib/db";
 import { chatAiSearch, searchAiSearch } from "../lib/cloudflareAiSearch";
 import { upsertWikiPageInIndex } from "../lib/wikiIndexing";
 import { buildExerciseDoc, buildProtocolDoc, buildIndexChunks } from "../lib/contentIndexing";
-import { deleteIndexedItemsByFilenames } from "../lib/wikiIndexing";
 import type { DocMeta } from "../lib/ai/sectionChunker";
 import { enqueueKbReindex, type KbSource } from "../lib/kbReindex";
 import { aggregateStatus, type StatusItem } from "../lib/reindexStatus";
