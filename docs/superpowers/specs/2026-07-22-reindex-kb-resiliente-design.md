@@ -65,6 +65,14 @@ Barra de progresso ao vivo, listagem clicável de itens com erro, botão "reproc
 - backoff: `backoffDelay(attempts)` pura.
 - status endpoint: agrega contagens de `items.list({status})` (mock do binding).
 
+## Dados de produção (verificados via Neon/Sentry MCP)
+
+- **DB de produção:** projeto Neon `purple-union-72678311` (`minatto`, us... sa-east-1, pg17). É a que o Worker usa (contagens batem).
+- **Contagens (jul/2026):** `exercise_protocols` públicos = **104**, `exercises` públicos+ativos = **394**, `wiki_pages` públicos = **62** → total **560** (bate exatamente com os "560 itens" enfileirados).
+- `kb_index_chunks` **não existe** ainda → migração 0141 a cria.
+- **Sentry limpo** (orgs `activity-fisioterapia` e `-rg`, 24h): as falhas de sync não aparecem porque são engolidas — reforça o valor de relançar o erro (retry + visibilidade).
+- A migração 0141 deve ser aplicada em `purple-union-72678311`. **Não aplicar autonomamente** — pedir confirmação (padrão do projeto: migrations via CI/deploy).
+
 ## Verificação end-to-end
 
 Deploy → re-disparar reindex → `GET /reindex/status` mostra `error` caindo a zero ao longo dos retries; `items.list({status:"error"})` vazio ao fim; nenhuma nova ocorrência de `chunk cleanup failed` nos logs; query RAG retorna com fontes.
