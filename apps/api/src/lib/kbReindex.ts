@@ -1,10 +1,6 @@
 import type { Env } from "../types/env";
 import { createPool } from "./db";
-import {
-  syncProtocolToIndex,
-  syncExerciseToIndex,
-  syncWikiToIndex,
-} from "./contentIndexing";
+import { indexProtocol, indexExercise, indexWiki } from "./contentIndexing";
 
 /**
  * Reindexação assíncrona da base de conhecimento via Cloudflare Queues.
@@ -70,13 +66,13 @@ export async function enqueueKbReindex(
 export async function reindexKbItem(payload: ReindexKbItemPayload, env: Env): Promise<void> {
   switch (payload.source) {
     case "protocols":
-      await syncProtocolToIndex(env, payload.id);
+      await indexProtocol(env, payload.id);
       break;
     case "exercises":
-      await syncExerciseToIndex(env, payload.id);
+      await indexExercise(env, payload.id);
       break;
     case "wiki":
-      await syncWikiToIndex(env, payload.id);
+      await indexWiki(env, payload.id);
       break;
   }
 }

@@ -1,5 +1,22 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { chunkArray, buildReindexMessages } from "./kbReindex";
+
+vi.mock("./contentIndexing", () => ({
+  indexProtocol: vi.fn(async () => {
+    throw new Error("upload 503");
+  }),
+  indexExercise: vi.fn(async () => {}),
+  indexWiki: vi.fn(async () => {}),
+}));
+
+describe("reindexKbItem", () => {
+  it("propaga o erro do core (para a fila re-tentar)", async () => {
+    const { reindexKbItem } = await import("./kbReindex");
+    await expect(
+      reindexKbItem({ source: "protocols", id: "abc" }, {} as any),
+    ).rejects.toThrow("upload 503");
+  });
+});
 
 describe("kbReindex helpers", () => {
   it("chunkArray splits into batches of at most `size`", () => {
