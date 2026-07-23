@@ -2,6 +2,12 @@ import type { Env } from "../types/env";
 import { createPool } from "./db";
 import { computeAvailableSlots } from "../routes/publicBooking";
 
+// Tipos de atendimento oferecidos no Flow (id casa com normalizeAppointmentType).
+export const BOOKING_TYPES = [
+  { id: "evaluation", title: "Avaliação" },
+  { id: "session", title: "Sessão" },
+];
+
 // Clínica única: resolve a org pelo WABA id (ou primeira org).
 async function resolveOrgId(pool: ReturnType<typeof createPool>, env: Env): Promise<string | null> {
   const waba = env.WHATSAPP_BUSINESS_ACCOUNT_ID;
@@ -30,6 +36,7 @@ export async function buildAppointmentScreen(
       )).rows
     : [];
   return {
+    types: BOOKING_TYPES,
     therapists: therapists.map((t: any) => ({ id: t.id, title: t.full_name })),
     is_therapist_enabled: therapists.length > 0,
     slots: [],

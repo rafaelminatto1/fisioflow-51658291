@@ -26,6 +26,12 @@ import {
 import { WhatsAppService } from "../lib/whatsapp";
 import { mirrorWhatsAppMedia } from "../lib/media-mirror";
 import { needsHumanApproval } from "../lib/whatsappApproval";
+import { sendFlowMessage } from "../lib/whatsapp-interactive";
+import {
+  createBookingRequestFromFlow,
+  isBookingIntent,
+  DEFAULT_BOOKING_FLOW_ID,
+} from "../lib/flowsBookingCompletion";
 
 /**
  * Resolve organization ID from phone number ID (WhatsApp) or Instagram account ID.
@@ -197,9 +203,38 @@ export async function handleWhatsAppInboundQueue(
 
       // Pegar o ID do botão interativo no payload bruto se existir
       const rawPayload = msg.rawPayload as any;
-      const buttonId = rawPayload?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.interactive?.button_reply?.id 
-                    || rawPayload?.interactive?.button_reply?.id 
+      const buttonId = rawPayload?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.interactive?.button_reply?.id
+                    || rawPayload?.interactive?.button_reply?.id
                     || rawPayload?.button_reply?.id;
+
+      // 9.1b. Conclusão do Flow de agendamento (nfm_reply): cria pedido + confirma.
+      const nfmReply = rawPayload?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.interactive?.nfm_reply
+                    ?? rawPayload?.interactive?.nfm_reply;
+      if (nfmReply?.response_json) {
+        skipConcierge = true;
+        let flowData: any = null;
+        try { flowData = JSON.parse(nfmReply.response_json); } catch { /* payload inválido */ }
+        if (flowData?.therapist) {
+          const result = await createBookingRequestFromFlow(
+            pool, orgId, contact.display_name || "", msg.from || msg.waId, flowData,
+          );
+          if (result) {
+            const whatsapp = new WhatsAppService(env);
+            await whatsapp.sendTextMessage(msg.from || msg.waId, result.confirmationText);
+            await addMessage(
+              pool, conversation.id, orgId, contact.id, "outbound", "system", contact.id,
+              "text", result.confirmationText, `flow_booking_${Date.now()}`,
+              { status: "sent", metadata: { autoReply: true, flowBooking: true } },
+            );
+            await broadcastToOrg(env, orgId, {
+              type: "whatsapp_message",
+              conversationId: conversation.id,
+              message: { content: result.confirmationText, direction: "outbound", messageType: "text", status: "sent" },
+            });
+            writeEvent(env, { orgId, event: "flow_booking_request" });
+          }
+        }
+      }
 
       if (buttonId && typeof buttonId === "string") {
         if (buttonId.startsWith("confirm_appt_")) {
@@ -303,6 +338,28 @@ export async function handleWhatsAppInboundQueue(
         });
 
         skipConcierge = true; // Pular concierge já que o agendamento foi confirmado automaticamente
+      }
+
+      // 9.4. Intenção clara de agendar -> envia o Flow nativo e pula o concierge.
+      if (!skipConcierge && isBookingIntent(msg.text)) {
+        const flowId = env.FLOWS_BOOKING_FLOW_ID || DEFAULT_BOOKING_FLOW_ID;
+        const sent = await sendFlowMessage(
+          env,
+          msg.from || msg.waId,
+          flowId,
+          "Agendar",
+          "Vamos agendar seu atendimento? Toque no botão abaixo para escolher tipo de atendimento, profissional, data e horário.",
+          { flowAction: "data_exchange", flowToken: `book_${conversation.id}_${Date.now()}` },
+        );
+        if (!(sent as any)?.error) {
+          skipConcierge = true;
+          await addMessage(
+            pool, conversation.id, orgId, contact.id, "outbound", "system", contact.id,
+            "interactive", "Vamos agendar seu atendimento?", `flow_send_${Date.now()}`,
+            { status: "sent", metadata: { autoReply: true, flowSend: true } },
+          );
+          writeEvent(env, { orgId, event: "flow_booking_sent" });
+        }
       }
 
       if (!skipConcierge) {

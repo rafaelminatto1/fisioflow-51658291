@@ -1,13 +1,18 @@
-# WhatsApp Flow — Agendar Consulta
+# WhatsApp Flow — Agendar Atendimento
 
-Fonte versionada do Flow. A publicação é feita no WhatsApp Manager (Meta),
-pois Flow publicado é imutável (clonar para alterar).
+Fonte versionada do Flow. A publicação é feita no WhatsApp Manager (Meta).
+Flow publicado pode receber **novas versões** (editar o JSON no builder → Publicar).
 
-## Passos (fase de implementação, com login do Rafael)
-1. WhatsApp Manager > Flows > Create > "Book an appointment" (ou importar este JSON).
-2. Endpoint: colar a URL `https://<worker>/api/whatsapp/flows/data`, conectar o Meta App.
-3. Preview > "Request data on first screen" -> deve renderizar a lista de fisios (health/INIT OK).
-4. Publicar (irreversível — confirmar antes).
-5. Copiar o `FLOW_ID` gerado -> usado no trigger (próximo plano) para `sendFlowMessage`.
+- **FLOW_ID publicado:** `1706568520560773` (WABA `806225345331804`)
+- **Endpoint:** `https://fisioflow-api.rafalegollas.workers.dev/api/whatsapp/flows/data`
+- **App conectado:** Activity Fisioterapia (`2479744142426362`)
 
-Endpoint espera: telas `APPOINTMENT`; campos `therapist`, `date`, `slot`.
+## Contrato (deve casar com o endpoint)
+- Tela `APPOINTMENT`; campos `type`, `therapist`, `date`, `slot`.
+- `type`: `evaluation` (Avaliação) | `session` (Sessão) — ver `BOOKING_TYPES` em `src/lib/flowsBooking.ts`.
+- INIT retorna `types` + `therapists`; `data_exchange` (ao escolher data) retorna `slots`.
+- Conclusão (`nfm_reply`) → `src/queues/whatsapp-inbound.ts` cria pedido em `public_booking_requests`.
+
+## Publicar nova versão
+1. WhatsApp Manager → Flows → "Agendar Atendimento" → editor.
+2. Colar o conteúdo de `agendar-atendimento.flow.json` → Executar → Salvar → Publicar.
