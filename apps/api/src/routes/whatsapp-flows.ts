@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { createPool } from "../lib/db";
 import { decryptFlowRequest, encryptFlowResponse } from "../lib/flowsCrypto";
 import { verifyMetaSignature } from "./whatsapp";
@@ -38,7 +39,7 @@ app.post("/data", async (c) => {
   const secret = c.env.WHATSAPP_APP_SECRET;
   if (secret) {
     const ok = await verifyMetaSignature(secret, rawBody, signature);
-    if (!ok) return c.text("", 432); // 432 força o cliente a re-baixar a chave/retry
+    if (!ok) return c.text("", 432 as ContentfulStatusCode); // 432 força o cliente a re-baixar a chave/retry
   }
 
   const privateKey = c.env.FLOWS_PRIVATE_KEY;

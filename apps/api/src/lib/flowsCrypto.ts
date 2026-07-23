@@ -3,12 +3,17 @@
 // payload com AES-128-GCM (tag de 16 bytes anexada) -> encrypted_flow_data.
 // Resposta: mesmo AES key, IV com bits invertidos (XOR 0xFF), saída base64.
 
+function toArrayBufferBacked(bin: string): Uint8Array {
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
 function pemToDer(pem: string): Uint8Array {
   const b64 = pem.replace(/-----BEGIN [^-]+-----/, "").replace(/-----END [^-]+-----/, "").replace(/\s+/g, "");
-  return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  return toArrayBufferBacked(atob(b64));
 }
 function b64ToBytes(s: string): Uint8Array {
-  return Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+  return toArrayBufferBacked(atob(s));
 }
 function bytesToB64(bytes: Uint8Array): string {
   let s = "";
@@ -22,7 +27,7 @@ export async function decryptFlowRequest(
 ): Promise<{ decrypted: any; aesKey: CryptoKey; iv: Uint8Array }> {
   const privateKey = await crypto.subtle.importKey(
     "pkcs8",
-    pemToDer(privateKeyPem),
+    pemToDer(privateKeyPem) as BufferSource,
     { name: "RSA-OAEP", hash: "SHA-256" },
     false,
     ["decrypt"],
@@ -30,14 +35,14 @@ export async function decryptFlowRequest(
   const aesRaw = await crypto.subtle.decrypt(
     { name: "RSA-OAEP" },
     privateKey,
-    b64ToBytes(body.encrypted_aes_key),
+    b64ToBytes(body.encrypted_aes_key) as BufferSource,
   );
   const aesKey = await crypto.subtle.importKey("raw", aesRaw, { name: "AES-GCM" }, false, ["decrypt", "encrypt"]);
   const iv = b64ToBytes(body.initial_vector);
   const clear = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv, tagLength: 128 },
+    { name: "AES-GCM", iv: iv as BufferSource, tagLength: 128 },
     aesKey,
-    b64ToBytes(body.encrypted_flow_data),
+    b64ToBytes(body.encrypted_flow_data) as BufferSource,
   );
   return { decrypted: JSON.parse(new TextDecoder().decode(clear)), aesKey, iv };
 }

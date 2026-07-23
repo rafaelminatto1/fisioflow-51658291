@@ -48,6 +48,26 @@ async function hasColumn(
   return result.rows.length > 0;
 }
 
+export async function getBookedSlots(
+  pool: ReturnType<typeof createPool>,
+  therapistId: string,
+  date: string,
+): Promise<string[]> {
+  try {
+    const booked = await pool.query(
+      `SELECT start_time FROM appointments
+       WHERE therapist_id = $1 AND appointment_date = $2
+         AND status NOT IN ('cancelado', 'falta')
+         AND deleted_at IS NULL`,
+      [therapistId, date],
+    );
+    return booked.rows.map((r: any) => String(r.start_time).substring(0, 5));
+  } catch {
+    // colunas ausentes -> devolve nenhum horário ocupado
+    return [];
+  }
+}
+
 export async function computeAvailableSlots(
   pool: ReturnType<typeof createPool>,
   therapistId: string,
@@ -58,19 +78,7 @@ export async function computeAvailableSlots(
     allSlots.push(`${String(h).padStart(2, "0")}:00`);
     allSlots.push(`${String(h).padStart(2, "0")}:30`);
   }
-  let bookedSlots: string[] = [];
-  try {
-    const booked = await pool.query(
-      `SELECT start_time FROM appointments
-       WHERE therapist_id = $1 AND appointment_date = $2
-         AND status NOT IN ('cancelado', 'falta')
-         AND deleted_at IS NULL`,
-      [therapistId, date],
-    );
-    bookedSlots = booked.rows.map((r: any) => String(r.start_time).substring(0, 5));
-  } catch {
-    // colunas ausentes -> devolve todos
-  }
+  const bookedSlots = await getBookedSlots(pool, therapistId, date);
   return allSlots.filter((s) => !bookedSlots.includes(s));
 }
 
@@ -121,8 +129,11 @@ app.get("/booking/:slug/availability", bookingRateLimit, async (c) => {
 
   const profile = profileResult.rows[0] as { id: string; organization_id: string };
 
-  const slots = await computeAvailableSlots(pool, profile.id, date);
-  return c.json({ slots });
+  const [slots, bookedSlots] = await Promise.all([
+    computeAvailableSlots(pool, profile.id, date),
+    getBookedSlots(pool, profile.id, date),
+  ]);
+  return c.json({ slots, bookedSlots });
 });
 
 // POST /api/public-booking/booking — Create booking request (Turnstile required)

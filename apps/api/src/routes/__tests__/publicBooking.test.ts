@@ -115,4 +115,34 @@ describe("public booking protection", () => {
     );
     expect(res.status).toBe(400);
   });
+
+  it("GET /booking/:slug/availability returns both slots and bookedSlots", async () => {
+    const { createPool } = await import("../../lib/db");
+    (createPool as any).mockReturnValueOnce({
+      query: vi.fn((sql: string) => {
+        if (sql.includes("FROM profiles")) {
+          return Promise.resolve({ rows: [{ id: "therapist-1", organization_id: "org-1" }] });
+        }
+        if (sql.includes("FROM appointments")) {
+          return Promise.resolve({ rows: [{ start_time: "09:00:00" }] });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+    });
+
+    const app = await buildApp();
+    const res = await app.fetch(
+      makeRequest(
+        "GET",
+        "/api/public-booking/booking/demo/availability?date=2026-05-10",
+      ),
+      BASE_ENV as any,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { slots: string[]; bookedSlots: string[] };
+    expect(body.bookedSlots).toEqual(["09:00"]);
+    expect(body.slots).not.toContain("09:00");
+    expect(body.slots.length).toBeGreaterThan(0);
+  });
 });
