@@ -8,6 +8,7 @@ import { buildExerciseDoc, buildProtocolDoc, buildIndexChunks } from "../lib/con
 import { deleteIndexedItemsByFilenames } from "../lib/wikiIndexing";
 import type { DocMeta } from "../lib/ai/sectionChunker";
 import { enqueueKbReindex, type KbSource } from "../lib/kbReindex";
+import { aggregateStatus, type StatusItem } from "../lib/reindexStatus";
 import {
   ASK_MATCH_THRESHOLD,
   isInternalRole,
@@ -196,7 +197,7 @@ aiSearchApp.post("/suggest", requireAuth, async (c) => {
 aiSearchApp.get("/items", requireAuth, async (c) => {
   if (c.env.AI_SEARCH) {
     const data = await c.env.AI_SEARCH.items.list({
-      per_page: Math.min(100, Math.max(1, Number(c.req.query("limit") ?? 50))),
+      per_page: Math.min(50, Math.max(1, Number(c.req.query("limit") ?? 50))),
     });
     return c.json(data);
   }
@@ -455,6 +456,24 @@ aiSearchApp.post("/reindex", requireAuth, async (c) => {
     console.error("[AI Search] reindex enqueue error:", err);
     return c.json({ error: "Falha ao enfileirar reindexação", details: err.message }, 500);
   }
+});
+
+aiSearchApp.get("/reindex/status", requireAuth, async (c) => {
+  if (!isInternalRole(c.get("user").role)) {
+    return c.json({ error: "Acesso restrito a profissionais da clínica" }, 403);
+  }
+  if (!c.env.AI_SEARCH?.items) return c.json({ errors: 0, pending: 0, errorKeys: [] });
+  const collected: StatusItem[] = [];
+  for (const status of ["error", "running", "queued"] as const) {
+    for (let page = 1; page <= 10; page++) {
+      const listing: any = await c.env.AI_SEARCH.items.list({ status, per_page: 50, page } as any);
+      const rows: any[] = listing?.result ?? listing?.items ?? [];
+      if (rows.length === 0) break;
+      for (const r of rows) collected.push({ status, key: r.key ?? r.filename });
+      if (rows.length < 50) break;
+    }
+  }
+  return c.json(aggregateStatus(collected));
 });
 
 aiSearchApp.post("/sync", requireAuth, async (c) => {
