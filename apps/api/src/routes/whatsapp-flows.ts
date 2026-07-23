@@ -68,4 +68,34 @@ app.post("/data", async (c) => {
   return c.body(encrypted, 200, { "Content-Type": "text/plain" });
 });
 
+// Setup ONE-TIME: assina/sobe a chave pública de Flows na Meta usando o
+// WHATSAPP_ACCESS_TOKEN do próprio Worker (nunca exposto). Protegida por
+// FLOWS_SETUP_KEY. Desative deletando o secret FLOWS_SETUP_KEY após o uso.
+app.post("/upload-public-key", async (c) => {
+  const setupKey = c.env.FLOWS_SETUP_KEY;
+  const provided = c.req.header("x-setup-key");
+  if (!setupKey || provided !== setupKey) return c.json({ error: "forbidden" }, 403);
+
+  const token = c.env.WHATSAPP_ACCESS_TOKEN;
+  const phoneId = c.env.WHATSAPP_PHONE_NUMBER_ID;
+  const publicKey = c.env.FLOWS_PUBLIC_KEY;
+  if (!token || !phoneId || !publicKey) return c.json({ error: "config ausente" }, 500);
+
+  const form = new URLSearchParams();
+  form.set("business_public_key", publicKey);
+  const res = await fetch(
+    `https://graph.facebook.com/v25.0/${phoneId}/whatsapp_business_encryption`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: form,
+    },
+  );
+  const data = await res.json().catch(() => ({}));
+  return c.json({ status: res.status, data });
+});
+
 export { app as whatsappFlowsRoutes };
