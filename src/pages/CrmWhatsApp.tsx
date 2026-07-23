@@ -544,6 +544,7 @@ export default function CrmWhatsApp() {
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [editDraft, setEditDraft] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
   const [newConversationOpen, setNewConversationOpen] = useState(false);
   const [newConversationQuery, setNewConversationQuery] = useState("");
   const [startingConversation, setStartingConversation] = useState(false);
@@ -563,6 +564,13 @@ export default function CrmWhatsApp() {
     updateConversation: patchConversation,
     refetch: refetchConversation,
   } = useWhatsAppConversation(selectedId);
+
+  useEffect(() => {
+    if (loadingConversation) return;
+    const el = messagesScrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [selectedId, loadingConversation, messages.length]);
 
   useEffect(() => {
     fetchTags().then(setAvailableTags).catch(() => {});
@@ -1259,7 +1267,7 @@ export default function CrmWhatsApp() {
                   </div>
 
                   <div className="flex min-h-0 flex-1 flex-col bg-[radial-gradient(hsl(40_20%_88%)_1px,transparent_1px)] bg-[length:22px_22px] px-5 py-4">
-                    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+                    <div ref={messagesScrollRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
                       {loadingConversation ? (
                         <div className="py-10 text-center text-sm text-muted-foreground">
                           Carregando conversa...
