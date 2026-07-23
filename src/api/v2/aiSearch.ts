@@ -19,6 +19,8 @@ export type ReindexResponse = {
   enqueued: Record<string, number>;
 };
 
+export type ReindexStatus = { errors: number; pending: number; errorKeys: string[] };
+
 export const aiSearchApi = {
   ask: (query: string) =>
     request<AskResponse>("/api/ai-search/ask", {
@@ -31,4 +33,5 @@ export const aiSearchApi = {
       method: "POST",
       body: JSON.stringify(types ? { types } : {}),
     }),
+  reindexStatus: () => request<ReindexStatus>("/api/ai-search/reindex/status", { method: "GET" }),
 };

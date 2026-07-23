@@ -25,7 +25,14 @@ export default function KnowledgeAsk() {
     try {
       const r = await aiSearchApi.reindex();
       const total = Object.values(r.enqueued).reduce((a, b) => a + b, 0);
-      setReindexMsg(`Reindexação enfileirada: ${total} itens processando em segundo plano.`);
+      let msg = `Reindexação enfileirada: ${total} itens processando em segundo plano.`;
+      try {
+        const s = await aiSearchApi.reindexStatus();
+        msg += ` Status atual — erros: ${s.errors}, processando: ${s.pending}.`;
+      } catch {
+        /* status é opcional */
+      }
+      setReindexMsg(msg);
     } catch (e) {
       setReindexMsg((e as Error).message ?? "Falha ao enfileirar reindexação");
     } finally {
