@@ -1,0 +1,511 @@
+openapi: 3.1.0
+info:
+  title: FisioFlow Next API
+  version: 0.0.1-draft
+  description: >-
+    DRAFT do primeiro slice vertical. Não representa o legado e não autoriza
+    implementação ou deploy.
+  x-status: draft
+servers:
+  - url: https://api.staging.example.invalid
+    description: Placeholder de staging
+tags:
+  - name: System
+  - name: Identity
+  - name: Patients
+security:
+  - staffBearer: []
+  - staffSession: []
+paths:
+  /api/v1/health/live:
+    get:
+      tags: [System]
+      operationId: getLiveness
+      security: []
+      summary: Verifica somente se o processo responde
+      responses:
+        '200':
+          description: Processo vivo; não revela dependências
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LivenessResponse'
+  /api/v1/health/ready:
+    get:
+      tags: [System]
+      operationId: getReadiness
+      security: []
+      summary: Verifica se o processo pode receber tráfego
+      responses:
+        '200':
+          description: Serviço pronto; detalhes internos não são expostos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/auth/contexts:
+    get:
+      tags: [Identity]
+      operationId: listStaffContextCandidates
+      security:
+        - staffBootstrapBearer: []
+      summary: Lista somente os contextos ligados ao subject externo autenticado
+      x-permissions: [auth.context.list]
+      responses:
+        '200':
+          description: Contextos do próprio subject; somente selectable=true pode ser selecionado
+          headers:
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlNoStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffContextCandidateList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/v1/auth/context:
+    post:
+      tags: [Identity]
+      operationId: selectStaffContext
+      security:
+        - staffBootstrapBearer: []
+      summary: Seleciona uma membership própria ativa e estabelece a sessão web
+      x-permissions: [auth.context.select]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SelectStaffContextRequest'
+      responses:
+        '204':
+          description: Contexto ativo revalidado e sessão estabelecida
+          headers:
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlNoStore'
+            Set-Cookie:
+              $ref: '#/components/headers/StaffSessionCookie'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/me:
+    get:
+      tags: [Identity]
+      operationId: getCurrentActor
+      summary: Retorna identidade e membership ativa
+      x-permissions: [actor.context.read]
+      responses:
+        '200':
+          description: Contexto autorizado atual
+          headers:
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlNoStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentActor'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/patients:
+    get:
+      tags: [Patients]
+      operationId: listPatients
+      summary: Lista pacientes visíveis na organização atual
+      x-permissions: [patient.directory.read]
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - name: query
+          in: query
+          description: Busca somente por nome normalizado dentro do tenant atual
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 100
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/PatientStatus'
+      responses:
+        '200':
+          description: Página de pacientes
+          headers:
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlNoStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/patients/{patientId}:
+    get:
+      tags: [Patients]
+      operationId: getPatient
+      summary: Retorna o resumo somente leitura de um paciente autorizado
+      x-permissions: [patient.demographics.read]
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      responses:
+        '200':
+          description: Paciente encontrado no escopo autorizado
+          headers:
+            ETag:
+              description: Versão da representação do paciente neste primeiro slice
+              schema:
+                type: string
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlNoStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    staffBootstrapBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token externo pré-contexto; permite apenas resolver/selecionar memberships do próprio subject
+    staffBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token interno staff já vinculado a identityId, membershipId e authorizationVersion revalidados
+    staffSession:
+      type: apiKey
+      in: cookie
+      name: __Host-fisioflow-session
+      description: Cookie Secure HttpOnly SameSite definido pelo auth escolhido
+  parameters:
+    Cursor:
+      name: cursor
+      in: query
+      description: Cursor opaco retornado pela página anterior
+      schema:
+        type: string
+        maxLength: 500
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 25
+    PatientId:
+      name: patientId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  headers:
+    CacheControlNoStore:
+      description: Resposta sensível não deve ser armazenada pelo navegador ou edge
+      schema:
+        type: string
+        const: private, no-store
+    StaffSessionCookie:
+      description: Cookie de sessão web Secure HttpOnly SameSite vinculado à membership revalidada
+      schema:
+        type: string
+  responses:
+    BadRequest:
+      description: Requisição inválida
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlNoStore'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unauthorized:
+      description: Sessão ausente ou inválida
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlNoStore'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Forbidden:
+      description: Membership ou permission insuficiente
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlNoStore'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: Recurso inexistente ou fora do escopo visível
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlNoStore'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ServiceUnavailable:
+      description: Dependência crítica indisponível
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  schemas:
+    LivenessResponse:
+      type: object
+      additionalProperties: false
+      required: [status, timestamp]
+      properties:
+        status:
+          type: string
+          const: ok
+        timestamp:
+          type: string
+          format: date-time
+    ReadinessResponse:
+      type: object
+      additionalProperties: false
+      required: [status, timestamp]
+      properties:
+        status:
+          type: string
+          enum: [ready, unavailable]
+        timestamp:
+          type: string
+          format: date-time
+    StaffContextCandidate:
+      type: object
+      additionalProperties: false
+      required: [membershipId, organization, status, roles, authorizationVersion, selectable, unavailableReason]
+      properties:
+        membershipId:
+          type: string
+          format: uuid
+        organization:
+          $ref: '#/components/schemas/OrganizationSummary'
+        status:
+          type: string
+          enum: [pending, active, suspended, revoked]
+        roles:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            enum: [clinic_admin, clinical_lead, reception, physiotherapist, intern]
+        authorizationVersion:
+          type: integer
+          minimum: 1
+        selectable:
+          type: boolean
+        unavailableReason:
+          type: [string, 'null']
+          enum: [membership_pending, membership_suspended, membership_revoked, organization_inactive, role_missing, null]
+    StaffContextCandidateList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/StaffContextCandidate'
+    SelectStaffContextRequest:
+      type: object
+      additionalProperties: false
+      required: [membershipId]
+      properties:
+        membershipId:
+          type: string
+          format: uuid
+    CurrentActor:
+      type: object
+      additionalProperties: false
+      required: [identityId, organization, membership, permissions]
+      properties:
+        identityId:
+          type: string
+          format: uuid
+        organization:
+          $ref: '#/components/schemas/OrganizationSummary'
+        membership:
+          $ref: '#/components/schemas/MembershipSummary'
+        permissions:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            pattern: '^[a-z][a-z0-9_-]*(\.[a-z][a-z0-9_-]*)+$'
+    OrganizationSummary:
+      type: object
+      additionalProperties: false
+      required: [id, displayName, timezone]
+      properties:
+        id:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        timezone:
+          type: string
+    MembershipSummary:
+      type: object
+      additionalProperties: false
+      required: [id, status, roles, authorizationVersion]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          const: active
+        roles:
+          type: array
+          uniqueItems: true
+          minItems: 1
+          items:
+            type: string
+            enum: [clinic_admin, clinical_lead, reception, physiotherapist, intern]
+        authorizationVersion:
+          type: integer
+          minimum: 1
+    PatientStatus:
+      type: string
+      enum: [active, inactive, deceased]
+    PatientSummary:
+      type: object
+      additionalProperties: false
+      required: [id, displayName, status, version]
+      properties:
+        id:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        preferredName:
+          type: [string, 'null']
+        status:
+          $ref: '#/components/schemas/PatientStatus'
+        version:
+          type: integer
+          minimum: 1
+    PatientDetail:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - displayName
+        - preferredName
+        - status
+        - version
+        - birthDate
+        - contact
+      properties:
+        id:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        preferredName:
+          type: [string, 'null']
+        status:
+          $ref: '#/components/schemas/PatientStatus'
+        version:
+          type: integer
+          minimum: 1
+        birthDate:
+          type: [string, 'null']
+          format: date
+        contact:
+          $ref: '#/components/schemas/PatientContact'
+    PatientContact:
+      type: object
+      additionalProperties: false
+      required: [phone, email]
+      properties:
+        phone:
+          type: [string, 'null']
+          description: Retornado somente quando a permission permitir
+        email:
+          type: [string, 'null']
+          format: email
+    PatientPage:
+      type: object
+      additionalProperties: false
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PatientSummary'
+        page:
+          $ref: '#/components/schemas/CursorPage'
+    CursorPage:
+      type: object
+      additionalProperties: false
+      required: [hasMore, nextCursor]
+      properties:
+        hasMore:
+          type: boolean
+        nextCursor:
+          type: [string, 'null']
+    FieldError:
+      type: object
+      additionalProperties: false
+      required: [field, code, message]
+      properties:
+        field:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+    Problem:
+      type: object
+      additionalProperties: false
+      required: [type, title, status, code, traceId]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        code:
+          type: string
+        traceId:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldError'

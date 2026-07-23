@@ -53,6 +53,7 @@ coverage/
 test-results/
 playwright-report/
 blob-report/
+.playwright-cli/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
@@ -174,6 +175,7 @@ e2e/*.mjs
 
 # Scratch/debug scripts (contem URLs de producao, credenciais, tokens)
 scratch/
+test-surgery.ts
 
 # Test artifacts (PDFs de pacientes, screenshots, debug)
 TESTES-APAGAR/
@@ -226,6 +228,11 @@ apps/api/scratch/
 
 # Documentos legais temporarios
 DE-FRAUDE_E_ESTELIONATO_*.pdf
+docs/NF *.pdf
+
+# Transcricoes locais de sessoes de agentes (podem conter contexto sensivel)
+20??-??-??-*-local-command-*.txt
+20??-??-??-*-this-session-*.txt
 
 # ===========================================================================
 # Mobile (Capacitor)

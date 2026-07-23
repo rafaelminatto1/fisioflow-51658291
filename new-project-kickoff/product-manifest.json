@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "approvedAt": "2026-07-14",
+  "strategy": {
+    "name": "complete_modular_platform_by_waves",
+    "architecture": "modular_hybrid",
+    "deliveryRule": "complete_in_destination_incremental_in_delivery",
+    "initialRecommendation": "internal_pilot_saas_ready",
+    "initialRecommendationStatus": "pending_DG_00"
+  },
+  "platform": {
+    "preferredCompute": "Cloudflare",
+    "preferredTransactionalDatabase": "Neon_Postgres",
+    "deployables": [
+      "web",
+      "api-platform",
+      "public-edge",
+      "jobs-integrations",
+      "realtime",
+      "ai",
+      "telehealth",
+      "professional-app",
+      "patient-app"
+    ],
+    "extractionRule": "create_or_extract_only_for_public_exposure_runtime_security_scale_rpo_rto_failure_isolation_or_independent_ownership"
+  },
+  "surfaces": [
+    {
+      "id": "web",
+      "platform": "desktop_browser",
+      "scope": "complete_administration_for_authorized_modules"
+    },
+    {
+      "id": "professional-app",
+      "platform": "iPhone",
+      "scope": "complete_professional_journeys_without_irrelevant_backoffice_mirroring"
+    },
+    {
+      "id": "patient-app",
+      "platform": "iPhone",
+      "scope": "complete_patient_journeys_without_staff_or_cross_patient_data"
+    }
+  ],
+  "modules": [
+    { "id": "identity-organizations", "status": "approved_complete", "wave": "foundation" },
+    { "id": "saas-administration-billing-white-label", "status": "approved_complete", "wave": "business" },
+    { "id": "patients-caregivers-consents", "status": "approved_complete", "wave": "clinical_core" },
+    { "id": "episodes-clinical-records-assessments", "status": "approved_complete", "wave": "clinical_core" },
+    { "id": "individual-scheduling-booking-waitlist", "status": "approved_complete", "wave": "clinical_core" },
+    { "id": "patient-calendar-sync-google-outlook-apple", "status": "approved_complete", "wave": "clinical_core" },
+    { "id": "outcomes-care-radar-analytics", "status": "approved_complete", "wave": "clinical_core" },
+    { "id": "exercises-protocols-hep", "status": "approved_complete", "wave": "continuity" },
+    { "id": "documents-signatures-media", "status": "approved_complete", "wave": "clinical_core" },
+    { "id": "messaging-omnichannel", "status": "approved_complete", "wave": "communication" },
+    { "id": "erp-accounting-finance-procurement", "status": "approved_complete", "wave": "business" },
+    { "id": "nfse-fiscal", "status": "approved_complete", "wave": "fiscal" },
+    { "id": "projects-kanban-time-tracking", "status": "approved_complete", "wave": "business" },
+    { "id": "crm-marketing-automation-social", "status": "approved_complete", "wave": "business" },
+    { "id": "site-builder-landing-pages-domains", "status": "approved_complete", "wave": "business" },
+    { "id": "commerce-catalog-orders-payments", "status": "approved_complete", "wave": "commerce" },
+    { "id": "physical-inventory-suppliers-lots", "status": "approved_complete", "wave": "commerce" },
+    { "id": "gamification-currency-store-virtual-inventory-leaderboard", "status": "approved_complete", "wave": "engagement" },
+    { "id": "telehealth", "status": "approved_complete", "wave": "communication" },
+    { "id": "realtime-collaboration", "status": "approved_complete", "wave": "communication" },
+    { "id": "knowledge-evidence-original-or-licensed-content", "status": "approved_complete", "wave": "intelligence" },
+    { "id": "ai-copilots-specialized-agents", "status": "approved_complete", "wave": "intelligence" },
+    { "id": "biomechanics-pose-computer-vision", "status": "approved_complete_experimental_gate", "wave": "advanced_clinical" },
+    { "id": "wearables-healthkit", "status": "approved_complete_experimental_gate", "wave": "advanced_clinical" },
+    { "id": "digital-twin-predictive-models", "status": "approved_complete_experimental_gate", "wave": "advanced_clinical" }
+  ],
+  "exclusions": [
+    {
+      "id": "groups-classes",
+      "status": "definitively_excluded",
+      "forbiddenArtifacts": ["entity", "table", "route", "event", "screen", "permission", "flag", "placeholder"]
+    },
+    {
+      "id": "dicom-pacs",
+      "status": "definitively_excluded",
+      "forbiddenArtifacts": ["ingestion", "worklist", "viewer", "study", "series", "instance", "sdk", "bucket", "placeholder"]
+    }
+  ],
+  "dataPolicy": {
+    "legacyCurrentData": "discard_no_export_no_backup_no_migration",
+    "newSystemInitialData": "synthetic_only",
+    "beforeFirstRealData": [
+      "PITR_enabled",
+      "backup_enabled",
+      "object_versioning_and_lifecycle_enabled",
+      "integrated_restore_drill_passed",
+      "RLS_and_permissions_passed_with_real_runtime_roles",
+      "LGPD_consent_retention_and_incident_runbooks_approved"
+    ]
+  },
+  "designPolicy": {
+    "owner": "LLM",
+    "exploration": "Google_Stitch_MCP",
+    "visualSourceOfTruth": "official_remote_Figma_MCP",
+    "implementationSkills": ["frontend-design", "vercel-react-best-practices", "vercel-react-native-skills"],
+    "validation": ["Chrome_DevTools_MCP", "Playwright", "accessibility", "visual_regression"],
+    "externalToolData": "synthetic_only",
+    "humanRole": "approve_direction_and_non_inferable_business_decisions"
+  },
+  "contentPolicy": {
+    "allowed": ["original", "properly_licensed", "authorized", "compatible_public_domain"],
+    "forbidden": ["copied_without_permission", "AI_paraphrase_used_to_bypass_rights"]
+  },
+  "firstSlice": "staff_login_to_own_membership_context_to_paginated_patient_list_to_read_only_patient_detail_with_audit_and_cross_tenant_tests"
+}

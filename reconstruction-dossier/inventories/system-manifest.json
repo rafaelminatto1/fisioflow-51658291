@@ -1,0 +1,258 @@
+{
+  "generatedAt": "2026-07-13",
+  "commit": "9b5c76f1069e5bc6bbab22397e69028d314cc3be",
+  "workspaces": [
+    {
+      "name": "fisioflow-monorepo",
+      "path": ".",
+      "type": "package",
+      "entrypoint": "package.json (scripts turbo)",
+      "deployTarget": null,
+      "status": "ativo",
+      "evidence": "package.json:1 (name fisioflow-monorepo); pnpm-workspace.yaml packages: apps/* (!apps/mobile-ios), packages/*, functions"
+    },
+    {
+      "name": "fisioflow-web (dashboard src/)",
+      "path": "src/ + wrangler.toml raiz",
+      "type": "web",
+      "entrypoint": "apps/web/index.html:432 -> ./src/main.tsx -> import '../../../src/main' (apps/web/src/main.tsx:1)",
+      "deployTarget": "Cloudflare Worker 'fisioflow-web' (Workers Assets, moocafisio.com.br)",
+      "status": "ativo",
+      "evidence": "wrangler.toml:3 name=fisioflow-web, main=apps/web/src/asset-worker.ts, assets=./apps/web/dist; src/App.tsx:61 RouterProvider; src/routes/router.tsx:39 createBrowserRouter"
+    },
+    {
+      "name": "fisioflow-web (apps/web shell)",
+      "path": "apps/web",
+      "type": "web",
+      "entrypoint": "index.html + vite.config.ts (build); src/* são re-exports finos de ../../src",
+      "deployTarget": "mesmo Worker fisioflow-web",
+      "status": "ativo (shell de build; código de produto vive em src/ na raiz)",
+      "evidence": "apps/web/src/main.tsx:1 `import \"../../../src/main\"`; apps/web/src/routes.ts:1 `export { default } from \"../../../src/routes\"`"
+    },
+    {
+      "name": "@fisioflow/api",
+      "path": "apps/api",
+      "type": "api",
+      "entrypoint": "src/index.ts",
+      "deployTarget": "Cloudflare Worker 'fisioflow-api' (api-pro/api-paciente.moocafisio.com.br); Hyperdrive+R2+D1+KV+Queues+Workflows+DOs+Vectorize+AI Search+Pipelines+Stream",
+      "status": "ativo",
+      "evidence": "apps/api/wrangler.toml:1-4; package.json deploy=wrangler deploy --env production; 36 class_name (12 Workflows + 6 DOs + migrations)"
+    },
+    {
+      "name": "@fisioflow/ai-gateway",
+      "path": "apps/ai-gateway",
+      "type": "worker",
+      "entrypoint": "src/index.ts",
+      "deployTarget": "Cloudflare Worker 'fisioflow-ai-gateway' (Analytics Engine fisioflow_ai_usage)",
+      "status": "ativo",
+      "evidence": "apps/ai-gateway/wrangler.jsonc:3-4; consumido via MONITOR_AI_GATEWAY_URL em apps/api/wrangler.toml"
+    },
+    {
+      "name": "@fisioflow/mcp-server",
+      "path": "apps/mcp-server",
+      "type": "worker",
+      "entrypoint": "src/index.ts",
+      "deployTarget": "Cloudflare Worker 'fisioflow-mcp-server' (DO FisioFlowMCP)",
+      "status": "ativo",
+      "evidence": "apps/mcp-server/wrangler.jsonc:2-8; testes em apps/mcp-server/src/__tests__"
+    },
+    {
+      "name": "@fisioflow/jules-bot",
+      "path": "apps/jules-bot",
+      "type": "worker",
+      "entrypoint": "src/index.ts (Hono + Octokit + @fisioflow/jules, review bot GitHub via Gemini)",
+      "deployTarget": "Cloudflare Worker 'jules-bot'",
+      "status": "legado/experimento (último commit 2026-06-11)",
+      "evidence": "apps/jules-bot/wrangler.toml:2; apps/jules-bot/src/index.ts:1-12 (GITHUB_TOKEN, GEMINI_API_KEY)"
+    },
+    {
+      "name": "fisioflow-patient-ios",
+      "path": "apps/patient-app",
+      "type": "mobile",
+      "entrypoint": "expo-router (Expo 55 / RN 0.83.6)",
+      "deployTarget": "EAS build iOS/Android",
+      "status": "ativo",
+      "evidence": "apps/patient-app/package.json (expo ^55.0.23, react-native 0.83.6, 23 arquivos de teste jest)"
+    },
+    {
+      "name": "@fisioflow/professional-app",
+      "path": "apps/professional-app",
+      "type": "mobile",
+      "entrypoint": "expo-router (Expo 55 / RN 0.83.6); babel.config.cjs na raiz do monorepo",
+      "deployTarget": "IPA via GitHub Action ios-build.yml (sem macOS local)",
+      "status": "ativo",
+      "evidence": "apps/professional-app/package.json; pnpm-workspace.yaml patchedDependencies expo-modules-core@55.0.25"
+    },
+    {
+      "name": "mobile-ios",
+      "path": "apps/mobile-ios",
+      "type": "legacy",
+      "entrypoint": "App.js/index.js (Expo bare mínimo)",
+      "deployTarget": null,
+      "status": "morto (excluído do workspace via '!apps/mobile-ios')",
+      "evidence": "pnpm-workspace.yaml:3; apps/mobile-ios contém só App.js/index.js/app.json"
+    },
+    {
+      "name": "vinext-poc",
+      "path": "apps/vinext-poc",
+      "type": "dead",
+      "entrypoint": null,
+      "deployTarget": null,
+      "status": "morto (só node_modules residual, sem package.json)",
+      "evidence": "ls apps/vinext-poc => apenas node_modules; relacionado ao POC Vite+ (memória reference_viteplus_poc_jun2026)"
+    },
+    {
+      "name": "functions",
+      "path": "functions/",
+      "type": "dead",
+      "entrypoint": null,
+      "deployTarget": null,
+      "status": "morto (diretório NÃO existe, mas segue listado em pnpm-workspace.yaml)",
+      "evidence": "pnpm-workspace.yaml:5 lista 'functions'; find functions => inexistente (resquício Cloudflare Pages Functions)"
+    },
+    {
+      "name": "workers (legado)",
+      "path": "workers/",
+      "type": "legacy",
+      "entrypoint": null,
+      "deployTarget": null,
+      "status": "legado (só migrations/0083_backfill_exercise_media.sql; path antigo pré-monorepo, migrations 0041-0048 foram aplicadas daqui)",
+      "evidence": "workers/migrations/*; apps/api/migrations/MIGRATIONS_STATUS.md linha 'gap 0041-0048 ... path antigo workers/migrations/'"
+    },
+    {
+      "name": "@fisioflow/db",
+      "path": "packages/db",
+      "type": "package",
+      "entrypoint": "src/schema/*",
+      "deployTarget": null,
+      "status": "ativo (schema Drizzle compartilhado — 'single source of truth')",
+      "evidence": "packages/db/package.json description; drizzle.config.ts schema=./packages/db/src/schema/*, out=./packages/db/migrations"
+    },
+    {
+      "name": "@fisioflow/evolution-editor-schema",
+      "path": "packages/evolution-editor-schema",
+      "type": "package",
+      "entrypoint": "schema TipTap compartilhado (cliente + DO de colaboração Yjs->HTML)",
+      "deployTarget": null,
+      "status": "ativo",
+      "evidence": "packages/evolution-editor-schema/package.json description; @tiptap/core 3.23.4"
+    },
+    {
+      "name": "@fisioflow/shared-api",
+      "path": "packages/shared-api",
+      "type": "package",
+      "entrypoint": "tipos/cliente API compartilhados",
+      "deployTarget": null,
+      "status": "ativo",
+      "evidence": "packages/shared-api/package.json"
+    },
+    {
+      "name": "@fisioflow/core | @fisioflow/ui | @fisioflow/config",
+      "path": "packages/core, packages/ui, packages/config",
+      "type": "package",
+      "entrypoint": "sem build ('no build')",
+      "deployTarget": null,
+      "status": "ativo/mínimo (cascas com pouco conteúdo, sem testes)",
+      "evidence": "packages/*/package.json scripts build='echo no build'"
+    },
+    {
+      "name": "@fisioflow/jules",
+      "path": "packages/jules",
+      "type": "package",
+      "entrypoint": "src/cli.ts (tsup build)",
+      "deployTarget": null,
+      "status": "legado/experimento (par do jules-bot)",
+      "evidence": "packages/jules/package.json (tsup, tsx src/cli.ts)"
+    },
+    {
+      "name": "db-utils",
+      "path": "packages/db-utils",
+      "type": "dead",
+      "entrypoint": null,
+      "deployTarget": null,
+      "status": "morto (só node_modules residual, sem package.json)",
+      "evidence": "ls packages/db-utils => apenas node_modules"
+    },
+    {
+      "name": "android (Capacitor)",
+      "path": "android/ + capacitor.config.ts",
+      "type": "legacy",
+      "entrypoint": "capacitor.config.ts (webDir apps/web/dist, appId com.moocafisio.fisioflow)",
+      "deployTarget": "APK Capacitor (workflow mobile-android.yml)",
+      "status": "legado/protótipo (último commit 2026-04-25; apps mobile vivos são Expo)",
+      "evidence": "capacitor.config.ts:1-10; git log -1 android => 2026-04-25"
+    },
+    {
+      "name": "docker/macos-docker",
+      "path": "docker/",
+      "type": "legacy",
+      "entrypoint": "docker-compose de macOS virtualizado (tentativa de build iOS local)",
+      "deployTarget": null,
+      "status": "morto (substituído pelo ios-build.yml no CI; usuário está em Linux)",
+      "evidence": "docker/macos-docker/{Dockerfile,start-macos.sh}; último commit 2026-06-15"
+    },
+    {
+      "name": "design-system",
+      "path": "design-system/",
+      "type": "legacy",
+      "entrypoint": "fisioflow-wiki/MASTER.md (doc, não código)",
+      "deployTarget": null,
+      "status": "legado (DS vivo é src/index.css + tokens; ver memória DS Restyle Jun/2026)",
+      "evidence": "design-system/fisioflow-wiki/MASTER.md único conteúdo"
+    },
+    {
+      "name": "_design-system-export",
+      "path": "_design-system-export/",
+      "type": "legacy",
+      "entrypoint": "export estático (colors_and_type.css, ui_kits, preview)",
+      "deployTarget": null,
+      "status": "legado (export/backup de DS, commit 2026-05-11)",
+      "evidence": "_design-system-export/{README.md,SKILL.md,colors_and_type.css}"
+    },
+    {
+      "name": "TESTES-APAGAR",
+      "path": "TESTES-APAGAR/",
+      "type": "dead",
+      "entrypoint": null,
+      "deployTarget": null,
+      "status": "morto (diretório vazio, nome literal 'apagar')",
+      "evidence": "ls TESTES-APAGAR => vazio"
+    },
+    {
+      "name": "scratch",
+      "path": "scratch/",
+      "type": "dead",
+      "entrypoint": null,
+      "deployTarget": null,
+      "status": "morto (scripts one-off de análise de backup/exercícios)",
+      "evidence": "scratch/analyze_backup.cjs, check_exercises_fields.cjs etc."
+    },
+    {
+      "name": "backups",
+      "path": "backups/",
+      "type": "dead",
+      "entrypoint": null,
+      "deployTarget": null,
+      "status": "morto e SENSÍVEL (dumps SQL de produção de 2026-05-15)",
+      "evidence": "backups/prod-mooca-fisio-before-clean-20260515-*.dump"
+    },
+    {
+      "name": "migrate-pages.ts/.js",
+      "path": "migrate-pages.ts",
+      "type": "dead",
+      "entrypoint": "script ts-morph one-off (migração MainLayout -> PageLayout em src/pages)",
+      "deployTarget": null,
+      "status": "morto (codemod já executado)",
+      "evidence": "migrate-pages.ts:1-14"
+    },
+    {
+      "name": "drizzle (raiz)",
+      "path": "drizzle/",
+      "type": "legacy",
+      "entrypoint": "migrations drizzle-kit antigas (0000-0012 + 9999 + meta)",
+      "deployTarget": null,
+      "status": "legado (drizzle.config.ts atual aponta out=packages/db/migrations; fonte operacional é apps/api/migrations)",
+      "evidence": "drizzle.config.ts:13; drizzle/ contém dois trilhos 0000-0003 duplicados + apply_migration.sql"
+    }
+  ]
+}

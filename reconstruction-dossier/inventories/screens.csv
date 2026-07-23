@@ -1,0 +1,112 @@
+produto,rota,tela,persona,objetivo,componentes_chave,formularios,estados(loading/empty/error),permissao,api_calls_principais,status
+auth,/auth,Login/Cadastro (Auth),todos,autenticar via Neon Auth (JWT),src/pages/Auth.tsx,login/signup,loading/erro credenciais,publica,POST /__neon-auth (Neon Auth),ativo
+auth,/welcome,Boas-vindas,novo usuario,onboarding pos-cadastro,src/pages/auth,-,loading,publica,-,ativo
+auth,/pending-approval,Aprovacao pendente,novo profissional,aguardar aprovacao do admin,src/pages/PendingApproval.tsx,-,estado bloqueio permanente,autenticado sem role,GET /api/profile,ativo
+auth,/pre-cadastro/:token?,Pre-cadastro paciente,paciente/lead,preencher dados antes da 1a consulta,src/pages/PreCadastro.tsx,dados pessoais+anamnese,loading/erro token,publica (token),POST /api/precadastro,ativo
+auth,/feedback-pre-cadastro,Feedback pre-cadastro,paciente,confirmar envio,src/pages/FeedbackPreCadastro.tsx,-,-,publica,-,ativo
+auth,/indicacao/:code,Landing de indicacao,lead,captar lead por codigo de indicado,src/routes/auth.tsx (ReferralLanding),lead form,erro codigo invalido,publica,POST /api/referrals,ativo
+auth,/tv/recepcao,TV sala de espera,recepcao,exibir fila/chamadas na TV,WaitingRoomTV,-,loading/empty,publica (kiosk),GET /api/appointments (dia),ativo
+core,/agenda,Agenda (FullCalendar),admin/fisio/estagiario,gerenciar agendamentos dia/semana/mes,src/pages/Schedule.tsx + FullCalendar,quick create,skeleton/erro fetch/offline badge Pendente,ProtectedRoute,GET/POST/PATCH /api/appointments,ativo
+core,/agenda (modal),AppointmentQuickView,fisio/admin,ver detalhes e acoes rapidas do agendamento,src/components/schedule/AppointmentQuickView.tsx (692L),status/confirmacao,loading,ProtectedRoute,PATCH /api/appointments/:id,ativo
+core,/agenda (modal),AppointmentQuickEditModal,fisio/admin,editar agendamento (horario/terapeuta/status/pagamento),src/components/schedule/AppointmentQuickEditModal.tsx (950L),edicao completa,erro 409 conflito,ProtectedRoute,PATCH /api/appointments/:id,ativo
+core,/agenda (modal),RecurringAppointmentModal,admin/fisio,criar serie recorrente,src/components/schedule/RecurringAppointmentModal.tsx (607L),recorrencia (tipo/intervalo/dias semana),preview ocorrencias/erros conflito,ProtectedRoute,POST /api/scheduling/recurring-series,ativo
+core,/agenda/settings,Configuracoes da agenda (5 abas),admin,horarios/status/notificacoes/aparencia,src/pages (AgendaSettings)+TabSaveHandle/SettingsSaveBar,multi-abas com save unificado,dirty-state/erro save,ProtectedRoute,GET/PUT /api/scheduling-settings,ativo
+core,/dashboard,Dashboard inicial,admin/fisio,visao geral do dia (KPIs+proximos atendimentos),src/pages/Index.tsx,-,skeleton/empty,ProtectedRoute,GET /api/clinic-metrics,ativo
+core,/patients,Lista de pacientes,admin/fisio/estagiario,buscar e gerenciar pacientes,src/pages/Patients.tsx,busca/filtros,skeleton/empty/erro,ProtectedRoute,GET /api/patients,ativo
+core,/patients (modal),NewPatientModal,admin/fisio,cadastrar paciente,src/components/modals/NewPatientModal.tsx (1076L),dados pessoais+contato+convenio (Zod),validacao inline/erro dup telefone E.164,ProtectedRoute,POST /api/patients,ativo
+patients,/patients/new,Novo paciente (pagina),admin/fisio,cadastro completo,src/pages/patients,form multi-secao,validacao Zod,ProtectedRoute,POST /api/patients,ativo
+patients,/patients/:id,Perfil do paciente,admin/fisio/estagiario,hub do paciente (historico/evolucoes/pacotes/midia),src/pages/patients + PatientMediaGallery (1264L),edicao inline,tabs com loading proprio,ProtectedRoute,GET /api/patients/:id + subrotas,ativo
+patients,/patient-evolution/:appointmentId,Evolucao do atendimento,fisio/estagiario,registrar evolucao da sessao (TipTap+Yjs+ditado),src/pages/PatientEvolution.tsx + NotionEvolutionPanel/EvolutionNoScrollPanel,observacao livre+estruturados+procedimentos,autosave draft/conflito versao/offline/colaboracao presenca,ProtectedRoute,POST /api/sessions/autosave + POST /api/sessions/:id/finalize + WS EvolutionCollaborationSql,ativo
+patients,/patient-evolution (modal),MedicalReturnFormModal,fisio,registrar pedido de retorno medico,src/components/evolution/MedicalReturnFormModal.tsx (735L),medico/prazo/anexo,validacao/erro upload,ProtectedRoute,POST /api/medical-requests,ativo
+patients,/patient-evolution (modal),SurgeryFormModal / PathologyFormModal,fisio,registrar cirurgias e patologias,src/components/evolution/SurgeryFormModal.tsx (527L)/PathologyFormModal.tsx (609L),data/tipo/CID,validacao,ProtectedRoute,POST /api/clinical,ativo
+patients,/patient-evolution-report/:patientId,Relatorio de evolucao,fisio/admin,gerar relatorio consolidado (PDF),src/pages/PatientEvolutionReport.tsx,periodo/secoes,loading geracao/erro,ProtectedRoute,GET /api/reports-pdf,ativo
+patients,/session-evolution/:appointmentId,Evolucao (rota alternativa),fisio,mesma jornada de evolucao,src/routes/patients.tsx:77,-,-,ProtectedRoute,idem evolucao,ativo
+patients,/pacientes/:id/mapas-dor,Mapas de dor,fisio,registrar mapa corporal de dor,src/pages/patients,body map interativo,empty/salvando,ProtectedRoute,POST /api/clinical,ativo
+patients,/patients/:patientId/evaluations/new/:formId?,Nova avaliacao (ficha),fisio,preencher ficha de avaliacao dinamica,src/pages/patients + PhysicalExamForm (594L),campos dinamicos da ficha,validacao por campo,ProtectedRoute,POST /api/evaluation-forms,ativo
+patients,/portal,Portal do paciente,paciente,ver agenda/exercicios/documentos proprios,src/pages/PatientPortal.tsx,-,empty/loading,PatientRoute (paciente),GET /api/patient-portal,ativo
+patients,/prontuario/:patientId,Prontuario eletronico,fisio/admin,visao clinica consolidada,src/pages/ProntuarioEletronico.tsx,-,tabs loading,ProtectedRoute,GET /api/clinical + /api/sessions,ativo
+clinical,/evolucao-clinica,Hub Evolucao Clinica,fisio,fila de atendimentos do dia p/ evoluir,src/pages/EvolucaoClinica.tsx,-,empty sem atendimentos,ProtectedRoute,GET /api/appointments?date=today,ativo
+clinical,/avaliacao-inicial,Avaliacao inicial,fisio,realizar avaliacao inicial padronizada,src/pages/AvaliacaoInicial.tsx,anamnese+exame fisico+objetivos,autosave/validacao,ProtectedRoute,POST /api/sessions,ativo
+clinical,/clinical-tests,Biblioteca de testes clinicos,fisio,consultar/aplicar testes padronizados,src/pages/ClinicalTestsLibrary.tsx,resultado do teste,empty/busca,ProtectedRoute,GET /api/standardized-tests,ativo
+clinical,/biomechanics + /clinical/biomechanics/*,Lab biomecanico (jump/gait/running/treadmill/posture/functional),fisio,analises biomecanicas por video,src/routes/enterprise.tsx:261-309,captura/upload video,processando/erro upload,ProtectedRoute,POST /api/biomechanics,ativo
+exercises,/exercises,Exercicios (layout com abas),fisio,hub de exercicios,src/pages/Exercises.tsx + Outlet,-,-,ProtectedRoute,-,ativo
+exercises,/exercises (index),Biblioteca de exercicios,fisio,buscar exercicios e montar prescricao,src/pages/exercises/ExercisesLibraryPage.tsx + ExerciseLibrary (1321L),filtros corpo/equipamento/dificuldade,skeleton/empty busca,ProtectedRoute,GET /api/exercises,ativo
+exercises,/exercises (modal),NewExerciseModal,fisio/admin,cadastrar exercicio custom,src/components/modals/NewExerciseModal.tsx (1538L),nome/musculos/patologias/contraindicacoes/video,validacao Zod,ProtectedRoute,POST /api/exercises,ativo
+exercises,/exercises (modal),ExerciseViewModal,fisio,ver detalhe+video+evidencia,src/components/exercises/ExerciseViewModal.tsx (658L),-,loading video,ProtectedRoute,GET /api/exercises/:id,ativo
+exercises,/exercises/videos,Videos de exercicios,fisio,gerenciar videos (Stream),ExerciseVideoLibrary (1159L)+ExerciseVideoUpload (648L),upload,progresso upload/erro,ProtectedRoute,POST /api/exercise-videos,ativo
+exercises,/exercises/templates,Templates de prescricao,fisio,montar templates HEP reutilizaveis,TemplateCreateFlow (995L)+TemplateDetailPanel,builder de template,empty,ProtectedRoute,GET/POST /api/exercise-plans,ativo
+exercises,/exercises/protocols,Protocolos de exercicio,fisio,protocolos por patologia,src/pages/exercises/ExerciseProtocolsPage.tsx,-,empty,ProtectedRoute,GET /api/protocols,ativo
+exercises,/exercises/ai,Exercicios IA,fisio,sugestao de exercicios por IA,src/pages/exercises/ExerciseAiPage.tsx,prompt clinico,gerando/erro IA,ProtectedRoute,POST /api/ai,ativo
+exercises,/exercises/analytics,Analytics de exercicios,admin/fisio,aderencia e uso,src/pages/exercises/ExerciseAnalyticsPage.tsx,-,empty,ProtectedRoute,GET /api/exercise-sessions,ativo
+exercises,/exercises/search-ai,Busca semantica de exercicios,fisio,busca vetorial (pgvector),src/pages/exercises/SemanticExerciseSearch.tsx,query livre,sem resultados,ProtectedRoute,POST /api/ai-clinical-search,ativo
+exercises,/exercises/curation,Curadoria de exercicios,admin,aprovar/editar exercicios importados,src/pages/exercises/ExerciseCuration.tsx,edicao em lote,fila vazia,ProtectedRoute,GET /api/exercise-import,ativo
+exercises,/exercises/:id/evidence,Evidencia do exercicio,fisio,ver evidencias PubMed vinculadas,src/pages/exercises/ExerciseEvidence.tsx,-,sem evidencia,ProtectedRoute,GET /api/evidence,ativo
+exercises,/prescricoes/publica/:qrCode,Prescricao publica (QR),paciente,acessar HEP sem login,src/pages/prescricoes/PublicPrescriptionPage.tsx,-,erro QR invalido,publica (qrCode),GET /api/exercise-plans/public/:qrCode,ativo
+financeiro,/financial + /financeiro,Financeiro (hub),admin,visao financeira geral,src/pages/Financial.tsx,-,skeleton,ProtectedRoute,GET /api/financial,ativo
+financeiro,/financeiro/contas,Contas a pagar/receber,admin,gerenciar transacoes,src/pages/financeiro,transacao (Zod),empty/erro,ProtectedRoute,GET/POST /api/financial,ativo
+financeiro,/financeiro/fluxo-caixa,Fluxo de caixa,admin,acompanhar entradas/saidas,src/pages/financeiro,-,empty,ProtectedRoute,GET /api/financial-analytics,ativo
+financeiro,/financeiro/nfse,NFS-e,admin,emitir notas fiscais de servico (SP),src/components/financial/NFSeContent.tsx (514L),dados tomador/servico,rascunho/homologacao/erro assinatura,ProtectedRoute,POST /api/nfse,ativo
+financeiro,/financeiro/recibos,Recibos,admin,emitir recibos de pagamento,src/pages/financeiro,recibo,empty,ProtectedRoute,GET/POST /api/recibos,ativo
+financeiro,/financeiro/demonstrativo,Demonstrativo,admin,DRE simplificado,src/pages/financeiro,-,empty,ProtectedRoute,GET /api/financial-analytics,ativo
+financeiro,/financeiro/simulador,Simulador,admin,simular precos/pacotes,src/pages/financeiro,parametros,-,ProtectedRoute,-,ativo
+financeiro,/financeiro/comissoes,Comissoes,admin,calcular e pagar comissoes por fisio,src/pages/financeiro,taxa 0-100%/payout,empty mes,ProtectedRoute,GET /api/commissions/summary + POST /api/commissions/payout,ativo
+financeiro,/vouchers,Vouchers,admin,criar vouchers (pacote/avulso/mensal),src/routes/enterprise.tsx:361,voucherCreateSchema (Zod),validacao,ProtectedRoute,POST /api (vouchers),ativo
+cadastros,/cadastros,Hub de cadastros,admin,central de cadastros mestres,src/pages/cadastros/MasterDataHub.tsx,-,-,ProtectedRoute,-,ativo
+cadastros,/cadastros/servicos|fornecedores|feriados|atestados|contratos|contratados|objetivos|medicos|formas-pagamento|convenios|turmas|escalas,Cadastros mestres (12 telas),admin,CRUD de entidades de apoio,src/routes/cadastros.tsx:78-192,CRUD forms (Zod em src/lib/validations),empty/validacao,ProtectedRoute,GET/POST /api/* correspondente,ativo
+cadastros,/cadastros/templates-evolucao,Templates de evolucao,admin/fisio,templates de texto p/ evolucao,src/routes/cadastros.tsx:128,editor rich text,empty,ProtectedRoute,GET/POST /api/templates,ativo
+cadastros,/cadastros/fichas-avaliacao(+/:id/campos),Fichas de avaliacao (builder),admin,montar fichas dinamicas por campos,src/routes/cadastros.tsx:136-144,builder de campos,empty,ProtectedRoute,GET/POST /api/evaluation-forms,ativo
+crm,/crm,CRM (leads/pipeline),admin,funil de leads e campanhas,src/routes/enterprise.tsx:415 + CRMCampanhas (672L),lead/campanha,empty pipeline,ProtectedRoute (fisio sem acesso),GET /api/crm,ativo
+crm,/crm-whatsapp,Inbox WhatsApp/IG/Webchat,admin/recepcao,atender conversas multicanal,src/pages/CrmWhatsApp.tsx + ChatPanel (706L),mensagem/nota interna/template,badge nao-lidas/loading historico/aviso janela 24h,ProtectedRoute,GET/POST /api/whatsapp-inbox,ativo
+crm,/crm-whatsapp/configuracoes,Config CRM WhatsApp,admin,auto-reply/roteamento/automations gate/webchat,src/pages/CrmWhatsAppSettings.tsx,toggles+delays 0-20s+KB concierge,save/erro,ProtectedRoute,PUT /api/whatsapp-inbox/settings,ativo
+crm,/whatsapp/templates,Templates WhatsApp (Meta),admin,criar/enviar templates a Meta e sincronizar status,src/components/whatsapp + TemplateBuilderDialog,builder com preview+dicas anti-rejeicao,PENDING/APPROVED/REJECTED da Meta,ProtectedRoute,POST /api/whatsapp/templates + /templates/sync,ativo
+crm,/whatsapp/dashboard,Dashboard WhatsApp,admin,metricas de atendimento,WhatsAppDashboard (622L),-,empty,ProtectedRoute,GET /api/whatsapp-inbox/stats,ativo
+crm,/whatsapp/automations,Automacoes WhatsApp,admin,regras de mensagens automaticas (gated),src/routes/whatsapp.tsx:49,triggers,gate automations_enabled OFF default,ProtectedRoute,GET /api/crm-automations,ativo
+tarefas,/boards,Kanban de tarefas (home),equipe,gerenciar boards,src/pages/BoardsHome.tsx,novo board,empty,ProtectedRoute,GET /api/tarefas/boards,ativo
+tarefas,/boards/:boardId,Board kanban,equipe,tarefas em colunas com dependencias/recorrencia,src/pages/BoardDetail.tsx + KanbanBoardV2 (726L),TarefaModal (766L)+TaskQuickCreateModal,drag-drop/409 dependencias abertas,ProtectedRoute,GET/POST/PATCH /api/tarefas,ativo
+tarefas,/boards (modal),TarefaModal,equipe,editar tarefa (checklist/anexos/dependencias/ack/recorrencia),src/components/tarefas/TarefaModal.tsx,campos completos,erro 409 bloqueio,ProtectedRoute,PATCH /api/tarefas/:id,ativo
+relatorios,/reports,Relatorios (hub),admin/fisio,central de relatorios,src/pages/Reports.tsx,-,-,ProtectedRoute,GET /api/reports,ativo
+relatorios,/relatorios/aniversariantes|comparecimento|medico|convenio,Relatorios especificos,admin,listas operacionais,src/routes/reports.tsx:32-56,filtros periodo,empty,ProtectedRoute,GET /api/reports/*,ativo
+relatorios,/performance-equipe,Performance da equipe,admin,produtividade por fisio,src/routes/reports.tsx:64,-,empty,ProtectedRoute,GET /api/clinic-metrics,ativo
+ia,/inteligencia,Intelligence Hub (tabs overview/analytics/assistant/studio),admin/fisio,BI + assistente IA,src/pages/IntelligenceHub.tsx,prompt,gerando/erro,ProtectedRoute,POST /api/ai,ativo
+ia,/copiloto,Copilot Chat,fisio,chat clinico com tools,src/pages/copilot/CopilotChatPage.tsx,chat,streaming/erro,ProtectedRoute,POST /api/copilot,ativo
+ia,/briefing,Briefing matinal,admin/fisio,resumo diario gerado por IA,src/pages/briefing/BriefingDashboardPage.tsx,-,sem briefing,ProtectedRoute,GET /api/briefing,ativo
+ia,/monitor,Event Monitor,admin,monitorar eventos da plataforma,src/pages/events/EventMonitorPage.tsx,-,stream vazio,ProtectedRoute,GET /api/events,ativo
+ia,/base-conhecimento,Knowledge Ask (RAG),fisio,perguntar a base de conhecimento (AutoRAG),src/pages/knowledge/KnowledgeAsk.tsx,pergunta,sem resposta/citacoes,ProtectedRoute,POST /api/knowledge,ativo
+ia,/ai/clinical|dicom|movement|semantic-search|brain-dashboard|scanner|activity-lab,Ferramentas IA especializadas,fisio,analises IA especificas,src/routes/ai.tsx:111-159,upload/prompt,processando/erro,ProtectedRoute,POST /api/ai-*,ativo
+ia,/chatbot,Chatbot,admin,testar assistente,src/routes/ai.tsx:169,chat,-,ProtectedRoute,POST /api/patient-assistant,ativo
+automacoes,/automacoes(+templates+builder),Automacoes (canvas),admin,criar automacoes visuais (trigger->acoes),src/pages/automations/*,canvas de nodes,validacao grafo,ProtectedRoute,GET/POST /api/automation,ativo
+marketing,/marketing/*,Marketing (17 telas: dashboard/reviews/content-generator/calendar/myth-truth/whatsapp/timelapse/seo/gamification/exports/settings/fisiolink/referral/roi/before-after/reativacao),admin,marketing e conteudo,src/routes/marketing.tsx:66-194,varia por tela,empty/gerando,ProtectedRoute (fisio sem acesso),GET/POST /api/marketing,ativo
+admin,/admin/users,Gestao de usuarios,admin,convidar/aprovar/editar usuarios e roles,src/pages/admin + InvitationsManager (587L),convite (Zod invitation.ts),pendentes/empty,allowedRoles=[admin],GET/POST /api/invitations + /api/organization-members,ativo
+admin,/admin/usuarios-pendentes,Usuarios pendentes,admin,aprovar cadastros (pending approval flow),src/routes/admin.tsx:165,aprovar/rejeitar+roles TEXT[],empty,allowedRoles=[admin],POST /api/organization-members,ativo
+admin,/admin/audit-logs,Logs de auditoria,admin,rastrear acoes,src/pages/AuditLogs.tsx,filtros,empty,allowedRoles=[admin],GET /api/audit,ativo
+admin,/admin/security + /security-settings + /security-monitoring,Seguranca,admin,politicas e monitoramento,src/routes/admin.tsx:89-185,-,-,allowedRoles=[admin],GET /api/security,ativo
+admin,/admin/organization,Organizacao,admin,dados da clinica e settings,src/pages/OrganizationSettings.tsx,settings org,save/erro,allowedRoles=[admin],PATCH /api/organizations,ativo
+admin,/admin/analytics + /admin/cohorts + /admin/events-lake,Analytics avancado,admin/fisio,coortes e lake de eventos,src/pages/AdvancedAnalytics.tsx/CohortAnalysis.tsx/EventsLakePage.tsx,-,empty,allowedRoles=[admin(+fisio analytics)],GET /api/enterprise-bi,ativo
+admin,/admin/goals(+/:id),Metas,admin/fisio,metas da clinica,src/routes/admin.tsx:133-141,meta,empty,allowedRoles=[admin fisioterapeuta],GET/POST /api/goals,ativo
+admin,/admin/professionals + /admin/crud,Gestao profissionais/CRUD,admin,dados de profissionais,src/pages/AdminCRUD.tsx,CRUD,empty,allowedRoles=[admin],GET /api/*,ativo
+admin,/admin/lgpd/ropa + /admin/system-health,LGPD ROPA / Saude do sistema,admin,conformidade e health,src/routes/admin.tsx:211-219,-,-,allowedRoles=[admin],GET /api/lgpd + /api/health,ativo
+admin,/pre-cadastro-admin,Pre-cadastros recebidos,admin,revisar pre-cadastros e converter em paciente,src/pages/PreCadastroAdmin.tsx,converter,empty,allowedRoles=[admin],GET /api/precadastro,ativo
+eventos,/eventos(+/:id +/analytics),Eventos (corridas/empresas),admin,gerenciar eventos com prestadores/pagamentos/checklist,src/pages/Eventos.tsx + ContratadosTab (569L),evento/prestador/pagamento/voucher (Zod validations/),empty/validacao,ProtectedRoute,GET/POST /api/eventos,ativo
+gamification,/gamification(+achievements+quests+shop+leaderboard),Gamificacao paciente,paciente,pontos/conquistas/loja,src/routes/gamification.tsx:47-79,-,empty,ProtectedRoute,GET /api/gamification,ativo
+gamification,/admin/gamification,Config gamificacao,admin/fisio,configurar regras de pontos,src/routes/gamification.tsx:89,regras,-,allowedRoles=[admin fisioterapeuta],PUT /api/gamification,ativo
+enterprise,/wiki/:slug? + /wiki/article/:id + /wiki-hub/*,Wiki clinica,equipe,base de conhecimento interna,src/routes/enterprise.tsx:197-221,editor artigo,empty/busca,ProtectedRoute,GET/POST /api/wiki,ativo
+enterprise,/projects(+/:id),Projetos,admin,projetos internos,src/pages/Projects.tsx,projeto,empty,ProtectedRoute,GET /api/projects,ativo
+enterprise,/timetracking,Time tracking,equipe,registrar horas,src/routes/enterprise.tsx:171,entrada tempo,empty,ProtectedRoute,GET/POST /api/time-entries,ativo
+enterprise,/inventory,Inventario,admin,controle de estoque,src/pages/Inventory.tsx,item/movimento,empty,ProtectedRoute,GET/POST /api/inventory,ativo
+enterprise,/telemedicine(+room/:roomId),Telemedicina,fisio/paciente,sessao remota por video,src/routes/enterprise.tsx:398-406,-,conexao/erro sala,ProtectedRoute,GET /api/telemedicine,ativo
+enterprise,/ocupacao-fisioterapeutas,Ocupacao dos fisios,admin,taxa de ocupacao de agenda,src/routes/enterprise.tsx:317,-,empty,ProtectedRoute,GET /api/clinic-metrics,ativo
+enterprise,/partner,Portal do parceiro,parceiro,visao restrita de parceiro,src/pages/Partner.tsx,-,-,PartnerRoute (parceiro),GET /api/prestadores,ativo
+enterprise,/notifications,Notificacoes,todos,central de notificacoes in-app,src/pages/Notifications.tsx,preferencias,empty,ProtectedRoute,GET /api/notifications,ativo
+publico,/agendar/:slug,Agendamento online publico,lead/paciente,agendar sem login,src/pages/public/BookingPage.tsx,dados+slot,slots esgotados/erro,publica,GET slots + POST /api/public-booking,ativo
+publico,/checkin,Check-in,paciente,confirmar presenca ao chegar,src/pages/public/CheckIn.tsx,telefone/codigo,erro nao encontrado,publica,POST /api/appointments/checkin,ativo
+publico,/assinar/:token,Assinatura de documento,paciente,assinar documento digital via link,src/pages/public/DocumentSigning.tsx,assinatura,token expirado,publica (token),POST /api/document-signatures,ativo
+publico,/nps/:token,NPS publico,paciente,responder pesquisa NPS 0-10,src/pages/public/NpsPublic.tsx,score 0-10+comentario,ja respondido/expirado,publica (token),GET/POST /api/public-nps/:token,ativo
+publico,/satisfacao + /surveys,Pesquisas de satisfacao,paciente,responder pesquisas,src/pages/Surveys.tsx,survey,empty,publica,GET/POST /api/satisfaction-surveys,ativo
+sistema,/settings,Configuracoes do usuario,todos,preferencias pessoais,src/pages/Settings.tsx,preferencias,save,autenticado (sem guard de role),PATCH /api/profile,ativo
+sistema,/profile,Perfil,todos,dados do usuario,src/pages/Profile.tsx,perfil,save,ProtectedRoute,GET/PATCH /api/profile,ativo
+sistema,/communications,Comunicacoes,admin,mensagens email/SMS a pacientes,src/pages/Communications.tsx + PatientMessages (666L),mensagem,empty,ProtectedRoute,POST /api/communications,ativo
+sistema,/install,Instalar PWA,todos,instrucoes de instalacao,src/pages/Install.tsx,-,-,publica,-,ativo
+sistema,/error + /*,Erro/404,todos,fallback de erro e rota inexistente,src/pages/ErrorPage.tsx + NotFound.tsx,-,-,publica,-,ativo
+sistema,/seed-data,Seed de dados (dev),dev,popular dados de teste,src/pages/SeedData.tsx,-,-,ProtectedRoute,POST /api/import,dev-only
+sistema,/auth/dev/clinical-media,Harness de midia clinica (dev),dev,testar upload de midia,src/pages/dev/ClinicalMediaHarness.tsx,-,-,so import.meta.env.DEV,POST /api/patient-media,dev-only
+retorno-medico,/evolucao-clinica (card),Alerta retorno medico (coluna 3),fisio/admin,ver pedidos de retorno pendentes ate report_sent,card vermelho na coluna 3 (memoria projeto retorno medico),envio wa.me editavel+template relatorio_fisioterapia,persistente ate report_sent,ProtectedRoute,GET /api/medical-requests,ativo

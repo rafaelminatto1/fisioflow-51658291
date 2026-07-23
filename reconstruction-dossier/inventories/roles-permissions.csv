@@ -1,0 +1,51 @@
+role,modulo,acao,enforcement_frontend,enforcement_api,enforcement_rls,evidencia,confianca
+admin,admin-usuarios,listar/aprovar pendentes,sim (allowedRoles admin),sim (check inline admin),org-only,apps/api/src/routes/profile.ts:671-704; src/routes/admin.tsx:74,A
+admin,admin-audit-logs,ver logs,sim (allowedRoles admin),parcial (rota audit-logs so requireAuth),org-only,src/routes/admin.tsx:82; apps/api/src/index.ts (mount /api/audit-logs),B
+admin,admin-security,monitoramento seguranca,sim (allowedRoles admin),parcial (security.ts so requireAuth),org-only,src/routes/admin.tsx:91; apps/api/src/routes/security.ts,B
+admin,cloudflare-control,operar infra,nao,sim (requireRole admin/owner),n/a,apps/api/src/routes/admin/cloudflare-control.ts:16,A
+admin,docs-clinicos-kb,gerir base de conhecimento,menu apenas,sim (requireRole admin/owner),org-only,apps/api/src/routes/clinicalDocs.ts:20,A
+admin,gamificacao,CRUD definicoes/quests/loja,sim (admin+fisio),sim (requireRole admin),org-only,apps/api/src/routes/gamification.ts:934-1303; src/routes/gamification.tsx:91,A
+admin,exercicios,importar biblioteca,nao,sim (isAdmin local),org-only,apps/api/src/routes/exercise-import.ts:61-121,A
+admin,anuncios,criar/editar/apagar,nao,sim (check inline admin/owner),org-only,apps/api/src/routes/announcements.ts:57-146,A
+admin,pacientes,hard delete,nao,sim (admin ou email hardcoded),org-only,apps/api/src/routes/patients.ts:1465-1468,A
+admin,whatsapp,todas as 15 permissoes,menu,sim (matriz WHATSAPP_PERMISSIONS),org-only,apps/api/src/middleware/whatsapp-rbac.ts:7-23,A
+fisioterapeuta,agenda,CRUD agendamentos,sim (ProtectedRoute sem roles),nao (so requireAuth+rate limit),org-only,apps/api/src/routes/appointments.ts:208,A
+fisioterapeuta,pacientes,CRUD prontuario/evolucao,sim (ProtectedRoute sem roles),nao (so requireAuth),org-only,apps/api/src/routes/patients.ts; sessions.ts,A
+fisioterapeuta,financeiro,ver/criar lancamentos,NAO (ProtectedRoute sem allowedRoles),NAO (sem requireRole),org-only,src/routes/financial.tsx:46-104; apps/api/src/routes/financial.ts,A
+fisioterapeuta,crm,acesso inbox/leads,NAO (menu escondido apenas),NAO (sem requireRole em crm.ts),org-only,src/components/layout/Sidebar.tsx:261-263; apps/api/src/routes/crm.ts,A
+fisioterapeuta,marketing,campanhas,NAO (ProtectedRoute sem roles),NAO,org-only,src/routes/marketing.tsx:68-110; apps/api/src/routes/marketing.ts,A
+fisioterapeuta,whatsapp,ver atribuidas/enviar/transferir/clinico,menu,sim (matriz + escopo de conversas),org-only,apps/api/src/middleware/whatsapp-rbac.ts:24-33;149-158,A
+fisioterapeuta,evolucao-colaborativa,editar Y.Doc via WS,nao,sim (EDITABLE_ROLES),n/a,apps/api/src/agents/EvolutionCollaboration.ts:10,A
+fisioterapeuta,admin-crud,ferramenta CRUD,sim (admin+fisio),nao verificado no back,org-only,src/routes/admin.tsx:99,B
+estagiario,pacientes,CRUD prontuario,sim (ProfessionalRoute inclui estagiario),nao (mesma API do fisio),org-only,src/components/ProtectedRoute.tsx:164-170,A
+estagiario,whatsapp,ver atribuidas/enviar/templates/notas,menu,sim (matriz reduzida),org-only,apps/api/src/middleware/whatsapp-rbac.ts:34-39,A
+estagiario,financeiro,ver/criar,NAO,NAO,org-only,src/routes/financial.tsx; apps/api/src/routes/financial.ts,A
+estagiario,evolucao-colaborativa,editar,nao,sim (EDITABLE_ROLES),n/a,apps/api/src/agents/EvolutionCollaboration.ts:10,A
+recepcionista,whatsapp,ver todas/atribuir/financeiro (sem clinico),menu,sim (matriz),org-only,apps/api/src/middleware/whatsapp-rbac.ts:40-51,A
+recepcionista,demais-modulos,sem definicao propria,nao (sem guard especifico),nao,org-only,rg sem hits fora de whatsapp-rbac e whitelist de aprovacao,B
+parceiro,rotas-parceiro,acesso PartnerRoute,sim (allowedRoles parceiro),nao evidenciado,org-only,src/components/ProtectedRoute.tsx:182-184,B
+paciente,portal,ver perfil/agendamentos/exercicios/progresso,sim (PatientRoute),sim (requirePatientAuth JWT role=patient),org-only,apps/api/src/routes/patientPortal.ts:578-583; src/routes/patients.tsx:115,A
+paciente,portal,confirmar/cancelar agendamento,sim,sim (requirePatientAuth + patient_id do token),org-only,apps/api/src/routes/patientPortal.ts:778-842,A
+paciente,portal,concluir exercicio/log/PROMs,sim,sim,org-only,apps/api/src/routes/patientPortal.ts:935;1547;1601,A
+paciente,portal,pedido exclusao LGPD,sim,sim (lgpd.ts),org-only,apps/api/src/routes/lgpd.ts:29-73,A
+paciente,rotas-staff,qualquer acao,bloqueado (allowedRoles),bloqueado (role!==patient => 403 no portal; requireAuth staff exige profile),org-only,apps/api/src/lib/auth/patientAuth.ts:53-55,A
+pending,todas,qualquer acao,bloqueado (redirect /pending-approval),parcial (role pending nao passa requireRole; rotas sem requireRole ACEITAM),org-only,src/components/ProtectedRoute.tsx:114-130,A
+viewer,todas,fallback sem profile,sem guard proprio,requireAuth aceita (role viewer default),org DEFAULT_ORG_ID,apps/api/src/lib/auth.ts:227-241,A
+qualquer-autenticado,convites,criar/editar/apagar convite com qualquer papel,tela admin apenas,NAO (so requireAuth),org-only,apps/api/src/routes/invitations.ts:22-53,A
+qualquer-autenticado,organizacoes,criar organizacao,nao exposto,NAO (so requireAuth),n/a,apps/api/src/routes/organizations.ts:163-188,A
+anonimo,convites,validar/usar token,pagina publica onboarding,publico (token 64hex + expiracao),n/a,apps/api/src/routes/invitations.ts:89-113,A
+anonimo,auth,login/signup/reset,paginas publicas,rate limit IP + turnstile (signup),n/a,apps/api/src/routes/auth.ts:12-38;226,A
+anonimo,portal-paciente,request-otp,pagina publica,SEM rate limit e SEM turnstile; enumeracao de telefone,bypass rls (owner),apps/api/src/routes/patientPortal.ts:499-538,A
+anonimo,agendamento-publico,public booking/checkin,pagina publica,rate limit + turnstile,n/a,apps/api/src/routes/publicBooking.ts:11-21,A
+admin,configuracoes-org,editar organizacao (nome/pix/settings),menu (aba organization),parcial (PUT restrito a propria org; sem requireRole - qualquer staff edita),n/a,apps/api/src/routes/organizations.ts:190-240; apps/api/src/routes/profile.ts:491-492 (update org via profile exige admin),A
+admin,perfil,editar campos de organizacao via /profile,sim,sim (check inline admin),org-only,apps/api/src/routes/profile.ts:491-492,A
+fisioterapeuta,evolucao,criar/editar/finalizar sessao,sim (ProtectedRoute sem roles),nao (so requireAuth),org-only,apps/api/src/routes/sessions.ts; evolution.ts,A
+fisioterapeuta,exames-documentos,upload/ver exames e docs,sim (ProtectedRoute sem roles),nao (so requireAuth),org-only,apps/api/src/routes/exams.ts; documents.ts,B
+fisioterapeuta,telemedicina,criar sala (roomAdmin se therapist),sim,parcial (role therapist vira admin da sala),n/a,apps/api/src/routes/telemedicine.ts:317-399,B
+fisioterapeuta,tarefas,CRUD tarefas (delete comentario proprio ou admin),sim,parcial (isAdmin p/ moderar comentarios),org-only,apps/api/src/routes/tarefas.ts:833-838,A
+fisioterapeuta,ia,copilot/ai endpoints,sim,nao role; rate limit 100/h org,org-only,apps/api/src/routes/ai.ts:19; copilot.ts:64,A
+estagiario,agenda,CRUD agendamentos,sim (sem allowedRoles),nao,org-only,apps/api/src/routes/appointments.ts:208,A
+admin,lgpd,ver pedidos de exclusao e access logs,menu,parcial (comentado como admin mas so requireAuth),org-only,apps/api/src/routes/lgpd.ts:78-96,A
+admin,audit-logs-api,consultar /api/audit-logs,sim (front admin),nao evidenciado requireRole no mount,org-only,apps/api/src/index.ts (mount /api/audit-logs); src/routes/admin.tsx:82,B
+paciente,portal,solicitar OTP/login,pagina publica,publico sem rate limit,bypass rls (owner),apps/api/src/routes/patientPortal.ts:499-576,A
+paciente,portal,bootstrap vinculo (staff),n/a,sim (rota bootstrap usa requireAuth staff),org-only,apps/api/src/routes/patientPortal.ts:578-586,A

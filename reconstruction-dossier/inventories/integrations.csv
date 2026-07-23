@@ -1,0 +1,35 @@
+fornecedor,finalidade,dominio,fluxo,auth_tipo(nome do secret),webhooks,retry/idempotencia,ambiente,status,lock_in_risco
+Meta WhatsApp Cloud API,Mensageria WhatsApp (templates + conversas + inbox CRM),graph.facebook.com/v25.0,both,Bearer WHATSAPP_ACCESS_TOKEN + WHATSAPP_APP_SECRET (HMAC in) + WHATSAPP_VERIFY_TOKEN,in: /api/whatsapp/webhook; out: envio Graph API,Queue fisioflow-whatsapp-inbound (retries 5 + DLQ) + dedup whatsapp-idempotency.ts,prod,ativo,médio (Graph API proprietária; Twilio como fallback parcial)
+Meta Instagram Messaging,DMs Instagram no inbox CRM + concierge auto-reply,graph.instagram.com + graph.facebook.com,both,IG_ACCESS_TOKEN + IG_VERIFY_TOKEN + IG_APP_SECRET,in: /api/instagram/webhook,waitUntil no webhook; refresh de token quinzenal via cron 0 9 1;15,prod,ativo,médio
+Meta CDN (lookaside),Download de mídia recebida (WhatsApp/IG),lookaside.fbsbx.com,in,Bearer WHATSAPP_ACCESS_TOKEN,não,retry da fila inbound,prod,ativo,baixo
+Neon (Postgres + Auth + Data API),Banco primário via Hyperdrive; JWT/JWKS; Data API REST,*.neon.tech (JWKS/Auth/Data API),both,Hyperdrive binding (credencial no CF) + NEON_AUTH_JWKS_URL,in: /api/webhooks/neon-auth (user.created; EdDSA),pool pg via Hyperdrive; JWKS cacheado 5min,prod,ativo,médio (Postgres padrão; Auth/Data API proprietários da Neon)
+Cloudflare Workers AI / AI Gateway,LLMs + embeddings + transcrição (Deepgram nova-3/aura-2 via Workers AI) + spend limits,binding AI + gateway.ai.cloudflare.com,out,binding AI + FISIOFLOW_AI_GATEWAY_TOKEN,não,retryPolicy nos Workflows; registry central lib/workersAi.ts,prod,ativo,alto (modelos @cf/ e gateway proprietários)
+Cloudflare REST API,AutoRAG sync + Analytics Engine SQL + GraphQL analytics + controle de worker,api.cloudflare.com,out,Bearer CF_API_TOKEN (+CF_ACCOUNT_ID),não,best-effort (cron/admin),prod,ativo,alto
+Cloudflare Stream,Vídeos de exercícios (encoding adaptativo HLS),binding STREAM + videodelivery.net,both,binding + STREAM_WEBHOOK_SECRET,in: /api/exercise-videos/stream-webhook (HMAC + anti-replay 5min),webhook idempotente por uid,prod,ativo,alto
+Cloudflare Turnstile,Anti-bot em rotas públicas (auth/login e public-booking),challenges.cloudflare.com,out,TURNSTILE_SECRET_KEY (+TURNSTILE_SITE_KEY),não,fail-closed no middleware,prod,ativo,baixo (substituível por hCaptcha/reCAPTCHA)
+Resend,E-mail transacional (boas-vindas; prescrição PDF; briefing; notificação admin),api.resend.com (SDK resend),out,RESEND_API_KEY (+RESEND_FROM_EMAIL),não,best-effort (sem retry explícito),prod,ativo,baixo
+Google Calendar,Sync de agenda (OAuth por profissional),oauth2.googleapis.com + www.googleapis.com/calendar/v3,both,GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET (refresh token por usuário),não (polling/sync),refresh token flow; sem retry dedicado,prod,ativo,baixo
+Google AI (Gemini),Modelos premium opt-in (Gemini Live p/ avaliação em tempo real),generativelanguage.googleapis.com,out,GOOGLE_AI_API_KEY (gate GOOGLE_AI_PREMIUM_ENABLED=false),não,desligado por flag,prod,configurado-desligado,baixo
+Z.AI (GLM),GLM-5.2 no /evidence/summarize (A/B via provider OpenAI-compatible),api.z.ai,out,ZAI_API_KEY,não,retryPolicy dos Workflows,prod,ativo,baixo (API OpenAI-compatible)
+Deepgram (via Workers AI),Ditado de evolução pt-BR streaming (@cf/deepgram/nova-3) e TTS (aura-2),binding AI (sem chamada direta a deepgram.com),out,binding AI,não,acúmulo local + flush budget (withVoiceInput),prod,ativo,médio (mediado pela CF)
+NCBI PubMed E-utils,Evidence Gateway: busca de literatura científica,eutils.ncbi.nlm.nih.gov + pubmed.ncbi.nlm.nih.gov,in,NCBI_API_KEY + NCBI_EMAIL (opcionais),não,rate-limit da NCBI; cache local,prod,ativo,baixo
+Europe PMC / OpenAlex,Fontes complementares de evidência científica,www.ebi.ac.uk (Europe PMC),in,sem auth,não,best-effort,prod,ativo,baixo
+Prefeitura de São Paulo (NFS-e),Emissão direta de NFS-e via SOAP + mTLS + assinatura XML,nfe.prefeitura.sp.gov.br + nfews.prefeitura.sp.gov.br,out,mTLS binding NFSE_SP_CERT + NFSE_SP_CERT_PEM/NFSE_SP_KEY_PEM; NFSE_SANDBOX,não,NFSeWorkflow durável com retries,prod,ativo,alto (webservice municipal específico)
+Focus NFe,Emissão NFS-e (legado; sendo substituído pela emissão direta SP),api.focusnfe.com.br,out,FOCUS_NFE_TOKEN (+FOCUS_NFE_ENVIRONMENT),não,retries do workflow,prod,legado,médio
+Stripe,Pagamentos (checkout/cobranças em financial-commerce),api.stripe.com,out,Bearer STRIPE_SECRET_KEY,não encontrado webhook de entrada,fetch direto sem retry; sem webhook de confirmação (risco),prod,parcial/mock,baixo
+Twilio,Fallback de envio WhatsApp,api.twilio.com,out,TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN/TWILIO_PHONE_NUMBER,não,fallback manual,prod,configurado-standby,baixo
+Strava,Wearables: atividades do paciente (OAuth),www.strava.com,both,STRAVA_CLIENT_ID/STRAVA_CLIENT_SECRET,callback /api/wearables/oauth/strava/callback,refresh token,prod,ativo,baixo
+Oura,Wearables: sono/recuperação (OAuth),api.ouraring.com + cloud.ouraring.com,both,OURA_CLIENT_ID/OURA_CLIENT_SECRET,callback /api/wearables/oauth/oura/callback,refresh token,prod,ativo,baixo
+Garmin,Wearables (OAuth),connect.garmin.com,both,GARMIN_CLIENT_ID/GARMIN_CLIENT_SECRET,previsto,parcial,prod,parcial,baixo
+Google Fit,Wearables (OAuth),www.googleapis.com,both,GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET,callback /api/wearables/oauth/google_fit/callback,refresh token,prod,ativo,baixo
+wger,Importação de catálogo de exercícios open-source,wger.de,in,WGER_API_TOKEN,não,import job manual,prod,ativo,baixo
+Axiom,Log analytics estruturado,api.axiom.co,out,AXIOM_TOKEN (+AXIOM_ORG_ID/AXIOM_DATASET),não,fire-and-forget via waitUntil,prod,ativo,baixo
+ntfy.sh,Alertas operacionais push (health/SLO) ao celular do Rafael,ntfy.sh,out,tópico público MONITOR_NTFY_TOPIC (sem secret),não,fire-and-forget,prod,ativo,baixo
+Expo Push,Push notifications dos apps mobile (patient-app/professional-app),exp.host,out,sem secret (tokens de device),não,best-effort,prod,ativo,médio (acoplado ao ecossistema Expo)
+Jitsi Meet,Telemedicina: sala de vídeo pública por roomCode,meet.jit.si,out,sem auth (URL pública),não,n/a,prod,ativo,baixo (mas sem privacidade garantida — sala pública)
+LiveKit,Telemedicina: token JWT gerado manualmente no Worker,LIVEKIT_URL (*.livekit.cloud),out,LIVEKIT_API_KEY/LIVEKIT_API_SECRET,não,n/a,prod,parcial (URL placeholder default),baixo
+QuickChart,Geração de gráficos em relatórios,quickchart.io,out,sem auth,não,best-effort,prod,ativo,baixo
+Google Maps,Geocoding/links de endereço,maps.googleapis.com,out,GOOGLE_MAPS_API_KEY (vazio em prod),não,n/a,prod,configurado-desligado,baixo
+R2 SQL (Data Catalog),Consulta ao data lake Iceberg (events/sessions_archive),api.sql.cloudflarestorage.com,out,R2_SQL_TOKEN,não,ausente = data lake off,prod,ativo,alto
+Inngest (removido),Antigo orquestrador de jobs — client agora só repassa à BACKGROUND_QUEUE,n/a (sem chamada externa),out,INNGEST_SIGNING_KEY (residual),não,n/a,prod,órfão/residual,nenhum
+DICOM (PACS),Integração de imagens médicas prevista,DICOM_BASE_URL (configurável),in,DICOM_AUTH_TOKEN/DICOM_AUTH_HEADER,não,n/a,não configurado,parcial,baixo

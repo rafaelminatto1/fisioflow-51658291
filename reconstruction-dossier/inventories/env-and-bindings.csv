@@ -1,0 +1,121 @@
+name,source,consumer,purpose_inferido
+HYPERDRIVE,wrangler.toml (binding hyperdrive),apps/api,Pool Neon Postgres via Hyperdrive (única via de acesso ao DB em prod)
+MEDIA_BUCKET,wrangler.toml (binding r2),apps/api,R2 fisioflow-media (mídia de exercícios/pacientes)
+EXAMS_BUCKET,wrangler.toml (binding r2),apps/api,R2 fisioflow-exams (exames)
+CLINICAL_DOCS_BUCKET,wrangler.toml (binding r2),apps/api,R2 fisioflow-clinical-docs (documentos clínicos)
+STREAM,wrangler.toml (binding stream),apps/api,Cloudflare Stream (vídeos de exercícios)
+FISIOFLOW_CONFIG,wrangler.toml (binding kv),apps/api,KV de configuração/remote config
+DB,wrangler.toml (binding d1),apps/api,D1 fisioflow-db (dados edge ex.: feriados)
+EDGE_CACHE,wrangler.toml (binding d1),apps/api,D1 fisioflow-edge-cache (cache na borda)
+ANALYTICS,wrangler.toml (binding analytics_engine),apps/api + apps/ai-gateway,Analytics Engine (fisioflow_events / fisioflow_ai_usage)
+VECTORIZE_KNOWLEDGE_BASE,wrangler.toml (binding vectorize),apps/api,Índice fisioflow-knowledge-base (busca semântica pgvector-like)
+AI_SEARCH,wrangler.toml (binding ai_search),apps/api,AI Search fisioflow-rag (RAG interno)
+AI_SEARCH_PATIENT,wrangler.toml (binding ai_search),apps/api,AI Search fisioflow-rag-paciente (RAG isolado do paciente)
+EVENTS_PIPELINE,wrangler.toml (binding pipelines),apps/api,Cloudflare Pipelines (lake de eventos)
+AI,wrangler.toml (binding ai),apps/api,Workers AI (modelos @cf via registry workersAi.ts)
+BROWSER,wrangler.toml (binding browser),apps/api,Browser Rendering (PDF/screenshot)
+IMAGES,wrangler.toml (binding images),apps/api,Cloudflare Images (transformações)
+BACKGROUND_QUEUE,wrangler.toml (queue producer/consumer),apps/api,Queue fisioflow-background-tasks (tarefas assíncronas)
+WHATSAPP_QUEUE,wrangler.toml (queue producer/consumer),apps/api,Queue fisioflow-whatsapp-inbound (webhook -> processamento)
+WHATSAPP_DLQ,wrangler.toml (queue producer/consumer),apps/api,DLQ WhatsApp (mensagens falhas p/ revisão manual)
+ORGANIZATION_STATE,wrangler.toml (binding DO),apps/api,DO OrganizationState (estado org / WS)
+PATIENT_AGENT,wrangler.toml (binding DO),apps/api,DO PatientAgentSql (agente do paciente)
+ASSESSMENT_LIVE_SESSION,wrangler.toml (binding DO),apps/api,DO AssessmentLiveSession (avaliação ao vivo)
+CLINIC_AGENT,wrangler.toml (binding DO),apps/api,DO ClinicAgentSql (agente da clínica)
+VOICE_SCRIBE_AGENT,wrangler.toml (binding DO),apps/api,DO VoiceScribeAgent (ditado de evolução Nova-3)
+EVOLUTION_COLLABORATION,wrangler.toml (binding DO),apps/api,DO EvolutionCollaborationSql (colaboração Yjs na evolução)
+WORKFLOW_APPOINTMENT_REMINDER,wrangler.toml (binding workflow),apps/api,Workflow lembrete de consulta
+WORKFLOW_PATIENT_ONBOARDING,wrangler.toml (binding workflow),apps/api,Workflow onboarding de paciente
+WORKFLOW_NFSE,wrangler.toml (binding workflow),apps/api,Workflow emissão NFS-e
+WORKFLOW_HEP_COMPLIANCE,wrangler.toml (binding workflow),apps/api,Workflow adesão a exercícios domiciliares (HEP)
+WORKFLOW_DISCHARGE,wrangler.toml (binding workflow),apps/api,Workflow alta de paciente
+WORKFLOW_REENGAGEMENT,wrangler.toml (binding workflow),apps/api,Workflow reengajamento
+WORKFLOW_DIGITAL_TWIN,wrangler.toml (binding workflow),apps/api,Workflow digital twin do paciente
+WORKFLOW_SESSION_SUMMARY,wrangler.toml (binding workflow),apps/api,Workflow resumo de sessão
+WORKFLOW_KNOWLEDGE_SYNC,wrangler.toml (binding workflow),apps/api,Workflow sync base de conhecimento
+WORKFLOW_WIKI_SYNC,wrangler.toml (binding workflow),apps/api,Workflow sync wiki RAG
+WORKFLOW_AUTOMATION,wrangler.toml (binding workflow),apps/api,Workflow motor de automações (canvas)
+WORKFLOW_BIOMECHANICS_ANALYSIS,wrangler.toml (binding workflow),apps/api,Workflow análise biomecânica
+AGENT_MEMORY,wrangler.toml (binding comentado),apps/api,Agent Memory (beta privado Cloudflare ainda não liberado)
+ENVIRONMENT,wrangler.toml [vars],apps/api,Nome do ambiente (production/staging)
+ALLOWED_ORIGINS,wrangler.toml [vars] + .dev.vars,apps/api,CORS allowlist
+NEON_AUTH_URL,wrangler.toml [vars],apps/api,Endpoint Neon Auth
+NEON_AUTH_JWKS_URL,wrangler.toml [vars] + .dev.vars,apps/api,JWKS p/ validar JWT
+NEON_AUTH_ISSUER,wrangler.toml [vars] + .dev.vars,apps/api,Issuer esperado do JWT
+NEON_AUTH_AUDIENCE,wrangler.toml [vars],apps/api,Audience esperada do JWT
+PAGES_URL,wrangler.toml [vars],apps/api,URL canônica do frontend
+R2_PUBLIC_URL,wrangler.toml [vars],apps/api,Domínio público de mídia (media.moocafisio.com.br)
+TURNSTILE_SITE_KEY,wrangler.toml [vars],apps/api,Site key Turnstile (pública)
+IMAGE_TRANSFORMATIONS,wrangler.toml [vars],apps/api,Liga transformações de imagem
+MONITOR_NTFY_TOPIC,wrangler.toml [vars],apps/api,Tópico ntfy de alertas
+MONITOR_HEALTH_URL,wrangler.toml [vars],apps/api,URL de health p/ monitor
+MONITOR_AI_GATEWAY_URL,wrangler.toml [vars],apps/api,Health do ai-gateway
+AXIOM_ORG_ID,wrangler.toml [vars],apps/api,Org Axiom (logs)
+AXIOM_DATASET,wrangler.toml [vars],apps/api,Dataset Axiom
+FISIOFLOW_AI_GATEWAY_URL,wrangler.toml [vars],apps/api,URL do AI Gateway Cloudflare
+GOOGLE_AI_PREMIUM_ENABLED,wrangler.toml [vars],apps/api,Flag de uso de Google AI premium
+AXIOM_TOKEN,secret,apps/api,Token Axiom
+TURNSTILE_SECRET_KEY,secret,apps/api,Secret Turnstile (siteverify)
+WHATSAPP_ACCESS_TOKEN,secret,apps/api,Token Meta Graph API (WhatsApp)
+WHATSAPP_PHONE_NUMBER_ID,secret,apps/api,Phone number id WABA
+WHATSAPP_BUSINESS_ACCOUNT_ID,secret,apps/api,WABA id
+WHATSAPP_VERIFY_TOKEN,secret,apps/api,Verify token do webhook Meta
+WHATSAPP_APP_SECRET,secret,apps/api,HMAC do webhook Meta
+IG_ACCESS_TOKEN,secret,apps/api,Token Instagram Graph
+IG_APP_SECRET,secret,apps/api,HMAC webhook Instagram
+IG_VERIFY_TOKEN,secret,apps/api,Verify token webhook Instagram
+GOOGLE_AI_API_KEY,secret + .dev.vars,apps/api,Google AI (Gemini)
+GOOGLE_CLIENT_ID,secret,apps/api,OAuth Google Calendar
+GOOGLE_CLIENT_SECRET,secret,apps/api,OAuth Google Calendar
+GOOGLE_REDIRECT_URI,secret/var,apps/api,OAuth redirect
+GOOGLE_MAPS_API_KEY,secret,apps/api,Google Maps
+FISIOFLOW_AI_GATEWAY_TOKEN,secret,apps/api,Auth do ai-gateway interno
+CF_API_TOKEN,secret,apps/api,API Cloudflare (Stream/Images/R2 SQL)
+CF_ACCOUNT_ID,secret,apps/api,Conta Cloudflare
+R2_ACCESS_KEY_ID,secret,apps/api,S3 API R2 (presign)
+R2_SECRET_ACCESS_KEY,secret,apps/api,S3 API R2
+R2_ACCOUNT_ID,secret,apps/api,S3 API R2
+R2_EXAMS_BUCKET_NAME,secret/var,apps/api,Nome bucket exames
+R2_SQL_TOKEN,secret,apps/api,R2 SQL (lake)
+RESEND_API_KEY,secret,apps/api,Email transacional Resend
+RESEND_FROM_EMAIL,secret/var,apps/api,Remetente Resend
+STRIPE_SECRET_KEY,secret,apps/api,Stripe (pagamentos)
+TWILIO_ACCOUNT_SID,secret,apps/api,Twilio (SMS)
+TWILIO_AUTH_TOKEN,secret,apps/api,Twilio
+TWILIO_PHONE_NUMBER,secret/var,apps/api,Número Twilio
+VAPID_PUBLIC_KEY,secret/var,apps/api,Web Push VAPID
+VAPID_PRIVATE_KEY,secret,apps/api,Web Push VAPID
+VAPID_SUBJECT,secret/var,apps/api,Web Push VAPID subject
+FOCUS_NFE_TOKEN,secret,apps/api,Focus NFe (NFS-e)
+FOCUS_NFE_ENVIRONMENT,secret/var,apps/api,Ambiente Focus NFe
+NFSE_SP_CERT / NFSE_SP_CERT_PEM / NFSE_SP_KEY_PEM,secret,apps/api,Certificado A1 emissão direta NFS-e SP
+NFSE_SANDBOX,secret/var,apps/api,Sandbox NFS-e
+NCBI_API_KEY,secret,apps/api,PubMed E-utilities (Evidence Gateway)
+NCBI_EMAIL,secret/var,apps/api,Email exigido pelo NCBI
+ZAI_API_KEY,secret,apps/api,Z.ai (GLM) — evidência/summarize
+WGER_API_TOKEN,secret,apps/api,wger (ingestão de exercícios)
+GARMIN_CLIENT_ID / OURA_CLIENT_ID / OURA_CLIENT_SECRET / STRAVA_CLIENT_ID / STRAVA_CLIENT_SECRET,secret,apps/api,OAuth wearables
+WEARABLE_OAUTH_REDIRECT_BASE,secret/var,apps/api,Redirect base OAuth wearables
+STREAM_WEBHOOK_SECRET,secret,apps/api,Assinatura webhooks Cloudflare Stream
+ML_SALT / VITE_ML_SALT,secret,apps/api + front,Salt p/ hashing em ML/risk scoring
+ML_RISK_SCORING_ENABLED / RAG_CLINICAL_ENABLED / AI_ROUTER_ENABLED / AI_GATEWAY_ENABLED / AUTOMATION_EXECUTION_ENABLED / MORNING_BRIEFING_ENABLED,env (vars de flag),apps/api,Flags de recurso lidas de env
+AI_DEFAULT_CHEAP_MODEL / AI_DAILY_BUDGET_BRL / LEAD_SCORING_AI,env,apps/api,Configuração de modelo/orçamento AI
+MORNING_BRIEFING_ORG_ID / MORNING_BRIEFING_TO / ADMIN_NOTIFICATION_EMAIL / NPS_PUBLIC_BASE_URL / FRONTEND_URL / API_BASE_URL,env,apps/api,Config operacional (briefing/emails/URLs)
+NEON_URL / NEON_REPLICA_URL / DATABASE_URL,env (DELETADOS como secret em prod),apps/api,Fallback direto ao Neon — removidos; só Hyperdrive (memória Jul/2026); referências residuais no código
+WRANGLER_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE,.dev.vars,apps/api (dev),Conexão local do Hyperdrive em wrangler dev
+LIVEKIT_URL / LIVEKIT_API_KEY / LIVEKIT_API_SECRET,.dev.vars,apps/api,LiveKit (voz/vídeo em tempo real)
+GITHUB_TOKEN / GEMINI_API_KEY / WEBHOOK_SECRET,secret,apps/jules-bot,Bot de review GitHub (legado)
+VITE_WORKERS_API_URL,.env.local/.env.production,frontend (src/),URL da API Workers
+VITE_NEON_AUTH_URL,.env.local/.env.example,frontend,Endpoint Neon Auth no cliente
+VITE_NEON_DATA_API_URL,.env.example,frontend,Neon Data API (PostgREST)
+VITE_PAGES_URL,.env.*,frontend,URL pública do app
+VITE_ENVIRONMENT,.env.production,frontend,Nome do ambiente
+VITE_STREAM_UPLOAD_ENABLED,.env.production,frontend,Flag upload via Stream
+VITE_POSTHOG_KEY / VITE_POSTHOG_HOST,.env.*,frontend,PostHog analytics
+VITE_FEATURE_* (NEW_DASHBOARD/AI_TRANSCRIPTION/AI_CHATBOT/AI_EXERCISE_SUGGESTIONS/...),env,frontend (src/lib/featureFlags/envFlags.ts),Feature flags por env (fallback do remote config)
+DATABASE_URL / DATABASE_DIRECT_URL,.env.local/.env.production,drizzle-kit (drizzle.config.ts),Migrations locais (host direto sem -pooler)
+CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID,.env.local/.env.cloudflare.local,scripts/CI,Deploy wrangler e API CF
+TEST_USER_EMAIL / TEST_USER_PASSWORD,.env.test,e2e Playwright,Credenciais de teste
+TESTSPRITE_API_KEY / STITCH_API_KEY / EXA_API_KEY / CONTEXT7_API_KEY,.env.local,tooling local,Ferramentas de dev/MCP
+APP_VERSION,.env.build,build web,Versão p/ cache busting
+PORT / VITE_PORT / VITE_CLOUDFLARE_WORKER_URL / VITE_CLOUDFLARE_AUTH_TOKEN,.env.dev-run,dev local,Execução dev

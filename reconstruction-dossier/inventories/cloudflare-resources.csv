@@ -1,0 +1,64 @@
+tipo,nome,detalhe,escopo,status,evidencia
+worker,fisioflow-api,API Hono principal; domains api-pro/api-paciente.moocafisio.com.br; smart placement,fisioflow,ativo-prod,CF-001
+worker,fisioflow-web,Workers Assets do frontend (asset-worker.ts); moocafisio.com.br + www,fisioflow,ativo-prod,CF-001
+worker,fisioflow-api-staging,staging da API,fisioflow,ativo-staging,CF-001
+worker,fisioflow-web-staging,staging do web,fisioflow,ativo-staging,CF-001
+worker,fisioflow-ai-gateway,router LLM auxiliar (apps/ai-gateway),fisioflow,ativo (modificado 05/2026),CF-001
+worker,fisioflow-mcp-server,MCP server (apps/mcp-server),fisioflow,ativo (modificado 06/2026),CF-001
+worker,fisioflow-mcp,MCP antigo,fisioflow,legado-suspeito (05/2026),CF-001
+worker,api-worker,fora do escopo FisioFlow (criado 06-07/jul),outro-projeto,fora-do-escopo,CF-001
+worker,auth-worker,fora do escopo FisioFlow,outro-projeto,fora-do-escopo,CF-001
+worker,scheduled-worker,fora do escopo FisioFlow,outro-projeto,fora-do-escopo,CF-001
+worker,background-worker,fora do escopo FisioFlow,outro-projeto,fora-do-escopo,CF-001
+worker,activity-lab-web,lab.moocafisio.com.br,activity-lab,paralelo,CF-001
+worker,activity-lab-whc06-web,lab2.moocafisio.com.br,activity-lab,paralelo,CF-001
+worker,activity-lab-api,API do activity-lab,activity-lab,paralelo,CF-001
+worker,gestao-saude-cloudflare,projeto gestão-saúde,outro-projeto,fora-do-escopo,CF-001
+hyperdrive,fisioflow-neon (12b9fefcfbc04074a63342a9212e1b4f),origin ep-wandering-bonus-acj4zwvo.sa-east-1 db neondb user neondb_owner; caching DISABLED,fisioflow,ativo-prod,CF-002
+hyperdrive,fisioflow-neon-staging (37189eb42d314a0a8fd0e169a2b27ad1),origin -pooler user app_runtime; caching 300s,fisioflow,staging,CF-002
+hyperdrive,gestao-saude-db,outro projeto,outro-projeto,fora-do-escopo,CF-002
+kv,FISIOFLOW_CONFIG (4284b33fa7ed40b6bc9c59b6041c03ed),config runtime binding FISIOFLOW_CONFIG,fisioflow,ativo,CF-003
+kv,staging-FISIOFLOW_CONFIG,staging,fisioflow,staging,CF-003
+kv,CONFIG_KV;SESSION_KV;SESSION_KV_preview;GESTAO_SAUDE_KV,sem binding no wrangler FisioFlow,misto,órfão-ou-outro-projeto,CF-003
+r2,fisioflow-media,mídia (exercícios/fotos); público via media.moocafisio.com.br,fisioflow,ativo,CF-004
+r2,fisioflow-exams,exames de pacientes,fisioflow,ativo,CF-004
+r2,fisioflow-clinical-docs,documentos clínicos,fisioflow,ativo,CF-004
+r2,fisioflow-archive,arquivamento (session_archive_runs),fisioflow,ativo,CF-004
+r2,fisioflow-media-dr,disaster recovery de mídia,fisioflow,ativo,CF-004
+r2,fisioflow-files,uso a confirmar (sem binding no wrangler da api),fisioflow,órfão-suspeito,CF-004
+r2,fisioflow-*-staging (3),staging,fisioflow,staging,CF-004
+r2,activity-lab-uploads;gestao-saude-pdfs;reports-bucket,outros projetos,outro-projeto,fora-do-escopo,CF-004
+d1,fisioflow-db (bf781be2),binding DB,fisioflow,ativo,SRC apps/api/wrangler.toml
+d1,fisioflow-edge-cache (9eba3eb7),binding EDGE_CACHE,fisioflow,ativo,SRC apps/api/wrangler.toml
+queue,fisioflow-background-tasks,producer+consumer batch10 retries3 dlq fisioflow-tasks-dlq,fisioflow,ativo,CF-005
+queue,fisioflow-whatsapp-inbound,producer+consumer batch5 retries5 dlq própria,fisioflow,ativo,CF-005
+queue,fisioflow-tasks-dlq,DLQ (0 consumers),fisioflow,ativo,CF-005
+queue,fisioflow-whatsapp-inbound-dlq,DLQ com consumer de revisão,fisioflow,ativo,CF-005
+queue,gestao-saude-pdf-queue,outro projeto,outro-projeto,fora-do-escopo,CF-005
+workflow,appointment-reminder;patient-onboarding;hep-compliance;patient-reengagement;patient-digital-twin;wiki-sync(0 9 * * *);knowledge-sync(10 10 * * 1);session-summary;biomechanics-analysis;automation-executor,deployados no script fisioflow-api,fisioflow,ativo,CF-006
+workflow,nfse-emission,DECLARADO no wrangler.toml mas AUSENTE na conta,fisioflow,divergência,CF-006
+workflow,patient-discharge,DECLARADO no wrangler.toml mas AUSENTE na conta,fisioflow,divergência,CF-006
+durable-object,OrganizationState,estado org/WS reusável,fisioflow,ativo,SRC apps/api/wrangler.toml
+durable-object,PatientAgentSql,agente paciente (Agents SDK SQLite),fisioflow,ativo,SRC apps/api/wrangler.toml
+durable-object,ClinicAgentSql,agente clínica,fisioflow,ativo,SRC apps/api/wrangler.toml
+durable-object,AssessmentLiveSession,avaliação ao vivo,fisioflow,ativo,SRC apps/api/wrangler.toml
+durable-object,VoiceScribeAgent,ditado por voz (SQLite),fisioflow,ativo,SRC apps/api/wrangler.toml
+durable-object,EvolutionCollaborationSql,colaboração Yjs evolução (y-partyserver),fisioflow,ativo,SRC apps/api/wrangler.toml
+cron,fisioflow-api,"14 crons: */5, */15, 15 *, 0 6, 0 9, 30 10, 0 11, 0 12, 0 14, 0 21, 30 21, 0 12 seg, 0 3 dia1, 0 9 dias1e15",fisioflow,ativo,SRC apps/api/wrangler.toml
+vectorize,fisioflow-knowledge-base,binding VECTORIZE_KNOWLEDGE_BASE (bge-m3 1024d),fisioflow,ativo,SRC apps/api/wrangler.toml
+ai-search,fisioflow-rag,RAG interno,fisioflow,ativo,SRC apps/api/wrangler.toml
+ai-search,fisioflow-rag-paciente,RAG isolado patient_visible,fisioflow,ativo,SRC apps/api/wrangler.toml
+pipeline,EVENTS_PIPELINE (stream 701aff68),eventos analíticos,fisioflow,ativo,SRC apps/api/wrangler.toml
+analytics-engine,fisioflow_events,dataset ANALYTICS,fisioflow,ativo,SRC apps/api/wrangler.toml
+workers-ai,binding AI,modelos @cf via registry workersAi.ts + AI Gateway fisioflow-gateway,fisioflow,ativo,SRC apps/api/wrangler.toml
+browser-rendering,binding BROWSER,render/scrape,fisioflow,ativo,SRC apps/api/wrangler.toml
+stream,binding STREAM,vídeos de exercícios,fisioflow,ativo,SRC apps/api/wrangler.toml
+mtls-cert,NFSE_SP_CERT (20d19f67),certificado NFS-e SP,fisioflow,provisionado (0 notas emitidas),SRC apps/api/wrangler.toml
+domain,moocafisio.com.br + www,fisioflow-web,fisioflow,ativo,CF-007
+domain,api-pro.moocafisio.com.br,fisioflow-api (app profissional/web),fisioflow,ativo,CF-007
+domain,api-paciente.moocafisio.com.br,fisioflow-api (app paciente),fisioflow,ativo,CF-007
+domain,media.moocafisio.com.br,R2 público fisioflow-media,fisioflow,ativo,SRC apps/api/wrangler.toml R2_PUBLIC_URL
+domain,lab.moocafisio.com.br + lab2,activity-lab-web,activity-lab,paralelo,CF-007
+secrets,fisioflow-api (43 nomes),"ver env-and-bindings.csv; inclui órfãos INNGEST_*; ausência notável: nenhuma chave Deepgram",fisioflow,registrado,CF-008
+secrets,fisioflow-web (1),DATABASE_URL em asset worker — suspeito/órfão,fisioflow,risco,CF-008
+observability,fisioflow-api,logs 10% traces 5% + Axiom (AXIOM_ORG_ID activity-dbyc dataset fisioflow-logs) + ntfy fisioflow-mon-rafael-prod,fisioflow,ativo,SRC apps/api/wrangler.toml

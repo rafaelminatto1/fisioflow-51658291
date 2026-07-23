@@ -1,0 +1,1192 @@
+method,path,file,auth,roles/permission,entidades,consumidor_front,status
+GET,/api/health,apps/api/src/index.ts:235,public,,health,sim,ativo
+GET,/api/health/ready,apps/api/src/index.ts:240,public,,health (db+kv),não (monitor),ativo
+GET,/api/health/db,apps/api/src/index.ts:270,public,,health (db),não (monitor),ativo
+GET,/api/realtime,apps/api/src/index.ts:419,jwt (token query),,WebSocket realtime org,sim,ativo
+GET,/api/sessions/:id/collaboration,apps/api/src/index.ts:571,jwt (token query),,WebSocket colaboração evolução,sim,ativo
+ANY,/agents/*,apps/api/src/index.ts:563,jwt (Agents SDK routeAgentRequest),,Agents SDK (PatientAgent/ClinicAgent/VoiceScribe/AssessmentLive),sim,ativo
+GET,/api/scheduling/settings/business-hours,apps/api/src/routes/scheduling-settings.ts:339,jwt,,scheduling-settings,sim,ativo
+POST,/api/scheduling/settings/business-hours,apps/api/src/routes/scheduling-settings.ts:361,jwt,,scheduling-settings,sim,ativo
+PUT,/api/scheduling/settings/business-hours,apps/api/src/routes/scheduling-settings.ts:362,jwt,,scheduling-settings,sim,ativo
+GET,/api/scheduling/settings/blocked-times,apps/api/src/routes/scheduling-settings.ts:365,jwt,,scheduling-settings,sim,ativo
+POST,/api/scheduling/settings/blocked-times,apps/api/src/routes/scheduling-settings.ts:379,jwt,,scheduling-settings,sim,ativo
+DELETE,/api/scheduling/settings/blocked-times/:id,apps/api/src/routes/scheduling-settings.ts:413,jwt,,scheduling-settings,sim,ativo
+GET,/api/scheduling/settings/cancellation-rules,apps/api/src/routes/scheduling-settings.ts:429,jwt,,scheduling-settings,sim,ativo
+POST,/api/scheduling/settings/cancellation-rules,apps/api/src/routes/scheduling-settings.ts:451,jwt,,scheduling-settings,sim,ativo
+PUT,/api/scheduling/settings/cancellation-rules,apps/api/src/routes/scheduling-settings.ts:452,jwt,,scheduling-settings,sim,ativo
+GET,/api/scheduling/settings/notification-settings,apps/api/src/routes/scheduling-settings.ts:455,jwt,,scheduling-settings,sim,ativo
+POST,/api/scheduling/settings/notification-settings,apps/api/src/routes/scheduling-settings.ts:477,jwt,,scheduling-settings,sim,ativo
+PUT,/api/scheduling/settings/notification-settings,apps/api/src/routes/scheduling-settings.ts:478,jwt,,scheduling-settings,sim,ativo
+GET,/api/scheduling/capacity-config,apps/api/src/routes/scheduling-settings.ts:481,jwt,,scheduling-settings,sim,ativo
+POST,/api/scheduling/capacity-config,apps/api/src/routes/scheduling-settings.ts:503,jwt,,scheduling-settings,sim,ativo
+PUT,/api/scheduling/capacity-config/:id,apps/api/src/routes/scheduling-settings.ts:537,jwt,,scheduling-settings,sim,ativo
+DELETE,/api/scheduling/capacity-config/:id,apps/api/src/routes/scheduling-settings.ts:589,jwt,,scheduling-settings,sim,ativo
+GET,/api/scheduling/settings/statuses,apps/api/src/routes/scheduling-settings.ts:606,jwt,,scheduling-settings,sim,ativo
+POST,/api/scheduling/settings/statuses,apps/api/src/routes/scheduling-settings.ts:632,jwt,,scheduling-settings,sim,ativo
+PUT,/api/scheduling/settings/statuses/:id,apps/api/src/routes/scheduling-settings.ts:666,jwt,,scheduling-settings,sim,ativo
+DELETE,/api/scheduling/settings/statuses/:id,apps/api/src/routes/scheduling-settings.ts:720,jwt,,scheduling-settings,sim,ativo
+GET,/api/scheduling/settings/booking-window,apps/api/src/routes/scheduling-settings.ts:762,jwt,,scheduling-settings,sim,ativo
+POST,/api/scheduling/settings/booking-window,apps/api/src/routes/scheduling-settings.ts:784,jwt,,scheduling-settings,sim,ativo
+PUT,/api/scheduling/settings/booking-window,apps/api/src/routes/scheduling-settings.ts:785,jwt,,scheduling-settings,sim,ativo
+GET,/api/scheduling/settings/slot-config,apps/api/src/routes/scheduling-settings.ts:788,jwt,,scheduling-settings,sim,ativo
+POST,/api/scheduling/settings/slot-config,apps/api/src/routes/scheduling-settings.ts:810,jwt,,scheduling-settings,sim,ativo
+PUT,/api/scheduling/settings/slot-config,apps/api/src/routes/scheduling-settings.ts:811,jwt,,scheduling-settings,sim,ativo
+GET,/api/scheduling/settings/no-show-policy,apps/api/src/routes/scheduling-settings.ts:863,jwt,,scheduling-settings,sim,ativo
+POST,/api/scheduling/settings/no-show-policy,apps/api/src/routes/scheduling-settings.ts:885,jwt,,scheduling-settings,sim,ativo
+PUT,/api/scheduling/settings/no-show-policy,apps/api/src/routes/scheduling-settings.ts:886,jwt,,scheduling-settings,sim,ativo
+POST,/api/agents/resources/search,apps/api/src/routes/ai-agents.ts:18,jwt,,ai-agents,sim,ativo
+POST,/api/agents/resources/suggest,apps/api/src/routes/ai-agents.ts:42,jwt,,ai-agents,sim,ativo
+POST,/api/agents/soap-review,apps/api/src/routes/ai-agents.ts:58,public (SEM AUTH — risco),,ai-agents,sim,ativo
+POST,/api/agents/tutor/chat,apps/api/src/routes/ai-agents.ts:80,public (SEM AUTH — risco),,ai-agents,sim,ativo
+POST,/api/agents/simulator/chat,apps/api/src/routes/ai-agents.ts:119,public (SEM AUTH — risco),,ai-agents,sim,ativo
+POST,/api/agents/simulator/evaluate,apps/api/src/routes/ai-agents.ts:149,public (SEM AUTH — risco),,ai-agents,sim,ativo
+POST,/api/agents/charts/generate,apps/api/src/routes/ai-agents.ts:172,public (SEM AUTH — risco),,ai-agents,sim,ativo
+POST,/api/agents/clinic/chat,apps/api/src/routes/ai-agents.ts:197,jwt,,ai-agents,sim,ativo
+GET,/api/staff-schedules,apps/api/src/routes/staffSchedules.ts:12,jwt,,staffSchedules,sim,ativo
+PUT,/api/staff-schedules/:therapistId/weekly,apps/api/src/routes/staffSchedules.ts:54,jwt,,staffSchedules,sim,ativo
+POST,/api/staff-schedules/blocks,apps/api/src/routes/staffSchedules.ts:82,jwt,,staffSchedules,sim,ativo
+DELETE,/api/staff-schedules/blocks/:id,apps/api/src/routes/staffSchedules.ts:117,jwt,,staffSchedules,sim,ativo
+GET,/api/satisfaction-surveys,apps/api/src/routes/satisfactionSurveys.ts:10,jwt,,satisfactionSurveys,sim,ativo
+GET,/api/satisfaction-surveys/stats,apps/api/src/routes/satisfactionSurveys.ts:51,jwt,,satisfactionSurveys,sim,ativo
+POST,/api/satisfaction-surveys,apps/api/src/routes/satisfactionSurveys.ts:94,jwt,,satisfactionSurveys,sim,ativo
+PATCH,/api/satisfaction-surveys/:id,apps/api/src/routes/satisfactionSurveys.ts:128,jwt,,satisfactionSurveys,sim,ativo
+DELETE,/api/satisfaction-surveys/:id,apps/api/src/routes/satisfactionSurveys.ts:167,jwt,,satisfactionSurveys,sim,ativo
+POST,/api/satisfaction-surveys/public,apps/api/src/routes/satisfactionSurveys.ts:181,public,,satisfactionSurveys,sim,ativo
+POST,/api/satisfaction-surveys/nps,apps/api/src/routes/satisfactionSurveys.ts:271,public,,satisfactionSurveys,sim,ativo
+GET,/api/satisfaction-surveys/latest-feedbacks,apps/api/src/routes/satisfactionSurveys.ts:321,jwt,,satisfactionSurveys,sim,ativo
+GET,/api/analytics/at-risk-patients,apps/api/src/routes/analytics.ts:22,jwt,,analytics,sim,ativo
+POST,/api/analytics/predict/:patientId,apps/api/src/routes/analytics.ts:52,jwt,,analytics,sim,ativo
+GET,/api/analytics/business-kpis,apps/api/src/routes/analytics.ts:66,jwt,,analytics,sim,ativo
+GET,/api/analytics/wiki-gaps,apps/api/src/routes/analytics.ts:85,jwt,,analytics,sim,ativo
+GET,/api/analytics/dashboard,apps/api/src/routes/analytics.ts:143,jwt,,analytics,sim,ativo
+GET,/api/analytics/bi,apps/api/src/routes/analytics.ts:228,jwt,,analytics,sim,ativo
+GET,/api/analytics/top-exercises,apps/api/src/routes/analytics.ts:461,jwt,,analytics,sim,ativo
+GET,/api/analytics/pain-map,apps/api/src/routes/analytics.ts:502,jwt,,analytics,sim,ativo
+GET,/api/appointments,apps/api/src/routes/appointments.ts:66,jwt,,appointments,sim,ativo
+POST,/api/appointments,apps/api/src/routes/appointments.ts:205,jwt,,appointments,sim,ativo
+GET,/api/appointments/last-updated,apps/api/src/routes/appointments.ts:388,jwt,,appointments,sim,ativo
+GET,/api/appointments/:id,apps/api/src/routes/appointments.ts:408,jwt,,appointments,sim,ativo
+PATCH,/api/appointments/:id,apps/api/src/routes/appointments.ts:690,jwt,,appointments,sim,ativo
+PUT,/api/appointments/:id,apps/api/src/routes/appointments.ts:691,jwt,,appointments,sim,ativo
+POST,/api/appointments/:id/cancel,apps/api/src/routes/appointments.ts:693,jwt,,appointments,sim,ativo
+DELETE,/api/appointments/:id,apps/api/src/routes/appointments.ts:741,jwt,,appointments,sim,ativo
+POST,/api/appointments/:id/qr-token,apps/api/src/routes/appointments.ts:774,jwt,,appointments,sim,ativo
+GET,/api/financial-analytics/command-center,apps/api/src/routes/financial-analytics.ts:244,jwt,,financial-analytics,sim,ativo
+GET,/api/financial-analytics/dre,apps/api/src/routes/financial-analytics.ts:1059,jwt,,financial-analytics,sim,ativo
+GET,/api/financial-analytics/reimbursement-patterns,apps/api/src/routes/financial-analytics.ts:1125,jwt,,financial-analytics,sim,ativo
+GET,/api/financial-analytics/prediction,apps/api/src/routes/financial-analytics.ts:1185,jwt,,financial-analytics,sim,ativo
+GET,/api/financial-analytics/card-mapping/:digits,apps/api/src/routes/financial-analytics.ts:1263,jwt,,financial-analytics,sim,ativo
+POST,/api/financial-analytics/card-mapping,apps/api/src/routes/financial-analytics.ts:1289,jwt,,financial-analytics,sim,ativo
+GET,/api/protocols,apps/api/src/routes/protocols.ts:49,public,,protocols,sim,ativo
+GET,/api/protocols/:id,apps/api/src/routes/protocols.ts:143,public,,protocols,sim,ativo
+POST,/api/protocols,apps/api/src/routes/protocols.ts:183,jwt,,protocols,sim,ativo
+PUT,/api/protocols/:id,apps/api/src/routes/protocols.ts:228,jwt,,protocols,sim,ativo
+DELETE,/api/protocols/:id,apps/api/src/routes/protocols.ts:316,jwt,,protocols,sim,ativo
+POST,/api/protocols/:id/exercises,apps/api/src/routes/protocols.ts:334,jwt,,protocols,sim,ativo
+PUT,/api/protocols/:id/exercises/:exerciseId,apps/api/src/routes/protocols.ts:374,jwt,,protocols,sim,ativo
+DELETE,/api/protocols/:id/exercises/:exerciseId,apps/api/src/routes/protocols.ts:444,jwt,,protocols,sim,ativo
+GET,/api/sessions,apps/api/src/routes/sessions.ts:112,jwt,,sessions,sim,ativo
+POST,/api/sessions/autosave,apps/api/src/routes/sessions.ts:160,jwt,,sessions,sim,ativo
+GET,/api/sessions/:id,apps/api/src/routes/sessions.ts:346,jwt,,sessions,sim,ativo
+POST,/api/sessions/:id/finalize,apps/api/src/routes/sessions.ts:379,jwt,,sessions,sim,ativo
+POST,/api/sessions,apps/api/src/routes/sessions.ts:478,jwt,,sessions,sim,ativo
+PUT,/api/sessions/:id,apps/api/src/routes/sessions.ts:551,jwt,,sessions,sim,ativo
+DELETE,/api/sessions/:id,apps/api/src/routes/sessions.ts:666,jwt,,sessions,sim,ativo
+GET,/api/sessions/templates,apps/api/src/routes/sessions.ts:711,jwt,,sessions,sim,ativo
+POST,/api/sessions/templates,apps/api/src/routes/sessions.ts:752,jwt,,sessions,sim,ativo
+PUT,/api/sessions/templates/:templateId,apps/api/src/routes/sessions.ts:774,jwt,,sessions,sim,ativo
+DELETE,/api/sessions/templates/:templateId,apps/api/src/routes/sessions.ts:805,jwt,,sessions,sim,ativo
+GET,/api/sessions/:id/attachments,apps/api/src/routes/sessions.ts:826,jwt,,sessions,sim,ativo
+POST,/api/sessions/:id/attachments,apps/api/src/routes/sessions.ts:860,jwt,,sessions,sim,ativo
+DELETE,/api/sessions/:id/attachments/:attachmentId,apps/api/src/routes/sessions.ts:909,jwt,,sessions,sim,ativo
+GET,/api/agent-memory/status,apps/api/src/routes/agentMemory.ts:13,jwt,,agentMemory,não,ativo
+POST,/api/agent-memory/remember,apps/api/src/routes/agentMemory.ts:21,jwt,,agentMemory,não,ativo
+POST,/api/agent-memory/recall,apps/api/src/routes/agentMemory.ts:43,jwt,,agentMemory,não,ativo
+GET,/api/enterprise/regional-summary,apps/api/src/routes/enterprise-bi.ts:12,jwt,,enterprise-bi,sim,ativo
+GET,/api/enterprise/regional-audit,apps/api/src/routes/enterprise-bi.ts:51,jwt,,enterprise-bi,sim,ativo
+GET,/api/knowledge/articles,apps/api/src/routes/knowledge.ts:147,jwt,,knowledge,sim,ativo
+POST,/api/knowledge/articles,apps/api/src/routes/knowledge.ts:180,jwt,,knowledge,sim,ativo
+PUT,/api/knowledge/articles/:articleId,apps/api/src/routes/knowledge.ts:234,jwt,,knowledge,sim,ativo
+POST,/api/knowledge/articles/sync,apps/api/src/routes/knowledge.ts:307,jwt,,knowledge,sim,ativo
+POST,/api/knowledge/articles/index,apps/api/src/routes/knowledge.ts:374,jwt,,knowledge,sim,ativo
+POST,/api/knowledge/articles/:articleId/process,apps/api/src/routes/knowledge.ts:396,jwt,,knowledge,sim,ativo
+POST,/api/knowledge/articles/:articleId/ask,apps/api/src/routes/knowledge.ts:435,jwt,,knowledge,sim,ativo
+POST,/api/knowledge/semantic-search,apps/api/src/routes/knowledge.ts:466,jwt,,knowledge,sim,ativo
+GET,/api/knowledge/annotations,apps/api/src/routes/knowledge.ts:528,jwt,,knowledge,sim,ativo
+PUT,/api/knowledge/annotations/:articleId,apps/api/src/routes/knowledge.ts:559,jwt,,knowledge,sim,ativo
+GET,/api/knowledge/curation,apps/api/src/routes/knowledge.ts:638,jwt,,knowledge,sim,ativo
+GET,/api/knowledge/articles/:articleId/notes,apps/api/src/routes/knowledge.ts:665,jwt,,knowledge,sim,ativo
+POST,/api/knowledge/articles/:articleId/notes,apps/api/src/routes/knowledge.ts:691,jwt,,knowledge,sim,ativo
+PUT,/api/knowledge/curation/:articleId,apps/api/src/routes/knowledge.ts:715,jwt,,knowledge,sim,ativo
+GET,/api/knowledge/audit,apps/api/src/routes/knowledge.ts:753,jwt,,knowledge,sim,ativo
+POST,/api/knowledge/audit,apps/api/src/routes/knowledge.ts:781,jwt,,knowledge,sim,ativo
+DELETE,/api/knowledge/articles/:articleId,apps/api/src/routes/knowledge.ts:809,jwt,,knowledge,sim,ativo
+GET,/api/knowledge/profiles,apps/api/src/routes/knowledge.ts:827,jwt,,knowledge,sim,ativo
+POST,/api/knowledge/upload-paper,apps/api/src/routes/knowledge.ts:874,jwt,,knowledge,sim,ativo
+GET,/api/security/mfa/settings,apps/api/src/routes/security.ts:117,jwt,,security,sim,ativo
+GET,/api/security/lgpd-consents,apps/api/src/routes/security.ts:126,jwt,,security,sim,ativo
+PUT,/api/security/lgpd-consents/:consentType,apps/api/src/routes/security.ts:145,jwt,,security,sim,ativo
+POST,/api/security/mfa/enable,apps/api/src/routes/security.ts:202,jwt,,security,sim,ativo
+POST,/api/security/mfa/disable,apps/api/src/routes/security.ts:233,jwt,,security,sim,ativo
+POST,/api/security/mfa/send-otp,apps/api/src/routes/security.ts:254,jwt,,security,sim,ativo
+POST,/api/security/mfa/verify-otp,apps/api/src/routes/security.ts:286,jwt,,security,sim,ativo
+POST,/api/security/mfa/enroll,apps/api/src/routes/security.ts:339,jwt,,security,sim,ativo
+POST,/api/security/mfa/enroll/verify,apps/api/src/routes/security.ts:362,jwt,,security,sim,ativo
+GET,/api/security/mfa/factors,apps/api/src/routes/security.ts:402,jwt,,security,sim,ativo
+DELETE,/api/security/mfa/factors/:factorId,apps/api/src/routes/security.ts:421,jwt,,security,sim,ativo
+GET,/api/packages,apps/api/src/routes/packages.ts:13,jwt,,packages,sim,ativo
+POST,/api/packages,apps/api/src/routes/packages.ts:31,jwt,,packages,sim,ativo
+PATCH,/api/packages/:id,apps/api/src/routes/packages.ts:73,jwt,,packages,sim,ativo
+DELETE,/api/packages/:id,apps/api/src/routes/packages.ts:132,jwt,,packages,sim,ativo
+GET,/api/packages/patient/:patientId,apps/api/src/routes/packages.ts:149,jwt,,packages,sim,ativo
+POST,/api/packages/sell,apps/api/src/routes/packages.ts:169,jwt,,packages,sim,ativo
+POST,/api/packages/patient-package/:id/use,apps/api/src/routes/packages.ts:219,jwt,,packages,sim,ativo
+GET,/api/packages/stats,apps/api/src/routes/packages.ts:295,jwt,,packages,sim,ativo
+POST,/api/ai-search,apps/api/src/routes/aiSearch.ts:25,jwt,,aiSearch,sim,ativo
+POST,/api/ai-search/ask,apps/api/src/routes/aiSearch.ts:77,jwt,,aiSearch,sim,ativo
+POST,/api/ai-search/suggest,apps/api/src/routes/aiSearch.ts:164,jwt,,aiSearch,sim,ativo
+GET,/api/ai-search/items,apps/api/src/routes/aiSearch.ts:191,jwt,,aiSearch,sim,ativo
+POST,/api/ai-search/items/upload,apps/api/src/routes/aiSearch.ts:209,jwt,,aiSearch,sim,ativo
+DELETE,/api/ai-search/items/:id,apps/api/src/routes/aiSearch.ts:237,jwt,,aiSearch,sim,ativo
+POST,/api/ai-search/sync,apps/api/src/routes/aiSearch.ts:418,jwt,,aiSearch,sim,ativo
+GET,/api/ai-search/exercises,apps/api/src/routes/aiSearch.ts:432,jwt,,aiSearch,sim,ativo
+GET,/api/ai-search/recommend,apps/api/src/routes/aiSearch.ts:468,jwt,,aiSearch,sim,ativo
+POST,/api/ai-search/exercises/sync,apps/api/src/routes/aiSearch.ts:531,jwt,,aiSearch,sim,ativo
+POST,/api/ai-search/wiki/sync,apps/api/src/routes/aiSearch.ts:541,jwt,,aiSearch,sim,ativo
+GET,/api/ai-search/unified,apps/api/src/routes/aiSearch.ts:551,jwt,,aiSearch,sim,ativo
+GET,/api/ai-search/education,apps/api/src/routes/aiSearch.ts:623,public,,aiSearch,sim,ativo
+GET,/api/push-subscriptions,apps/api/src/routes/pushSubscriptions.ts:53,jwt,,pushSubscriptions,sim,ativo
+POST,/api/push-subscriptions,apps/api/src/routes/pushSubscriptions.ts:91,jwt,,pushSubscriptions,sim,ativo
+PUT,/api/push-subscriptions/deactivate,apps/api/src/routes/pushSubscriptions.ts:184,jwt,,pushSubscriptions,sim,ativo
+GET,/api/evidence/search,apps/api/src/routes/evidence.ts:35,jwt,,evidence,sim,ativo
+GET,/api/evidence/article/:pmid/fulltext,apps/api/src/routes/evidence.ts:44,jwt,,evidence,sim,ativo
+POST,/api/evidence/summarize,apps/api/src/routes/evidence.ts:54,jwt,,evidence,sim,ativo
+POST,/api/evidence/save,apps/api/src/routes/evidence.ts:76,jwt,,evidence,sim,ativo
+GET,/api/evidence/library,apps/api/src/routes/evidence.ts:88,jwt,,evidence,sim,ativo
+GET,/api/evidence/cid10/:code,apps/api/src/routes/evidence.ts:101,jwt,,evidence,sim,ativo
+POST,/api/evidence/cid10/suggest,apps/api/src/routes/evidence.ts:109,jwt,,evidence,sim,ativo
+GET,/api/evidence/links,apps/api/src/routes/evidence.ts:127,jwt,,evidence,sim,ativo
+DELETE,/api/evidence/link/:id,apps/api/src/routes/evidence.ts:148,jwt,,evidence,sim,ativo
+GET,/api/calendar/feed/:patientId.ics,apps/api/src/routes/calendar.ts:12,public,,calendar,sim (consumidor externo),ativo
+GET,/api/clinical/pathologies/options,apps/api/src/routes/clinical.ts:24,public,,clinical,sim,ativo
+GET,/api/clinical/insights,apps/api/src/routes/clinical.ts:35,jwt,,clinical,sim,ativo
+GET,/api/instagram/webhook,apps/api/src/routes/instagram-webhook.ts:50,webhook-secret,,mensagens Instagram,desconhecido,ativo
+POST,/api/instagram/webhook,apps/api/src/routes/instagram-webhook.ts:61,webhook-secret,,mensagens Instagram,desconhecido,ativo
+GET,/api/activities,apps/api/src/routes/eventos.ts:34,jwt,,eventos/inscrições,sim,ativo
+GET,/api/activities/:id,apps/api/src/routes/eventos.ts:64,jwt,,eventos/inscrições,sim,ativo
+POST,/api/activities,apps/api/src/routes/eventos.ts:79,jwt,,eventos/inscrições,sim,ativo
+PUT,/api/activities/:id,apps/api/src/routes/eventos.ts:107,jwt,,eventos/inscrições,sim,ativo
+DELETE,/api/activities/:id,apps/api/src/routes/eventos.ts:141,jwt,,eventos/inscrições,sim,ativo
+GET,/api/salas,apps/api/src/routes/eventos.ts:154,jwt,,eventos/inscrições,sim,ativo
+POST,/api/salas,apps/api/src/routes/eventos.ts:167,jwt,,eventos/inscrições,sim,ativo
+PUT,/api/salas/:id,apps/api/src/routes/eventos.ts:185,jwt,,eventos/inscrições,sim,ativo
+DELETE,/api/salas/:id,apps/api/src/routes/eventos.ts:207,jwt,,eventos/inscrições,sim,ativo
+GET,/api/servicos,apps/api/src/routes/eventos.ts:220,jwt,,eventos/inscrições,sim,ativo
+POST,/api/servicos,apps/api/src/routes/eventos.ts:233,jwt,,eventos/inscrições,sim,ativo
+PUT,/api/servicos/:id,apps/api/src/routes/eventos.ts:252,jwt,,eventos/inscrições,sim,ativo
+DELETE,/api/servicos/:id,apps/api/src/routes/eventos.ts:275,jwt,,eventos/inscrições,sim,ativo
+GET,/api/contratados,apps/api/src/routes/eventos.ts:288,jwt,,eventos/inscrições,sim,ativo
+POST,/api/contratados,apps/api/src/routes/eventos.ts:306,jwt,,eventos/inscrições,sim,ativo
+PUT,/api/contratados/:id,apps/api/src/routes/eventos.ts:345,jwt,,eventos/inscrições,sim,ativo
+GET,/api/checklist,apps/api/src/routes/eventos.ts:400,jwt,,eventos/inscrições,sim,ativo
+POST,/api/checklist,apps/api/src/routes/eventos.ts:423,jwt,,eventos/inscrições,sim,ativo
+PUT,/api/checklist/:id,apps/api/src/routes/eventos.ts:451,jwt,,eventos/inscrições,sim,ativo
+DELETE,/api/checklist/:id,apps/api/src/routes/eventos.ts:495,jwt,,eventos/inscrições,sim,ativo
+DELETE,/api/contratados/:id,apps/api/src/routes/eventos.ts:508,jwt,,eventos/inscrições,sim,ativo
+GET,/api/activity-contractors,apps/api/src/routes/eventos.ts:527,jwt,,eventos/inscrições,sim,ativo
+POST,/api/activity-contractors,apps/api/src/routes/eventos.ts:558,jwt,,eventos/inscrições,sim,ativo
+PUT,/api/activity-contractors/:id,apps/api/src/routes/eventos.ts:610,jwt,,eventos/inscrições,sim,ativo
+DELETE,/api/activity-contractors/:id,apps/api/src/routes/eventos.ts:655,jwt,,eventos/inscrições,sim,ativo
+GET,/api/participantes,apps/api/src/routes/eventos.ts:674,jwt,,eventos/inscrições,sim,ativo
+POST,/api/participantes,apps/api/src/routes/eventos.ts:703,jwt,,eventos/inscrições,sim,ativo
+PUT,/api/participantes/:id,apps/api/src/routes/eventos.ts:752,jwt,,eventos/inscrições,sim,ativo
+DELETE,/api/participantes/:id,apps/api/src/routes/eventos.ts:797,jwt,,eventos/inscrições,sim,ativo
+GET,/api/activity-templates,apps/api/src/routes/eventos.ts:816,jwt,,eventos/inscrições,sim,ativo
+GET,/api/activity-templates/:id,apps/api/src/routes/eventos.ts:837,jwt,,eventos/inscrições,sim,ativo
+POST,/api/activity-templates,apps/api/src/routes/eventos.ts:856,jwt,,eventos/inscrições,sim,ativo
+DELETE,/api/activity-templates/:id,apps/api/src/routes/eventos.ts:887,jwt,,eventos/inscrições,sim,ativo
+GET,/api/exercise-sessions,apps/api/src/routes/exerciseSessions.ts:10,jwt,,exerciseSessions,sim,ativo
+POST,/api/exercise-sessions,apps/api/src/routes/exerciseSessions.ts:38,jwt,,exerciseSessions,sim,ativo
+GET,/api/exercise-sessions/stats/:patientId,apps/api/src/routes/exerciseSessions.ts:117,jwt,,exerciseSessions,sim,ativo
+GET,/api/activity-lab/patients,apps/api/src/routes/activityLab.ts:99,jwt,,activityLab,sim,ativo
+GET,/api/activity-lab/patients/:id,apps/api/src/routes/activityLab.ts:146,jwt,,activityLab,sim,ativo
+GET,/api/activity-lab/patients/:id/sessions,apps/api/src/routes/activityLab.ts:181,jwt,,activityLab,sim,ativo
+GET,/api/activity-lab/sessions/:id,apps/api/src/routes/activityLab.ts:202,jwt,,activityLab,sim,ativo
+GET,/api/activity-lab/clinic/profile,apps/api/src/routes/activityLab.ts:223,jwt,,activityLab,sim,ativo
+GET,/api/inventory/status,apps/api/src/routes/inventory.ts:12,jwt,,inventory,sim,ativo
+GET,/api/post-discharge/at-risk,apps/api/src/routes/postDischargeReactivation.ts:22,jwt,,postDischargeReactivation,sim,ativo
+POST,/api/post-discharge/trigger-followup,apps/api/src/routes/postDischargeReactivation.ts:85,jwt,,postDischargeReactivation,sim,ativo
+GET,/api/whatsapp/webhook,apps/api/src/routes/whatsapp-webhook.ts:96,webhook-secret,,mensagens WhatsApp (Meta),desconhecido,ativo
+POST,/api/whatsapp/webhook,apps/api/src/routes/whatsapp-webhook.ts:109,webhook-secret,,mensagens WhatsApp (Meta),desconhecido,ativo
+GET,/api/goal-profiles,apps/api/src/routes/goalProfiles.ts:18,jwt,,goalProfiles,sim,ativo
+GET,/api/goal-profiles/:id,apps/api/src/routes/goalProfiles.ts:35,jwt,,goalProfiles,sim,ativo
+POST,/api/goal-profiles,apps/api/src/routes/goalProfiles.ts:49,jwt,,goalProfiles,sim,ativo
+PUT,/api/goal-profiles/:id,apps/api/src/routes/goalProfiles.ts:87,jwt,,goalProfiles,sim,ativo
+POST,/api/goal-profiles/:id/publish,apps/api/src/routes/goalProfiles.ts:137,jwt,,goalProfiles,sim,ativo
+DELETE,/api/goal-profiles/:id,apps/api/src/routes/goalProfiles.ts:153,jwt,,goalProfiles,sim,ativo
+GET,/api/wger/search,apps/api/src/routes/wger.ts:12,jwt,,wger,não,ativo
+POST,/api/wger/enrich,apps/api/src/routes/wger.ts:29,jwt,,wger,não,ativo
+GET,/api/audit-logs,apps/api/src/routes/auditRoutes.ts:8,jwt,,audit_logs,sim,ativo
+POST,/api/audit-logs,apps/api/src/routes/auditRoutes.ts:22,jwt,,audit_logs,sim,ativo
+GET,/api/events-lake,apps/api/src/routes/eventsLake.ts:71,jwt,,eventsLake,sim,ativo
+POST,/api/patient-media/upload-url,apps/api/src/routes/patientMedia.ts:91,jwt,,patientMedia,sim,ativo
+GET,/api/patient-media/access-url/*,apps/api/src/routes/patientMedia.ts:158,jwt,,patientMedia,sim,ativo
+GET,/api/patient-media/image/*,apps/api/src/routes/patientMedia.ts:182,jwt,,patientMedia,sim,ativo
+GET,/api/patient-media/:patientId/photos,apps/api/src/routes/patientMedia.ts:250,jwt,,patientMedia,sim,ativo
+POST,/api/patient-media/:patientId/photos,apps/api/src/routes/patientMedia.ts:272,jwt,,patientMedia,sim,ativo
+DELETE,/api/patient-media/:patientId/photos/:id,apps/api/src/routes/patientMedia.ts:312,jwt,,patientMedia,sim,ativo
+GET,/api/patient-media/:patientId/videos,apps/api/src/routes/patientMedia.ts:339,jwt,,patientMedia,sim,ativo
+POST,/api/patient-media/:patientId/videos,apps/api/src/routes/patientMedia.ts:357,jwt,,patientMedia,sim,ativo
+DELETE,/api/patient-media/:patientId/videos/:id,apps/api/src/routes/patientMedia.ts:396,jwt,,patientMedia,sim,ativo
+GET,/api/patient-media/:patientId/medical-requests,apps/api/src/routes/patientMedia.ts:425,jwt,,patientMedia,sim,ativo
+POST,/api/patient-media/:patientId/medical-requests,apps/api/src/routes/patientMedia.ts:439,jwt,,patientMedia,sim,ativo
+PATCH,/api/patient-media/:patientId/medical-requests/:id,apps/api/src/routes/patientMedia.ts:471,jwt,,patientMedia,sim,ativo
+DELETE,/api/patient-media/:patientId/medical-requests/:id,apps/api/src/routes/patientMedia.ts:508,jwt,,patientMedia,sim,ativo
+GET,/api/tarefas/by-entity/:type/:entityId,apps/api/src/routes/tarefas.ts:263,jwt,,tarefas,sim,ativo
+POST,/api/tarefas/ai/suggest-priority,apps/api/src/routes/tarefas.ts:284,jwt,,tarefas,sim,ativo
+POST,/api/tarefas/ai/weekly-summary,apps/api/src/routes/tarefas.ts:317,jwt,,tarefas,sim,ativo
+GET,/api/tarefas/reports/flow,apps/api/src/routes/tarefas.ts:365,jwt,,tarefas,sim,ativo
+GET,/api/tarefas/templates,apps/api/src/routes/tarefas.ts:412,jwt,,tarefas,sim,ativo
+POST,/api/tarefas/templates,apps/api/src/routes/tarefas.ts:427,jwt,,tarefas,sim,ativo
+DELETE,/api/tarefas/templates/:templateId,apps/api/src/routes/tarefas.ts:456,jwt,,tarefas,sim,ativo
+GET,/api/tarefas,apps/api/src/routes/tarefas.ts:468,jwt,,tarefas,sim,ativo
+POST,/api/tarefas,apps/api/src/routes/tarefas.ts:509,jwt,,tarefas,sim,ativo
+PATCH,/api/tarefas/:id,apps/api/src/routes/tarefas.ts:583,jwt,,tarefas,sim,ativo
+GET,/api/tarefas/:id/comments,apps/api/src/routes/tarefas.ts:763,jwt,,tarefas,sim,ativo
+POST,/api/tarefas/:id/comments,apps/api/src/routes/tarefas.ts:780,jwt,,tarefas,sim,ativo
+DELETE,/api/tarefas/:id/comments/:commentId,apps/api/src/routes/tarefas.ts:827,jwt,,tarefas,sim,ativo
+POST,/api/tarefas/:id/duplicate,apps/api/src/routes/tarefas.ts:845,jwt,,tarefas,sim,ativo
+DELETE,/api/tarefas/:id,apps/api/src/routes/tarefas.ts:873,jwt,,tarefas,sim,ativo
+POST,/api/tarefas/bulk,apps/api/src/routes/tarefas.ts:886,jwt,,tarefas,sim,ativo
+GET,/api/wearables,apps/api/src/routes/wearables.ts:11,jwt,,wearables,sim,ativo
+GET,/api/wearables/patient/:patientId/summary,apps/api/src/routes/wearables.ts:52,jwt,,wearables,sim,ativo
+POST,/api/wearables,apps/api/src/routes/wearables.ts:78,jwt,,wearables,sim,ativo
+POST,/api/wearables/sync,apps/api/src/routes/wearables.ts:109,jwt,,wearables,sim,ativo
+POST,/api/wearables/bulk,apps/api/src/routes/wearables.ts:152,jwt,,wearables,sim,ativo
+GET,/api/wearables/integrations,apps/api/src/routes/wearables.ts:189,jwt,,wearables,sim,ativo
+DELETE,/api/wearables/integrations/:provider,apps/api/src/routes/wearables.ts:205,jwt,,wearables,sim,ativo
+GET,/api/wearables/oauth/garmin/start,apps/api/src/routes/wearables.ts:222,jwt,,wearables,sim,ativo
+GET,/api/wearables/oauth/strava/start,apps/api/src/routes/wearables.ts:245,jwt,,wearables,sim,ativo
+GET,/api/wearables/oauth/strava/callback,apps/api/src/routes/wearables.ts:264,public,,wearables,sim,ativo
+GET,/api/wearables/oauth/oura/start,apps/api/src/routes/wearables.ts:322,jwt,,wearables,sim,ativo
+GET,/api/wearables/oauth/oura/callback,apps/api/src/routes/wearables.ts:340,public,,wearables,sim,ativo
+GET,/api/wearables/oauth/google_fit/start,apps/api/src/routes/wearables.ts:392,jwt,,wearables,sim,ativo
+GET,/api/wearables/oauth/google_fit/callback,apps/api/src/routes/wearables.ts:418,public,,wearables,sim,ativo
+POST,/api/wearables/sync-provider,apps/api/src/routes/wearables.ts:479,jwt,,wearables,sim,ativo
+GET,/api/wearables/rtm/status/:patientId,apps/api/src/routes/wearables.ts:630,jwt,,wearables,sim,ativo
+POST,/api/wearables/rtm/milestones/sync,apps/api/src/routes/wearables.ts:673,jwt,,wearables,sim,ativo
+GET,/api/benchmark/market-position,apps/api/src/routes/marketBenchmark.ts:69,jwt,,benchmark de mercado,sim,ativo
+GET,/api/exercises/categories,apps/api/src/routes/exercises.ts:131,jwt,,exercises,sim,ativo
+GET,/api/exercises,apps/api/src/routes/exercises.ts:160,jwt,,exercises,sim,ativo
+GET,/api/exercises/:id,apps/api/src/routes/exercises.ts:318,public,,exercises,sim,ativo
+POST,/api/exercises/:id/favorite,apps/api/src/routes/exercises.ts:399,jwt,,exercises,sim,ativo
+DELETE,/api/exercises/:id/favorite,apps/api/src/routes/exercises.ts:421,jwt,,exercises,sim,ativo
+GET,/api/exercises/favorites/me,apps/api/src/routes/exercises.ts:445,jwt,,exercises,sim,ativo
+POST,/api/exercises,apps/api/src/routes/exercises.ts:489,jwt,,exercises,sim,ativo
+PUT,/api/exercises/:id,apps/api/src/routes/exercises.ts:570,jwt,,exercises,sim,ativo
+DELETE,/api/exercises/:id,apps/api/src/routes/exercises.ts:646,jwt,,exercises,sim,ativo
+GET,/api/exercises/search/semantic,apps/api/src/routes/exercises.ts:667,public,,exercises,sim,ativo
+POST,/api/exercises/embeddings/backfill,apps/api/src/routes/exercises.ts:766,jwt,,exercises,sim,ativo
+GET,/api/ai-insights/widgets,apps/api/src/routes/ai-insights.ts:12,jwt,,ai-insights,sim,ativo
+GET,/api/ai-insights/analytics,apps/api/src/routes/ai-insights.ts:35,jwt,,ai-insights,sim,ativo
+POST,/api/ai-insights/chat,apps/api/src/routes/ai-insights.ts:65,jwt,,ai-insights,sim,ativo
+GET,/api/doctors,apps/api/src/routes/doctors.ts:8,jwt,,doctors,sim,ativo
+GET,/api/doctors/:id,apps/api/src/routes/doctors.ts:67,jwt,,doctors,sim,ativo
+POST,/api/doctors,apps/api/src/routes/doctors.ts:104,jwt,,doctors,sim,ativo
+PUT,/api/doctors/:id,apps/api/src/routes/doctors.ts:175,jwt,,doctors,sim,ativo
+DELETE,/api/doctors/:id,apps/api/src/routes/doctors.ts:268,jwt,,doctors,sim,ativo
+GET,/api/messaging/ws,apps/api/src/routes/messaging.ts:14,jwt,,messaging,sim,ativo
+GET,/api/messaging/conversations,apps/api/src/routes/messaging.ts:38,jwt,,messaging,sim,ativo
+GET,/api/messaging/conversations/:participantId/messages,apps/api/src/routes/messaging.ts:90,jwt,,messaging,sim,ativo
+POST,/api/messaging/messages,apps/api/src/routes/messaging.ts:114,jwt,,messaging,sim,ativo
+POST,/api/messaging/conversations/:participantId/read,apps/api/src/routes/messaging.ts:163,jwt,,messaging,sim,ativo
+GET,/api/whatsapp/inbox/conversations,apps/api/src/routes/whatsapp-inbox.ts:516,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/conversations,apps/api/src/routes/whatsapp-inbox.ts:578,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/conversations/bulk,apps/api/src/routes/whatsapp-inbox.ts:624,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+GET,/api/whatsapp/inbox/conversations/:id,apps/api/src/routes/whatsapp-inbox.ts:699,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/conversations/:id/ai/summary,apps/api/src/routes/whatsapp-inbox.ts:791,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/conversations/:id/ai/suggest-reply,apps/api/src/routes/whatsapp-inbox.ts:795,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/conversations/:id/ai/next-action,apps/api/src/routes/whatsapp-inbox.ts:801,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+PATCH,/api/whatsapp/inbox/conversations/:id,apps/api/src/routes/whatsapp-inbox.ts:844,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+DELETE,/api/whatsapp/inbox/conversations/:id,apps/api/src/routes/whatsapp-inbox.ts:945,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/conversations/:id/restore,apps/api/src/routes/whatsapp-inbox.ts:977,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/conversations/:id/read,apps/api/src/routes/whatsapp-inbox.ts:1002,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/conversations/:id/messages,apps/api/src/routes/whatsapp-inbox.ts:1033,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+PATCH,/api/whatsapp/inbox/conversations/:id/messages/:messageId,apps/api/src/routes/whatsapp-inbox.ts:1472,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+DELETE,/api/whatsapp/inbox/conversations/:id/messages/:messageId,apps/api/src/routes/whatsapp-inbox.ts:1523,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/conversations/:id/interactive,apps/api/src/routes/whatsapp-inbox.ts:1588,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/conversations/:id/assign,apps/api/src/routes/whatsapp-inbox.ts:1694,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/conversations/:id/transfer,apps/api/src/routes/whatsapp-inbox.ts:1742,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/conversations/:id/notes,apps/api/src/routes/whatsapp-inbox.ts:1790,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+PUT,/api/whatsapp/inbox/conversations/:id/status,apps/api/src/routes/whatsapp-inbox.ts:1820,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/contacts/resolve,apps/api/src/routes/whatsapp-inbox.ts:1864,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+GET,/api/whatsapp/inbox/contacts,apps/api/src/routes/whatsapp-inbox.ts:1922,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+GET,/api/whatsapp/inbox/contacts/:id,apps/api/src/routes/whatsapp-inbox.ts:1997,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+GET,/api/whatsapp/inbox/metrics,apps/api/src/routes/whatsapp-inbox.ts:2019,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+GET,/api/whatsapp/inbox/metrics/funnel,apps/api/src/routes/whatsapp-inbox.ts:2033,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+GET,/api/whatsapp/inbox/unread-count,apps/api/src/routes/whatsapp-inbox.ts:2054,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+GET,/api/whatsapp/inbox/tags,apps/api/src/routes/whatsapp-inbox.ts:2077,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/tags,apps/api/src/routes/whatsapp-inbox.ts:2105,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/conversations/:id/tags,apps/api/src/routes/whatsapp-inbox.ts:2126,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+DELETE,/api/whatsapp/inbox/conversations/:id/tags/:tagId,apps/api/src/routes/whatsapp-inbox.ts:2154,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+GET,/api/whatsapp/inbox/quick-replies,apps/api/src/routes/whatsapp-inbox.ts:2174,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/quick-replies,apps/api/src/routes/whatsapp-inbox.ts:2200,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+PUT,/api/whatsapp/inbox/quick-replies/:id,apps/api/src/routes/whatsapp-inbox.ts:2237,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+DELETE,/api/whatsapp/inbox/quick-replies/:id,apps/api/src/routes/whatsapp-inbox.ts:2278,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+PUT,/api/whatsapp/inbox/tags/:id,apps/api/src/routes/whatsapp-inbox.ts:2295,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+DELETE,/api/whatsapp/inbox/tags/:id,apps/api/src/routes/whatsapp-inbox.ts:2328,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+GET,/api/whatsapp/inbox/crm-settings,apps/api/src/routes/whatsapp-inbox.ts:2349,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+PATCH,/api/whatsapp/inbox/crm-settings,apps/api/src/routes/whatsapp-inbox.ts:2399,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+GET,/api/whatsapp/inbox/crm-settings/automation-log,apps/api/src/routes/whatsapp-inbox.ts:2460,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/crm-settings/test,apps/api/src/routes/whatsapp-inbox.ts:2479,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+GET,/api/whatsapp/inbox/pending-confirmations,apps/api/src/routes/whatsapp-inbox.ts:2505,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+PUT,/api/whatsapp/inbox/conversations/:id/priority,apps/api/src/routes/whatsapp-inbox.ts:2555,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/broadcast,apps/api/src/routes/whatsapp-inbox.ts:2578,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/conversations/:id/snooze,apps/api/src/routes/whatsapp-inbox.ts:2695,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+GET,/api/whatsapp/inbox/conversations/:id/activity,apps/api/src/routes/whatsapp-inbox.ts:2725,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/instagram/backfill-profiles,apps/api/src/routes/whatsapp-inbox.ts:2794,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+GET,/api/whatsapp/inbox/agents/workload,apps/api/src/routes/whatsapp-inbox.ts:2922,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/templates/reengagement/register,apps/api/src/routes/whatsapp-inbox.ts:2971,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/upload,apps/api/src/routes/whatsapp-inbox.ts:3009,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+POST,/api/whatsapp/inbox/templates/automation/register,apps/api/src/routes/whatsapp-inbox.ts:3060,jwt,,conversas/mensagens WhatsApp,desconhecido,ativo
+GET,/api/public-booking/booking/:slug,apps/api/src/routes/publicBooking.ts:52,public,,publicBooking,sim,ativo
+GET,/api/public-booking/booking/:slug/availability,apps/api/src/routes/publicBooking.ts:82,public,,publicBooking,sim,ativo
+POST,/api/public-booking/booking,apps/api/src/routes/publicBooking.ts:125,public+turnstile,,publicBooking,sim,ativo
+GET,/api/public-booking/requests,apps/api/src/routes/publicBooking.ts:216,jwt,,publicBooking,sim,ativo
+PATCH,/api/public-booking/requests/:id,apps/api/src/routes/publicBooking.ts:242,jwt,,publicBooking,sim,ativo
+POST,/api/public-booking/checkin,apps/api/src/routes/publicBooking.ts:281,public,,publicBooking,sim,ativo
+GET,/api/media/gallery,apps/api/src/routes/media.ts:33,jwt,,media,sim,ativo
+GET,/api/media/gallery/folders,apps/api/src/routes/media.ts:58,jwt,,media,sim,ativo
+POST,/api/media/gallery,apps/api/src/routes/media.ts:77,jwt,,media,sim,ativo
+DELETE,/api/media/gallery/:id,apps/api/src/routes/media.ts:99,jwt,,media,sim,ativo
+GET,/api/media/exercise/:exerciseId,apps/api/src/routes/media.ts:122,jwt,,media,sim,ativo
+POST,/api/media/exercise/:exerciseId,apps/api/src/routes/media.ts:141,jwt,,media,sim,ativo
+PUT,/api/media/exercise/attachment/:id,apps/api/src/routes/media.ts:163,jwt,,media,sim,ativo
+DELETE,/api/media/exercise/attachment/:id,apps/api/src/routes/media.ts:186,jwt,,media,sim,ativo
+GET,/api/media/image/*,apps/api/src/routes/media.ts:205,jwt,,media,sim,ativo
+POST,/api/media/upload-url,apps/api/src/routes/media.ts:261,jwt,,media,sim,ativo
+DELETE,/api/media/:key{.*},apps/api/src/routes/media.ts:322,jwt,,media,sim,ativo
+GET,/api/document-signatures,apps/api/src/routes/documentSignatures.ts:8,jwt,,documentSignatures,sim,ativo
+POST,/api/document-signatures,apps/api/src/routes/documentSignatures.ts:31,jwt,,documentSignatures,sim,ativo
+GET,/api/document-signatures/verify,apps/api/src/routes/documentSignatures.ts:60,public,,documentSignatures,sim,ativo
+POST,/api/document-signatures/:id/send-for-signature,apps/api/src/routes/documentSignatures.ts:78,jwt,,documentSignatures,sim,ativo
+GET,/api/document-signatures/sign/:token,apps/api/src/routes/documentSignatures.ts:138,public,,documentSignatures,sim,ativo
+POST,/api/document-signatures/sign/:token/confirm,apps/api/src/routes/documentSignatures.ts:172,public,,documentSignatures,sim,ativo
+GET,/api/patients,apps/api/src/routes/patients.ts:565,jwt,,patients,sim,ativo
+GET,/api/patients/last-updated,apps/api/src/routes/patients.ts:1140,jwt,,patients,sim,ativo
+GET,/api/patients/birthdays,apps/api/src/routes/patients.ts:1160,jwt,,patients,sim,ativo
+GET,/api/patients/by-profile/:profileId,apps/api/src/routes/patients.ts:1197,jwt,,patients,sim,ativo
+POST,/api/patients,apps/api/src/routes/patients.ts:1217,jwt,,patients,sim,ativo
+GET,/api/patients/:id/stats,apps/api/src/routes/patients.ts:1319,jwt,,patients,sim,ativo
+GET,/api/patients/:id,apps/api/src/routes/patients.ts:1378,jwt,,patients,sim,ativo
+PUT,/api/patients/:id,apps/api/src/routes/patients.ts:1455,jwt,,patients,sim,ativo
+PATCH,/api/patients/:id,apps/api/src/routes/patients.ts:1456,jwt,,patients,sim,ativo
+DELETE,/api/patients/:id,apps/api/src/routes/patients.ts:1458,jwt,,patients,sim,ativo
+GET,/api/patients/:id/timeline,apps/api/src/routes/patients.ts:1509,jwt,,patients,sim,ativo
+GET,/api/patients/:id/export,apps/api/src/routes/patients.ts:1650,jwt,,patients,sim,ativo
+POST,/api/patients/:id/forget,apps/api/src/routes/patients.ts:1717,jwt,,patients,sim,ativo
+POST,/api/fcm-tokens,apps/api/src/routes/fcmTokens.ts:10,jwt,,fcmTokens,sim (app mobile),ativo
+DELETE,/api/fcm-tokens/:token,apps/api/src/routes/fcmTokens.ts:46,jwt,,fcmTokens,sim (app mobile),ativo
+GET,/api/fcm-tokens/user/:userId,apps/api/src/routes/fcmTokens.ts:61,jwt,,fcmTokens,sim (app mobile),ativo
+GET,/api/fcm-tokens/tenant/:tenantId,apps/api/src/routes/fcmTokens.ts:76,jwt,,fcmTokens,sim (app mobile),ativo
+GET,/api/innovations/inventory,apps/api/src/routes/innovations.ts:18,jwt,,innovations,sim,ativo
+POST,/api/innovations/inventory,apps/api/src/routes/innovations.ts:43,jwt,,innovations,sim,ativo
+PUT,/api/innovations/inventory/:id,apps/api/src/routes/innovations.ts:75,jwt,,innovations,sim,ativo
+GET,/api/innovations/inventory-movements,apps/api/src/routes/innovations.ts:114,jwt,,innovations,sim,ativo
+POST,/api/innovations/inventory-movements,apps/api/src/routes/innovations.ts:143,jwt,,innovations,sim,ativo
+GET,/api/innovations/staff-performance,apps/api/src/routes/innovations.ts:207,jwt,,innovations,sim,ativo
+GET,/api/innovations/appointment-predictions,apps/api/src/routes/innovations.ts:243,jwt,,innovations,sim,ativo
+GET,/api/innovations/revenue-forecasts,apps/api/src/routes/innovations.ts:279,jwt,,innovations,sim,ativo
+GET,/api/innovations/whatsapp-exercise-queue,apps/api/src/routes/innovations.ts:300,jwt,,innovations,sim,ativo
+POST,/api/innovations/whatsapp-exercise-queue,apps/api/src/routes/innovations.ts:321,jwt,,innovations,sim,ativo
+GET,/api/innovations/patient-self-assessments,apps/api/src/routes/innovations.ts:353,jwt,,innovations,sim,ativo
+GET,/api/innovations/inventory/forecast,apps/api/src/routes/innovations.ts:387,jwt,,innovations,sim,ativo
+GET,/api/gamification-notifications,apps/api/src/routes/gamificationNotifications.ts:15,jwt,,gamificationNotifications,sim,ativo
+PUT,/api/gamification-notifications/:id/read,apps/api/src/routes/gamificationNotifications.ts:38,jwt,,gamificationNotifications,sim,ativo
+PUT,/api/gamification-notifications/read-all,apps/api/src/routes/gamificationNotifications.ts:45,jwt,,gamificationNotifications,sim,ativo
+DELETE,/api/gamification-notifications/:id,apps/api/src/routes/gamificationNotifications.ts:61,jwt,,gamificationNotifications,sim,ativo
+GET,/api/precadastro/public/:token,apps/api/src/routes/precadastro.ts:94,public,,precadastro,sim,ativo
+POST,/api/precadastro/public/:token/submissions,apps/api/src/routes/precadastro.ts:128,public,,precadastro,sim,ativo
+GET,/api/precadastro/tokens,apps/api/src/routes/precadastro.ts:226,jwt,,precadastro,sim,ativo
+POST,/api/precadastro/tokens,apps/api/src/routes/precadastro.ts:247,jwt,,precadastro,sim,ativo
+PUT,/api/precadastro/tokens/:id,apps/api/src/routes/precadastro.ts:298,jwt,,precadastro,sim,ativo
+GET,/api/precadastro/submissions,apps/api/src/routes/precadastro.ts:373,jwt,,precadastro,sim,ativo
+PUT,/api/precadastro/submissions/:id,apps/api/src/routes/precadastro.ts:399,jwt,,precadastro,sim,ativo
+POST,/api/ia-studio/scribe/process,apps/api/src/routes/ai-studio.ts:19,jwt,,ai-studio,sim,ativo
+GET,/api/ia-studio/retention/at-risk,apps/api/src/routes/ai-studio.ts:124,jwt,,ai-studio,sim,ativo
+GET,/api/ia-studio/predict/discharge/:patientId,apps/api/src/routes/ai-studio.ts:168,jwt,,ai-studio,sim,ativo
+POST,/api/ia-studio/reports/synthesize,apps/api/src/routes/ai-studio.ts:221,jwt,,ai-studio,sim,ativo
+POST,/api/ia-studio/generate-protocol,apps/api/src/routes/ai-studio.ts:258,jwt,,ai-studio,sim,ativo
+GET,/api/time-entries,apps/api/src/routes/timeEntries.ts:10,jwt,,timeEntries,sim,ativo
+POST,/api/time-entries,apps/api/src/routes/timeEntries.ts:47,jwt,,timeEntries,sim,ativo
+PATCH,/api/time-entries/:id,apps/api/src/routes/timeEntries.ts:95,jwt,,timeEntries,sim,ativo
+DELETE,/api/time-entries/:id,apps/api/src/routes/timeEntries.ts:140,jwt,,timeEntries,sim,ativo
+GET,/api/time-entries/stats,apps/api/src/routes/timeEntries.ts:154,jwt,,timeEntries,sim,ativo
+GET,/api/time-entries/timer-draft/:userId,apps/api/src/routes/timeEntries.ts:188,jwt,,timeEntries,sim,ativo
+PUT,/api/time-entries/timer-draft/:userId,apps/api/src/routes/timeEntries.ts:208,jwt,,timeEntries,sim,ativo
+DELETE,/api/time-entries/timer-draft/:userId,apps/api/src/routes/timeEntries.ts:223,jwt,,timeEntries,sim,ativo
+GET,/api/churn-prediction/at-risk-signals,apps/api/src/routes/churnPrediction.ts:41,jwt,,churnPrediction,sim,ativo
+GET,/api/briefing,apps/api/src/routes/briefing.ts:19,jwt,,briefing,sim,ativo
+POST,/api/briefing/send,apps/api/src/routes/briefing.ts:30,jwt,,briefing,sim,ativo
+GET,/api/integrations/google/places/search,apps/api/src/routes/integrations.ts:83,jwt,,integrations,sim,ativo
+GET,/api/integrations/google/auth-url,apps/api/src/routes/integrations.ts:108,jwt,,integrations,sim,ativo
+GET,/api/integrations/google/status,apps/api/src/routes/integrations.ts:116,jwt,,integrations,sim,ativo
+GET,/api/integrations/google/business/reviews,apps/api/src/routes/integrations.ts:131,jwt,,integrations,sim,ativo
+POST,/api/integrations/google/exchange-code,apps/api/src/routes/integrations.ts:155,jwt,,integrations,sim,ativo
+POST,/api/integrations/google/connect,apps/api/src/routes/integrations.ts:225,jwt,,integrations,sim,ativo
+POST,/api/integrations/google/disconnect,apps/api/src/routes/integrations.ts:247,jwt,,integrations,sim,ativo
+GET,/api/integrations/google/calendar,apps/api/src/routes/integrations.ts:272,jwt,,integrations,sim,ativo
+PUT,/api/integrations/google/calendar,apps/api/src/routes/integrations.ts:287,jwt,,integrations,sim,ativo
+GET,/api/integrations/google/calendar/logs,apps/api/src/routes/integrations.ts:325,jwt,,integrations,sim,ativo
+POST,/api/integrations/google/calendar/sync,apps/api/src/routes/integrations.ts:352,jwt,,integrations,sim,ativo
+POST,/api/integrations/google/calendar/import-preview,apps/api/src/routes/integrations.ts:381,jwt,,integrations,sim,ativo
+POST,/api/integrations/google/calendar/sync-appointment,apps/api/src/routes/integrations.ts:408,jwt,,integrations,sim,ativo
+POST,/api/integrations/google/calendar/sync-task,apps/api/src/routes/integrations.ts:480,jwt,,integrations,sim,ativo
+GET,/api/integrations/google/docs/templates,apps/api/src/routes/integrations.ts:537,jwt,,integrations,sim,ativo
+POST,/api/integrations/google/docs/generate-report,apps/api/src/routes/integrations.ts:561,jwt,,integrations,sim,ativo
+GET,/api/integrations/google/drive/files,apps/api/src/routes/integrations.ts:603,jwt,,integrations,sim,ativo
+POST,/api/integrations/google/drive/folders,apps/api/src/routes/integrations.ts:631,jwt,,integrations,sim,ativo
+GET,/api/boards,apps/api/src/routes/boards.ts:25,jwt,,boards,sim,ativo
+POST,/api/boards,apps/api/src/routes/boards.ts:49,jwt,,boards,sim,ativo
+GET,/api/boards/:id,apps/api/src/routes/boards.ts:108,jwt,,boards,sim,ativo
+PATCH,/api/boards/:id,apps/api/src/routes/boards.ts:134,jwt,,boards,sim,ativo
+DELETE,/api/boards/:id,apps/api/src/routes/boards.ts:178,jwt,,boards,sim,ativo
+GET,/api/boards/:id/columns,apps/api/src/routes/boards.ts:198,jwt,,boards,sim,ativo
+POST,/api/boards/:id/columns,apps/api/src/routes/boards.ts:223,jwt,,boards,sim,ativo
+PATCH,/api/boards/columns/:colId,apps/api/src/routes/boards.ts:263,jwt,,boards,sim,ativo
+DELETE,/api/boards/columns/:colId,apps/api/src/routes/boards.ts:301,jwt,,boards,sim,ativo
+POST,/api/boards/columns/reorder,apps/api/src/routes/boards.ts:323,jwt,,boards,sim,ativo
+GET,/api/boards/:id/tarefas,apps/api/src/routes/boards.ts:347,jwt,,boards,sim,ativo
+GET,/api/boards/:id/labels,apps/api/src/routes/boards.ts:369,jwt,,boards,sim,ativo
+POST,/api/boards/:id/labels,apps/api/src/routes/boards.ts:393,jwt,,boards,sim,ativo
+PATCH,/api/boards/labels/:labelId,apps/api/src/routes/boards.ts:432,jwt,,boards,sim,ativo
+DELETE,/api/boards/labels/:labelId,apps/api/src/routes/boards.ts:469,jwt,,boards,sim,ativo
+POST,/api/boards/labels/reorder,apps/api/src/routes/boards.ts:490,jwt,,boards,sim,ativo
+GET,/api/boards/:id/checklist-templates,apps/api/src/routes/boards.ts:515,jwt,,boards,sim,ativo
+POST,/api/boards/:id/checklist-templates,apps/api/src/routes/boards.ts:536,jwt,,boards,sim,ativo
+PATCH,/api/boards/checklist-templates/:templateId,apps/api/src/routes/boards.ts:565,jwt,,boards,sim,ativo
+DELETE,/api/boards/checklist-templates/:templateId,apps/api/src/routes/boards.ts:600,jwt,,boards,sim,ativo
+POST,/api/boards/checklist-templates/:templateId/use,apps/api/src/routes/boards.ts:619,jwt,,boards,sim,ativo
+GET,/api/boards/:id/automations,apps/api/src/routes/boards.ts:641,jwt,,boards,sim,ativo
+POST,/api/boards/:id/automations,apps/api/src/routes/boards.ts:659,jwt,,boards,sim,ativo
+PATCH,/api/boards/automations/:automationId,apps/api/src/routes/boards.ts:695,jwt,,boards,sim,ativo
+DELETE,/api/boards/automations/:automationId,apps/api/src/routes/boards.ts:732,jwt,,boards,sim,ativo
+POST,/api/boards/templates/financial,apps/api/src/routes/boards.ts:753,jwt,,boards,sim,ativo
+POST,/api/boards/templates/goals,apps/api/src/routes/boards.ts:801,jwt,,boards,sim,ativo
+GET,/api/search,apps/api/src/routes/search.ts:19,jwt,,search,não,ativo
+POST,/api/search/index,apps/api/src/routes/search.ts:84,jwt,,search,não,ativo
+DELETE,/api/search/index/:id,apps/api/src/routes/search.ts:96,jwt,,search,não,ativo
+GET,/api/v1/user/agenda-appearance,apps/api/src/routes/agendaAppearance.ts:130,jwt,,agenda_appearance (user settings),sim,ativo
+PUT,/api/v1/user/agenda-appearance,apps/api/src/routes/agendaAppearance.ts:168,jwt,,agenda_appearance (user settings),sim,ativo
+GET,/api/financial/transactions,apps/api/src/routes/financial.ts:34,jwt,,financial,sim,ativo
+POST,/api/financial/transactions,apps/api/src/routes/financial.ts:67,jwt,,financial,sim,ativo
+PUT,/api/financial/transactions/:id,apps/api/src/routes/financial.ts:100,jwt,,financial,sim,ativo
+DELETE,/api/financial/transactions/:id,apps/api/src/routes/financial.ts:136,jwt,,financial,sim,ativo
+GET,/api/financial/accounts,apps/api/src/routes/financial.ts:158,jwt,,financial,sim,ativo
+POST,/api/financial/accounts,apps/api/src/routes/financial.ts:217,jwt,,financial,sim,ativo
+PUT,/api/financial/accounts/:id,apps/api/src/routes/financial.ts:254,jwt,,financial,sim,ativo
+DELETE,/api/financial/accounts/:id,apps/api/src/routes/financial.ts:302,jwt,,financial,sim,ativo
+GET,/api/financial/cost-centers,apps/api/src/routes/financial.ts:324,jwt,,financial,sim,ativo
+GET,/api/financial/centros-custo,apps/api/src/routes/financial.ts:347,jwt,,financial,sim,ativo
+POST,/api/financial/cost-centers,apps/api/src/routes/financial.ts:349,jwt,,financial,sim,ativo
+POST,/api/financial/centros-custo,apps/api/src/routes/financial.ts:379,jwt,,financial,sim,ativo
+PUT,/api/financial/cost-centers/:id,apps/api/src/routes/financial.ts:381,jwt,,financial,sim,ativo
+DELETE,/api/financial/cost-centers/:id,apps/api/src/routes/financial.ts:414,jwt,,financial,sim,ativo
+GET,/api/financial/payments,apps/api/src/routes/financial.ts:436,jwt,,financial,sim,ativo
+POST,/api/financial/payments,apps/api/src/routes/financial.ts:482,jwt,,financial,sim,ativo
+PUT,/api/financial/payments/:id,apps/api/src/routes/financial.ts:512,jwt,,financial,sim,ativo
+DELETE,/api/financial/payments/:id,apps/api/src/routes/financial.ts:547,jwt,,financial,sim,ativo
+GET,/api/financial/package-templates,apps/api/src/routes/financial.ts:569,jwt,,financial,sim,ativo
+POST,/api/financial/package-templates,apps/api/src/routes/financial.ts:587,jwt,,financial,sim,ativo
+PUT,/api/financial/package-templates/:id,apps/api/src/routes/financial.ts:618,jwt,,financial,sim,ativo
+DELETE,/api/financial/package-templates/:id,apps/api/src/routes/financial.ts:658,jwt,,financial,sim,ativo
+GET,/api/financial/patient-packages,apps/api/src/routes/financial.ts:684,jwt,,financial,sim,ativo
+POST,/api/financial/patient-packages,apps/api/src/routes/financial.ts:727,jwt,,financial,sim,ativo
+POST,/api/financial/patient-packages/:id/consume,apps/api/src/routes/financial.ts:786,jwt,,financial,sim,ativo
+POST,/api/copilot/chat,apps/api/src/routes/copilot.ts:61,jwt,,copilot,sim,ativo
+GET,/api/whatsapp/config,apps/api/src/routes/whatsapp.ts:172,jwt,,whatsapp,sim,ativo
+GET,/api/whatsapp/templates,apps/api/src/routes/whatsapp.ts:182,jwt,,whatsapp,sim,ativo
+PUT,/api/whatsapp/templates/:id,apps/api/src/routes/whatsapp.ts:190,jwt,,whatsapp,sim,ativo
+DELETE,/api/whatsapp/templates/:id,apps/api/src/routes/whatsapp.ts:251,jwt,,whatsapp,sim,ativo
+GET,/api/whatsapp/messages,apps/api/src/routes/whatsapp.ts:292,jwt,,whatsapp,sim,ativo
+GET,/api/whatsapp/webhook-logs,apps/api/src/routes/whatsapp.ts:344,jwt,,whatsapp,sim,ativo
+POST,/api/whatsapp/messages,apps/api/src/routes/whatsapp.ts:387,jwt,,whatsapp,sim,ativo
+GET,/api/whatsapp/pending-confirmations,apps/api/src/routes/whatsapp.ts:451,jwt,,whatsapp,sim,ativo
+POST,/api/whatsapp/send-template,apps/api/src/routes/whatsapp.ts:524,jwt,,whatsapp,sim,ativo
+GET,/api/whatsapp/automations,apps/api/src/routes/whatsapp.ts:634,jwt,,whatsapp,sim,ativo
+POST,/api/whatsapp/automations,apps/api/src/routes/whatsapp.ts:662,jwt,,whatsapp,sim,ativo
+PUT,/api/whatsapp/automations/:id,apps/api/src/routes/whatsapp.ts:721,jwt,,whatsapp,sim,ativo
+DELETE,/api/whatsapp/automations/:id,apps/api/src/routes/whatsapp.ts:800,jwt,,whatsapp,sim,ativo
+POST,/api/whatsapp/templates,apps/api/src/routes/whatsapp.ts:817,jwt,,whatsapp,sim,ativo
+POST,/api/whatsapp/templates/sync,apps/api/src/routes/whatsapp.ts:962,jwt,,whatsapp,sim,ativo
+GET,/api/whatsapp/pending-replies,apps/api/src/routes/whatsapp.ts:1038,jwt,,whatsapp,sim,ativo
+POST,/api/whatsapp/pending-replies/:id/approve,apps/api/src/routes/whatsapp.ts:1052,jwt,,whatsapp,sim,ativo
+POST,/api/whatsapp/pending-replies/:id/reject,apps/api/src/routes/whatsapp.ts:1082,jwt,,whatsapp,sim,ativo
+GET,/api/whatsapp/admin/webhook-register,apps/api/src/routes/whatsapp.ts:1106,public (SEM AUTH — risco),,whatsapp,sim,ativo
+GET,/api/whatsapp/admin/webhook-status,apps/api/src/routes/whatsapp.ts:1163,public (SEM AUTH — risco),,whatsapp,sim,ativo
+POST,/api/whatsapp/admin/test-send,apps/api/src/routes/whatsapp.ts:1204,public (SEM AUTH — risco),,whatsapp,sim,ativo
+PATCH,/api/whatsapp/appointment-confirmation-response,apps/api/src/routes/whatsapp.ts:1265,jwt,,whatsapp,sim,ativo
+GET,/api/communications,apps/api/src/routes/communications.ts:9,jwt,,communications,sim,ativo
+GET,/api/communications/stats,apps/api/src/routes/communications.ts:64,jwt,,communications,sim,ativo
+POST,/api/communications,apps/api/src/routes/communications.ts:107,jwt,,communications,sim,ativo
+DELETE,/api/communications/:id,apps/api/src/routes/communications.ts:186,jwt,,communications,sim,ativo
+POST,/api/communications/:id/resend,apps/api/src/routes/communications.ts:198,jwt,,communications,sim,ativo
+POST,/api/communications/test-email,apps/api/src/routes/communications.ts:217,jwt,,communications,sim,ativo
+GET,/api/gamification/profile,apps/api/src/routes/gamification.ts:67,jwt,,gamification,sim,ativo
+GET,/api/gamification/profile/:patientId,apps/api/src/routes/gamification.ts:94,jwt,,gamification,sim,ativo
+POST,/api/gamification/award-xp,apps/api/src/routes/gamification.ts:196,jwt,,gamification,sim,ativo
+GET,/api/gamification/quests,apps/api/src/routes/gamification.ts:277,jwt,,gamification,sim,ativo
+GET,/api/gamification/quests/:patientId,apps/api/src/routes/gamification.ts:292,jwt,,gamification,sim,ativo
+PUT,/api/gamification/quests/:patientId/complete,apps/api/src/routes/gamification.ts:388,jwt,,gamification,sim,ativo
+GET,/api/gamification/achievements,apps/api/src/routes/gamification.ts:426,jwt,,gamification,sim,ativo
+GET,/api/gamification/achievements/:patientId,apps/api/src/routes/gamification.ts:441,jwt,,gamification,sim,ativo
+GET,/api/gamification/transactions/:patientId,apps/api/src/routes/gamification.ts:457,jwt,,gamification,sim,ativo
+GET,/api/gamification/transactions,apps/api/src/routes/gamification.ts:476,jwt,,gamification,sim,ativo
+GET,/api/gamification/leaderboard,apps/api/src/routes/gamification.ts:506,jwt,,gamification,sim,ativo
+GET,/api/gamification/badges/:patientId,apps/api/src/routes/gamification.ts:557,jwt,,gamification,sim,ativo
+GET,/api/gamification/shop,apps/api/src/routes/gamification.ts:575,jwt,,gamification,sim,ativo
+GET,/api/gamification/inventory,apps/api/src/routes/gamification.ts:588,jwt,,gamification,sim,ativo
+GET,/api/gamification/inventory/:patientId,apps/api/src/routes/gamification.ts:605,jwt,,gamification,sim,ativo
+POST,/api/gamification/buy,apps/api/src/routes/gamification.ts:627,jwt,,gamification,sim,ativo
+GET,/api/gamification/settings,apps/api/src/routes/gamification.ts:680,jwt,,gamification,sim,ativo
+PUT,/api/gamification/settings,apps/api/src/routes/gamification.ts:694,jwt,,gamification,sim,ativo
+GET,/api/gamification/admin/stats,apps/api/src/routes/gamification.ts:721,jwt,,gamification,sim,ativo
+GET,/api/gamification/admin/at-risk,apps/api/src/routes/gamification.ts:793,jwt,,gamification,sim,ativo
+GET,/api/gamification/admin/popular-achievements,apps/api/src/routes/gamification.ts:827,jwt,,gamification,sim,ativo
+POST,/api/gamification/admin/adjust-xp,apps/api/src/routes/gamification.ts:863,jwt,,gamification,sim,ativo
+POST,/api/gamification/admin/reset-streak,apps/api/src/routes/gamification.ts:908,jwt,,gamification,sim,ativo
+GET,/api/gamification/achievement-definitions,apps/api/src/routes/gamification.ts:924,jwt,,gamification,sim,ativo
+POST,/api/gamification/achievement-definitions,apps/api/src/routes/gamification.ts:934,jwt,role-check,gamification,sim,ativo
+PUT,/api/gamification/achievement-definitions/:id,apps/api/src/routes/gamification.ts:954,jwt,role-check,gamification,sim,ativo
+DELETE,/api/gamification/achievement-definitions/:id,apps/api/src/routes/gamification.ts:984,jwt,role-check,gamification,sim,ativo
+GET,/api/gamification/quest-definitions,apps/api/src/routes/gamification.ts:993,jwt,,gamification,sim,ativo
+POST,/api/gamification/quest-definitions,apps/api/src/routes/gamification.ts:1005,jwt,role-check,gamification,sim,ativo
+PUT,/api/gamification/quest-definitions/:id,apps/api/src/routes/gamification.ts:1030,jwt,role-check,gamification,sim,ativo
+PATCH,/api/gamification/quest-definitions/:id/active,apps/api/src/routes/gamification.ts:1068,jwt,role-check,gamification,sim,ativo
+DELETE,/api/gamification/quest-definitions/:id,apps/api/src/routes/gamification.ts:1079,jwt,role-check,gamification,sim,ativo
+GET,/api/gamification/weekly-challenges,apps/api/src/routes/gamification.ts:1088,jwt,,gamification,sim,ativo
+POST,/api/gamification/weekly-challenges,apps/api/src/routes/gamification.ts:1128,jwt,role-check,gamification,sim,ativo
+PUT,/api/gamification/weekly-challenges/:id,apps/api/src/routes/gamification.ts:1154,jwt,role-check,gamification,sim,ativo
+PATCH,/api/gamification/weekly-challenges/:id/active,apps/api/src/routes/gamification.ts:1190,jwt,role-check,gamification,sim,ativo
+DELETE,/api/gamification/weekly-challenges/:id,apps/api/src/routes/gamification.ts:1203,jwt,role-check,gamification,sim,ativo
+GET,/api/gamification/patient-challenges,apps/api/src/routes/gamification.ts:1211,jwt,,gamification,sim,ativo
+GET,/api/gamification/patient-challenges/:patientId,apps/api/src/routes/gamification.ts:1222,jwt,,gamification,sim,ativo
+GET,/api/gamification/shop-items,apps/api/src/routes/gamification.ts:1238,jwt,,gamification,sim,ativo
+POST,/api/gamification/shop-items,apps/api/src/routes/gamification.ts:1250,jwt,,gamification,sim,ativo
+PUT,/api/gamification/shop-items/:id,apps/api/src/routes/gamification.ts:1271,jwt,role-check,gamification,sim,ativo
+DELETE,/api/gamification/shop-items/:id,apps/api/src/routes/gamification.ts:1303,jwt,role-check,gamification,sim,ativo
+GET,/api/automation,apps/api/src/routes/automation.ts:68,jwt,,automation,sim,ativo
+POST,/api/automation,apps/api/src/routes/automation.ts:78,jwt,,automation,sim,ativo
+GET,/api/automation/logs,apps/api/src/routes/automation.ts:92,jwt,,automation,sim,ativo
+GET,/api/automation/stats,apps/api/src/routes/automation.ts:116,jwt,,automation,sim,ativo
+GET,/api/automation/:id,apps/api/src/routes/automation.ts:178,jwt,,automation,sim,ativo
+PUT,/api/automation/:id,apps/api/src/routes/automation.ts:192,jwt,,automation,sim,ativo
+DELETE,/api/automation/:id,apps/api/src/routes/automation.ts:222,jwt,,automation,sim,ativo
+POST,/api/automation/simulate,apps/api/src/routes/automation.ts:231,jwt,,automation,sim,ativo
+POST,/api/automation/nl-condition,apps/api/src/routes/automation.ts:241,jwt,,automation,sim,ativo
+GET,/api/cloudflare-analytics/status,apps/api/src/routes/cloudflareAnalytics.ts:10,jwt,admin/owner,cloudflareAnalytics,não,ativo
+POST,/api/cloudflare-analytics/graphql,apps/api/src/routes/cloudflareAnalytics.ts:19,jwt,admin/owner,cloudflareAnalytics,não,ativo
+GET,/api/cloudflare-analytics/workflows,apps/api/src/routes/cloudflareAnalytics.ts:36,jwt,admin/owner,cloudflareAnalytics,não,ativo
+GET,/api/scheduling/waitlist,apps/api/src/routes/scheduling-waitlist.ts:15,jwt,,scheduling-waitlist,sim,ativo
+POST,/api/scheduling/waitlist,apps/api/src/routes/scheduling-waitlist.ts:43,jwt,,scheduling-waitlist,sim,ativo
+PUT,/api/scheduling/waitlist/:id,apps/api/src/routes/scheduling-waitlist.ts:84,jwt,,scheduling-waitlist,sim,ativo
+DELETE,/api/scheduling/waitlist/:id,apps/api/src/routes/scheduling-waitlist.ts:144,jwt,,scheduling-waitlist,sim,ativo
+GET,/api/scheduling/waitlist-offers,apps/api/src/routes/scheduling-waitlist.ts:159,jwt,,scheduling-waitlist,sim,ativo
+POST,/api/scheduling/waitlist-offers,apps/api/src/routes/scheduling-waitlist.ts:179,jwt,,scheduling-waitlist,sim,ativo
+POST,/api/scheduling/waitlist-offers/:id/respond,apps/api/src/routes/scheduling-waitlist.ts:215,jwt,,scheduling-waitlist,sim,ativo
+POST,/api/patient-portal/auth/request-otp,apps/api/src/routes/patientPortal.ts:499,public (fluxo OTP),,patientPortal,sim,ativo
+POST,/api/patient-portal/auth/verify-otp,apps/api/src/routes/patientPortal.ts:540,public (fluxo OTP),,patientPortal,sim,ativo
+POST,/api/patient-portal/bootstrap,apps/api/src/routes/patientPortal.ts:586,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+GET,/api/patient-portal/profile,apps/api/src/routes/patientPortal.ts:595,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+PATCH,/api/patient-portal/profile,apps/api/src/routes/patientPortal.ts:604,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+GET,/api/patient-portal/therapists,apps/api/src/routes/patientPortal.ts:612,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+POST,/api/patient-portal/link-professional,apps/api/src/routes/patientPortal.ts:656,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+GET,/api/patient-portal/appointments,apps/api/src/routes/patientPortal.ts:699,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+POST,/api/patient-portal/appointments/:id/confirm,apps/api/src/routes/patientPortal.ts:778,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+POST,/api/patient-portal/appointments/:id/cancel,apps/api/src/routes/patientPortal.ts:810,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+GET,/api/patient-portal/exercises,apps/api/src/routes/patientPortal.ts:843,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+POST,/api/patient-portal/exercises/:assignmentId/complete,apps/api/src/routes/patientPortal.ts:935,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+GET,/api/patient-portal/notifications,apps/api/src/routes/patientPortal.ts:1141,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+POST,/api/patient-portal/notifications/:id/read,apps/api/src/routes/patientPortal.ts:1176,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+POST,/api/patient-portal/notifications/read-all,apps/api/src/routes/patientPortal.ts:1197,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+GET,/api/patient-portal/progress,apps/api/src/routes/patientPortal.ts:1209,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+GET,/api/patient-portal/stats,apps/api/src/routes/patientPortal.ts:1293,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+GET,/api/patient-portal/referral,apps/api/src/routes/patientPortal.ts:1332,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+GET,/api/patient-portal/digital-twin,apps/api/src/routes/patientPortal.ts:1363,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+GET,/api/patient-portal/ai-snapshot,apps/api/src/routes/patientPortal.ts:1421,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+GET,/api/patient-portal/gamification,apps/api/src/routes/patientPortal.ts:1493,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+POST,/api/patient-portal/proms,apps/api/src/routes/patientPortal.ts:1547,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+POST,/api/patient-portal/exercises/log,apps/api/src/routes/patientPortal.ts:1601,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+GET,/api/patient-portal/media/photos,apps/api/src/routes/patientPortal.ts:1635,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+GET,/api/patient-portal/media/medical-requests,apps/api/src/routes/patientPortal.ts:1653,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+GET,/api/patient-portal/media/access-url/*,apps/api/src/routes/patientPortal.ts:1673,jwt (sessão paciente OTP),,patientPortal,sim,ativo
+POST,/api/patient/assistant,apps/api/src/routes/patientAssistant.ts:25,jwt,,patientAssistant,sim (app mobile),ativo
+GET,/api/evolution/treatment-sessions,apps/api/src/routes/evolution.ts:49,jwt,,evolution,sim,ativo
+GET,/api/evolution/measurements,apps/api/src/routes/evolution.ts:81,jwt,,evolution,sim,ativo
+POST,/api/evolution/measurements,apps/api/src/routes/evolution.ts:109,jwt,,evolution,sim,ativo
+GET,/api/evolution/required-measurements,apps/api/src/routes/evolution.ts:156,jwt,,evolution,sim,ativo
+POST,/api/evolution/treatment-sessions,apps/api/src/routes/evolution.ts:190,jwt,,evolution,sim,ativo
+PATCH,/api/evolution/treatment-sessions/:id,apps/api/src/routes/evolution.ts:328,jwt,,evolution,sim,ativo
+GET,/api/notification-preferences,apps/api/src/routes/notificationPreferences.ts:27,jwt,,notificationPreferences,sim,ativo
+PUT,/api/notification-preferences,apps/api/src/routes/notificationPreferences.ts:69,jwt,,notificationPreferences,sim,ativo
+GET,/api/clinic-metrics/kpis,apps/api/src/routes/clinicMetrics.ts:52,jwt,,clinicMetrics,sim,ativo
+GET,/api/clinic-metrics/team-performance,apps/api/src/routes/clinicMetrics.ts:135,jwt,,clinicMetrics,sim,ativo
+GET,/api/clinic-metrics/patients/:id/digital-twin,apps/api/src/routes/clinicMetrics.ts:184,jwt,,clinicMetrics,sim,ativo
+GET,/api/clinic-metrics/cohorts,apps/api/src/routes/clinicMetrics.ts:207,jwt,,clinicMetrics,sim,ativo
+GET,/api/clinic-metrics/churn,apps/api/src/routes/clinicMetrics.ts:266,jwt,,clinicMetrics,sim,ativo
+GET,/api/clinic-metrics/patients/:id/ai-snapshot,apps/api/src/routes/clinicMetrics.ts:306,jwt,,clinicMetrics,sim,ativo
+GET,/api/clinic-metrics/protocol-efficacy,apps/api/src/routes/clinicMetrics.ts:396,jwt,,clinicMetrics,sim,ativo
+GET,/api/clinic-metrics/clinical-quality,apps/api/src/routes/clinicMetrics.ts:449,jwt,,clinicMetrics,sim,ativo
+GET,/api/clinic-metrics/clinical-alerts,apps/api/src/routes/clinicMetrics.ts:479,jwt,,clinicMetrics,sim,ativo
+GET,/api/clinic-metrics/at-risk-patients,apps/api/src/routes/clinicMetrics.ts:507,jwt,,clinicMetrics,sim,ativo
+GET,/api/clinic-metrics/revenue-forecast,apps/api/src/routes/clinicMetrics.ts:559,jwt,,clinicMetrics,sim,ativo
+GET,/api/clinic-metrics/overdue-payments,apps/api/src/routes/clinicMetrics.ts:624,jwt,,clinicMetrics,sim,ativo
+GET,/api/clinic-metrics/packages-expiring,apps/api/src/routes/clinicMetrics.ts:684,jwt,,clinicMetrics,sim,ativo
+GET,/api/clinic-metrics/cac-ltv,apps/api/src/routes/clinicMetrics.ts:742,jwt,,clinicMetrics,sim,ativo
+GET,/api/recibos,apps/api/src/routes/recibos.ts:15,jwt,,recibos,sim,ativo
+GET,/api/recibos/last-number,apps/api/src/routes/recibos.ts:38,jwt,,recibos,sim,ativo
+POST,/api/recibos,apps/api/src/routes/recibos.ts:57,jwt,,recibos,sim,ativo
+POST,/api/recibos/:id/send-whatsapp,apps/api/src/routes/recibos.ts:97,jwt,,recibos,sim,ativo
+GET,/api/recibos/:id/pix-qr,apps/api/src/routes/recibos.ts:163,jwt,,recibos,sim,ativo
+GET,/api/events/feed,apps/api/src/routes/events.ts:11,jwt,,events,sim,ativo
+POST,/api/events,apps/api/src/routes/events.ts:60,jwt,,events,sim,ativo
+GET,/api/clinical-docs,apps/api/src/routes/clinicalDocs.ts:23,jwt,admin/owner,clinicalDocs,sim,ativo
+POST,/api/clinical-docs,apps/api/src/routes/clinicalDocs.ts:29,jwt,admin/owner,clinicalDocs,sim,ativo
+DELETE,/api/clinical-docs/:id,apps/api/src/routes/clinicalDocs.ts:82,jwt,admin/owner,clinicalDocs,sim,ativo
+GET,/api/evaluation-forms,apps/api/src/routes/evaluationForms.ts:186,jwt,,evaluationForms,sim,ativo
+GET,/api/evaluation-forms/responses,apps/api/src/routes/evaluationForms.ts:221,jwt,,evaluationForms,sim,ativo
+GET,/api/evaluation-forms/responses/:responseId,apps/api/src/routes/evaluationForms.ts:265,jwt,,evaluationForms,sim,ativo
+PUT,/api/evaluation-forms/responses/:responseId,apps/api/src/routes/evaluationForms.ts:317,jwt,,evaluationForms,sim,ativo
+GET,/api/evaluation-forms/:id,apps/api/src/routes/evaluationForms.ts:382,jwt,,evaluationForms,sim,ativo
+POST,/api/evaluation-forms,apps/api/src/routes/evaluationForms.ts:412,jwt,,evaluationForms,sim,ativo
+PUT,/api/evaluation-forms/:id,apps/api/src/routes/evaluationForms.ts:444,jwt,,evaluationForms,sim,ativo
+DELETE,/api/evaluation-forms/:id,apps/api/src/routes/evaluationForms.ts:509,jwt,,evaluationForms,sim,ativo
+POST,/api/evaluation-forms/:id/duplicate,apps/api/src/routes/evaluationForms.ts:529,jwt,,evaluationForms,sim,ativo
+POST,/api/evaluation-forms/:id/fields,apps/api/src/routes/evaluationForms.ts:599,jwt,,evaluationForms,sim,ativo
+PUT,/api/evaluation-forms/fields/:fieldId,apps/api/src/routes/evaluationForms.ts:639,jwt,,evaluationForms,sim,ativo
+DELETE,/api/evaluation-forms/fields/:fieldId,apps/api/src/routes/evaluationForms.ts:717,jwt,,evaluationForms,sim,ativo
+GET,/api/evaluation-forms/:id/responses,apps/api/src/routes/evaluationForms.ts:740,jwt,,evaluationForms,sim,ativo
+POST,/api/evaluation-forms/:id/responses,apps/api/src/routes/evaluationForms.ts:772,jwt,,evaluationForms,sim,ativo
+GET,/api/contacts,apps/api/src/routes/contacts.ts:22,jwt,,contacts,sim,ativo
+GET,/api/contacts/:id,apps/api/src/routes/contacts.ts:76,jwt,,contacts,sim,ativo
+GET,/api/contacts/:id/timeline,apps/api/src/routes/contacts.ts:118,jwt,,contacts,sim,ativo
+POST,/api/contacts/:id/convert,apps/api/src/routes/contacts.ts:155,jwt,,contacts,sim,ativo
+POST,/api/contacts/:id/activities,apps/api/src/routes/contacts.ts:225,jwt,,contacts,sim,ativo
+GET,/api/contacts/roi-by-source,apps/api/src/routes/contacts.ts:257,jwt,,contacts,sim,ativo
+POST,/api/contacts/:id/rescore,apps/api/src/routes/contacts.ts:310,jwt,,contacts,sim,ativo
+GET,/api/exercise-plans,apps/api/src/routes/exercisePlans.ts:12,jwt,,exercisePlans,sim,ativo
+POST,/api/exercise-plans,apps/api/src/routes/exercisePlans.ts:35,jwt,,exercisePlans,sim,ativo
+POST,/api/exercise-plans/:id/pdf,apps/api/src/routes/exercisePlans.ts:97,jwt,,exercisePlans,sim,ativo
+PATCH,/api/exercise-plans/:id,apps/api/src/routes/exercisePlans.ts:120,jwt,,exercisePlans,sim,ativo
+DELETE,/api/exercise-plans/:id,apps/api/src/routes/exercisePlans.ts:148,jwt,,exercisePlans,sim,ativo
+GET,/api/exercise-plans/:id/compliance,apps/api/src/routes/exercisePlans.ts:167,jwt,,exercisePlans,sim,ativo
+POST,/api/exercise-plans/:id/generate-hep,apps/api/src/routes/exercisePlans.ts:252,jwt,,exercisePlans,sim,ativo
+POST,/api/exercise-plans/:id/items,apps/api/src/routes/exercisePlans.ts:338,jwt,,exercisePlans,sim,ativo
+POST,/api/webchat/message,apps/api/src/routes/webchat.ts:171,public,,webchat,sim (consumidor externo),ativo
+GET,/api/webchat/poll,apps/api/src/routes/webchat.ts:489,public,,webchat,sim (consumidor externo),ativo
+GET,/api/webchat/widget.js,apps/api/src/routes/webchat.ts:531,public,,webchat,sim (consumidor externo),ativo
+POST,/api/goals/suggest,apps/api/src/routes/goals.ts:64,jwt,,goals,sim,ativo
+GET,/api/goals,apps/api/src/routes/goals.ts:76,jwt,,goals,sim,ativo
+POST,/api/goals,apps/api/src/routes/goals.ts:95,jwt,,goals,sim,ativo
+PUT,/api/goals/:id,apps/api/src/routes/goals.ts:154,jwt,,goals,sim,ativo
+DELETE,/api/goals/:id,apps/api/src/routes/goals.ts:265,jwt,,goals,sim,ativo
+GET,/api/reports/medical-templates,apps/api/src/routes/reports.ts:92,jwt,,reports,sim,ativo
+POST,/api/reports/medical-templates,apps/api/src/routes/reports.ts:112,jwt,,reports,sim,ativo
+PUT,/api/reports/medical-templates/:id,apps/api/src/routes/reports.ts:143,jwt,,reports,sim,ativo
+DELETE,/api/reports/medical-templates/:id,apps/api/src/routes/reports.ts:178,jwt,,reports,sim,ativo
+GET,/api/reports/medical,apps/api/src/routes/reports.ts:191,jwt,,reports,sim,ativo
+POST,/api/reports/medical,apps/api/src/routes/reports.ts:211,jwt,,reports,sim,ativo
+PUT,/api/reports/medical/:id,apps/api/src/routes/reports.ts:239,jwt,,reports,sim,ativo
+DELETE,/api/reports/medical/:id,apps/api/src/routes/reports.ts:274,jwt,,reports,sim,ativo
+GET,/api/reports/convenio,apps/api/src/routes/reports.ts:287,jwt,,reports,sim,ativo
+POST,/api/reports/convenio,apps/api/src/routes/reports.ts:307,jwt,,reports,sim,ativo
+PUT,/api/reports/convenio/:id,apps/api/src/routes/reports.ts:337,jwt,,reports,sim,ativo
+DELETE,/api/reports/convenio/:id,apps/api/src/routes/reports.ts:378,jwt,,reports,sim,ativo
+GET,/api/reports/chart,apps/api/src/routes/reports.ts:391,jwt,,reports,sim,ativo
+GET,/api/wiki/dictionary,apps/api/src/routes/wiki.ts:52,public,,wiki,sim,ativo
+POST,/api/wiki/dictionary,apps/api/src/routes/wiki.ts:82,jwt,,wiki,sim,ativo
+PUT,/api/wiki/dictionary/:id,apps/api/src/routes/wiki.ts:108,jwt,,wiki,sim,ativo
+DELETE,/api/wiki/dictionary/:id,apps/api/src/routes/wiki.ts:141,jwt,,wiki,sim,ativo
+GET,/api/wiki/categories,apps/api/src/routes/wiki.ts:160,jwt,,wiki,sim,ativo
+POST,/api/wiki/categories,apps/api/src/routes/wiki.ts:174,jwt,,wiki,sim,ativo
+DELETE,/api/wiki/categories/:id,apps/api/src/routes/wiki.ts:199,jwt,,wiki,sim,ativo
+GET,/api/wiki,apps/api/src/routes/wiki.ts:210,public,,wiki,sim,ativo
+GET,/api/wiki/:slug,apps/api/src/routes/wiki.ts:260,public,,wiki,sim,ativo
+GET,/api/wiki/:slug/children,apps/api/src/routes/wiki.ts:288,public,,wiki,sim,ativo
+GET,/api/wiki/:slug/versions,apps/api/src/routes/wiki.ts:318,jwt,,wiki,sim,ativo
+GET,/api/wiki/org/list,apps/api/src/routes/wiki.ts:341,jwt,,wiki,sim,ativo
+GET,/api/wiki/by-id/:id,apps/api/src/routes/wiki.ts:367,jwt,,wiki,sim,ativo
+PATCH,/api/wiki/triage,apps/api/src/routes/wiki.ts:383,jwt,,wiki,sim,ativo
+POST,/api/wiki,apps/api/src/routes/wiki.ts:413,jwt,,wiki,sim,ativo
+PUT,/api/wiki/:slug,apps/api/src/routes/wiki.ts:461,jwt,,wiki,sim,ativo
+DELETE,/api/wiki/:slug,apps/api/src/routes/wiki.ts:557,jwt,,wiki,sim,ativo
+GET,/api/wiki/:pageId/comments,apps/api/src/routes/wiki.ts:582,jwt,,wiki,sim,ativo
+POST,/api/wiki/:pageId/comments,apps/api/src/routes/wiki.ts:596,jwt,,wiki,sim,ativo
+PATCH,/api/wiki/comments/:id/resolve,apps/api/src/routes/wiki.ts:618,jwt,,wiki,sim,ativo
+GET,/api/marketing/consents/:patientId,apps/api/src/routes/marketing.ts:21,jwt,,marketing,sim,ativo
+PUT,/api/marketing/consents/:patientId,apps/api/src/routes/marketing.ts:37,jwt,,marketing,sim,ativo
+POST,/api/marketing/consents/:patientId/revoke,apps/api/src/routes/marketing.ts:79,jwt,,marketing,sim,ativo
+GET,/api/marketing/review-config,apps/api/src/routes/marketing.ts:97,jwt,,marketing,sim,ativo
+PUT,/api/marketing/review-config,apps/api/src/routes/marketing.ts:120,jwt,,marketing,sim,ativo
+GET,/api/marketing/birthday-config,apps/api/src/routes/marketing.ts:150,jwt,,marketing,sim,ativo
+PUT,/api/marketing/birthday-config,apps/api/src/routes/marketing.ts:172,jwt,,marketing,sim,ativo
+GET,/api/marketing/recall-campaigns,apps/api/src/routes/marketing.ts:200,jwt,,marketing,sim,ativo
+POST,/api/marketing/recall-campaigns,apps/api/src/routes/marketing.ts:219,jwt,,marketing,sim,ativo
+PUT,/api/marketing/recall-campaigns/:id,apps/api/src/routes/marketing.ts:242,jwt,,marketing,sim,ativo
+DELETE,/api/marketing/recall-campaigns/:id,apps/api/src/routes/marketing.ts:276,jwt,,marketing,sim,ativo
+GET,/api/marketing/referrals/stats,apps/api/src/routes/marketing.ts:291,jwt,,marketing,sim,ativo
+POST,/api/marketing/referrals,apps/api/src/routes/marketing.ts:344,jwt,,marketing,sim,ativo
+GET,/api/marketing/referrals/code/:code,apps/api/src/routes/marketing.ts:371,jwt,,marketing,sim,ativo
+GET,/api/marketing/referrals/patient/:patientId,apps/api/src/routes/marketing.ts:387,jwt,,marketing,sim,ativo
+POST,/api/marketing/referrals/redeem,apps/api/src/routes/marketing.ts:405,jwt,,marketing,sim,ativo
+GET,/api/marketing/fisiolink,apps/api/src/routes/marketing.ts:458,jwt,,marketing,sim,ativo
+PUT,/api/marketing/fisiolink,apps/api/src/routes/marketing.ts:472,jwt,,marketing,sim,ativo
+GET,/api/marketing/fisiolink/:slug/analytics,apps/api/src/routes/marketing.ts:512,jwt,,marketing,sim,ativo
+GET,/api/marketing/exports,apps/api/src/routes/marketing.ts:529,jwt,,marketing,sim,ativo
+GET,/api/marketing/content-calendar,apps/api/src/routes/marketing.ts:558,jwt,,marketing,sim,ativo
+POST,/api/marketing/content-calendar,apps/api/src/routes/marketing.ts:577,jwt,,marketing,sim,ativo
+PUT,/api/marketing/content-calendar/:id,apps/api/src/routes/marketing.ts:602,jwt,,marketing,sim,ativo
+DELETE,/api/marketing/content-calendar/:id,apps/api/src/routes/marketing.ts:638,jwt,,marketing,sim,ativo
+POST,/api/marketing/exports,apps/api/src/routes/marketing.ts:650,jwt,,marketing,sim,ativo
+DELETE,/api/marketing/exports/:id,apps/api/src/routes/marketing.ts:678,jwt,,marketing,sim,ativo
+GET,/api/marketing/roi,apps/api/src/routes/marketing.ts:695,jwt,,marketing,sim,ativo
+GET,/api/marketing/ltv-maximizer/opportunities,apps/api/src/routes/marketing.ts:725,jwt,,marketing,sim,ativo
+GET,/api/marketing/public/fisiolink/:slug,apps/api/src/routes/marketing.ts:857,public,,marketing,sim,ativo
+POST,/api/marketing/public/fisiolink/:slug/click,apps/api/src/routes/marketing.ts:872,public,,marketing,sim,ativo
+GET,/api/organizations/current,apps/api/src/routes/organizations.ts:56,jwt,,organizations,sim,ativo
+GET,/api/organizations/:id,apps/api/src/routes/organizations.ts:106,jwt,,organizations,sim,ativo
+POST,/api/organizations,apps/api/src/routes/organizations.ts:163,jwt,,organizations,sim,ativo
+PUT,/api/organizations/:id,apps/api/src/routes/organizations.ts:190,jwt,,organizations,sim,ativo
+GET,/api/prestadores,apps/api/src/routes/prestadores.ts:43,jwt,,prestadores,sim,ativo
+GET,/api/prestadores/metrics,apps/api/src/routes/prestadores.ts:61,jwt,,prestadores,sim,ativo
+POST,/api/prestadores,apps/api/src/routes/prestadores.ts:80,jwt,,prestadores,sim,ativo
+PUT,/api/prestadores/:id,apps/api/src/routes/prestadores.ts:110,jwt,,prestadores,sim,ativo
+DELETE,/api/prestadores/:id,apps/api/src/routes/prestadores.ts:139,jwt,,prestadores,sim,ativo
+PUT,/api/prestadores/:id/status,apps/api/src/routes/prestadores.ts:152,jwt,,prestadores,sim,ativo
+GET,/api/medical-requests,apps/api/src/routes/medicalRequests.ts:17,jwt,,medicalRequests,sim,ativo
+POST,/api/medical-requests,apps/api/src/routes/medicalRequests.ts:39,jwt,,medicalRequests,sim,ativo
+POST,/api/medical-requests/:id/files,apps/api/src/routes/medicalRequests.ts:64,jwt,,medicalRequests,sim,ativo
+DELETE,/api/medical-requests/:id,apps/api/src/routes/medicalRequests.ts:94,jwt,,medicalRequests,sim,ativo
+DELETE,/api/medical-requests/:id/files/:fileId,apps/api/src/routes/medicalRequests.ts:114,jwt,,medicalRequests,sim,ativo
+GET,/api/financial/vouchers,apps/api/src/routes/financial-commerce.ts:11,jwt,,financial-commerce,sim,ativo
+POST,/api/financial/vouchers,apps/api/src/routes/financial-commerce.ts:32,jwt,,financial-commerce,sim,ativo
+PUT,/api/financial/vouchers/:id,apps/api/src/routes/financial-commerce.ts:59,jwt,,financial-commerce,sim,ativo
+DELETE,/api/financial/vouchers/:id,apps/api/src/routes/financial-commerce.ts:88,jwt,,financial-commerce,sim,ativo
+GET,/api/financial/user-vouchers,apps/api/src/routes/financial-commerce.ts:100,jwt,,financial-commerce,sim,ativo
+POST,/api/financial/user-vouchers/:id/consume,apps/api/src/routes/financial-commerce.ts:133,jwt,,financial-commerce,sim,ativo
+POST,/api/financial/vouchers/:id/checkout,apps/api/src/routes/financial-commerce.ts:170,jwt,,financial-commerce,sim,ativo
+POST,/api/financial/vouchers/checkout/verify,apps/api/src/routes/financial-commerce.ts:208,jwt,,financial-commerce,sim,ativo
+GET,/api/financial/nfse,apps/api/src/routes/financial-commerce.ts:269,jwt,,financial-commerce,sim,ativo
+POST,/api/financial/nfse,apps/api/src/routes/financial-commerce.ts:282,jwt,,financial-commerce,sim,ativo
+PUT,/api/financial/nfse/:id,apps/api/src/routes/financial-commerce.ts:313,jwt,,financial-commerce,sim,ativo
+DELETE,/api/financial/nfse/:id,apps/api/src/routes/financial-commerce.ts:344,jwt,,financial-commerce,sim,ativo
+GET,/api/financial/nfse-config,apps/api/src/routes/financial-commerce.ts:359,jwt,,financial-commerce,sim,ativo
+PUT,/api/financial/nfse-config,apps/api/src/routes/financial-commerce.ts:372,jwt,,financial-commerce,sim,ativo
+GET,/api/exercise-videos,apps/api/src/routes/exerciseVideos.ts:24,jwt,,exerciseVideos,sim,ativo
+GET,/api/exercise-videos/by-exercise/:exerciseId,apps/api/src/routes/exerciseVideos.ts:68,jwt,,exerciseVideos,sim,ativo
+GET,/api/exercise-videos/:id,apps/api/src/routes/exerciseVideos.ts:84,jwt,,exerciseVideos,sim,ativo
+POST,/api/exercise-videos,apps/api/src/routes/exerciseVideos.ts:94,jwt,,exerciseVideos,sim,ativo
+PUT,/api/exercise-videos/:id,apps/api/src/routes/exerciseVideos.ts:132,jwt,,exerciseVideos,sim,ativo
+DELETE,/api/exercise-videos/:id,apps/api/src/routes/exerciseVideos.ts:172,jwt,,exerciseVideos,sim,ativo
+POST,/api/exercise-videos/upload-url,apps/api/src/routes/exerciseVideos.ts:202,jwt,,exerciseVideos,sim,ativo
+POST,/api/exercise-videos/stream-webhook,apps/api/src/routes/exerciseVideos.ts:270,webhook-secret (HMAC STREAM_WEBHOOK_SECRET),,exerciseVideos,sim,ativo
+GET,/api/telemedicine/rooms,apps/api/src/routes/telemedicine.ts:70,jwt,,telemedicine,sim,ativo
+GET,/api/telemedicine/rooms/:id,apps/api/src/routes/telemedicine.ts:102,jwt,,telemedicine,sim,ativo
+POST,/api/telemedicine/rooms,apps/api/src/routes/telemedicine.ts:132,jwt,,telemedicine,sim,ativo
+POST,/api/telemedicine/rooms/:id/start,apps/api/src/routes/telemedicine.ts:181,jwt,,telemedicine,sim,ativo
+PUT,/api/telemedicine/rooms/:id,apps/api/src/routes/telemedicine.ts:226,jwt,,telemedicine,sim,ativo
+POST,/api/telemedicine/livekit-token,apps/api/src/routes/telemedicine.ts:365,jwt,,telemedicine,sim,ativo
+POST,/api/telemedicine/rooms/:id/summary,apps/api/src/routes/telemedicine.ts:418,jwt,,telemedicine,sim,ativo
+GET,/api/projects,apps/api/src/routes/projects.ts:8,jwt,,projects,sim,ativo
+GET,/api/projects/:id,apps/api/src/routes/projects.ts:46,jwt,,projects,sim,ativo
+POST,/api/projects,apps/api/src/routes/projects.ts:85,jwt,,projects,sim,ativo
+PUT,/api/projects/:id,apps/api/src/routes/projects.ts:125,jwt,,projects,sim,ativo
+DELETE,/api/projects/:id,apps/api/src/routes/projects.ts:185,jwt,,projects,sim,ativo
+GET,/api/commissions/summary,apps/api/src/routes/commissions.ts:9,jwt,,commissions,sim,ativo
+GET,/api/commissions/therapist/:id,apps/api/src/routes/commissions.ts:59,jwt,,commissions,sim,ativo
+POST,/api/commissions/config,apps/api/src/routes/commissions.ts:76,jwt,,commissions,sim,ativo
+POST,/api/commissions/payout,apps/api/src/routes/commissions.ts:107,jwt,,commissions,sim,ativo
+GET,/api/commissions/config,apps/api/src/routes/commissions.ts:152,jwt,,commissions,sim,ativo
+POST,/api/webhooks/neon-auth,apps/api/src/routes/webhooks.ts:103,webhook-secret,,webhooks,sim (consumidor externo),ativo
+GET,/api/autocomplete,apps/api/src/routes/autocomplete.ts:11,public,,autocomplete,não,ativo
+GET,/api/autocomplete/pending,apps/api/src/routes/autocomplete.ts:80,jwt,,autocomplete,não,ativo
+POST,/api/autocomplete/suggest,apps/api/src/routes/autocomplete.ts:104,public,,autocomplete,não,ativo
+POST,/api/autocomplete/moderate,apps/api/src/routes/autocomplete.ts:198,jwt,,autocomplete,não,ativo
+GET,/api/profile/me,apps/api/src/routes/profile.ts:152,jwt,,profile,sim,ativo
+GET,/api/profile/therapists,apps/api/src/routes/profile.ts:209,jwt,,profile,sim,ativo
+PUT,/api/profile/me,apps/api/src/routes/profile.ts:237,jwt,,profile,sim,ativo
+GET,/api/profile/users/:id,apps/api/src/routes/profile.ts:341,jwt,,profile,sim,ativo
+PUT,/api/profile/users/:id,apps/api/src/routes/profile.ts:401,jwt,,profile,sim,ativo
+PATCH,/api/profile/me/public,apps/api/src/routes/profile.ts:567,jwt,,profile,sim,ativo
+DELETE,/api/profile/me,apps/api/src/routes/profile.ts:624,jwt,,profile,sim,ativo
+GET,/api/profile/admin/pending,apps/api/src/routes/profile.ts:671,jwt,,profile,sim,ativo
+POST,/api/profile/admin/approve/:profileId,apps/api/src/routes/profile.ts:693,jwt,,profile,sim,ativo
+GET,/api/documents,apps/api/src/routes/documents.ts:36,jwt,,documents,sim,ativo
+POST,/api/documents,apps/api/src/routes/documents.ts:55,jwt,,documents,sim,ativo
+DELETE,/api/documents/:id,apps/api/src/routes/documents.ts:109,jwt,,documents,sim,ativo
+GET,/api/documents/atestado-templates,apps/api/src/routes/documents.ts:124,jwt,,documents,sim,ativo
+POST,/api/documents/atestado-templates,apps/api/src/routes/documents.ts:142,jwt,,documents,sim,ativo
+PUT,/api/documents/atestado-templates/:id,apps/api/src/routes/documents.ts:172,jwt,,documents,sim,ativo
+DELETE,/api/documents/atestado-templates/:id,apps/api/src/routes/documents.ts:208,jwt,,documents,sim,ativo
+GET,/api/documents/contrato-templates,apps/api/src/routes/documents.ts:220,jwt,,documents,sim,ativo
+POST,/api/documents/contrato-templates,apps/api/src/routes/documents.ts:238,jwt,,documents,sim,ativo
+PUT,/api/documents/contrato-templates/:id,apps/api/src/routes/documents.ts:269,jwt,,documents,sim,ativo
+DELETE,/api/documents/contrato-templates/:id,apps/api/src/routes/documents.ts:307,jwt,,documents,sim,ativo
+POST,/api/documents/print,apps/api/src/routes/documents.ts:323,jwt,,documents,sim,ativo
+GET,/api/nps,apps/api/src/routes/nps.ts:23,jwt,,nps,sim,ativo
+GET,/api/nps/stats,apps/api/src/routes/nps.ts:50,jwt,,nps,sim,ativo
+GET,/api/nps/:id,apps/api/src/routes/nps.ts:77,jwt,,nps,sim,ativo
+POST,/api/nps,apps/api/src/routes/nps.ts:90,jwt,,nps,sim,ativo
+DELETE,/api/nps/:id,apps/api/src/routes/nps.ts:125,jwt,,nps,sim,ativo
+GET,/api/public-nps/:token,apps/api/src/routes/nps.ts:142,public,,nps,sim,ativo
+POST,/api/public-nps/:token/respond,apps/api/src/routes/nps.ts:166,public,,nps,sim,ativo
+POST,/api/reports/pdf,apps/api/src/routes/reportsPdf.ts:48,jwt,,reportsPdf,desconhecido,ativo
+POST,/api/reports/pdf/share,apps/api/src/routes/reportsPdf.ts:113,jwt,,reportsPdf,desconhecido,ativo
+GET,/api/reports/pdf/templates,apps/api/src/routes/reportsPdf.ts:132,jwt,,reportsPdf,desconhecido,ativo
+GET,/api/crm-automations,apps/api/src/routes/crmAutomations.ts:21,jwt,,crmAutomations,sim,ativo
+GET,/api/crm-automations/templates,apps/api/src/routes/crmAutomations.ts:33,jwt,,crmAutomations,sim,ativo
+POST,/api/crm-automations,apps/api/src/routes/crmAutomations.ts:41,jwt,,crmAutomations,sim,ativo
+PUT,/api/crm-automations/:id,apps/api/src/routes/crmAutomations.ts:78,jwt,,crmAutomations,sim,ativo
+DELETE,/api/crm-automations/:id,apps/api/src/routes/crmAutomations.ts:129,jwt,,crmAutomations,sim,ativo
+GET,/api/crm-automations/:id/executions,apps/api/src/routes/crmAutomations.ts:155,jwt,,crmAutomations,sim,ativo
+POST,/api/crm-automations/scan,apps/api/src/routes/crmAutomations.ts:170,jwt,,crmAutomations,sim,ativo
+GET,/api/scheduling/recurring-series,apps/api/src/routes/scheduling-recurring.ts:18,jwt,,scheduling-recurring,sim,ativo
+POST,/api/scheduling/recurring-series,apps/api/src/routes/scheduling-recurring.ts:45,jwt,,scheduling-recurring,sim,ativo
+PUT,/api/scheduling/recurring-series/:id,apps/api/src/routes/scheduling-recurring.ts:84,jwt,,scheduling-recurring,sim,ativo
+DELETE,/api/scheduling/recurring-series/:id,apps/api/src/routes/scheduling-recurring.ts:147,jwt,,scheduling-recurring,sim,ativo
+GET,/api/scheduling/recurring-series/:id/occurrences,apps/api/src/routes/scheduling-recurring.ts:162,jwt,,scheduling-recurring,sim,ativo
+GET,/api/scheduling/appointment-types,apps/api/src/routes/scheduling-recurring.ts:183,jwt,,scheduling-recurring,sim,ativo
+POST,/api/scheduling/appointment-types,apps/api/src/routes/scheduling-recurring.ts:197,jwt,,scheduling-recurring,sim,ativo
+PUT,/api/scheduling/appointment-types/:id,apps/api/src/routes/scheduling-recurring.ts:226,jwt,,scheduling-recurring,sim,ativo
+DELETE,/api/scheduling/appointment-types/:id,apps/api/src/routes/scheduling-recurring.ts:308,jwt,,scheduling-recurring,sim,ativo
+POST,/api/auth/login,apps/api/src/routes/auth.ts:151,public,,auth,sim (app mobile),ativo
+POST,/api/auth/signup,apps/api/src/routes/auth.ts:226,public+turnstile,,auth,sim (app mobile),ativo
+POST,/api/auth/forgot-password,apps/api/src/routes/auth.ts:263,public+turnstile,,auth,sim (app mobile),ativo
+POST,/api/auth/reset-password,apps/api/src/routes/auth.ts:287,public+turnstile,,auth,sim (app mobile),ativo
+POST,/api/auth/logout,apps/api/src/routes/auth.ts:313,public,,auth,sim (app mobile),ativo
+GET,/api/auth/session,apps/api/src/routes/auth.ts:329,public,,auth,sim (app mobile),ativo
+GET,/api/standardized-tests,apps/api/src/routes/standardizedTests.ts:42,jwt,,standardizedTests,sim,ativo
+GET,/api/standardized-tests/:id,apps/api/src/routes/standardizedTests.ts:100,jwt,,standardizedTests,sim,ativo
+POST,/api/standardized-tests/extract,apps/api/src/routes/standardizedTests.ts:141,jwt,,standardizedTests,sim,ativo
+POST,/api/standardized-tests,apps/api/src/routes/standardizedTests.ts:153,jwt,,standardizedTests,sim,ativo
+DELETE,/api/standardized-tests/:id,apps/api/src/routes/standardizedTests.ts:214,jwt,,standardizedTests,sim,ativo
+GET,/api/organization-members,apps/api/src/routes/organizationMembers.ts:8,jwt,,organizationMembers,sim,ativo
+PATCH,/api/organization-members/:userId/phone,apps/api/src/routes/organizationMembers.ts:52,jwt,,organizationMembers,sim,ativo
+GET,/api/invitations,apps/api/src/routes/invitations.ts:8,jwt,,invitations,sim,ativo
+POST,/api/invitations,apps/api/src/routes/invitations.ts:22,jwt,,invitations,sim,ativo
+PATCH,/api/invitations/:id,apps/api/src/routes/invitations.ts:55,jwt,,invitations,sim,ativo
+DELETE,/api/invitations/:id,apps/api/src/routes/invitations.ts:77,jwt,,invitations,sim,ativo
+GET,/api/invitations/validate/:token,apps/api/src/routes/invitations.ts:89,public,,invitations,sim,ativo
+POST,/api/invitations/use/:token,apps/api/src/routes/invitations.ts:101,public,,invitations,sim,ativo
+GET,/api/referrals/ranking,apps/api/src/routes/referrals.ts:18,jwt,,referrals,sim,ativo
+GET,/api/referrals/codes,apps/api/src/routes/referrals.ts:47,jwt,,referrals,sim,ativo
+POST,/api/referrals/codes,apps/api/src/routes/referrals.ts:62,jwt,,referrals,sim,ativo
+GET,/api/referrals/fisio-links,apps/api/src/routes/referrals.ts:90,jwt,,referrals,sim,ativo
+GET,/api/referrals/clicks-daily,apps/api/src/routes/referrals.ts:108,jwt,,referrals,sim,ativo
+GET,/api/nfse/config,apps/api/src/routes/nfse.ts:67,jwt,,nfse,sim,ativo
+PUT,/api/nfse/config,apps/api/src/routes/nfse.ts:128,jwt,,nfse,sim,ativo
+GET,/api/nfse,apps/api/src/routes/nfse.ts:187,jwt,,nfse,sim,ativo
+GET,/api/nfse/test-connection,apps/api/src/routes/nfse.ts:253,jwt,,nfse,sim,ativo
+GET,/api/nfse/:id,apps/api/src/routes/nfse.ts:274,jwt,,nfse,sim,ativo
+POST,/api/nfse/generate,apps/api/src/routes/nfse.ts:291,jwt,,nfse,sim,ativo
+POST,/api/nfse/send/:id,apps/api/src/routes/nfse.ts:379,jwt,,nfse,sim,ativo
+POST,/api/nfse/test/:id,apps/api/src/routes/nfse.ts:429,jwt,,nfse,sim,ativo
+GET,/api/nfse/consulta-nfse/:id,apps/api/src/routes/nfse.ts:492,jwt,,nfse,sim,ativo
+GET,/api/nfse/consulta-lote/:numeroLote,apps/api/src/routes/nfse.ts:534,jwt,,nfse,sim,ativo
+POST,/api/nfse/cancel/:id,apps/api/src/routes/nfse.ts:570,jwt,,nfse,sim,ativo
+POST,/api/nfse/:id/cancel,apps/api/src/routes/nfse.ts:633,jwt,,nfse,sim,ativo
+GET,/api/nfse/danfse/:id,apps/api/src/routes/nfse.ts:642,jwt,,nfse,sim,ativo
+POST,/api/nfse/batch,apps/api/src/routes/nfse.ts:689,jwt,,nfse,sim,ativo
+DELETE,/api/nfse/:id,apps/api/src/routes/nfse.ts:770,jwt,,nfse,sim,ativo
+GET,/api/ai-clinical-search,apps/api/src/routes/ai-clinical-search.ts:29,jwt,,ai-clinical-search,sim,ativo
+GET,/api/ai-clinical-search/patients/:id/similar,apps/api/src/routes/ai-clinical-search.ts:105,jwt,,ai-clinical-search,sim,ativo
+GET,/api/exams,apps/api/src/routes/exams.ts:17,jwt,,exams,sim,ativo
+POST,/api/exams,apps/api/src/routes/exams.ts:35,jwt,,exams,sim,ativo
+POST,/api/exams/:id/files,apps/api/src/routes/exams.ts:61,jwt,,exams,sim,ativo
+DELETE,/api/exams/:id,apps/api/src/routes/exams.ts:91,jwt,,exams,sim,ativo
+DELETE,/api/exams/:id/files/:fileId,apps/api/src/routes/exams.ts:110,jwt,,exams,sim,ativo
+GET,/api/crm/leads,apps/api/src/routes/crm.ts:45,jwt,,crm,sim,ativo
+GET,/api/crm/leads/:id,apps/api/src/routes/crm.ts:87,jwt,,crm,sim,ativo
+POST,/api/crm/leads,apps/api/src/routes/crm.ts:100,jwt,,crm,sim,ativo
+PUT,/api/crm/leads/:id,apps/api/src/routes/crm.ts:182,jwt,,crm,sim,ativo
+DELETE,/api/crm/leads/:id,apps/api/src/routes/crm.ts:273,jwt,,crm,sim,ativo
+GET,/api/crm/leads/:id/historico,apps/api/src/routes/crm.ts:290,jwt,,crm,sim,ativo
+POST,/api/crm/leads/:id/historico,apps/api/src/routes/crm.ts:312,jwt,,crm,sim,ativo
+GET,/api/crm/tarefas,apps/api/src/routes/crm.ts:345,jwt,,crm,sim,ativo
+POST,/api/crm/tarefas,apps/api/src/routes/crm.ts:378,jwt,,crm,sim,ativo
+PUT,/api/crm/tarefas/:id,apps/api/src/routes/crm.ts:403,jwt,,crm,sim,ativo
+DELETE,/api/crm/tarefas/:id,apps/api/src/routes/crm.ts:448,jwt,,crm,sim,ativo
+GET,/api/crm/campanhas,apps/api/src/routes/crm.ts:468,jwt,,crm,sim,ativo
+POST,/api/crm/campanhas/audience-count,apps/api/src/routes/crm.ts:501,jwt,,crm,sim,ativo
+GET,/api/crm/campanhas/:id/summary,apps/api/src/routes/crm.ts:520,jwt,,crm,sim,ativo
+POST,/api/crm/campanhas,apps/api/src/routes/crm.ts:541,jwt,,crm,sim,ativo
+PUT,/api/crm/campanhas/:id,apps/api/src/routes/crm.ts:646,jwt,,crm,sim,ativo
+DELETE,/api/crm/campanhas/:id,apps/api/src/routes/crm.ts:684,jwt,,crm,sim,ativo
+GET,/api/evolution-versions,apps/api/src/routes/evolutionVersions.ts:10,jwt,,evolutionVersions,sim,ativo
+POST,/api/evolution-versions,apps/api/src/routes/evolutionVersions.ts:26,jwt,,evolutionVersions,sim,ativo
+POST,/api/lgpd/data-deletion-request,apps/api/src/routes/lgpd.ts:29,jwt,,lgpd,não,ativo
+GET,/api/lgpd/data-deletion-requests,apps/api/src/routes/lgpd.ts:75,jwt,,lgpd,não,ativo
+GET,/api/lgpd/clinical-access-logs,apps/api/src/routes/lgpd.ts:94,jwt,,lgpd,não,ativo
+GET,/api/announcements,apps/api/src/routes/announcements.ts:10,jwt,,announcements,sim,ativo
+PUT,/api/announcements/:id,apps/api/src/routes/announcements.ts:55,jwt,role-check,announcements,sim,ativo
+DELETE,/api/announcements/:id,apps/api/src/routes/announcements.ts:107,jwt,role-check,announcements,sim,ativo
+POST,/api/announcements,apps/api/src/routes/announcements.ts:142,jwt,role-check,announcements,sim,ativo
+POST,/api/announcements/:id/read,apps/api/src/routes/announcements.ts:211,jwt,,announcements,sim,ativo
+GET,/api/announcements/compliance,apps/api/src/routes/announcements.ts:233,jwt,,announcements,sim,ativo
+GET,/api/treatment-cycles,apps/api/src/routes/treatmentCycles.ts:8,jwt,,treatmentCycles,sim,ativo
+POST,/api/treatment-cycles,apps/api/src/routes/treatmentCycles.ts:31,jwt,,treatmentCycles,sim,ativo
+PATCH,/api/treatment-cycles/:id,apps/api/src/routes/treatmentCycles.ts:55,jwt,,treatmentCycles,sim,ativo
+DELETE,/api/treatment-cycles/:id,apps/api/src/routes/treatmentCycles.ts:96,jwt,,treatmentCycles,sim,ativo
+POST,/api/treatment-cycles/:id/close,apps/api/src/routes/treatmentCycles.ts:108,jwt,,treatmentCycles,sim,ativo
+GET,/api/treatment-cycles/:id/report,apps/api/src/routes/treatmentCycles.ts:266,jwt,,treatmentCycles,sim,ativo
+GET,/api/groups/classes,apps/api/src/routes/groups.ts:53,jwt,,groups,sim,ativo
+POST,/api/groups/classes,apps/api/src/routes/groups.ts:79,jwt,,groups,sim,ativo
+POST,/api/groups/enroll,apps/api/src/routes/groups.ts:114,jwt,,groups,sim,ativo
+POST,/api/groups/checkin,apps/api/src/routes/groups.ts:148,jwt,,groups,sim,ativo
+GET,/api/groups/live-status,apps/api/src/routes/groups.ts:187,jwt,,groups,sim,ativo
+GET,/api/image-processor/:key{.*},apps/api/src/routes/imageProcessor.ts:11,public,,imageProcessor,sim (consumidor externo),ativo
+GET,/api/biomechanics/dashboard,apps/api/src/routes/biomechanics.ts:449,jwt,,biomechanics,sim,ativo
+GET,/api/biomechanics/protocols,apps/api/src/routes/biomechanics.ts:493,jwt,,biomechanics,sim,ativo
+POST,/api/biomechanics/protocols,apps/api/src/routes/biomechanics.ts:511,jwt,,biomechanics,sim,ativo
+GET,/api/biomechanics/protocols/:id,apps/api/src/routes/biomechanics.ts:549,jwt,,biomechanics,sim,ativo
+POST,/api/biomechanics/captures,apps/api/src/routes/biomechanics.ts:564,jwt,,biomechanics,sim,ativo
+POST,/api/biomechanics/:id/media/upload-url,apps/api/src/routes/biomechanics.ts:681,jwt,,biomechanics,sim,ativo
+POST,/api/biomechanics/:id/media/complete,apps/api/src/routes/biomechanics.ts:737,jwt,,biomechanics,sim,ativo
+POST,/api/biomechanics/:id/process,apps/api/src/routes/biomechanics.ts:801,jwt,,biomechanics,sim,ativo
+GET,/api/biomechanics/:id/job,apps/api/src/routes/biomechanics.ts:898,jwt,,biomechanics,sim,ativo
+GET,/api/biomechanics/:id/workbench,apps/api/src/routes/biomechanics.ts:918,jwt,,biomechanics,sim,ativo
+POST,/api/biomechanics/:id/annotations,apps/api/src/routes/biomechanics.ts:1000,jwt,,biomechanics,sim,ativo
+PATCH,/api/biomechanics/:id/metrics/:metricId,apps/api/src/routes/biomechanics.ts:1035,jwt,,biomechanics,sim,ativo
+POST,/api/biomechanics/:id/validate,apps/api/src/routes/biomechanics.ts:1067,jwt,,biomechanics,sim,ativo
+GET,/api/biomechanics/patient/:patientId/timeline,apps/api/src/routes/biomechanics.ts:1116,jwt,,biomechanics,sim,ativo
+GET,/api/biomechanics/patient/:patientId,apps/api/src/routes/biomechanics.ts:1146,jwt,,biomechanics,sim,ativo
+GET,/api/biomechanics/patient/:patientId/metrics/history,apps/api/src/routes/biomechanics.ts:1166,jwt,,biomechanics,sim,ativo
+GET,/api/biomechanics/patient/:patientId/comparison,apps/api/src/routes/biomechanics.ts:1186,jwt,,biomechanics,sim,ativo
+POST,/api/biomechanics,apps/api/src/routes/biomechanics.ts:1250,jwt,,biomechanics,sim,ativo
+PATCH,/api/biomechanics/:id,apps/api/src/routes/biomechanics.ts:1286,jwt,,biomechanics,sim,ativo
+GET,/api/biomechanics/:id,apps/api/src/routes/biomechanics.ts:1317,jwt,,biomechanics,sim,ativo
+POST,/api/biomechanics/:id/pdf,apps/api/src/routes/biomechanics.ts:1340,jwt,,biomechanics,sim,ativo
+POST,/api/biomechanics/:id/sign,apps/api/src/routes/biomechanics.ts:1498,jwt,,biomechanics,sim,ativo
+GET,/api/biomechanics/:id/verify,apps/api/src/routes/biomechanics.ts:1562,public,,biomechanics,sim,ativo
+GET,/api/notifications,apps/api/src/routes/notifications.ts:9,jwt,,notifications,sim,ativo
+POST,/api/notifications,apps/api/src/routes/notifications.ts:31,jwt,,notifications,sim,ativo
+PUT,/api/notifications/:id/read,apps/api/src/routes/notifications.ts:69,jwt,,notifications,sim,ativo
+PUT,/api/notifications/read-all,apps/api/src/routes/notifications.ts:96,jwt,,notifications,sim,ativo
+DELETE,/api/notifications/:id,apps/api/src/routes/notifications.ts:108,jwt,,notifications,sim,ativo
+POST,/api/exercise-import/ingest,apps/api/src/routes/exercise-import.ts:65,jwt,role-check,exercise-import,sim,ativo
+GET,/api/exercise-import/candidates,apps/api/src/routes/exercise-import.ts:72,jwt,,exercise-import,sim,ativo
+POST,/api/exercise-import/candidates/:id/approve,apps/api/src/routes/exercise-import.ts:85,jwt,role-check,exercise-import,sim,ativo
+POST,/api/exercise-import/candidates/:id/reject,apps/api/src/routes/exercise-import.ts:119,jwt,role-check,exercise-import,sim,ativo
+GET,/api/fisiobrain/search,apps/api/src/routes/fisiobrain.ts:32,jwt,,fisiobrain,sim,ativo
+GET,/api/feriados,apps/api/src/routes/feriados.ts:20,jwt,,feriados,sim,ativo
+POST,/api/feriados,apps/api/src/routes/feriados.ts:76,jwt,,feriados,sim,ativo
+PUT,/api/feriados/:id,apps/api/src/routes/feriados.ts:99,jwt,,feriados,sim,ativo
+DELETE,/api/feriados/:id,apps/api/src/routes/feriados.ts:136,jwt,,feriados,sim,ativo
+GET,/api/financial/empresas-parceiras,apps/api/src/routes/financial-catalogs.ts:11,jwt,,financial-catalogs,sim,ativo
+POST,/api/financial/empresas-parceiras,apps/api/src/routes/financial-catalogs.ts:29,jwt,,financial-catalogs,sim,ativo
+PUT,/api/financial/empresas-parceiras/:id,apps/api/src/routes/financial-catalogs.ts:61,jwt,,financial-catalogs,sim,ativo
+DELETE,/api/financial/empresas-parceiras/:id,apps/api/src/routes/financial-catalogs.ts:109,jwt,,financial-catalogs,sim,ativo
+GET,/api/financial/fornecedores,apps/api/src/routes/financial-catalogs.ts:134,jwt,,financial-catalogs,sim,ativo
+POST,/api/financial/fornecedores,apps/api/src/routes/financial-catalogs.ts:152,jwt,,financial-catalogs,sim,ativo
+PUT,/api/financial/fornecedores/:id,apps/api/src/routes/financial-catalogs.ts:193,jwt,,financial-catalogs,sim,ativo
+DELETE,/api/financial/fornecedores/:id,apps/api/src/routes/financial-catalogs.ts:264,jwt,,financial-catalogs,sim,ativo
+GET,/api/financial/formas-pagamento,apps/api/src/routes/financial-catalogs.ts:284,jwt,,financial-catalogs,sim,ativo
+POST,/api/financial/formas-pagamento,apps/api/src/routes/financial-catalogs.ts:302,jwt,,financial-catalogs,sim,ativo
+PUT,/api/financial/formas-pagamento/:id,apps/api/src/routes/financial-catalogs.ts:335,jwt,,financial-catalogs,sim,ativo
+DELETE,/api/financial/formas-pagamento/:id,apps/api/src/routes/financial-catalogs.ts:374,jwt,,financial-catalogs,sim,ativo
+GET,/api/financial/convenios,apps/api/src/routes/financial-catalogs.ts:396,jwt,,financial-catalogs,sim,ativo
+POST,/api/financial/convenios,apps/api/src/routes/financial-catalogs.ts:420,jwt,,financial-catalogs,sim,ativo
+PUT,/api/financial/convenios/:id,apps/api/src/routes/financial-catalogs.ts:457,jwt,,financial-catalogs,sim,ativo
+DELETE,/api/financial/convenios/:id,apps/api/src/routes/financial-catalogs.ts:510,jwt,,financial-catalogs,sim,ativo
+POST,/api/import/legacy-data,apps/api/src/routes/import.ts:470,jwt,,import,não (só e2e),ativo
+GET,/api/templates/categories,apps/api/src/routes/templates.ts:92,public,,templates,sim,ativo
+GET,/api/templates,apps/api/src/routes/templates.ts:104,public,,templates,sim,ativo
+POST,/api/templates/:id/apply,apps/api/src/routes/templates.ts:195,jwt,,templates,sim,ativo
+POST,/api/templates/:id/customize,apps/api/src/routes/templates.ts:286,jwt,,templates,sim,ativo
+GET,/api/templates/:id,apps/api/src/routes/templates.ts:365,public,,templates,sim,ativo
+POST,/api/templates,apps/api/src/routes/templates.ts:413,jwt,,templates,sim,ativo
+PUT,/api/templates/:id,apps/api/src/routes/templates.ts:506,jwt,,templates,sim,ativo
+DELETE,/api/templates/:id,apps/api/src/routes/templates.ts:563,jwt,,templates,sim,ativo
+GET,/api/ai-config/models,apps/api/src/routes/ai-config.ts:12,jwt,,ai-config,não,ativo
+GET,/api/ai-config/config,apps/api/src/routes/ai-config.ts:35,jwt,,ai-config,não,ativo
+PUT,/api/ai-config/config,apps/api/src/routes/ai-config.ts:44,jwt,,ai-config,não,ativo
+GET,/api/ai-config/usage,apps/api/src/routes/ai-config.ts:81,jwt,,ai-config,não,ativo
+GET,(não montado)/usage/today,apps/api/src/routes/ai/usage.ts:9,public,,usage,não,órfão
+GET,(não montado)/usage/month,apps/api/src/routes/ai/usage.ts:16,public,,usage,não,órfão
+GET,(não montado)/usage/by-task,apps/api/src/routes/ai/usage.ts:21,public,,usage,não,órfão
+POST,(não montado),apps/api/src/routes/ai/ragClinical.ts:8,public,,ragClinical,não,órfão
+POST,(não montado)/sync,apps/api/src/routes/ai/knowledge.ts:9,public,,knowledge,não,órfão
+DELETE,(não montado)/:id,apps/api/src/routes/ai/knowledge.ts:19,public,,knowledge,não,órfão
+POST,(não montado)/search,apps/api/src/routes/ai/knowledge.ts:30,public,,knowledge,não,órfão
+POST,/api/ai/dictate,apps/api/src/routes/ai/aiDictation.ts:14,jwt,,aiDictation,sim,ativo
+POST,/api/ai/service,apps/api/src/routes/ai/ai-chat.ts:30,jwt,,ai-chat,sim,ativo
+POST,/api/ai/chat,apps/api/src/routes/ai/ai-chat.ts:153,jwt,,ai-chat,sim,ativo
+POST,/api/ai/fast-processing,apps/api/src/routes/ai/ai-chat.ts:240,jwt,,ai-chat,sim,ativo
+POST,/api/ai/treatment-assistant,apps/api/src/routes/ai/ai-chat.ts:273,jwt,,ai-chat,sim,ativo
+POST,/api/ai/analysis,apps/api/src/routes/ai/ai-chat.ts:456,jwt,,ai-chat,sim,ativo
+POST,/api/ai/form-suggestions,apps/api/src/routes/ai/ai-chat.ts:521,jwt,,ai-chat,sim,ativo
+POST,/api/ai/suggest-reply,apps/api/src/routes/ai/ai-chat.ts:554,jwt,,ai-chat,sim,ativo
+POST,/api/ai/executive-summary,apps/api/src/routes/ai/ai-chat.ts:581,jwt,,ai-chat,sim,ativo
+POST,/api/ai/soap-suggestions,apps/api/src/routes/ai/ai-chat.ts:594,jwt,,ai-chat,sim,ativo
+POST,/api/ai/native/summarize,apps/api/src/routes/ai/ai-chat.ts:649,jwt,,ai-chat,sim,ativo
+POST,/api/ai/native/translate,apps/api/src/routes/ai/ai-chat.ts:657,jwt,,ai-chat,sim,ativo
+POST,/api/ai/vector-search,apps/api/src/routes/ai/ai-chat.ts:677,jwt,,ai-chat,sim,ativo
+POST,/api/ai/ingest,apps/api/src/routes/ai/ai-chat.ts:716,jwt,,ai-chat,sim,ativo
+GET,/api/ai/retention/:patientId,apps/api/src/routes/ai/retention.ts:36,jwt,,retention,desconhecido,ativo
+POST,/api/ai/retention/:patientId/update,apps/api/src/routes/ai/retention.ts:53,jwt,,retention,desconhecido,ativo
+POST,/api/ai/retention/:patientId/draft,apps/api/src/routes/ai/retention.ts:88,jwt,,retention,desconhecido,ativo
+POST,/api/ai/retention/:patientId/dismiss,apps/api/src/routes/ai/retention.ts:106,jwt,,retention,desconhecido,ativo
+POST,/api/ai/brain/chat/:patientId,apps/api/src/routes/ai/brain-chat.ts:12,jwt,,brain-chat,desconhecido,ativo
+GET,/api/ai/insights,apps/api/src/routes/ai/ai-insights.ts:22,jwt,,ai-insights,desconhecido,ativo
+POST,/api/ai/transcribe-audio,apps/api/src/routes/ai/ai-audio.ts:14,jwt,,ai-audio,sim,ativo
+POST,/api/ai/transcribe-session,apps/api/src/routes/ai/ai-audio.ts:72,jwt,,ai-audio,sim,ativo
+POST,/api/ai/voice/transcribe,apps/api/src/routes/ai/ai-audio.ts:155,jwt,,ai-audio,sim,ativo
+POST,/api/ai/voice/evolution,apps/api/src/routes/ai/ai-audio.ts:174,jwt,,ai-audio,sim,ativo
+POST,/api/ai/voice/task,apps/api/src/routes/ai/ai-audio.ts:239,jwt,,ai-audio,sim,ativo
+POST,/api/ai/patient-360/prime,apps/api/src/routes/ai/ai-clinical.ts:34,jwt,,ai-clinical,sim,ativo
+POST,/api/ai/patient-360/ask,apps/api/src/routes/ai/ai-clinical.ts:75,jwt,,ai-clinical,sim,ativo
+POST,/api/ai/patient-360/clinical-report,apps/api/src/routes/ai/ai-clinical.ts:130,jwt,,ai-clinical,sim,ativo
+GET,/api/ai/patient-360/status/:patientId,apps/api/src/routes/ai/ai-clinical.ts:183,jwt,,ai-clinical,sim,ativo
+DELETE,/api/ai/patient-360/:patientId,apps/api/src/routes/ai/ai-clinical.ts:202,jwt,,ai-clinical,sim,ativo
+POST,/api/ai/assessment/recording,apps/api/src/routes/ai/ai-clinical.ts:222,jwt,,ai-clinical,sim,ativo
+POST,/api/ai/assessment/transcript,apps/api/src/routes/ai/ai-clinical.ts:271,jwt,,ai-clinical,sim,ativo
+GET,/api/ai/assessment/live-ws,apps/api/src/routes/ai/ai-clinical.ts:325,jwt,,ai-clinical,sim,ativo
+POST,/api/ai/vision/analyze,apps/api/src/routes/ai/ai-clinical.ts:394,jwt,,ai-clinical,sim,ativo
+POST,/api/ai/vision/posture,apps/api/src/routes/ai/ai-clinical.ts:426,jwt,,ai-clinical,sim,ativo
+GET,/api/ai/usage/weekly,apps/api/src/routes/ai/ai-clinical.ts:458,jwt,,ai-clinical,sim,ativo
+POST,/api/ai/summarize-patient,apps/api/src/routes/ai/ai-clinical.ts:506,jwt,,ai-clinical,sim,ativo
+POST,/api/ai/summarize-patient-soap,apps/api/src/routes/ai/ai-clinical.ts:573,jwt,,ai-clinical,sim,ativo
+POST,/api/ai/peer-review,apps/api/src/routes/ai/ai-clinical.ts:701,jwt,,ai-clinical,sim,ativo
+GET,/api/ai/medical-report/outcome,apps/api/src/routes/ai/ai-clinical.ts:785,jwt,,ai-clinical,sim,ativo
+POST,/api/ai/generate-medication,apps/api/src/routes/ai/ai-clinical.ts:847,jwt,,ai-clinical,sim,ativo
+POST,/api/ai/document/analyze,apps/api/src/routes/ai/ai-documents.ts:12,jwt,,ai-documents,sim,ativo
+POST,/api/ai/document/classify,apps/api/src/routes/ai/ai-documents.ts:64,jwt,,ai-documents,sim,ativo
+POST,/api/ai/document/summarize,apps/api/src/routes/ai/ai-documents.ts:85,jwt,,ai-documents,sim,ativo
+POST,/api/ai/document/translate,apps/api/src/routes/ai/ai-documents.ts:123,jwt,,ai-documents,sim,ativo
+POST,/api/ai/document/compare,apps/api/src/routes/ai/ai-documents.ts:153,jwt,,ai-documents,sim,ativo
+POST,/api/ai/document/pdf,apps/api/src/routes/ai/ai-documents.ts:187,jwt,,ai-documents,sim,ativo
+POST,/api/ai/document/to-markdown,apps/api/src/routes/ai/ai-documents.ts:203,jwt,,ai-documents,sim,ativo
+POST,/api/ai/document/rag-ingest,apps/api/src/routes/ai/ai-documents.ts:224,jwt,,ai-documents,sim,ativo
+POST,/api/ai/document/chat,apps/api/src/routes/ai/ai-documents.ts:249,jwt,,ai-documents,sim,ativo
+POST,/api/ai/receipt-ocr,apps/api/src/routes/ai/ai-documents.ts:320,jwt,,ai-documents,sim,ativo
+POST,/api/ai/movement-video,apps/api/src/routes/ai/ai-documents.ts:375,jwt,,ai-documents,sim,ativo
+GET,/api/ai/brain/insights/:patientId,apps/api/src/routes/ai/brain-insights.ts:18,jwt,,brain-insights,desconhecido,ativo
+GET,(não montado)/:patientId,apps/api/src/routes/ml/patientRisk.ts:9,public,,patientRisk,não,órfão
+POST,(não montado)/:patientId/explain,apps/api/src/routes/ml/patientRisk.ts:34,public,,patientRisk,não,órfão
+GET,/api/analytics/intelligent-reports/:patientId,apps/api/src/routes/analytics/patient.ts:48,jwt,,patient,sim,ativo
+POST,/api/analytics/intelligent-reports,apps/api/src/routes/analytics/patient.ts:69,jwt,,patient,sim,ativo
+GET,/api/analytics/patient-evolution/:patientId,apps/api/src/routes/analytics/patient.ts:227,jwt,,patient,sim,ativo
+GET,/api/analytics/patient-progress/:patientId,apps/api/src/routes/analytics/patient.ts:251,jwt,,patient,sim,ativo
+GET,/api/analytics/patient-lifecycle-events/:patientId,apps/api/src/routes/analytics/patient.ts:332,jwt,,patient,sim,ativo
+POST,/api/analytics/patient-lifecycle-events,apps/api/src/routes/analytics/patient.ts:350,jwt,,patient,sim,ativo
+GET,/api/analytics/patient-outcome-measures/:patientId,apps/api/src/routes/analytics/patient.ts:399,jwt,,patient,sim,ativo
+POST,/api/analytics/patient-outcome-measures,apps/api/src/routes/analytics/patient.ts:438,jwt,,patient,sim,ativo
+GET,/api/analytics/patient-session-metrics/:patientId,apps/api/src/routes/analytics/patient.ts:489,jwt,,patient,sim,ativo
+POST,/api/analytics/patient-session-metrics,apps/api/src/routes/analytics/patient.ts:516,jwt,,patient,sim,ativo
+GET,/api/analytics/patient-predictions/:patientId,apps/api/src/routes/analytics/patient.ts:566,jwt,,patient,sim,ativo
+GET,/api/analytics/patient-risk/:patientId,apps/api/src/routes/analytics/patient.ts:601,jwt,,patient,sim,ativo
+GET,/api/analytics/patient-insights/:patientId,apps/api/src/routes/analytics/patient.ts:608,jwt,,patient,sim,ativo
+PATCH,/api/analytics/patient-insights/:insightId/acknowledge,apps/api/src/routes/analytics/patient.ts:636,jwt,,patient,sim,ativo
+GET,/api/analytics/patient-goals/:patientId,apps/api/src/routes/analytics/patient.ts:664,jwt,,patient,sim,ativo
+POST,/api/analytics/patient-goals,apps/api/src/routes/analytics/patient.ts:682,jwt,,patient,sim,ativo
+PUT,/api/analytics/patient-goals/:goalId,apps/api/src/routes/analytics/patient.ts:732,jwt,,patient,sim,ativo
+PATCH,/api/analytics/patient-goals/:goalId/complete,apps/api/src/routes/analytics/patient.ts:818,jwt,,patient,sim,ativo
+GET,/api/analytics/clinical-benchmarks,apps/api/src/routes/analytics/patient.ts:842,jwt,,patient,sim,ativo
+GET,(não montado)/ml-training-data/patient/:patientId,apps/api/src/routes/analytics/ml.ts:30,jwt,,ml,não,órfão
+GET,(não montado)/ml-training-data/patients,apps/api/src/routes/analytics/ml.ts:178,jwt,,ml,não,órfão
+GET,(não montado)/ml-training-data/stats,apps/api/src/routes/analytics/ml.ts:196,jwt,,ml,não,órfão
+GET,(não montado)/ml-training-data/similar,apps/api/src/routes/analytics/ml.ts:257,jwt,,ml,não,órfão
+POST,(não montado)/ml-training-data,apps/api/src/routes/analytics/ml.ts:287,jwt,,ml,não,órfão
+POST,(não montado)/patient-predictions/upsert,apps/api/src/routes/analytics/ml.ts:333,jwt,,ml,não,órfão
+GET,(não montado)/population-health,apps/api/src/routes/analytics/ml.ts:405,jwt,,ml,não,órfão
+GET,(não montado)/patient/:id,apps/api/src/routes/analytics/digital-twin.ts:25,jwt,,digital-twin,não,órfão
+DELETE,(não montado)/patient/:id/cache,apps/api/src/routes/analytics/digital-twin.ts:252,jwt,,digital-twin,não,órfão
+GET,(não montado)/recovery-prediction/:patientId,apps/api/src/routes/analytics/mlPrediction.ts:20,jwt,,mlPrediction,não,órfão
+GET,(não montado)/history/:patientId,apps/api/src/routes/analytics/mlPrediction.ts:135,jwt,,mlPrediction,não,órfão
+POST,/api/ai-trigger-dt,apps/api/src/routes/admin/trigger-digital-twin.ts:25,jwt,admin,trigger-digital-twin,não,ativo
+POST,/api/admin/trigger-session-archive,apps/api/src/routes/admin/trigger-session-archive.ts:16,jwt,admin,trigger-session-archive,sim,ativo
+GET,/api/admin/dlq,apps/api/src/routes/admin/dlq-replay.ts:15,jwt,admin,dlq-replay,não,ativo
+POST,/api/admin/dlq/replay,apps/api/src/routes/admin/dlq-replay.ts:44,jwt,admin,dlq-replay,não,ativo
+GET,/api/admin/slo-metrics,apps/api/src/routes/admin/slo-metrics.ts:41,jwt,admin,slo-metrics,sim,ativo
+GET,(não montado)/ai-cost,apps/api/src/routes/admin/observability.ts:12,public,,observability,não,órfão
+GET,(não montado)/jobs,apps/api/src/routes/admin/observability.ts:85,public,,observability,não,órfão
+GET,(não montado)/errors,apps/api/src/routes/admin/observability.ts:114,public,,observability,não,órfão
+POST,/api/admin/seed-templates,apps/api/src/routes/admin/seed-templates.ts:18,jwt,admin/owner,seed-templates,não,ativo
+GET,/api/admin/cloudflare-control/status,apps/api/src/routes/admin/cloudflare-control.ts:18,jwt,admin/owner,cloudflare-control,sim,ativo
+POST,/api/admin/cloudflare-control/workflows/:name/trigger,apps/api/src/routes/admin/cloudflare-control.ts:56,jwt,admin/owner,cloudflare-control,sim,ativo
+POST,/api/admin/cloudflare-control/ai-search/cleanup-errors,apps/api/src/routes/admin/cloudflare-control.ts:86,jwt,admin/owner,cloudflare-control,sim,ativo
+POST,/api/admin/cloudflare-control/ai-search/reindex,apps/api/src/routes/admin/cloudflare-control.ts:120,jwt,admin/owner,cloudflare-control,sim,ativo
+GET,/api/admin/cloudflare-control/transcription-budget,apps/api/src/routes/admin/cloudflare-control.ts:156,jwt,admin/owner,cloudflare-control,sim,ativo
+PUT,/api/admin/cloudflare-control/transcription-budget,apps/api/src/routes/admin/cloudflare-control.ts:170,jwt,admin/owner,cloudflare-control,sim,ativo
+DELETE,/api/admin/cloudflare-control/transcription-budget,apps/api/src/routes/admin/cloudflare-control.ts:185,jwt,admin/owner,cloudflare-control,sim,ativo
+GET,/api/patients/:id/medical-records,apps/api/src/routes/patients/clinical-details.ts:28,jwt,,clinical-details,sim,ativo
+POST,/api/patients/:id/medical-records,apps/api/src/routes/patients/clinical-details.ts:47,jwt,,clinical-details,sim,ativo
+PUT,/api/patients/:id/medical-records/:recordId,apps/api/src/routes/patients/clinical-details.ts:105,jwt,,clinical-details,sim,ativo
+DELETE,/api/patients/:id/medical-records/:recordId,apps/api/src/routes/patients/clinical-details.ts:151,jwt,,clinical-details,sim,ativo
+GET,/api/patients/:id/physical-examinations,apps/api/src/routes/patients/clinical-details.ts:169,jwt,,clinical-details,sim,ativo
+POST,/api/patients/:id/physical-examinations,apps/api/src/routes/patients/clinical-details.ts:190,jwt,,clinical-details,sim,ativo
+PUT,/api/patients/:id/physical-examinations/:examId,apps/api/src/routes/patients/clinical-details.ts:257,jwt,,clinical-details,sim,ativo
+DELETE,/api/patients/:id/physical-examinations/:examId,apps/api/src/routes/patients/clinical-details.ts:311,jwt,,clinical-details,sim,ativo
+GET,/api/patients/:id/treatment-plans,apps/api/src/routes/patients/clinical-details.ts:329,jwt,,clinical-details,sim,ativo
+POST,/api/patients/:id/treatment-plans,apps/api/src/routes/patients/clinical-details.ts:348,jwt,,clinical-details,sim,ativo
+PUT,/api/patients/:id/treatment-plans/:planId,apps/api/src/routes/patients/clinical-details.ts:403,jwt,,clinical-details,sim,ativo
+DELETE,/api/patients/:id/treatment-plans/:planId,apps/api/src/routes/patients/clinical-details.ts:457,jwt,,clinical-details,sim,ativo
+GET,/api/patients/:id/attachments,apps/api/src/routes/patients/clinical-details.ts:475,jwt,,clinical-details,sim,ativo
+POST,/api/patients/:id/attachments,apps/api/src/routes/patients/clinical-details.ts:502,jwt,,clinical-details,sim,ativo
+DELETE,/api/patients/:id/attachments/:attachmentId,apps/api/src/routes/patients/clinical-details.ts:559,jwt,,clinical-details,sim,ativo
+GET,/api/patients/:id/pathologies,apps/api/src/routes/patients/clinical-details.ts:577,jwt,,clinical-details,sim,ativo
+POST,/api/patients/:id/pathologies,apps/api/src/routes/patients/clinical-details.ts:596,jwt,,clinical-details,sim,ativo
+PUT,/api/patients/:id/pathologies/:pathologyId,apps/api/src/routes/patients/clinical-details.ts:654,jwt,,clinical-details,sim,ativo
+DELETE,/api/patients/:id/pathologies/:pathologyId,apps/api/src/routes/patients/clinical-details.ts:698,jwt,,clinical-details,sim,ativo
+GET,/api/patients/:id/surgeries,apps/api/src/routes/patients/clinical-details.ts:716,jwt,,clinical-details,sim,ativo
+POST,/api/patients/:id/surgeries,apps/api/src/routes/patients/clinical-details.ts:735,jwt,,clinical-details,sim,ativo
+PUT,/api/patients/:id/surgeries/:surgeryId,apps/api/src/routes/patients/clinical-details.ts:796,jwt,,clinical-details,sim,ativo
+DELETE,/api/patients/:id/surgeries/:surgeryId,apps/api/src/routes/patients/clinical-details.ts:842,jwt,,clinical-details,sim,ativo
+GET,/api/patients/:id/medical-returns,apps/api/src/routes/patients/clinical-details.ts:860,jwt,,clinical-details,sim,ativo
+POST,/api/patients/:id/medical-returns,apps/api/src/routes/patients/clinical-details.ts:879,jwt,,clinical-details,sim,ativo
+PUT,/api/patients/:id/medical-returns/:medicalReturnId,apps/api/src/routes/patients/clinical-details.ts:942,jwt,,clinical-details,sim,ativo
+POST,/api/patients/:id/medical-returns/:medicalReturnId/send-report,apps/api/src/routes/patients/clinical-details.ts:994,jwt,,clinical-details,sim,ativo
+DELETE,/api/patients/:id/medical-returns/:medicalReturnId,apps/api/src/routes/patients/clinical-details.ts:1078,jwt,,clinical-details,sim,ativo
+GET,/api/clinical/conduct-library,apps/api/src/routes/clinical/resources.ts:55,jwt,,resources,sim,ativo
+GET,/api/clinical/conduct-library/:id,apps/api/src/routes/clinical/resources.ts:80,jwt,,resources,sim,ativo
+POST,/api/clinical/conduct-library,apps/api/src/routes/clinical/resources.ts:103,jwt,,resources,sim,ativo
+PUT,/api/clinical/conduct-library/:id,apps/api/src/routes/clinical/resources.ts:127,jwt,,resources,sim,ativo
+DELETE,/api/clinical/conduct-library/:id,apps/api/src/routes/clinical/resources.ts:149,jwt,,resources,sim,ativo
+GET,/api/clinical/test-templates,apps/api/src/routes/clinical/resources.ts:163,jwt,,resources,sim,ativo
+GET,/api/clinical/test-templates/:id,apps/api/src/routes/clinical/resources.ts:200,jwt,,resources,sim,ativo
+POST,/api/clinical/test-templates,apps/api/src/routes/clinical/resources.ts:221,jwt,,resources,sim,ativo
+PUT,/api/clinical/test-templates/:id,apps/api/src/routes/clinical/resources.ts:261,jwt,,resources,sim,ativo
+DELETE,/api/clinical/test-templates/:id,apps/api/src/routes/clinical/resources.ts:328,jwt,,resources,sim,ativo
+GET,/api/clinical/standardized-tests,apps/api/src/routes/clinical/resources.ts:345,jwt,,resources,sim,ativo
+POST,/api/clinical/standardized-tests,apps/api/src/routes/clinical/resources.ts:385,jwt,,resources,sim,ativo
+GET,/api/clinical/pain-maps,apps/api/src/routes/clinical/resources.ts:422,jwt,,resources,sim,ativo
+POST,/api/clinical/pain-maps,apps/api/src/routes/clinical/resources.ts:460,jwt,,resources,sim,ativo
+PUT,/api/clinical/pain-maps/:id,apps/api/src/routes/clinical/resources.ts:504,jwt,,resources,sim,ativo
+DELETE,/api/clinical/pain-maps/:id,apps/api/src/routes/clinical/resources.ts:526,jwt,,resources,sim,ativo
+GET,/api/clinical/evolution-templates,apps/api/src/routes/clinical/resources.ts:543,jwt,,resources,sim,ativo
+GET,/api/clinical/evolution-templates/:id,apps/api/src/routes/clinical/resources.ts:560,jwt,,resources,sim,ativo
+POST,/api/clinical/evolution-templates,apps/api/src/routes/clinical/resources.ts:580,jwt,,resources,sim,ativo
+PUT,/api/clinical/evolution-templates/:id,apps/api/src/routes/clinical/resources.ts:616,jwt,,resources,sim,ativo
+DELETE,/api/clinical/evolution-templates/:id,apps/api/src/routes/clinical/resources.ts:669,jwt,,resources,sim,ativo
+GET,/api/clinical/prescriptions,apps/api/src/routes/clinical/resources.ts:694,jwt,,resources,sim,ativo
+GET,/api/clinical/prescriptions/qr/:qrCode,apps/api/src/routes/clinical/resources.ts:713,public,,resources,sim,ativo
+PUT,/api/clinical/prescriptions/qr/:qrCode,apps/api/src/routes/clinical/resources.ts:727,public,,resources,sim,ativo
+GET,/api/clinical/prescriptions/:id,apps/api/src/routes/clinical/resources.ts:756,jwt,,resources,sim,ativo
+POST,/api/clinical/prescriptions,apps/api/src/routes/clinical/resources.ts:776,jwt,,resources,sim,ativo
+PUT,/api/clinical/prescriptions/:id,apps/api/src/routes/clinical/resources.ts:802,jwt,,resources,sim,ativo
+DELETE,/api/clinical/prescriptions/:id,apps/api/src/routes/clinical/resources.ts:838,jwt,,resources,sim,ativo
+GET,/api/clinical/prescribed-exercises,apps/api/src/routes/clinical/resources.ts:863,jwt,,resources,sim,ativo
+POST,/api/clinical/prescribed-exercises,apps/api/src/routes/clinical/resources.ts:905,jwt,,resources,sim,ativo
+PUT,/api/clinical/prescribed-exercises/:id,apps/api/src/routes/clinical/resources.ts:937,jwt,,resources,sim,ativo
+DELETE,/api/clinical/prescribed-exercises/:id,apps/api/src/routes/clinical/resources.ts:967,jwt,,resources,sim,ativo
+GET,/api/clinical/patient-objectives,apps/api/src/routes/clinical/resources.ts:987,jwt,,resources,sim,ativo
+POST,/api/clinical/patient-objectives,apps/api/src/routes/clinical/resources.ts:1008,jwt,,resources,sim,ativo
+PUT,/api/clinical/patient-objectives/:id,apps/api/src/routes/clinical/resources.ts:1035,jwt,,resources,sim,ativo
+DELETE,/api/clinical/patient-objectives/:id,apps/api/src/routes/clinical/resources.ts:1075,jwt,,resources,sim,ativo
+GET,/api/clinical/patient-objective-assignments,apps/api/src/routes/clinical/resources.ts:1093,jwt,,resources,sim,ativo
+POST,/api/clinical/patient-objective-assignments,apps/api/src/routes/clinical/resources.ts:1139,jwt,,resources,sim,ativo
+DELETE,/api/clinical/patient-objective-assignments/:id,apps/api/src/routes/clinical/resources.ts:1163,jwt,,resources,sim,ativo
+POST,/api/clinical/verify-test,apps/api/src/routes/clinical/resources.ts:1184,jwt,,resources,sim,ativo
+POST,/api/clinical/prescriptions/suggest,apps/api/src/routes/clinical/auto-prescribe.ts:22,jwt,,auto-prescribe,desconhecido,ativo
+POST,/api/clinical/home-exercises/share,apps/api/src/routes/clinical/home-exercises.ts:26,jwt,,home-exercises,desconhecido,ativo
+GET,/api/clinical/home-exercises/patient/:patientId,apps/api/src/routes/clinical/home-exercises.ts:86,jwt,,home-exercises,desconhecido,ativo

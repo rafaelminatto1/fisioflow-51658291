@@ -1,0 +1,62 @@
+dominio,funcionalidade,produto,status,evidencia
+Agenda,"Calendário FullCalendar (dia/semana/mês, drag-drop, resize persistente)",web+pro,Confirmada em produção,SRC agenda + 13941 appointments
+Agenda,Recorrência (recurring_series),web,Implementada não confirmada,BR-AGENDA
+Agenda,Conflito de terapeuta (constraint no_overlapping_therapist_appointments → 409),web+api,Confirmada em produção,BR-AGENDA-002
+Agenda,Bloqueios (blocked_times/blocked_slots/staff_blocks),web,Implementada,DB
+Agenda,Feriados (feriados + D1) na disponibilidade,web,Confirmada em produção,memória webchat
+Agenda,Lista de espera (waitlist/waitlist_offers),web,Implementada não confirmada,DB
+Agenda,No-show policy / confirmação,web,Parcial,DB schedule_no_show_policy
+Agenda,Booking público (publicBooking) com Turnstile,web-public,Confirmada,SRC publicBooking.ts (fallback permissivo — risco)
+Pacientes,Cadastro/diretório com filtros estruturados,web+pro,Confirmada em produção,986 pacientes
+Pacientes,Pré-cadastro por token (2 trilhos precadastro×pre_registration),web-public,Parcial/duplicado,DB
+Pacientes,Prontuário (medical_records),web+pro,Implementada,DB
+Prontuário,Avaliação inicial (evaluation_forms/templates/responses),web,Confirmada,SRC avaliacao-inicial
+Evolução,Editor TipTap texto livre + autosave semi-controlado,web+pro,Confirmada em produção,BR-EVOLUCAO project memory
+Evolução,Colaboração tempo real Yjs (EvolutionCollaborationSql DO),web,Confirmada em produção (6/jul),memória evolução colaborativa
+Evolução,Ditado por voz Nova-3 pt-BR (VoiceScribeAgent),web,Confirmada em produção (gate F1 WER pendente),memória ditado
+Evolução,"Finalização/assinatura lógica (finalizedAt/By, is_edited)",web,Confirmada,BR-EVOLUCAO-005
+Evolução,Fluxo under_review estagiário→supervisor,web,"Planejada (enum existe, API não implementa)",gap agente regras
+Exercícios,Biblioteca (399 exercícios) + categorias + mídia/Stream,web+pac,Confirmada em produção,399 exercises
+Exercícios,HEP / prescrição domiciliar (exercise_plans),web+pac,Implementada,DB
+Exercícios,Protocolos clínicos (exercise_protocols),web,Implementada,DB
+Exercícios,Import wger/ZenFisio,web,Parcial,integrations.csv
+Exercícios,Pose detection na execução (câmera),pac,Parcial/mock,SRC patient-app HEP
+Financeiro,"Pacotes de sessões (consumo atômico, expiração lazy, renewal gate)",web,Confirmada,BR-FINANCEIRO-003/004/005
+Financeiro,Pagamentos/transações (2 trilhos pagamentos×payments/transactions),web,Parcial/duplicado,2 transactions
+Financeiro,Comissões de terapeuta (default 40%),web,Implementada,BR-FINANCEIRO-006
+Financeiro,Recibos,web,Implementada,DB recibos
+Financeiro,NFS-e SP (mTLS + workflow),web,Parcial (0 emitidas; workflow não deployado),DB-003 CF-006
+Financeiro,Vouchers/checkout,web,Implementada não confirmada,DB vouchers
+Financeiro,Fluxo de caixa / contas / centros de custo (duplicado PT/EN),web,Implementada,DB
+CRM,Inbox WhatsApp (wa_conversations/wa_messages) + atribuição + SLA,web+pro,Confirmada em produção,151 wa_messages
+CRM,Janela 24h + templates Meta,web,Confirmada,BR-CRM-002
+CRM,Opt-in/opt-out,web,Implementada,DB wa_opt_in_out
+CRM,Automações gated (automations_enabled default OFF),web,Confirmada (gated),BR-CRM-001
+CRM,Lead score determinístico 0-100,api,Confirmada,BR-CRM-007
+CRM,Roteamento automático de leads,api,Implementada (gated),memória CRM
+CRM,Funil/conversão + campanhas,web,Implementada,DB crm_campanhas
+CRM,Instagram concierge (*/15),api,Confirmada em produção,memória CRM backend
+CRM,Webchat do site (concierge),web-public,Confirmada em produção,memória webchat
+CRM,Trilho legado whatsapp_* (paralelo a wa_*),api,Legada ainda ativa,DB duplicidade
+Tarefas,Kanban (boards/columns) + dependências (409) + recorrência,web,Confirmada em produção (09/jul),memória tarefas
+Tarefas,Integrações Jira/Asana/Monday (paridade),web,Implementada não confirmada,memória tarefas 0140
+NPS,Pesquisas + trigger on-response,web,Implementada,DB trigger
+Retorno médico,Alerta card vermelho + envio wa.me + template Meta,web,Confirmada em produção,memória retorno médico
+Relatórios,Analytics/BI (analytics + insights),web,Implementada,SRC analytics
+IA,Copilot clínico,web,Confirmada em produção,memória IA platform
+IA,Evidence Gateway (PubMed/CID-10) + GLM-5.2,api,Confirmada em produção,memória GLM52
+IA,Busca semântica pgvector + AutoRAG,api,Confirmada (AutoRAG sync cron morto),clinical_embeddings
+IA,Morning Briefing,api,Confirmada (gated por secret),CF-008
+IA,Digital Twin / predições / riscos,web,Parcial (rotas órfãs analytics/ml),agente APIs
+Biomecânica,Lab biomecânico (6 telas RN + workflow + DO),pro,Mock/placeholder (KPIs hardcoded; backend existe),agente mobile
+Wiki,Base de conhecimento interna + versões + sync diário,web,Confirmada,DB wiki_pages
+Gamificação,XP/quests/achievements (paciente),pac,Implementada,DB patient_gamification=3
+Telemedicina,Salas (telemedicine_rooms + LiveKit/Jitsi),web,Parcial (Jitsi sala pública sem senha),agente APIs
+Portal do paciente,OTP telefone + HEP + agenda + chat,pac+web,"Parcial (OTP sem rate limit, envio WA stub)",agente RBAC
+Inventário,clinic_inventory + movimentos,web,Implementada não confirmada,DB
+Wearables,wearable_data + OAuth tokens + workflow,pac,Parcial (módulo workflow órfão),agente APIs
+Marketing,Campanhas recall/aniversário/review + consents,web,Implementada,DB marketing_*
+Grupos,"Aulas em grupo/turmas (2 trilhos, tabelas órfãs)",legado,"Fora do escopo do sistema novo; sem previsão (decisão do proprietário em 2026-07-13)","DB-006; verificar dependências e arquivamento antes de descartar"
+Admin/LGPD,Auditoria (audit_logs + clinical_access_logs + security_events),web,Confirmada,422 audit_logs
+Admin/LGPD,Exclusão/exportação LGPD,web,Implementada (0 consents registrados),agente RBAC
+MFA,Enrollment/settings/backup codes,web,Mock/placeholder (login não consulta),agente RBAC

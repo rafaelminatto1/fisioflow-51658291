@@ -1,0 +1,58 @@
+type,name,schedule_ou_trigger,file,purpose,status
+cron,health-monitor,*/5 * * * *,apps/api/src/cron.ts:31,Health monitor leve (API + AI Gateway) com alerta via ntfy.sh; DB-free para não acordar Neon,ativo
+cron,lead-scoring,0 6 * * *,apps/api/src/cron.ts:35,Lead scoring batch (scoreContacts; heurística + IA opcional via LEAD_SCORING_AI),ativo
+cron,crm-automations-scan,*/15 * * * *,apps/api/src/cron.ts:47,Scan de execuções agendadas do motor de automações CRM + lembretes de sessão configuráveis + SLA de leads + concierge Instagram + backfill de perfis IG,ativo
+cron,lembretes-manha,0 9 * * *,apps/api/src/cron.ts:88,BRT 06h: prewarm Neon; lembretes de consulta; confirmação D-2 (48h); aniversários; pacientes inativos; recall; reengajamento sessão-3; lembretes de exercício; morning briefing (gated),ativo
+cron,manutencao-d1,0 11 * * *,apps/api/src/cron.ts:117,BRT 08h: limpeza de banco; lembrete same-day não confirmados; confirmação urgente D-1; cleanup rate_limits no D1,ativo
+cron,tarefas-vencimento,0 12 * * *,apps/api/src/cron.ts:135,BRT 09h: automações por vencimento de tarefa; notificação tarefas urgentes; tarefas por pendência clínica (evolução faltante e pagamento em atraso); tarefas travadas,ativo
+cron,prewarm-2/wiki-sync,0 10 * * *,apps/api/src/cron.ts:164,Segundo prewarm do Neon; WikiSync delegado a workflow — CASE MORTO: cron não está em triggers do wrangler.toml,órfão
+cron,autorag-sync,10 10 * * 1,apps/api/src/cron.ts:173,Sync AutoRAG (CF REST API) — CASE MORTO: schedule só existe em [[workflows]] (KnowledgeSync); não está em [triggers].crons,órfão
+cron,clinic-agent-briefing,30 10 * * *,apps/api/src/cron.ts:186,ClinicAgent DO: morning briefing por organização (RPC runMorningBriefing),ativo
+cron,clinic-agent-summary,30 21 * * *,apps/api/src/cron.ts:203,ClinicAgent DO: resumo diário por organização (runDailySummary),ativo
+cron,clinic-agent-missing-patients,0 12 * * 1,apps/api/src/cron.ts:219,ClinicAgent DO: alerta semanal de pacientes sumidos (checkMissingPatients),ativo
+cron,nps-auto-trigger,0 14 * * *,apps/api/src/cron.ts:235,BRT 11h: dispara pesquisas NPS (orgs e pacientes),ativo
+cron,anti-churn-placeholder,0 13 * * *,apps/api/src/cron.ts:243,Placeholder anti-churn (delegado a WORKFLOW_REENGAGEMENT) — CASE MORTO: não está em [triggers].crons,órfão
+cron,rtm-clinical-alerts,0 15 * * *,apps/api/src/cron.ts:250,RTM Clinical Alerts + análise de wearables — CASE MORTO: não está em [triggers].crons,órfão
+cron,session-archive,0 3 1 * *,apps/api/src/cron.ts:271,Mensal: arquiva sessions >90d via Pipeline → R2 Iceberg (fisioflow_archive.sessions_archive),ativo
+cron,slo-biweekly-report,"0 9 1,15 * *",apps/api/src/cron.ts:283,Quinzenal: relatório SLO (uptime/p95 via Analytics Engine SQL) + refresh de tokens Instagram,ativo
+cron,slo-health-check,15 * * * *,apps/api/src/cron.ts:300,Horário: alerta se uptime <99.5% ou p95 >2s; dispara campanhas WhatsApp agendadas cuja hora chegou,ativo
+cron,hep-daily-reminder,0 21 * * *,apps/api/src/cron.ts:336,BRT 18h: push diário de HEP (exercícios domiciliares) aos pacientes do app,ativo
+queue,fisioflow-background-tasks,producer BACKGROUND_QUEUE / consumer batch 10 retries 3 DLQ fisioflow-tasks-dlq,apps/api/src/queue.ts:169,"Fila genérica: SEND_WHATSAPP, SEND_PUSH, R2_OBJECT_CREATED, PROCESS_EXAM, PROCESS_BIOMECHANICS_MEDIA, GENERATE_TTS, TRIGGER_WORKFLOW, GENERATE_NFSE, WA_AUTOMATION + eventos de domínio (appointment.created, patient.birthday, prescription.created etc.) que alimentam o motor de automações",ativo
+queue,fisioflow-whatsapp-inbound,producer WHATSAPP_QUEUE / consumer batch 5 retries 5 DLQ inbound-dlq,apps/api/src/queues/whatsapp-inbound.ts,Processa mensagens inbound WhatsApp desacoplado do webhook (ack rápido à Meta; IA/DB no consumer),ativo
+queue,fisioflow-whatsapp-inbound-dlq,consumer batch 1 retries 0,apps/api/src/queues/whatsapp-dlq.ts,Dead-letter de mensagens WhatsApp falhas para revisão manual (replay via /api/admin/dlq),ativo
+queue,fisioflow-tasks-dlq,dead_letter_queue (sem consumer no worker),apps/api/wrangler.toml:254,DLQ da fila background-tasks — sem consumer dedicado; replay via rotas admin,ativo
+workflow,AppointmentReminderWorkflow,binding WORKFLOW_APPOINTMENT_REMINDER (on-demand),apps/api/src/workflows/appointmentReminder.ts,Lembrete durável de consulta (WhatsApp/e-mail com sleep até o horário),ativo
+workflow,PatientOnboardingWorkflow,binding WORKFLOW_PATIENT_ONBOARDING (on-demand),apps/api/src/workflows/patientOnboarding.ts,Onboarding de paciente novo (boas-vindas e passos sequenciais),ativo
+workflow,NFSeWorkflow,binding WORKFLOW_NFSE (on-demand),apps/api/src/workflows/nfseWorkflow.ts,Emissão durável de NFS-e com retries,ativo
+workflow,HEPComplianceWorkflow,binding WORKFLOW_HEP_COMPLIANCE (on-demand),apps/api/src/workflows/hepCompliance.ts,Acompanhamento de adesão ao programa de exercícios domiciliares,ativo
+workflow,PatientDischargeWorkflow,binding WORKFLOW_DISCHARGE (on-demand),apps/api/src/workflows/dischargeWorkflow.ts,Fluxo de alta do paciente,ativo
+workflow,PatientReengagementWorkflow,binding WORKFLOW_REENGAGEMENT (on-demand),apps/api/src/workflows/reengagementWorkflow.ts,Reengajamento de paciente inativo/anti-churn,ativo
+workflow,PatientDigitalTwinWorkflow,binding WORKFLOW_DIGITAL_TWIN (on-demand; admin /api/ai-trigger-dt),apps/api/src/workflows/patient-digital-twin.ts,Geração do digital twin do paciente (IA),ativo
+workflow,WikiSyncWorkflow,cron nativo do workflow 0 9 * * *,apps/api/src/workflows/wikiSync.ts,Sync/indexação da wiki para busca/RAG,ativo
+workflow,KnowledgeSyncWorkflow,cron nativo do workflow 10 10 * * 1,apps/api/src/workflows/knowledgeSync.ts,Sync semanal da base de conhecimento,ativo
+workflow,SessionSummaryWorkflow,binding WORKFLOW_SESSION_SUMMARY (on-demand),apps/api/src/workflows/sessionSummary.ts,Resumo de sessão via IA,ativo
+workflow,BiomechanicsAnalysisWorkflow,binding WORKFLOW_BIOMECHANICS_ANALYSIS (on-demand),apps/api/src/workflows/biomechanicsAnalysis.ts,Análise biomecânica de mídia (vídeo/marcha/postura),ativo
+workflow,AutomationExecutor,binding WORKFLOW_AUTOMATION (event bus; gated AUTOMATION_EXECUTION_ENABLED),apps/api/src/workflows/automationExecutor.ts,Executa ações de automações do canvas (send_webhook e outras) de forma durável,ativo
+workflow,wearableActivity,(módulo presente; sem binding em wrangler.toml),apps/api/src/workflows/wearableActivity.ts,Processamento de atividade de wearables — não registrado como workflow,órfão
+durable-object,OrganizationState,binding ORGANIZATION_STATE (WS /api/realtime),apps/api/src/lib/realtime.ts,Hub realtime por organização: WebSocket broadcast (inbox unread; eventos da org),ativo
+durable-object,PatientAgentSql,binding PATIENT_AGENT (Agents SDK /agents/*),apps/api/src/agents/PatientAgent.ts,Agente IA por paciente (Agents SDK; SQLite),ativo
+durable-object,ClinicAgentSql,binding CLINIC_AGENT (Agents SDK + crons 30 10 / 30 21 / 0 12 seg),apps/api/src/agents/ClinicAgent.ts,Agente IA da clínica: briefings diários; resumo; alerta de pacientes sumidos,ativo
+durable-object,AssessmentLiveSession,binding ASSESSMENT_LIVE_SESSION (Agents SDK),apps/api/src/agents/AssessmentLiveSession.ts,Sessão de avaliação ao vivo (premium Gemini Live gated por GOOGLE_AI_PREMIUM_ENABLED),ativo
+durable-object,VoiceScribeAgent,binding VOICE_SCRIBE_AGENT (WS /agents/*),apps/api/src/agents/VoiceScribeAgent.ts,Ditado de evolução: transcrição streaming pt-BR via Workers AI @cf/deepgram/nova-3 (scribeConfig.ts),ativo
+durable-object,EvolutionCollaborationSql,binding EVOLUTION_COLLABORATION (WS /api/sessions/:id/collaboration),apps/api/src/agents/EvolutionCollaboration.ts,Colaboração tempo-real Google-Docs na observação da evolução (y-partyserver/Yjs; snapshot em sessions.observacao_ydoc),ativo
+websocket,realtime-org,GET /api/realtime (upgrade antes do Hono; token JWT em query),apps/api/src/index.ts:419;474,WS por organização → OrganizationState DO (presença/notificações/inbox),ativo
+websocket,evolution-collaboration,GET /api/sessions/:id/collaboration (upgrade; JWT+org+RBAC),apps/api/src/index.ts:571;592,WS Yjs da evolução colaborativa → EvolutionCollaborationSql,ativo
+websocket,agents-sdk,ANY /agents/* (routeAgentRequest),apps/api/src/index.ts:563,WS/HTTP dos agentes do Agents SDK (VoiceScribe ditado; Patient/ClinicAgent chat),ativo
+sse,ai-chat-stream,POST /api/ai/* (text/event-stream),apps/api/src/routes/ai/ai-chat.ts:234,Streaming SSE de respostas do chat IA,ativo
+sse,agents-charts-stream,POST /api/agents/* (text/event-stream),apps/api/src/routes/ai-agents.ts:109,Streaming SSE de agentes educacionais (tutor/simulador),ativo
+webhook-in,whatsapp-meta,GET+POST /api/whatsapp/webhook (verify token + HMAC X-Hub-Signature-256 WHATSAPP_APP_SECRET),apps/api/src/routes/whatsapp-webhook.ts,Recebe mensagens/status do WhatsApp Cloud API; enfileira em fisioflow-whatsapp-inbound,ativo
+webhook-in,instagram-meta,GET+POST /api/instagram/webhook (IG_VERIFY_TOKEN; IG_APP_SECRET opcional),apps/api/src/routes/instagram-webhook.ts,Recebe DMs do Instagram Messaging API (processInstagram via waitUntil),ativo
+webhook-in,neon-auth,POST /api/webhooks/neon-auth (assinatura EdDSA via JWKS Neon),apps/api/src/routes/webhooks.ts,user.created → cria profile no banco + e-mail ao admin (aprovação pendente),ativo
+webhook-in,cloudflare-stream,POST /api/exercise-videos/stream-webhook (HMAC STREAM_WEBHOOK_SECRET + janela anti-replay 5min),apps/api/src/routes/exerciseVideos.ts:270,Notificação de encoding done/error do Cloudflare Stream,ativo
+webhook-in,r2-event-notifications,mensagens R2_OBJECT_CREATED na fila background-tasks,apps/api/src/queue.ts:188,Eventos de objeto R2 (Put/Delete/Copy) processados no consumer da fila,ativo
+webhook-in,wearables-oauth-callback,GET /api/wearables/oauth/{strava|oura|google_fit}/callback,apps/api/src/routes/wearables.ts:264,Callbacks OAuth de wearables (troca code→token),ativo
+webhook-out,automation-send-webhook,ação send_webhook do canvas de automações,apps/api/src/lib/automation/actionHandlers.ts,POST a URL configurada pelo usuário quando automação dispara,ativo
+webhook-out,ntfy-alerts,health monitor + rotina cloud,apps/api/src/lib/monitor.ts:20,Alertas push via https://ntfy.sh/fisioflow-mon-rafael-prod,ativo
+webhook-out,axiom-ingest,logToAxiom (waitUntil em todos os requests relevantes),apps/api/src/lib/axiom.ts:54,Ingestão de logs estruturados em api.axiom.co (dataset fisioflow-logs),ativo
+webhook-out,expo-push,notifyPatientAppointment/push mobile,apps/api/src/lib/push.ts:30,Push a apps Expo via https://exp.host/--/api/v2/push/send,ativo
+webhook-out,web-push-vapid,sendPushToUser/sendPushToOrg,apps/api/src/lib/webpush.ts,Web Push (VAPID) aos browsers inscritos em push_subscriptions,ativo

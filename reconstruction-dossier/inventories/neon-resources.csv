@@ -1,0 +1,17 @@
+tipo,nome,detalhe,escopo,status,evidencia
+projeto,purple-union-72678311 (minatto),aws-sa-east-1; PG17; PITR 7d; logical replication ON; compute 0.25CU fixo suspend 0s,fisioflow-PROD,ativo (é o prod real — Hyperdrive fisioflow-neon aponta p/ ep-wandering-bonus-acj4zwvo),DB-001;CF-002
+projeto,calm-glitter-24420194 (fisioflow-production),aws-us-east-1; criado 2026-07-05; PITR 1d; 1CU,experimento,⚠️ nome enganoso — NÃO é o prod real; classificar/limpar,DB-011
+projeto,red-hall-80601762 (gestao-saude-cloudflare),aws-us-west-2; criado 2026-07-06,outro-projeto,fora-do-escopo,DB-011
+branch,production (br-dawn-block-acf1bzzv),default+protected; 103MB lógico; criado 2026-03-04,fisioflow-PROD,ativo,DB-001
+branch,backup-2026-04-24-1138 (br-weathered-night-acwx8my7),snapshot manual,fisioflow,arquivado,DB-001
+database,neondb,database principal FisioFlow (303 tabelas public + neon_auth),fisioflow-PROD,ativo,DB-001
+database,gestao-saude,segundo database NO MESMO branch de produção,outro-projeto,risco — não reproduzir,DB-005
+endpoint,ep-wandering-bonus-acj4zwvo,host direto (Hyperdrive prod sem -pooler) + -pooler (staging/Data API),fisioflow-PROD,ativo,CF-002
+role,neondb_owner,owner bypassrls — usado pelo Hyperdrive de PROD (RLS não efetivo no caminho principal),fisioflow-PROD,ativo/risco,DB-004;DB-009
+role,app_runtime,role de runtime sujeita a RLS — usada só no Hyperdrive STAGING,fisioflow,subutilizada em prod,DB-004
+role,app_readonly;analytics_readonly;app_migration,roles auxiliares,fisioflow,ativo,DB-004
+role,inngest,órfã (Inngest removido do código jun/2026),fisioflow,órfã — remover,DB-004
+role,authenticator;anonymous;authenticated,Neon Data API (PostgREST),fisioflow,ativo,DB-004
+data-api,ep-wandering-bonus-acj4zwvo.apirest.sa-east-1,NEON_DATA_API_URL do Worker; RLS via request.jwt.claim.sub,fisioflow-PROD,ativo,SRC apps/api/wrangler.toml
+neon-auth,ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1,JWT/JWKS issuer+audience; schema neon_auth (9 tabelas),fisioflow-PROD,ativo,SRC apps/api/wrangler.toml
+extensao,vector;pg_trgm;unaccent;pgcrypto;btree_gist;pg_session_jwt;pg_stat_statements;pg_prewarm;online_advisor,extensões instaladas,fisioflow-PROD,ativo,DB-001

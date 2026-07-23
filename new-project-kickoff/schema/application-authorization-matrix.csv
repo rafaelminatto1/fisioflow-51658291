@@ -1,0 +1,53 @@
+case_use,clinic_admin,clinical_lead,reception,physiotherapist,intern,patient,finance_manager,accountant,marketing_manager,project_manager,inventory_manager,commercial_manager,knowledge_editor,platform_admin,platform_support,platform_billing,system_service,notes
+read_own_actor_context,allow,allow,allow,allow,allow,allow,allow,allow,allow,allow,allow,allow,allow,allow,allow,allow,allow,active membership or platform capability only; authorizationVersion returned
+list_patient_directory,allow,allow,allow,allow,supervised,-,billing_minimum,-,-,-,-,-,-,-,-,-,scoped_job,minimum DTO; no clinical notes; finance sees only billing identity when required
+read_patient_demographics,allow,allow,allow,allow,supervised,self,billing_minimum,-,-,-,-,-,-,-,-,-,scoped_job,field-level DTO; administrative roles never receive clinical record
+read_clinical_record,-,allow,-,assigned_or_care_team,supervised,self_released,-,-,-,-,-,-,-,-,-,-,scoped_clinical_job,clinic ownership or platform operation never grants clinical access
+write_clinical_draft,-,allow,-,assigned_or_care_team,supervised,-,-,-,-,-,-,-,-,-,-,-,scoped_clinical_job,intern cannot finalize; every mutation audited
+finalize_clinical_record,-,allow,-,assigned_or_care_team,-,-,-,-,-,-,-,-,-,-,-,-,scoped_clinical_job,immutable version and audit; AI/service cannot sign
+approve_intern_work,-,allow,-,supervisor_only,-,-,-,-,-,-,-,-,-,-,-,-,-,explicit supervision relation required
+manage_tenant_memberships,allow,delegated_clinical_team,-,-,-,-,-,-,-,-,-,-,-,-,-,-,provisioning_only,platform provisioning creates initial admin through audited workflow; no standing tenant membership
+manage_tenant_security,allow,delegated_clinical_policy,-,-,-,-,-,-,-,-,-,-,-,-,-,-,security_job,MFA and policy changes require step-up and audit
+read_audit_case,authorized_case,authorized_case,-,-,-,own_export,authorized_finance_case,authorized_fiscal_case,authorized_marketing_case,authorized_project_case,authorized_inventory_case,authorized_commercial_case,authorized_content_case,platform_only,linked_ticket,platform_billing_only,scoped_audit_job,reviewed case-use/view; never raw unrestricted table
+resolve_identity_context,auth_service,auth_service,auth_service,auth_service,auth_service,auth_service,auth_service,auth_service,auth_service,auth_service,auth_service,auth_service,auth_service,platform_auth,platform_auth,platform_auth,allow,dedicated auth resolver; labels identify runtime path rather than end-user grant
+evaluate_module_entitlement,own_tenant,own_tenant,own_tenant,own_tenant,own_tenant,own_tenant,own_tenant,own_tenant,own_tenant,own_tenant,own_tenant,own_tenant,own_tenant,allow,linked_ticket,allow,allow,entitlement enables module but never replaces permission
+read_financial_operations,authorized_summary,-,billing_minimum,-,-,own_charges,allow,allow,-,-,purchase_cost_scope,own_orders,-,-,-,-,scoped_finance_job,DTO and row scope vary by purpose; no clinical fields
+create_payable,-,-,-,-,-,-,allow,prepare,-,-,from_purchase_order,-,-,-,-,-,scoped_finance_job,creator cannot approve own payment above configured threshold
+approve_payment,by_explicit_alçada,-,-,-,-,-,segregated_approver,segregated_approver,-,-,-,-,-,-,-,-,scoped_finance_job,maker-checker enforced by actor ID and alçada
+post_or_reverse_journal,-,-,-,-,-,-,prepare,segregated_accountant,-,-,-,-,-,-,-,-,scoped_accounting_job,posted entries are immutable; correction by reversal/new entry
+reconcile_bank,-,-,-,-,-,-,allow,allow,-,-,-,-,-,-,-,-,scoped_finance_job,reconciliation cannot silently mutate posted ledger
+manage_fiscal_and_nfse,-,-,-,-,-,-,prepare,allow,-,-,-,-,-,-,-,-,scoped_fiscal_job,provider adapter; issue/cancel/reconcile are separate audited actions
+read_financial_reports,authorized_summary,-,billing_minimum,-,-,own_receipts,allow,allow,-,project_budget_only,purchase_budget_only,sales_summary,-,-,-,-,scoped_report_job,segregated views; PHI excluded
+manage_crm_contacts,administrative_summary,-,assigned,assigned,-,own_preferences,-,-,allow,-,-,allow,-,-,-,-,scoped_crm_job,contact purpose and consent constrain fields and channel use
+manage_leads_and_opportunities,summary,-,assigned_intake,-,-,-,-,-,allow,-,-,allow,-,-,-,-,scoped_crm_job,patient and lead identities are not silently merged
+build_marketing_segment,approve_only,-,-,-,-,-,-,-,allow,-,-,authorized_commercial_fields,-,-,-,-,scoped_marketing_job,minimum fields; consent and suppression list applied server-side
+draft_campaign,approve_brand,-,-,-,-,-,-,-,allow,-,-,input_only,input_only,content_only,-,-,scoped_marketing_job,clinical claims require qualified content review
+publish_campaign,brand_approver,clinical_claim_approver,-,-,-,-,-,-,segregated_publisher,-,-,-,license_check_only,-,-,-,delivery_job,publisher cannot bypass opt-out or frequency cap
+manage_site_draft,approve_brand,-,-,-,-,-,-,-,allow,-,-,commercial_blocks,allow,allow_global_theme,-,-,scoped_site_job,LLM layout/text/design remains versioned draft with diff
+publish_site,brand_approver,-,-,-,-,-,-,-,segregated_publisher,-,-,-,-,global_platform_shell_only,-,-,publication_job,only approved immutable manifest reaches public-edge
+manage_projects,administrative_summary,-,-,own_tasks,own_tasks,-,-,-,own_marketing_projects,allow,own_procurement_projects,own_commercial_projects,own_content_projects,-,-,-,scoped_project_job,project data must not embed PHI
+log_time,own,own,own,own,own,-,own,own,own,own,own,own,own,-,-,-,scoped_time_job,own time only unless explicit correction permission
+approve_timesheet,-,-,-,-,-,-,-,-,-,segregated_approver,-,-,-,-,-,-,scoped_time_job,submitter cannot approve own timesheet
+read_inventory,summary,-,-,-,-,-,valuation,valuation,-,-,allow,availability_only,-,-,-,-,scoped_inventory_job,physical inventory is separate from virtual rewards inventory
+create_purchase_order,approve_only,-,-,-,-,-,check_budget,-,-,-,allow,request_only,-,-,-,-,scoped_procurement_job,request approval receipt invoice and payment are distinct events
+approve_purchase_order,by_explicit_alçada,-,-,-,-,-,by_explicit_alçada,-,-,-,segregated_approver,-,-,-,-,-,scoped_procurement_job,maker-checker and budget policy enforced
+receive_or_adjust_stock,-,-,-,-,-,-,-,-,-,-,allow,-,-,-,-,-,scoped_inventory_job,high-risk adjustments require reason and optional second approval
+manage_commercial_catalog,summary,-,-,-,-,-,pricing_review,-,marketing_copy,-,stock_input,allow,content_input,-,-,-,scoped_commerce_job,commercial catalog is not clinical exercise library
+approve_contract_or_order,by_explicit_alçada,-,-,-,-,own_order,-,-,-,-,-,segregated_approver,-,-,-,-,scoped_commerce_job,payment and accounting posting remain separate
+draft_knowledge_content,administrative_draft,allow,-,clinical_draft,supervised_draft,-,-,-,marketing_draft,-,-,commercial_draft,allow,-,-,-,ai_draft_only,human or LLM author stored; all drafts require editorial workflow
+review_clinical_content,-,allow,-,delegated_reviewer,-,-,-,-,-,-,-,-,license_check_only,-,-,-,-,qualified reviewer distinct from generator for high-risk content
+publish_knowledge_content,administrative_nonclinical,clinical_approver,-,-,-,-,-,-,approved_marketing_only,-,-,approved_commercial_only,second_approver_or_nonclinical,global_catalog_only,-,-,publication_job,source license citations and approved revision required
+manage_sources_and_licenses,-,clinical_source_review,-,-,-,-,-,-,-,-,-,-,allow,global_sources_only,-,-,source_sync_job,unlicensed or expired source blocks publication and indexing
+run_evidence_query,-,allow,-,assigned_or_care_team,supervised,-,-,-,-,-,-,-,allow,platform_quality_only,-,-,evidence_gateway,results include provider query date citations and limitations
+approve_llm_design,brand_approver,clinical_content_only,-,-,-,-,-,-,segregated_publisher,-,-,commercial_surface,content_surface,global_shell_only,-,-,-,approval applies to exact diff/version; never auto-publish
+manage_ai_agent_policy,tenant_admin_policy,clinical_tools_policy,-,-,-,-,finance_tools_policy,accounting_tools_policy,marketing_tools_policy,project_tools_policy,inventory_tools_policy,commercial_tools_policy,knowledge_tools_policy,global_provider_policy,-,-,ai_control_job,tool capability risk budget and approval policy are explicit
+provision_or_deprovision_tenant,-,-,-,-,-,-,-,-,-,-,-,-,-,allow,-,-,provisioning_workflow,idempotent workflow; platform admin gains no tenant membership
+manage_saas_plan_and_entitlements,-,-,-,-,-,-,-,-,-,-,-,-,-,allow,-,commercial_billing_scope,entitlement_workflow,plan versioning and entitlement grants are audited
+manage_own_subscription,allow,-,-,-,-,-,-,-,-,-,-,-,-,exception_only,-,allow,sync_provider,tenant buyer manages own subscription; platform billing reconciles provider
+record_or_aggregate_usage,-,-,-,-,-,-,-,-,-,-,-,-,-,policy_only,diagnostic_only,reconciliation_only,allow,usage event is idempotent and contains no PHI/PII payload
+read_saas_usage_and_invoice,own_tenant,-,-,-,-,-,-,-,-,-,-,-,-,platform_summary,linked_ticket,allow,scoped_billing_job,SaaS billing remains separate from clinic ERP
+open_support_case,allow,allow,allow,allow,allow,allow,allow,allow,allow,allow,allow,allow,allow,-,manage_queue,billing_cases,triage_job,tenant actors see own organization cases only
+manage_support_case,-,-,-,-,-,-,-,-,-,-,-,-,-,incident_oversight,allow,billing_cases,triage_job,support operates on sanitized telemetry by default
+grant_temporary_support_access,tenant_approver,clinical_approver,-,-,-,patient_consent_when_required,-,-,-,-,-,-,-,second_approver,request_only,-,revoke_job,ticket purpose scopes TTL banner and revocation mandatory
+use_temporary_support_access,-,-,-,-,-,-,-,-,-,-,-,-,-,-,active_grant_only,-,-,no standing access; every read/action is strongly audited
+manage_slo_and_incident,-,-,-,-,-,-,-,-,-,-,-,-,-,allow,incident_operator,-,monitoring_job,service objective incident impact and updates are versioned/audited
