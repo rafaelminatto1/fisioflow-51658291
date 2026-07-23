@@ -4,12 +4,7 @@ import { requireAuth, type AuthVariables } from "../lib/auth";
 import { createPool } from "../lib/db";
 import { chatAiSearch, searchAiSearch } from "../lib/cloudflareAiSearch";
 import { upsertWikiPageInIndex } from "../lib/wikiIndexing";
-import {
-  buildExerciseDoc,
-  buildProtocolDoc,
-  buildIndexChunks,
-  deleteChunkFiles,
-} from "../lib/contentIndexing";
+import { buildExerciseDoc, buildProtocolDoc, buildIndexChunks } from "../lib/contentIndexing";
 import { deleteIndexedItemsByFilenames } from "../lib/wikiIndexing";
 import type { DocMeta } from "../lib/ai/sectionChunker";
 import { enqueueKbReindex, type KbSource } from "../lib/kbReindex";
@@ -325,12 +320,12 @@ export async function syncAutoRAGContent(
     extra: Record<string, any>,
   ): Promise<void> {
     const files = buildIndexChunks(baseFilename, markdown, meta, extra);
-    if (env.AI_SEARCH) {
-      await deleteChunkFiles(env, baseFilename);
-      await deleteIndexedItemsByFilenames(env, [baseFilename]);
-    }
     for (const f of files) {
       await uploadDoc(f.filename, f.text, f.metadata);
+    }
+    if (env.AI_SEARCH) {
+      const { setChunkCount } = await import("../lib/kbIndexState");
+      await setChunkCount(env, baseFilename, extra.source as string, files.length);
     }
   }
 

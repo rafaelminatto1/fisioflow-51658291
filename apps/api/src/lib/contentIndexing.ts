@@ -2,6 +2,7 @@ import type { Env } from "../types/env";
 import { createPool } from "./db";
 import { deleteIndexedItemsByFilenames } from "./wikiIndexing";
 import { chunkClinicalDoc, type DocMeta } from "./ai/sectionChunker";
+import { chunksToDelete, getChunkCount, setChunkCount, deleteChunkState } from "./kbIndexState";
 
 export interface IndexChunkFile {
   filename: string;
@@ -28,36 +29,20 @@ export function buildIndexChunks(
   }));
 }
 
-/** Prefixo de busca para localizar todos os chunks de um documento no índice. */
-function chunkFilePrefix(baseFilename: string): string {
-  return `${baseFilename.replace(/\.md$/, "")}--`;
-}
-
-/** Remove todos os chunks antigos de um documento antes de reupload (upsert). */
-export async function deleteChunkFiles(
-  env: Env,
-  baseFilename: string,
-  binding = env.AI_SEARCH,
-): Promise<void> {
-  if (!binding?.items) return;
-  const prefix = chunkFilePrefix(baseFilename);
-  const seen = new Set<string>();
-  try {
-    // Drena todos os chunks do doc mesmo além de 1 página. Cada página deletada
-    // some da próxima listagem; `seen` + cap evitam qualquer loop infinito.
-    for (let page = 1; page <= 20; page++) {
-      const listing = await binding.items.list({ search: prefix, per_page: 100, page });
-      const items: Array<{ id: string; key?: string; filename?: string }> =
-        listing?.result ?? listing?.items ?? [];
-      const matches = items.filter(
-        (it) => (it.key ?? it.filename ?? "").startsWith(prefix) && !seen.has(it.id),
-      );
-      if (matches.length === 0) break;
-      matches.forEach((it) => seen.add(it.id));
-      await Promise.all(matches.map((it) => binding.items.delete(it.id)));
+/** Apaga chunks órfãos por chave exata (só quando o doc encolheu). Best-effort. */
+async function cleanupOldChunks(env: Env, baseFilename: string, newCount: number): Promise<void> {
+  if (!env.AI_SEARCH?.items) return;
+  const docKey = baseFilename;
+  const oldCount = await getChunkCount(env, docKey).catch(() => 0);
+  const keys = chunksToDelete(baseFilename, oldCount, newCount);
+  for (const key of keys) {
+    try {
+      const listing = await env.AI_SEARCH.items.list({ key, source: "builtin", per_page: 1 } as any);
+      const items: Array<{ id: string }> = listing?.result ?? listing?.items ?? [];
+      await Promise.all(items.map((it) => env.AI_SEARCH!.items.delete(it.id)));
+    } catch (error) {
+      console.warn(`[contentIndexing] orphan cleanup skipped for ${key}:`, error);
     }
-  } catch (error) {
-    console.warn(`[contentIndexing] chunk cleanup failed for ${baseFilename}:`, error);
   }
 }
 
@@ -148,123 +133,142 @@ export function buildProtocolDoc(row: ProtocolIndexRow): string {
   return parts.join("\n");
 }
 
-export async function syncExerciseToIndex(env: Env, exerciseId: string): Promise<void> {
+export async function indexExercise(env: Env, exerciseId: string): Promise<void> {
   if (!env.AI_SEARCH?.items) return;
+  const pool = createPool(env);
+  const res = await pool.query<ExerciseIndexRow>(
+    `SELECT e.id, e.name, e.description, e.instructions,
+            ec.name AS category, e.difficulty,
+            e.muscles_primary, e.muscles_secondary, e.body_parts,
+            e.tips, e.precautions, e.benefits
+     FROM exercises e
+     LEFT JOIN exercise_categories ec ON ec.id = e.category_id
+     WHERE e.id = $1 AND e.is_active = true`,
+    [exerciseId],
+  );
+  const row = res.rows[0];
+  if (!row) {
+    await removeExerciseFromIndex(env, exerciseId);
+    return;
+  }
+  const base = exerciseIndexFilename(row.id);
+  const files = buildIndexChunks(
+    base,
+    buildExerciseDoc(row),
+    { status: "current", sourceType: "exercise", specialty: row.category ?? undefined },
+    { source: "exercises", id: row.id, title: row.name, category: row.category ?? "" },
+  );
+  await cleanupOldChunks(env, base, files.length);
+  await uploadChunks(env, files);
+  await setChunkCount(env, base, "exercises", files.length);
+}
+
+export async function syncExerciseToIndex(env: Env, exerciseId: string): Promise<void> {
   try {
-    const pool = createPool(env);
-    const res = await pool.query<ExerciseIndexRow>(
-      `SELECT e.id, e.name, e.description, e.instructions,
-              ec.name AS category, e.difficulty,
-              e.muscles_primary, e.muscles_secondary, e.body_parts,
-              e.tips, e.precautions, e.benefits
-       FROM exercises e
-       LEFT JOIN exercise_categories ec ON ec.id = e.category_id
-       WHERE e.id = $1 AND e.is_active = true`,
-      [exerciseId],
-    );
-    const row = res.rows[0];
-    if (!row) {
-      await removeExerciseFromIndex(env, exerciseId);
-      return;
-    }
-    const base = exerciseIndexFilename(row.id);
-    const files = buildIndexChunks(
-      base,
-      buildExerciseDoc(row),
-      { status: "current", sourceType: "exercise", specialty: row.category ?? undefined },
-      { source: "exercises", id: row.id, title: row.name, category: row.category ?? "" },
-    );
-    await deleteChunkFiles(env, base);
-    await uploadChunks(env, files);
+    await indexExercise(env, exerciseId);
   } catch (error) {
     console.error(`[contentIndexing] exercise sync failed for ${exerciseId}:`, error);
   }
 }
 
-export async function syncProtocolToIndex(env: Env, protocolId: string): Promise<void> {
+export async function indexProtocol(env: Env, protocolId: string): Promise<void> {
   if (!env.AI_SEARCH?.items) return;
+  const pool = createPool(env);
+  const res = await pool.query<ProtocolIndexRow>(
+    `SELECT id, name, description, condition_name, weeks_total,
+            objectives, contraindications, evidence_level, protocol_type
+     FROM exercise_protocols
+     WHERE id = $1`,
+    [protocolId],
+  );
+  const row = res.rows[0];
+  if (!row) {
+    await removeProtocolFromIndex(env, protocolId);
+    return;
+  }
+  const base = protocolIndexFilename(row.id);
+  const files = buildIndexChunks(
+    base,
+    buildProtocolDoc(row),
+    { status: "current", sourceType: "protocol", specialty: row.protocol_type ?? undefined },
+    { source: "protocols", id: row.id, title: row.name, condition: row.condition_name ?? "" },
+  );
+  await cleanupOldChunks(env, base, files.length);
+  await uploadChunks(env, files);
+  await setChunkCount(env, base, "protocols", files.length);
+}
+
+export async function syncProtocolToIndex(env: Env, protocolId: string): Promise<void> {
   try {
-    const pool = createPool(env);
-    const res = await pool.query<ProtocolIndexRow>(
-      `SELECT id, name, description, condition_name, weeks_total,
-              objectives, contraindications, evidence_level, protocol_type
-       FROM exercise_protocols
-       WHERE id = $1`,
-      [protocolId],
-    );
-    const row = res.rows[0];
-    if (!row) {
-      await removeProtocolFromIndex(env, protocolId);
-      return;
-    }
-    const base = protocolIndexFilename(row.id);
-    const files = buildIndexChunks(
-      base,
-      buildProtocolDoc(row),
-      { status: "current", sourceType: "protocol", specialty: row.protocol_type ?? undefined },
-      {
-        source: "protocols",
-        id: row.id,
-        title: row.name,
-        condition: row.condition_name ?? "",
-      },
-    );
-    await deleteChunkFiles(env, base);
-    await uploadChunks(env, files);
+    await indexProtocol(env, protocolId);
   } catch (error) {
     console.error(`[contentIndexing] protocol sync failed for ${protocolId}:`, error);
   }
 }
 
-export async function syncWikiToIndex(env: Env, wikiId: string): Promise<void> {
+export async function indexWiki(env: Env, wikiId: string): Promise<void> {
   if (!env.AI_SEARCH?.items) return;
+  const pool = createPool(env);
+  const res = await pool.query<{ id: string; title: string; content: string | null; category: string | null }>(
+    `SELECT wp.id, wp.title, LEFT(wp.content, 3000) AS content, wc.name AS category
+     FROM wiki_pages wp
+     LEFT JOIN wiki_categories wc ON wc.id = wp.category_id
+     WHERE wp.id = $1`,
+    [wikiId],
+  );
+  const row = res.rows[0];
+  if (!row) {
+    await removeWikiFromIndex(env, wikiId);
+    return;
+  }
+  const base = wikiIndexFilename(row.id);
+  const files = buildIndexChunks(
+    base,
+    buildWikiIndexDoc(row),
+    { status: "current", sourceType: "wiki", specialty: row.category ?? undefined },
+    { source: "wiki", id: row.id, title: row.title, category: row.category ?? "" },
+  );
+  await cleanupOldChunks(env, base, files.length);
+  await uploadChunks(env, files);
+  await setChunkCount(env, base, "wiki", files.length);
+}
+
+export async function syncWikiToIndex(env: Env, wikiId: string): Promise<void> {
   try {
-    const pool = createPool(env);
-    const res = await pool.query<{
-      id: string;
-      title: string;
-      content: string | null;
-      category: string | null;
-    }>(
-      `SELECT wp.id, wp.title, LEFT(wp.content, 3000) AS content, wc.name AS category
-       FROM wiki_pages wp
-       LEFT JOIN wiki_categories wc ON wc.id = wp.category_id
-       WHERE wp.id = $1`,
-      [wikiId],
-    );
-    const row = res.rows[0];
-    if (!row) {
-      await removeWikiFromIndex(env, wikiId);
-      return;
-    }
-    const base = wikiIndexFilename(row.id);
-    const files = buildIndexChunks(
-      base,
-      buildWikiIndexDoc(row),
-      { status: "current", sourceType: "wiki", specialty: row.category ?? undefined },
-      { source: "wiki", id: row.id, title: row.title, category: row.category ?? "" },
-    );
-    await deleteChunkFiles(env, base);
-    await uploadChunks(env, files);
+    await indexWiki(env, wikiId);
   } catch (error) {
     console.error(`[contentIndexing] wiki sync failed for ${wikiId}:`, error);
   }
 }
 
-export async function removeWikiFromIndex(env: Env, wikiId: string): Promise<void> {
-  const base = wikiIndexFilename(wikiId);
-  await deleteChunkFiles(env, base);
-  await deleteIndexedItemsByFilenames(env, [base]);
+async function removeChunksByCount(env: Env, base: string): Promise<void> {
+  const count = await getChunkCount(env, base).catch(() => 0);
+  for (const key of chunksToDelete(base, count, 0)) {
+    try {
+      const listing = await env.AI_SEARCH?.items.list({ key, source: "builtin", per_page: 1 } as any);
+      const items: Array<{ id: string }> = listing?.result ?? listing?.items ?? [];
+      await Promise.all(items.map((it) => env.AI_SEARCH!.items.delete(it.id)));
+    } catch {
+      /* best-effort */
+    }
+  }
+  await deleteChunkState(env, base).catch(() => {});
 }
 
 export async function removeExerciseFromIndex(env: Env, exerciseId: string): Promise<void> {
   const base = exerciseIndexFilename(exerciseId);
-  await deleteChunkFiles(env, base); // chunks section-aware
-  await deleteIndexedItemsByFilenames(env, [base]); // doc legado single-file
+  await removeChunksByCount(env, base);
+  await deleteIndexedItemsByFilenames(env, [base]);
 }
 
 export async function removeProtocolFromIndex(env: Env, protocolId: string): Promise<void> {
   const base = protocolIndexFilename(protocolId);
-  await deleteChunkFiles(env, base);
+  await removeChunksByCount(env, base);
+  await deleteIndexedItemsByFilenames(env, [base]);
+}
+
+export async function removeWikiFromIndex(env: Env, wikiId: string): Promise<void> {
+  const base = wikiIndexFilename(wikiId);
+  await removeChunksByCount(env, base);
   await deleteIndexedItemsByFilenames(env, [base]);
 }
