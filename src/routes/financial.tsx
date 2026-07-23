@@ -43,7 +43,7 @@ export const financialRoutes = (
     <Route
       path="/financeiro/contas"
       element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["admin"]}>
           <ContasFinanceirasPage />
         </ProtectedRoute>
       }
@@ -51,7 +51,7 @@ export const financialRoutes = (
     <Route
       path="/financeiro/fluxo-caixa"
       element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["admin"]}>
           <FluxoCaixaPage />
         </ProtectedRoute>
       }
@@ -59,7 +59,7 @@ export const financialRoutes = (
     <Route
       path="/financeiro/nfse"
       element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["admin"]}>
           <NFSePage />
         </ProtectedRoute>
       }
@@ -67,7 +67,7 @@ export const financialRoutes = (
     <Route
       path="/financeiro/recibos"
       element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["admin"]}>
           <RecibosPage />
         </ProtectedRoute>
       }
@@ -75,7 +75,7 @@ export const financialRoutes = (
     <Route
       path="/financeiro/demonstrativo"
       element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["admin"]}>
           <DemonstrativoMensalPage />
         </ProtectedRoute>
       }
@@ -83,7 +83,7 @@ export const financialRoutes = (
     <Route
       path="/financeiro/simulador"
       element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["admin"]}>
           <SimuladorReceitasPage />
         </ProtectedRoute>
       }
@@ -91,7 +91,7 @@ export const financialRoutes = (
     <Route
       path="/financeiro/comissoes"
       element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["admin"]}>
           <CommissionsPage />
         </ProtectedRoute>
       }
@@ -99,7 +99,7 @@ export const financialRoutes = (
     <Route
       path="/financeiro"
       element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["admin"]}>
           <Navigate to={APP_ROUTES.FINANCIAL} replace />
         </ProtectedRoute>
       }

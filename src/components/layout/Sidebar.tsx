@@ -629,6 +629,7 @@ export function Sidebar() {
                   })}
                 </CollapsibleContent>
               </Collapsible>
+              {isAdmin && (
               <Collapsible
                 open={financeiroOpen || isFinanceiroActive}
                 onOpenChange={setFinanceiroOpen}
@@ -682,6 +683,7 @@ export function Sidebar() {
                   })}
                 </CollapsibleContent>
               </Collapsible>
+              )}
             </SidebarSection>
 
             <SidebarSection label="Configurações" collapsed={collapsed}>

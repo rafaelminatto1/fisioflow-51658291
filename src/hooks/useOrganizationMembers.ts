@@ -55,7 +55,7 @@ export const useOrganizationMembers = (organizationId?: string) => {
       role,
     }: {
       id: string;
-      role: "admin" | "fisioterapeuta" | "estagiario" | "paciente";
+      role: "admin" | "fisioterapeuta" | "estagiario" | "recepcionista" | "paciente";
     }) => {
       const res = await organizationMembersApi.update(id, { role });
       return res.data;

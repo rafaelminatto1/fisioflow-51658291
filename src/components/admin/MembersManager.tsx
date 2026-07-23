@@ -3,9 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useOrganizationMembers } from "@/hooks/useOrganizationMembers";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/contexts/AuthContext";
 import { MemberPhoneInline } from "@/components/organization/MemberPhoneInline";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { Search, UserPlus } from "lucide-react";
@@ -18,8 +26,18 @@ const ROLE_LABELS: Record<string, string> = {
   admin: "Administrador",
   fisioterapeuta: "Fisioterapeuta",
   estagiario: "Estagiário",
+  recepcionista: "Recepcionista",
   paciente: "Paciente",
 };
+
+// Roles atribuíveis pela tela de membros (equipe). Paciente não é atribuído aqui.
+const ASSIGNABLE_ROLES = [
+  "admin",
+  "fisioterapeuta",
+  "estagiario",
+  "recepcionista",
+] as const;
+type AssignableRole = (typeof ASSIGNABLE_ROLES)[number];
 
 type MemberRow = {
   id: string;
@@ -31,10 +49,10 @@ type MemberRow = {
 export function MembersManager({ onInviteClick }: MembersManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const { currentOrganization } = useOrganizations();
-  const { members, isLoading, updateMemberPhone, isUpdatingPhone } = useOrganizationMembers(
-    currentOrganization?.id,
-  );
+  const { members, isLoading, updateMemberPhone, isUpdatingPhone, updateMemberRole, isUpdating } =
+    useOrganizationMembers(currentOrganization?.id);
   const { isAdmin } = usePermissions();
+  const { user } = useAuth();
 
   const rows = ((members ?? []) as MemberRow[]).map((member) => ({
     ...member,
@@ -98,12 +116,37 @@ export function MembersManager({ onInviteClick }: MembersManagerProps) {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Badge
-                    variant={member.role === "admin" ? "default" : "secondary"}
-                    className="capitalize"
-                  >
-                    {ROLE_LABELS[member.role] ?? member.role}
-                  </Badge>
+                  {isAdmin && user?.uid !== member.user_id ? (
+                    <Select
+                      value={
+                        ASSIGNABLE_ROLES.includes(member.role as AssignableRole)
+                          ? member.role
+                          : undefined
+                      }
+                      onValueChange={(role) =>
+                        updateMemberRole({ id: member.id, role: role as AssignableRole })
+                      }
+                      disabled={isUpdating}
+                    >
+                      <SelectTrigger className="w-[168px]">
+                        <SelectValue placeholder={ROLE_LABELS[member.role] ?? member.role} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ASSIGNABLE_ROLES.map((r) => (
+                          <SelectItem key={r} value={r}>
+                            {ROLE_LABELS[r]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Badge
+                      variant={member.role === "admin" ? "default" : "secondary"}
+                      className="capitalize"
+                    >
+                      {ROLE_LABELS[member.role] ?? member.role}
+                    </Badge>
+                  )}
                 </div>
               </div>
             ))}
