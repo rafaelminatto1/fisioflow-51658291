@@ -259,7 +259,7 @@ export function PaymentRegistrationModal({
             {/* Amount with smart hint */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <Label htmlFor="amount" className="text-xs font-bold uppercase tracking-wider text-muted-foreground cursor-pointer">
                   Valor Recebido
                 </Label>
                 <AnimatePresence mode="wait">
@@ -286,6 +286,7 @@ export function PaymentRegistrationModal({
                   R$
                 </span>
                 <input
+                  id="amount"
                   type="number"
                   step="0.01"
                   min="0"

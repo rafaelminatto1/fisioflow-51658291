@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { useExerciseFavorites } from "@/hooks/useExerciseFavorites";
 import { useToast } from "@/hooks/use-toast";
 import type { Exercise } from "@/hooks/useExercises";
+import { ExerciseDifficultyBadge } from "./ExerciseDifficultyBadge";
 import { getBestImageUrl, getImageUrlCandidates, isYouTubeUrl, getYouTubeThumbnailUrl } from "@/lib/imageUtils";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { ShareExerciseToWhatsAppModal } from "./ShareExerciseToWhatsAppModal";
@@ -71,15 +72,6 @@ interface ExerciseViewModalProps {
   exercise: Exercise | null;
   onEdit?: (exercise: Exercise) => void;
 }
-
-const difficultyColors: Record<string, string> = {
-  Fácil: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 ring-emerald-500/20",
-  Iniciante: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 ring-emerald-500/20",
-  Médio: "bg-amber-500/10 text-amber-600 border-amber-500/20 ring-amber-500/20",
-  Intermediário: "bg-amber-500/10 text-amber-600 border-amber-500/20 ring-amber-500/20",
-  Difícil: "bg-rose-500/10 text-rose-600 border-rose-500/20 ring-rose-500/20",
-  Avançado: "bg-rose-500/10 text-rose-600 border-rose-500/20 ring-rose-500/20",
-};
 
 function getEmbedUrl(url: string): string | null {
   if (!url) return null;
@@ -225,16 +217,10 @@ export function ExerciseViewModal({
                   </Badge>
                 )}
                 {exercise.difficulty && (
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "border bg-card",
-                      difficultyColors[exercise.difficulty],
-                      "exercise-print-badge",
-                    )}
-                  >
-                    {exercise.difficulty}
-                  </Badge>
+                  <ExerciseDifficultyBadge
+                    difficulty={exercise.difficulty}
+                    className="exercise-print-badge"
+                  />
                 )}
               </div>
             </div>

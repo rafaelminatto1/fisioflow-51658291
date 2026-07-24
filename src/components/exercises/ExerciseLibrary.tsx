@@ -38,6 +38,7 @@ import {
 import { useExercises, type Exercise } from "@/hooks/useExercises";
 import { useExerciseFavorites } from "@/hooks/useExerciseFavorites";
 import { cn } from "@/lib/utils";
+import { ExerciseDifficultyBadge } from "./ExerciseDifficultyBadge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -86,39 +87,6 @@ interface ExerciseLibraryProps {
   addedExerciseIds?: string[];
 }
 
-const difficultyConfig: Record<string, { color: string; bg: string; border: string }> = {
-  Fácil: {
-    color: "text-emerald-600",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/30",
-  },
-  Iniciante: {
-    color: "text-emerald-600",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/30",
-  },
-  Médio: {
-    color: "text-amber-600",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/30",
-  },
-  Intermediário: {
-    color: "text-amber-600",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/30",
-  },
-  Difícil: {
-    color: "text-rose-600",
-    bg: "bg-rose-500/10",
-    border: "border-rose-500/30",
-  },
-  Avançado: {
-    color: "text-rose-600",
-    bg: "bg-rose-500/10",
-    border: "border-rose-500/30",
-  },
-};
-
 const categoryColors: Record<string, string> = {
   Fortalecimento: "bg-blue-500/10 text-blue-600 border-blue-500/30",
   Alongamento: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30",
@@ -153,7 +121,6 @@ const ExerciseCard = React.memo(function ExerciseCard({
   /** Prioridade de carregamento (above-the-fold): eager + fetchPriority high */
   imagePriority?: boolean;
 }) {
-  const diffConfig = exercise.difficulty ? difficultyConfig[exercise.difficulty] : null;
   const catColor = exercise.category
     ? categoryColors[exercise.category] || "bg-muted text-muted-foreground"
     : "";
@@ -266,19 +233,7 @@ const ExerciseCard = React.memo(function ExerciseCard({
               {exercise.category}
             </Badge>
           )}
-          {exercise.difficulty && diffConfig && (
-            <Badge
-              variant="outline"
-              className={cn(
-                "text-xs font-medium",
-                diffConfig.color,
-                diffConfig.bg,
-                diffConfig.border,
-              )}
-            >
-              {exercise.difficulty}
-            </Badge>
-          )}
+          <ExerciseDifficultyBadge difficulty={exercise.difficulty} />
         </div>
 
         {/* Parameters */}
@@ -416,7 +371,6 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const diffConfig = exercise.difficulty ? difficultyConfig[exercise.difficulty] : null;
   const catColor = exercise.category
     ? categoryColors[exercise.category] || "bg-muted text-muted-foreground"
     : "";
@@ -467,14 +421,7 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
                 {exercise.category}
               </Badge>
             )}
-            {exercise.difficulty && diffConfig && (
-              <Badge
-                variant="outline"
-                className={cn("text-xs", diffConfig.color, diffConfig.bg, diffConfig.border)}
-              >
-                {exercise.difficulty}
-              </Badge>
-            )}
+            <ExerciseDifficultyBadge difficulty={exercise.difficulty} size="sm" />
           </div>
         </div>
 
@@ -608,9 +555,12 @@ const ExerciseCompactCard = React.memo(function ExerciseCompactCard({
 
       {/* Info condensada */}
       <div className="flex-1 min-w-0">
-        <h4 className="font-semibold text-xs text-slate-800 dark:text-slate-200 truncate pr-2">
-          {exercise.name ?? "Sem nome"}
-        </h4>
+        <div className="flex items-center gap-1.5">
+          <h4 className="font-semibold text-xs text-slate-800 dark:text-slate-200 truncate pr-2">
+            {exercise.name ?? "Sem nome"}
+          </h4>
+          <ExerciseDifficultyBadge difficulty={exercise.difficulty} size="sm" />
+        </div>
         <div className="flex items-center gap-1.5 mt-1 text-[9px] text-slate-500 font-mono">
           {exercise.sets && <span>{exercise.sets}x</span>}
           {exercise.repetitions && <span>{exercise.repetitions} reps</span>}

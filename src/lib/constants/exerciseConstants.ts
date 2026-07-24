@@ -44,6 +44,28 @@ export const DIFFICULTY_LEVELS = [
 export type DifficultyLevel = (typeof DIFFICULTY_LEVELS)[number]["value"];
 
 // ============================================
+// DIFFICULTY UI — Canonical mapping for badge rendering
+// Keys are the DB canonical values (lowercase, no accents)
+// ============================================
+export const DIFFICULTY_UI: Record<
+  "iniciante" | "intermediario" | "avancado",
+  { label: string; badgeClass: string }
+> = {
+  iniciante: {
+    label: "Iniciante",
+    badgeClass: "text-emerald-600 bg-emerald-500/10 border-emerald-500/30",
+  },
+  intermediario: {
+    label: "Intermediário",
+    badgeClass: "text-amber-600 bg-amber-500/10 border-amber-500/30",
+  },
+  avancado: {
+    label: "Avançado",
+    badgeClass: "text-rose-600 bg-rose-500/10 border-rose-500/30",
+  },
+};
+
+// ============================================
 // CATEGORIES
 // ============================================
 export const CATEGORIES = [

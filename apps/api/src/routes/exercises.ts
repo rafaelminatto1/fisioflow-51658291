@@ -12,13 +12,15 @@ import {
   wikiDictionary,
 } from "@fisioflow/db";
 import { removeExerciseFromIndex, syncExerciseToIndex } from "../lib/contentIndexing";
-import { generateEmbedding1024, generateTurboSketch } from "../lib/ai-native";
+import { generateEmbedding1024, generateTurboSketch, runAi, readAiText } from "../lib/ai-native";
+import { WORKERS_AI_MODELS } from "../lib/workersAi";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 const KV_TTL = 3600; // 1 hora
 const KV_CATEGORIES = "exercises:v2:categories";
 const KV_LIST_PREFIX = "exercises:v3:list:";
+const KV_CATALOG = "exercises:v1:catalog";
 
 async function kvGet(env: Env, key: string): Promise<unknown | null> {
   if (!env.FISIOFLOW_CONFIG) return null;
@@ -311,6 +313,88 @@ app.get("/", requireAuth, async (c) => {
   } catch (error: any) {
     console.error("[Exercises/List] Error:", error.message);
     return c.json({ data: [], meta: { page: 1, limit: 20, total: 0, pages: 0 } }, 500);
+  }
+});
+
+// ===== CATÁLOGO POR DIFICULDADE =====
+app.get("/catalog", requireAuth, async (c) => {
+  try {
+    const cached = await kvGet(c.env, KV_CATALOG);
+    if (cached) return c.json(cached);
+
+    const db = createPool(c.env);
+
+    const summaryRows = await db.query(
+      `SELECT e.difficulty,
+              COUNT(*)::int AS count
+       FROM exercises e
+       WHERE e.is_active = true AND e.is_public = true
+       GROUP BY e.difficulty
+       ORDER BY e.difficulty`,
+    );
+
+    const categoryRows = await db.query(
+      `SELECT e.difficulty,
+              COALESCE(ec.slug, 'sem-categoria') AS category_slug,
+              COALESCE(ec.name, 'Sem Categoria') AS category_name,
+              COALESCE(ec.color, '#6b7280') AS category_color,
+              COUNT(*)::int AS count
+       FROM exercises e
+       LEFT JOIN exercise_categories ec ON ec.id = e.category_id
+       WHERE e.is_active = true AND e.is_public = true
+       GROUP BY e.difficulty, ec.slug, ec.name, ec.color
+       ORDER BY e.difficulty, count DESC`,
+    );
+
+    const gapRows = await db.query(
+      `SELECT e.id, e.slug, e.name, e.difficulty
+       FROM exercises e
+       WHERE e.is_active = true
+         AND e.is_public = true
+         AND (e.description IS NULL OR btrim(e.description) = ''
+              OR e.tips IS NULL OR btrim(e.tips) = ''
+              OR e.precautions IS NULL OR btrim(e.precautions) = '')
+       ORDER BY e.difficulty, e.name`,
+    );
+
+    const byDifficulty: Record<string, { count: number; categories: Array<{ slug: string; name: string; color: string; count: number }> }> = {};
+    for (const r of summaryRows.rows as Array<{ difficulty: string; count: number }>) {
+      byDifficulty[r.difficulty] = { count: r.count, categories: [] };
+    }
+    for (const r of categoryRows.rows as Array<{ difficulty: string; category_slug: string; category_name: string; category_color: string; count: number }>) {
+      if (byDifficulty[r.difficulty]) {
+        byDifficulty[r.difficulty].categories.push({
+          slug: r.category_slug,
+          name: r.category_name,
+          color: r.category_color,
+          count: r.count,
+        });
+      }
+    }
+
+    const gaps = (gapRows.rows as Array<{ id: string; slug: string; name: string; difficulty: string }>).map((r) => ({
+      id: r.id,
+      slug: r.slug,
+      name: r.name,
+      difficulty: r.difficulty,
+    }));
+
+    const total = Object.values(byDifficulty).reduce((sum, d) => sum + d.count, 0);
+
+    const payload = {
+      data: {
+        total,
+        byDifficulty,
+        contentGaps: gaps,
+        contentGapsCount: gaps.length,
+      },
+    };
+
+    c.executionCtx.waitUntil(kvSet(c.env, KV_CATALOG, payload));
+    return c.json(payload);
+  } catch (error: any) {
+    console.error("[Exercises/Catalog] Error:", error.message);
+    return c.json({ data: { total: 0, byDifficulty: {}, contentGaps: [], contentGapsCount: 0 } }, 500);
   }
 });
 
@@ -791,5 +875,119 @@ app.post("/embeddings/backfill", requireAuth, async (c) => {
   const rem = await sqlRaw(`SELECT count(*)::int AS n FROM exercises WHERE embedding IS NULL`, []);
   return c.json({ processed, remaining: (rem.rows?.[0] as { n?: number })?.n ?? 0 });
 });
+
+// ===== AI BACKFILL DE CONTEÚDO =====
+app.post("/content/backfill", requireAuth, async (c) => {
+  const user = c.get("user");
+  if (user.role !== "admin") return c.json({ error: "Apenas admin" }, 403);
+
+  const sqlRaw = getRawSql(c.env, "write");
+
+  const sel = await sqlRaw(
+    `SELECT id, name, description, tips, precautions
+     FROM exercises
+     WHERE is_active = true
+       AND is_public = true
+       AND (description IS NULL OR btrim(description) = ''
+            OR tips IS NULL OR btrim(tips) = ''
+            OR precautions IS NULL OR btrim(precautions) = '')
+     LIMIT 10`,
+    [],
+  );
+
+  const rows = (sel.rows ?? []) as Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    tips: string | null;
+    precautions: string | null;
+  }>;
+
+  let processed = 0;
+  const model = WORKERS_AI_MODELS.llama_3_1_8b;
+
+  for (const r of rows) {
+    const needDesc = !r.description || r.description.trim().length === 0;
+    const needTips = !r.tips || r.tips.trim().length === 0;
+    const needPrec = !r.precautions || r.precautions.trim().length === 0;
+
+    const fields: string[] = [];
+    if (needDesc) fields.push("descrição técnica e concisa (2-3 frases)");
+    if (needTips) fields.push("dicas de execução (3 bullets curtos)");
+    if (needPrec) fields.push("precauções e contraindicações (2 bullets)");
+
+    if (fields.length === 0) continue;
+
+    const prompt = `Você é um fisioterapeuta especialista. Gere conteúdo em português brasileiro para o exercício "${r.name}".
+Retorne JSON válido: {"description": "...", "tips": "...", "precautions": "..."}.
+Inclua apenas os campos solicitados: ${fields.join(", ")}.`;
+
+    try {
+      const resp = await runAi(c.env, model, {
+        messages: [
+          {
+            role: "system",
+            content:
+              "Você é um assistente especializado em fisioterapia. Gere conteúdo técnico e clínico em português brasileiro. Responda sempre em formato JSON válido.",
+          },
+          { role: "user", content: prompt },
+        ],
+      }, { cache: false });
+
+      const text = readAiText(resp);
+      let parsed: Record<string, string> = {};
+      try {
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
+      } catch { /* ignore parse error */ }
+
+      const updates: string[] = [];
+      const params: unknown[] = [];
+      const addParam = (val: unknown) => {
+        params.push(val);
+        return `$${params.length}`;
+      };
+
+      if (needDesc && parsed.description) {
+        updates.push(`description = ${addParam(parsed.description)}`);
+      }
+      if (needTips && parsed.tips) {
+        updates.push(`tips = ${addParam(parsed.tips)}`);
+      }
+      if (needPrec && parsed.precautions) {
+        updates.push(`precautions = ${addParam(parsed.precautions)}`);
+      }
+
+      if (updates.length > 0) {
+        params.push(r.id);
+        await sqlRaw(
+          `UPDATE exercises SET ${updates.join(", ")} WHERE id = $${params.length}`,
+          params,
+        );
+        processed++;
+      }
+    } catch (e) {
+      console.error("[Exercises/ContentBackfill] Error for", r.id, e);
+    }
+  }
+
+  const remaining = await sqlRaw(
+    `SELECT count(*)::int AS n FROM exercises
+     WHERE is_active = true AND is_public = true
+       AND (description IS NULL OR btrim(description) = ''
+            OR tips IS NULL OR btrim(tips) = ''
+            OR precautions IS NULL OR btrim(precautions) = '')`,
+    [],
+  );
+
+  // Invalidate catalog cache (gap counts changed)
+  await kvDelete(c.env, KV_CATALOG);
+
+  return c.json({
+    processed,
+    remaining: (remaining.rows?.[0] as { n?: number })?.n ?? 0,
+  });
+});
+
 
 export { app as exercisesRoutes };

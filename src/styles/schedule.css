@@ -90,17 +90,20 @@
   letter-spacing: -0.02em !important;
 }
 
-/* 5. Wrapper do card de evento (harness) */
-/* margem-direita: cria faixa clicável para criar novos agendamentos
-   em slots que já têm eventos */
+/* 5. Contêiner de eventos da coluna e wrapper do card (harness) */
+/* Recuo no contêiner da coluna inteira: cria a faixa em branco clicável
+   no canto direito de cada dia (junto à borda do próximo dia) sem separar
+   cards do mesmo horário */
+.fc .fc-timegrid-col-events {
+  margin-right: 14px !important;
+}
+
 .fc .fc-timegrid-event-harness {
   padding: 2px 4px !important;
-  margin-right: 10px !important;
 }
 
 .fc .fc-timegrid-event-harness-inset {
   padding: 2px 4px !important;
-  margin-right: 10px !important;
 }
 
 .fc .fc-v-event {
@@ -167,7 +170,6 @@
 
 .fc .fc-timegrid-event-harness {
   padding: var(--agenda-card-padding, 2px) 4px !important;
-  margin-right: 10px !important;
 }
 
 .fc .fc-v-event {

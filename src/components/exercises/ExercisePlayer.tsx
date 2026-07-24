@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { useExerciseFavorites } from "@/hooks/useExerciseFavorites";
 import type { Exercise } from "@/hooks/useExercises";
 import { buildImageSrcSet } from "@/lib/storageProxy";
+import { ExerciseDifficultyBadge } from "./ExerciseDifficultyBadge";
 import { ExerciseExecutionScreen } from "./ExerciseExecutionScreen";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -29,15 +30,6 @@ interface ExercisePlayerProps {
   exercise: Exercise;
   onAddToPlan?: (exerciseId: string) => void;
 }
-
-const difficultyColors: Record<string, string> = {
-  Fácil: "bg-green-500/10 text-green-600 border-green-500/30",
-  Iniciante: "bg-green-500/10 text-green-600 border-green-500/30",
-  Médio: "bg-yellow-500/10 text-yellow-600 border-yellow-500/30",
-  Intermediário: "bg-yellow-500/10 text-yellow-600 border-yellow-500/30",
-  Difícil: "bg-red-500/10 text-red-600 border-red-500/30",
-  Avançado: "bg-red-500/10 text-red-600 border-red-500/30",
-};
 
 function getEmbedUrl(url: string): string | null {
   if (!url) return null;
@@ -115,11 +107,7 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({ exercise, onAddT
             <CardTitle className="text-2xl">{exercise?.name ?? "Exercício"}</CardTitle>
             <div className="flex gap-2 flex-wrap">
               {exercise.category && <Badge variant="secondary">{exercise.category}</Badge>}
-              {exercise.difficulty && (
-                <Badge variant="outline" className={cn(difficultyColors[exercise.difficulty])}>
-                  {exercise.difficulty}
-                </Badge>
-              )}
+              <ExerciseDifficultyBadge difficulty={exercise.difficulty} />
             </div>
           </div>
           <div className="flex items-center gap-2">
