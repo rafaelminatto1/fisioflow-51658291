@@ -1213,7 +1213,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                   : defaultPlaceholder)
               }
               className={cn(
-                "pl-10 pr-12 h-12 rounded-2xl bg-muted/30 border-border/50 transition-all",
+                "pl-10 pr-24 sm:pr-48 h-12 rounded-2xl bg-muted/30 border-border/50 transition-all",
                 (type === "unified" ? newItemType : type) === "exercise"
                   ? "focus-visible:ring-emerald-500/20 focus-visible:border-emerald-500/30"
                   : "focus-visible:ring-orange-500/20 focus-visible:border-orange-500/30"
@@ -1229,7 +1229,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
             />
 
             <div className="absolute right-1.5 flex items-center gap-1">
-              <div className="hidden sm:flex items-center gap-1.5 mr-2">
+              <div className="hidden sm:flex items-center gap-1.5 mr-1.5">
                 <Badge
                   variant="outline"
                   className="h-5 px-1.5 text-[9px] font-bold text-muted-foreground/50 border-muted-foreground/20"
@@ -1243,11 +1243,39 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                   ALT+E
                 </Badge>
               </div>
+
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={() => {
+                  if ((type === "unified" ? newItemType : type) === "exercise") {
+                    setExerciseLibraryOpen(true);
+                  } else {
+                    setProcedureLibraryOpen(true);
+                  }
+                }}
+                title={
+                  (type === "unified" ? newItemType : type) === "exercise"
+                    ? "Abrir biblioteca de exercícios"
+                    : "Abrir biblioteca de procedimentos"
+                }
+                className={cn(
+                  "h-9 w-9 rounded-xl transition-colors",
+                  (type === "unified" ? newItemType : type) === "exercise"
+                    ? "hover:bg-emerald-500/10 text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400"
+                    : "hover:bg-orange-500/10 text-slate-500 hover:text-orange-600 dark:text-slate-400 dark:hover:text-orange-400"
+                )}
+              >
+                <BookOpen className="h-4 w-4" />
+              </Button>
+
               <Button
                 size="icon"
                 variant="ghost"
                 onClick={handleAddItem}
                 disabled={!newItemName.trim()}
+                title="Adicionar à sessão"
                 className={cn(
                   "h-9 w-9 rounded-xl transition-colors",
                   (type === "unified" ? newItemType : type) === "exercise"

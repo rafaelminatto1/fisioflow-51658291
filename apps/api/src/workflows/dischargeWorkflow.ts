@@ -48,7 +48,7 @@ export class PatientDischargeWorkflow extends WorkflowEntrypoint<Env, PatientDis
         const prompt = `
           Você é um assistente de alta humanizado. 
           Gere uma mensagem de "História de Sucesso" curta e emocionante para o paciente ${patientName}.
-          Ele está recebendo alta hoje da fisioterapia com ${therapistName}.
+          Ele está recebendo alta hoje da fisioterapia.
           
           HISTÓRICO:
           ${JSON.stringify(history.rows)}

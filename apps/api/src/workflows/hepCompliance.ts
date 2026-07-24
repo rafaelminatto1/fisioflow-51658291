@@ -89,7 +89,7 @@ export class HEPComplianceWorkflow extends WorkflowEntrypoint<Env, HEPCompliance
 
       await this.sendWhatsApp(
         patientPhone,
-        `${patientName}, seu programa de exercícios domiciliares foi concluído! 🏆\n\nAdesão média: ${avgAdherence}%\n\nSeu fisioterapeuta ${therapistName} receberá o relatório completo. Obrigado pela dedicação!`,
+        `${patientName}, seu programa de exercícios domiciliares foi concluído! 🏆\n\nAdesão média: ${avgAdherence}%\n\nO relatório completo de sua evolução foi gerado. Obrigado pela dedicação!`,
       );
 
       if (this.env.ANALYTICS) {

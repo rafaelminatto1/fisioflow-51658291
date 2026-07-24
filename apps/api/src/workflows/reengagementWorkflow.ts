@@ -58,7 +58,7 @@ export class PatientReengagementWorkflow extends WorkflowEntrypoint<
     await step.do("send-reengagement-2", async () => {
       await this.sendWhatsApp(
         patientPhone,
-        `Olá ${patientName}! Temos horários flexíveis disponíveis esta semana, inclusive no período noturno.\n\nGostaria de retomar seu acompanhamento com ${therapistName}? Responda SIM e entraremos em contato! 💪`,
+        `Olá ${patientName}! Temos horários flexíveis disponíveis esta semana, inclusive no período noturno.\n\nGostaria de retomar seu acompanhamento? Responda SIM e entraremos em contato! 💪`,
       );
     });
 

@@ -139,11 +139,11 @@ export async function notifyPatientAppointment(
   const labels: Record<typeof opts.type, { title: string; body: string }> = {
     reminder_48h: {
       title: "Lembrete de Sessão",
-      body: `Você tem uma sessão${opts.therapistName ? ` com ${opts.therapistName}` : ""} em ${opts.datetime}. Confirme sua presença!`,
+      body: `Você tem uma sessão em ${opts.datetime}. Confirme sua presença!`,
     },
     reminder_2h: {
       title: "Sessão em 2 horas",
-      body: `Sua sessão${opts.therapistName ? ` com ${opts.therapistName}` : ""} começa em 2 horas.`,
+      body: `Sua sessão em ${opts.datetime} começa em 2 horas.`,
     },
     confirmed: {
       title: "Sessão Confirmada ✅",

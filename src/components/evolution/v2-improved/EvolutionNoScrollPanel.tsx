@@ -213,7 +213,11 @@ export const EvolutionNoScrollPanel = memo(
     const [measurementModalOpen, setMeasurementModalOpen] = useState(false);
     const [focusSection, setFocusSection] = useState<null | "obs" | "condutas">(null);
     const [saveFeedback, setSaveFeedback] = useState<null | "saved" | "error">(null);
-    const [activePainMode, setActivePainMode] = useState<"arrival" | "discharge">("discharge");
+    const [activePainMode, setActivePainMode] = useState<"arrival" | "discharge">("arrival");
+
+    useEffect(() => {
+      setActivePainMode("arrival");
+    }, [evolutionId]);
 
     // Atalhos de teclado (T013)
     useEffect(() => {

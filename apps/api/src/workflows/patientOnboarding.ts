@@ -83,7 +83,7 @@ export class PatientOnboardingWorkflow extends WorkflowEntrypoint<Env, PatientOn
     await step.do("notify-therapist", async () => {
       await this.sendWhatsApp(
         patientPhone,
-        `✅ Cadastro confirmado! ${patientName}, seu prontuário foi ativado com sucesso.\n\nSeu fisioterapeuta ${therapistName} entrará em contato em breve para agendar sua primeira consulta.`,
+        `✅ Cadastro confirmado! ${patientName}, seu prontuário foi ativado com sucesso.\n\nNossa equipe entrará em contato em breve para agendar sua primeira sessão.`,
       );
     });
 
