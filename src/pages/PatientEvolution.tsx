@@ -99,11 +99,7 @@ const LazyPROMsDashboard = lazy(() =>
     default: m.PROMsDashboard,
   }))
 );
-const LazyEvolutionSettingsTab = lazy(() =>
-  import('@/components/evolution/v3-notion/EvolutionSettingsTab').then((m) => ({
-    default: m.EvolutionSettingsTab,
-  }))
-);
+
 const LazyPatientMediaGallery = lazy(() =>
   import('@/components/patient/PatientMediaGallery').then((m) => ({
     default: m.PatientMediaGallery,
@@ -912,11 +908,7 @@ const PatientEvolution = () => {
                   {state.patientId && <LazyPatientMediaGallery patientId={state.patientId} />}
                 </Suspense>
               </TabsContent>
-              <TabsContent value="configuracoes" className="mt-0 p-4">
-                <Suspense fallback={<LoadingSkeleton />}>
-                  <LazyEvolutionSettingsTab />
-                </Suspense>
-              </TabsContent>
+
             </Tabs>
           </div>
 

@@ -43,6 +43,14 @@ import { accentIncludes } from "@/lib/utils/bilingualSearch";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { getBestImageUrl, getImageUrlCandidates } from "@/lib/imageUtils";
 import { ExerciseViewModal } from "../../exercises/ExerciseViewModal";
+import {
+  getAvailableMainRegions,
+  getAvailableSubBranches,
+  matchesAnatomicalFilter,
+  matchesMultiAnatomicalFilter,
+  type SelectedAnatomicalFilter,
+} from "@/lib/constants/anatomicalTaxonomy";
+
 
 // Category colors for visual distinction
 const CATEGORY_COLORS: Record<string, string> = {
@@ -557,6 +565,9 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
   const [librarySearchQuery, setLibrarySearchQuery] = useState("");
   const [libraryDifficultyFilter, setLibraryDifficultyFilter] = useState("all");
   const [libraryBodyPartFilter, setLibraryBodyPartFilter] = useState("all");
+  const [librarySubBranchFilter, setLibrarySubBranchFilter] = useState("all");
+  const [selectedAnatomicalFilters, setSelectedAnatomicalFilters] = useState<SelectedAnatomicalFilter[]>([]);
+  const [filterMatchMode, setFilterMatchMode] = useState<"OR" | "AND">("OR");
   const [tempSelectedProcedures, setTempSelectedProcedures] = useState<string[]>([]);
   const [tempSelectedExercises, setTempSelectedExercises] = useState<string[]>([]);
   const [viewExercise, setViewExercise] = useState<Exercise | null>(null);
@@ -643,25 +654,54 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
     return groups;
   }, [librarySearchQuery]);
 
-  const availableBodyParts = useMemo(() => {
-    const parts = new Set<string>();
-    libraryExercises.forEach(ex => {
-      if (Array.isArray(ex.body_parts)) {
-        ex.body_parts.forEach(p => parts.add(p));
-      }
-    });
-    return Array.from(parts).sort();
+  const availableMainRegions = useMemo(() => {
+    return getAvailableMainRegions(libraryExercises);
   }, [libraryExercises]);
+
+  const availableSubBranches = useMemo(() => {
+    return getAvailableSubBranches(libraryBodyPartFilter, libraryExercises);
+  }, [libraryBodyPartFilter, libraryExercises]);
+
+  const handleAddAnatomicalFilter = useCallback((filter: SelectedAnatomicalFilter) => {
+    setSelectedAnatomicalFilters((prev) => {
+      if (prev.some((f) => f.id === filter.id)) return prev;
+      return [...prev, filter];
+    });
+  }, []);
+
+  const handleRemoveAnatomicalFilter = useCallback((filterId: string) => {
+    setSelectedAnatomicalFilters((prev) => prev.filter((f) => f.id !== filterId));
+  }, []);
+
+  const handleClearAnatomicalFilters = useCallback(() => {
+    setSelectedAnatomicalFilters([]);
+    setLibraryBodyPartFilter("all");
+    setLibrarySubBranchFilter("all");
+  }, []);
 
   const filteredExercises = useMemo(() => {
     return libraryExercises.filter((e) => {
       const matchesSearch = accentIncludes(e.name, librarySearchQuery);
       const matchesDifficulty = libraryDifficultyFilter === "all" || e.difficulty === libraryDifficultyFilter;
-      const matchesBodyPart = libraryBodyPartFilter === "all" || (Array.isArray(e.body_parts) && e.body_parts.includes(libraryBodyPartFilter));
+      
+      let matchesBodyPart = true;
+      if (selectedAnatomicalFilters.length > 0) {
+        matchesBodyPart = matchesMultiAnatomicalFilter(e, selectedAnatomicalFilters, filterMatchMode);
+      } else if (libraryBodyPartFilter !== "all") {
+        matchesBodyPart = matchesAnatomicalFilter(e, libraryBodyPartFilter, librarySubBranchFilter);
+      }
       
       return matchesSearch && matchesDifficulty && matchesBodyPart;
     });
-  }, [libraryExercises, librarySearchQuery, libraryDifficultyFilter, libraryBodyPartFilter]);
+  }, [
+    libraryExercises,
+    librarySearchQuery,
+    libraryDifficultyFilter,
+    libraryBodyPartFilter,
+    librarySubBranchFilter,
+    selectedAnatomicalFilters,
+    filterMatchMode,
+  ]);
 
   const [activeIndex, setActiveIndex] = useState(-1);
   const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
@@ -1585,30 +1625,48 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
 
       {/* Exercise Library Modal */}
       <Dialog open={exerciseLibraryOpen} onOpenChange={setExerciseLibraryOpen}>
-        <DialogContent className="w-[95vw] max-w-6xl rounded-3xl max-h-[92vh] flex flex-col p-0 overflow-hidden">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800/80">
-            <DialogTitle className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-              <BookOpen className="h-5 w-5" />
-              Biblioteca de Exercícios
-            </DialogTitle>
-            <DialogDescription>
-              Selecione os exercícios prescritos para esta sessão para adicioná-los à conduta do paciente.
-            </DialogDescription>
+        <DialogContent className="w-[95vw] max-w-6xl rounded-3xl max-h-[92vh] flex flex-col p-0 overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-2xl">
+          {/* Modal Header */}
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/20 flex flex-row items-center justify-between">
+            <div className="flex items-center gap-3.5">
+              <div className="h-11 w-11 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shadow-sm flex-shrink-0">
+                <BookOpen className="h-5.5 w-5.5" />
+              </div>
+              <div>
+                <div className="text-[10px] font-extrabold tracking-[0.16em] uppercase text-emerald-600 dark:text-emerald-400 mb-0.5 flex items-center gap-1.5">
+                  <Activity className="h-3 w-3" />
+                  Biblioteca de Exercícios · FisioFlow
+                </div>
+                <DialogTitle className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+                  Biblioteca de Exercícios
+                </DialogTitle>
+                <DialogDescription className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                  Selecione os exercícios prescritos para esta sessão para adicioná-los à conduta do paciente.
+                </DialogDescription>
+              </div>
+            </div>
+            
+            <div className="hidden sm:flex items-center gap-2">
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 px-3 py-1 rounded-full text-xs font-mono font-bold">
+                {filteredExercises.length} / {libraryExercises.length} disponíveis
+              </Badge>
+            </div>
           </DialogHeader>
 
-          <div className="px-6 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/10 flex flex-col sm:flex-row gap-3">
+          {/* Search & Filter Toolbar */}
+          <div className="px-6 py-3.5 border-b border-slate-100 dark:border-slate-800/80 bg-background flex flex-col sm:flex-row gap-3">
             <div className="relative flex items-center flex-1">
-              <Search className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3.5 h-4 w-4 text-slate-400" />
               <Input
-                placeholder="Buscar exercícios..."
+                placeholder="Buscar por nome, instrução ou patologia..."
                 value={librarySearchQuery}
                 onChange={(e) => setLibrarySearchQuery(e.target.value)}
-                className="pl-10 h-10 rounded-xl bg-background border-slate-200 w-full"
+                className="pl-10 h-10 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-emerald-500/20"
               />
             </div>
             <div className="flex gap-2">
               <select
-                className="h-10 rounded-xl bg-background border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-700 dark:text-slate-200 min-w-[140px]"
+                className="h-10 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 px-3 text-xs font-semibold text-slate-700 dark:text-slate-200 min-w-[140px] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-sm"
                 value={libraryDifficultyFilter}
                 onChange={(e) => setLibraryDifficultyFilter(e.target.value)}
               >
@@ -1619,91 +1677,239 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
               </select>
 
               <select
-                className="h-10 rounded-xl bg-background border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-700 dark:text-slate-200 min-w-[140px]"
+                className="h-10 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 px-3 text-xs font-semibold text-slate-700 dark:text-slate-200 min-w-[140px] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-sm"
                 value={libraryBodyPartFilter}
-                onChange={(e) => setLibraryBodyPartFilter(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setLibraryBodyPartFilter(val);
+                  setLibrarySubBranchFilter("all");
+                  if (val !== "all") {
+                    const region = availableMainRegions.find((r) => r.key === val);
+                    if (region) {
+                      handleAddAnatomicalFilter({
+                        id: `region-${val}`,
+                        mainRegionKey: val,
+                        label: region.label,
+                      });
+                    }
+                  }
+                }}
               >
                 <option value="all">Todos Membros</option>
-                {availableBodyParts.map((part) => (
-                  <option key={part} value={part}>
-                    {part.charAt(0).toUpperCase() + part.slice(1)}
+                {availableMainRegions.map((region) => (
+                  <option key={region.key} value={region.key}>
+                    {region.label}
                   </option>
                 ))}
               </select>
+
+              {availableSubBranches.length > 0 && (
+                <select
+                  className="h-10 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 px-3 text-xs font-semibold text-slate-700 dark:text-slate-200 min-w-[160px] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-sm animate-in fade-in slide-in-from-left-1 duration-200"
+                  value={librarySubBranchFilter}
+                  onChange={(e) => {
+                    const subVal = e.target.value;
+                    setLibrarySubBranchFilter(subVal);
+                    if (subVal !== "all") {
+                      const subObj = availableSubBranches.find((s) => s.key === subVal);
+                      const regionObj = availableMainRegions.find((r) => r.key === libraryBodyPartFilter);
+                      if (subObj && regionObj) {
+                        handleAddAnatomicalFilter({
+                          id: `sub-${libraryBodyPartFilter}-${subVal}`,
+                          mainRegionKey: libraryBodyPartFilter,
+                          subBranchKey: subVal,
+                          label: `${regionObj.label}: ${subObj.shortLabel}`,
+                        });
+                      }
+                    }
+                  }}
+                >
+                  <option value="all">
+                    Todas as articulações ({availableMainRegions.find((r) => r.key === libraryBodyPartFilter)?.label || ""})
+                  </option>
+                  {availableSubBranches.map((sub) => (
+                    <option key={sub.key} value={sub.key}>
+                      {sub.shortLabel}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+          {/* Active Filters Tag Bar */}
+          {selectedAnatomicalFilters.length > 0 && (
+            <div className="px-6 py-2.5 bg-emerald-500/5 dark:bg-emerald-950/30 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-2 text-xs">
+              <span className="text-slate-500 dark:text-slate-400 font-medium mr-1 flex items-center gap-1">
+                <Activity className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                Filtros Ativos ({selectedAnatomicalFilters.length}):
+              </span>
+              {selectedAnatomicalFilters.map((f) => (
+                <Badge
+                  key={f.id}
+                  variant="secondary"
+                  className="bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 gap-1.5 py-1 px-2.5 rounded-lg border border-emerald-200 dark:border-emerald-800 font-semibold"
+                >
+                  <span>{f.label}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveAnatomicalFilter(f.id)}
+                    className="hover:bg-emerald-200 dark:hover:bg-emerald-900 rounded-full p-0.5 transition-colors"
+                  >
+                    <X className="h-3 w-3 text-emerald-700 dark:text-emerald-400" />
+                  </button>
+                </Badge>
+              ))}
+
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFilterMatchMode(filterMatchMode === "OR" ? "AND" : "OR")}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg text-xs font-bold transition-all border shadow-sm",
+                    filterMatchMode === "AND"
+                      ? "bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700"
+                      : "bg-background text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  )}
+                  title={
+                    filterMatchMode === "AND"
+                      ? "Modo E: O exercício precisa englobar TODOS os membros selecionados"
+                      : "Modo OU: O exercício pode ser para QUALQUER um dos membros selecionados"
+                  }
+                >
+                  Modo: {filterMatchMode === "AND" ? "Todas as Regiões (E)" : "Qualquer Região (OU)"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClearAnatomicalFilters}
+                  className="text-xs text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 underline font-semibold"
+                >
+                  Limpar tudo
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Exercises Grid */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-slate-50/30 dark:bg-slate-950/20">
             {filteredExercises.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Nenhum exercício encontrado
+              <div className="text-center py-12 text-slate-400 dark:text-slate-500 flex flex-col items-center justify-center gap-2">
+                <Dumbbell className="h-10 w-10 text-slate-300 dark:text-slate-700 stroke-1" />
+                <span className="text-sm font-semibold">Nenhum exercício encontrado com estes filtros</span>
+                <span className="text-xs text-slate-400">Tente ajustar a busca ou limpar alguns filtros ativos</span>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredExercises.map((ex) => {
                   const isSelected = tempSelectedExercises.includes(ex.id);
                   const thumbSrc = getBestImageUrl(ex);
+                  
+                  // Difficulty badge colors
+                  const diffColor =
+                    ex.difficulty === "iniciante"
+                      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20"
+                      : ex.difficulty === "intermediario"
+                      ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
+                      : ex.difficulty === "avancado"
+                      ? "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20"
+                      : "bg-slate-100 text-slate-600 border-slate-200";
+
                   return (
                     <div
                       key={ex.id}
                       onClick={() => {
                         if (isSelected) {
-                          setTempSelectedExercises(tempSelectedExercises.filter(id => id !== ex.id));
+                          setTempSelectedExercises(tempSelectedExercises.filter((id) => id !== ex.id));
                         } else {
                           setTempSelectedExercises([...tempSelectedExercises, ex.id]);
                         }
                       }}
                       className={cn(
-                        "group flex items-center gap-4 p-4 rounded-2xl border cursor-pointer transition-all duration-200 select-none",
+                        "group relative flex flex-col justify-between p-4 rounded-2xl border cursor-pointer transition-all duration-200 select-none overflow-hidden",
                         isSelected
-                          ? "bg-emerald-500/5 border-emerald-500/30 text-emerald-950 dark:text-emerald-200"
-                          : "bg-background border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-900/30 hover:shadow-md hover:-translate-y-0.5"
+                          ? "bg-emerald-500/5 border-emerald-500 shadow-md shadow-emerald-500/10 text-slate-900 dark:text-slate-100 ring-1 ring-emerald-500/30"
+                          : "bg-card border-slate-200/80 dark:border-slate-800/80 hover:bg-slate-50/80 dark:hover:bg-slate-900/40 hover:shadow-lg hover:border-slate-300 dark:hover:border-slate-700 hover:-translate-y-0.5"
                       )}
                     >
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={() => {}} // handled by onClick on wrapper
-                        className="rounded border-slate-300 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
-                      />
-                      
-                      {/* Thumbnail */}
-                      <div className="h-16 w-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0 border border-slate-200/50">
-                        {thumbSrc ? (
-                          <OptimizedImage
-                            src={thumbSrc}
-                            alt={ex.name}
-                            className="h-full w-full object-cover"
-                            aspectRatio="1:1"
-                            fallbackSrcs={getImageUrlCandidates(ex)}
+                      {/* Top Header Row of Card */}
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => {}} // handled by onClick wrapper
+                            className="rounded-lg border-slate-300 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600 h-4.5 w-4.5"
                           />
-                        ) : (
-                          <div className="h-full w-full flex items-center justify-center">
-                            <Dumbbell className="h-6 w-6 text-slate-300" />
-                          </div>
-                        )}
+                          {ex.difficulty && (
+                            <Badge variant="outline" className={cn("text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md border", diffColor)}>
+                              {ex.difficulty}
+                            </Badge>
+                          )}
+                        </div>
+
+                        {/* View Details Button */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 rounded-lg opacity-60 group-hover:opacity-100 transition-opacity hover:bg-slate-200/60 dark:hover:bg-slate-800"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setViewExercise(ex);
+                          }}
+                          title="Visualizar detalhes do exercício"
+                        >
+                          <Eye className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                        </Button>
                       </div>
 
-                      <div className="flex-1 min-w-0">
-                        <span className="block text-sm font-semibold leading-tight truncate">{ex.name}</span>
-                        {ex.category && (
-                          <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-500">
-                            {ex.category}
+                      {/* Main Content Area */}
+                      <div className="flex gap-3.5 items-start">
+                        {/* Thumbnail */}
+                        <div className="h-16 w-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0 border border-slate-200/60 dark:border-slate-700/60 shadow-inner relative">
+                          {thumbSrc ? (
+                            <OptimizedImage
+                              src={thumbSrc}
+                              alt={ex.name}
+                              className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              aspectRatio="1:1"
+                              fallbackSrcs={getImageUrlCandidates(ex)}
+                            />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center">
+                              <Dumbbell className="h-6 w-6 text-slate-300 dark:text-slate-600" />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <span className="block text-sm font-bold leading-snug text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2">
+                            {ex.name}
                           </span>
-                        )}
+                          {ex.category && (
+                            <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700/50">
+                              {ex.category}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      {/* View Details Button */}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setViewExercise(ex);
-                        }}
-                      >
-                        <Eye className="h-4 w-4 text-slate-400" />
-                      </Button>
+                      {/* Body Parts Badges Footer */}
+                      {ex.body_parts && ex.body_parts.length > 0 && (
+                        <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/60 flex flex-wrap gap-1">
+                          {ex.body_parts.slice(0, 3).map((bp, idx) => (
+                            <span
+                              key={idx}
+                              className="text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100/70 dark:bg-slate-800/50 px-1.5 py-0.5 rounded"
+                            >
+                              {bp}
+                            </span>
+                          ))}
+                          {ex.body_parts.length > 3 && (
+                            <span className="text-[10px] font-medium text-slate-400">
+                              +{ex.body_parts.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -1711,13 +1917,30 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
             )}
           </div>
 
-          <DialogFooter className="px-6 py-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/10">
-            <Button variant="outline" onClick={() => setExerciseLibraryOpen(false)} className="rounded-xl">
-              Cancelar
-            </Button>
-            <Button onClick={handleSaveExercises} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl">
-              Adicionar à Conduta ({tempSelectedExercises.length})
-            </Button>
+          {/* Modal Footer */}
+          <DialogFooter className="px-6 py-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/20 flex flex-row items-center justify-between gap-3">
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              {tempSelectedExercises.length > 0 ? (
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                  {tempSelectedExercises.length} {tempSelectedExercises.length === 1 ? "exercício selecionado" : "exercícios selecionados"}
+                </span>
+              ) : (
+                "Nenhum exercício selecionado"
+              )}
+            </div>
+            
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setExerciseLibraryOpen(false)} className="rounded-xl font-semibold">
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleSaveExercises}
+                disabled={tempSelectedExercises.length === 0}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold px-5 shadow-md shadow-emerald-500/20 transition-all hover:scale-[1.02]"
+              >
+                Adicionar à Conduta ({tempSelectedExercises.length})
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

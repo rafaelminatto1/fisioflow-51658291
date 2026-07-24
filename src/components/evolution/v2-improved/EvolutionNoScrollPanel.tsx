@@ -291,9 +291,12 @@ export const EvolutionNoScrollPanel = memo(
     const autoLoadedMembersRef = useRef(false);
 
     const filteredRegions = useMemo(() => {
+      const sorted = [...COMMON_ANATOMICAL_REGIONS].sort((a, b) =>
+        a.localeCompare(b, "pt-BR")
+      );
       const query = regionSearch.trim().toLowerCase();
-      if (!query) return COMMON_ANATOMICAL_REGIONS;
-      return COMMON_ANATOMICAL_REGIONS.filter((region) =>
+      if (!query) return sorted;
+      return sorted.filter((region) =>
         region.toLowerCase().includes(query)
       );
     }, [regionSearch]);
@@ -830,7 +833,10 @@ export const EvolutionNoScrollPanel = memo(
               {/* Autocomplete Input */}
               <Popover open={isRegionPopoverOpen} onOpenChange={setIsRegionPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 shadow-sm focus-within:ring-1 focus-within:ring-rose-500">
+                  <div
+                    onClick={() => setIsRegionPopoverOpen(true)}
+                    className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 shadow-sm focus-within:ring-1 focus-within:ring-rose-500 cursor-text"
+                  >
                     <input
                       type="text"
                       value={regionSearch}
@@ -839,6 +845,7 @@ export const EvolutionNoScrollPanel = memo(
                         if (!isRegionPopoverOpen) setIsRegionPopoverOpen(true);
                       }}
                       onFocus={() => setIsRegionPopoverOpen(true)}
+                      onClick={() => setIsRegionPopoverOpen(true)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && regionSearch.trim()) {
                           e.preventDefault();

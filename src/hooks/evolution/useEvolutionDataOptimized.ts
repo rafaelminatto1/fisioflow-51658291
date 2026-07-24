@@ -43,8 +43,7 @@ export type EvolutionTab =
   | "historico"
   | "assistente"
   | "escalas"
-  | "midia"
-  | "configuracoes";
+  | "midia";
 export type LoadStrategy = "critical" | "tab-based" | "full";
 
 export interface EvolutionDataOptions {
@@ -201,7 +200,8 @@ export function useEvolutionDataOptimized(options: EvolutionDataOptions) {
         tratamento: ["goals", "pathologies"],
         historico: ["soap", "surgeries", "medical-returns", "measurements"],
         assistente: ["goals", "pathologies"],
-        configuracoes: [],
+        escalas: [],
+        midia: [],
       };
 
       return tabDataMap[activeTab]?.includes(dataType) || false;
@@ -272,8 +272,8 @@ export function useEvolutionDataOptimized(options: EvolutionDataOptions) {
       avaliacao: ["measurements", "required-measurements"],
       tratamento: ["goals", "pathologies"],
       historico: ["soap-records", "surgeries", "medical-returns", "measurements"],
-      assistente: ["goals", "pathologies"],
-      configuracoes: [],
+      escalas: [],
+      midia: [],
     };
 
     // Determinar próxima aba
@@ -283,7 +283,8 @@ export function useEvolutionDataOptimized(options: EvolutionDataOptions) {
       "tratamento",
       "historico",
       "assistente",
-      "configuracoes",
+      "escalas",
+      "midia",
     ];
     const currentIdx = tabs.indexOf(activeTab);
     const nextTab = tabs[(currentIdx + 1) % tabs.length];

@@ -402,6 +402,53 @@ app.post("/messages", requireAuth, async (c) => {
     return c.json({ error: "message_content is required" }, 400);
   }
 
+  let recipientPhone = body.to_phone?.trim();
+
+  // Se to_phone não veio mas veio patient_id, tentar buscar o telefone do paciente no DB
+  if (!recipientPhone && body.patient_id) {
+    try {
+      const pRes = await pool.query(
+        `SELECT phone, whatsapp FROM patients WHERE id = $1 AND organization_id = $2 LIMIT 1`,
+        [body.patient_id, user.organizationId]
+      );
+      if (pRes.rows.length > 0) {
+        recipientPhone = pRes.rows[0].whatsapp || pRes.rows[0].phone || undefined;
+      }
+    } catch (err) {
+      console.warn("[WhatsApp] Erro ao buscar telefone do paciente:", err);
+    }
+  }
+
+  let sendStatus = body.status ?? "sent";
+  let metaMessageId: string | null = null;
+  let sendError: unknown = null;
+
+  if (recipientPhone) {
+    const cleanPhone = recipientPhone.replace(/\D/g, "");
+    if (cleanPhone.length >= 8) {
+      try {
+        const whatsapp = new WhatsAppService(c.env);
+        const sendResult = (await whatsapp.sendTextMessage(cleanPhone, body.message_content)) as {
+          messages?: Array<{ id: string }>;
+          error?: unknown;
+        };
+
+        if (sendResult?.messages?.[0]?.id) {
+          metaMessageId = sendResult.messages[0].id;
+          sendStatus = "delivered";
+        } else if (sendResult?.error) {
+          console.error("[WhatsApp] Failure sending message via WhatsApp API:", sendResult.error);
+          sendStatus = "failed";
+          sendError = sendResult.error;
+        }
+      } catch (err) {
+        console.error("[WhatsApp] Exception in sendTextMessage:", err);
+        sendStatus = "failed";
+        sendError = err instanceof Error ? err.message : String(err);
+      }
+    }
+  }
+
   const result = await pool.query(
     `
       INSERT INTO whatsapp_messages (
@@ -423,15 +470,17 @@ app.post("/messages", requireAuth, async (c) => {
       user.organizationId,
       body.patient_id ?? null,
       body.from_phone ?? "clinic",
-      body.to_phone ?? "patient",
+      recipientPhone ?? body.to_phone ?? "patient",
       body.message_content,
       body.message_type ?? "text",
-      body.status ?? "sent",
-      null,
+      sendStatus,
+      metaMessageId,
       JSON.stringify({
         ...body.metadata,
         appointment_id: body.appointment_id ?? null,
         message_type: body.message_type,
+        to_phone: recipientPhone,
+        ...(sendError ? { send_error: sendError } : {}),
       }),
     ],
   );
@@ -447,6 +496,7 @@ app.post("/messages", requireAuth, async (c) => {
     201,
   );
 });
+
 
 app.get("/pending-confirmations", requireAuth, async (c) => {
   const user = c.get("user");
@@ -561,11 +611,11 @@ app.post("/send-template", requireAuth, async (c) => {
     content = content.replace(new RegExp(`{{${key}}}`, "g"), val);
   }
 
-  // 4. Enviar via Meta API (Simulado ou Real dependendo das envs)
+  // 4. Enviar via Meta API
   const phoneId = c.env.WHATSAPP_PHONE_NUMBER_ID;
   const token = c.env.WHATSAPP_ACCESS_TOKEN;
 
-  let status = "sent";
+  let status = "failed";
   let messageId = null;
 
   if (phoneId && token) {
@@ -596,12 +646,22 @@ app.post("/send-template", requireAuth, async (c) => {
         }),
       });
       const metaData = (await metaRes.json()) as any;
-      messageId = metaData.messages?.[0]?.id;
+      if (metaRes.ok && metaData.messages?.[0]?.id) {
+        messageId = metaData.messages[0].id;
+        status = "sent";
+      } else {
+        console.error("[WhatsApp] Error sending Meta template:", metaData);
+        status = "failed";
+      }
     } catch (e) {
-      console.error("[WhatsApp] Error sending Meta template:", e);
+      console.error("[WhatsApp] Exception sending Meta template:", e);
       status = "failed";
     }
+  } else {
+    console.warn("[WhatsApp] Credenciais Meta (WHATSAPP_PHONE_NUMBER_ID / WHATSAPP_ACCESS_TOKEN) não configuradas.");
+    status = "failed";
   }
+
 
   // 5. Salvar na tabela de mensagens
   await pool.query(

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AlertCircle, CheckCircle2, Clock, MessageCircle, RefreshCw, Send } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Clock, ExternalLink, MessageCircle, RefreshCw, Send } from 'lucide-react';
 
 import { whatsappApi } from '@/api/v2';
 import { Button } from '@/components/ui/button';
@@ -84,6 +84,23 @@ export function WhatsAppIntegration({
     []
   );
 
+  const openWebWhatsApp = (customMessage?: string) => {
+    if (!hasPhone || !patientPhone) {
+      toast({
+        title: 'Telefone não cadastrado',
+        description: 'Adicione um telefone ao paciente primeiro.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const messageToSend = (customMessage || message).trim();
+    const cleanDigits = patientPhone.replace(/\D/g, '');
+    const formattedPhone = cleanDigits.startsWith('55') ? cleanDigits : `55${cleanDigits}`;
+    const url = `https://wa.me/${formattedPhone}${messageToSend ? `?text=${encodeURIComponent(messageToSend)}` : ''}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   const sendWhatsAppMessage = async (customMessage?: string) => {
     if (!hasPhone || !patientPhone) {
       toast({
@@ -100,7 +117,7 @@ export function WhatsAppIntegration({
     try {
       setSendingMessage(true);
 
-      await whatsappApi.createMessage({
+      const res = await whatsappApi.createMessage({
         patient_id: _patientId,
         to_phone: patientPhone,
         message_type: 'custom',
@@ -112,10 +129,20 @@ export function WhatsAppIntegration({
         },
       });
 
-      toast({
-        title: 'Mensagem enviada',
-        description: 'A mensagem foi registrada para envio via WhatsApp Business.',
-      });
+      const messageStatus = res?.data?.status;
+
+      if (messageStatus === 'failed') {
+        toast({
+          title: 'Aviso de envio',
+          description: 'A mensagem foi registrada no sistema, mas o envio automático via Meta Cloud API falhou. Você pode clicar em "Abrir Web WhatsApp" para enviar diretamente.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Mensagem enviada com sucesso',
+          description: 'A mensagem foi enviada ao WhatsApp do paciente via Meta Cloud API.',
+        });
+      }
 
       setMessage('');
       fetchHistory();
@@ -200,24 +227,38 @@ export function WhatsAppIntegration({
             placeholder="Escreva uma mensagem curta para o paciente..."
             rows={4}
           />
-          <Button
-            onClick={() => sendWhatsAppMessage()}
-            disabled={!hasPhone || !message.trim() || sendingMessage}
-            className="w-full bg-emerald-600 hover:bg-emerald-700"
-          >
-            {sendingMessage ? (
-              <>
-                <Clock className="mr-2 h-4 w-4 animate-spin" />
-                Enviando...
-              </>
-            ) : (
-              <>
-                <Send className="mr-2 h-4 w-4" />
-                Enviar mensagem
-              </>
-            )}
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button
+              onClick={() => sendWhatsAppMessage()}
+              disabled={!hasPhone || !message.trim() || sendingMessage}
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+            >
+              {sendingMessage ? (
+                <>
+                  <Clock className="mr-2 h-4 w-4 animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                <>
+                  <Send className="mr-2 h-4 w-4" />
+                  Enviar mensagem
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => openWebWhatsApp()}
+              disabled={!hasPhone}
+              title="Abrir diretamente no WhatsApp Web / App"
+              className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+            >
+              <ExternalLink className="mr-2 h-4 w-4 text-emerald-600" />
+              Abrir Web WhatsApp
+            </Button>
+          </div>
         </div>
+
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">

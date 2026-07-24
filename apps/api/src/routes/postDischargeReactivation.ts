@@ -120,7 +120,9 @@ app.post("/trigger-followup", requireAuth, async (c) => {
     `Em uma escala de 0 a 10, como está sua dor hoje? ` +
     `Se precisar de mais sessões, estamos aqui para te ajudar! 💙`;
 
-  // Disparar via BACKGROUND_QUEUE (mesmo padrão do cron.ts)
+  let sendStatus = "pending";
+
+  // Disparar via BACKGROUND_QUEUE ou fallback síncrono via WhatsAppService
   if (env_has_queue(c.env)) {
     const queuePayload: WhatsAppQueuePayload = {
       to: patient.phone,
@@ -136,6 +138,21 @@ app.post("/trigger-followup", requireAuth, async (c) => {
     };
 
     await c.env.BACKGROUND_QUEUE.send({ type: "SEND_WHATSAPP", payload: queuePayload });
+    sendStatus = "queued";
+  } else if (patient.phone) {
+    try {
+      const wa = new WhatsAppService(c.env);
+      const cleanPhone = patient.phone.replace(/\D/g, "");
+      const res = (await wa.sendTextMessage(cleanPhone, messageText)) as { messages?: Array<{ id: string }> };
+      if (res?.messages?.[0]?.id) {
+        sendStatus = "delivered";
+      } else {
+        sendStatus = "failed";
+      }
+    } catch (err) {
+      console.warn("[PostDischarge] Direct WhatsApp dispatch fallback error:", err);
+      sendStatus = "failed";
+    }
   }
 
   // Log direto na tabela whatsapp_messages para rastreabilidade
@@ -147,7 +164,7 @@ app.post("/trigger-followup", requireAuth, async (c) => {
       patientId,
       patient.phone,
       messageText,
-      env_has_queue(c.env) ? "queued" : "pending",
+      sendStatus,
       JSON.stringify({
         trigger: "post_discharge_reactivation",
         triggered_by: user.uid,
@@ -155,6 +172,7 @@ app.post("/trigger-followup", requireAuth, async (c) => {
       }),
     ],
   );
+
 
   // Tentar registrar log de reativação (sem falhar se tabela não existir)
   try {

@@ -29,7 +29,6 @@ export const EvolutionTabsBar = memo(
       { id: "historico" as EvolutionTab, label: "HISTÓRICO" },
       { id: "assistente" as EvolutionTab, label: "ASSISTENTE" },
       { id: "midia" as EvolutionTab, label: "MÍDIA" },
-      { id: "ajustes" as EvolutionTab, label: "AJUSTES" },
     ];
 
     return (

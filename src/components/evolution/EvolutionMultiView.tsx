@@ -3,24 +3,20 @@
  *
  * Modos disponíveis:
  * - Timeline: linha do tempo cronologica (EvolutionTimeline existente)
- * - Calendario: grade mensal com sessoes destacadas (react-day-picker v9)
  * - Galeria: grade de fotos das sessoes
- * - Grafo: placeholder para grafo de conhecimento
+ * - Grafo: grafo de conhecimento do paciente
  */
 
 import { AnimatePresence, motion } from "framer-motion";
 import type React from "react";
-import { useCallback, useMemo, useState } from "react";
-import { DayPicker } from "react-day-picker";
-import "react-day-picker/dist/style.css";
-import { format, isValid, parseISO } from "date-fns";
+import { useMemo, useState } from "react";
+import { parseISO, isValid, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar as CalendarIcon, Camera, Clock, GitBranch, Image, ZoomIn } from "lucide-react";
+import { Camera, Clock, GitBranch, Image, ZoomIn } from "lucide-react";
 import { EvolutionTimeline } from "@/components/evolution/EvolutionTimeline";
 import { PatientKnowledgeGraph } from "@/components/evolution/PatientKnowledgeGraph";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
@@ -67,7 +63,7 @@ export interface EvolutionMultiViewProps {
   }>;
 }
 
-type ViewMode = "timeline" | "calendario" | "galeria" | "grafo";
+type ViewMode = "timeline" | "galeria" | "grafo";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -94,263 +90,12 @@ function looksLikeImage(url: string): boolean {
   if (!url) return false;
   const lower = url.toLowerCase();
   const legacyStorageHost = ["fire", "basestorage"].join("");
-  // URLs de storage geralmente nao tem extensao visivel, mas tentamos detectar
   return (
     /\.(jpe?g|png|gif|webp|bmp|svg)(\?.*)?$/i.test(lower) ||
     lower.includes(legacyStorageHost) ||
     lower.includes("storage.googleapis")
   );
 }
-
-// ---------------------------------------------------------------------------
-// Sub-component: CalendarView
-// ---------------------------------------------------------------------------
-
-interface CalendarViewProps {
-  evolutions: EvolutionMultiViewProps["previousEvolutions"];
-}
-
-const CalendarView: React.FC<CalendarViewProps> = ({ evolutions }) => {
-  const [selectedDay, setSelectedDay] = useState<Date | undefined>(undefined);
-  const [month, setMonth] = useState<Date>(new Date());
-
-  // Mapa: timestamp-ISO-dia -> evolutions naquele dia
-  const evolutionsByDay = useMemo(() => {
-    const map = new Map<string, typeof evolutions>();
-    for (const ev of evolutions ?? []) {
-      const d = resolveDate(ev);
-      if (!d) continue;
-      const key = format(d, "yyyy-MM-dd");
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(ev);
-    }
-    return map;
-  }, [evolutions]);
-
-  // Datas com sessoes (para o modificador do DayPicker)
-  const sessionDates = useMemo(
-    () =>
-      Array.from(evolutionsByDay.keys())
-        .map((k) => parseISO(k))
-        .filter(isValid),
-    [evolutionsByDay],
-  );
-
-  // Sessoes do dia selecionado
-  const sessionsForSelectedDay = useMemo(() => {
-    if (!selectedDay) return [];
-    const key = format(selectedDay, "yyyy-MM-dd");
-    return evolutionsByDay.get(key) ?? [];
-  }, [selectedDay, evolutionsByDay]);
-
-  // Contagem para um dia (usado nos footers dos dias)
-  const getCountForDay = useCallback(
-    (day: Date) => {
-      const key = format(day, "yyyy-MM-dd");
-      return evolutionsByDay.get(key)?.length ?? 0;
-    },
-    [evolutionsByDay],
-  );
-
-  return (
-    <div className="flex flex-col lg:flex-row gap-6">
-      {/* Calendario */}
-      <Card className="flex-shrink-0 shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2 text-indigo-700 dark:text-indigo-300">
-            <CalendarIcon className="h-4 w-4" />
-            Calendário de Sessoes
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0 pb-4">
-          <style>{`
-            .rdp-evolution .rdp-day_button:hover { background: hsl(var(--accent)); }
-            .rdp-evolution [data-has-session] .rdp-day_button {
-              position: relative;
-              font-weight: 600;
-            }
-            .rdp-evolution [data-has-session] .rdp-day_button::after {
-              content: '';
-              position: absolute;
-              bottom: 3px;
-              left: 50%;
-              transform: translateX(-50%);
-              width: 5px;
-              height: 5px;
-              border-radius: 50%;
-              background: #2563eb;
-            }
-          `}</style>
-
-          <DayPicker
-            className="rdp-evolution"
-            locale={ptBR}
-            month={month}
-            onMonthChange={setMonth}
-            mode="single"
-            selected={selectedDay}
-            onSelect={setSelectedDay}
-            modifiers={{ hasSession: sessionDates }}
-            modifiersClassNames={{ hasSession: "rdp-day-has-session" }}
-            footer={
-              selectedDay ? (
-                <div className="mt-2 px-4 text-xs text-muted-foreground text-center">
-                  {getCountForDay(selectedDay) > 0
-                    ? `${getCountForDay(selectedDay)} sessao(oes) em ${format(selectedDay, "dd/MM/yyyy", { locale: ptBR })}`
-                    : "Nenhuma sessao neste dia"}
-                </div>
-              ) : (
-                <div className="mt-2 px-4 text-xs text-muted-foreground text-center">
-                  Selecione um dia para ver as sessoes
-                </div>
-              )
-            }
-          />
-
-          {/* Legenda */}
-          <div className="px-4 flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <span className="inline-block w-3 h-3 rounded-full bg-indigo-500" />
-              Com sessao
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="inline-block w-3 h-3 rounded-full bg-accent border" />
-              Selecionado
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Painel lateral: sessoes do dia selecionado */}
-      <div className="flex-1 min-w-0">
-        <AnimatePresence mode="wait">
-          {selectedDay ? (
-            <motion.div
-              key={selectedDay.toISOString()}
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -16 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-3"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <h3 className="font-semibold text-sm">
-                  {format(selectedDay, "dd 'de' MMMM 'de' yyyy", {
-                    locale: ptBR,
-                  })}
-                </h3>
-                {sessionsForSelectedDay.length > 0 && (
-                  <Badge variant="secondary" className="text-xs">
-                    {sessionsForSelectedDay.length} sessao(oes)
-                  </Badge>
-                )}
-              </div>
-
-              {sessionsForSelectedDay.length === 0 ? (
-                <Card className="border-dashed">
-                  <CardContent className="flex flex-col items-center justify-center py-10 text-muted-foreground">
-                    <CalendarIcon className="h-10 w-10 mb-3 opacity-30" />
-                    <p className="text-sm">Nenhuma sessao registrada neste dia</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                sessionsForSelectedDay.map((ev, index) => (
-                  <motion.div
-                    key={ev.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <Card className="shadow-sm hover:shadow-md transition-shadow">
-                      <CardContent className="pt-4 pb-3">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-7 h-7 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                            {index + 1}
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            {format(resolveDate(ev) ?? new Date(), "HH:mm", {
-                              locale: ptBR,
-                            })}
-                          </span>
-                          {ev.pain_level !== undefined && (
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "text-xs ml-auto",
-                                ev.pain_level >= 7
-                                  ? "border-red-500/40 text-red-600 dark:text-red-400"
-                                  : ev.pain_level >= 4
-                                    ? "border-yellow-500/40 text-yellow-600 dark:text-yellow-400"
-                                    : "border-green-500/40 text-green-600 dark:text-green-400",
-                              )}
-                            >
-                              Dor: {ev.pain_level}/10
-                            </Badge>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                          {ev.subjective && (
-                            <div className="p-2 rounded-lg bg-blue-500/5 border border-blue-500/10">
-                              <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">
-                                S:
-                              </p>
-                              <p className="text-muted-foreground line-clamp-2">{ev.subjective}</p>
-                            </div>
-                          )}
-                          {ev.objective && (
-                            <div className="p-2 rounded-lg bg-green-500/5 border border-green-500/10">
-                              <p className="font-semibold text-green-600 dark:text-green-400 mb-1">
-                                O:
-                              </p>
-                              <p className="text-muted-foreground line-clamp-2">{ev.objective}</p>
-                            </div>
-                          )}
-                          {ev.assessment && (
-                            <div className="p-2 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
-                              <p className="font-semibold text-emerald-600 dark:text-emerald-400 mb-1">
-                                A:
-                              </p>
-                              <p className="text-muted-foreground line-clamp-2">{ev.assessment}</p>
-                            </div>
-                          )}
-                          {ev.plan && (
-                            <div className="p-2 rounded-lg bg-orange-500/5 border border-orange-500/10">
-                              <p className="font-semibold text-orange-600 dark:text-orange-400 mb-1">
-                                P:
-                              </p>
-                              <p className="text-muted-foreground line-clamp-2">{ev.plan}</p>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))
-              )}
-            </motion.div>
-          ) : (
-            <motion.div
-              key="empty-calendar"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center h-full min-h-[220px] text-muted-foreground"
-            >
-              <CalendarIcon className="h-12 w-12 mb-3 opacity-20" />
-              <p className="text-sm text-center">
-                Clique em um dia destacado no calendário para ver as sessoes
-              </p>
-              <p className="text-xs mt-1 opacity-60">
-                {sessionDates.length} dia(s) com sessoes registradas
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
-};
 
 // ---------------------------------------------------------------------------
 // Sub-component: GalleryView
@@ -547,7 +292,6 @@ const VIEW_MODES: Array<{
   icon: React.FC<{ className?: string }>;
 }> = [
   { value: "timeline", label: "Timeline", icon: Clock },
-  { value: "calendario", label: "Calendario", icon: CalendarIcon },
   { value: "galeria", label: "Galeria", icon: Image },
   { value: "grafo", label: "Grafo", icon: GitBranch },
 ];
@@ -619,17 +363,6 @@ export const EvolutionMultiView: React.FC<EvolutionMultiViewProps> = ({
           {/* Info contextual */}
           <span className="text-xs text-muted-foreground ml-auto hidden md:block">
             {activeView === "timeline" && `${previousEvolutions.length} registros`}
-            {activeView === "calendario" &&
-              `${
-                new Set(
-                  previousEvolutions
-                    .map((e) => {
-                      const d = resolveDate(e);
-                      return d ? format(d, "yyyy-MM-dd") : null;
-                    })
-                    .filter(Boolean),
-                ).size
-              } dias com sessoes`}
             {activeView === "galeria" && `${photoCount} foto(s)`}
             {activeView === "grafo" && "Em desenvolvimento"}
           </span>
@@ -655,21 +388,6 @@ export const EvolutionMultiView: React.FC<EvolutionMultiViewProps> = ({
                   onCopyEvolution={onCopyEvolution}
                 />
               )}
-            </motion.div>
-          </AnimatePresence>
-        </TabsContent>
-
-        {/* Calendário */}
-        <TabsContent value="calendario" className="mt-4">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key="calendario"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
-            >
-              <CalendarView evolutions={previousEvolutions} />
             </motion.div>
           </AnimatePresence>
         </TabsContent>
@@ -714,3 +432,4 @@ export const EvolutionMultiView: React.FC<EvolutionMultiViewProps> = ({
 };
 
 export type { EvolutionMultiViewProps as EvolutionMultiViewPropsType };
+

@@ -1,7 +1,6 @@
 import React from "react";
 import { EvolutionMultiView } from "@/components/evolution/EvolutionMultiView";
 import { SurgeryTimeline } from "@/components/evolution/SurgeryTimeline";
-import { MedicalReportSuggestions } from "@/components/evolution/MedicalReportSuggestions";
 
 interface Surgery {
   id: string;
@@ -56,7 +55,7 @@ export const EvolutionHistoryTab = React.memo(function EvolutionHistoryTab({
   pathologies = [],
 }: EvolutionHistoryTabProps) {
   return (
-    <div className="mt-4 space-y-4">
+    <div className="mt-4 space-y-6">
       {/* Multi-view evolution history (Notion-style: Timeline, Calendar, Gallery, Graph) */}
       <EvolutionMultiView
         patientId={patientId}
@@ -69,9 +68,7 @@ export const EvolutionHistoryTab = React.memo(function EvolutionHistoryTab({
 
       {/* Surgery Timeline */}
       <SurgeryTimeline surgeries={surgeries} />
-
-      {/* Medical Report Suggestions */}
-      <MedicalReportSuggestions patientId={patientId || ""} />
     </div>
   );
 });
+

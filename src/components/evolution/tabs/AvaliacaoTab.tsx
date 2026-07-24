@@ -68,7 +68,7 @@ export function AvaliacaoTab({
   measurementsByType,
 }: AvaliacaoTabProps) {
   return (
-    <div className="mt-4 space-y-4">
+    <div className="mt-4 space-y-6">
       {/* Mapa de Dor */}
       <Suspense fallback={<LoadingSkeleton type="card" />}>
         <LazyPainMapManager
