@@ -38,6 +38,7 @@ import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { PostConversionDialog } from "@/components/crm/PostConversionDialog";
+import { LeadOriginBadge } from "@/components/crm/LeadOriginBadge";
 
 const TIPOS_CONTATO = [
   {
@@ -205,9 +206,7 @@ export function LeadDetailSheet({ lead, onClose, onEdit, estagios }: LeadDetailS
               <CardContent className="p-4 space-y-2">
                 <div className="flex items-center gap-2 text-xs">
                   <span className="text-slate-400 font-bold uppercase">Origem:</span>
-                  <Badge variant="outline" className="rounded-lg bg-white border-slate-200">
-                    {lead.origem || "Não informada"}
-                  </Badge>
+                  <LeadOriginBadge origem={lead.origem} />
                 </div>
                 <div className="flex items-center gap-2 text-xs">
                   <span className="text-slate-400 font-bold uppercase">Interesse:</span>

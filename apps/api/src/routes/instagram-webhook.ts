@@ -153,9 +153,17 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
 
         // Texto da mensagem; menção em Stories ganha rótulo amigável.
         const att = Array.isArray(message.attachments) ? message.attachments[0] : null;
-        const attType: string | undefined = att?.type;
+        const attType: string | undefined = att?.type || (message.reply_to?.story ? "story_share" : undefined);
+        const replyToObj = message.reply_to;
+        const referralObj = message.referral;
+
         const rawMediaUrl: string | undefined =
-          typeof att?.payload?.url === "string" && att.payload.url.length ? att.payload.url : undefined;
+          typeof att?.payload?.url === "string" && att.payload.url.length
+            ? att.payload.url
+            : typeof replyToObj?.story?.url === "string"
+              ? replyToObj.story.url
+              : undefined;
+
         // Espelha no R2 (URLs do CDN do IG expiram → 403).
         const mediaUrl = await mirrorToR2(env, rawMediaUrl, "crm/instagram/media");
         let text: string;
@@ -251,6 +259,8 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
           continue;
         }
 
+        const attPayload = att?.payload && typeof att.payload === "object" ? att.payload : {};
+
         const savedMsg = await addMessage(
           pool,
           conversation.id,
@@ -265,12 +275,15 @@ async function processInstagram(body: Record<string, unknown>, env: Env): Promis
           {
             mediaUrl,
             mediaType,
-            metadata: attType
-              ? {
-                  attachmentType: attType,
-                  mediaUrl,
-                }
-              : undefined,
+            metadata: {
+              ...(attType ? { attachmentType: attType } : {}),
+              mediaUrl,
+              ...attPayload,
+              ...(att?.title ? { title: att.title } : {}),
+              ...(att?.url ? { url: att.url } : {}),
+              ...(replyToObj ? { replyTo: replyToObj } : {}),
+              ...(referralObj ? { referral: referralObj } : {}),
+            },
           },
         );
 

@@ -39,6 +39,9 @@ export interface CrmConversationViewModel {
   nextActionTitle: string;
   nextActionBody: string;
   leadScore?: number;
+  instagramHandle?: string;
+  hoursSinceLastMessage: number;
+  isCoolingDown: boolean;
   metadata: Record<string, unknown> | undefined;
 }
 
@@ -203,6 +206,19 @@ export function toCrmConversationViewModel(conversation: Conversation): CrmConve
   const phoneDigits = channelValue === "whatsapp" ? onlyDigits(phone) : "";
   const phoneLabel = phoneDigits ? formatBrazilPhone(phoneDigits) : "";
 
+  const lastMsgTime = conversation.lastMessageAt ? new Date(conversation.lastMessageAt).getTime() : 0;
+  const hoursSinceLastMessage = lastMsgTime > 0 ? Math.round((Date.now() - lastMsgTime) / 3600000) : 0;
+  const isCoolingDown =
+    hoursSinceLastMessage >= 24 &&
+    conversation.status !== "resolved" &&
+    conversation.status !== "closed";
+
+  const instagramHandle =
+    channelValue === "instagram"
+      ? readStringMetadata(metadata, ["username", "authorUsername", "instagramHandle"]) ||
+        (name.startsWith("@") ? name : `@${name.toLowerCase().replace(/\s+/g, ".")}`)
+      : undefined;
+
   return {
     id: conversation.id,
     channel: channelValue,
@@ -239,6 +255,9 @@ export function toCrmConversationViewModel(conversation: Conversation): CrmConve
         : typeof (metadata?.leadScore as number) === "number"
           ? (metadata?.leadScore as number)
           : undefined,
+    instagramHandle,
+    hoursSinceLastMessage,
+    isCoolingDown,
     metadata,
   };
 }

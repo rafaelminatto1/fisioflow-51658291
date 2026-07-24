@@ -42,71 +42,91 @@ export default function CRMDashboard() {
         />
         <div className="mt-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} orientation="vertical" className="flex flex-col lg:flex-row gap-8">
-            <div className="lg:w-64 shrink-0">
-              <TabsList className="flex flex-col h-auto bg-transparent p-0 w-full space-y-1">
-                <TabsTrigger
-                  value="leads"
-                  className="w-full justify-start gap-3 rounded-xl px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold transition-all hover:bg-muted/50 border border-transparent data-[state=active]:border-primary/20"
-                >
-                  <Users className="h-4 w-4" />
-                  <span>Leads</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="campanhas"
-                  className="w-full justify-start gap-3 rounded-xl px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold transition-all hover:bg-muted/50 border border-transparent data-[state=active]:border-primary/20"
-                >
-                  <Send className="h-4 w-4" />
-                  <span>Campanhas Manuais</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="regras_automacao"
-                  className="w-full justify-start gap-3 rounded-xl px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold transition-all hover:bg-muted/50 border border-transparent data-[state=active]:border-primary/20"
-                >
-                  <Zap className="h-4 w-4" />
-                  <span>Regras de Automação</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="monitor_robo"
-                  className="w-full justify-start gap-3 rounded-xl px-4 py-3 data-[state=active]:bg-emerald-500/10 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-400 data-[state=active]:font-semibold transition-all hover:bg-muted/50 border border-transparent data-[state=active]:border-emerald-500/20"
-                >
-                  <Bot className="h-4 w-4" />
-                  <span>Monitor do Robô</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="tarefas"
-                  className="w-full justify-start gap-3 rounded-xl px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold transition-all hover:bg-muted/50 border border-transparent data-[state=active]:border-primary/20"
-                >
-                  <CheckSquare className="h-4 w-4" />
-                  <span>Tarefas</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="nps"
-                  className="w-full justify-start gap-3 rounded-xl px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold transition-all hover:bg-muted/50 border border-transparent data-[state=active]:border-primary/20"
-                >
-                  <Heart className="h-4 w-4" />
-                  <span>NPS</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="indicacoes"
-                  className="w-full justify-start gap-3 rounded-xl px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold transition-all hover:bg-muted/50 border border-transparent data-[state=active]:border-primary/20"
-                >
-                  <Award className="h-4 w-4" />
-                  <span>Indicações</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="analytics"
-                  className="w-full justify-start gap-3 rounded-xl px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold transition-all hover:bg-muted/50 border border-transparent data-[state=active]:border-primary/20"
-                >
-                  <BarChart3 className="h-4 w-4" />
-                  <span>Analytics</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="importar"
-                  className="w-full justify-start gap-3 rounded-xl px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold transition-all hover:bg-muted/50 border border-transparent data-[state=active]:border-primary/20"
-                >
-                  <Upload className="h-4 w-4" />
-                  <span>Importar Leads</span>
-                </TabsTrigger>
+            <div className="lg:w-64 shrink-0 space-y-6">
+              <TabsList className="flex flex-col h-auto bg-transparent p-0 w-full space-y-5">
+                {/* Grupo 1: Operação Comercial */}
+                <div className="w-full space-y-1">
+                  <p className="px-3 text-[11px] font-semibold tracking-wider text-muted-foreground/70 uppercase">
+                    Pipeline & Operação
+                  </p>
+                  <TabsTrigger
+                    value="leads"
+                    className="w-full justify-start gap-3 rounded-xl px-3.5 py-2.5 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold transition-all hover:bg-muted/60 border border-transparent data-[state=active]:border-primary/20 text-xs"
+                  >
+                    <Users className="h-4 w-4" />
+                    <span>Pipeline de Leads</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="tarefas"
+                    className="w-full justify-start gap-3 rounded-xl px-3.5 py-2.5 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold transition-all hover:bg-muted/60 border border-transparent data-[state=active]:border-primary/20 text-xs"
+                  >
+                    <CheckSquare className="h-4 w-4" />
+                    <span>Tarefas de Follow-up</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="importar"
+                    className="w-full justify-start gap-3 rounded-xl px-3.5 py-2.5 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold transition-all hover:bg-muted/60 border border-transparent data-[state=active]:border-primary/20 text-xs"
+                  >
+                    <Upload className="h-4 w-4" />
+                    <span>Importar Leads</span>
+                  </TabsTrigger>
+                </div>
+
+                {/* Grupo 2: Comunicação e Automações */}
+                <div className="w-full space-y-1">
+                  <p className="px-3 text-[11px] font-semibold tracking-wider text-muted-foreground/70 uppercase">
+                    Robôs & Disparos
+                  </p>
+                  <TabsTrigger
+                    value="campanhas"
+                    className="w-full justify-start gap-3 rounded-xl px-3.5 py-2.5 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold transition-all hover:bg-muted/60 border border-transparent data-[state=active]:border-primary/20 text-xs"
+                  >
+                    <Send className="h-4 w-4" />
+                    <span>Campanhas Manuais</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="regras_automacao"
+                    className="w-full justify-start gap-3 rounded-xl px-3.5 py-2.5 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold transition-all hover:bg-muted/60 border border-transparent data-[state=active]:border-primary/20 text-xs"
+                  >
+                    <Zap className="h-4 w-4" />
+                    <span>Regras de Automação</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="monitor_robo"
+                    className="w-full justify-start gap-3 rounded-xl px-3.5 py-2.5 data-[state=active]:bg-emerald-500/10 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-400 data-[state=active]:font-semibold transition-all hover:bg-muted/60 border border-transparent data-[state=active]:border-emerald-500/20 text-xs"
+                  >
+                    <Bot className="h-4 w-4" />
+                    <span>Monitor do Robô IA</span>
+                  </TabsTrigger>
+                </div>
+
+                {/* Grupo 3: Performance & Crescimento */}
+                <div className="w-full space-y-1">
+                  <p className="px-3 text-[11px] font-semibold tracking-wider text-muted-foreground/70 uppercase">
+                    Métricas & Retenção
+                  </p>
+                  <TabsTrigger
+                    value="analytics"
+                    className="w-full justify-start gap-3 rounded-xl px-3.5 py-2.5 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold transition-all hover:bg-muted/60 border border-transparent data-[state=active]:border-primary/20 text-xs"
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                    <span>Analytics Comercial</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="nps"
+                    className="w-full justify-start gap-3 rounded-xl px-3.5 py-2.5 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold transition-all hover:bg-muted/60 border border-transparent data-[state=active]:border-primary/20 text-xs"
+                  >
+                    <Heart className="h-4 w-4" />
+                    <span>NPS & Satisfação</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="indicacoes"
+                    className="w-full justify-start gap-3 rounded-xl px-3.5 py-2.5 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold transition-all hover:bg-muted/60 border border-transparent data-[state=active]:border-primary/20 text-xs"
+                  >
+                    <Award className="h-4 w-4" />
+                    <span>Ranking Indicações</span>
+                  </TabsTrigger>
+                </div>
               </TabsList>
             </div>
 

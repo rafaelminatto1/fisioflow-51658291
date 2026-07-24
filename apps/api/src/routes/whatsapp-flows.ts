@@ -26,7 +26,7 @@ export async function getNextScreen(
   if (action === "data_exchange") {
     // Seleção de tipo+data -> devolve horários livres (por capacidade/avaliação).
     if (screen === "APPOINTMENT" && data?.date) {
-      return { screen: "APPOINTMENT", data: await buildSlotsData(pool, env, data.type || "session", data.date) };
+      return { screen: "APPOINTMENT", data: await buildSlotsData(pool, env, data.type || "session", data.date, data.period) };
     }
   }
 

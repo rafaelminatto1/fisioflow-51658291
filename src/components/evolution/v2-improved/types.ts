@@ -1,4 +1,5 @@
 import { EvolutionItemV3 } from "../v3-unified/types";
+import type { PainLocationMember } from "@/lib/evolution/painDetail";
 
 export interface EvolutionV2Data {
   // Header (auto-filled)
@@ -36,6 +37,8 @@ export interface EvolutionV2Data {
   // Pain level
   painLevel?: number;
   painLocation?: string;
+  locationMembers?: PainLocationMember[];
+  isIndividualPain?: boolean;
   // Pain detail (Layout E — dor-cêntrico). Persistido via measurements reservadas.
   painLevelArrival?: number; // Chegada
   painLevelDischarge?: number; // Saída

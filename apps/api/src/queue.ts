@@ -1,5 +1,7 @@
 import type { Env } from "./types/env";
-import { createPool, createPoolForOrg, getRawSql, runWithOrg } from "./lib/db";
+import { createPool, createPoolForOrg, getRawSql, runWithOrg, createDb } from "./lib/db";
+import { appointments, patients } from "@fisioflow/db";
+import { eq, sql } from "drizzle-orm";
 import { runAutomationsForEvent } from "./lib/automation/triggerAutomations";
 import { writeEvent } from "./lib/analytics";
 import { transcribeAudio, analyzeClinicImage } from "./lib/ai-native";
@@ -219,6 +221,10 @@ export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Pro
         // Event-driven triggers (from triggerInngestEvent)
         case "appointment.created" as any:
           await handleAppointmentCreated((task as any).data, env);
+          break;
+
+        case "appointment.updated" as any:
+          await handleAppointmentUpdated((task as any).data, env);
           break;
 
         case "patient.inactive" as any:
@@ -1098,22 +1104,74 @@ export async function processAppointmentCompleted(
 
 // ===== EVENT HANDLERS =====
 
+function formatDatePtBr(dateVal: any): string {
+  if (!dateVal) return "";
+  const str = String(dateVal).trim();
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) {
+    return str;
+  }
+  const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch;
+    return `${day}/${month}/${year}`;
+  }
+  try {
+    const d = new Date(str);
+    if (isNaN(d.getTime())) return str;
+    const day = String(d.getUTCDate()).padStart(2, "0");
+    const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const year = d.getUTCFullYear();
+    return `${day}/${month}/${year}`;
+  } catch {
+    return str;
+  }
+}
+
 async function handleAppointmentCreated(data: any, env: Env) {
   const { appointmentId, patientId, patientName, patientPhone, date, startTime, organizationId } =
     data;
   if (!patientPhone) return;
 
+  let finalDate = date;
+  let finalStartTime = startTime;
+
+  // Consultar o banco para obter o estado atualizado após os 60s de delay
+  if (appointmentId && env.DATABASE_URL) {
+    try {
+      const db = createDb(env, "read");
+      const [apt] = await db
+        .select({
+          id: appointments.id,
+          status: appointments.status,
+          date: appointments.date,
+          startTime: appointments.startTime,
+        })
+        .from(appointments)
+        .where(eq(appointments.id, appointmentId))
+        .limit(1);
+
+      // Se o agendamento foi cancelado ou removido nos 60s, aborta o envio
+      if (!apt || apt.status === "cancelado") {
+        console.log(`[Queue] Appointment ${appointmentId} was cancelled/deleted within 60s window. Skipping creation WhatsApp.`);
+        return;
+      }
+
+      if (apt.date) finalDate = apt.date;
+      if (apt.startTime) finalStartTime = apt.startTime;
+    } catch (err) {
+      console.warn("[Queue] Failed to query appointment DB state (non-fatal):", err);
+    }
+  }
+
   const firstName = patientName?.split(" ")[0] || "Paciente";
-  const formattedDate = new Date(date).toLocaleDateString("pt-BR");
-  const time = startTime?.substring(0, 5) || "";
+  const formattedDate = formatDatePtBr(finalDate);
+  const time = (finalStartTime || "")?.substring(0, 5) || "";
 
   const messageText = `Olá, ${firstName}! 👋 Seu agendamento no FisioFlow foi confirmado para o dia ${formattedDate} às ${time}. Até lá!`;
 
   await processWhatsAppMessage(
     {
       to: patientPhone,
-      // "confirmacao_agendamento" não existe na WABA — consulta_confirmada é o
-      // aprovado com a mesma assinatura ({{1}} nome, {{2}} data, {{3}} hora).
       templateName: "consulta_confirmada",
       languageCode: "pt_BR",
       bodyParameters: [
@@ -1128,6 +1186,83 @@ async function handleAppointmentCreated(data: any, env: Env) {
     },
     env,
   );
+}
+
+async function handleAppointmentUpdated(data: any, env: Env) {
+  const { appointmentId, patientId, date, startTime, status, organizationId } = data;
+  if (!appointmentId || !env.DATABASE_URL) return;
+
+  try {
+    const db = createDb(env, "read");
+    const [apt] = await db
+      .select({
+        id: appointments.id,
+        status: appointments.status,
+        date: appointments.date,
+        startTime: appointments.startTime,
+        patientId: appointments.patientId,
+        organizationId: appointments.organizationId,
+      })
+      .from(appointments)
+      .where(eq(appointments.id, appointmentId))
+      .limit(1);
+
+    if (!apt || apt.status === "cancelado") {
+      return;
+    }
+
+    // Verificar se já existe mensagem gravada para este agendamento no histórico
+    const pool = await createPoolForOrg(env, apt.organizationId || organizationId);
+    const checkRes = await pool.query(
+      `SELECT id FROM whatsapp_messages WHERE metadata->>'appointment_id' = $1 LIMIT 1`,
+      [appointmentId],
+    );
+
+    if (!checkRes.rows || checkRes.rows.length === 0) {
+      // Nenhuma mensagem foi enviada ainda (ex: alteração feita nos primeiros 60s da criação).
+      // handleAppointmentCreated enviará a mensagem de criação já com os dados corretos ao expirar o tempo.
+      console.log(`[Queue] Appointment ${appointmentId} updated before initial notice was sent. Skipping duplicate update notice.`);
+      return;
+    }
+
+    // Se a mensagem inicial já tinha sido enviada, envia o aviso de reagendamento
+    const targetPatientId = apt.patientId || patientId;
+    const targetOrgId = apt.organizationId || organizationId;
+
+    const [patientRow] = await db
+      .select({ fullName: patients.fullName, phone: patients.phone })
+      .from(patients)
+      .where(eq(patients.id, targetPatientId))
+      .limit(1);
+
+    if (!patientRow?.phone) return;
+
+    const firstName = patientRow.fullName?.split(" ")[0] || "Paciente";
+    const formattedDate = formatDatePtBr(apt.date || date);
+    const time = (apt.startTime || startTime)?.substring(0, 5) || "";
+
+    const messageText = `Olá, ${firstName}! 🗓️ Sua consulta no FisioFlow foi reagendada para o dia ${formattedDate} às ${time}. Qualquer dúvida, estamos à disposição!`;
+
+    await processWhatsAppMessage(
+      {
+        to: patientRow.phone,
+        templateName: "consulta_confirmada",
+        languageCode: "pt_BR",
+        bodyParameters: [
+          { type: "text", text: firstName },
+          { type: "text", text: formattedDate },
+          { type: "text", text: time },
+        ],
+        organizationId: targetOrgId,
+        patientId: targetPatientId,
+        messageText,
+        appointmentId,
+      },
+      env,
+    );
+  } catch (err) {
+    console.error("[Queue] Error handling appointment update:", err);
+  }
 }
 
 async function handlePatientInactive(data: any, env: Env) {

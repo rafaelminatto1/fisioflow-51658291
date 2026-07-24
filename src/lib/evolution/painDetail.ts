@@ -12,6 +12,8 @@ const NAME_ARRIVAL = "EVA Chegada";
 const NAME_DISCHARGE = "EVA Saída";
 const NAME_QUALITY = "Qualidade da dor";
 const NAME_LOCATION = "Localização da dor";
+const NAME_LOCATION_MEMBERS = "Membros de dor";
+const NAME_IS_INDIVIDUAL = "Modo dor individual";
 
 export type PainQualityIntensity = "leve" | "moderada" | "intensa";
 
@@ -20,11 +22,19 @@ export interface PainQualityItem {
   intensity: PainQualityIntensity;
 }
 
+export interface PainLocationMember {
+  member: string;
+  arrival?: number;
+  discharge?: number;
+}
+
 export interface PainDetail {
   arrival?: number;
   discharge?: number;
   quality: PainQualityItem[];
   location?: string;
+  locationMembers?: PainLocationMember[];
+  isIndividualPain?: boolean;
 }
 
 /** Qualidades de dor disponíveis no medidor (Layout E). */
@@ -36,6 +46,35 @@ export const PAIN_QUALITY_OPTIONS = [
 ] as const;
 
 export const PAIN_QUALITY_INTENSITIES: PainQualityIntensity[] = ["leve", "moderada", "intensa"];
+
+/** Regiões anatômicas mais comuns para autocomplete em fisioterapia */
+export const COMMON_ANATOMICAL_REGIONS = [
+  "Ombro D",
+  "Ombro E",
+  "Cervical",
+  "Torácica",
+  "Lombar",
+  "Sacroilíaca",
+  "Quadril D",
+  "Quadril E",
+  "Coxa D",
+  "Coxa E",
+  "Joelho D",
+  "Joelho E",
+  "Panturrilha D",
+  "Panturrilha E",
+  "Tornozelo D",
+  "Tornozelo E",
+  "Pé D",
+  "Pé E",
+  "Cotovelo D",
+  "Cotovelo E",
+  "Punho D",
+  "Punho E",
+  "Mão D",
+  "Mão E",
+  "Mandíbula / ATM",
+] as const;
 
 export function isPainDetailMeasurement(m: { measurement_type?: string } | null | undefined): boolean {
   return !!m && m.measurement_type === PAIN_DETAIL_TYPE;
@@ -58,7 +97,7 @@ export function parsePainDetail(
   measurements: MeasurementItem[] = [],
   fallbackPainScale?: number | null,
 ): PainDetail {
-  const detail: PainDetail = { quality: [] };
+  const detail: PainDetail = { quality: [], locationMembers: [] };
 
   for (const m of measurements) {
     if (m.measurement_type !== PAIN_DETAIL_TYPE) continue;
@@ -72,6 +111,25 @@ export function parsePainDetail(
       case NAME_LOCATION:
         detail.location = m.value || undefined;
         break;
+      case NAME_LOCATION_MEMBERS:
+        try {
+          if (m.value) {
+            const parsed = JSON.parse(m.value);
+            if (Array.isArray(parsed)) {
+              detail.locationMembers = parsed.map((item: any) => ({
+                member: typeof item === "string" ? item : item.member,
+                arrival: toLevel(item?.arrival),
+                discharge: toLevel(item?.discharge),
+              }));
+            }
+          }
+        } catch {
+          // ignore json parse error
+        }
+        break;
+      case NAME_IS_INDIVIDUAL:
+        detail.isIndividualPain = m.value === "true";
+        break;
       case NAME_QUALITY: {
         const cd = m.custom_data ?? {};
         detail.quality = Object.entries(cd)
@@ -80,6 +138,20 @@ export function parsePainDetail(
         break;
       }
     }
+  }
+
+  // Se não houver locationMembers estruturado, mas houver location string legada
+  if ((!detail.locationMembers || detail.locationMembers.length === 0) && detail.location) {
+    detail.locationMembers = detail.location
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((member) => ({ member }));
+  }
+
+  // Se houver locationMembers mas não houver location string, gera concatenada
+  if (detail.locationMembers && detail.locationMembers.length > 0 && !detail.location) {
+    detail.location = detail.locationMembers.map((m) => m.member).join(", ");
   }
 
   // Saída cai no pain_scale canônico quando ainda não há entrada explícita.
@@ -116,9 +188,23 @@ export function writePainDetail(
   if (detail.arrival != null) reserved.push(makeMeasurement(NAME_ARRIVAL, String(detail.arrival)));
   if (detail.discharge != null)
     reserved.push(makeMeasurement(NAME_DISCHARGE, String(detail.discharge)));
-  if (detail.location && detail.location.trim())
-    reserved.push(makeMeasurement(NAME_LOCATION, detail.location.trim()));
-  if (detail.quality.length > 0) {
+
+  const locationMembers = detail.locationMembers || [];
+  const locationString = detail.location?.trim() || locationMembers.map((m) => m.member).join(", ");
+
+  if (locationString) {
+    reserved.push(makeMeasurement(NAME_LOCATION, locationString));
+  }
+
+  if (locationMembers.length > 0) {
+    reserved.push(makeMeasurement(NAME_LOCATION_MEMBERS, JSON.stringify(locationMembers)));
+  }
+
+  if (detail.isIndividualPain !== undefined) {
+    reserved.push(makeMeasurement(NAME_IS_INDIVIDUAL, String(detail.isIndividualPain)));
+  }
+
+  if (detail.quality && detail.quality.length > 0) {
     const cd: Record<string, string> = {};
     for (const q of detail.quality) cd[q.type] = q.intensity;
     reserved.push(makeMeasurement(NAME_QUALITY, "", cd));

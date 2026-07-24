@@ -10,6 +10,7 @@ import {
   History,
   Maximize2,
   MapPin,
+  Plus,
   Ruler,
   Stethoscope,
   TrendingDown,
@@ -38,9 +39,12 @@ import { MeasurementForm } from "@/components/evolution/MeasurementForm";
 import {
   PAIN_QUALITY_OPTIONS,
   PAIN_QUALITY_INTENSITIES,
+  COMMON_ANATOMICAL_REGIONS,
+  parsePainDetail,
   shouldShowVitals,
   stripPainDetail,
   type PainQualityIntensity,
+  type PainLocationMember,
 } from "@/lib/evolution/painDetail";
 import { useSoapRecords } from "@/hooks/useSoapRecords";
 import { usePatientSurgeries } from "@/hooks/usePatientEvolution";
@@ -263,39 +267,67 @@ export const EvolutionNoScrollPanel = memo(
     const arrival = data.painLevelArrival;
     const discharge = data.painLevelDischarge ?? data.painLevel ?? 0;
     const quality = data.painQuality ?? [];
-    const delta = arrival != null ? discharge - arrival : null;
 
-    type PainData = Pick<EvolutionV2Data, "painLevelArrival" | "painLevelDischarge" | "painLevel" | "painQuality" | "painLocation">;
+    type PainData = Pick<
+      EvolutionV2Data,
+      | "painLevelArrival"
+      | "painLevelDischarge"
+      | "painLevel"
+      | "painQuality"
+      | "painLocation"
+      | "locationMembers"
+      | "isIndividualPain"
+    >;
     const [painPast, setPainPast] = useState<PainData[]>([]);
     const [painFuture, setPainFuture] = useState<PainData[]>([]);
 
-    const currentPainData: PainData = useMemo(() => ({
-      painLevelArrival: data.painLevelArrival,
-      painLevelDischarge: data.painLevelDischarge,
-      painLevel: data.painLevel,
-      painQuality: data.painQuality,
-      painLocation: data.painLocation
-    }), [data.painLevelArrival, data.painLevelDischarge, data.painLevel, data.painQuality, data.painLocation]);
+    const [regionSearch, setRegionSearch] = useState("");
+    const [isRegionPopoverOpen, setIsRegionPopoverOpen] = useState(false);
+    const autoLoadedMembersRef = useRef(false);
 
-    const commitPainChange = useCallback((newPainData: Partial<EvolutionV2Data>) => {
-      setPainPast(p => [...p, currentPainData].slice(-50));
-      setPainFuture([]);
-      onChange({ ...data, ...newPainData });
-    }, [currentPainData, data, onChange]);
+    const currentPainData: PainData = useMemo(
+      () => ({
+        painLevelArrival: data.painLevelArrival,
+        painLevelDischarge: data.painLevelDischarge,
+        painLevel: data.painLevel,
+        painQuality: data.painQuality,
+        painLocation: data.painLocation,
+        locationMembers: data.locationMembers,
+        isIndividualPain: data.isIndividualPain,
+      }),
+      [
+        data.painLevelArrival,
+        data.painLevelDischarge,
+        data.painLevel,
+        data.painQuality,
+        data.painLocation,
+        data.locationMembers,
+        data.isIndividualPain,
+      ],
+    );
+
+    const commitPainChange = useCallback(
+      (newPainData: Partial<EvolutionV2Data>) => {
+        setPainPast((p) => [...p, currentPainData].slice(-50));
+        setPainFuture([]);
+        onChange({ ...data, ...newPainData });
+      },
+      [currentPainData, data, onChange],
+    );
 
     const handlePainUndo = useCallback(() => {
       if (painPast.length === 0) return;
       const prev = painPast[painPast.length - 1];
-      setPainPast(p => p.slice(0, -1));
-      setPainFuture(f => [currentPainData, ...f]);
+      setPainPast((p) => p.slice(0, -1));
+      setPainFuture((f) => [currentPainData, ...f]);
       onChange({ ...data, ...prev });
     }, [painPast, currentPainData, data, onChange]);
 
     const handlePainRedo = useCallback(() => {
       if (painFuture.length === 0) return;
       const next = painFuture[0];
-      setPainFuture(f => f.slice(1));
-      setPainPast(p => [...p, currentPainData]);
+      setPainFuture((f) => f.slice(1));
+      setPainPast((p) => [...p, currentPainData]);
       onChange({ ...data, ...next });
     }, [painFuture, currentPainData, data, onChange]);
 
@@ -644,15 +676,181 @@ export const EvolutionNoScrollPanel = memo(
               })}
             </div>
 
-            <div className="mt-2 flex items-center gap-2 rounded-xl border border-border bg-slate-50/60 px-3 py-1.5">
-              <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <input
-                type="text"
-                value={data.painLocation || ""}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Localização da dor (opcional)"
-                className="w-full bg-transparent text-[12px] font-semibold text-slate-700 placeholder:text-slate-400 focus:outline-none"
-              />
+            {/* Localização da dor com Autocomplete e EVA por Membro */}
+            <div className="mt-2.5 rounded-xl border border-slate-200 bg-slate-50/80 p-2 space-y-2">
+              <div className="flex items-center justify-between gap-1 text-[11px] font-bold text-slate-700">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                  <span className="truncate">Localização da dor</span>
+                  {autoLoadedMembersRef.current && (
+                    <span className="shrink-0 text-[9px] font-semibold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full" title="Repetido da última sessão">
+                      ↺ Repetido
+                    </span>
+                  )}
+                </div>
+
+                {/* Alternador Global vs Individual */}
+                {(data.locationMembers?.length ?? 0) > 0 && (
+                  <div className="flex shrink-0 items-center gap-0.5 rounded-lg bg-slate-200/70 p-0.5 text-[9.5px] font-extrabold">
+                    <button
+                      type="button"
+                      onClick={() => toggleIndividualPain(false)}
+                      className={cn(
+                        "px-1.5 py-0.5 rounded-md transition-colors",
+                        !data.isIndividualPain ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700",
+                      )}
+                    >
+                      Dor Única
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleIndividualPain(true)}
+                      className={cn(
+                        "px-1.5 py-0.5 rounded-md transition-colors",
+                        data.isIndividualPain ? "bg-white text-rose-600 shadow-sm" : "text-slate-500 hover:text-slate-700",
+                      )}
+                    >
+                      Por Membro
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Autocomplete Input */}
+              <Popover open={isRegionPopoverOpen} onOpenChange={setIsRegionPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 shadow-sm focus-within:ring-1 focus-within:ring-rose-500">
+                    <input
+                      type="text"
+                      value={regionSearch}
+                      onChange={(e) => {
+                        setRegionSearch(e.target.value);
+                        if (!isRegionPopoverOpen) setIsRegionPopoverOpen(true);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && regionSearch.trim()) {
+                          e.preventDefault();
+                          addPainMember(regionSearch);
+                          setRegionSearch("");
+                          setIsRegionPopoverOpen(false);
+                        }
+                      }}
+                      placeholder="Adicionar membro (ex: Ombro D, Lombar)..."
+                      className="w-full bg-transparent text-[11px] font-semibold text-slate-700 placeholder:text-slate-400 focus:outline-none"
+                    />
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-1 max-h-48 overflow-y-auto" align="start">
+                  {filteredRegions.length > 0 ? (
+                    filteredRegions.map((region) => {
+                      const isSelected = data.locationMembers?.some(
+                        (m) => m.member.toLowerCase() === region.toLowerCase(),
+                      );
+                      return (
+                        <button
+                          key={region}
+                          type="button"
+                          onClick={() => {
+                            addPainMember(region);
+                            setRegionSearch("");
+                            setIsRegionPopoverOpen(false);
+                          }}
+                          className="w-full text-left px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-rose-50 hover:text-rose-700 rounded-md transition-colors flex items-center justify-between"
+                        >
+                          <span>{region}</span>
+                          {isSelected && (
+                            <span className="text-[9px] font-bold text-rose-500">Adicionado</span>
+                          )}
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <div className="px-2 py-1.5 text-[11px] text-slate-500 text-center">
+                      Nenhuma região sugerida
+                    </div>
+                  )}
+                  {regionSearch.trim() &&
+                    !COMMON_ANATOMICAL_REGIONS.some(
+                      (r) => r.toLowerCase() === regionSearch.trim().toLowerCase(),
+                    ) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          addPainMember(regionSearch);
+                          setRegionSearch("");
+                          setIsRegionPopoverOpen(false);
+                        }}
+                        className="w-full text-left px-2.5 py-1.5 text-[11px] font-bold text-rose-600 hover:bg-rose-50 rounded-md border-t border-slate-100 flex items-center gap-1"
+                      >
+                        <Plus className="h-3 w-3" /> Adicionar "{regionSearch.trim()}"
+                      </button>
+                    )}
+                </PopoverContent>
+              </Popover>
+
+              {/* Lista de Membros Selecionados */}
+              {(data.locationMembers?.length ?? 0) > 0 && (
+                <div className="space-y-1.5 pt-0.5">
+                  {data.locationMembers?.map((m) => {
+                    const mArrival = m.arrival ?? arrival ?? 0;
+                    const mDischarge = m.discharge ?? discharge;
+                    return (
+                      <div
+                        key={m.member}
+                        className="rounded-lg border border-slate-200 bg-white p-2 text-[11px] space-y-1.5 shadow-sm"
+                      >
+                        <div className="flex items-center justify-between font-extrabold text-slate-800">
+                          <span className="flex items-center gap-1 text-rose-700">
+                            <MapPin className="h-3 w-3 shrink-0" /> {m.member}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removePainMember(m.member)}
+                            className="text-slate-400 hover:text-rose-600 p-0.5 rounded transition-colors"
+                            title="Remover membro"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+
+                        {/* EVA Individual por Membro */}
+                        {data.isIndividualPain && (
+                          <div className="pt-1.5 border-t border-slate-100 grid grid-cols-2 gap-2 text-[10px]">
+                            <div>
+                              <div className="flex justify-between font-semibold text-slate-600 mb-1">
+                                <span>Chegada:</span>
+                                <span className="font-extrabold text-violet-700">{mArrival}/10</span>
+                              </div>
+                              <Slider
+                                min={0}
+                                max={10}
+                                step={1}
+                                value={[mArrival]}
+                                onValueChange={([v]) => updatePainMemberLevel(m.member, "arrival", v)}
+                                className="h-3"
+                              />
+                            </div>
+                            <div>
+                              <div className="flex justify-between font-semibold text-slate-600 mb-1">
+                                <span>Saída:</span>
+                                <span className="font-extrabold text-violet-700">{mDischarge}/10</span>
+                              </div>
+                              <Slider
+                                min={0}
+                                max={10}
+                                step={1}
+                                value={[mDischarge]}
+                                onValueChange={([v]) => updatePainMemberLevel(m.member, "discharge", v)}
+                                className="h-3"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 

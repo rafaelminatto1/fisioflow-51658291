@@ -8,7 +8,38 @@ export const BOOKING_TYPES = [
   { id: "session", title: "Sessão" },
 ];
 
+export const BOOKING_PERIODS = [
+  { id: "manha", title: "Manhã (07h às 12h)" },
+  { id: "tarde_noite", title: "Tarde / Noite (13h às 20h)" },
+];
+
 const ACTIVE_STATUS_EXCLUDE = ["cancelado", "faltou", "faltou_sem_aviso", "faltou_com_aviso"];
+
+const FULL_HOURS_MANHA = ["07:00", "08:00", "09:00", "10:00", "11:00", "12:00"];
+const FULL_HOURS_TARDE_NOITE = ["13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
+
+export function getFullHourSlotGrid(dateStr?: string, period?: string): string[] {
+  let isSaturday = false;
+  if (dateStr) {
+    const iso = toIsoDate(dateStr);
+    const day = new Date(`${iso}T12:00:00Z`).getUTCDay();
+    if (day === 6) isSaturday = true;
+  }
+
+  // Sábado: atendimento exclusivo das 07h às 12h (manhã)
+  if (isSaturday) {
+    return [...FULL_HOURS_MANHA];
+  }
+
+  if (period === "manha") {
+    return [...FULL_HOURS_MANHA];
+  }
+  if (period === "tarde_noite") {
+    return [...FULL_HOURS_TARDE_NOITE];
+  }
+
+  return [...FULL_HOURS_MANHA, ...FULL_HOURS_TARDE_NOITE];
+}
 
 // Clínica única: resolve a org pelo WABA id (ou primeira org).
 export async function resolveOrgId(pool: ReturnType<typeof createPool>, env: Env): Promise<string | null> {
@@ -78,9 +109,11 @@ export async function availableSlotsForTherapist(
   pool: ReturnType<typeof createPool>,
   therapistId: string,
   date: string,
+  period?: string,
 ): Promise<string[]> {
   const booked = await bookedSlotsForTherapist(pool, therapistId, date);
-  return buildSlotGrid().filter((s) => !booked.includes(s));
+  const grid = getFullHourSlotGrid(date, period);
+  return grid.filter((s) => !booked.includes(s));
 }
 
 // Capacidade da clínica: slot livre se ao menos 1 fisio estiver livre (sessão).
@@ -88,6 +121,7 @@ export async function availableSlotsByCapacity(
   pool: ReturnType<typeof createPool>,
   orgId: string,
   date: string,
+  period?: string,
 ): Promise<string[]> {
   const therapistIds = await getTherapistIds(pool, orgId);
   if (therapistIds.length === 0) return [];
@@ -106,7 +140,8 @@ export async function availableSlotsByCapacity(
   } catch {
     bookedCount = {};
   }
-  return buildSlotGrid().filter((s) => (bookedCount[s] ?? 0) < total);
+  const grid = getFullHourSlotGrid(date, period);
+  return grid.filter((s) => (bookedCount[s] ?? 0) < total);
 }
 
 // WhatsApp Flows DatePicker devolve a data como epoch millis em string.
@@ -118,8 +153,7 @@ export async function buildAppointmentScreen(
   _pool: ReturnType<typeof createPool>,
   _env: Env,
 ): Promise<object> {
-  // O paciente NÃO escolhe o fisioterapeuta: só o tipo de atendimento.
-  return { types: BOOKING_TYPES, slots: [] };
+  return { types: BOOKING_TYPES, periods: BOOKING_PERIODS, slots: [] };
 }
 
 export async function buildSlotsData(
@@ -127,21 +161,26 @@ export async function buildSlotsData(
   env: Env,
   type: string,
   date: string,
+  period?: string,
 ): Promise<object> {
   const iso = toIsoDate(date);
   const orgId = await resolveOrgId(pool, env);
-  if (!orgId) return { slots: [] };
+  if (!orgId) return { slots: [{ id: "outra_hora", title: "Outra hora (não listada)" }] };
 
   let slots: string[];
   if (type === "evaluation") {
     // Avaliação -> disponibilidade do profissional designado.
     const evalId = await getEvaluationProfessionalId(pool, orgId);
-    slots = evalId ? await availableSlotsForTherapist(pool, evalId, iso) : [];
+    slots = evalId ? await availableSlotsForTherapist(pool, evalId, iso, period) : [];
   } else {
     // Sessão -> capacidade agregada (qualquer fisio livre).
-    slots = await availableSlotsByCapacity(pool, orgId, iso);
+    slots = await availableSlotsByCapacity(pool, orgId, iso, period);
   }
-  return { slots: slots.map((s) => ({ id: s, title: s })) };
+
+  const slotItems = slots.map((s) => ({ id: s, title: s }));
+  slotItems.push({ id: "outra_hora", title: "Outra hora (não listada)" });
+
+  return { slots: slotItems };
 }
 
 export { ACTIVE_STATUS_EXCLUDE };

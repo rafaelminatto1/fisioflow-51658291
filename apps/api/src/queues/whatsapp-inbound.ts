@@ -30,9 +30,13 @@ import { sendFlowMessage } from "../lib/whatsapp-interactive";
 import {
   createConfirmedAppointmentFromFlow,
   isBookingIntent,
+  sendQuickSlotButtonsFallback,
   sendSlotsListFallback,
   parseBookListId,
   DEFAULT_BOOKING_FLOW_ID,
+  notifyWaitlistPatientForFreedSlot,
+  claimWaitlistSlot,
+  declineWaitlistSlot,
 } from "../lib/flowsBookingCompletion";
 
 /**
@@ -222,42 +226,91 @@ export async function handleWhatsAppInboundQueue(
         bookingPayload = parseBookListId(listReplyId);
       }
       if (bookingPayload?.date && bookingPayload?.slot) {
-        skipConcierge = true;
-        const whatsapp = new WhatsAppService(env);
-        const result = await createConfirmedAppointmentFromFlow(
-          pool,
-          orgId,
-          { id: contact.id, display_name: contact.display_name, patient_id: contact.patient_id },
-          msg.from || msg.waId,
-          bookingPayload,
-        );
-        const replyText = result
-          ? result.confirmationText
-          : "Ops, esse horário acabou de ficar indisponível. 😅 Responda *agendar* para ver os horários novamente.";
-        await whatsapp.sendTextMessage(msg.from || msg.waId, replyText);
-        await addMessage(
-          pool, conversation.id, orgId, contact.id, "outbound", "system", contact.id,
-          "text", replyText, `flow_booking_${Date.now()}`,
-          { status: "sent", metadata: { autoReply: true, flowBooking: true } },
-        );
-        await broadcastToOrg(env, orgId, {
-          type: "whatsapp_message",
-          conversationId: conversation.id,
-          message: { content: replyText, direction: "outbound", messageType: "text", status: "sent" },
-        });
-        if (result) {
-          await broadcastToOrg(env, orgId, { type: "appointment_created", appointmentId: result.appointmentId });
-          writeEvent(env, { orgId, event: "flow_booking_confirmed" });
+        if (bookingPayload.slot === "outra_hora") {
+          const whatsapp = new WhatsAppService(env);
+          const replyText = "Sem problemas! 😊 Qual horário você gostaria de agendar? Pode nos enviar por aqui o dia e horário da sua preferência que vamos verificar para você!";
+          await whatsapp.sendTextMessage(msg.from || msg.waId, replyText);
+          await addMessage(
+            pool, conversation.id, orgId, contact.id, "outbound", "system", contact.id,
+            "text", replyText, `flow_outra_hora_${Date.now()}`,
+            { status: "sent", metadata: { autoReply: true, flowOutraHora: true } },
+          );
+          await broadcastToOrg(env, orgId, {
+            type: "whatsapp_message",
+            conversationId: conversation.id,
+            message: { content: replyText, direction: "outbound", messageType: "text", status: "sent" },
+          });
+          // Não pulamos o Concierge para que a IA possa acompanhar a resposta do paciente
+          skipConcierge = false;
+        } else {
+          skipConcierge = true;
+          const whatsapp = new WhatsAppService(env);
+          const result = await createConfirmedAppointmentFromFlow(
+            pool,
+            orgId,
+            { id: contact.id, display_name: contact.display_name, patient_id: contact.patient_id },
+            msg.from || msg.waId,
+            bookingPayload,
+          );
+          const replyText = result
+            ? result.confirmationText
+            : "Ops, esse horário acabou de ficar indisponível. 😅 Responda *agendar* para ver os horários novamente.";
+          await whatsapp.sendTextMessage(msg.from || msg.waId, replyText);
+          await addMessage(
+            pool, conversation.id, orgId, contact.id, "outbound", "system", contact.id,
+            "text", replyText, `flow_booking_${Date.now()}`,
+            { status: "sent", metadata: { autoReply: true, flowBooking: true } },
+          );
+          await broadcastToOrg(env, orgId, {
+            type: "whatsapp_message",
+            conversationId: conversation.id,
+            message: { content: replyText, direction: "outbound", messageType: "text", status: "sent" },
+          });
+          if (result) {
+            await broadcastToOrg(env, orgId, { type: "appointment_created", appointmentId: result.appointmentId });
+            writeEvent(env, { orgId, event: "flow_booking_confirmed" });
+          }
         }
       }
 
       if (buttonId && typeof buttonId === "string") {
-        if (buttonId.startsWith("confirm_appt_")) {
+        if (buttonId.startsWith("claim_waitlist|")) {
+          const waitlistId = buttonId.split("|")[1];
+          await claimWaitlistSlot(env, pool, orgId, waitlistId, msg.from || msg.waId);
+          skipConcierge = true;
+        } else if (buttonId.startsWith("decline_waitlist|")) {
+          const waitlistId = buttonId.split("|")[1];
+          await declineWaitlistSlot(env, pool, orgId, waitlistId, msg.from || msg.waId);
+          skipConcierge = true;
+        } else if (buttonId.startsWith("confirm_appt_")) {
           targetApptId = buttonId.replace("confirm_appt_", "");
           apptConfirmed = true;
         } else if (buttonId.startsWith("reschedule_appt_")) {
           targetApptId = buttonId.replace("reschedule_appt_", "");
-          // Paciente quer remarcar - enviamos um aviso amigável que a IA do Concierge está procurando slots
+
+          // 1. Libera o horário antigo atualizando status para 'rescheduled'
+          try {
+            const apptQuery = await pool.query(
+              `SELECT date, start_time FROM appointments WHERE id = $1 LIMIT 1`,
+              [targetApptId]
+            );
+            if (apptQuery.rows.length > 0) {
+              const { date, start_time } = apptQuery.rows[0];
+              const isoDate = typeof date === "string" ? date.slice(0, 10) : new Date(date).toISOString().slice(0, 10);
+              const slotTime = String(start_time).slice(0, 5);
+
+              await pool.query(
+                `UPDATE appointments SET status = 'rescheduled', updated_at = NOW() WHERE id = $1`,
+                [targetApptId]
+              );
+
+              // 2. Dispara aviso automático para o próximo paciente da Fila de Espera desse horário!
+              await notifyWaitlistPatientForFreedSlot(env, pool, orgId, isoDate, slotTime);
+            }
+          } catch (err) {
+            console.error("[Reschedule Waitlist Trigger Error]", err);
+          }
+
           const rescheduleAck = "Entendido, você quer remarcar sua consulta. Vou consultar nossa agenda de horários livres para sugerir opções para você...";
           const whatsapp = new WhatsAppService(env);
           await whatsapp.sendTextMessage(msg.from || msg.waId, rescheduleAck);
@@ -286,6 +339,17 @@ export async function handleWhatsAppInboundQueue(
               status: "sent",
             },
           });
+
+          // Dispara Modelo B (botões rápidos com 3 horários livres) para remarcação imediata
+          const okQuick = await sendQuickSlotButtonsFallback(env, pool, orgId, msg.from || msg.waId, Date.now());
+          if (okQuick) {
+            skipConcierge = true;
+            await addMessage(
+              pool, conversation.id, orgId, contact.id, "outbound", "system", contact.id,
+              "interactive", "Opções para remarcar", `reschedule_slots_${Date.now()}`,
+              { status: "sent", metadata: { autoReply: true, rescheduleSlots: true } },
+            );
+          }
         }
       }
 
@@ -355,36 +419,36 @@ export async function handleWhatsAppInboundQueue(
         skipConcierge = true; // Pular concierge já que o agendamento foi confirmado automaticamente
       }
 
-      // 9.4. Intenção clara de agendar -> envia o Flow nativo; se falhar, lista de horários.
+      // 9.4. Intenção de agendar / consultar horários -> Modelo B (botões rápidos de 1 clique) ou Flow
       if (!skipConcierge && isBookingIntent(msg.text)) {
-        const flowId = env.FLOWS_BOOKING_FLOW_ID || DEFAULT_BOOKING_FLOW_ID;
-        const sent = await sendFlowMessage(
-          env,
-          msg.from || msg.waId,
-          flowId,
-          "Agendar",
-          "Vamos agendar seu atendimento? Toque no botão abaixo para escolher o tipo (avaliação ou sessão), a data e o horário.",
-          { flowAction: "data_exchange", flowToken: `book_${conversation.id}_${Date.now()}` },
-        );
-        if (!(sent as any)?.error) {
+        const okQuick = await sendQuickSlotButtonsFallback(env, pool, orgId, msg.from || msg.waId, Date.now(), msg.text);
+        if (okQuick) {
           skipConcierge = true;
           await addMessage(
             pool, conversation.id, orgId, contact.id, "outbound", "system", contact.id,
-            "interactive", "Vamos agendar seu atendimento?", `flow_send_${Date.now()}`,
-            { status: "sent", metadata: { autoReply: true, flowSend: true } },
+            "interactive", "Horários disponíveis para agendamento", `quick_slots_send_${Date.now()}`,
+            { status: "sent", metadata: { autoReply: true, quickSlotsSend: true } },
           );
-          writeEvent(env, { orgId, event: "flow_booking_sent" });
+          writeEvent(env, { orgId, event: "quick_slots_sent" });
         } else {
-          // Fallback: paciente pode não conseguir abrir o Flow -> lista de horários.
-          const okList = await sendSlotsListFallback(env, pool, orgId, msg.from || msg.waId, Date.now());
-          if (okList) {
+          // Fallback Flow Meta / Lista
+          const flowId = env.FLOWS_BOOKING_FLOW_ID || DEFAULT_BOOKING_FLOW_ID;
+          const sent = await sendFlowMessage(
+            env,
+            msg.from || msg.waId,
+            flowId,
+            "Agendar",
+            "Vamos agendar seu atendimento? Toque no botão abaixo para escolher o tipo, data e horário.",
+            { flowAction: "data_exchange", flowToken: `book_${conversation.id}_${Date.now()}` },
+          );
+          if (!(sent as any)?.error) {
             skipConcierge = true;
             await addMessage(
               pool, conversation.id, orgId, contact.id, "outbound", "system", contact.id,
-              "interactive", "Horários disponíveis", `flow_fallback_${Date.now()}`,
-              { status: "sent", metadata: { autoReply: true, flowFallbackList: true } },
+              "interactive", "Vamos agendar seu atendimento?", `flow_send_${Date.now()}`,
+              { status: "sent", metadata: { autoReply: true, flowSend: true } },
             );
-            writeEvent(env, { orgId, event: "flow_booking_fallback_list" });
+            writeEvent(env, { orgId, event: "flow_booking_sent" });
           }
         }
       }

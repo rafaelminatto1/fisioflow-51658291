@@ -6,6 +6,7 @@ export async function triggerInngestEvent(
   eventName: string,
   data: Record<string, any>,
   user?: { id?: string; email?: string },
+  options?: { delaySeconds?: number },
 ) {
   if (!env.BACKGROUND_QUEUE) {
     console.warn("[Queue] BACKGROUND_QUEUE not bound. Skipping event:", eventName);
@@ -20,8 +21,9 @@ export async function triggerInngestEvent(
   };
 
   ctx.waitUntil(
-    env.BACKGROUND_QUEUE.send(payload).catch((err: Error) => {
+    env.BACKGROUND_QUEUE.send(payload, options).catch((err: Error) => {
       console.error("[Queue] Failed to send event:", eventName, err);
     }),
   );
 }
+

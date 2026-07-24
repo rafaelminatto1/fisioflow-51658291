@@ -9,7 +9,8 @@
       "terminal": true,
       "data": {
         "types": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "title": { "type": "string" } } }, "__example__": [{ "id": "evaluation", "title": "Avaliação" }, { "id": "session", "title": "Sessão" }] },
-        "slots": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "title": { "type": "string" } } }, "__example__": [{ "id": "08:30", "title": "08:30" }] }
+        "periods": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "title": { "type": "string" } } }, "__example__": [{ "id": "manha", "title": "Manhã (07h às 12h)" }, { "id": "tarde_noite", "title": "Tarde / Noite (13h às 20h)" }] },
+        "slots": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "title": { "type": "string" } } }, "__example__": [{ "id": "08:00", "title": "08:00" }] }
       },
       "layout": {
         "type": "SingleColumnLayout",
@@ -19,9 +20,10 @@
             "name": "form",
             "children": [
               { "type": "Dropdown", "name": "type", "label": "Tipo de atendimento", "required": true, "data-source": "${data.types}" },
-              { "type": "DatePicker", "name": "date", "label": "Data", "required": true, "on-select-action": { "name": "data_exchange", "payload": { "type": "${form.type}", "date": "${form.date}" } } },
+              { "type": "DatePicker", "name": "date", "label": "Data", "required": true, "on-select-action": { "name": "data_exchange", "payload": { "type": "${form.type}", "date": "${form.date}", "period": "${form.period}" } } },
+              { "type": "Dropdown", "name": "period", "label": "Período", "required": true, "data-source": "${data.periods}", "on-select-action": { "name": "data_exchange", "payload": { "type": "${form.type}", "date": "${form.date}", "period": "${form.period}" } } },
               { "type": "Dropdown", "name": "slot", "label": "Horário disponível", "required": true, "data-source": "${data.slots}" },
-              { "type": "Footer", "label": "Confirmar", "on-click-action": { "name": "complete", "payload": { "type": "${form.type}", "date": "${form.date}", "slot": "${form.slot}" } } }
+              { "type": "Footer", "label": "Confirmar", "on-click-action": { "name": "complete", "payload": { "type": "${form.type}", "date": "${form.date}", "period": "${form.period}", "slot": "${form.slot}" } } }
             ]
           }
         ]

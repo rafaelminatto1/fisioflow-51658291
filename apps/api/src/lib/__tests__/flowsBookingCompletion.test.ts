@@ -3,16 +3,67 @@ import {
   isBookingIntent,
   parseBookListId,
   createConfirmedAppointmentFromFlow,
+  detectPeriodFromText,
+  resolveTargetDateFromText,
+  extractSpecificTimeFromText,
 } from "../flowsBookingCompletion";
 
 vi.mock("../whatsapp-identity", () => ({ linkContactToPatient: vi.fn(async () => {}) }));
 
+describe("extractSpecificTimeFromText", () => {
+  it("extrai horários válidos entre 07h e 20h", () => {
+    expect(extractSpecificTimeFromText("teria às 10h?")).toBe("10:00");
+    expect(extractSpecificTimeFromText("tem às 14:00?")).toBe("14:00");
+    expect(extractSpecificTimeFromText("pode ser 9h30?")).toBe("09:30");
+    expect(extractSpecificTimeFromText("olá amanhã no período da tarde teria horário?")).toBeNull();
+  });
+});
+
+describe("resolveTargetDateFromText", () => {
+  it("resolve corretamente o próximo sábado a partir de uma quinta-feira (23/07/2026)", () => {
+    const ThursdayMs = Date.parse("2026-07-23T12:00:00Z");
+    const { isoDate, isSaturday } = resolveTargetDateFromText("olá quais horários disponíveis para sábado", ThursdayMs);
+    expect(isoDate).toBe("2026-07-25");
+    expect(isSaturday).toBe(true);
+  });
+
+  it("resolve amanhã como padrão quando não especifica o dia", () => {
+    const ThursdayMs = Date.parse("2026-07-23T12:00:00Z");
+    const { isoDate, isSaturday } = resolveTargetDateFromText("quais horários disponíveis?", ThursdayMs);
+    expect(isoDate).toBe("2026-07-24");
+    expect(isSaturday).toBe(false);
+  });
+});
+
+describe("detectPeriodFromText", () => {
+  it("detecta tarde_noite quando o usuário menciona tarde ou noite", () => {
+    expect(detectPeriodFromText("olá amanha no periodo da tarde teria horario?")).toBe("tarde_noite");
+    expect(detectPeriodFromText("teria no periodo da tarde?")).toBe("tarde_noite");
+    expect(detectPeriodFromText("tem horário à noite?")).toBe("tarde_noite");
+  });
+
+  it("detecta manha quando o usuário menciona manhã ou cedo", () => {
+    expect(detectPeriodFromText("quais horários de manhã?")).toBe("manha");
+    expect(detectPeriodFromText("posso ir de manhã cedo?")).toBe("manha");
+  });
+
+  it("retorna undefined se nenhum período for especificado", () => {
+    expect(detectPeriodFromText("gostaria de agendar para amanhã")).toBeUndefined();
+  });
+});
+
 describe("isBookingIntent", () => {
-  it("detecta pedidos claros de agendar", () => {
+  it("detecta pedidos claros de agendar e consultas de disponibilidade", () => {
     expect(isBookingIntent("quero agendar")).toBe(true);
     expect(isBookingIntent("gostaria de marcar uma avaliação")).toBe(true);
     expect(isBookingIntent("agendar sessão de fisio")).toBe(true);
     expect(isBookingIntent("Agendamento")).toBe(true);
+    expect(isBookingIntent("olá amanha no periodo da tarde teria horario?")).toBe(true);
+    expect(isBookingIntent("teria no periodo da tarde?")).toBe(true);
+    expect(isBookingIntent("Quais horários temos disponível para amanhã de manhã?")).toBe(true);
+    expect(isBookingIntent("tem vaga amanhã?")).toBe(true);
+    expect(isBookingIntent("sábado tem horário?")).toBe(true);
+    expect(isBookingIntent("teria às 10h?")).toBe(true);
   });
   it("ignora mensagens sem intenção", () => {
     expect(isBookingIntent("quanto custa a sessão?")).toBe(false);
@@ -22,11 +73,16 @@ describe("isBookingIntent", () => {
 });
 
 describe("parseBookListId", () => {
-  it("parseia o id da lista de fallback", () => {
-    expect(parseBookListId("book|session|2026-08-03|08:30")).toEqual({
+  it("parseia o id da lista de fallback e dos botões rápidos (Modelo B)", () => {
+    expect(parseBookListId("book|session|2026-08-03|08:00")).toEqual({
       type: "session",
       date: "2026-08-03",
-      slot: "08:30",
+      slot: "08:00",
+    });
+    expect(parseBookListId("book_slot|session|2026-08-03|14:00")).toEqual({
+      type: "session",
+      date: "2026-08-03",
+      slot: "14:00",
     });
     expect(parseBookListId("outra_coisa")).toBeNull();
     expect(parseBookListId(undefined)).toBeNull();

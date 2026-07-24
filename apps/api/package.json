@@ -53,7 +53,7 @@
     "lib0": "^0.2.117",
     "typescript": "^6.0.3",
     "vitest": "^4.1.8",
-    "wrangler": "4.100.0",
+    "wrangler": "4.114.0",
     "y-protocols": "^1.0.7"
   },
   "engines": {

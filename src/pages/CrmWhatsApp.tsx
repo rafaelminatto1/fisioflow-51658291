@@ -33,7 +33,11 @@ import {
   Trash2,
   UserPlus,
   Zap,
+  TrendingUp,
+  Calendar,
+  AlertTriangle,
 } from "lucide-react";
+import { Instagram } from "@/components/icons/InstagramIcon";
 import { toast } from "sonner";
 import { PageLayout, PageContainer } from "@/components/layout/PageLayout";
 import { Button } from "@/components/ui/button";
@@ -43,6 +47,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { TaskQuickCreateModal } from "@/components/tarefas/v2/TaskQuickCreateModal";
+import { QuickBookingCard, type BookingSlot } from "@/components/whatsapp/QuickBookingCard";
 import {
   addTags,
   deleteConversation,
@@ -74,7 +79,9 @@ import {
   type CrmStage,
   type CrmStageMeta,
 } from "@/features/whatsapp/crmWhatsAppAdapter";
-import { resolveMessageDisplayText } from "@/features/whatsapp/messageDisplay";
+import { resolveMessageDisplayText, parseInstagramAttachment, type InstagramAttachmentData } from "@/features/whatsapp/messageDisplay";
+import { InstagramCollabCard } from "@/components/whatsapp/InstagramCollabCard";
+import { InstagramCollabModal } from "@/components/whatsapp/InstagramCollabModal";
 import { summarizeConversation, suggestReply, suggestNextAction } from "@/services/whatsapp-api";
 import { cn } from "@/lib/utils";
 import {
@@ -390,11 +397,17 @@ function MessageBubble({
   text,
   timeLabel,
   isReplying,
+  channel,
+  contactName,
   onContextMenu,
   onPointerDown,
   onPointerUp,
   onPointerCancel,
   onPointerLeave,
+  onAcceptCollab,
+  onDeclineCollab,
+  onReplyCollab,
+  onOpenCollabModal,
 }: {
   message: Message;
   isOutbound: boolean;
@@ -404,15 +417,64 @@ function MessageBubble({
   text: string;
   timeLabel: string;
   isReplying: boolean;
+  channel?: string;
+  contactName?: string;
   onContextMenu: (e: React.MouseEvent) => void;
   onPointerDown: (e: React.PointerEvent) => void;
   onPointerUp: () => void;
   onPointerCancel: () => void;
   onPointerLeave: () => void;
+  onAcceptCollab?: () => void;
+  onDeclineCollab?: () => void;
+  onReplyCollab?: (draft: string) => void;
+  onOpenCollabModal?: (data: InstagramAttachmentData) => void;
 }) {
   const isVideo = message.type === "video" || message.mediaType === "video";
   const isAudio = message.type === "audio" || message.mediaType === "audio";
   const isFile = message.type === "file" || message.mediaType === "file";
+
+  const igAttachment = useMemo(
+    () => parseInstagramAttachment(message, channel, contactName),
+    [message, channel, contactName]
+  );
+
+  if (igAttachment) {
+    return (
+      <div
+        onContextMenu={onContextMenu}
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
+        onPointerLeave={onPointerLeave}
+        className={cn(
+          "relative my-1 max-w-[85%] sm:max-w-[360px]",
+          isOutbound ? "ml-auto" : "mr-auto",
+          isReplying && "ring-2 ring-primary/35 rounded-xl"
+        )}
+      >
+        <InstagramCollabCard
+          data={igAttachment}
+          isOutbound={isOutbound}
+          onAccept={onAcceptCollab}
+          onDecline={onDeclineCollab}
+          onReply={onReplyCollab}
+          onOpenModal={() => onOpenCollabModal?.(igAttachment)}
+        />
+        <div
+          className={cn(
+            "mt-1 flex items-center justify-end gap-1 text-[9px] text-muted-foreground",
+            isOutbound && "text-[hsl(142_40%_38%)]"
+          )}
+        >
+          {timeLabel}
+          {isOutbound && message.status !== "failed" && (
+            <CheckCheck className="h-[13px] w-[13px] text-sky-500" />
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       onContextMenu={onContextMenu}
@@ -524,6 +586,10 @@ export default function CrmWhatsApp() {
   const [aiNextAction, setAiNextAction] = useState<string | null>(null);
   const [savingStage, setSavingStage] = useState(false);
   const [replyMessage, setReplyMessage] = useState<Message | null>(null);
+  const [igModalOpen, setIgModalOpen] = useState(false);
+  const [igModalData, setIgModalData] = useState<InstagramAttachmentData | null>(null);
+  const [showQuickBooking, setShowQuickBooking] = useState(false);
+  const [dismissedCoolingBanners, setDismissedCoolingBanners] = useState<Set<string>>(new Set());
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [taskInitialData, setTaskInitialData] = useState<{
     titulo: string;
@@ -672,6 +738,21 @@ export default function CrmWhatsApp() {
       treatment: conversationCards.filter((item) => item.stage.key === "treatment").length,
     } satisfies Record<PipelineFilter, number>;
   }, [conversationCards]);
+
+  const handleDirectSend = async (textToSend: string) => {
+    if (!textToSend.trim() || sending) return;
+    setSending(true);
+    try {
+      await sendMessage(textToSend.trim());
+      await Promise.all([refetch(), refetchConversation()]);
+    } catch (err) {
+      toast.error("Não foi possível enviar a mensagem no Direct.", {
+        description: err instanceof Error ? err.message : "Tente novamente.",
+      });
+    } finally {
+      setSending(false);
+    }
+  };
 
   const handleSend = async () => {
     if (!selectedId || !composer.trim() || sending) return;
@@ -1174,8 +1255,8 @@ export default function CrmWhatsApp() {
               </button>
             </div>
           </div>
-          <div className="grid min-h-0 flex-1 grid-rows-1 lg:grid-cols-12 overflow-hidden bg-muted/20">
-            <aside className="flex min-h-0 flex-col border-r border-border/50 bg-background/50 lg:col-span-3">
+          <div className="flex min-h-0 flex-1 overflow-hidden bg-muted/20">
+            <aside className="flex min-h-0 w-full flex-col border-r border-border/50 bg-background/50 lg:w-[260px] xl:w-[280px] shrink-0">
               <div className="p-4">
                 <div className="flex items-center gap-2.5 rounded-xl bg-muted/80 px-3.5 py-2.5 transition-colors focus-within:bg-muted focus-within:ring-2 focus-within:ring-primary/20">
                   <Search className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -1207,7 +1288,7 @@ export default function CrmWhatsApp() {
               </div>
             </aside>
 
-            <section className="flex min-h-0 flex-col bg-[hsl(40_30%_96%)] lg:col-span-6">
+            <section className="flex min-h-0 flex-1 flex-col bg-[hsl(40_30%_96%)] min-w-0">
               {selectedConversationVm ? (
                 <>
                   <div className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
@@ -1235,6 +1316,16 @@ export default function CrmWhatsApp() {
                       </div>
                     </div>
                     <div className="ml-auto flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant={showQuickBooking ? "default" : "outline"}
+                        onClick={() => setShowQuickBooking((prev) => !prev)}
+                        className="h-8 text-xs font-semibold gap-1 px-2.5 shadow-2xs"
+                      >
+                        <Calendar className="h-3.5 w-3.5" />
+                        <span>📌 Horários</span>
+                      </Button>
+
                       <button type="button" className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary">
                         <Phone className="h-[18px] w-[18px]" />
                       </button>
@@ -1265,6 +1356,43 @@ export default function CrmWhatsApp() {
                       </DropdownMenu>
                     </div>
                   </div>
+
+                  {selectedConversationVm.isCoolingDown && !dismissedCoolingBanners.has(selectedConversationVm.id) && (
+                    <div className="flex items-center justify-between border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs text-amber-800 dark:text-amber-300">
+                      <div className="flex items-center gap-2 font-medium">
+                        <Clock3 className="h-4 w-4 text-amber-600 shrink-0" />
+                        <span>
+                          ⚡ <strong>Lead esfriando:</strong> sem resposta há {selectedConversationVm.hoursSinceLastMessage}h.
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            handleDirectSend("Olá! Passando para saber se ficou com alguma dúvida sobre nosso atendimento ou horários de avaliação na clínica?");
+                            toast.success("Mensagem de reengajamento enviada!");
+                          }}
+                          className="h-7 text-[11px] font-semibold bg-amber-600 hover:bg-amber-700 text-white shadow-xs"
+                        >
+                          Reengajar no Direct
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setShowQuickBooking((prev) => !prev)}
+                          className="h-7 text-[11px] text-amber-800 dark:text-amber-300"
+                        >
+                          📌 Horários
+                        </Button>
+                        <button
+                          onClick={() => setDismissedCoolingBanners((prev) => new Set(prev).add(selectedConversationVm.id))}
+                          className="ml-1 text-amber-600/70 hover:text-amber-800 p-1"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="flex min-h-0 flex-1 flex-col bg-[radial-gradient(hsl(40_20%_88%)_1px,transparent_1px)] bg-[length:22px_22px] px-5 py-4">
                     <div ref={messagesScrollRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
@@ -1331,6 +1459,21 @@ export default function CrmWhatsApp() {
                               text={text}
                               timeLabel={getMessageTimeLabel(message.timestamp)}
                               isReplying={replyMessage?.id === message.id}
+                              channel={selectedConversationVm?.channel}
+                              contactName={selectedConversationVm?.name}
+                              onAcceptCollab={() => {
+                                handleDirectSend("Olá! Aceitamos a proposta de colaboração no post do Instagram. Vamos seguir com a parceria!");
+                                toast.success("Confirmação enviada no Direct!");
+                              }}
+                              onDeclineCollab={() => {
+                                handleDirectSend("Olá! Agradecemos a proposta de colaboração, mas no momento não conseguiremos aceitar este post. Um abraço!");
+                                toast.info("Recusa enviada no Direct!");
+                              }}
+                              onReplyCollab={(draft) => setComposer(draft)}
+                              onOpenCollabModal={(data) => {
+                                setIgModalData(data);
+                                setIgModalOpen(true);
+                              }}
                               onContextMenu={(event) => {
                                 event.preventDefault();
                                 openMessageMenu(message, event.clientX, event.clientY);
@@ -1373,6 +1516,23 @@ export default function CrmWhatsApp() {
                             </Button>
                           </div>
                         </div>
+                      </div>
+                    )}
+
+                    {showQuickBooking && (
+                      <div className="border-t border-border bg-card p-3 flex justify-center">
+                        <QuickBookingCard
+                          onSelectSlot={(slot) => {
+                            handleDirectSend(`Olá! Confirmando o interesse no horário de ${slot.fullLabel}. Podemos agendar?`);
+                            setShowQuickBooking(false);
+                            toast.success("Horário selecionado e enviado ao paciente!");
+                          }}
+                          onSendSlotsMessage={(msg) => {
+                            handleDirectSend(msg);
+                            setShowQuickBooking(false);
+                            toast.success("Opções de horários enviadas no chat!");
+                          }}
+                        />
                       </div>
                     )}
 
@@ -1490,7 +1650,7 @@ export default function CrmWhatsApp() {
               )}
             </section>
 
-            <aside className="flex min-h-0 flex-col overflow-y-auto border-l border-border bg-muted/30 lg:col-span-3">
+            <aside className="flex min-h-0 w-full flex-col overflow-y-auto border-l border-border bg-muted/30 lg:w-[250px] xl:w-[270px] shrink-0">
               {selectedConversationVm ? (
                 <>
                   <div className="border-b border-border bg-card px-4 pb-4 pt-5 text-center">
@@ -1615,6 +1775,38 @@ export default function CrmWhatsApp() {
                       <h4 className="mb-3 text-[10px] font-extrabold uppercase tracking-[0.08em] text-muted-foreground">
                         Detalhes do lead
                       </h4>
+                      {selectedConversationVm.channel === "instagram" && (
+                        <div className="mb-3.5 overflow-hidden rounded-xl border border-purple-500/30 bg-gradient-to-br from-purple-500/10 via-rose-500/5 to-amber-500/10 p-3 shadow-2xs">
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <div className="flex items-center gap-1.5 font-bold text-xs">
+                              <Instagram className="h-4 w-4 text-rose-500" />
+                              <span>Perfil do Instagram</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
+                              Direct
+                            </span>
+                          </div>
+                          <div className="text-xs space-y-1.5">
+                            <div className="flex items-center justify-between font-medium border-b border-purple-500/10 pb-1">
+                              <span className="text-muted-foreground">Handle IG:</span>
+                              <span className="font-bold text-foreground">{selectedConversationVm.instagramHandle || "@instagram_user"}</span>
+                            </div>
+                            <div className="flex items-center justify-between font-medium border-b border-purple-500/10 pb-1">
+                              <span className="text-muted-foreground">Interações:</span>
+                              <span className="font-semibold text-emerald-600 dark:text-emerald-400">1 Collab · 2 Stories</span>
+                            </div>
+                            <a
+                              href={`https://instagram.com/${(selectedConversationVm.instagramHandle || "").replace(/^@/, "")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-2 flex items-center justify-center gap-1 rounded-lg bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 px-2.5 py-1.5 text-[11px] font-bold text-white shadow-2xs hover:opacity-95 transition-opacity"
+                            >
+                              <Instagram className="h-3.5 w-3.5" />
+                              Ver Perfil no Instagram
+                            </a>
+                          </div>
+                        </div>
+                      )}
                       <div className="space-y-2 text-xs">
                         {typeof selectedConversationVm.leadScore === "number" ? (
                           <div className="flex items-center justify-between border-b border-border/50 py-1.5">
@@ -2038,6 +2230,21 @@ export default function CrmWhatsApp() {
                 }
               : undefined
           }
+        />
+
+        <InstagramCollabModal
+          open={igModalOpen}
+          onOpenChange={setIgModalOpen}
+          data={igModalData}
+          onSendReply={handleDirectSend}
+          onAccept={() => {
+            handleDirectSend("Olá! Aceitamos a proposta de colaboração no post do Instagram. Vamos seguir com a parceria!");
+            toast.success("Resposta enviada no Direct!");
+          }}
+          onDecline={() => {
+            handleDirectSend("Olá! Agradecemos a proposta de colaboração, mas no momento não conseguiremos aceitar este post. Um abraço!");
+            toast.info("Recusa enviada no Direct!");
+          }}
         />
       </PageContainer>
     </PageLayout>

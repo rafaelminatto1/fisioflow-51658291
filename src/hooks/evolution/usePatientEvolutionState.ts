@@ -301,6 +301,8 @@ export function usePatientEvolutionState() {
       painLevelDischarge: painDetail.discharge ?? (evolutionData.painScale ?? undefined),
       painQuality: painDetail.quality,
       painLocation: painDetail.location,
+      locationMembers: painDetail.locationMembers,
+      isIndividualPain: painDetail.isIndividualPain,
       procedures: procs,
       exercises: exs,
       measurements: evolutionData.measurements ?? [],
@@ -330,6 +332,8 @@ export function usePatientEvolutionState() {
           painLevelDischarge: prevPainDetail.discharge ?? (current.painScale ?? undefined),
           painQuality: prevPainDetail.quality,
           painLocation: prevPainDetail.location,
+          locationMembers: prevPainDetail.locationMembers,
+          isIndividualPain: prevPainDetail.isIndividualPain,
           procedures: (current.procedures as any) ?? [],
           exercises: (current.exercises as any) ?? [],
           measurements: (current.measurements as any) ?? [],
@@ -453,6 +457,8 @@ export function usePatientEvolutionState() {
           discharge: dischargeLevel ?? undefined,
           quality: next.painQuality ?? [],
           location: next.painLocation,
+          locationMembers: next.locationMembers,
+          isIndividualPain: next.isIndividualPain,
         });
 
         return {

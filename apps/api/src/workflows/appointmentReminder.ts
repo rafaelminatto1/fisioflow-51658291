@@ -200,14 +200,14 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
                   type: "reply",
                   reply: {
                     id: `confirm_appt_${appointmentId}`,
-                    title: "Confirmar Presença",
+                    title: "Confirmar",
                   },
                 },
                 {
                   type: "reply",
                   reply: {
                     id: `reschedule_appt_${appointmentId}`,
-                    title: "Remarcar Consulta",
+                    title: "Reagendar Sessão",
                   },
                 },
               ],

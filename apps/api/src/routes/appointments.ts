@@ -356,6 +356,7 @@ app.post(
                   organizationId: row.organization_id,
                 },
                 { id: user.uid },
+                { delaySeconds: 60 },
               ).catch((err) => console.error("[Appointments/Create] Inngest trigger failed:", err));
             } catch (err) {
               console.error("[Appointments/Create] Background task error:", err);
@@ -644,6 +645,7 @@ const updateAppointmentHandler: MiddlewareHandler<{
                 status: row.status,
               },
               { id: user.uid },
+              { delaySeconds: 60 },
             );
           }
 

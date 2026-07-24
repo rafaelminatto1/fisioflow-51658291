@@ -45,7 +45,7 @@ export const DEFAULT_REMINDER_CONFIG: ReminderConfig = {
   ],
   sendAddressOnlyFirstVisit: true,
   addressText: "",
-  useButtons: false,
+  useButtons: true,
 };
 
 /** Mescla config persistida sobre os defaults (tolerante a campos ausentes). */
@@ -72,7 +72,7 @@ export function resolveReminderConfig(raw: unknown): ReminderConfig {
         : DEFAULT_REMINDER_CONFIG.bands,
     sendAddressOnlyFirstVisit: r.sendAddressOnlyFirstVisit !== false,
     addressText: typeof r.addressText === "string" ? r.addressText : "",
-    useButtons: r.useButtons === true,
+    useButtons: r.useButtons !== false,
   };
 }
 
