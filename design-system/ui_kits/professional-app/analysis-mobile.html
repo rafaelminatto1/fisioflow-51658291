@@ -1,0 +1,322 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Professional App" name="Professional App — Análise Biomecânica (mobile)" subtitle="Player vertical · ângulos articulares · bottom sheet métricas + goniometria + nota" viewport="390x844" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Análise Biomecânica — FisioFlow Pro (mobile)</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  body { margin: 0; background: #1a1d24; min-height: 100vh; display:flex; align-items:center; justify-content:center; padding: 20px; font-family: var(--font-sans); }
+
+  .app {
+    width: 390px; height: 844px; flex-shrink: 0;
+    background: #0a0e16; color: white;
+    border-radius: 48px; overflow: hidden; position: relative;
+    box-shadow: 0 0 0 12px #111, 0 0 0 14px #2a2d35, 0 30px 60px rgba(0,0,0,0.6);
+    user-select: none;
+  }
+
+  /* ---- video ---- */
+  .video { position:absolute; inset: 0; background: radial-gradient(120% 80% at 50% 35%, #182230, #060910 82%); overflow: hidden; }
+  .athlete { position:absolute; left: 50%; top: 36%; transform: translate(-50%, -50%); height: 42%; }
+
+  /* joint angle overlays */
+  .joint { position: absolute; z-index: 3; }
+  .joint .arc { stroke-width: 2.5; }
+  .ang-label { position:absolute; padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; display:flex; align-items:center; gap:5px; }
+  .ang-label i { width: 13px; height: 13px; }
+  .ang-label.primary { background: hsl(var(--primary)); color: white; }
+  .ang-label.warn { background: hsl(45 93% 50%); color: hsl(35 70% 18%); }
+  .ang-label.ok { background: hsl(158 64% 42%); color: white; }
+
+  /* ---- status bar ---- */
+  .statusbar { position:absolute; top:0; left:0; right:0; z-index: 7; display:flex; justify-content:space-between; align-items:center; padding: 14px 32px 6px; font-size: 14px; font-weight: 700; color:white; }
+  .statusbar .sb-right { display:flex; align-items:center; gap: 6px; }
+  .statusbar .sb-right i { width: 16px; height: 16px; }
+
+  /* ---- top bar ---- */
+  .topbar { position:absolute; top: 46px; left: 0; right: 0; z-index: 7; display:flex; align-items:center; gap: 12px; padding: 6px 16px; }
+  .round-btn { width: 40px; height: 40px; border-radius: 50%; background: rgba(15,20,30,.6); border: 1px solid rgba(255,255,255,.14); display:flex; align-items:center; justify-content:center; color: white; cursor:pointer; flex-shrink: 0; }
+  .round-btn:active { background: rgba(15,20,30,.9); }
+  .round-btn i { width: 19px; height: 19px; }
+  .topbar .title { min-width: 0; }
+  .topbar .title .tn { font-size: 14px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .topbar .title .ts { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.65); margin-top: 1px; }
+  .topbar .spacer { margin-left:auto; }
+
+  /* view toggle pill */
+  .view-toggle { position:absolute; top: 100px; left: 50%; transform: translateX(-50%); z-index: 7; display:flex; gap: 3px; background: rgba(10,14,22,.65); border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 3px; }
+  .vt { padding: 7px 14px; border-radius: 9px; font-size: 11px; font-weight: 800; letter-spacing: 0.02em; color: rgba(255,255,255,.6); cursor: pointer; }
+  .vt:active { color: white; }
+  .vt.sel { background: rgba(255,255,255,.16); color: white; }
+
+  .trial-tag { position:absolute; top: 150px; right: 16px; z-index: 7; padding: 6px 11px; border-radius: 999px; background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.12); font-size: 10px; font-weight: 800; letter-spacing: 0.05em; }
+
+  /* ---- video controls (above sheet) ---- */
+  .controls { position:absolute; left: 0; right: 0; bottom: 300px; z-index: 6; padding: 0 20px; transition: bottom .32s cubic-bezier(.22,1,.36,1); }
+  .scrubber { height: 5px; background: rgba(255,255,255,.2); border-radius: 999px; position:relative; margin-bottom: 14px; }
+  .scrub-fill { width: 42%; height: 100%; background: white; border-radius: 999px; }
+  .scrub-handle { position:absolute; left: 42%; top: 50%; transform: translate(-50%, -50%); width: 16px; height: 16px; border-radius: 50%; background: white; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+  .scrub-mark { position:absolute; top: -3px; width: 2px; height: 11px; border-radius: 1px; background: hsl(var(--primary)); }
+  .ctl-row { display:flex; align-items:center; gap: 16px; }
+  .timecode { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; color: rgba(255,255,255,.9); }
+  .ctl-spacer { flex: 1; }
+  .ctl-btn { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.12); border: none; color: white; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .ctl-btn:active { background: rgba(255,255,255,.22); }
+  .ctl-btn i { width: 18px; height: 18px; }
+  .play { width: 56px; height: 56px; border-radius: 50%; background: white; color: hsl(var(--primary)); border: none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .play i { width: 26px; height: 26px; }
+  .speed { padding: 8px 12px; border-radius: 10px; background: rgba(255,255,255,.12); font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; color: white; cursor:pointer; }
+
+  /* ---- bottom sheet ---- */
+  .sheet { position:absolute; left: 0; right: 0; bottom: 0; z-index: 8; height: 600px;
+    background: hsl(var(--card)); color: hsl(var(--foreground));
+    border-radius: 26px 26px 0 0; box-shadow: 0 -8px 24px rgba(0,0,0,.3);
+    transform: translateY(var(--sheet-y, 320px)); transition: transform .32s cubic-bezier(.22,1,.36,1);
+    touch-action: none; display:flex; flex-direction: column;
+  }
+  .sheet.dragging { transition: none; }
+  .grab { width: 100%; padding: 11px 0 2px; display:flex; justify-content:center; cursor: grab; flex-shrink: 0; }
+  .grab span { width: 40px; height: 5px; border-radius: 999px; background: hsl(var(--border)); }
+  .sheet-head { display:flex; align-items:center; gap: 10px; padding: 6px 22px 12px; flex-shrink: 0; }
+  .sheet-head h2 { font-size: 16px; font-weight: 800; letter-spacing: -0.015em; }
+  .sheet-head .toggle-ic { margin-left:auto; color: hsl(var(--muted-foreground)); cursor:pointer; }
+  .sheet-head .toggle-ic i { width: 18px; height: 18px; transition: transform .3s; }
+  .sheet.open .sheet-head .toggle-ic i { transform: rotate(180deg); }
+
+  .sheet-scroll { flex: 1; overflow-y: auto; padding: 0 22px 36px; display:flex; flex-direction: column; gap: 20px; }
+  .sheet-scroll::-webkit-scrollbar { width: 0; }
+
+  /* metric grid */
+  .metric-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .metric { padding: 13px 14px; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 14px; }
+  .metric .l { font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
+  .metric .v { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; margin-top: 3px; line-height: 1; }
+  .metric .d { font-size: 11px; font-weight: 700; margin-top: 5px; display:flex; align-items:center; gap: 3px; }
+  .metric .d i { width: 12px; height: 12px; }
+  .metric.ok .v { color: hsl(158 64% 30%); }
+  .metric.warn .v { color: hsl(35 92% 38%); }
+  .up { color: hsl(158 64% 35%); } .dn { color: hsl(0 72% 48%); }
+
+  .block-label { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin-bottom: 9px; display:flex; align-items:center; }
+
+  /* goniometry table */
+  .rom-table { border: 1px solid hsl(var(--border)); border-radius: 14px; overflow: hidden; }
+  .rom-row { display:grid; grid-template-columns: 1fr 56px 56px 48px; align-items:center; padding: 11px 14px; border-bottom: 1px solid hsl(var(--border) / .7); }
+  .rom-row:last-child { border-bottom: none; }
+  .rom-row.head { background: hsl(var(--muted) / .6); }
+  .rom-row.head .c { font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
+  .rom-row .jn { font-size: 13px; font-weight: 700; }
+  .rom-row .jn small { display:block; font-size: 10px; font-weight: 600; color: hsl(var(--muted-foreground)); }
+  .rom-row .c { text-align: right; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* clinical note */
+  .note-card { border: 1px solid hsl(var(--border)); border-radius: 14px; padding: 14px; background: hsl(var(--card)); }
+  .note-card textarea { width: 100%; border: none; outline: none; resize: none; font-family: inherit; font-size: 13px; line-height: 1.5; color: hsl(var(--foreground)); background: transparent; min-height: 58px; }
+  .note-card textarea::placeholder { color: hsl(var(--muted-foreground)); }
+  .note-foot { display:flex; align-items:center; gap: 8px; margin-top: 8px; padding-top: 10px; border-top: 1px solid hsl(var(--border) / .7); }
+  .note-time { font-size: 11px; font-weight: 800; color: hsl(var(--primary)); font-variant-numeric: tabular-nums; }
+  .note-foot .save { margin-left:auto; display:flex; align-items:center; gap: 6px; padding: 8px 14px; border-radius: 11px; background: hsl(var(--primary)); color: white; font-size: 13px; font-weight: 800; border: none; cursor: pointer; }
+  .note-foot .save i { width: 14px; height: 14px; }
+  .note-foot .save:active { background: hsl(211 100% 44%); }
+
+  .home-indicator { position:absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 134px; height: 5px; background: hsl(var(--foreground)); border-radius: 999px; z-index: 9; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- video -->
+  <div class="video">
+    <!-- squat silhouette (sagittal) -->
+    <svg class="athlete" viewBox="0 0 200 400" fill="none" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="100" cy="40" r="18" fill="#cbd5e1" stroke="none"/>
+      <path d="M100 60 Q105 95 115 130 Q120 155 118 175"/>
+      <ellipse cx="118" cy="180" rx="14" ry="9" fill="#cbd5e1" stroke="none"/>
+      <path d="M118 185 Q105 220 80 240"/>
+      <path d="M80 240 Q90 280 110 320"/>
+      <path d="M108 320 Q115 335 135 332" stroke-width="6"/>
+      <path d="M105 100 Q140 110 160 95"/>
+    </svg>
+
+    <!-- joint angle overlays -->
+    <div class="joint" style="left:30%; top:21%;">
+      <div class="ang-label primary">Tronco 32° flexão</div>
+    </div>
+    <div class="joint" style="left:50%; top:37%;">
+      <svg width="56" height="56" viewBox="0 0 56 56"><path class="arc" d="M 10 28 A 18 18 0 0 1 42 46" stroke="hsl(211 100% 60%)" fill="hsl(211 100% 60% / .15)"/></svg>
+      <div class="ang-label primary" style="position:absolute; top:-4px; left:50px;">Quadril 78°</div>
+    </div>
+    <div class="joint" style="left:30%; top:44%;">
+      <svg width="56" height="56" viewBox="0 0 56 56"><path class="arc" d="M 8 8 A 24 24 0 0 1 48 32" stroke="hsl(45 93% 52%)" fill="hsl(45 93% 52% / .18)"/></svg>
+      <div class="ang-label warn" style="position:absolute; top:30px; left:-6px;"><i data-lucide="alert-triangle"></i>Joelho 92° valgo</div>
+    </div>
+    <div class="joint" style="left:49%; top:50%;">
+      <svg width="48" height="48" viewBox="0 0 48 48"><path class="arc" d="M 5 24 A 18 18 0 0 1 38 32" stroke="hsl(158 64% 45%)" fill="hsl(158 64% 45% / .15)"/></svg>
+      <div class="ang-label ok" style="position:absolute; top:14px; left:44px;">Tornozelo 24°</div>
+    </div>
+  </div>
+
+  <!-- status bar -->
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="sb-right"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+  </div>
+
+  <!-- top bar -->
+  <div class="topbar">
+    <div class="round-btn"><i data-lucide="chevron-left"></i></div>
+    <div class="title">
+      <div class="tn">Carla Ferreira</div>
+      <div class="ts">Agachamento · 02/06 · Sessão 12</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="round-btn"><i data-lucide="git-compare"></i></div>
+    <div class="round-btn"><i data-lucide="share-2"></i></div>
+  </div>
+
+  <!-- view toggle -->
+  <div class="view-toggle" id="viewToggle">
+    <div class="vt">FRONTAL</div>
+    <div class="vt sel">SAGITAL</div>
+    <div class="vt">POSTERIOR</div>
+  </div>
+  <div class="trial-tag">TENTATIVA 3/5</div>
+
+  <!-- video controls -->
+  <div class="controls" id="controls">
+    <div class="scrubber">
+      <div class="scrub-fill"></div>
+      <div class="scrub-mark" style="left:15%;"></div>
+      <div class="scrub-mark" style="left:42%; background:hsl(45 93% 52%);"></div>
+      <div class="scrub-mark" style="left:68%;"></div>
+      <div class="scrub-handle"></div>
+    </div>
+    <div class="ctl-row">
+      <span class="timecode">00:04.21 / 00:10.05</span>
+      <div class="ctl-spacer"></div>
+      <button class="ctl-btn"><i data-lucide="rewind"></i></button>
+      <button class="play" id="play"><i data-lucide="play"></i></button>
+      <button class="ctl-btn"><i data-lucide="fast-forward"></i></button>
+      <div class="speed">0.5×</div>
+    </div>
+  </div>
+
+  <!-- bottom sheet -->
+  <div class="sheet" id="sheet">
+    <div class="grab" id="grab"><span></span></div>
+    <div class="sheet-head" id="sheetHead">
+      <h2>Métricas da sessão</h2>
+      <span class="toggle-ic"><i data-lucide="chevron-up"></i></span>
+    </div>
+    <div class="sheet-scroll">
+
+      <div class="metric-grid">
+        <div class="metric ok">
+          <div class="l">ROM joelho</div>
+          <div class="v">118°</div>
+          <div class="d up"><i data-lucide="trending-up"></i> +6° vs 112°</div>
+        </div>
+        <div class="metric warn">
+          <div class="l">Valgo dinâmico</div>
+          <div class="v">+14°</div>
+          <div class="d dn"><i data-lucide="trending-up"></i> +3° pior</div>
+        </div>
+        <div class="metric">
+          <div class="l">Simetria L/R</div>
+          <div class="v">84%</div>
+          <div class="d up"><i data-lucide="trending-up"></i> +6 p.p.</div>
+        </div>
+        <div class="metric">
+          <div class="l">Dor (VAS)</div>
+          <div class="v">3/10</div>
+          <div class="d up"><i data-lucide="trending-down"></i> −2 vs 5</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="block-label">Goniometria · agachamento</div>
+        <div class="rom-table">
+          <div class="rom-row head">
+            <span class="c" style="text-align:left;">Articulação</span>
+            <span class="c">Esq</span>
+            <span class="c">Dir</span>
+            <span class="c">Δ</span>
+          </div>
+          <div class="rom-row">
+            <span class="jn">Quadril<small>flexão</small></span>
+            <span class="c">95°</span>
+            <span class="c">98°</span>
+            <span class="c up">+3°</span>
+          </div>
+          <div class="rom-row">
+            <span class="jn">Joelho<small>flexão</small></span>
+            <span class="c">118°</span>
+            <span class="c">112°</span>
+            <span class="c dn">−6°</span>
+          </div>
+          <div class="rom-row">
+            <span class="jn">Tornozelo<small>dorsiflexão</small></span>
+            <span class="c">24°</span>
+            <span class="c">22°</span>
+            <span class="c dn">−2°</span>
+          </div>
+          <div class="rom-row">
+            <span class="jn">Tronco<small>inclinação</small></span>
+            <span class="c" style="grid-column: span 3; text-align:right;">32° anterior</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="block-label">Nota clínica</div>
+        <div class="note-card">
+          <textarea placeholder="Descreva achados, compensações e conduta...">Valgo dinâmico do joelho direito no descenso, com compensação por inclinação de tronco. Paciente relata pinçada patelar ao atingir 90°.</textarea>
+          <div class="note-foot">
+            <span class="note-time">marcador 00:04.21</span>
+            <button class="save"><i data-lucide="check"></i> Salvar nota</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="home-indicator"></div>
+
+</div>
+
+<script>
+  // play toggle
+  const play=document.getElementById('play');
+  let playing=false;
+  play.addEventListener('click',()=>{ playing=!playing;
+    play.innerHTML=playing?'<i data-lucide="pause"></i>':'<i data-lucide="play"></i>';
+    if(window.lucide) lucide.createIcons();
+  });
+
+  // view toggle
+  document.querySelectorAll('#viewToggle .vt').forEach(v=>v.addEventListener('click',()=>{
+    document.querySelectorAll('#viewToggle .vt').forEach(o=>o.classList.remove('sel')); v.classList.add('sel');
+  }));
+
+  // draggable sheet
+  const sheet=document.getElementById('sheet'), grab=document.getElementById('grab'), head=document.getElementById('sheetHead');
+  const controls=document.getElementById('controls');
+  const COLLAPSED=320, EXPANDED=0;
+  let y=COLLAPSED, open=false, startY=0, startSheetY=COLLAPSED, drag=false;
+  function setY(v){ y=Math.max(EXPANDED,Math.min(COLLAPSED,v)); sheet.style.setProperty('--sheet-y',y+'px'); }
+  function applyOpen(){ sheet.classList.toggle('open',open); controls.style.bottom=open?'620px':'300px'; }
+  function snap(){ const mid=(COLLAPSED+EXPANDED)/2; open=y<mid; setY(open?EXPANDED:COLLAPSED); applyOpen(); }
+  function toggle(){ open=!open; setY(open?EXPANDED:COLLAPSED); applyOpen(); }
+  head.addEventListener('click',toggle);
+  function down(e){ drag=true; sheet.classList.add('dragging'); startY=(e.touches?e.touches[0].clientY:e.clientY); startSheetY=y; }
+  function move(e){ if(!drag)return; const cy=(e.touches?e.touches[0].clientY:e.clientY); setY(startSheetY+(cy-startY)); }
+  function up(){ if(!drag)return; drag=false; sheet.classList.remove('dragging'); snap(); }
+  grab.addEventListener('pointerdown',down); window.addEventListener('pointermove',move); window.addEventListener('pointerup',up);
+
+  if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+</script>
+</body>
+</html>

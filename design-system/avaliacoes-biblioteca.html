@@ -1,0 +1,506 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="UI Kit · Biblioteca de Avaliações (web)" subtitle="Biblioteca de templates de avaliação: cards categorizados, filtros, modal de estrutura do protocolo e modal Nova Avaliação" viewport="1280x880" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Avaliações — Biblioteca de Templates — FisioFlow Clínica</title>
+<link rel="stylesheet" href="colors_and_type.css"/>
+<link rel="stylesheet" href="ui_kits/web/screen-shell.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  /* ---- category color tokens ---- */
+  :root {
+    --c-custom: 38 92% 50%;     /* personalizado — gold */
+    --c-orto:   211 100% 50%;   /* ortopédica — blue   */
+    --c-sport:  22 90% 52%;     /* esportiva — orange  */
+    --c-posop:  158 62% 40%;    /* pós-op — green      */
+    --c-geral:  220 9% 46%;     /* geral — slate       */
+    --c-neuro:  264 55% 55%;    /* neurológica — purple*/
+    --c-resp:   190 78% 40%;    /* respiratória — cyan */
+    --c-dor:    0 74% 58%;      /* dor crônica — rose  */
+  }
+
+  .pad { position: relative; }
+  .main { overflow-y: auto; min-height: 0; padding: 20px 26px 30px; position: relative; }
+
+  /* ---- page head ---- */
+  .crumb-row { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  .crumb-row .lucide { width: 13px; height: 13px; }
+  .crumb-row .sep { opacity: .5; }
+  .page-title { font-family: var(--font-futura); font-style: oblique; font-weight: 700; font-size: 34px; letter-spacing: 0.01em; line-height: 1; margin: 12px 0 0; text-transform: uppercase; color: hsl(var(--foreground)); }
+  .page-title b { color: hsl(var(--primary)); }
+
+  /* ---- featured hero ---- */
+  .hero { margin-top: 18px; border-radius: 18px; padding: 22px 26px; display: flex; align-items: center; gap: 26px;
+          background: radial-gradient(120% 160% at 88% 10%, hsl(214 70% 22%) 0%, hsl(224 60% 11%) 55%, hsl(226 64% 8%) 100%);
+          color: #fff; overflow: hidden; position: relative; }
+  .hero::after { content: ""; position: absolute; right: -40px; top: -60px; width: 240px; height: 240px; border-radius: 50%;
+                 background: radial-gradient(circle, hsl(var(--primary) / .55), transparent 70%); filter: blur(8px); }
+  .hero-glyph { width: 54px; height: 54px; border-radius: 15px; background: hsl(var(--primary) / .22); border: 1px solid hsl(var(--primary) / .4); display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; z-index: 1; }
+  .hero-glyph .lucide { width: 26px; height: 26px; color: #fff; }
+  .hero-main { z-index: 1; }
+  .hero-eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.16em; color: hsl(var(--primary) / .9); display: inline-flex; align-items: center; gap: 6px; }
+  .hero-eyebrow .lucide { width: 13px; height: 13px; }
+  .hero h2 { color: #fff; font-size: 21px; font-weight: 800; letter-spacing: -0.01em; margin: 5px 0 3px; }
+  .hero p { color: hsl(214 30% 80%); font-size: 13px; font-weight: 500; max-width: 460px; }
+  .hero-stats { margin-left: auto; display: flex; gap: 26px; z-index: 1; }
+  .hstat { text-align: right; }
+  .hstat .v { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+  .hstat .l { font-size: 9.5px; font-weight: 800; letter-spacing: 0.1em; color: hsl(214 25% 68%); margin-top: 5px; }
+  .hero-cta { display: flex; flex-direction: column; gap: 8px; z-index: 1; }
+  .hbtn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 11px; font-size: 12.5px; font-weight: 800; cursor: pointer; border: 1px solid transparent; white-space: nowrap; font-family: var(--font-sans); }
+  .hbtn .lucide { width: 15px; height: 15px; }
+  .hbtn.solid { background: #fff; color: hsl(224 60% 12%); }
+  .hbtn.ghost { background: hsl(0 0% 100% / .08); border-color: hsl(0 0% 100% / .22); color: #fff; }
+  .hbtn.ghost:hover { background: hsl(0 0% 100% / .16); }
+
+  /* ---- filter rail ---- */
+  .toolbar { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
+  .toolbar .search { flex: 1; max-width: 320px; }
+  .tabs-wrap { position: relative; flex: 1; overflow: hidden; }
+  .tabs { display: flex; gap: 7px; overflow-x: auto; padding: 2px; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { display: inline-flex; align-items: center; gap: 7px; padding: 9px 15px; border-radius: 11px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); font-size: 12px; font-weight: 800; letter-spacing: 0.02em; color: hsl(var(--muted-foreground)); cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+  .tab .lucide { width: 14px; height: 14px; }
+  .tab:hover { border-color: hsl(var(--primary) / .4); color: hsl(var(--primary)); }
+  .tab.on { background: hsl(var(--primary)); border-color: hsl(var(--primary)); color: #fff; box-shadow: var(--shadow-glow-primary); }
+
+  .results-bar { display: flex; align-items: center; margin: 18px 0 12px; gap: 10px; }
+  .results-bar .ct { font-size: 12px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  .results-bar .ct b { color: hsl(var(--foreground)); font-variant-numeric: tabular-nums; }
+  .sort { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: hsl(var(--muted-foreground)); cursor: pointer; }
+  .sort b { color: hsl(var(--foreground)); }
+  .sort .lucide { width: 13px; height: 13px; }
+
+  /* ---- cards grid ---- */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .acard { --c: var(--c-geral); position: relative; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; padding: 16px 17px 14px; display: flex; flex-direction: column; gap: 11px; cursor: pointer; transition: box-shadow .15s, transform .15s, border-color .15s; border-top: 3px solid hsl(var(--c)); }
+  .acard:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: hsl(var(--c) / .4); }
+
+  .acard-top { display: flex; align-items: center; gap: 8px; }
+  .cat { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; font-size: 9.5px; font-weight: 800; letter-spacing: 0.07em; background: hsl(var(--c) / .12); color: hsl(var(--c)); }
+  .cat .lucide { width: 12px; height: 12px; }
+  .fields { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  .fields .lucide { width: 13px; height: 13px; }
+
+  .acard-title { font-size: 16.5px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.2; color: hsl(var(--foreground)); }
+  .acard-desc { font-size: 12.5px; font-weight: 500; color: hsl(var(--muted-foreground)); line-height: 1.5; flex: 1; }
+
+  .acard-foot { display: flex; align-items: center; gap: 4px; border-top: 1px solid hsl(var(--border) / .8); padding-top: 12px; margin-top: 2px; }
+  .iconbtn { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: hsl(var(--muted-foreground)); cursor: pointer; }
+  .iconbtn:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+  .iconbtn .lucide { width: 15px; height: 15px; }
+  .use-btn { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; padding: 9px 15px; border-radius: 10px; background: hsl(var(--primary)); color: #fff; font-size: 11.5px; font-weight: 800; letter-spacing: 0.05em; cursor: pointer; border: none; font-family: var(--font-sans); box-shadow: var(--shadow-glow-primary); }
+  .use-btn:hover { background: hsl(211 100% 46%); }
+  .use-btn .lucide { width: 14px; height: 14px; }
+
+  /* category variants */
+  .acard.custom { --c: var(--c-custom); }
+  .acard.orto   { --c: var(--c-orto); }
+  .acard.sport  { --c: var(--c-sport); }
+  .acard.posop  { --c: var(--c-posop); }
+  .acard.geral  { --c: var(--c-geral); }
+  .acard.neuro  { --c: var(--c-neuro); }
+  .acard.resp   { --c: var(--c-resp); }
+  .acard.dor    { --c: var(--c-dor); }
+
+  /* ============ MODALS ============ */
+  .overlay { position: absolute; inset: 0; background: hsl(224 40% 8% / .55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; z-index: 40; padding: 30px; }
+  .overlay.open { display: flex; }
+  .modal { background: hsl(var(--card)); border-radius: 22px; box-shadow: 0 30px 70px hsl(224 40% 6% / .45); position: relative; opacity: 1; transform: scale(.975); transition: transform .18s ease; }
+  .overlay.open .modal { transform: none; }
+  .modal-x { position: absolute; left: 22px; bottom: -42px; width: 30px; height: 30px; border-radius: 50%; background: hsl(0 0% 100% / .9); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: hsl(var(--foreground)); }
+  .modal-x .lucide { width: 16px; height: 16px; }
+
+  /* ---- detail modal ---- */
+  .m-detail { width: 720px; max-height: 100%; overflow-y: auto; padding: 28px 30px 24px; }
+  .md-top { display: flex; align-items: center; }
+  .md-tag { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; background: hsl(var(--c-posop) / .12); color: hsl(var(--c-posop)); }
+  .md-tag .lucide { width: 12px; height: 12px; }
+  .md-gold { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 0.07em; border: 1px solid hsl(var(--c-custom) / .4); background: hsl(var(--c-custom) / .08); color: hsl(38 80% 38%); }
+  .md-gold .lucide { width: 13px; height: 13px; }
+  .md-head { display: flex; align-items: flex-start; gap: 12px; margin-top: 16px; }
+  .md-head h2 { font-size: 27px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
+  .md-edit { margin-left: auto; width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: hsl(var(--primary)); background: hsl(var(--primary) / .1); cursor: pointer; }
+  .md-edit .lucide { width: 16px; height: 16px; }
+  .md-sub { font-size: 14px; font-weight: 500; color: hsl(var(--muted-foreground)); margin-top: 8px; }
+
+  .md-refs { display: flex; align-items: center; gap: 12px; border: 1px solid hsl(var(--border)); border-radius: 12px; padding: 12px 15px; margin-top: 18px; background: hsl(var(--muted) / .4); }
+  .md-refs .lbl { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; color: hsl(var(--muted-foreground)); flex-shrink: 0; }
+  .md-refs .lbl .lucide { width: 14px; height: 14px; }
+  .md-refs .txt { font-size: 11.5px; font-style: italic; font-weight: 500; color: hsl(var(--foreground)); line-height: 1.4; }
+
+  .md-struct-head { display: flex; align-items: center; margin: 22px 0 12px; }
+  .md-struct-head h3 { font-size: 13px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
+  .md-struct-head .count { margin-left: auto; padding: 4px 12px; border-radius: 999px; background: hsl(var(--primary) / .1); color: hsl(var(--primary)); font-size: 11px; font-weight: 800; }
+
+  .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .frow { display: flex; align-items: center; gap: 12px; border: 1px solid hsl(var(--border)); border-radius: 12px; padding: 12px 14px; }
+  .frow .n { width: 26px; height: 26px; border-radius: 8px; background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .frow .fn { flex: 1; min-width: 0; }
+  .frow .fn .nm { font-size: 13px; font-weight: 700; line-height: 1.2; }
+  .frow .fn .tp { font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em; color: hsl(var(--muted-foreground)); margin-top: 3px; }
+  .frow .req { width: 7px; height: 7px; border-radius: 50%; background: hsl(var(--destructive)); flex-shrink: 0; }
+
+  .md-foot { display: flex; gap: 10px; align-items: stretch; border-top: 1px solid hsl(var(--border)); padding-top: 18px; margin-top: 22px; }
+  .mbtn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 13px 20px; border-radius: 12px; font-size: 13.5px; font-weight: 800; cursor: pointer; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); color: hsl(var(--foreground)); font-family: var(--font-sans); }
+  .mbtn:hover { background: hsl(var(--muted)); }
+  .mbtn .lucide { width: 16px; height: 16px; }
+  .mbtn.primary { flex: 1; background: hsl(var(--primary)); color: #fff; border-color: hsl(var(--primary)); box-shadow: var(--shadow-glow-primary); }
+  .mbtn.primary:hover { background: hsl(211 100% 46%); }
+
+  /* ---- nova avaliação modal ---- */
+  .m-new { width: 420px; padding: 30px 30px 26px; }
+  .mn-glyph { width: 52px; height: 52px; border-radius: 15px; background: hsl(var(--primary) / .12); display: flex; align-items: center; justify-content: center; }
+  .mn-glyph .lucide { width: 24px; height: 24px; color: hsl(var(--primary)); }
+  .m-new h2 { font-size: 23px; font-weight: 800; letter-spacing: -0.01em; margin-top: 18px; }
+  .m-new .lead { font-size: 13.5px; font-weight: 500; color: hsl(var(--muted-foreground)); line-height: 1.5; margin-top: 8px; }
+  .m-new .lead b { color: hsl(var(--foreground)); font-weight: 800; }
+  .field-lbl { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; color: hsl(var(--muted-foreground)); margin: 22px 0 9px; }
+  .select { display: flex; align-items: center; gap: 12px; border: 1px solid hsl(var(--border)); border-radius: 12px; padding: 11px 13px; cursor: pointer; position: relative; }
+  .select:hover { border-color: hsl(var(--primary) / .4); }
+  .select .av-ic { width: 34px; height: 34px; border-radius: 10px; background: hsl(var(--muted)); display: flex; align-items: center; justify-content: center; color: hsl(var(--muted-foreground)); }
+  .select .av-ic .lucide { width: 17px; height: 17px; }
+  .select .pick .badge-sel { font-size: 8.5px; font-weight: 800; letter-spacing: 0.1em; color: hsl(var(--muted-foreground)); }
+  .select .pick .ph { font-size: 13.5px; font-weight: 700; color: hsl(var(--foreground)); margin-top: 1px; }
+  .select .pick .hint { font-size: 11px; font-weight: 500; color: hsl(var(--muted-foreground)); }
+  .select .chev { margin-left: auto; color: hsl(var(--muted-foreground)); }
+  .select .chev .lucide { width: 16px; height: 16px; }
+
+  .radio-opt { display: flex; align-items: center; gap: 13px; border: 1px solid hsl(var(--border)); border-radius: 12px; padding: 13px 15px; cursor: pointer; margin-bottom: 9px; }
+  .radio-opt:hover { border-color: hsl(var(--primary) / .4); }
+  .radio-opt.on { border-color: hsl(var(--primary)); background: hsl(var(--primary) / .05); }
+  .radio-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid hsl(var(--border)); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .radio-opt.on .radio-dot { border-color: hsl(var(--primary)); }
+  .radio-opt.on .radio-dot::after { content: ""; width: 9px; height: 9px; border-radius: 50%; background: hsl(var(--primary)); }
+  .radio-opt .rt { font-size: 13.5px; font-weight: 800; line-height: 1.2; }
+  .radio-opt .rs { font-size: 11.5px; font-weight: 500; color: hsl(var(--muted-foreground)); margin-top: 2px; }
+  .mn-foot { display: flex; gap: 10px; margin-top: 22px; }
+  .mn-foot .mbtn { flex: 1; padding: 12px 18px; }
+</style>
+</head>
+<body>
+<div class="pad">
+
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><img src="assets/activity-logo.svg" alt=""/></div>
+      <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div>
+        <div class="sb-group-label">ATENDIMENTO</div>
+        <div class="sb-item"><i data-lucide="calendar-days"></i> AGENDA</div>
+        <div class="sb-item"><i data-lucide="users"></i> PACIENTES</div>
+        <div class="sb-item"><i data-lucide="message-circle"></i> CRM · WHATSAPP</div>
+      </div>
+      <div>
+        <div class="sb-group-label">CLÍNICA</div>
+        <div class="sb-item is-active"><i data-lucide="clipboard-check"></i> AVALIAÇÕES</div>
+        <div class="sb-item"><i data-lucide="dumbbell"></i> EXERCÍCIOS</div>
+        <div class="sb-item"><i data-lucide="clipboard-list"></i> PROTOCOLOS</div>
+        <div class="sb-item"><i data-lucide="flask-conical"></i> TESTES CLÍNICOS</div>
+        <div class="sb-item"><i data-lucide="camera"></i> BIOMECÂNICA</div>
+      </div>
+      <div>
+        <div class="sb-group-label">GESTÃO &amp; OPERAÇÃO</div>
+        <div class="sb-item"><i data-lucide="layout-dashboard"></i> BOARDS</div>
+        <div class="sb-item"><i data-lucide="wallet"></i> FINANCEIRO</div>
+        <div class="sb-item"><i data-lucide="book-open"></i> WIKI CLÍNICA</div>
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-item"><i data-lucide="settings"></i> CONFIGURAÇÕES</div>
+      <div class="sb-item"><i data-lucide="log-out"></i> SAIR</div>
+    </div>
+  </aside>
+
+  <div class="content">
+    <div class="topbar">
+      <div class="crumbs"><strong>Avaliações</strong></div>
+      <div class="topbar-right">
+        <button class="btn"><i data-lucide="upload"></i> Importar</button>
+        <button class="btn primary"><i data-lucide="plus"></i> Novo Template</button>
+      </div>
+    </div>
+
+    <div class="main" data-screen-label="Biblioteca de Avaliações">
+      <div class="crumb-row"><i data-lucide="home"></i> Início <span class="sep">›</span> Avaliações <span class="sep">›</span> Templates</div>
+      <h1 class="page-title">Biblioteca de <b>Avaliações</b></h1>
+
+      <!-- featured hero -->
+      <div class="hero">
+        <div class="hero-glyph"><i data-lucide="sparkles"></i></div>
+        <div class="hero-main">
+          <span class="hero-eyebrow"><i data-lucide="badge-check"></i> CURADORIA PADRÃO OURO</span>
+          <h2>Modelos validados, prontos para aplicar</h2>
+          <p>Protocolos com evidência, campos estruturados e cadência de reteste — ou gere um template sob medida com a IA clínica.</p>
+        </div>
+        <div class="hero-stats">
+          <div class="hstat"><div class="v">18</div><div class="l">TEMPLATES</div></div>
+          <div class="hstat"><div class="v">9</div><div class="l">PADRÃO OURO</div></div>
+          <div class="hstat"><div class="v">7,4</div><div class="l">CAMPOS MÉD.</div></div>
+        </div>
+        <div class="hero-cta">
+          <button class="hbtn solid"><i data-lucide="wand-2"></i> Gerar com IA</button>
+          <button class="hbtn ghost"><i data-lucide="plus"></i> Criar do zero</button>
+        </div>
+      </div>
+
+      <!-- toolbar -->
+      <div class="toolbar">
+        <div class="search"><i data-lucide="search"></i> Buscar template, categoria ou campo...</div>
+        <div class="tabs-wrap">
+          <div class="tabs">
+            <span class="tab on"><i data-lucide="layout-grid"></i> Todos</span>
+            <span class="tab"><i data-lucide="star"></i> Meus modelos</span>
+            <span class="tab"><i data-lucide="activity"></i> Ortopédica</span>
+            <span class="tab"><i data-lucide="zap"></i> Esportiva</span>
+            <span class="tab"><i data-lucide="stethoscope"></i> Pós-op</span>
+            <span class="tab"><i data-lucide="clipboard-list"></i> Geral</span>
+            <span class="tab"><i data-lucide="brain"></i> Neurológica</span>
+            <span class="tab"><i data-lucide="wind"></i> Respiratória</span>
+            <span class="tab"><i data-lucide="flame"></i> Dor crônica</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="results-bar">
+        <span class="ct">Mostrando <b>9</b> de <b>18</b> templates</span>
+        <span class="badge info">CURADORIA CLÍNICA — modelos Padrão Ouro trazem referências, campos e cadência sugerida</span>
+        <span class="sort"><i data-lucide="arrow-up-down"></i> Ordenar: <b>Mais aplicados</b></span>
+      </div>
+
+      <!-- cards -->
+      <div class="grid">
+
+        <div class="acard custom" data-detail>
+          <div class="acard-top"><span class="cat"><i data-lucide="star"></i> PERSONALIZADO</span><span class="fields"><i data-lucide="layout-grid"></i> 11 campos</span></div>
+          <div class="acard-title">Avaliação Ortopédica (Padrão Ouro)</div>
+          <p class="acard-desc">Estrutura completa para diagnóstico cinético-funcional ortopédico com triagem de Red Flags.</p>
+          <div class="acard-foot">
+            <span class="iconbtn" data-detail><i data-lucide="eye"></i></span>
+            <span class="iconbtn"><i data-lucide="pencil"></i></span>
+            <span class="iconbtn"><i data-lucide="ellipsis-vertical"></i></span>
+            <button class="use-btn" data-new>USAR TEMPLATE <i data-lucide="play"></i></button>
+          </div>
+        </div>
+
+        <div class="acard custom" data-detail>
+          <div class="acard-top"><span class="cat"><i data-lucide="star"></i> PERSONALIZADO</span><span class="fields"><i data-lucide="layout-grid"></i> 9 campos</span></div>
+          <div class="acard-title">Triagem: Hipermobilidade &amp; Dor Crônica</div>
+          <p class="acard-desc">Avaliação sistêmica para pacientes com dor persistente e suspeita de SED/HSD.</p>
+          <div class="acard-foot">
+            <span class="iconbtn" data-detail><i data-lucide="eye"></i></span>
+            <span class="iconbtn"><i data-lucide="pencil"></i></span>
+            <span class="iconbtn"><i data-lucide="ellipsis-vertical"></i></span>
+            <button class="use-btn" data-new>USAR TEMPLATE <i data-lucide="play"></i></button>
+          </div>
+        </div>
+
+        <div class="acard orto" data-detail>
+          <div class="acard-top"><span class="cat"><i data-lucide="activity"></i> ORTOPÉDICA</span><span class="fields"><i data-lucide="layout-grid"></i> 11 campos</span></div>
+          <div class="acard-title">Avaliação Ortopédica (Padrão Ouro)</div>
+          <p class="acard-desc">Estrutura completa para diagnóstico cinético-funcional ortopédico com triagem de Red Flags.</p>
+          <div class="acard-foot">
+            <span class="iconbtn" data-detail><i data-lucide="eye"></i></span>
+            <span class="iconbtn"><i data-lucide="pencil"></i></span>
+            <span class="iconbtn"><i data-lucide="ellipsis-vertical"></i></span>
+            <button class="use-btn" data-new>USAR TEMPLATE <i data-lucide="play"></i></button>
+          </div>
+        </div>
+
+        <div class="acard sport" data-detail>
+          <div class="acard-top"><span class="cat"><i data-lucide="zap"></i> ESPORTIVA</span><span class="fields"><i data-lucide="layout-grid"></i> 8 campos</span></div>
+          <div class="acard-title">Avaliação Fisioterapia Esportiva</div>
+          <p class="acard-desc">Focada em Return-to-Sport (RTS), prontidão atlética e prevenção de relesão.</p>
+          <div class="acard-foot">
+            <span class="iconbtn" data-detail><i data-lucide="eye"></i></span>
+            <span class="iconbtn"><i data-lucide="pencil"></i></span>
+            <span class="iconbtn"><i data-lucide="ellipsis-vertical"></i></span>
+            <button class="use-btn" data-new>USAR TEMPLATE <i data-lucide="play"></i></button>
+          </div>
+        </div>
+
+        <div class="acard posop" data-detail>
+          <div class="acard-top"><span class="cat"><i data-lucide="stethoscope"></i> PÓS-OP</span><span class="fields"><i data-lucide="layout-grid"></i> 8 campos</span></div>
+          <div class="acard-title">Avaliação Pós-Operatória Ortopédica</div>
+          <p class="acard-desc">Protocolo de segurança, monitoramento cicatricial e progressão de carga.</p>
+          <div class="acard-foot">
+            <span class="iconbtn" data-detail><i data-lucide="eye"></i></span>
+            <span class="iconbtn"><i data-lucide="pencil"></i></span>
+            <span class="iconbtn"><i data-lucide="ellipsis-vertical"></i></span>
+            <button class="use-btn" data-new>USAR TEMPLATE <i data-lucide="play"></i></button>
+          </div>
+        </div>
+
+        <div class="acard geral" data-detail>
+          <div class="acard-top"><span class="cat"><i data-lucide="clipboard-list"></i> GERAL</span><span class="fields"><i data-lucide="layout-grid"></i> 6 campos</span></div>
+          <div class="acard-title">Avaliação SOAP Passo-a-Passo</div>
+          <p class="acard-desc">Avaliação guiada dividida por Subjetivo, Objetivo, Avaliação e Plano.</p>
+          <div class="acard-foot">
+            <span class="iconbtn" data-detail><i data-lucide="eye"></i></span>
+            <span class="iconbtn"><i data-lucide="pencil"></i></span>
+            <span class="iconbtn"><i data-lucide="ellipsis-vertical"></i></span>
+            <button class="use-btn" data-new>USAR TEMPLATE <i data-lucide="play"></i></button>
+          </div>
+        </div>
+
+        <div class="acard neuro" data-detail>
+          <div class="acard-top"><span class="cat"><i data-lucide="brain"></i> NEUROLÓGICA</span><span class="fields"><i data-lucide="layout-grid"></i> 7 campos</span></div>
+          <div class="acard-title">Avaliação Neurológica Funcional</div>
+          <p class="acard-desc">Tônus, marcha, equilíbrio e escalas funcionais para reabilitação neuromotora.</p>
+          <div class="acard-foot">
+            <span class="iconbtn" data-detail><i data-lucide="eye"></i></span>
+            <span class="iconbtn"><i data-lucide="pencil"></i></span>
+            <span class="iconbtn"><i data-lucide="ellipsis-vertical"></i></span>
+            <button class="use-btn" data-new>USAR TEMPLATE <i data-lucide="play"></i></button>
+          </div>
+        </div>
+
+        <div class="acard resp" data-detail>
+          <div class="acard-top"><span class="cat"><i data-lucide="wind"></i> RESPIRATÓRIA</span><span class="fields"><i data-lucide="layout-grid"></i> 6 campos</span></div>
+          <div class="acard-title">Avaliação Respiratória</div>
+          <p class="acard-desc">Ausculta, padrão ventilatório, PImáx/PEmáx e capacidade funcional cardiorrespiratória.</p>
+          <div class="acard-foot">
+            <span class="iconbtn" data-detail><i data-lucide="eye"></i></span>
+            <span class="iconbtn"><i data-lucide="pencil"></i></span>
+            <span class="iconbtn"><i data-lucide="ellipsis-vertical"></i></span>
+            <button class="use-btn" data-new>USAR TEMPLATE <i data-lucide="play"></i></button>
+          </div>
+        </div>
+
+        <div class="acard dor" data-detail>
+          <div class="acard-top"><span class="cat"><i data-lucide="flame"></i> DOR CRÔNICA</span><span class="fields"><i data-lucide="layout-grid"></i> 6 campos</span></div>
+          <div class="acard-title">Manejo de Dor Persistente</div>
+          <p class="acard-desc">Mapa corporal, escalas PSEQ e PCS, e metas de função para dor de longa duração.</p>
+          <div class="acard-foot">
+            <span class="iconbtn" data-detail><i data-lucide="eye"></i></span>
+            <span class="iconbtn"><i data-lucide="pencil"></i></span>
+            <span class="iconbtn"><i data-lucide="ellipsis-vertical"></i></span>
+            <button class="use-btn" data-new>USAR TEMPLATE <i data-lucide="play"></i></button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============ MODAL · DETALHE DO TEMPLATE ============ -->
+    <div class="overlay" id="ov-detail">
+      <div class="modal m-detail" data-screen-label="Modal Detalhe do Template">
+        <div class="md-top">
+          <span class="md-tag"><i data-lucide="stethoscope"></i> PÓS-OP</span>
+          <span class="md-gold"><i data-lucide="badge-check"></i> PROTOCOLO PADRÃO OURO</span>
+        </div>
+        <div class="md-head">
+          <h2>Avaliação Pós-Operatória Ortopédica</h2>
+          <span class="md-edit"><i data-lucide="pencil"></i></span>
+        </div>
+        <p class="md-sub">Protocolo de segurança, monitoramento cicatricial e progressão de carga.</p>
+
+        <div class="md-refs">
+          <span class="lbl"><i data-lucide="info"></i> REFERÊNCIAS</span>
+          <span class="txt">Standard Rehabilitation Protocols (Orthopedic Trauma Association); Manske (2024) — Post-Surgical Rehabilitation.</span>
+        </div>
+
+        <div class="md-struct-head">
+          <h3>Estrutura do Protocolo</h3>
+          <span class="count">8 Campos</span>
+        </div>
+
+        <div class="fgrid">
+          <div class="frow"><span class="n">1</span><div class="fn"><div class="nm">Data da Cirurgia</div><div class="tp">DATE</div></div><span class="req"></span></div>
+          <div class="frow"><span class="n">2</span><div class="fn"><div class="nm">Médico Cirurgião</div><div class="tp">TEXTO CURTO</div></div></div>
+          <div class="frow"><span class="n">3</span><div class="fn"><div class="nm">Procedimento Detalhado</div><div class="tp">TEXTAREA</div></div><span class="req"></span></div>
+          <div class="frow"><span class="n">4</span><div class="fn"><div class="nm">Protocolo Médico e Restrições</div><div class="tp">TEXTAREA</div></div><span class="req"></span></div>
+          <div class="frow"><span class="n">5</span><div class="fn"><div class="nm">Sinais de Alerta (TVP/Infecção)</div><div class="tp">MULTISELECT</div></div><span class="req"></span></div>
+          <div class="frow"><span class="n">6</span><div class="fn"><div class="nm">Nível de Edema (Grau de Cacifo)</div><div class="tp">ESCALA</div></div></div>
+          <div class="frow"><span class="n">7</span><div class="fn"><div class="nm">Estado da Cicatriz / Incisão</div><div class="tp">OPÇÃO ÚNICA</div></div></div>
+          <div class="frow"><span class="n">8</span><div class="fn"><div class="nm">Auxiliares de Marcha e Órteses</div><div class="tp">LISTA</div></div></div>
+        </div>
+
+        <div class="md-foot">
+          <button class="mbtn" data-close>Fechar</button>
+          <button class="mbtn"><i data-lucide="copy"></i> Personalizar Cópia</button>
+          <button class="mbtn primary" data-new><i data-lucide="play"></i> Usar Template</button>
+        </div>
+        <button class="modal-x" data-close><i data-lucide="x"></i></button>
+      </div>
+    </div>
+
+    <!-- ============ MODAL · NOVA AVALIAÇÃO ============ -->
+    <div class="overlay" id="ov-new">
+      <div class="modal m-new" data-screen-label="Modal Nova Avaliação">
+        <div class="mn-glyph"><i data-lucide="play"></i></div>
+        <h2>Nova Avaliação</h2>
+        <p class="lead">Selecione um paciente e quando a avaliação será realizada usando o template <b>"Avaliação Pós-Operatória Ortopédica"</b>.</p>
+
+        <div class="field-lbl">BUSCAR PACIENTE</div>
+        <div class="select">
+          <span class="av-ic"><i data-lucide="user"></i></span>
+          <div class="pick">
+            <div class="badge-sel">SELEÇÃO</div>
+            <div class="ph">Selecione o paciente</div>
+            <div class="hint">Busque por nome, CPF ou telefone</div>
+          </div>
+          <span class="chev"><i data-lucide="chevrons-up-down"></i></span>
+        </div>
+
+        <div class="field-lbl">QUANDO REALIZAR</div>
+        <div class="radio-opt on">
+          <span class="radio-dot"></span>
+          <div><div class="rt">Realizar agora</div><div class="rs">A ficha será aberta para preenchimento.</div></div>
+        </div>
+        <div class="radio-opt">
+          <span class="radio-dot"></span>
+          <div><div class="rt">Agendar para depois</div><div class="rs">A avaliação ficará visível no perfil do paciente.</div></div>
+        </div>
+
+        <div class="mn-foot">
+          <button class="mbtn" data-close>Cancelar</button>
+          <button class="mbtn primary">Criar e Preencher <i data-lucide="arrow-right"></i></button>
+        </div>
+        <button class="modal-x" data-close><i data-lucide="x"></i></button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+
+  const ovDetail = document.getElementById('ov-detail');
+  const ovNew = document.getElementById('ov-new');
+  function close(){ ovDetail.classList.remove('open'); ovNew.classList.remove('open'); }
+
+  document.querySelectorAll('[data-detail]').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('.use-btn') || e.target.closest('[data-new]')) return;
+      e.stopPropagation();
+      ovNew.classList.remove('open');
+      ovDetail.classList.add('open');
+    });
+  });
+  document.querySelectorAll('[data-new]').forEach(el => {
+    el.addEventListener('click', e => { e.stopPropagation(); ovDetail.classList.remove('open'); ovNew.classList.add('open'); });
+  });
+  document.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); close(); }));
+  [ovDetail, ovNew].forEach(ov => ov.addEventListener('click', e => { if (e.target === ov) close(); }));
+
+  // radio toggle in nova avaliação
+  document.querySelectorAll('#ov-new .radio-opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      document.querySelectorAll('#ov-new .radio-opt').forEach(o => o.classList.remove('on'));
+      opt.classList.add('on');
+    });
+  });
+
+  // filter tabs
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+    t.classList.add('on');
+  }));
+</script>
+</body>
+</html>

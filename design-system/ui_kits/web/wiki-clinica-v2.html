@@ -1,0 +1,814 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="UI Kit · Wiki Clínica v2 (redesign)" subtitle="Redesign 'Biblioteca Clínica': hero de busca semântica, lista de diretrizes com spine de evidência, detalhe editorial, drawer de edição e modal Novo Termo — tudo clicável" viewport="1320x920" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Wiki Clínica v2 — FisioFlow</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<link rel="stylesheet" href="screen-shell.css"/>
+<link rel="stylesheet" href="wiki-v2.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+<div class="pad">
+
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><img src="../../assets/activity-logo.svg" alt=""/></div>
+      <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div>
+        <div class="sb-group-label">ATENDIMENTO</div>
+        <div class="sb-item"><i data-lucide="calendar-days"></i> AGENDA</div>
+        <div class="sb-item"><i data-lucide="users"></i> PACIENTES</div>
+        <div class="sb-item"><i data-lucide="message-circle"></i> CRM · WHATSAPP</div>
+      </div>
+      <div>
+        <div class="sb-group-label">CLÍNICA</div>
+        <div class="sb-item"><i data-lucide="clipboard-check"></i> AVALIAÇÕES</div>
+        <div class="sb-item"><i data-lucide="dumbbell"></i> EXERCÍCIOS</div>
+        <div class="sb-item"><i data-lucide="clipboard-list"></i> PROTOCOLOS</div>
+        <div class="sb-item"><i data-lucide="flask-conical"></i> TESTES CLÍNICOS</div>
+        <div class="sb-item"><i data-lucide="camera"></i> BIOMECÂNICA</div>
+      </div>
+      <div>
+        <div class="sb-group-label">GESTÃO &amp; OPERAÇÃO</div>
+        <div class="sb-item"><i data-lucide="layout-dashboard"></i> BOARDS</div>
+        <div class="sb-item"><i data-lucide="wallet"></i> FINANCEIRO</div>
+        <div class="sb-item is-active"><i data-lucide="book-open"></i> WIKI CLÍNICA</div>
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-item"><i data-lucide="settings"></i> CONFIGURAÇÕES</div>
+      <div class="sb-item"><i data-lucide="log-out"></i> SAIR</div>
+    </div>
+  </aside>
+
+  <div class="content">
+    <div class="topbar">
+      <div class="crumbs">Início <i data-lucide="chevron-right"></i> <strong>Wiki Clínica</strong></div>
+      <div class="topbar-right">
+        <button class="btn"><i data-lucide="history"></i> Sincronizar</button>
+        <button class="btn primary"><i data-lucide="plus"></i> Nova Diretriz</button>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <!-- ============ HERO PERSISTENTE ============ -->
+      <div class="hero">
+        <div class="wm"><i data-lucide="library-big"></i></div>
+        <div class="hero-top">
+          <div class="pic"><i data-lucide="library"></i></div>
+          <div>
+            <h1>Biblioteca Clínica</h1>
+            <div class="sub">Diretrizes curadas, evidência indexada e o conhecimento vivo da clínica — em um só lugar.</div>
+          </div>
+          <div class="hero-stats">
+            <div class="hstat"><b>39</b><span>DIRETRIZES</span></div>
+            <div class="hstat"><b class="teal">64%</b><span>VERIFICADAS</span></div>
+            <div class="hstat"><b class="amber">5</b><span>PENDENTES</span></div>
+          </div>
+        </div>
+        <div class="hero-search">
+          <i data-lucide="search" class="lead"></i>
+          <span class="ph">Pergunte ou busque: "critério de alta para corrida pós-LCA"...</span>
+          <span class="ai-chip"><i data-lucide="sparkles"></i> IA SEMÂNTICA</span>
+          <span class="go"><i data-lucide="send"></i> Buscar</span>
+        </div>
+        <div class="hero-tabs">
+          <span class="htab on" data-goto="dashboard"><i data-lucide="layout-grid"></i> Dashboard</span>
+          <span class="htab" data-goto="hub"><i data-lucide="brain"></i> AI Hub</span>
+          <span class="htab" data-goto="artigos"><i data-lucide="file-text"></i> Artigos</span>
+          <span class="htab" data-goto="dicionario"><i data-lucide="languages"></i> Dicionário</span>
+          <span class="gap"></span>
+          <span class="htab"><i data-lucide="git-branch"></i> Trilhas <i data-lucide="chevron-down" class="chev"></i></span>
+          <span class="htab"><i data-lucide="clock"></i> Acesso Rápido <i data-lucide="chevron-down" class="chev"></i></span>
+        </div>
+      </div>
+
+      <!-- ============ VIEW: DASHBOARD ============ -->
+      <section class="view on" data-view="dashboard" data-screen-label="Wiki v2 · Dashboard">
+        <div class="fbar">
+          <div class="sel"><i data-lucide="sliders-horizontal"></i> Especialidade: Todas <i data-lucide="chevron-down"></i></div>
+          <span class="div"></span>
+          <span class="fchip on">Todas as fontes</span>
+          <span class="fchip">Diretriz Clínica</span>
+          <span class="fchip">Consenso</span>
+          <span class="fchip">Revisão Sistemática</span>
+          <span class="div"></span>
+          <span class="fchip on teal">Todos</span>
+          <span class="fchip">Verificados</span>
+          <span class="fchip">Pendentes</span>
+          <div class="end">
+            <span class="icon-btn on"><i data-lucide="rows-3"></i></span>
+            <span class="icon-btn"><i data-lucide="layout-grid"></i></span>
+            <span class="icon-btn"><i data-lucide="share-2"></i></span>
+          </div>
+        </div>
+
+        <div class="dash">
+          <div class="glist">
+            <div class="ggroup">
+              <div class="ggroup-hd"><span class="eyebrow">Pós-operatório Esportivo</span><span class="n">2</span><span class="line"></span></div>
+
+              <div class="g-row" data-open="article">
+                <span class="spine"></span>
+                <div class="gmain">
+                  <h3>Effectiveness of early versus delayed rehabilitation following rotator cuff repair</h3>
+                  <div class="gmeta">
+                    <span class="badge ok"><i data-lucide="shield-check" style="width:10px;height:10px;"></i> REVISÃO SISTEM.</span>
+                    <span class="m"><i data-lucide="locate"></i> OMBRO</span>
+                    <span class="m"><i data-lucide="book-marked"></i> PLOS ONE</span>
+                  </div>
+                  <div class="gkf"><i data-lucide="quote"></i><p>Mobilização precoce melhora ROM inicial após reparo do manguito, sem aumentar risco de re-ruptura.</p></div>
+                </div>
+                <div class="gside">
+                  <span class="badge info top-badge">CERTIFICADA</span>
+                  <span class="yr"><i data-lucide="calendar"></i> 2021</span>
+                </div>
+                <div class="gacts">
+                  <span class="icon-btn" data-drawer="open" title="Editar"><i data-lucide="pencil"></i></span>
+                  <span class="icon-btn" title="Modo Estudo"><i data-lucide="book-open"></i></span>
+                  <span class="icon-btn" title="Fonte"><i data-lucide="external-link"></i></span>
+                </div>
+              </div>
+
+              <div class="g-row" data-open="article">
+                <span class="spine"></span>
+                <div class="gmain">
+                  <h3>Systematic review and meta-analysis of the Y-Balance Test Lower Quarter</h3>
+                  <div class="gmeta">
+                    <span class="badge ok"><i data-lucide="trending-up" style="width:10px;height:10px;"></i> REVISÃO SISTEM.</span>
+                    <span class="m"><i data-lucide="locate"></i> MEMBRO INFERIOR</span>
+                    <span class="m"><i data-lucide="book-marked"></i> IJSPT</span>
+                  </div>
+                  <div class="gkf"><i data-lucide="quote"></i><p>YBT-LQ é confiável para monitorar assimetrias funcionais e apoiar decisão de retorno ao esporte.</p></div>
+                </div>
+                <div class="gside">
+                  <span class="badge info top-badge">CERTIFICADA</span>
+                  <span class="yr"><i data-lucide="calendar"></i> 2021</span>
+                </div>
+                <div class="gacts">
+                  <span class="icon-btn" data-drawer="open" title="Editar"><i data-lucide="pencil"></i></span>
+                  <span class="icon-btn" title="Modo Estudo"><i data-lucide="book-open"></i></span>
+                  <span class="icon-btn" title="Fonte"><i data-lucide="external-link"></i></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ggroup">
+              <div class="ggroup-hd"><span class="eyebrow">Ortopedia</span><span class="n">2</span><span class="line"></span></div>
+
+              <div class="g-row" data-open="article">
+                <span class="spine blue"></span>
+                <div class="gmain">
+                  <h3>Diagnostic accuracy of clinical tests for subacromial pain syndrome</h3>
+                  <div class="gmeta">
+                    <span class="badge info"><i data-lucide="stethoscope" style="width:10px;height:10px;"></i> DIRETRIZ CLÍNICA</span>
+                    <span class="m"><i data-lucide="locate"></i> OMBRO</span>
+                    <span class="m"><i data-lucide="book-marked"></i> BJSM</span>
+                  </div>
+                  <div class="gkf"><i data-lucide="quote"></i><p>A combinação de testes clínicos supera testes isolados no diagnóstico da síndrome subacromial.</p></div>
+                </div>
+                <div class="gside">
+                  <span class="badge info top-badge">CERTIFICADA</span>
+                  <span class="yr"><i data-lucide="calendar"></i> 2012</span>
+                </div>
+                <div class="gacts">
+                  <span class="icon-btn" data-drawer="open" title="Editar"><i data-lucide="pencil"></i></span>
+                  <span class="icon-btn" title="Modo Estudo"><i data-lucide="book-open"></i></span>
+                  <span class="icon-btn" title="Fonte"><i data-lucide="external-link"></i></span>
+                </div>
+              </div>
+
+              <div class="g-row" data-open="article">
+                <span class="spine amber"></span>
+                <div class="gmain">
+                  <h3>Value of clinical tests in diagnosis of ACL ruptures</h3>
+                  <div class="gmeta">
+                    <span class="badge warn"><i data-lucide="clock" style="width:10px;height:10px;"></i> AGUARDANDO CURADORIA</span>
+                    <span class="m"><i data-lucide="locate"></i> JOELHO</span>
+                    <span class="m"><i data-lucide="book-marked"></i> KSSTA</span>
+                  </div>
+                  <div class="gkf"><i data-lucide="quote"></i><p>Lachman é o teste mais sensível para ruptura de LCA; pivot-shift é o mais específico.</p></div>
+                </div>
+                <div class="gside">
+                  <span class="badge warn top-badge">PENDENTE</span>
+                  <span class="yr"><i data-lucide="calendar"></i> 2022</span>
+                </div>
+                <div class="gacts">
+                  <span class="icon-btn" data-drawer="open" title="Editar"><i data-lucide="pencil"></i></span>
+                  <span class="icon-btn" title="Modo Estudo"><i data-lucide="book-open"></i></span>
+                  <span class="icon-btn" title="Fonte"><i data-lucide="external-link"></i></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ggroup">
+              <div class="ggroup-hd"><span class="eyebrow">Coluna</span><span class="n">1</span><span class="line"></span></div>
+              <div class="g-row" data-open="article">
+                <span class="spine violet"></span>
+                <div class="gmain">
+                  <h3>Consenso brasileiro sobre exercício terapêutico na lombalgia crônica não específica</h3>
+                  <div class="gmeta">
+                    <span class="badge muted"><i data-lucide="users" style="width:10px;height:10px;"></i> CONSENSO</span>
+                    <span class="m"><i data-lucide="locate"></i> LOMBAR</span>
+                    <span class="m"><i data-lucide="book-marked"></i> ABRAFIN</span>
+                  </div>
+                  <div class="gkf"><i data-lucide="quote"></i><p>Exercício é a intervenção de primeira linha; modalidade importa menos que adesão e progressão de carga.</p></div>
+                </div>
+                <div class="gside">
+                  <span class="badge info top-badge">CERTIFICADA</span>
+                  <span class="yr"><i data-lucide="calendar"></i> 2024</span>
+                </div>
+                <div class="gacts">
+                  <span class="icon-btn" data-drawer="open" title="Editar"><i data-lucide="pencil"></i></span>
+                  <span class="icon-btn" title="Modo Estudo"><i data-lucide="book-open"></i></span>
+                  <span class="icon-btn" title="Fonte"><i data-lucide="external-link"></i></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rail">
+            <div class="rail-card">
+              <div class="tt"><i data-lucide="shield-check"></i> BASE CERTIFICADA</div>
+              <div class="gauge-row">
+                <div class="gauge"><div class="in"><b>64%</b><span>DA META</span></div></div>
+                <div class="gauge-legend">
+                  <div class="gl"><i></i> Verificadas <b>25</b></div>
+                  <div class="gl pend"><i></i> Pendentes <b>5</b></div>
+                  <div class="gl" style="opacity:.65;"><i style="background:hsl(var(--muted-foreground)/.4);"></i> Rascunhos <b>9</b></div>
+                </div>
+              </div>
+              <div class="meta-note">A meta é manter 90% da base "Verificada" pela curadoria clínica.</div>
+            </div>
+
+            <div class="import-mini">
+              <div class="hd">
+                <div class="pic"><i data-lucide="brain"></i></div>
+                <b>Importação Clínica IA</b>
+              </div>
+              <p>Cole um artigo ou arraste um PDF — a IA extrai key findings, evidência e indexação.</p>
+              <div class="drop">
+                <i data-lucide="file-up"></i>
+                <span>Arraste um PDF aqui ou</span>
+                <b>cole o texto do artigo</b>
+              </div>
+              <button class="btn primary sm"><i data-lucide="sparkles"></i> Alimentar IA</button>
+            </div>
+
+            <div class="rail-card">
+              <div class="tt"><i data-lucide="activity"></i> ATIVIDADE RECENTE</div>
+              <div class="act-item">
+                <div class="dotc"><i data-lucide="shield-check"></i></div>
+                <div><p><b>Dra. Camila</b> certificou a diretriz de manguito rotador</p><div class="when">há 2 horas</div></div>
+              </div>
+              <div class="act-item">
+                <div class="dotc blue"><i data-lucide="upload"></i></div>
+                <div><p><b>IA</b> importou 3 key findings de um novo PDF</p><div class="when">ontem</div></div>
+              </div>
+              <div class="act-item">
+                <div class="dotc amber"><i data-lucide="clock"></i></div>
+                <div><p>Diretriz de <b>LCA</b> aguarda parecer da curadoria</p><div class="when">há 3 dias</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW: DETALHE ============ -->
+      <section class="view" data-view="article" data-screen-label="Wiki v2 · Detalhe da Diretriz">
+        <div class="det">
+          <div class="det-bar">
+            <span class="back" data-goto="dashboard"><i data-lucide="arrow-left"></i> Voltar ao Dashboard</span>
+            <div class="end">
+              <span class="icon-btn"><i data-lucide="message-circle"></i></span>
+              <span class="icon-btn"><i data-lucide="share-2"></i></span>
+              <button class="btn study sm"><i data-lucide="book-open"></i> Modo Estudo IA</button>
+              <button class="btn primary sm" data-drawer="open"><i data-lucide="pencil"></i> Editar</button>
+            </div>
+          </div>
+
+          <div class="det-hero">
+            <div class="topline">
+              <span class="badge ok"><i data-lucide="shield-check" style="width:10px;height:10px;"></i> REVISÃO SISTEMÁTICA</span>
+              <span class="badge info">CERTIFICADA</span>
+            </div>
+            <h2>Effectiveness of early versus delayed rehabilitation following rotator cuff repair</h2>
+            <div class="meta">
+              <span class="m"><i data-lucide="layers"></i> <b>Pós-op Esportivo</b></span>
+              <span class="m"><i data-lucide="locate"></i> Ombro</span>
+              <span class="m"><i data-lucide="book-marked"></i> PLoS One</span>
+              <span class="m"><i data-lucide="calendar"></i> 2021</span>
+              <span class="m"><i data-lucide="eye"></i> 128 leituras na clínica</span>
+            </div>
+          </div>
+
+          <div class="det-cols">
+            <div style="display:flex;flex-direction:column;gap:14px;min-width:0;">
+              <div class="panel">
+                <div class="panel-head">
+                  <i data-lucide="bookmark"></i><h3>Principais Achados</h3>
+                  <div class="end"><span class="refine"><i data-lucide="sparkles"></i> REFINAR COM IA</span></div>
+                </div>
+                <div class="panel-body">
+                  <div class="kf-ed">
+                    <span class="n">01</span>
+                    <div>
+                      <p>Mobilização precoce melhora a amplitude de movimento inicial após reparo do manguito rotador.</p>
+                      <div class="conf"><i data-lucide="shield-check"></i> EVIDÊNCIA FORTE</div>
+                    </div>
+                  </div>
+                  <div class="kf-ed">
+                    <span class="n">02</span>
+                    <div>
+                      <p>Na maioria dos desfechos funcionais não houve diferença clínica relevante entre protocolos precoce e tardio.</p>
+                      <div class="conf"><i data-lucide="shield-check"></i> EVIDÊNCIA FORTE</div>
+                    </div>
+                  </div>
+                  <div class="kf-ed">
+                    <span class="n">03</span>
+                    <div>
+                      <p>A reabilitação precoce não aumentou o risco de re-ruptura nesta síntese de ensaios.</p>
+                      <div class="conf mod"><i data-lucide="shield-alert"></i> EVIDÊNCIA MODERADA</div>
+                    </div>
+                  </div>
+                  <div class="obs-ed">
+                    <i data-lucide="clipboard-list"></i>
+                    <p>Na prática: usar para calibrar tempo de sling, progressão de movimento e alinhar expectativas do paciente por fase.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-head"><i data-lucide="message-circle-question"></i><h3>Perguntas que esta diretriz responde</h3></div>
+                <div class="panel-body" style="padding-top:9px;">
+                  <div class="qa-item"><i data-lucide="corner-down-right"></i><p>Quando iniciar mobilização após reparo do manguito rotador?</p></div>
+                  <div class="qa-item"><i data-lucide="corner-down-right"></i><p>Mobilização precoce aumenta o risco de re-ruptura?</p></div>
+                  <div class="qa-item"><i data-lucide="corner-down-right"></i><p>Quanto tempo de sling é recomendado no pós-operatório?</p></div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-head">
+                  <i data-lucide="paperclip"></i><h3>Fontes e Anexos</h3>
+                  <div class="end"><button class="btn sm"><i data-lucide="upload"></i> Subir PDF</button></div>
+                </div>
+                <div class="panel-body" style="padding-top:9px;">
+                  <div class="src-row">
+                    <div class="pic blue"><i data-lucide="link"></i></div>
+                    <div><b>PubMed · Fonte principal</b><span>pubmed.ncbi.nlm.nih.gov/34458318</span></div>
+                    <div class="end"><span class="icon-btn"><i data-lucide="external-link"></i></span></div>
+                  </div>
+                  <div class="src-row">
+                    <div class="pic"><i data-lucide="file-text"></i></div>
+                    <div><b>rotator-cuff-early-rehab.pdf</b><span>2.4 MB · indexado pelo FisioBrain</span></div>
+                    <div class="end"><span class="icon-btn"><i data-lucide="download"></i></span><span class="icon-btn"><i data-lucide="trash-2"></i></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="det-rail">
+              <div class="ai-card">
+                <div class="hd"><i data-lucide="sparkles"></i> AI INSIGHTS <span class="tag">FISIOBRAIN</span></div>
+                <div class="bd">
+                  <div class="ai-ins">
+                    <div class="ic"><i data-lucide="lightbulb"></i></div>
+                    <div><div class="tt">ESTRATÉGIA CLÍNICA</div><p>Priorizar mobilidade passiva assistida nas semanas 1–3 e progressão ativa conforme tolerância.</p></div>
+                  </div>
+                  <div class="ai-ins teal">
+                    <div class="ic"><i data-lucide="trending-up"></i></div>
+                    <div><div class="tt">PROGNÓSTICO ESTIMADO</div><p>ROM funcional esperada em 6 semanas com protocolo precoce bem dosado.</p></div>
+                  </div>
+                </div>
+                <div class="ft">
+                  <span class="ai-btn"><i data-lucide="book-open"></i> ESTUDAR</span>
+                  <span class="ai-btn primary"><i data-lucide="sparkles"></i> RESUMO</span>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-head"><i data-lucide="database"></i><h3>Atributos Técnicos</h3></div>
+                <div class="panel-body" style="padding-top:9px;">
+                  <div class="attr-row"><i data-lucide="calendar"></i> Publicado em <b>2021</b></div>
+                  <div class="attr-row"><i data-lucide="book-marked"></i> Veículo <b>PLoS One</b></div>
+                  <div class="attr-row"><i data-lucide="shield"></i> Qualidade <span class="badge info">CERTIFICADA</span></div>
+                  <div class="attr-row"><i data-lucide="flask-conical"></i> Testes ligados <b>2</b></div>
+                  <div class="attr-row"><i data-lucide="dumbbell"></i> Exercícios ligados <b>4</b></div>
+                  <div class="idx-lbl">INDEXAÇÃO</div>
+                  <div class="idx-tags"><span>#Manguito Rotador</span><span>#Reparo</span><span>#Mobilização</span><span>#Pós-operatório</span></div>
+                </div>
+              </div>
+
+              <div class="cur-card">
+                <div class="tt"><i data-lucide="shield-check"></i> PARECER DA CURADORIA</div>
+                <div class="box">Diretriz importada via IA. Aguardando parecer clínico oficial sobre a aplicabilidade nesta organização.</div>
+                <div class="acts">
+                  <span class="cur-btn ok"><i data-lucide="check"></i> CERTIFICAR</span>
+                  <span class="cur-btn"><i data-lucide="message-circle"></i> COMENTAR</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW: AI HUB ============ -->
+      <section class="view" data-view="hub" data-screen-label="Wiki v2 · AI Hub">
+        <div class="hub">
+          <div class="pill-tabs">
+            <span class="on"><i data-lucide="brain"></i> FisioBrain</span>
+            <span><i data-lucide="stethoscope"></i> SOAP Review</span>
+            <span><i data-lucide="message-square"></i> Simulator</span>
+          </div>
+          <div class="hub-grid">
+            <div>
+              <div class="prompt-card">
+                <div class="tt">
+                  <div class="pic"><i data-lucide="brain"></i></div>
+                  <div><b>FisioBrain</b><span>Busca por evidência na base da clínica</span></div>
+                </div>
+                <div class="prompt-box">Ex: Quais exercícios são recomendados para lombalgia crônica não específica?</div>
+                <div class="prompt-foot">
+                  <span class="sel"><i data-lucide="database"></i> Todas as fontes <i data-lucide="chevron-down"></i></span>
+                  <span class="sel"><i data-lucide="layers"></i> Todas as áreas <i data-lucide="chevron-down"></i></span>
+                  <button class="btn primary sm"><i data-lucide="send"></i> Perguntar</button>
+                </div>
+                <div class="sugg">
+                  <span>Critério de alta pós-LCA?</span>
+                  <span>Dosagem para tendinopatia patelar</span>
+                  <span>Sling após reparo de manguito?</span>
+                  <span>Tração na lombalgia tem evidência?</span>
+                </div>
+              </div>
+            </div>
+            <div class="hist">
+              <div class="tt"><i data-lucide="history"></i> HISTÓRICO DA SESSÃO</div>
+              <div class="q"><i data-lucide="message-circle"></i> Critério de alta para corrida pós-LCA?</div>
+              <div class="q"><i data-lucide="message-circle"></i> Dosagem de exercício para tendinopatia patelar</div>
+              <div class="q"><i data-lucide="message-circle"></i> Evidência de tração para lombalgia?</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW: ARTIGOS ============ -->
+      <section class="view" data-view="artigos" data-screen-label="Wiki v2 · Artigos Científicos">
+        <div class="arts">
+          <div class="dropzone">
+            <div class="pic"><i data-lucide="file-up"></i></div>
+            <div>
+              <b>Adicionar artigos científicos</b>
+              <p>Arraste PDFs aqui — eles são indexados no FisioBrain e viram fonte de evidência nas buscas.</p>
+            </div>
+            <button class="btn primary"><i data-lucide="upload"></i> Upload de PDF</button>
+          </div>
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead>
+                <tr><th>ARTIGO</th><th>ÁREA</th><th>ANO</th><th>STATUS</th><th style="text-align:right;">AÇÕES</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><div class="ft"><div class="pic"><i data-lucide="file-text"></i></div><div><b>rotator-cuff-early-rehab.pdf</b><span>2.4 MB · vinculado a 1 diretriz</span></div></div></td>
+                  <td>Ombro</td>
+                  <td class="num">2021</td>
+                  <td><span class="badge ok">INDEXADO</span></td>
+                  <td><div class="rowacts"><span class="icon-btn"><i data-lucide="eye"></i></span><span class="icon-btn"><i data-lucide="download"></i></span><span class="icon-btn"><i data-lucide="trash-2"></i></span></div></td>
+                </tr>
+                <tr>
+                  <td><div class="ft"><div class="pic"><i data-lucide="file-text"></i></div><div><b>ybt-lq-meta-analysis.pdf</b><span>1.8 MB · vinculado a 1 diretriz</span></div></div></td>
+                  <td>Membro Inferior</td>
+                  <td class="num">2021</td>
+                  <td><span class="badge ok">INDEXADO</span></td>
+                  <td><div class="rowacts"><span class="icon-btn"><i data-lucide="eye"></i></span><span class="icon-btn"><i data-lucide="download"></i></span><span class="icon-btn"><i data-lucide="trash-2"></i></span></div></td>
+                </tr>
+                <tr>
+                  <td><div class="ft"><div class="pic"><i data-lucide="file-text"></i></div><div><b>acl-clinical-tests.pdf</b><span>3.1 MB · processando</span></div></div></td>
+                  <td>Joelho</td>
+                  <td class="num">2022</td>
+                  <td><span class="badge warn">PROCESSANDO</span></td>
+                  <td><div class="rowacts"><span class="icon-btn"><i data-lucide="eye"></i></span><span class="icon-btn"><i data-lucide="download"></i></span><span class="icon-btn"><i data-lucide="trash-2"></i></span></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW: DICIONÁRIO ============ -->
+      <section class="view" data-view="dicionario" data-screen-label="Wiki v2 · Dicionário Bilíngue">
+        <div class="dic">
+          <div class="dic-tools">
+            <div class="search"><i data-lucide="search"></i> Buscar termo em PT ou EN (ex: LCA, Squat, Isquiotibiais)...</div>
+            <button class="btn primary" data-modal="open"><i data-lucide="plus"></i> Novo Termo</button>
+          </div>
+          <div class="alpha">
+            <span class="on">A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span><span>I</span><span class="off">J</span><span class="off">K</span><span>L</span><span>M</span><span>N</span><span class="off">O</span><span>P</span><span>Q</span><span>R</span><span>S</span><span>T</span><span class="off">U</span><span class="off">V</span><span class="off">W</span><span class="off">X</span><span class="off">Y</span><span class="off">Z</span>
+          </div>
+          <div class="chips">
+            <span class="fchip on">Todos</span>
+            <span class="fchip">Músculos</span>
+            <span class="fchip">Articulações</span>
+            <span class="fchip">Patologias</span>
+            <span class="fchip">Exercícios</span>
+            <span class="fchip">Testes Clínicos</span>
+            <span class="fchip">Movimentos</span>
+            <span class="fchip">Protocolos</span>
+          </div>
+          <div class="term-grid">
+            <div class="term-card">
+              <span class="badge muted cat">EXERCÍCIOS</span>
+              <div class="term-pair">
+                <h3>Abdominal</h3>
+                <div class="en"><i data-lucide="languages"></i> Crunch</div>
+              </div>
+              <div class="syn-cols">
+                <div><div class="syn-lbl">SINÔNIMOS (PT)</div><div class="syn-tags"><span>abdominal parcial</span><span>crunch</span></div></div>
+                <div><div class="syn-lbl">SYNONYMS (EN)</div><div class="syn-tags en"><span>sit-up</span><span>curl-up</span></div></div>
+              </div>
+              <div class="region"><i data-lucide="map-pin"></i> Core <span class="uses">usado em 12 protocolos</span></div>
+              <div class="hacts">
+                <span class="icon-btn"><i data-lucide="pencil"></i></span>
+                <span class="icon-btn del"><i data-lucide="trash-2"></i></span>
+              </div>
+            </div>
+            <div class="term-card">
+              <span class="badge muted cat">EXERCÍCIOS</span>
+              <div class="term-pair">
+                <h3>Abdominal Bicicleta</h3>
+                <div class="en"><i data-lucide="languages"></i> Bicycle Crunch</div>
+              </div>
+              <div class="syn-cols">
+                <div><div class="syn-lbl">SINÔNIMOS (PT)</div><div class="syn-tags"><span>bicicleta</span><span>abdominal cruzado</span></div></div>
+                <div><div class="syn-lbl">SYNONYMS (EN)</div><div class="syn-tags en"><span>bicycle</span></div></div>
+              </div>
+              <div class="region"><i data-lucide="map-pin"></i> Core <span class="uses">usado em 4 protocolos</span></div>
+              <div class="hacts">
+                <span class="icon-btn"><i data-lucide="pencil"></i></span>
+                <span class="icon-btn del"><i data-lucide="trash-2"></i></span>
+              </div>
+            </div>
+            <div class="term-card">
+              <span class="badge muted cat">MOVIMENTOS</span>
+              <div class="term-pair">
+                <h3>Abdução</h3>
+                <div class="en"><i data-lucide="languages"></i> Abduction</div>
+              </div>
+              <div class="syn-cols">
+                <div><div class="syn-lbl">SINÔNIMOS (PT)</div><div class="syn-tags"><span>abrir</span><span>afastar</span></div></div>
+                <div><div class="syn-lbl">SYNONYMS (EN)</div><div class="syn-tags en"><span>open</span><span>move away</span></div></div>
+              </div>
+              <div class="region"><i data-lucide="map-pin"></i> Quadril · Ombro <span class="uses">usado em 31 protocolos</span></div>
+              <div class="hacts">
+                <span class="icon-btn"><i data-lucide="pencil"></i></span>
+                <span class="icon-btn del"><i data-lucide="trash-2"></i></span>
+              </div>
+            </div>
+            <div class="term-card">
+              <span class="badge muted cat">PATOLOGIAS</span>
+              <div class="term-pair">
+                <h3>Acidente Vascular Cerebral</h3>
+                <div class="en"><i data-lucide="languages"></i> Stroke (CVA)</div>
+              </div>
+              <div class="syn-cols">
+                <div><div class="syn-lbl">SINÔNIMOS (PT)</div><div class="syn-tags"><span>AVC</span><span>AVE</span><span>derrame</span></div></div>
+                <div><div class="syn-lbl">SYNONYMS (EN)</div><div class="syn-tags en"><span>CVA</span><span>cerebrovascular accident</span></div></div>
+              </div>
+              <div class="region"><i data-lucide="map-pin"></i> Neurologia <span class="uses">usado em 7 protocolos</span></div>
+              <div class="hacts">
+                <span class="icon-btn"><i data-lucide="pencil"></i></span>
+                <span class="icon-btn del"><i data-lucide="trash-2"></i></span>
+              </div>
+            </div>
+            <div class="term-card">
+              <span class="badge muted cat">TESTES CLÍNICOS</span>
+              <div class="term-pair">
+                <h3>Agachamento Unipodal</h3>
+                <div class="en"><i data-lucide="languages"></i> Single-Leg Squat</div>
+              </div>
+              <div class="syn-cols">
+                <div><div class="syn-lbl">SINÔNIMOS (PT)</div><div class="syn-tags"><span>agachamento em uma perna</span></div></div>
+                <div><div class="syn-lbl">SYNONYMS (EN)</div><div class="syn-tags en"><span>SLS</span><span>pistol (var.)</span></div></div>
+              </div>
+              <div class="region"><i data-lucide="map-pin"></i> Joelho · Quadril <span class="uses">usado em 18 protocolos</span></div>
+              <div class="hacts">
+                <span class="icon-btn"><i data-lucide="pencil"></i></span>
+                <span class="icon-btn del"><i data-lucide="trash-2"></i></span>
+              </div>
+            </div>
+            <div class="term-card">
+              <span class="badge muted cat">ARTICULAÇÕES</span>
+              <div class="term-pair">
+                <h3>Articulação Acromioclavicular</h3>
+                <div class="en"><i data-lucide="languages"></i> Acromioclavicular Joint</div>
+              </div>
+              <div class="syn-cols">
+                <div><div class="syn-lbl">SINÔNIMOS (PT)</div><div class="syn-tags"><span>AC</span></div></div>
+                <div><div class="syn-lbl">SYNONYMS (EN)</div><div class="syn-tags en"><span>AC joint</span></div></div>
+              </div>
+              <div class="region"><i data-lucide="map-pin"></i> Ombro <span class="uses">usado em 9 protocolos</span></div>
+              <div class="hacts">
+                <span class="icon-btn"><i data-lucide="pencil"></i></span>
+                <span class="icon-btn del"><i data-lucide="trash-2"></i></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ============ DRAWER: EDITAR DIRETRIZ ============ -->
+  <div class="drawer-ov" data-screen-label="Wiki v2 · Drawer Editar Diretriz">
+    <div class="drawer">
+      <div class="drawer-hd">
+        <div class="pic"><i data-lucide="pencil"></i></div>
+        <div><b>Editar Diretriz</b><span>Última edição há 2 dias · Dra. Camila</span></div>
+        <span class="icon-btn x" data-drawer="close"><i data-lucide="x"></i></span>
+      </div>
+      <div class="drawer-bd">
+        <div class="dsec">
+          <div class="sec-hd"><i data-lucide="info"></i> IDENTIFICAÇÃO</div>
+          <div>
+            <div class="field-lbl">TÍTULO DA DIRETRIZ</div>
+            <div class="input focus">Effectiveness of early versus delayed rehabilitation following rotator cuff repair</div>
+          </div>
+          <div>
+            <div class="field-lbl">URL DA FONTE (PUBMED / PDF / JOURNAL)</div>
+            <div class="input"><i data-lucide="link"></i> https://pubmed.ncbi.nlm.nih.gov/34458318/</div>
+          </div>
+          <div class="frow three">
+            <div><div class="field-lbl">ESPECIALIDADE</div><div class="selectf">Pós-op Esportivo <i data-lucide="chevron-down"></i></div></div>
+            <div><div class="field-lbl">REGIÃO</div><div class="input">Ombro</div></div>
+            <div><div class="field-lbl">ANO</div><div class="input">2021</div></div>
+          </div>
+          <div class="frow">
+            <div><div class="field-lbl">NÍVEL DE EVIDÊNCIA</div><div class="selectf">Revisão Sistemática <i data-lucide="chevron-down"></i></div></div>
+            <div><div class="field-lbl">STATUS DE CURADORIA</div><div class="selectf">Verificado / Ouro <i data-lucide="chevron-down"></i></div></div>
+          </div>
+        </div>
+
+        <div class="dsec">
+          <div class="sec-hd"><i data-lucide="bookmark"></i> CONTEÚDO CLÍNICO</div>
+          <div>
+            <div class="field-lbl">RESUMO EXECUTIVO</div>
+            <div class="textarea" style="color:hsl(var(--foreground));">Síntese sobre mobilização precoce vs. tardia após reparo do manguito rotador: ROM inicial, risco de re-ruptura e desfechos funcionais.</div>
+          </div>
+          <div>
+            <div class="field-lbl">KEY FINDINGS</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <div class="pill-it"><span class="grip"><i data-lucide="grip-vertical"></i></span> Mobilização precoce melhora ROM inicial <span class="x"><i data-lucide="x"></i></span></div>
+              <div class="pill-it"><span class="grip"><i data-lucide="grip-vertical"></i></span> Sem diferença clínica relevante entre protocolos <span class="x"><i data-lucide="x"></i></span></div>
+              <div class="pill-it"><span class="grip"><i data-lucide="grip-vertical"></i></span> Sem aumento de risco de re-ruptura <span class="x"><i data-lucide="x"></i></span></div>
+            </div>
+            <div class="add-row" style="margin-top:7px;"><div class="input ghost">Novo destaque...</div><span class="add-btn"><i data-lucide="plus"></i></span></div>
+          </div>
+          <div>
+            <div class="field-lbl">OBSERVAÇÕES CLÍNICAS (INTERNO)</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <div class="pill-it"><span class="grip"><i data-lucide="grip-vertical"></i></span> Usar para calibrar sling e progressão por fase <span class="x"><i data-lucide="x"></i></span></div>
+            </div>
+            <div class="add-row" style="margin-top:7px;"><div class="input ghost">Nova observação...</div><span class="add-btn"><i data-lucide="plus"></i></span></div>
+          </div>
+          <div>
+            <div class="field-lbl">PERGUNTAS QUE ESTA DIRETRIZ RESPONDE (Q&amp;A)</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <div class="pill-it"><span class="grip"><i data-lucide="grip-vertical"></i></span> Quando iniciar mobilização após reparo? <span class="x"><i data-lucide="x"></i></span></div>
+            </div>
+            <div class="add-row" style="margin-top:7px;"><div class="input ghost">Ex: Qual o critério de alta para corrida?</div><span class="add-btn"><i data-lucide="plus"></i></span></div>
+          </div>
+        </div>
+
+        <div class="dsec">
+          <div class="sec-hd"><i data-lucide="git-merge"></i> VÍNCULOS NA PLATAFORMA</div>
+          <div class="frow">
+            <div>
+              <div class="field-lbl">TESTES CLÍNICOS (IDS)</div>
+              <div class="add-row"><div class="input ghost"><i data-lucide="stethoscope"></i> Ex: lasegue-test</div><span class="add-btn"><i data-lucide="plus"></i></span></div>
+            </div>
+            <div>
+              <div class="field-lbl">EXERCÍCIOS SUGERIDOS (IDS)</div>
+              <div class="add-row"><div class="input ghost"><i data-lucide="dumbbell"></i> Ex: pelvic-tilt</div><span class="add-btn"><i data-lucide="plus"></i></span></div>
+            </div>
+          </div>
+          <div>
+            <div class="field-lbl">ANEXOS E DOCUMENTOS</div>
+            <div class="add-row">
+              <div class="selectf" style="flex:0 0 110px;">Arquivo <i data-lucide="chevron-down"></i></div>
+              <div class="input ghost">URL ou caminho do documento</div>
+              <span class="add-btn"><i data-lucide="plus"></i></span>
+            </div>
+          </div>
+          <div>
+            <div class="field-lbl">TAGS DE BUSCA</div>
+            <div class="add-row"><div class="input ghost">Adicionar tag...</div><span class="add-btn"><i data-lucide="plus"></i></span></div>
+            <div class="chip-row" style="margin-top:8px;">
+              <span class="tagx">#Manguito Rotador <i data-lucide="x"></i></span>
+              <span class="tagx">#Reparo <i data-lucide="x"></i></span>
+              <span class="tagx">#Mobilização <i data-lucide="x"></i></span>
+              <span class="tagx">#Pós-operatório <i data-lucide="x"></i></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="drawer-ft">
+        <span class="hint"><i data-lucide="sparkles"></i> Alterações reindexam o FisioBrain automaticamente.</span>
+        <div class="end">
+          <button class="btn" data-drawer="close">Cancelar</button>
+          <button class="btn primary" data-drawer="close"><i data-lucide="check"></i> Atualizar Diretriz</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: NOVO TERMO ============ -->
+  <div class="modal-ov" data-screen-label="Wiki v2 · Modal Novo Termo">
+    <div class="modal">
+      <div class="modal-hd">
+        <div class="pic"><i data-lucide="languages"></i></div>
+        <div><b>Novo Termo Bilíngue</b><span>Sinônimos valem em buscas e protocolos de toda a plataforma</span></div>
+        <span class="icon-btn x" data-modal="close"><i data-lucide="x"></i></span>
+      </div>
+      <div class="modal-bd">
+        <div class="lang-pair">
+          <div><div class="field-lbl">TERMO EM PORTUGUÊS</div><div class="input focus">Isquiotibiais</div></div>
+          <div class="swap"><i data-lucide="arrow-left-right"></i></div>
+          <div><div class="field-lbl">TERMO EM INGLÊS</div><div class="input">Hamstrings</div></div>
+        </div>
+        <div class="frow">
+          <div><div class="field-lbl">CATEGORIA</div><div class="selectf">Músculos <i data-lucide="chevron-down"></i></div></div>
+          <div><div class="field-lbl">REGIÃO DO CORPO</div><div class="selectf">Coxa posterior <i data-lucide="chevron-down"></i></div></div>
+        </div>
+        <div>
+          <div class="field-lbl">SINÔNIMOS (PT)</div>
+          <div class="add-row"><div class="input ghost">Ex: posteriores de coxa</div><span class="add-btn"><i data-lucide="plus"></i></span></div>
+          <div class="chip-row" style="margin-top:8px;">
+            <span class="tagx">posterior de coxa <i data-lucide="x"></i></span>
+            <span class="tagx">ísquios <i data-lucide="x"></i></span>
+          </div>
+        </div>
+        <div>
+          <div class="field-lbl">SYNONYMS (EN)</div>
+          <div class="add-row"><div class="input ghost">Ex: hams</div><span class="add-btn"><i data-lucide="plus"></i></span></div>
+          <div class="chip-row" style="margin-top:8px;">
+            <span class="tagx">hams <i data-lucide="x"></i></span>
+            <span class="tagx">posterior chain (var.) <i data-lucide="x"></i></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-ft">
+        <button class="btn" data-modal="close">Cancelar</button>
+        <button class="btn primary" data-modal="close"><i data-lucide="check"></i> Salvar Termo</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+
+  function goTo(name) {
+    document.querySelectorAll('.view').forEach(function (v) {
+      v.classList.toggle('on', v.getAttribute('data-view') === name);
+    });
+    document.querySelectorAll('.htab[data-goto]').forEach(function (t) {
+      var owns = t.getAttribute('data-goto') === name || (name === 'article' && t.getAttribute('data-goto') === 'dashboard');
+      t.classList.toggle('on', owns);
+    });
+    document.querySelector('.body').scrollTop = 0;
+  }
+  document.querySelectorAll('[data-goto]').forEach(function (el) {
+    el.addEventListener('click', function () { goTo(el.getAttribute('data-goto')); });
+  });
+  document.querySelectorAll('[data-open="article"]').forEach(function (el) {
+    el.addEventListener('click', function () { goTo('article'); });
+  });
+
+  // drawer editar
+  var dov = document.querySelector('.drawer-ov');
+  document.querySelectorAll('[data-drawer="open"]').forEach(function (el) {
+    el.addEventListener('click', function (e) { e.stopPropagation(); dov.classList.add('open'); });
+  });
+  document.querySelectorAll('[data-drawer="close"]').forEach(function (el) {
+    el.addEventListener('click', function (e) { e.stopPropagation(); dov.classList.remove('open'); });
+  });
+  dov.addEventListener('click', function (e) { if (e.target === dov) dov.classList.remove('open'); });
+
+  // modal novo termo
+  var mov = document.querySelector('.modal-ov');
+  document.querySelectorAll('[data-modal="open"]').forEach(function (el) {
+    el.addEventListener('click', function () { mov.classList.add('open'); });
+  });
+  document.querySelectorAll('[data-modal="close"]').forEach(function (el) {
+    el.addEventListener('click', function (e) { e.stopPropagation(); mov.classList.remove('open'); });
+  });
+  mov.addEventListener('click', function (e) { if (e.target === mov) mov.classList.remove('open'); });
+</script>
+</body>
+</html>

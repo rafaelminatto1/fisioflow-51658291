@@ -1,0 +1,282 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Professional App" name="Professional App — Nova Captura (mobile)" subtitle="Câmera full-screen · prumo + 17 juntas · bottom sheet de protocolo" viewport="390x844" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Nova Captura — FisioFlow Pro (mobile)</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  body { margin: 0; background: #1a1d24; min-height: 100vh; display:flex; align-items:center; justify-content:center; padding: 20px; font-family: var(--font-sans); }
+
+  .app {
+    width: 390px; height: 844px; flex-shrink: 0;
+    background: #0a0e16; color: white;
+    border-radius: 48px; overflow: hidden; position: relative;
+    box-shadow: 0 0 0 12px #111, 0 0 0 14px #2a2d35, 0 30px 60px rgba(0,0,0,0.6);
+    user-select: none;
+  }
+
+  /* ---- camera feed ---- */
+  .camera { position:absolute; inset: 0; background: radial-gradient(120% 80% at 50% 30%, #1a2434, #070a11 80%); overflow: hidden; }
+  .grid-overlay { position:absolute; inset:0; background-image: linear-gradient(hsla(0,0%,100%,.045) 1px, transparent 1px), linear-gradient(90deg, hsla(0,0%,100%,.045) 1px, transparent 1px); background-size: 39px 39px; }
+  .plumb { position:absolute; top:0; bottom:0; left:50%; width:1px; background: hsla(45,93%,55%,.45); }
+  .plumb::before { content:"PRUMO"; position:absolute; top: 120px; left: 6px; font-size: 8px; font-weight: 800; letter-spacing: 0.12em; color: hsla(45,93%,60%,.8); }
+
+  /* skeleton overlay */
+  .skeleton { position:absolute; inset: 0; }
+  .joint-dot { position:absolute; width: 11px; height: 11px; border-radius: 50%; background: hsl(45 93% 55%); border: 2px solid white; transform: translate(-50%, -50%); box-shadow: 0 0 6px hsla(45,93%,55%,.7); }
+
+  /* ---- status bar ---- */
+  .statusbar { position:absolute; top:0; left:0; right:0; z-index: 6; display:flex; justify-content:space-between; align-items:center; padding: 14px 32px 6px; font-size: 14px; font-weight: 700; color:white; }
+  .statusbar .sb-right { display:flex; align-items:center; gap: 6px; }
+  .statusbar .sb-right i { width: 16px; height: 16px; }
+
+  /* ---- top control bar ---- */
+  .topctl { position:absolute; top: 46px; left: 0; right: 0; z-index: 6; display:flex; align-items:center; gap: 10px; padding: 6px 18px; }
+  .round-btn { width: 40px; height: 40px; border-radius: 50%; background: rgba(15,20,30,.6); border: 1px solid rgba(255,255,255,.14); display:flex; align-items:center; justify-content:center; color: white; cursor:pointer; }
+  .round-btn:active { background: rgba(15,20,30,.9); }
+  .round-btn i { width: 19px; height: 19px; }
+  .calib-chip { margin: 0 auto; display:flex; align-items:center; gap: 7px; padding: 8px 14px; border-radius: 999px; background: hsl(142 60% 16%); border: 1px solid hsl(142 50% 32%); color: hsl(142 70% 75%); font-size: 12px; font-weight: 800; letter-spacing: 0.02em; }
+  .calib-chip i { width: 14px; height: 14px; }
+
+  /* recording badge */
+  .rec-badge { position:absolute; top: 100px; left: 50%; transform: translateX(-50%); z-index: 6; display:flex; align-items:center; gap: 8px; padding: 7px 14px; border-radius: 999px; background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.12); font-size: 12px; font-weight: 800; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+  .rec-dot { width: 9px; height: 9px; border-radius: 50%; background: hsl(0 80% 55%); }
+  .rec-meta { position:absolute; top: 100px; right: 18px; z-index: 6; display:flex; flex-direction: column; gap: 5px; align-items: flex-end; }
+  .rec-meta .m { padding: 4px 9px; border-radius: 7px; background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.1); font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .hint { position:absolute; left: 24px; right: 24px; bottom: 320px; z-index: 5; text-align:center; font-size: 12px; font-weight: 600; color: rgba(255,255,255,.72); line-height: 1.4; transition: opacity .25s; }
+
+  /* ---- view toggle (floating) ---- */
+  .view-toggle { position:absolute; left: 50%; transform: translateX(-50%); bottom: 234px; z-index: 6; display:flex; gap: 4px; background: rgba(10,14,22,.7); border: 1px solid rgba(255,255,255,.12); border-radius: 13px; padding: 4px; transition: bottom .3s cubic-bezier(.22,1,.36,1); }
+  .vt { padding: 9px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; color: rgba(255,255,255,.6); cursor: pointer; }
+  .vt:active { color: white; }
+  .vt.sel { background: hsl(var(--primary)); color: white; }
+
+  /* ---- record control row (floating) ---- */
+  .rec-row { position:absolute; left: 0; right: 0; bottom: 132px; z-index: 6; display:flex; align-items:center; justify-content:center; gap: 44px; transition: bottom .3s cubic-bezier(.22,1,.36,1); }
+  .rec-side { width: 50px; height: 50px; border-radius: 50%; background: rgba(15,20,30,.65); border: 1px solid rgba(255,255,255,.14); display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; }
+  .rec-side:active { background: rgba(15,20,30,.95); }
+  .rec-side i { width: 20px; height: 20px; }
+  .rec-btn { width: 78px; height: 78px; border-radius: 50%; background: transparent; border: 4px solid white; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .rec-btn .inner { width: 30px; height: 30px; border-radius: 7px; background: hsl(0 80% 55%); transition: border-radius .2s, width .2s, height .2s; }
+  .rec-btn.recording .inner { border-radius: 50%; }
+
+  /* ---- bottom sheet ---- */
+  .sheet { position:absolute; left: 0; right: 0; bottom: 0; z-index: 8;
+    background: hsl(var(--card)); color: hsl(var(--foreground));
+    border-radius: 26px 26px 0 0; box-shadow: 0 -8px 24px rgba(0,0,0,.28);
+    transform: translateY(var(--sheet-y, 280px)); transition: transform .32s cubic-bezier(.22,1,.36,1);
+    touch-action: none;
+  }
+  .sheet.dragging { transition: none; }
+  .grab { width: 100%; padding: 11px 0 4px; display:flex; justify-content:center; cursor: grab; }
+  .grab span { width: 40px; height: 5px; border-radius: 999px; background: hsl(var(--border)); }
+  .sheet-head { display:flex; align-items:center; gap: 10px; padding: 4px 22px 14px; cursor: pointer; }
+  .sheet-head h2 { font-size: 16px; font-weight: 800; letter-spacing: -0.015em; }
+  .sheet-head .sel-now { margin-left:auto; display:flex; align-items:center; gap: 6px; font-size: 13px; font-weight: 700; color: hsl(var(--primary)); }
+  .sheet-head .sel-now i { width: 16px; height: 16px; transition: transform .3s; }
+  .sheet.open .sheet-head .sel-now i { transform: rotate(180deg); }
+
+  .sheet-body { padding: 0 22px 30px; }
+  .patient-sel { display:flex; align-items:center; gap: 11px; padding: 12px 14px; border-radius: 14px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); margin-bottom: 16px; cursor: pointer; }
+  .patient-sel:active { background: hsl(var(--muted) / .5); }
+  .patient-sel .pa { width: 36px; height: 36px; border-radius: 12px; background: hsl(211 100% 50%); color:white; font-size: 13px; font-weight: 800; display:flex; align-items:center; justify-content:center; }
+  .patient-sel .pn { font-size: 14px; font-weight: 700; }
+  .patient-sel .px { font-size: 11px; font-weight: 600; color: hsl(var(--muted-foreground)); margin-top: 1px; }
+  .patient-sel .chev { margin-left:auto; color: hsl(var(--muted-foreground)); }
+
+  .field-label { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin-bottom: 9px; }
+  .test-options { display:flex; flex-direction: column; gap: 9px; }
+  .test-opt { display:flex; align-items:center; gap: 12px; padding: 13px 14px; border-radius: 14px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); cursor: pointer; }
+  .test-opt:active { background: hsl(var(--muted) / .5); }
+  .test-opt.sel { border-color: hsl(var(--primary)); background: hsl(var(--primary) / .06); }
+  .test-opt .ti { width: 38px; height: 38px; border-radius: 11px; background: hsl(var(--muted) / .8); display:flex; align-items:center; justify-content:center; color: hsl(var(--primary)); }
+  .test-opt .ti i { width: 19px; height: 19px; }
+  .test-opt.sel .ti { background: hsl(var(--primary)); color: white; }
+  .test-opt .nm { font-size: 14px; font-weight: 700; }
+  .test-opt .mt { font-size: 11px; font-weight: 600; color: hsl(var(--muted-foreground)); margin-top: 1px; }
+  .test-opt .rad { margin-left:auto; width: 20px; height: 20px; border-radius: 50%; border: 2px solid hsl(var(--border)); flex-shrink: 0; }
+  .test-opt.sel .rad { border-color: hsl(var(--primary)); background: hsl(var(--primary)); box-shadow: inset 0 0 0 4px white; }
+
+  .home-indicator { position:absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 134px; height: 5px; background: rgba(255,255,255,.55); border-radius: 999px; z-index: 9; }
+  .sheet.open ~ .home-indicator { background: hsl(var(--foreground)); }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- camera -->
+  <div class="camera">
+    <div class="grid-overlay"></div>
+    <div class="plumb"></div>
+    <svg class="skeleton" id="skeleton" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+    <div id="dots"></div>
+  </div>
+
+  <!-- status bar -->
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="sb-right"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+  </div>
+
+  <!-- top controls -->
+  <div class="topctl">
+    <div class="round-btn"><i data-lucide="x"></i></div>
+    <div class="calib-chip"><i data-lucide="check-circle-2"></i> CALIBRADO · 3,2 m</div>
+    <div class="round-btn"><i data-lucide="settings-2"></i></div>
+  </div>
+
+  <!-- recording badge -->
+  <div class="rec-badge"><span class="rec-dot"></span> PRONTO · 00:00</div>
+  <div class="rec-meta">
+    <span class="m">1080p · 60fps</span>
+    <span class="m">17 / 17 juntas</span>
+  </div>
+
+  <div class="hint" id="hint">Posicione o paciente sobre a linha de prumo.<br/>17 articulações rastreadas em tempo real.</div>
+
+  <!-- view toggle -->
+  <div class="view-toggle" id="viewToggle">
+    <div class="vt">Frontal</div>
+    <div class="vt sel">Sagital</div>
+    <div class="vt">Posterior</div>
+  </div>
+
+  <!-- record controls -->
+  <div class="rec-row" id="recRow">
+    <div class="rec-side"><i data-lucide="rotate-ccw"></i></div>
+    <div class="rec-btn" id="recBtn"><div class="inner"></div></div>
+    <div class="rec-side"><i data-lucide="timer"></i></div>
+  </div>
+
+  <!-- bottom sheet -->
+  <div class="sheet" id="sheet">
+    <div class="grab" id="grab"><span></span></div>
+    <div class="sheet-head" id="sheetHead">
+      <h2>Protocolo de teste</h2>
+      <span class="sel-now"><span id="selName">Agachamento</span><i data-lucide="chevron-up"></i></span>
+    </div>
+    <div class="sheet-body">
+      <div class="patient-sel">
+        <span class="pa">CF</span>
+        <div>
+          <div class="pn">Carla Ferreira</div>
+          <div class="px">34 anos · Condromalácia G2 · Sessão 12</div>
+        </div>
+        <i data-lucide="chevron-down" class="chev" style="width:18px;height:18px;"></i>
+      </div>
+
+      <div class="field-label">Protocolo</div>
+      <div class="test-options" id="testOptions">
+        <div class="test-opt sel" data-name="Agachamento">
+          <span class="ti"><i data-lucide="arrow-down"></i></span>
+          <div><div class="nm">Agachamento</div><div class="mt">ROM joelho · valgo · tronco</div></div>
+          <span class="rad"></span>
+        </div>
+        <div class="test-opt" data-name="Marcha">
+          <span class="ti"><i data-lucide="footprints"></i></span>
+          <div><div class="nm">Marcha</div><div class="mt">Cadência · simetria · fase de apoio</div></div>
+          <span class="rad"></span>
+        </div>
+        <div class="test-opt" data-name="Step-down">
+          <span class="ti"><i data-lucide="move-vertical"></i></span>
+          <div><div class="nm">Step-down</div><div class="mt">Controle pélvico · valgo dinâmico</div></div>
+          <span class="rad"></span>
+        </div>
+        <div class="test-opt" data-name="Salto vertical">
+          <span class="ti"><i data-lucide="chevrons-up"></i></span>
+          <div><div class="nm">Salto vertical</div><div class="mt">Impulsão · aterrissagem · simetria</div></div>
+          <span class="rad"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="home-indicator"></div>
+
+</div>
+
+<script>
+  // ---- skeleton (17 joints, front-facing standing) ----
+  const joints = {
+    nose:[50,12], neck:[50,16], chest:[50,21], pelvis:[50,33],
+    lSh:[42,18], rSh:[58,18], lEl:[37,25], rEl:[63,25], lWr:[34,32], rWr:[66,32],
+    lHip:[45,33], rHip:[55,33], lKnee:[44,46], rKnee:[56,46], lAnk:[43,57], rAnk:[57,57]
+  };
+  // 16 named + 1 extra mid-spine
+  joints.spine=[50,27];
+  const edges=[['nose','neck'],['neck','chest'],['chest','spine'],['spine','pelvis'],
+    ['neck','lSh'],['neck','rSh'],['lSh','lEl'],['lEl','lWr'],['rSh','rEl'],['rEl','rWr'],
+    ['pelvis','lHip'],['pelvis','rHip'],['lHip','lKnee'],['lKnee','lAnk'],['rHip','rKnee'],['rKnee','rAnk']];
+  const svg=document.getElementById('skeleton'), dots=document.getElementById('dots');
+  edges.forEach(([a,b])=>{
+    const l=document.createElementNS('http://www.w3.org/2000/svg','line');
+    l.setAttribute('x1',joints[a][0]); l.setAttribute('y1',joints[a][1]);
+    l.setAttribute('x2',joints[b][0]); l.setAttribute('y2',joints[b][1]);
+    l.setAttribute('stroke','hsla(211,100%,60%,.55)'); l.setAttribute('stroke-width','0.6');
+    l.setAttribute('vector-effect','non-scaling-stroke'); l.setAttribute('stroke-linecap','round');
+    svg.appendChild(l);
+  });
+  Object.values(joints).forEach(([x,y])=>{
+    const d=document.createElement('div'); d.className='joint-dot';
+    d.style.left=x+'%'; d.style.top=y+'%'; dots.appendChild(d);
+  });
+
+  // ---- protocol select ----
+  document.querySelectorAll('#testOptions .test-opt').forEach(opt=>{
+    opt.addEventListener('click',()=>{
+      document.querySelectorAll('#testOptions .test-opt').forEach(o=>o.classList.remove('sel'));
+      opt.classList.add('sel');
+      document.getElementById('selName').textContent=opt.dataset.name;
+    });
+  });
+
+  // ---- record toggle ----
+  const recBtn=document.getElementById('recBtn');
+  const badge=document.querySelector('.rec-badge');
+  const recDot=document.querySelector('.rec-dot');
+  let recording=false, t=0, timer=null;
+  recBtn.addEventListener('click',()=>{
+    recording=!recording; recBtn.classList.toggle('recording',recording);
+    if(recording){ t=0; recDot.style.animation='blink 1.2s infinite'; tick();
+      timer=setInterval(()=>{t++;tick();},1000);
+      document.getElementById('hint').style.opacity='0';
+    } else { clearInterval(timer); recDot.style.animation='';
+      badge.innerHTML='<span class="rec-dot"></span> PRONTO · 00:00';
+      document.getElementById('hint').style.opacity='';
+    }
+  });
+  function tick(){ const m=String(Math.floor(t/60)).padStart(2,'0'), s=String(t%60).padStart(2,'0');
+    badge.innerHTML='<span class="rec-dot" style="animation:blink 1.2s infinite"></span> REC · '+m+':'+s; }
+
+  // ---- draggable bottom sheet ----
+  const sheet=document.getElementById('sheet'), grab=document.getElementById('grab'), head=document.getElementById('sheetHead');
+  const viewToggle=document.getElementById('viewToggle'), recRow=document.getElementById('recRow');
+  const COLLAPSED=280, EXPANDED=0;
+  let y=COLLAPSED, open=false, startY=0, startSheetY=COLLAPSED, drag=false;
+  function setY(v){ y=Math.max(EXPANDED,Math.min(COLLAPSED,v)); sheet.style.setProperty('--sheet-y',y+'px'); }
+  function snap(){ const mid=(COLLAPSED+EXPANDED)/2; open=y<mid; setY(open?EXPANDED:COLLAPSED); sheet.classList.toggle('open',open);
+    // lift floating controls when open
+    viewToggle.style.bottom=open?'470px':'234px'; recRow.style.bottom=open?'368px':'132px'; }
+  function toggle(){ open=!open; setY(open?EXPANDED:COLLAPSED); sheet.classList.toggle('open',open);
+    viewToggle.style.bottom=open?'470px':'234px'; recRow.style.bottom=open?'368px':'132px'; }
+  head.addEventListener('click',toggle);
+  function down(e){ drag=true; sheet.classList.add('dragging'); startY=(e.touches?e.touches[0].clientY:e.clientY); startSheetY=y; }
+  function move(e){ if(!drag)return; const cy=(e.touches?e.touches[0].clientY:e.clientY); setY(startSheetY+(cy-startY)); }
+  function up(){ if(!drag)return; drag=false; sheet.classList.remove('dragging'); snap(); }
+  grab.addEventListener('pointerdown',down); window.addEventListener('pointermove',move); window.addEventListener('pointerup',up);
+
+  document.querySelectorAll('#viewToggle .vt').forEach(v=>v.addEventListener('click',()=>{
+    document.querySelectorAll('#viewToggle .vt').forEach(o=>o.classList.remove('sel')); v.classList.add('sel');
+  }));
+
+  const style=document.createElement('style');
+  style.textContent='@keyframes blink{50%{opacity:.35}}';
+  document.head.appendChild(style);
+
+  if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+</script>
+</body>
+</html>

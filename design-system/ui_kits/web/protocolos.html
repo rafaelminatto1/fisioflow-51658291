@@ -1,0 +1,278 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="UI Kit · Protocolos (web)" subtitle="Biblioteca de protocolos: lista master-detail com fases, sequência de exercícios e pacientes ativos" viewport="1320x920" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Protocolos — FisioFlow Clínica</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<link rel="stylesheet" href="screen-shell.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  .body { display: grid; grid-template-columns: 372px 1fr; min-height: 0; }
+
+  /* ---- list pane ---- */
+  .listpane { border-right: 1px solid hsl(var(--border)); display: grid; grid-template-rows: auto auto 1fr; min-height: 0; }
+  .lp-head { padding: 16px 18px 0; }
+  .lp-head h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  .lp-head .sub { font-size: 12px; color: hsl(var(--muted-foreground)); font-weight: 600; margin-top: 2px; }
+  .lp-tools { padding: 12px 18px; display: flex; flex-direction: column; gap: 9px; }
+  .filter-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .fchip { padding: 5px 11px; border-radius: 999px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); font-size: 11px; font-weight: 700; color: hsl(var(--muted-foreground)); cursor: pointer; }
+  .fchip.on { background: hsl(var(--primary)); border-color: hsl(var(--primary)); color: white; }
+  .lp-list { overflow-y: auto; padding: 2px 12px 14px; }
+
+  .proto { border: 1px solid hsl(var(--border)); background: hsl(var(--card)); border-radius: 14px; padding: 13px 15px; margin-bottom: 8px; cursor: pointer; }
+  .proto:hover { box-shadow: var(--shadow-md); }
+  .proto.sel { border-color: hsl(var(--primary) / .45); background: hsl(var(--primary) / .04); box-shadow: 0 0 0 1px hsl(var(--primary) / .45); }
+  .proto .nm { font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+  .proto .meta { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; margin-top: 3px; }
+  .proto .foot { display: flex; align-items: center; gap: 6px; margin-top: 9px; }
+  .proto .avs { display: flex; margin-left: auto; }
+  .proto .avs .av { width: 20px; height: 20px; font-size: 8px; border: 2px solid hsl(var(--card)); margin-left: -6px; }
+
+  /* ---- detail pane ---- */
+  .detail { overflow-y: auto; min-height: 0; padding: 20px 26px 26px; }
+  .d-head { display: flex; align-items: flex-start; gap: 14px; }
+  .d-head h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+  .d-head .meta { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+  .d-head .desc { font-size: 12.5px; color: hsl(var(--muted-foreground)); font-weight: 500; margin-top: 8px; max-width: 560px; line-height: 1.5; }
+  .d-actions { margin-left: auto; display: flex; gap: 8px; flex-shrink: 0; }
+
+  /* phases */
+  .phases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 18px; }
+  .phase { border: 1px solid hsl(var(--border)); background: hsl(var(--card)); border-radius: 13px; padding: 12px 14px; position: relative; }
+  .phase.on { border-color: hsl(var(--primary) / .5); background: hsl(var(--primary) / .05); }
+  .phase .tag { font-size: 9.5px; font-weight: 800; letter-spacing: 0.07em; color: hsl(var(--muted-foreground)); }
+  .phase.on .tag { color: hsl(var(--primary)); }
+  .phase .nm { font-size: 13px; font-weight: 800; margin-top: 2px; }
+  .phase .mt { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; margin-top: 2px; }
+  .phase .crit { display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; color: hsl(var(--muted-foreground)); margin-top: 8px; padding-top: 8px; border-top: 1px dashed hsl(var(--border)); }
+
+  /* exercise table */
+  .sec-title { display: flex; align-items: center; justify-content: space-between; margin: 22px 0 10px; }
+  .sec-title h3 { font-size: 14px; font-weight: 800; }
+  .sec-title .hint { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .exrow { display: grid; grid-template-columns: 26px 44px 1fr 110px 90px 70px 30px; gap: 12px; align-items: center; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 13px; padding: 9px 14px; margin-bottom: 7px; }
+  .exrow .ord { font-size: 11px; font-weight: 800; color: hsl(var(--muted-foreground)); font-variant-numeric: tabular-nums; }
+  .exrow .thumb { width: 44px; height: 38px; border-radius: 9px; background: repeating-linear-gradient(45deg, hsl(220 14% 94%), hsl(220 14% 94%) 5px, hsl(220 14% 90%) 5px, hsl(220 14% 90%) 10px); border: 1px solid hsl(var(--border)); display: flex; align-items: center; justify-content: center; color: hsl(var(--muted-foreground)); }
+  .exrow .nm { font-size: 13px; font-weight: 700; }
+  .exrow .mt { font-size: 10.5px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .exrow .dose { font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .exrow .dose small { font-weight: 600; color: hsl(var(--muted-foreground)); }
+  .exrow .grip { color: hsl(220 10% 78%); cursor: grab; display: flex; justify-content: center; }
+  .superset { font-size: 10px; font-weight: 800; letter-spacing: 0.06em; color: hsl(264 55% 50%); background: hsl(264 55% 55% / .1); padding: 3px 9px; border-radius: 999px; width: fit-content; }
+  .add-ex { display: flex; align-items: center; justify-content: center; gap: 7px; border: 1.5px dashed hsl(var(--border)); border-radius: 13px; padding: 12px; font-size: 12.5px; font-weight: 700; color: hsl(var(--primary)); cursor: pointer; }
+  .add-ex:hover { background: hsl(var(--primary) / .04); border-color: hsl(var(--primary) / .4); }
+</style>
+</head>
+<body>
+<div class="pad">
+
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><img src="../../assets/activity-logo.svg" alt=""/></div>
+      <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div>
+        <div class="sb-group-label">ATENDIMENTO</div>
+        <div class="sb-item"><i data-lucide="calendar-days"></i> AGENDA</div>
+        <div class="sb-item"><i data-lucide="users"></i> PACIENTES</div>
+        <div class="sb-item"><i data-lucide="message-circle"></i> CRM · WHATSAPP</div>
+      </div>
+      <div>
+        <div class="sb-group-label">CLÍNICA</div>
+        <div class="sb-item"><i data-lucide="clipboard-check"></i> AVALIAÇÕES</div>
+        <div class="sb-item"><i data-lucide="dumbbell"></i> EXERCÍCIOS</div>
+        <div class="sb-item is-active"><i data-lucide="clipboard-list"></i> PROTOCOLOS</div>
+        <div class="sb-item"><i data-lucide="flask-conical"></i> TESTES CLÍNICOS</div>
+        <div class="sb-item"><i data-lucide="camera"></i> BIOMECÂNICA</div>
+      </div>
+      <div>
+        <div class="sb-group-label">GESTÃO &amp; OPERAÇÃO</div>
+        <div class="sb-item"><i data-lucide="layout-dashboard"></i> BOARDS</div>
+        <div class="sb-item"><i data-lucide="wallet"></i> FINANCEIRO</div>
+        <div class="sb-item"><i data-lucide="book-open"></i> WIKI CLÍNICA</div>
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-item"><i data-lucide="settings"></i> CONFIGURAÇÕES</div>
+      <div class="sb-item"><i data-lucide="log-out"></i> SAIR</div>
+    </div>
+  </aside>
+
+  <div class="content">
+    <div class="topbar">
+      <div class="crumbs"><strong>Protocolos</strong></div>
+      <div class="topbar-right">
+        <button class="btn"><i data-lucide="copy"></i> Duplicar</button>
+        <button class="btn primary"><i data-lucide="plus"></i> Novo Protocolo</button>
+      </div>
+    </div>
+
+    <div class="body">
+      <!-- list -->
+      <div class="listpane">
+        <div class="lp-head">
+          <h1>Biblioteca de Protocolos</h1>
+          <div class="sub">55 protocolos · 23 com pacientes ativos · 12 templates</div>
+        </div>
+        <div class="lp-tools">
+          <div class="search"><i data-lucide="search"></i> Buscar protocolo...</div>
+          <div class="filter-chips">
+            <span class="fchip on">Todos</span>
+            <span class="fchip">Joelho</span>
+            <span class="fchip">Ombro</span>
+            <span class="fchip">Coluna</span>
+            <span class="fchip">Pós-op</span>
+            <span class="fchip">Esportivo</span>
+          </div>
+        </div>
+        <div class="lp-list">
+          <div class="proto sel">
+            <div class="nm">Dor patelofemoral — conservador <span class="badge info">ATIVO</span></div>
+            <div class="meta">Joelho · 3 fases · 18 exercícios · 6 semanas</div>
+            <div class="foot">
+              <span class="badge muted">7 PACIENTES</span>
+              <div class="avs"><span class="av" style="background:hsl(264 55% 55%);">MA</span><span class="av" style="background:hsl(28 80% 52%);">JS</span><span class="av" style="background:hsl(158 55% 42%);">PL</span><span class="av" style="background:hsl(220 10% 60%);">+4</span></div>
+            </div>
+          </div>
+          <div class="proto">
+            <div class="nm">LCA pós-reconstrução — acelerado</div>
+            <div class="meta">Joelho · 5 fases · 32 exercícios · 24 semanas</div>
+            <div class="foot">
+              <span class="badge muted">4 PACIENTES</span>
+              <div class="avs"><span class="av" style="background:hsl(211 70% 50%);">RC</span><span class="av" style="background:hsl(340 60% 55%);">FM</span><span class="av" style="background:hsl(220 10% 60%);">+2</span></div>
+            </div>
+          </div>
+          <div class="proto">
+            <div class="nm">Manguito rotador — fase inicial</div>
+            <div class="meta">Ombro · 4 fases · 22 exercícios · 12 semanas</div>
+            <div class="foot">
+              <span class="badge muted">5 PACIENTES</span>
+              <div class="avs"><span class="av" style="background:hsl(28 80% 52%);">AT</span><span class="av" style="background:hsl(158 55% 42%);">GB</span><span class="av" style="background:hsl(220 10% 60%);">+3</span></div>
+            </div>
+          </div>
+          <div class="proto">
+            <div class="nm">Lombalgia crônica — McGill</div>
+            <div class="meta">Coluna · 3 fases · 14 exercícios · 8 semanas</div>
+            <div class="foot">
+              <span class="badge muted">9 PACIENTES</span>
+              <div class="avs"><span class="av" style="background:hsl(264 55% 55%);">LM</span><span class="av" style="background:hsl(211 70% 50%);">DS</span><span class="av" style="background:hsl(220 10% 60%);">+7</span></div>
+            </div>
+          </div>
+          <div class="proto">
+            <div class="nm">Entorse de tornozelo grau II</div>
+            <div class="meta">Tornozelo · 3 fases · 16 exercícios · 6 semanas</div>
+            <div class="foot"><span class="badge muted">TEMPLATE</span></div>
+          </div>
+          <div class="proto">
+            <div class="nm">Tendinopatia patelar — HSR</div>
+            <div class="meta">Joelho · 2 fases · 9 exercícios · 12 semanas</div>
+            <div class="foot"><span class="badge muted">TEMPLATE</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- detail -->
+      <div class="detail">
+        <div class="d-head">
+          <div>
+            <h2>Dor patelofemoral — conservador</h2>
+            <div class="meta">
+              <span class="badge info">JOELHO</span>
+              <span class="badge muted">6 SEMANAS</span>
+              <span class="badge muted">3×/SEMANA</span>
+              <span class="badge ok">7 PACIENTES ATIVOS</span>
+            </div>
+            <p class="desc">Protocolo conservador para síndrome da dor patelofemoral com ênfase em fortalecimento de quadríceps e quadril, controle do valgo dinâmico e exposição gradual a agachamento e escadas.</p>
+          </div>
+          <div class="d-actions">
+            <button class="btn"><i data-lucide="pencil"></i> Editar</button>
+            <button class="btn primary"><i data-lucide="user-plus"></i> Prescrever</button>
+          </div>
+        </div>
+
+        <div class="phases">
+          <div class="phase">
+            <div class="tag">FASE 1 · SEM 1–2</div>
+            <div class="nm">Controle de dor</div>
+            <div class="mt">6 exercícios · isometria + mobilidade</div>
+            <div class="crit"><i data-lucide="arrow-right-circle" style="width:13px;height:13px;"></i> Progride com EVA &lt; 5 em AVDs</div>
+          </div>
+          <div class="phase on">
+            <div class="tag">FASE 2 · SEM 3–4</div>
+            <div class="nm">Fortalecimento</div>
+            <div class="mt">8 exercícios · carga progressiva</div>
+            <div class="crit"><i data-lucide="arrow-right-circle" style="width:13px;height:13px;"></i> Step-down 3×10 sem dor</div>
+          </div>
+          <div class="phase">
+            <div class="tag">FASE 3 · SEM 5–6</div>
+            <div class="nm">Retorno funcional</div>
+            <div class="mt">4 exercícios · pliometria leve</div>
+            <div class="crit"><i data-lucide="flag" style="width:13px;height:13px;"></i> Alta com hop test ≥ 90% contralateral</div>
+          </div>
+        </div>
+
+        <div class="sec-title">
+          <h3>Exercícios — Fase 2 · Fortalecimento</h3>
+          <span class="hint">Arraste para reordenar · dose padrão, ajustável por paciente</span>
+        </div>
+
+        <div class="exrow">
+          <span class="ord">1</span>
+          <span class="thumb"><i data-lucide="image" style="width:15px;height:15px;"></i></span>
+          <div><div class="nm">Leg press 45° unilateral</div><div class="mt">Quadríceps · arco 0–60° · cadeia fechada</div></div>
+          <span class="dose">3 × 10 <small>reps</small></span>
+          <span class="dose">40 kg</span>
+          <span class="badge info">VÍDEO</span>
+          <span class="grip"><i data-lucide="grip-vertical" style="width:15px;height:15px;"></i></span>
+        </div>
+        <div class="exrow">
+          <span class="ord">2</span>
+          <span class="thumb"><i data-lucide="image" style="width:15px;height:15px;"></i></span>
+          <div><div class="nm">Step-down excêntrico</div><div class="mt">Controle de valgo · degrau 15 cm · tempo 3-0-1</div></div>
+          <span class="dose">3 × 10 <small>/lado</small></span>
+          <span class="dose">Peso corp.</span>
+          <span class="badge info">VÍDEO</span>
+          <span class="grip"><i data-lucide="grip-vertical" style="width:15px;height:15px;"></i></span>
+        </div>
+        <div class="exrow" style="grid-template-columns: 26px 1fr; padding: 6px 14px; background: transparent; border: 0; margin-bottom: 4px;">
+          <span></span><span class="superset">SUPERSÉRIE A — sem descanso entre 3 e 4</span>
+        </div>
+        <div class="exrow">
+          <span class="ord">3</span>
+          <span class="thumb"><i data-lucide="image" style="width:15px;height:15px;"></i></span>
+          <div><div class="nm">Abdução de quadril com caneleira</div><div class="mt">Glúteo médio · decúbito lateral</div></div>
+          <span class="dose">3 × 12 <small>/lado</small></span>
+          <span class="dose">3 kg</span>
+          <span class="badge info">VÍDEO</span>
+          <span class="grip"><i data-lucide="grip-vertical" style="width:15px;height:15px;"></i></span>
+        </div>
+        <div class="exrow">
+          <span class="ord">4</span>
+          <span class="thumb"><i data-lucide="image" style="width:15px;height:15px;"></i></span>
+          <div><div class="nm">Ponte unilateral</div><div class="mt">Glúteo máximo · isometria 5 s no topo</div></div>
+          <span class="dose">3 × 8 <small>/lado</small></span>
+          <span class="dose">Peso corp.</span>
+          <span class="badge muted">SEM VÍDEO</span>
+          <span class="grip"><i data-lucide="grip-vertical" style="width:15px;height:15px;"></i></span>
+        </div>
+        <div class="exrow">
+          <span class="ord">5</span>
+          <span class="thumb"><i data-lucide="image" style="width:15px;height:15px;"></i></span>
+          <div><div class="nm">Agachamento parcial com apoio</div><div class="mt">Arco 0–60° · espelho para feedback de valgo</div></div>
+          <span class="dose">3 × 12 <small>reps</small></span>
+          <span class="dose">Peso corp.</span>
+          <span class="badge info">VÍDEO</span>
+          <span class="grip"><i data-lucide="grip-vertical" style="width:15px;height:15px;"></i></span>
+        </div>
+        <div class="add-ex"><i data-lucide="plus" style="width:15px;height:15px;"></i> Adicionar exercício da biblioteca</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();</script>
+</body>
+</html>

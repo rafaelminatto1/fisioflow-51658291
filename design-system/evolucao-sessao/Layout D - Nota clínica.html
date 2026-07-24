@@ -1,0 +1,284 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="Evolução/Sessão · D — Nota clínica" subtitle="Writing-first editorial: jornada da dor (EVA) + descrição clínica narrativa" viewport="1360x980" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Evolução da Sessão · Layout D — Nota clínica</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<link rel="stylesheet" href="session.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  .stage-d { flex: 1; min-height: 0; overflow-y: auto; background: hsl(var(--muted) / .35); padding: 26px 24px 60px; display: flex; justify-content: center; gap: 22px; align-items: flex-start; }
+  .doc { width: 100%; max-width: 740px; display: flex; flex-direction: column; gap: 18px; }
+
+  /* EVA journey banner */
+  .eva-banner { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 20px; padding: 22px 26px; box-shadow: var(--shadow-sm); }
+  .eva-banner .eh { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .eva-banner .eh .et { font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
+  .eva-banner .eh .delta { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: hsl(158 64% 92%); color: hsl(158 64% 28%); font-size: 12px; font-weight: 800; }
+  .eva-banner .eh .delta svg { width: 14px; height: 14px; }
+
+  .journey { position: relative; padding: 26px 8px 8px; }
+  .jtrack { height: 12px; border-radius: 999px; background: linear-gradient(90deg, var(--color-pain-gauge-low), var(--color-pain-gauge-med) 50%, var(--color-pain-gauge-high) 78%, var(--color-pain-gauge-severe)); position: relative; }
+  .pin { position: absolute; top: -23px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; }
+  .pin .pv { width: 40px; height: 40px; border-radius: 12px; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; box-shadow: var(--shadow-md); border: 2px solid #fff; }
+  .pin .pl { font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin-top: 6px; }
+  .pin .stem { position: absolute; top: 40px; width: 2px; height: 14px; background: hsl(var(--foreground) / .25); }
+  .jflow { position: absolute; height: 12px; top: 0; border-radius: 999px; background: repeating-linear-gradient(90deg, hsl(var(--foreground)/.18) 0 4px, transparent 4px 8px); }
+  .jscale { display: flex; justify-content: space-between; margin-top: 12px; font-size: 10px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  .eva-desc { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px dashed hsl(var(--border)); flex-wrap: wrap; }
+  .qchip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 700; background: hsl(var(--secondary)); color: hsl(var(--muted-foreground)); }
+  .qchip.on { background: hsl(0 84% 95%); color: hsl(0 70% 42%); }
+  .qchip svg { width: 12px; height: 12px; }
+  .eva-desc .loc { margin-left: auto; font-size: 11.5px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  .eva-desc .loc svg { width: 13px; height: 13px; vertical-align: -2px; }
+
+  /* clinical note paper */
+  .note { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 20px; box-shadow: var(--shadow-sm); overflow: hidden; }
+  .note-bar { display: flex; align-items: center; gap: 10px; padding: 14px 22px; border-bottom: 1px solid hsl(var(--border)); }
+  .note-bar .nt { font-size: 15px; font-weight: 800; }
+  .note-bar .ns { font-size: 11px; font-weight: 600; color: hsl(var(--muted-foreground)); }
+  .note-bar .tools { margin-left: auto; display: flex; align-items: center; gap: 2px; }
+  .note-bar .tb { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: hsl(var(--muted-foreground)); cursor: pointer; font-weight: 800; font-size: 13px; }
+  .note-bar .tb:hover { background: hsl(var(--secondary)); color: hsl(var(--foreground)); }
+  .note-bar .tb svg { width: 15px; height: 15px; }
+  .note-bar .div { width: 1px; height: 18px; background: hsl(var(--border)); margin: 0 4px; }
+
+  .paper { padding: 30px 40px 36px; font-size: 15px; line-height: 1.72; color: hsl(224 30% 18%); }
+  .paper .lead { display: flex; gap: 16px; }
+  .paper .dropcap { float: none; font-size: 58px; line-height: .9; font-weight: 800; color: hsl(var(--primary)); font-family: var(--font-display); margin-top: 2px; }
+  .paper p { font-size: 15px; line-height: 1.72; margin-bottom: 15px; color: hsl(224 28% 20%); }
+  .paper p strong { font-weight: 800; color: hsl(224 40% 14%); }
+  .paper .mark { background: linear-gradient(180deg, transparent 55%, hsl(211 100% 50% / .18) 55%); padding: 0 1px; }
+  .paper h4 { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: hsl(var(--primary)); margin: 22px 0 9px; display: flex; align-items: center; gap: 8px; }
+  .paper h4 svg { width: 15px; height: 15px; }
+  .paper ul.clin { margin: 0 0 15px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .paper ul.clin li { display: flex; gap: 11px; font-size: 14.5px; line-height: 1.55; }
+  .paper ul.clin li svg { width: 16px; height: 16px; color: hsl(158 64% 42%); flex-shrink: 0; margin-top: 4px; }
+  .paper .metric-inline { display: inline-flex; align-items: baseline; gap: 4px; padding: 1px 9px; border-radius: 7px; background: hsl(211 100% 95%); color: hsl(211 100% 34%); font-weight: 800; font-variant-numeric: tabular-nums; font-size: 13.5px; }
+
+  .signoff { display: flex; align-items: center; gap: 13px; margin-top: 26px; padding-top: 20px; border-top: 1px solid hsl(var(--border)); }
+  .signoff .sa { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg,hsl(211 100% 60%),hsl(211 100% 40%)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; }
+  .signoff .snm { font-size: 13.5px; font-weight: 800; }
+  .signoff .scr { font-size: 11.5px; color: hsl(var(--muted-foreground)); font-weight: 700; }
+  .signoff .when { margin-left: auto; font-size: 11px; font-weight: 700; color: hsl(var(--muted-foreground)); text-align: right; }
+
+  /* right utility rail */
+  .urail { width: 232px; flex-shrink: 0; position: sticky; top: 0; display: flex; flex-direction: column; gap: 13px; }
+  .ucard { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; padding: 15px; }
+  .ucard .ut { font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin-bottom: 11px; }
+  .urow { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; font-size: 12px; font-weight: 700; }
+  .urow .ul { color: hsl(var(--muted-foreground)); font-weight: 600; display: flex; align-items: center; gap: 7px; }
+  .urow .ul svg { width: 14px; height: 14px; }
+  .ai-suggest { background: linear-gradient(135deg, hsl(211 100% 97%), hsl(199 89% 96%)); border-color: hsl(199 89% 86%); }
+  .ai-suggest .ut { color: hsl(205 70% 40%); }
+  .ai-suggest p { font-size: 11.5px; line-height: 1.5; color: hsl(205 45% 30%); font-weight: 600; margin: 0 0 10px; }
+</style>
+</head>
+<body class="frame-wrap">
+<div class="screen">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><img src="../assets/activity-logo.svg" alt=""/></div>
+      <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
+    </div>
+    <div class="sb-search"><i data-lucide="search"></i> Buscar paciente… <span class="kbd">⌘K</span></div>
+    <nav class="sb-nav">
+      <div>
+        <div class="sb-group-label">ATENDIMENTO</div>
+        <div class="sb-item"><i data-lucide="calendar-days"></i> AGENDA</div>
+        <div class="sb-item"><i data-lucide="users"></i> PACIENTES</div>
+        <div class="sb-item"><i data-lucide="message-circle"></i> WHATSAPP</div>
+      </div>
+      <div>
+        <div class="sb-group-label">CLÍNICA</div>
+        <div class="sb-item is-active"><i data-lucide="line-chart"></i> EVOLUÇÃO CLÍNICA</div>
+        <div class="sb-item"><i data-lucide="dumbbell"></i> EXERCÍCIOS</div>
+        <div class="sb-item"><i data-lucide="clipboard-list"></i> PROTOCOLOS</div>
+        <div class="sb-item"><i data-lucide="flask-conical"></i> TESTES CLÍNICOS</div>
+        <div class="sb-item"><i data-lucide="camera"></i> BIOMECÂNICA</div>
+      </div>
+      <div>
+        <div class="sb-group-label">INTELIGÊNCIA &amp; IA</div>
+        <div class="sb-item"><i data-lucide="sparkles"></i> IA STUDIO <span class="tag pro">PRO</span></div>
+        <div class="sb-item"><i data-lucide="brain"></i> HUB <span class="tag new">NEW</span></div>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- topbar -->
+    <div class="topbar">
+      <div class="crumbs">
+        <span class="live"><span class="dot"></span> REAL-TIME ACTIVE</span>
+        <span class="sep"><i data-lucide="chevron-right"></i></span>
+        <span>Evolução do Paciente</span>
+        <span class="sep"><i data-lucide="chevron-right"></i></span>
+        <span style="color:hsl(var(--foreground));font-weight:800;">Nota clínica</span>
+      </div>
+      <div class="grow"></div>
+      <div class="top-search"><i data-lucide="search" style="width:14px;height:14px;"></i> Buscar <span class="kbd">⌘K</span></div>
+      <div class="top-ic"><i data-lucide="bell"></i><span class="ping"></span></div>
+      <div class="top-ic"><i data-lucide="moon"></i></div>
+      <div class="top-user"><div class="av">RM</div><div><div class="nm">Rafael Minatto</div><div class="rl">ADMIN</div></div></div>
+    </div>
+
+    <!-- patient header -->
+    <div class="phead">
+      <div class="back"><i data-lucide="arrow-left"></i></div>
+      <div class="pav">RM</div>
+      <div>
+        <div class="pname">
+          <h1>Rafael Minatto De Martino</h1>
+          <span class="sess-pill">SESSÃO #3</span>
+        </div>
+        <div class="pmeta">
+          <span><i data-lucide="user"></i> 32 anos · ♂</span><span class="dot"></span>
+          <span><i data-lucide="activity"></i> Síndrome do impacto · ombro D</span><span class="dot"></span>
+          <span><i data-lucide="clipboard-list"></i> Reabilitação de ombro · 3/12</span>
+        </div>
+      </div>
+      <div class="ml-auto" style="display:flex;align-items:center;gap:10px;margin-left:auto;">
+        <span class="timer calm"><i data-lucide="clock" style="width:15px;height:15px;"></i> 00:24:18</span>
+        <button class="btn scribe"><i data-lucide="mic"></i> Voice Scribe <span class="ia">IA</span></button>
+        <button class="btn success"><i data-lucide="check-circle-2"></i> Concluir</button>
+      </div>
+    </div>
+
+    <!-- tabs -->
+    <div class="tabs">
+      <div class="tab is-active"><i data-lucide="line-chart"></i> Evolução</div>
+      <div class="tab"><i data-lucide="stethoscope"></i> Avaliação</div>
+      <div class="tab"><i data-lucide="pill"></i> Tratamento</div>
+      <div class="tab"><i data-lucide="history"></i> Histórico</div>
+      <div class="tab"><i data-lucide="sparkles"></i> Assistente</div>
+      <div class="tab"><i data-lucide="image"></i> Mídia</div>
+      <div class="tab"><i data-lucide="settings"></i> Ajustes</div>
+      <div class="grow"></div>
+      <div class="pick"><i data-lucide="user-cog"></i> Dra. Marina Alves <i data-lucide="chevron-down"></i></div>
+    </div>
+
+    <!-- STAGE -->
+    <div class="stage-d">
+
+      <!-- DOCUMENT -->
+      <div class="doc">
+
+        <!-- EVA journey -->
+        <div class="eva-banner">
+          <div class="eh">
+            <i data-lucide="activity" style="width:18px;height:18px;color:var(--color-pain-7);"></i>
+            <span class="et">Nível de dor · a jornada de hoje (EVA)</span>
+            <span class="delta"><i data-lucide="trending-down"></i> −2 pontos na sessão</span>
+          </div>
+          <div class="journey">
+            <div class="jtrack">
+              <div class="jflow" style="left:40%;width:20%;"></div>
+              <div class="pin" style="left:60%;">
+                <div class="pv" style="background:var(--color-pain-7);">6</div>
+                <span class="stem"></span>
+                <div class="pl" style="margin-top:18px;">Chegada</div>
+              </div>
+              <div class="pin" style="left:40%;">
+                <div class="pv" style="background:var(--color-pain-5);">4</div>
+                <span class="stem"></span>
+                <div class="pl" style="margin-top:18px;">Saída</div>
+              </div>
+            </div>
+            <div class="jscale"><span>0 · sem dor</span><span>5 · moderada</span><span>10 · máxima</span></div>
+          </div>
+          <div class="eva-desc">
+            <span style="font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:hsl(var(--muted-foreground));">Característica:</span>
+            <span class="qchip on"><i data-lucide="zap"></i> Pontada</span>
+            <span class="qchip on"><i data-lucide="anchor"></i> Peso</span>
+            <span class="qchip"><i data-lucide="flame"></i> Queimação</span>
+            <span class="loc"><i data-lucide="map-pin"></i> Ombro D · face anterior · arco 70–110°</span>
+          </div>
+        </div>
+
+        <!-- CLINICAL NOTE -->
+        <div class="note">
+          <div class="note-bar">
+            <i data-lucide="file-text" style="width:17px;height:17px;color:hsl(var(--muted-foreground));"></i>
+            <div><div class="nt">Nota clínica da sessão</div><div class="ns">Descrição detalhada da evolução · registro principal</div></div>
+            <div class="tools">
+              <span class="tb">B</span><span class="tb" style="font-style:italic;">I</span><span class="tb" style="text-decoration:underline;">U</span>
+              <span class="div"></span>
+              <span class="tb"><i data-lucide="heading-2"></i></span><span class="tb"><i data-lucide="list"></i></span><span class="tb"><i data-lucide="highlighter"></i></span>
+              <span class="div"></span>
+              <span class="tb"><i data-lucide="sparkles"></i></span><span class="tb"><i data-lucide="maximize-2"></i></span>
+            </div>
+          </div>
+          <div class="paper">
+            <div class="lead">
+              <span class="dropcap">R</span>
+              <p style="margin:0;">afael chega à terceira sessão visivelmente mais solto com o braço direito. Conta, antes mesmo de deitar na maca, que conseguiu <span class="mark">pentear o cabelo sem o "travão" do meio do movimento</span> pela primeira vez em semanas — e que a dor noturna, que o despertava duas vezes por noite, ontem o acordou apenas uma vez. Pequenas vitórias que, para ele, valem mais que qualquer número.</p>
+            </div>
+            <p>Ao exame, o <strong>arco doloroso persiste entre 70° e 110° de elevação</strong>, porém com intensidade nitidamente menor: o que na S02 arrancava uma careta, hoje é descrito como "um aviso, não uma dor". A palpação do tendão supraespinhal segue sensível, sem sinais flogísticos. A mobilização escapular grau III foi muito bem tolerada e, logo após a liberação, ganhamos amplitude imediata — a elevação ativa saltou para <span class="metric-inline">142°</span>, contra 127° na sessão anterior.</p>
+
+            <h4><i data-lucide="dumbbell"></i> Conduta realizada</h4>
+            <ul class="clin">
+              <li><i data-lucide="check-circle-2"></i><span>Mobilização escapular grau III em decúbito lateral — <strong>3 séries · 10 min</strong>, sem reprodução de dor.</span></li>
+              <li><i data-lucide="check-circle-2"></i><span>Rotação externa com faixa elástica amarela — <strong>3×12</strong>, boa ativação do infraespinhal, sem compensação de trapézio superior.</span></li>
+              <li><i data-lucide="check-circle-2"></i><span><em>Wall slides</em> para controle motor escapular — <strong>2×15</strong>, progredindo amplitude ao final.</span></li>
+            </ul>
+
+            <h4><i data-lucide="compass"></i> Impressão &amp; plano</h4>
+            <p>Evolução <strong>favorável e consistente</strong> com o protocolo de reabilitação. A redução da dor noturna sugere menor irritabilidade tecidual — sinal verde para progredir carga na próxima sessão. Mantida a tríade mobilidade escapular + fortalecimento do manguito + controle motor. Reforçada a importância da adesão ao programa domiciliar, hoje em <span class="metric-inline">75%</span>; combinamos um lembrete via WhatsApp nas noites de treino.</p>
+
+            <div class="signoff">
+              <div class="sa">MA</div>
+              <div><div class="snm">Dra. Marina Alves</div><div class="scr">Fisioterapeuta · CREFITO-3 · 98765-F</div></div>
+              <div class="when">9 jun 2026 · 19:24<br/><span style="color:hsl(158 64% 35%);"><i data-lucide="check" style="width:11px;height:11px;vertical-align:-1px;"></i> Salvo automaticamente</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- UTILITY RAIL -->
+      <div class="urail">
+        <div class="ucard">
+          <div class="ut">Adicionar conduta</div>
+          <div class="acwrap compact" data-ac="">
+            <div class="acbox">
+              <i data-lucide="search"></i>
+              <input type="text" placeholder="Buscar conduta…"/>
+            </div>
+            <div class="acpanel"></div>
+          </div>
+        </div>
+        <div class="ucard ai-suggest">
+          <div class="ut"><i data-lucide="sparkles" style="width:12px;height:12px;vertical-align:-1px;"></i> Sugestão da IA</div>
+          <p>O Voice Scribe transcreveu a sessão e redigiu este rascunho. Revise os trechos destacados antes de concluir.</p>
+          <button class="btn sm" style="width:100%;justify-content:center;background:hsl(var(--primary));color:#fff;border-color:hsl(var(--primary));"><i data-lucide="wand-2"></i> Reescrever trecho</button>
+        </div>
+        <div class="ucard">
+          <div class="ut">Objetivos de hoje</div>
+          <div class="urow"><span class="ul"><i data-lucide="check-circle-2" style="color:hsl(158 64% 45%);"></i> Mobilidade escapular</span></div>
+          <div class="urow"><span class="ul"><i data-lucide="check-circle-2" style="color:hsl(158 64% 45%);"></i> Fortalecer manguito</span></div>
+          <div class="urow"><span class="ul"><i data-lucide="circle" style="color:hsl(var(--muted-foreground));"></i> Reduzir dor noturna</span></div>
+        </div>
+        <div class="ucard">
+          <div class="ut">Medições</div>
+          <div class="urow"><span class="ul"><i data-lucide="move"></i> ROM elev.</span><span>142° <span class="up" style="font-size:10px;">+15</span></span></div>
+          <div class="urow"><span class="ul"><i data-lucide="gauge"></i> PA</span><span>128/82</span></div>
+          <div class="urow"><span class="ul"><i data-lucide="heart"></i> FC</span><span>74 bpm</span></div>
+        </div>
+        <div class="ucard">
+          <div class="ut">Anexos</div>
+          <div class="addrow" style="justify-content:center;padding:9px;"><i data-lucide="paperclip"></i> Anexar</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="conduta-autocomplete.js"></script>
+<script>if (window.lucide) lucide.createIcons();</script>
+</body>
+</html>

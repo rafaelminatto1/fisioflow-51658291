@@ -1,0 +1,245 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="UI Kit · Financeiro (web)" subtitle="Faturamento: KPIs do mês, receita particular × convênio, repasses e lançamentos com status" viewport="1320x920" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Financeiro — FisioFlow Clínica</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<link rel="stylesheet" href="screen-shell.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  .main { overflow-y: auto; min-height: 0; padding: 18px 24px 24px; }
+  .m-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .m-head h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  .m-head .sub { font-size: 12px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .period { margin-left: auto; display: flex; align-items: center; gap: 0; border: 1px solid hsl(var(--border)); border-radius: 10px; overflow: hidden; background: hsl(var(--card)); }
+  .period span { padding: 7px 13px; font-size: 12px; font-weight: 700; color: hsl(var(--muted-foreground)); cursor: pointer; border-right: 1px solid hsl(var(--border)); }
+  .period span:last-child { border-right: 0; }
+  .period span.on { background: hsl(var(--primary) / .1); color: hsl(var(--primary)); }
+
+  /* KPIs */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .kpi { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 14px; padding: 14px 16px; }
+  .kpi .lb { font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: hsl(var(--muted-foreground)); display: flex; align-items: center; gap: 6px; }
+  .kpi .vl { font-size: 23px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; margin-top: 4px; }
+  .kpi .dl { font-size: 11px; font-weight: 700; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
+  .kpi .dl.up { color: hsl(158 60% 32%); }
+  .kpi .dl.down { color: hsl(0 70% 45%); }
+  .kpi .dl.flat { color: hsl(var(--muted-foreground)); }
+
+  /* charts row */
+  .charts { display: grid; grid-template-columns: 1fr 296px; gap: 12px; margin-top: 12px; }
+  .chart-card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 14px; padding: 16px 18px; }
+  .chart-card h3 { font-size: 12px; font-weight: 800; display: flex; align-items: center; gap: 14px; }
+  .legend { display: flex; gap: 12px; margin-left: auto; font-size: 10.5px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+  .bars { display: flex; align-items: flex-end; gap: 18px; height: 132px; margin-top: 16px; padding: 0 6px; }
+  .bgrp { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 0; height: 100%; position: relative; }
+  .bgrp .seg { border-radius: 0; }
+  .bgrp .seg.top { border-radius: 5px 5px 0 0; }
+  .bgrp .lbl { position: absolute; bottom: -20px; left: 0; right: 0; text-align: center; font-size: 10px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  .bgrp .val { position: absolute; top: -18px; left: 0; right: 0; text-align: center; font-size: 10px; font-weight: 800; font-variant-numeric: tabular-nums; color: hsl(var(--muted-foreground)); }
+  .bars-foot { height: 22px; }
+
+  /* receivables */
+  .recv { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+  .recv-row { display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; }
+  .recv-row .nm { width: 86px; flex-shrink: 0; }
+  .recv-row .track { flex: 1; height: 7px; border-radius: 4px; background: hsl(var(--muted)); overflow: hidden; }
+  .recv-row .track span { display: block; height: 100%; border-radius: 4px; background: hsl(var(--primary)); }
+  .recv-row .amt { width: 76px; text-align: right; font-variant-numeric: tabular-nums; font-size: 11.5px; }
+  .recv-note { font-size: 10.5px; font-weight: 600; color: hsl(var(--muted-foreground)); margin-top: 4px; padding-top: 10px; border-top: 1px dashed hsl(var(--border)); display: flex; align-items: center; gap: 6px; }
+
+  /* table */
+  .tbl-card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 14px; margin-top: 12px; overflow: hidden; }
+  .tbl-head { display: flex; align-items: center; padding: 13px 18px; border-bottom: 1px solid hsl(var(--border)); gap: 12px; }
+  .tbl-head h3 { font-size: 13px; font-weight: 800; }
+  .tbl-head .sub { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: hsl(var(--muted-foreground)); padding: 9px 18px; border-bottom: 1px solid hsl(var(--border)); background: hsl(var(--muted) / .35); }
+  td { padding: 10px 18px; border-bottom: 1px solid hsl(var(--border) / .6); font-size: 12.5px; font-weight: 600; vertical-align: middle; }
+  tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: hsl(220 14% 96%); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .pt { display: flex; align-items: center; gap: 9px; }
+  .pt .av { width: 26px; height: 26px; font-size: 9px; }
+  .pt .nm { font-weight: 800; }
+  .pt .mt { font-size: 10.5px; color: hsl(var(--muted-foreground)); }
+</style>
+</head>
+<body>
+<div class="pad">
+
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><img src="../../assets/activity-logo.svg" alt=""/></div>
+      <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div>
+        <div class="sb-group-label">ATENDIMENTO</div>
+        <div class="sb-item"><i data-lucide="calendar-days"></i> AGENDA</div>
+        <div class="sb-item"><i data-lucide="users"></i> PACIENTES</div>
+        <div class="sb-item"><i data-lucide="message-circle"></i> CRM · WHATSAPP</div>
+      </div>
+      <div>
+        <div class="sb-group-label">CLÍNICA</div>
+        <div class="sb-item"><i data-lucide="clipboard-check"></i> AVALIAÇÕES</div>
+        <div class="sb-item"><i data-lucide="dumbbell"></i> EXERCÍCIOS</div>
+        <div class="sb-item"><i data-lucide="clipboard-list"></i> PROTOCOLOS</div>
+        <div class="sb-item"><i data-lucide="flask-conical"></i> TESTES CLÍNICOS</div>
+        <div class="sb-item"><i data-lucide="camera"></i> BIOMECÂNICA</div>
+      </div>
+      <div>
+        <div class="sb-group-label">GESTÃO &amp; OPERAÇÃO</div>
+        <div class="sb-item"><i data-lucide="layout-dashboard"></i> BOARDS</div>
+        <div class="sb-item is-active"><i data-lucide="wallet"></i> FINANCEIRO</div>
+        <div class="sb-item"><i data-lucide="book-open"></i> WIKI CLÍNICA</div>
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-item"><i data-lucide="settings"></i> CONFIGURAÇÕES</div>
+      <div class="sb-item"><i data-lucide="log-out"></i> SAIR</div>
+    </div>
+  </aside>
+
+  <div class="content">
+    <div class="topbar">
+      <div class="crumbs"><strong>Financeiro</strong></div>
+      <div class="topbar-right">
+        <button class="btn"><i data-lucide="download"></i> Exportar</button>
+        <button class="btn primary"><i data-lucide="plus"></i> Novo Lançamento</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="m-head">
+        <h1>Faturamento</h1>
+        <span class="sub">Junho de 2026 · fechamento em 20 dias</span>
+        <div class="period"><span>Semana</span><span class="on">Mês</span><span>Trimestre</span><span>Ano</span></div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi">
+          <div class="lb"><i data-lucide="banknote" style="width:13px;height:13px;"></i> Receita do mês</div>
+          <div class="vl">R$ 48.260</div>
+          <div class="dl up"><i data-lucide="trending-up" style="width:12px;height:12px;"></i> +12% vs. maio</div>
+        </div>
+        <div class="kpi">
+          <div class="lb"><i data-lucide="hourglass" style="width:13px;height:13px;"></i> A receber</div>
+          <div class="vl">R$ 13.840</div>
+          <div class="dl flat">R$ 9.120 de convênios · 30–60 dias</div>
+        </div>
+        <div class="kpi">
+          <div class="lb"><i data-lucide="alert-triangle" style="width:13px;height:13px;"></i> Inadimplência</div>
+          <div class="vl">R$ 2.310</div>
+          <div class="dl down"><i data-lucide="trending-up" style="width:12px;height:12px;"></i> 4,8% da receita · 6 faturas</div>
+        </div>
+        <div class="kpi">
+          <div class="lb"><i data-lucide="receipt" style="width:13px;height:13px;"></i> Ticket médio / sessão</div>
+          <div class="vl">R$ 142</div>
+          <div class="dl up"><i data-lucide="trending-up" style="width:12px;height:12px;"></i> +R$ 6 vs. maio</div>
+        </div>
+      </div>
+
+      <div class="charts">
+        <div class="chart-card">
+          <h3>Receita mensal
+            <span class="legend">
+              <span><i style="background:hsl(211 100% 50%);"></i> Particular</span>
+              <span><i style="background:hsl(211 60% 78%);"></i> Convênio</span>
+            </span>
+          </h3>
+          <div class="bars">
+            <div class="bgrp"><span class="val">38,4</span><span class="seg top" style="height:38%; background:hsl(211 100% 50%);"></span><span class="seg" style="height:26%; background:hsl(211 60% 78%);"></span><span class="lbl">JAN</span></div>
+            <div class="bgrp"><span class="val">41,0</span><span class="seg top" style="height:42%; background:hsl(211 100% 50%);"></span><span class="seg" style="height:27%; background:hsl(211 60% 78%);"></span><span class="lbl">FEV</span></div>
+            <div class="bgrp"><span class="val">39,7</span><span class="seg top" style="height:40%; background:hsl(211 100% 50%);"></span><span class="seg" style="height:26%; background:hsl(211 60% 78%);"></span><span class="lbl">MAR</span></div>
+            <div class="bgrp"><span class="val">44,9</span><span class="seg top" style="height:46%; background:hsl(211 100% 50%);"></span><span class="seg" style="height:29%; background:hsl(211 60% 78%);"></span><span class="lbl">ABR</span></div>
+            <div class="bgrp"><span class="val">43,1</span><span class="seg top" style="height:44%; background:hsl(211 100% 50%);"></span><span class="seg" style="height:28%; background:hsl(211 60% 78%);"></span><span class="lbl">MAI</span></div>
+            <div class="bgrp"><span class="val">48,3</span><span class="seg top" style="height:52%; background:hsl(211 100% 50%);"></span><span class="seg" style="height:29%; background:hsl(211 60% 78%);"></span><span class="lbl">JUN</span></div>
+          </div>
+          <div class="bars-foot"></div>
+        </div>
+
+        <div class="chart-card">
+          <h3>A receber por origem</h3>
+          <div class="recv">
+            <div class="recv-row"><span class="nm">Particular</span><span class="track"><span style="width:34%;"></span></span><span class="amt">R$ 4.720</span></div>
+            <div class="recv-row"><span class="nm">Unimed</span><span class="track"><span style="width:42%; background:hsl(158 60% 42%);"></span></span><span class="amt">R$ 5.880</span></div>
+            <div class="recv-row"><span class="nm">Bradesco</span><span class="track"><span style="width:16%; background:hsl(158 60% 42%);"></span></span><span class="amt">R$ 2.190</span></div>
+            <div class="recv-row"><span class="nm">SulAmérica</span><span class="track"><span style="width:8%; background:hsl(158 60% 42%);"></span></span><span class="amt">R$ 1.050</span></div>
+          </div>
+          <div class="recv-note"><i data-lucide="info" style="width:13px;height:13px;"></i> Repasse Unimed previsto para 25/06</div>
+        </div>
+      </div>
+
+      <div class="tbl-card">
+        <div class="tbl-head">
+          <h3>Lançamentos recentes</h3>
+          <span class="sub">142 no mês</span>
+          <div class="topbar-right">
+            <button class="btn sm"><i data-lucide="filter"></i> Status</button>
+            <button class="btn sm"><i data-lucide="search"></i> Buscar</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Paciente</th><th>Descrição</th><th>Origem</th><th>Vencimento</th><th class="num">Valor</th><th style="width:110px;">Status</th><th style="width:44px;"></th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="pt"><span class="av" style="background:hsl(264 55% 55%);">MA</span><div><div class="nm">Marina Alves</div><div class="mt">PAC-0214</div></div></div></td>
+              <td>Pacote 16 sessões — parcela 2/4</td>
+              <td><span class="badge muted">PARTICULAR</span></td>
+              <td>10/06/2026</td>
+              <td class="num"><b>R$ 560,00</b></td>
+              <td><span class="badge ok">PAGO · PIX</span></td>
+              <td><i data-lucide="more-horizontal" style="width:15px;height:15px;color:hsl(var(--muted-foreground));"></i></td>
+            </tr>
+            <tr>
+              <td><div class="pt"><span class="av" style="background:hsl(211 70% 50%);">JS</span><div><div class="nm">João Sampaio</div><div class="mt">PAC-0198</div></div></div></td>
+              <td>Sessão avulsa — fisioterapia esportiva</td>
+              <td><span class="badge muted">PARTICULAR</span></td>
+              <td>09/06/2026</td>
+              <td class="num"><b>R$ 180,00</b></td>
+              <td><span class="badge ok">PAGO · CARTÃO</span></td>
+              <td><i data-lucide="more-horizontal" style="width:15px;height:15px;color:hsl(var(--muted-foreground));"></i></td>
+            </tr>
+            <tr>
+              <td><div class="pt"><span class="av" style="background:hsl(158 55% 42%);">BN</span><div><div class="nm">Beatriz Nunes</div><div class="mt">PAC-0231</div></div></div></td>
+              <td>Guia 8429103 — 10 sessões autorizadas</td>
+              <td><span class="badge info">UNIMED</span></td>
+              <td>25/06/2026</td>
+              <td class="num"><b>R$ 1.420,00</b></td>
+              <td><span class="badge warn">AGUARDANDO REPASSE</span></td>
+              <td><i data-lucide="more-horizontal" style="width:15px;height:15px;color:hsl(var(--muted-foreground));"></i></td>
+            </tr>
+            <tr>
+              <td><div class="pt"><span class="av" style="background:hsl(28 80% 52%);">CE</span><div><div class="nm">Carlos Eduardo</div><div class="mt">PAC-0167</div></div></div></td>
+              <td>Pacote 12 sessões — parcela 3/3</td>
+              <td><span class="badge muted">PARTICULAR</span></td>
+              <td>28/05/2026</td>
+              <td class="num"><b>R$ 470,00</b></td>
+              <td><span class="badge bad">ATRASADO · 13 DIAS</span></td>
+              <td><i data-lucide="more-horizontal" style="width:15px;height:15px;color:hsl(var(--muted-foreground));"></i></td>
+            </tr>
+            <tr>
+              <td><div class="pt"><span class="av" style="background:hsl(340 60% 55%);">FM</span><div><div class="nm">Fernanda Moraes</div><div class="mt">PAC-0205</div></div></div></td>
+              <td>Análise biomecânica + laudo comparativo</td>
+              <td><span class="badge muted">PARTICULAR</span></td>
+              <td>17/06/2026</td>
+              <td class="num"><b>R$ 350,00</b></td>
+              <td><span class="badge muted">EM ABERTO</span></td>
+              <td><i data-lucide="more-horizontal" style="width:15px;height:15px;color:hsl(var(--muted-foreground));"></i></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();</script>
+</body>
+</html>

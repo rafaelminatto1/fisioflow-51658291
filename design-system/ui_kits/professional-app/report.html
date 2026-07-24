@@ -1,0 +1,225 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Professional App" name="UI Kit · Pro App — Laudo Biomecânico" subtitle="Documento de laudo clínico gerado da análise, com tabela comparativa e assinatura" viewport="1320x920" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Laudo Biomecânico — FisioFlow Pro</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  body { margin: 0; background: #0d1117; min-height: 100vh; display:flex; align-items:center; justify-content:center; padding: 24px; font-family: var(--font-sans); color: hsl(var(--foreground)); }
+  .pad { width: 1280px; height: 880px; flex-shrink: 0; background: hsl(var(--background)); border-radius: 24px; overflow: hidden; box-shadow: 0 0 0 10px #111, 0 0 0 12px #2a2d35, 0 40px 80px rgba(0,0,0,0.6); display: grid; grid-template-columns: 68px 1fr; }
+
+  .rail { background: hsl(224 50% 14%); display:flex; flex-direction:column; align-items:center; padding: 14px 0; gap: 4px; }
+  .rail-logo { width: 40px; height: 40px; border-radius: 12px; background: white; display:flex; align-items:center; justify-content:center; padding: 6px; margin-bottom: 14px; }
+  .rail-logo img { width: 100%; }
+  .rail-item { width: 44px; height: 44px; border-radius: 12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color: hsl(211 40% 70%); cursor: pointer; }
+  .rail-item:hover { background: hsl(224 40% 22%); color: white; }
+  .rail-item.is-active { background: hsl(var(--primary)); color: white; }
+  .rail-item .lbl { font-size: 7px; font-weight: 800; letter-spacing: 0.03em; }
+  .rail-spacer { flex: 1; }
+  .rail-avatar { width: 36px; height: 36px; border-radius: 50%; background: hsl(211 100% 70%); color: hsl(224 60% 20%); display:flex; align-items:center; justify-content:center; font-weight: 800; font-size: 12px; margin-top: 8px; }
+
+  .main { display:flex; flex-direction: column; min-width: 0; min-height: 0; }
+  .topbar { display:flex; align-items:center; padding: 14px 24px; gap: 12px; border-bottom: 1px solid hsl(var(--border)); }
+  .crumbs { display:flex; gap: 7px; align-items:center; font-size: 13px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .crumbs strong { color: hsl(var(--foreground)); font-weight: 800; }
+  .topbar-right { margin-left:auto; display:flex; gap:8px; align-items:center; }
+  .btn { display:inline-flex; align-items:center; gap:7px; padding: 9px 15px; border-radius: 10px; font-size: 13px; font-weight: 700; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); cursor:pointer; color: hsl(var(--foreground)); }
+  .btn.primary { background: hsl(var(--primary)); color: white; border-color: hsl(var(--primary)); box-shadow: var(--shadow-glow-primary); }
+  .btn.wa { background: hsl(142 70% 42%); color:white; border-color: hsl(142 70% 42%); }
+
+  .body { flex:1; display:grid; grid-template-columns: 252px 1fr; min-height:0; }
+  /* doc outline */
+  .outline { border-right:1px solid hsl(var(--border)); background: hsl(var(--muted) / .3); padding: 18px 14px; overflow-y:auto; }
+  .outline h4 { font-size:10px; font-weight:800; letter-spacing:0.07em; text-transform:uppercase; color: hsl(var(--muted-foreground)); margin-bottom:10px; padding:0 8px; }
+  .ol-item { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:9px; font-size:12px; font-weight:700; color: hsl(var(--muted-foreground)); cursor:pointer; }
+  .ol-item:hover { background: hsl(var(--card)); }
+  .ol-item.active { background: hsl(var(--primary) / .1); color: hsl(var(--primary)); }
+  .ol-item .n { width:18px; height:18px; border-radius:50%; background: hsl(var(--secondary)); display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:800; }
+  .ol-item.active .n { background: hsl(var(--primary)); color:white; }
+  .ai-card { margin-top:18px; padding:13px; border-radius:13px; background: linear-gradient(135deg, hsl(264 60% 96%), hsl(264 60% 91%)); border:1px solid hsl(264 50% 82%); }
+  .ai-card .h { display:flex; align-items:center; gap:6px; font-size:11px; font-weight:800; color: hsl(264 50% 40%); }
+  .ai-card .b { font-size:11px; color: hsl(264 40% 32%); font-weight:600; line-height:1.45; margin-top:6px; }
+
+  /* document */
+  .doc-wrap { overflow-y:auto; padding: 26px 0; display:flex; justify-content:center; background: hsl(220 16% 90%); }
+  .doc { width: 660px; background: white; border-radius: 6px; box-shadow: 0 8px 30px rgba(0,0,0,.12); padding: 44px 48px; }
+  .doc-head { display:flex; align-items:flex-start; gap:14px; padding-bottom:18px; border-bottom: 2px solid hsl(var(--primary)); }
+  .doc-head .logo { width:46px; height:46px; }
+  .doc-head .clinic strong { font-size:17px; font-weight:800; letter-spacing:-0.01em; color: hsl(224 71% 20%); }
+  .doc-head .clinic .x { font-size:11px; color: hsl(var(--muted-foreground)); font-weight:600; }
+  .doc-head .rt { margin-left:auto; text-align:right; }
+  .doc-head .rt .t { font-size:13px; font-weight:800; color: hsl(var(--primary)); }
+  .doc-head .rt .s { font-size:10px; color: hsl(var(--muted-foreground)); font-weight:600; }
+
+  .doc-pinfo { display:grid; grid-template-columns: 1fr 1fr; gap:6px 20px; margin: 18px 0 22px; }
+  .pi { font-size:12px; }
+  .pi .k { color: hsl(var(--muted-foreground)); font-weight:600; }
+  .pi .v { font-weight:700; }
+
+  .doc-sec { margin-bottom: 22px; }
+  .doc-sec h2 { font-size:13px; font-weight:800; letter-spacing:0.03em; text-transform:uppercase; color: hsl(var(--primary)); margin-bottom:10px; display:flex; align-items:center; gap:7px; }
+  .doc-sec h2 .num { width:20px; height:20px; border-radius:50%; background: hsl(var(--primary)); color:white; display:flex; align-items:center; justify-content:center; font-size:11px; }
+  .doc-sec p { font-size:12.5px; line-height:1.6; color: hsl(220 20% 25%); margin:0 0 8px; }
+  .doc-sec p strong { font-weight:700; }
+
+  /* metric table */
+  .mtable { width:100%; border-collapse:collapse; font-size:12px; margin-top:4px; }
+  .mtable th { text-align:left; padding:7px 10px; background: hsl(var(--muted) / .6); font-size:10px; font-weight:800; letter-spacing:0.04em; text-transform:uppercase; color: hsl(var(--muted-foreground)); }
+  .mtable th:not(:first-child), .mtable td:not(:first-child) { text-align:center; }
+  .mtable td { padding:8px 10px; border-bottom:1px solid hsl(var(--border)); font-variant-numeric:tabular-nums; }
+  .mtable td.metric { font-weight:700; }
+  .delta { font-weight:800; padding:2px 7px; border-radius:5px; font-size:11px; }
+  .delta.up { background: hsl(158 64% 92%); color: hsl(158 64% 25%); }
+  .delta.warn { background: hsl(28 92% 92%); color: hsl(25 70% 32%); }
+  .flag { display:inline-block; font-size:9px; font-weight:800; padding:1px 6px; border-radius:4px; }
+  .flag.ok { background: hsl(158 64% 92%); color: hsl(158 64% 28%); }
+  .flag.att { background: hsl(45 93% 88%); color: hsl(35 80% 30%); }
+
+  /* image row */
+  .frames { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:8px 0; }
+  .frame { border:1px solid hsl(var(--border)); border-radius:10px; overflow:hidden; }
+  .frame .img { height:150px; background: linear-gradient(180deg,#0a0f1a,#1a2030); display:flex; align-items:center; justify-content:center; position:relative; }
+  .frame .img.before { filter: grayscale(.25); }
+  .frame .cap { font-size:10px; font-weight:700; padding:6px 10px; background: hsl(var(--muted) / .5); }
+  .frame .ang { position:absolute; padding:2px 6px; border-radius:4px; font-size:9px; font-weight:800; color:white; }
+
+  .verdict { padding:14px 16px; border-radius:12px; background: hsl(158 64% 96%); border:1px solid hsl(158 50% 80%); }
+  .verdict .h { font-size:12px; font-weight:800; color: hsl(158 64% 22%); display:flex; align-items:center; gap:6px; }
+  .verdict p { font-size:12px; color: hsl(158 64% 18%); margin:6px 0 0; line-height:1.55; }
+  .sign { margin-top:30px; padding-top:14px; border-top:1px solid hsl(var(--border)); display:flex; justify-content:space-between; align-items:flex-end; }
+  .sign .name { font-size:13px; font-weight:800; } .sign .reg { font-size:11px; color: hsl(var(--muted-foreground)); font-weight:600; }
+  .sign .stamp { width:80px; height:80px; border-radius:50%; border:2px dashed hsl(var(--primary) / .4); display:flex; align-items:center; justify-content:center; color: hsl(var(--primary) / .5); font-size:9px; font-weight:800; text-align:center; }
+</style>
+</head>
+<body>
+<div class="pad">
+
+  <nav class="rail">
+    <div class="rail-logo"><img src="../../assets/activity-logo.svg" alt=""/></div>
+    <div class="rail-item"><i data-lucide="layout-dashboard" style="width:19px;height:19px;"></i><span class="lbl">PAINEL</span></div>
+    <div class="rail-item"><i data-lucide="users" style="width:19px;height:19px;"></i><span class="lbl">PACIENTES</span></div>
+    <div class="rail-item"><i data-lucide="video" style="width:19px;height:19px;"></i><span class="lbl">CAPTURAR</span></div>
+    <div class="rail-item"><i data-lucide="activity" style="width:19px;height:19px;"></i><span class="lbl">ANÁLISES</span></div>
+    <div class="rail-item"><i data-lucide="list-checks" style="width:19px;height:19px;"></i><span class="lbl">TESTES</span></div>
+    <div class="rail-item is-active"><i data-lucide="file-text" style="width:19px;height:19px;"></i><span class="lbl">LAUDOS</span></div>
+    <div class="rail-spacer"></div>
+    <div class="rail-item"><i data-lucide="settings" style="width:19px;height:19px;"></i></div>
+    <div class="rail-avatar">RM</div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs">Laudos <i data-lucide="chevron-right" style="width:14px;height:14px;"></i> Carla Ferreira <i data-lucide="chevron-right" style="width:14px;height:14px;"></i> <strong>Laudo biomecânico · S12</strong></div>
+      <div class="topbar-right">
+        <button class="btn"><i data-lucide="pencil" style="width:15px;height:15px;"></i> Editar</button>
+        <button class="btn"><i data-lucide="download" style="width:15px;height:15px;"></i> PDF</button>
+        <button class="btn wa"><i data-lucide="send" style="width:15px;height:15px;"></i> Enviar ao paciente</button>
+      </div>
+    </div>
+
+    <div class="body">
+      <!-- outline -->
+      <div class="outline">
+        <h4>Seções do laudo</h4>
+        <div class="ol-item active"><span class="n">1</span> Identificação</div>
+        <div class="ol-item"><span class="n">2</span> Queixa &amp; histórico</div>
+        <div class="ol-item"><span class="n">3</span> Achados biomecânicos</div>
+        <div class="ol-item"><span class="n">4</span> Comparativo S03↔S12</div>
+        <div class="ol-item"><span class="n">5</span> Conclusão &amp; conduta</div>
+
+        <div class="ai-card">
+          <div class="h"><i data-lucide="sparkles" style="width:13px;height:13px;"></i> Redigido com IA</div>
+          <div class="b">Texto gerado a partir das métricas da análise. Revise e ajuste antes de assinar.</div>
+        </div>
+      </div>
+
+      <!-- document -->
+      <div class="doc-wrap">
+        <div class="doc">
+          <div class="doc-head">
+            <img class="logo" src="../../assets/activity-logo.svg" alt=""/>
+            <div class="clinic">
+              <strong>Activity Fisioterapia</strong>
+              <div class="x">Mooca Fisio · CNPJ 12.345.678/0001-90<br/>R. da Mooca, 1234 · São Paulo/SP</div>
+            </div>
+            <div class="rt">
+              <div class="t">LAUDO BIOMECÂNICO</div>
+              <div class="s">Nº 2026-0512-CF · 12/05/2026</div>
+            </div>
+          </div>
+
+          <div class="doc-pinfo">
+            <div class="pi"><span class="k">Paciente:</span> <span class="v">Carla Ferreira</span></div>
+            <div class="pi"><span class="k">Data de nasc.:</span> <span class="v">14/08/1991 (34a)</span></div>
+            <div class="pi"><span class="k">Diagnóstico:</span> <span class="v">Condromalácia patelar G2 (D)</span></div>
+            <div class="pi"><span class="k">Sessão:</span> <span class="v">12 de 20</span></div>
+            <div class="pi"><span class="k">Teste aplicado:</span> <span class="v">Agachamento — vista sagital</span></div>
+            <div class="pi"><span class="k">Responsável:</span> <span class="v">Dr. Rafael Minatto</span></div>
+          </div>
+
+          <div class="doc-sec">
+            <h2><span class="num">1</span> Queixa &amp; objetivo</h2>
+            <p>Paciente em reabilitação de <strong>condromalácia patelar grau II</strong> à direita, com queixa inicial de dor anterior no joelho agravada por agachar e descer escadas. Reavaliação biomecânica do agachamento para mensurar a evolução do controle motor e da amplitude após 8 semanas de tratamento.</p>
+          </div>
+
+          <div class="doc-sec">
+            <h2><span class="num">2</span> Achados biomecânicos</h2>
+            <p>A captura sagital evidenciou <strong>ganho expressivo de amplitude de flexão do joelho</strong> (118°) sem reprodução de dor até a 8ª repetição. A inclinação de tronco reduziu para 32°, aproximando-se do padrão ideal. Persiste <strong>valgo dinâmico moderado à direita (+14°)</strong> na fase descendente, indicando déficit residual de controle do glúteo médio.</p>
+            <div class="frames">
+              <div class="frame">
+                <div class="img before">
+                  <svg height="110" viewBox="0 0 100 200" fill="none" stroke="#94a3b8" stroke-width="3"><circle cx="50" cy="22" r="9" fill="#94a3b8"/><path d="M50 31 L62 95 L68 130"/><path d="M62 95 Q45 120 38 145"/></svg>
+                  <span class="ang" style="background:hsl(0 72% 50%);left:8px;bottom:30px;">78°</span>
+                </div>
+                <div class="cap">17 mar · pico de flexão 78°</div>
+              </div>
+              <div class="frame">
+                <div class="img">
+                  <svg height="110" viewBox="0 0 100 200" fill="none" stroke="#cbd5e1" stroke-width="3"><circle cx="50" cy="22" r="9" fill="#cbd5e1"/><path d="M50 31 L56 95 L40 125"/><path d="M56 95 Q40 130 55 160"/></svg>
+                  <span class="ang" style="background:hsl(158 64% 42%);left:8px;bottom:30px;">118°</span>
+                </div>
+                <div class="cap">12 mai · pico de flexão 118°</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-sec">
+            <h2><span class="num">3</span> Comparativo de métricas</h2>
+            <table class="mtable">
+              <thead><tr><th>Métrica</th><th>S03</th><th>S12</th><th>Δ</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td class="metric">ROM joelho (flexão)</td><td>78°</td><td>118°</td><td><span class="delta up">+40°</span></td><td><span class="flag ok">OK</span></td></tr>
+                <tr><td class="metric">Inclinação de tronco</td><td>48°</td><td>32°</td><td><span class="delta up">−16°</span></td><td><span class="flag ok">OK</span></td></tr>
+                <tr><td class="metric">Valgo dinâmico (D)</td><td>+18°</td><td>+14°</td><td><span class="delta warn">−4°</span></td><td><span class="flag att">ATENÇÃO</span></td></tr>
+                <tr><td class="metric">Simetria de carga L/R</td><td>71%</td><td>84%</td><td><span class="delta up">+13 p.p.</span></td><td><span class="flag ok">OK</span></td></tr>
+                <tr><td class="metric">Dor (EVA, pico)</td><td>6/10</td><td>3/10</td><td><span class="delta up">−3</span></td><td><span class="flag ok">OK</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="doc-sec">
+            <h2><span class="num">4</span> Conclusão &amp; conduta</h2>
+            <div class="verdict">
+              <div class="h"><i data-lucide="trending-up" style="width:14px;height:14px;"></i> Evolução positiva consistente</div>
+              <p>Ganho de ROM e redução de dor confirmam boa resposta ao protocolo. Mantém-se o valgo dinâmico residual como foco terapêutico. <strong>Conduta:</strong> progredir fortalecimento de glúteo médio e controle excêntrico; reavaliar em 4 semanas (S16).</p>
+            </div>
+            <div class="sign">
+              <div>
+                <div class="name">Dr. Rafael Minatto</div>
+                <div class="reg">Fisioterapeuta · CREFITO-3 123456-F</div>
+              </div>
+              <div class="stamp">ASSINATURA<br/>DIGITAL</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,338 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="Evolução/Sessão · C — Modo ao vivo" subtitle="Atendimento rápido: timer, captura por voz e feed cronológico da sessão" viewport="1360x980" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Evolução da Sessão · Layout C — Modo ao vivo</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<link rel="stylesheet" href="session.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  .content { position: relative; }
+  .stage { flex: 1; min-height: 0; display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 20px; overflow-y: auto; padding: 22px 24px 28px; background: hsl(var(--muted) / .3); }
+  .live-wrap { width: 100%; max-width: 840px; display: flex; flex-direction: column; gap: 16px; }
+
+  /* live header bar */
+  .livehead { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 18px; box-shadow: var(--shadow-sm); }
+  .livehead .pav { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg,hsl(211 100% 60%),hsl(211 100% 40%)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; }
+  .livehead .nm { font-size: 16px; font-weight: 800; letter-spacing: -0.01em; display: flex; align-items: center; gap: 9px; }
+  .livehead .mt { font-size: 11px; font-weight: 600; color: hsl(var(--muted-foreground)); margin-top: 1px; }
+  .bigtimer { display: flex; align-items: center; gap: 11px; padding: 10px 18px; border-radius: 14px; background: hsl(0 84% 97%); border: 1px solid hsl(0 80% 90%); }
+  .bigtimer .rec { width: 11px; height: 11px; border-radius: 50%; background: hsl(0 80% 55%); animation: livepulse 1.6s ease-out infinite; }
+  .bigtimer .tv { font-size: 23px; font-weight: 800; font-variant-numeric: tabular-nums; color: hsl(0 70% 42%); letter-spacing: -0.01em; }
+  .bigtimer .tl { font-size: 9px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: hsl(0 60% 50%); }
+
+  /* voice scribe hero */
+  .scribe-hero { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-radius: 18px; background: linear-gradient(120deg, hsl(211 100% 96%), hsl(199 89% 95%)); border: 1px solid hsl(199 89% 84%); }
+  .scribe-hero .mic { width: 54px; height: 54px; border-radius: 16px; background: hsl(var(--primary)); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 6px 18px hsl(211 100% 50% / .35); }
+  .scribe-hero .mic svg { width: 25px; height: 25px; }
+  .scribe-hero .st { font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+  .scribe-hero .ss { font-size: 12px; font-weight: 600; color: hsl(205 50% 35%); margin-top: 2px; }
+  .wave { display: flex; align-items: center; gap: 3px; height: 28px; }
+  .wave i { width: 3px; border-radius: 999px; background: hsl(211 100% 50% / .55); animation: wv 1s ease-in-out infinite; }
+  @keyframes wv { 0%,100%{height:7px;} 50%{height:24px;} }
+  .wave i:nth-child(2){animation-delay:.1s} .wave i:nth-child(3){animation-delay:.2s} .wave i:nth-child(4){animation-delay:.3s} .wave i:nth-child(5){animation-delay:.15s} .wave i:nth-child(6){animation-delay:.25s} .wave i:nth-child(7){animation-delay:.05s}
+
+  /* quick capture */
+  .qcap { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 18px; padding: 14px; box-shadow: var(--shadow-sm); }
+  .qcap .qin { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid hsl(var(--border)); border-radius: 13px; }
+  .qcap .qin svg { width: 18px; height: 18px; color: hsl(var(--muted-foreground)); }
+  .qcap .qin .qph { flex: 1; font-size: 14px; font-weight: 600; color: hsl(var(--muted-foreground)); }
+  .qcap .qin .ent { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 7px; background: hsl(var(--secondary)); color: hsl(var(--muted-foreground)); }
+  .qrow { display: flex; gap: 8px; margin-top: 11px; flex-wrap: wrap; }
+  .qbtn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: 11px; font-size: 12.5px; font-weight: 800; cursor: pointer; border: 1px solid transparent; }
+  .qbtn svg { width: 15px; height: 15px; }
+  .qbtn.proc { background: hsl(158 64% 92%); color: hsl(158 64% 28%); }
+  .qbtn.exer { background: hsl(211 100% 95%); color: hsl(211 100% 38%); }
+  .qbtn.meas { background: hsl(264 60% 94%); color: hsl(264 50% 44%); }
+  .qbtn.pain { background: hsl(0 84% 95%); color: hsl(0 70% 45%); }
+  .qbtn.media { background: hsl(38 92% 90%); color: hsl(32 80% 38%); }
+
+  /* pain quick */
+  .painquick { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 18px; padding: 16px 18px; }
+  .painquick .ph { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .painquick .ph .t { font-size: 14px; font-weight: 800; }
+  .painquick .ph .seg2 { margin-left: auto; }
+  .pq-tap { display: flex; gap: 7px; }
+  .pq-tap button { flex: 1; height: 46px; border: 1px solid hsl(var(--border)); border-radius: 12px; font-size: 16px; font-weight: 800; color: hsl(var(--foreground)); cursor: pointer; font-variant-numeric: tabular-nums; background: hsl(var(--card)); font-family: inherit; }
+  .pq-tap button:hover { border-color: hsl(var(--primary) / .5); }
+  .pq-tap button.sel { color: #fff; border-color: transparent; transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+  /* feed */
+  .feed { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 18px; overflow: hidden; }
+  .feed-h { display: flex; align-items: center; gap: 10px; padding: 15px 18px; border-bottom: 1px solid hsl(var(--border)); }
+  .feed-h .t { font-size: 14px; font-weight: 800; }
+  .feed-h .c { font-size: 11px; font-weight: 800; padding: 2px 9px; border-radius: 999px; background: hsl(var(--secondary)); color: hsl(var(--muted-foreground)); }
+  .feed-list { padding: 6px 8px; }
+  .fitem { display: flex; gap: 13px; padding: 12px 12px; border-radius: 13px; position: relative; }
+  .fitem:hover { background: hsl(var(--secondary) / .6); }
+  .fitem:hover .factions { opacity: 1; }
+  .fitem .ftime { width: 46px; flex-shrink: 0; font-size: 11px; font-weight: 800; color: hsl(var(--muted-foreground)); font-variant-numeric: tabular-nums; padding-top: 2px; }
+  .fitem .fdot { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .fitem .fdot svg { width: 15px; height: 15px; }
+  .fitem .fbody { flex: 1; min-width: 0; }
+  .fitem .fbody .fk { font-size: 9.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin-bottom: 2px; }
+  .fitem .fbody .fv { font-size: 13px; font-weight: 700; line-height: 1.4; }
+  .fitem .fbody .fv b { font-weight: 800; }
+  .fitem .fbody .fmeta { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
+  .factions { position: absolute; right: 12px; top: 12px; display: flex; gap: 3px; opacity: 0; transition: opacity .15s; }
+  .factions .ib { width: 28px; height: 28px; border-radius: 8px; border: none; background: hsl(var(--card)); color: hsl(var(--muted-foreground)); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-xs); }
+  .factions .ib:hover { background: hsl(var(--secondary)); }
+  .factions .ib svg { width: 14px; height: 14px; }
+  .fline { width: 2px; background: hsl(var(--border)); margin-left: 61px; height: 6px; }
+
+  /* right context dock */
+  .dock { position: sticky; top: 0; width: 250px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; }
+  .dock-card { background: hsl(var(--card) / .94); backdrop-filter: blur(8px); border: 1px solid hsl(var(--border)); border-radius: 15px; padding: 13px 14px; box-shadow: var(--shadow-md); }
+  .dock-card .dt { font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin-bottom: 9px; }
+  .dock-mini { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; font-size: 12px; font-weight: 700; }
+  .dock-mini .dl { color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .goalrow { display: flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 700; padding: 4px 0; }
+  .goalrow svg { width: 14px; height: 14px; }
+
+  /* footer */
+  .footbar { height: 66px; flex-shrink: 0; display: flex; align-items: center; gap: 14px; padding: 0 24px; background: hsl(var(--card)); border-top: 1px solid hsl(var(--border)); }
+  .footbar .summ { display: flex; align-items: center; gap: 14px; }
+  .footbar .sm { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 800; }
+  .footbar .sm svg { width: 15px; height: 15px; color: hsl(var(--muted-foreground)); }
+  .footbar .sm .n { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body class="frame-wrap">
+<div class="screen">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><img src="../assets/activity-logo.svg" alt=""/></div>
+      <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
+    </div>
+    <div class="sb-search"><i data-lucide="search"></i> Buscar paciente… <span class="kbd">⌘K</span></div>
+    <nav class="sb-nav">
+      <div>
+        <div class="sb-group-label">ATENDIMENTO</div>
+        <div class="sb-item"><i data-lucide="calendar-days"></i> AGENDA</div>
+        <div class="sb-item"><i data-lucide="users"></i> PACIENTES</div>
+        <div class="sb-item"><i data-lucide="message-circle"></i> WHATSAPP</div>
+      </div>
+      <div>
+        <div class="sb-group-label">CLÍNICA</div>
+        <div class="sb-item is-active"><i data-lucide="line-chart"></i> EVOLUÇÃO CLÍNICA</div>
+        <div class="sb-item"><i data-lucide="dumbbell"></i> EXERCÍCIOS</div>
+        <div class="sb-item"><i data-lucide="clipboard-list"></i> PROTOCOLOS</div>
+        <div class="sb-item"><i data-lucide="flask-conical"></i> TESTES CLÍNICOS</div>
+        <div class="sb-item"><i data-lucide="camera"></i> BIOMECÂNICA</div>
+      </div>
+      <div>
+        <div class="sb-group-label">INTELIGÊNCIA &amp; IA</div>
+        <div class="sb-item"><i data-lucide="sparkles"></i> IA STUDIO <span class="tag pro">PRO</span></div>
+        <div class="sb-item"><i data-lucide="brain"></i> HUB <span class="tag new">NEW</span></div>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- topbar (slim) -->
+    <div class="topbar">
+      <div class="back" style="width:34px;height:34px;border:1px solid hsl(var(--border));border-radius:9px;display:flex;align-items:center;justify-content:center;color:hsl(var(--muted-foreground));cursor:pointer;"><i data-lucide="arrow-left" style="width:17px;height:17px;"></i></div>
+      <div class="crumbs"><span style="color:hsl(var(--foreground));font-weight:800;">Evolução · Sessão ao vivo</span></div>
+      <span class="badge b-rose" style="margin-left:4px;"><i data-lucide="radio"></i> MODO AO VIVO</span>
+      <div class="grow"></div>
+      <div class="top-ic"><i data-lucide="layout-panel-left"></i></div>
+      <div class="top-ic"><i data-lucide="bell"></i><span class="ping"></span></div>
+      <div class="top-user"><div class="av">RM</div><div><div class="nm">Rafael Minatto</div><div class="rl">ADMIN</div></div></div>
+    </div>
+
+    <!-- STAGE -->
+    <div class="stage">
+      <div class="live-wrap">
+
+        <!-- live header -->
+        <div class="livehead">
+          <div class="pav">RM</div>
+          <div style="flex:1;">
+            <div class="nm">Rafael Minatto De Martino <span class="sess-pill">SESSÃO #3</span></div>
+            <div class="mt">Síndrome do impacto · ombro D · Reabilitação 3/12 · Dra. Marina Alves</div>
+          </div>
+          <div class="bigtimer">
+            <span class="rec"></span>
+            <div><div class="tl">Em sessão</div><div class="tv">24:18</div></div>
+          </div>
+        </div>
+
+        <!-- voice scribe hero -->
+        <div class="scribe-hero">
+          <div class="mic"><i data-lucide="mic"></i></div>
+          <div style="flex:1;">
+            <div class="st">Voice Scribe ouvindo <span class="badge b-blue"><i data-lucide="sparkles"></i> IA</span></div>
+            <div class="ss">Fale naturalmente — condutas, dor e exercícios viram registros automáticos no feed abaixo.</div>
+          </div>
+          <div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <button class="btn" style="background:#fff;"><i data-lucide="pause"></i> Pausar</button>
+        </div>
+
+        <!-- quick capture -->
+        <div class="qcap">
+          <div class="acwrap" data-ac="">
+            <div class="acbox">
+              <i data-lucide="search"></i>
+              <input type="text" placeholder="Buscar conduta para adicionar — exercício, procedimento, teste…"/>
+              <span class="kbd">Enter</span>
+            </div>
+            <div class="acpanel"></div>
+          </div>
+          <div class="qrow">
+            <span class="qbtn proc"><i data-lucide="hand"></i> Procedimento</span>
+            <span class="qbtn exer"><i data-lucide="dumbbell"></i> Exercício</span>
+            <span class="qbtn meas"><i data-lucide="ruler"></i> Medição</span>
+            <span class="qbtn pain"><i data-lucide="activity"></i> Dor</span>
+            <span class="qbtn media"><i data-lucide="camera"></i> Foto / vídeo</span>
+          </div>
+        </div>
+
+        <!-- pain quick tap -->
+        <div class="painquick">
+          <div class="ph">
+            <i data-lucide="activity" style="width:18px;height:18px;color:var(--color-pain-7);"></i>
+            <span class="t">Nível de dor (EVA)</span>
+            <div class="seg seg2"><button class="on">Chegada · 6</button><button>Saída</button></div>
+          </div>
+          <div class="pq-tap">
+            <button>0</button><button>1</button><button>2</button><button>3</button><button>4</button><button>5</button>
+            <button class="sel" style="background:var(--color-pain-7);">6</button><button>7</button><button>8</button><button>9</button><button>10</button>
+          </div>
+          <div class="pain-track" style="margin-top:12px;"></div>
+          <div class="pain-scale-lbl"><span>Sem dor</span><span>Moderada</span><span>Máxima</span></div>
+        </div>
+
+        <!-- feed -->
+        <div class="feed">
+          <div class="feed-h">
+            <i data-lucide="list" style="width:17px;height:17px;color:hsl(var(--muted-foreground));"></i>
+            <span class="t">Registro da sessão</span>
+            <span class="c">6 itens</span>
+            <div class="grow" style="flex:1;"></div>
+            <span style="font-size:11px;font-weight:700;color:hsl(158 64% 35%);display:flex;align-items:center;gap:5px;"><i data-lucide="check-circle-2" style="width:14px;height:14px;"></i> Salvo</span>
+          </div>
+          <div class="feed-list">
+
+            <div class="fitem">
+              <div class="ftime">19:02</div>
+              <div class="fdot" style="background:hsl(0 84% 95%);color:hsl(0 70% 45%);"><i data-lucide="activity"></i></div>
+              <div class="fbody">
+                <div class="fk">Dor · chegada</div>
+                <div class="fv"><b>EVA 6/10</b> — moderada, ombro D face anterior, arco doloroso 70–110°</div>
+              </div>
+              <div class="factions"><button class="ib"><i data-lucide="pencil"></i></button><button class="ib"><i data-lucide="trash-2"></i></button></div>
+            </div>
+            <div class="fline"></div>
+
+            <div class="fitem">
+              <div class="ftime">19:05</div>
+              <div class="fdot" style="background:hsl(264 60% 94%);color:hsl(264 50% 46%);"><i data-lucide="flask-conical"></i></div>
+              <div class="fbody">
+                <div class="fk">Testes clínicos</div>
+                <div class="fv">Neer e Hawkins-Kennedy aplicados</div>
+                <div class="fmeta"><span class="badge b-rose">Neer +</span><span class="badge b-rose">Hawkins +</span><span class="badge b-teal">Jobe −</span></div>
+              </div>
+              <div class="factions"><button class="ib"><i data-lucide="pencil"></i></button><button class="ib"><i data-lucide="trash-2"></i></button></div>
+            </div>
+            <div class="fline"></div>
+
+            <div class="fitem">
+              <div class="ftime">19:08</div>
+              <div class="fdot" style="background:hsl(158 64% 92%);color:hsl(158 64% 30%);"><i data-lucide="hand"></i></div>
+              <div class="fbody">
+                <div class="fk">Procedimento · voz</div>
+                <div class="fv"><b>Mobilização escapular grau III</b> em decúbito lateral, bem tolerada</div>
+                <div class="fmeta"><span class="dosepill">3 séries</span><span class="dosepill">10 min</span></div>
+              </div>
+              <div class="factions"><button class="ib"><i data-lucide="pencil"></i></button><button class="ib"><i data-lucide="trash-2"></i></button></div>
+            </div>
+            <div class="fline"></div>
+
+            <div class="fitem">
+              <div class="ftime">19:14</div>
+              <div class="fdot" style="background:hsl(211 100% 95%);color:hsl(211 100% 40%);"><i data-lucide="dumbbell"></i></div>
+              <div class="fbody">
+                <div class="fk">Exercício</div>
+                <div class="fv"><b>Rotação externa com elástico</b> — boa ativação, sem dor durante execução</div>
+                <div class="fmeta"><span class="dosepill">3×12</span><span class="dosepill">Faixa amarela</span></div>
+              </div>
+              <div class="factions"><button class="ib"><i data-lucide="pencil"></i></button><button class="ib"><i data-lucide="trash-2"></i></button></div>
+            </div>
+            <div class="fline"></div>
+
+            <div class="fitem">
+              <div class="ftime">19:20</div>
+              <div class="fdot" style="background:hsl(264 60% 94%);color:hsl(264 50% 46%);"><i data-lucide="ruler"></i></div>
+              <div class="fbody">
+                <div class="fk">Medição · ROM</div>
+                <div class="fv">Elevação do ombro D <b>142°</b></div>
+                <div class="fmeta"><span class="badge b-teal"><i data-lucide="trending-up"></i> +15° vs. S02</span></div>
+              </div>
+              <div class="factions"><button class="ib"><i data-lucide="pencil"></i></button><button class="ib"><i data-lucide="trash-2"></i></button></div>
+            </div>
+            <div class="fline"></div>
+
+            <div class="fitem">
+              <div class="ftime">19:23</div>
+              <div class="fdot" style="background:hsl(38 92% 90%);color:hsl(32 80% 40%);"><i data-lucide="message-square-text"></i></div>
+              <div class="fbody">
+                <div class="fk">Observação · voz</div>
+                <div class="fv">Paciente refere melhora da dor noturna — despertar reduziu de 2× para 1× por noite</div>
+              </div>
+              <div class="factions"><button class="ib"><i data-lucide="pencil"></i></button><button class="ib"><i data-lucide="trash-2"></i></button></div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- context dock (sticky lateral) -->
+      <div class="dock">
+        <div class="dock-card">
+          <div class="dt">Objetivos de hoje</div>
+          <div class="goalrow"><i data-lucide="check-circle-2" style="color:hsl(158 64% 45%);"></i> Mobilidade escapular</div>
+          <div class="goalrow"><i data-lucide="check-circle-2" style="color:hsl(158 64% 45%);"></i> Fortalecer manguito</div>
+          <div class="goalrow"><i data-lucide="circle" style="color:hsl(var(--muted-foreground));"></i> Reduzir dor noturna</div>
+        </div>
+        <div class="dock-card">
+          <div class="dt">vs. sessão anterior</div>
+          <div class="dock-mini"><span class="dl">Dor (EVA)</span><span class="up">6 → 4 ▾</span></div>
+          <div class="dock-mini"><span class="dl">ROM elevação</span><span class="up">+15°</span></div>
+          <div class="dock-mini"><span class="dl">Adesão HEP</span><span>75%</span></div>
+        </div>
+        <div class="dock-card">
+          <div class="dt">Sinais vitais</div>
+          <div class="dock-mini"><span class="dl">PA</span><span>128/82</span></div>
+          <div class="dock-mini"><span class="dl">FC</span><span>74 bpm</span></div>
+          <div class="dock-mini"><span class="dl">SpO₂</span><span>98%</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- footer -->
+    <div class="footbar">
+      <div class="summ">
+        <span class="sm"><i data-lucide="hand"></i> <span class="n">1</span> proced.</span>
+        <span class="sm"><i data-lucide="dumbbell"></i> <span class="n">1</span> exerc.</span>
+        <span class="sm"><i data-lucide="ruler"></i> <span class="n">1</span> medição</span>
+        <span class="sm"><i data-lucide="activity"></i> EVA <span class="n">6→4</span></span>
+      </div>
+      <div class="grow" style="flex:1;"></div>
+      <button class="btn"><i data-lucide="home"></i> Definir HEP</button>
+      <button class="btn"><i data-lucide="wand-2"></i> Gerar evolução c/ IA</button>
+      <button class="btn success"><i data-lucide="check-circle-2"></i> Concluir sessão</button>
+    </div>
+
+  </div>
+</div>
+<script src="conduta-autocomplete.js"></script>
+<script>if (window.lucide) lucide.createIcons();</script>
+</body>
+</html>

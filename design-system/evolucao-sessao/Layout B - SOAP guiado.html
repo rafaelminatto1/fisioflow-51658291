@@ -1,0 +1,359 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="Evolução/Sessão · B — SOAP guiado" subtitle="Fluxo estruturado por etapas (S·O·A·P) com resumo montado por IA" viewport="1360x980" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Evolução da Sessão · Layout B — SOAP guiado</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<link rel="stylesheet" href="session.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  /* progress strip */
+  .soap-prog { display: flex; align-items: center; gap: 0; padding: 12px 22px; background: hsl(var(--card)); border-bottom: 1px solid hsl(var(--border)); }
+  .step { display: flex; align-items: center; gap: 10px; padding: 7px 14px; border-radius: 11px; cursor: pointer; }
+  .step .sb { width: 28px; height: 28px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; border: 1.5px solid hsl(var(--border)); color: hsl(var(--muted-foreground)); }
+  .step .sl { line-height: 1.1; }
+  .step .sl .k { font-size: 13px; font-weight: 800; }
+  .step .sl .d { font-size: 10px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  .step.done .sb { background: hsl(158 64% 42%); border-color: hsl(158 64% 42%); color: #fff; }
+  .step.done .sl .d { color: hsl(158 64% 35%); }
+  .step.active { background: hsl(var(--primary) / .08); }
+  .step.active .sb { background: hsl(var(--primary)); border-color: hsl(var(--primary)); color: #fff; }
+  .step.active .sl .k { color: hsl(211 100% 38%); }
+  .step-conn { flex: 1; height: 2px; background: hsl(var(--border)); margin: 0 4px; min-width: 18px; }
+  .step-conn.done { background: hsl(158 64% 45%); }
+  .soap-prog .pct { margin-left: auto; display: flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 800; color: hsl(var(--muted-foreground)); }
+  .soap-prog .pbar { width: 90px; height: 7px; border-radius: 999px; background: hsl(var(--secondary)); overflow: hidden; }
+  .soap-prog .pbar i { display: block; height: 100%; background: hsl(var(--primary)); border-radius: 999px; }
+
+  .body-b { flex: 1; display: grid; grid-template-columns: 224px 1fr 360px; min-height: 0; }
+
+  /* left rail nav */
+  .b-rail { border-right: 1px solid hsl(var(--border)); overflow-y: auto; padding: 16px 12px; display: flex; flex-direction: column; gap: 14px; background: hsl(var(--muted) / .3); }
+  .rail-sec .rt { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: hsl(var(--muted-foreground)); padding: 0 8px 6px; }
+  .rnav { display: flex; flex-direction: column; gap: 2px; }
+  .rn { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 10px; font-size: 12px; font-weight: 700; color: hsl(var(--foreground)); cursor: pointer; }
+  .rn:hover { background: hsl(var(--secondary)); }
+  .rn svg { width: 14px; height: 14px; color: hsl(var(--muted-foreground)); }
+  .rn.active { background: hsl(var(--primary) / .1); color: hsl(211 100% 38%); }
+  .rn.active svg { color: hsl(211 100% 42%); }
+  .rn .ck { margin-left: auto; color: hsl(158 64% 45%); display: flex; }
+  .rn .ck svg { width: 14px; height: 14px; color: hsl(158 64% 45%); }
+  .rn .cn { margin-left: auto; font-size: 10px; font-weight: 800; color: hsl(var(--muted-foreground)); background: hsl(var(--secondary)); padding: 1px 7px; border-radius: 999px; }
+
+  .goal-mini { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 13px; padding: 12px; }
+  .goal-mini .gt { font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin-bottom: 9px; }
+  .goal-mini .gi { display: flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 700; padding: 5px 0; }
+  .goal-mini .gi svg { width: 14px; height: 14px; color: hsl(158 64% 45%); }
+
+  /* center form */
+  .b-main { overflow-y: auto; padding: 20px 24px 30px; }
+  .step-title { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+  .step-title .si { width: 40px; height: 40px; border-radius: 12px; background: hsl(var(--primary) / .12); color: hsl(var(--primary)); display: flex; align-items: center; justify-content: center; }
+  .step-title .si svg { width: 20px; height: 20px; }
+  .step-title h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+  .step-title .ssub { font-size: 12px; font-weight: 600; color: hsl(var(--muted-foreground)); }
+  .step-desc { font-size: 12.5px; color: hsl(var(--muted-foreground)); font-weight: 600; margin: 8px 0 18px; padding-left: 52px; }
+
+  .field { margin-bottom: 18px; }
+  .field > label { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 800; margin-bottom: 8px; }
+  .field > label .opt { font-size: 10px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  .field > label svg { width: 14px; height: 14px; color: hsl(var(--muted-foreground)); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 11px; }
+
+  .input { border: 1px solid hsl(var(--border)); border-radius: 12px; padding: 11px 14px; font-size: 13px; font-weight: 600; color: hsl(var(--foreground)); background: hsl(var(--card)); }
+  .input .iv { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .input .ik { font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: hsl(var(--muted-foreground)); display: flex; align-items: center; gap: 5px; margin-bottom: 4px; }
+  .input .ik svg { width: 12px; height: 12px; }
+
+  /* test rows */
+  .test { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid hsl(var(--border)); border-radius: 12px; }
+  .test .tn { flex: 1; }
+  .test .tn .tnm { font-size: 12.5px; font-weight: 800; }
+  .test .tn .tds { font-size: 10.5px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .res { display: inline-flex; padding: 3px; background: hsl(var(--secondary)); border-radius: 9px; gap: 2px; }
+  .res button { border: none; background: transparent; padding: 5px 12px; border-radius: 7px; font-size: 11px; font-weight: 800; color: hsl(var(--muted-foreground)); cursor: pointer; font-family: inherit; }
+  .res button.pos { background: hsl(0 84% 60%); color: #fff; }
+  .res button.neg { background: hsl(158 64% 42%); color: #fff; }
+
+  .step-nav { display: flex; align-items: center; gap: 10px; margin-top: 24px; padding-top: 18px; border-top: 1px solid hsl(var(--border)); }
+
+  /* right summary */
+  .b-side { border-left: 1px solid hsl(var(--border)); background: hsl(var(--muted) / .35); overflow-y: auto; padding: 18px 18px 30px; display: flex; flex-direction: column; gap: 14px; }
+  .ai-card { border-radius: 16px; padding: 16px; background: linear-gradient(135deg, hsl(211 100% 97%), hsl(199 89% 96%)); border: 1px solid hsl(199 89% 86%); }
+  .ai-card .ah { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+  .ai-card .ah .ai { width: 32px; height: 32px; border-radius: 10px; background: hsl(var(--primary)); color: #fff; display: flex; align-items: center; justify-content: center; }
+  .ai-card .ah .ai svg { width: 17px; height: 17px; }
+  .ai-card .ah .at { font-size: 13px; font-weight: 800; }
+  .ai-card .ah .as { font-size: 10.5px; font-weight: 700; color: hsl(205 60% 40%); }
+  .ai-card p { font-size: 11.5px; line-height: 1.5; color: hsl(205 40% 28%); font-weight: 600; }
+
+  .sum-card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; padding: 16px; }
+  .sum-card .sh { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .sum-card .sh .st { font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
+  .sum-card .sh .grow { flex: 1; }
+  .sblock { padding: 10px 0; border-bottom: 1px dashed hsl(var(--border)); }
+  .sblock:last-child { border: none; padding-bottom: 0; }
+  .sblock .bk { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 800; margin-bottom: 5px; }
+  .sblock .bk .let { width: 18px; height: 18px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #fff; }
+  .sblock .bv { font-size: 11.5px; line-height: 1.5; color: hsl(var(--foreground)); font-weight: 600; }
+  .sblock .bv.muted { color: hsl(var(--muted-foreground)); font-weight: 600; font-style: italic; }
+  .let.s { background: hsl(264 50% 55%); } .let.o { background: hsl(211 100% 50%); } .let.a { background: hsl(38 90% 50%); } .let.p { background: hsl(158 64% 42%); }
+  .sign { display: flex; align-items: center; gap: 11px; padding: 13px; border-radius: 13px; border: 1px dashed hsl(var(--border)); }
+  .sign .sa { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg,hsl(211 100% 60%),hsl(211 100% 40%)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; }
+  .sign .sn { font-size: 12px; font-weight: 800; } .sign .sr { font-size: 10.5px; color: hsl(var(--muted-foreground)); font-weight: 700; }
+</style>
+</head>
+<body class="frame-wrap">
+<div class="screen">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><img src="../assets/activity-logo.svg" alt=""/></div>
+      <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
+    </div>
+    <div class="sb-search"><i data-lucide="search"></i> Buscar paciente… <span class="kbd">⌘K</span></div>
+    <nav class="sb-nav">
+      <div>
+        <div class="sb-group-label">ATENDIMENTO</div>
+        <div class="sb-item"><i data-lucide="calendar-days"></i> AGENDA</div>
+        <div class="sb-item"><i data-lucide="users"></i> PACIENTES</div>
+        <div class="sb-item"><i data-lucide="message-circle"></i> WHATSAPP</div>
+      </div>
+      <div>
+        <div class="sb-group-label">CLÍNICA</div>
+        <div class="sb-item is-active"><i data-lucide="line-chart"></i> EVOLUÇÃO CLÍNICA</div>
+        <div class="sb-item"><i data-lucide="dumbbell"></i> EXERCÍCIOS</div>
+        <div class="sb-item"><i data-lucide="clipboard-list"></i> PROTOCOLOS</div>
+        <div class="sb-item"><i data-lucide="flask-conical"></i> TESTES CLÍNICOS</div>
+        <div class="sb-item"><i data-lucide="camera"></i> BIOMECÂNICA</div>
+      </div>
+      <div>
+        <div class="sb-group-label">INTELIGÊNCIA &amp; IA</div>
+        <div class="sb-item"><i data-lucide="sparkles"></i> IA STUDIO <span class="tag pro">PRO</span></div>
+        <div class="sb-item"><i data-lucide="brain"></i> HUB <span class="tag new">NEW</span></div>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- topbar -->
+    <div class="topbar">
+      <div class="crumbs">
+        <span class="live"><span class="dot"></span> REAL-TIME ACTIVE</span>
+        <span class="sep"><i data-lucide="chevron-right"></i></span>
+        <span>Evolução do Paciente</span>
+        <span class="sep"><i data-lucide="chevron-right"></i></span>
+        <span style="color:hsl(var(--foreground));font-weight:800;">Detalhes</span>
+      </div>
+      <div class="grow"></div>
+      <div class="top-search"><i data-lucide="search" style="width:14px;height:14px;"></i> Buscar <span class="kbd">⌘K</span></div>
+      <div class="top-ic"><i data-lucide="bell"></i><span class="ping"></span></div>
+      <div class="top-ic"><i data-lucide="moon"></i></div>
+      <div class="top-user"><div class="av">RM</div><div><div class="nm">Rafael Minatto</div><div class="rl">ADMIN</div></div></div>
+    </div>
+
+    <!-- patient header -->
+    <div class="phead">
+      <div class="back"><i data-lucide="arrow-left"></i></div>
+      <div class="pav">RM</div>
+      <div>
+        <div class="pname">
+          <h1>Rafael Minatto De Martino</h1>
+          <span class="sess-pill">SESSÃO #3</span>
+        </div>
+        <div class="pmeta">
+          <span><i data-lucide="user"></i> 32 anos · ♂</span><span class="dot"></span>
+          <span><i data-lucide="activity"></i> Síndrome do impacto · ombro D</span><span class="dot"></span>
+          <span><i data-lucide="clipboard-list"></i> Reabilitação de ombro · 3/12</span>
+        </div>
+      </div>
+      <div class="ml-auto" style="display:flex;align-items:center;gap:10px;">
+        <span class="timer calm"><i data-lucide="clock" style="width:15px;height:15px;"></i> 00:24:18</span>
+        <button class="btn scribe"><i data-lucide="mic"></i> Voice Scribe <span class="ia">IA</span></button>
+        <button class="btn success"><i data-lucide="check-circle-2"></i> Concluir</button>
+      </div>
+    </div>
+
+    <!-- tabs -->
+    <div class="tabs">
+      <div class="tab is-active"><i data-lucide="line-chart"></i> Evolução</div>
+      <div class="tab"><i data-lucide="stethoscope"></i> Avaliação</div>
+      <div class="tab"><i data-lucide="pill"></i> Tratamento</div>
+      <div class="tab"><i data-lucide="history"></i> Histórico</div>
+      <div class="tab"><i data-lucide="sparkles"></i> Assistente</div>
+      <div class="tab"><i data-lucide="image"></i> Mídia</div>
+      <div class="tab"><i data-lucide="settings"></i> Ajustes</div>
+      <div class="grow"></div>
+      <div class="pick"><i data-lucide="user-cog"></i> Dra. Marina Alves <i data-lucide="chevron-down"></i></div>
+    </div>
+
+    <!-- SOAP progress -->
+    <div class="soap-prog">
+      <div class="step done"><div class="sb"><i data-lucide="check" style="width:15px;height:15px;"></i></div><div class="sl"><div class="k">Subjetivo</div><div class="d">Concluído</div></div></div>
+      <div class="step-conn done"></div>
+      <div class="step active"><div class="sb">O</div><div class="sl"><div class="k">Objetivo</div><div class="d">Em andamento</div></div></div>
+      <div class="step-conn"></div>
+      <div class="step"><div class="sb">A</div><div class="sl"><div class="k">Avaliação</div><div class="d">Pendente</div></div></div>
+      <div class="step-conn"></div>
+      <div class="step"><div class="sb">P</div><div class="sl"><div class="k">Plano</div><div class="d">Pendente</div></div></div>
+      <div class="pct"><span>58%</span><div class="pbar"><i style="width:58%;"></i></div></div>
+    </div>
+
+    <!-- BODY -->
+    <div class="body-b">
+
+      <!-- LEFT RAIL -->
+      <div class="b-rail">
+        <div class="rail-sec">
+          <div class="rt">Etapas da evolução</div>
+          <div class="rnav">
+            <div class="rn"><i data-lucide="message-square-text"></i> Subjetivo <span class="ck"><i data-lucide="check-circle-2"></i></span></div>
+            <div class="rn active"><i data-lucide="ruler"></i> Objetivo</div>
+            <div class="rn" style="padding-left:30px;font-size:11px;color:hsl(var(--muted-foreground));"><i data-lucide="activity"></i> Dor &amp; sinais <span class="ck"><i data-lucide="check-circle-2"></i></span></div>
+            <div class="rn" style="padding-left:30px;font-size:11px;color:hsl(var(--muted-foreground));"><i data-lucide="flask-conical"></i> Testes clínicos <span class="cn">3</span></div>
+            <div class="rn" style="padding-left:30px;font-size:11px;color:hsl(var(--muted-foreground));"><i data-lucide="move"></i> Medições / ROM</div>
+            <div class="rn"><i data-lucide="brain"></i> Avaliação</div>
+            <div class="rn"><i data-lucide="clipboard-list"></i> Plano &amp; condutas</div>
+            <div class="rn" style="padding-left:30px;font-size:11px;color:hsl(var(--muted-foreground));"><i data-lucide="home"></i> Exercícios p/ casa</div>
+            <div class="rn" style="padding-left:30px;font-size:11px;color:hsl(var(--muted-foreground));"><i data-lucide="calendar-plus"></i> Próxima sessão</div>
+          </div>
+        </div>
+        <div class="goal-mini">
+          <div class="gt">Objetivos da sessão</div>
+          <div class="gi"><i data-lucide="check-circle-2"></i> Mobilidade escapular</div>
+          <div class="gi"><i data-lucide="check-circle-2"></i> Fortalecer manguito</div>
+          <div class="gi"><i data-lucide="circle" style="color:hsl(var(--muted-foreground));"></i> Reduzir dor noturna</div>
+        </div>
+      </div>
+
+      <!-- CENTER FORM -->
+      <div class="b-main">
+        <div class="step-title">
+          <div class="si"><i data-lucide="ruler"></i></div>
+          <div><h2>Objetivo</h2><div class="ssub">Dados mensuráveis observados na sessão</div></div>
+        </div>
+        <div class="step-desc">Registre dor, sinais vitais, testes especiais e amplitudes. Os campos alimentam automaticamente o resumo e a comparação entre sessões.</div>
+
+        <!-- dor -->
+        <div class="field">
+          <label><i data-lucide="activity"></i> Nível de dor (EVA) — chegada e saída</label>
+          <div class="grid-2">
+            <div>
+              <div style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:hsl(var(--muted-foreground));margin-bottom:7px;">Na chegada</div>
+              <div class="pain-num">
+                <button>0</button><button>1</button><button>2</button><button>3</button><button>4</button><button>5</button><button class="sel" style="background:var(--color-pain-7);">6</button><button>7</button><button>8</button><button>9</button><button>10</button>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:hsl(var(--muted-foreground));margin-bottom:7px;">Na saída</div>
+              <div class="pain-num">
+                <button>0</button><button>1</button><button>2</button><button>3</button><button class="sel" style="background:var(--color-pain-5);">4</button><button>5</button><button>6</button><button>7</button><button>8</button><button>9</button><button>10</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- sinais vitais -->
+        <div class="field">
+          <label><i data-lucide="heart-pulse"></i> Sinais vitais <span class="opt">opcional</span></label>
+          <div class="grid-3">
+            <div class="input"><div class="ik"><i data-lucide="gauge"></i> Pressão arterial</div><div class="iv">128/82 <span style="font-size:11px;color:hsl(var(--muted-foreground));">mmHg</span></div></div>
+            <div class="input"><div class="ik"><i data-lucide="heart"></i> Freq. cardíaca</div><div class="iv">74 <span style="font-size:11px;color:hsl(var(--muted-foreground));">bpm</span></div></div>
+            <div class="input"><div class="ik"><i data-lucide="wind"></i> SpO₂</div><div class="iv">98 <span style="font-size:11px;color:hsl(var(--muted-foreground));">%</span></div></div>
+          </div>
+        </div>
+
+        <!-- testes clínicos -->
+        <div class="field">
+          <label><i data-lucide="flask-conical"></i> Testes clínicos aplicados</label>
+          <div class="stack" style="gap:9px;">
+            <div class="test"><div class="tn"><div class="tnm">Neer</div><div class="tds">Impacto subacromial</div></div><div class="res"><button class="pos">Positivo</button><button>Negativo</button></div></div>
+            <div class="test"><div class="tn"><div class="tnm">Hawkins-Kennedy</div><div class="tds">Impacto subacromial</div></div><div class="res"><button class="pos">Positivo</button><button>Negativo</button></div></div>
+            <div class="test"><div class="tn"><div class="tnm">Jobe (lata vazia)</div><div class="tds">Supraespinhal</div></div><div class="res"><button>Positivo</button><button class="neg">Negativo</button></div></div>
+            <div class="addrow"><i data-lucide="plus"></i> Adicionar teste da biblioteca</div>
+          </div>
+        </div>
+
+        <!-- medições -->
+        <div class="field">
+          <label><i data-lucide="move"></i> Amplitude de movimento (ROM)</label>
+          <div class="grid-3">
+            <div class="input"><div class="ik">Elevação</div><div class="iv">142° <span class="badge b-teal" style="margin-left:4px;"><i data-lucide="trending-up"></i> +15</span></div></div>
+            <div class="input"><div class="ik">Abdução</div><div class="iv">128°</div></div>
+            <div class="input"><div class="ik">Rot. externa</div><div class="iv">52°</div></div>
+          </div>
+        </div>
+
+        <!-- condutas -->
+        <div class="field">
+          <label><i data-lucide="clipboard-list"></i> Condutas da sessão</label>
+          <div class="acwrap" data-ac="">
+            <div class="acbox">
+              <i data-lucide="search"></i>
+              <input type="text" placeholder="Buscar conduta — exercício, procedimento, teste, agente físico…"/>
+              <span class="kbd">/</span>
+            </div>
+            <div class="acpanel"></div>
+          </div>
+        </div>
+
+        <div class="step-nav">
+          <button class="btn ghost"><i data-lucide="arrow-left"></i> Subjetivo</button>
+          <div class="grow" style="flex:1;"></div>
+          <button class="btn"><i data-lucide="save"></i> Salvar rascunho</button>
+          <button class="btn primary">Avaliação <i data-lucide="arrow-right"></i></button>
+        </div>
+      </div>
+
+      <!-- RIGHT SUMMARY -->
+      <div class="b-side">
+        <div class="ai-card">
+          <div class="ah"><div class="ai"><i data-lucide="sparkles"></i></div><div><div class="at">Resumo por IA</div><div class="as">Montado a partir dos campos</div></div></div>
+          <p>O Voice Scribe transcreveu 3 min de áudio e preencheu o Subjetivo. Revise os testes do Objetivo e gere o laudo de evolução com 1 clique ao concluir.</p>
+          <button class="btn sm" style="margin-top:10px;background:hsl(var(--primary));color:#fff;border-color:hsl(var(--primary));"><i data-lucide="wand-2"></i> Gerar evolução</button>
+        </div>
+
+        <div class="sum-card">
+          <div class="sh"><i data-lucide="file-text" style="width:16px;height:16px;color:hsl(var(--muted-foreground));"></i><span class="st">Evolução S03</span><span class="grow" style="flex:1;"></span><span class="badge b-amber">Rascunho</span></div>
+          <div class="sblock">
+            <div class="bk"><span class="let s">S</span> Subjetivo</div>
+            <div class="bv">Melhora da dor noturna (2→1 despertar/noite). Refere mais facilidade para pentear o cabelo.</div>
+          </div>
+          <div class="sblock">
+            <div class="bk"><span class="let o">O</span> Objetivo</div>
+            <div class="bv">EVA 6→4. Neer (+), Hawkins (+), Jobe (−). Elevação 142° (+15°). PA 128/82, FC 74.</div>
+          </div>
+          <div class="sblock">
+            <div class="bk"><span class="let a">A</span> Avaliação</div>
+            <div class="bv muted">Pendente — preencha a etapa Avaliação.</div>
+          </div>
+          <div class="sblock">
+            <div class="bk"><span class="let p">P</span> Plano</div>
+            <div class="bv muted">Pendente — condutas, HEP e próxima sessão.</div>
+          </div>
+        </div>
+
+        <div class="sum-card">
+          <div class="sh"><i data-lucide="pen-line" style="width:16px;height:16px;color:hsl(var(--muted-foreground));"></i><span class="st">Conclusão</span></div>
+          <div class="sign">
+            <div class="sa">MA</div>
+            <div style="flex:1;"><div class="sn">Dra. Marina Alves</div><div class="sr">CREFITO-3 · 98765-F</div></div>
+            <i data-lucide="circle-dashed" style="width:18px;height:18px;color:hsl(var(--muted-foreground));"></i>
+          </div>
+          <button class="btn success" style="width:100%;justify-content:center;margin-top:11px;"><i data-lucide="check-circle-2"></i> Assinar &amp; concluir sessão</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="conduta-autocomplete.js"></script>
+<script>if (window.lucide) lucide.createIcons();</script>
+</body>
+</html>

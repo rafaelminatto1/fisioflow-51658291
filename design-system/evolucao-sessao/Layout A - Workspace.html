@@ -1,0 +1,371 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="Evolução/Sessão · A — Workspace" subtitle="Refino do layout de 2 colunas: objetivos, dor antes/depois, comparação" viewport="1360x980" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Evolução da Sessão · Layout A — Workspace</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<link rel="stylesheet" href="session.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  .body-a { flex: 1; display: grid; grid-template-columns: 1fr 372px; min-height: 0; }
+  .col-main { overflow-y: auto; padding: 18px 22px 90px; display: flex; flex-direction: column; gap: 16px; }
+  .col-side { border-left: 1px solid hsl(var(--border)); background: hsl(var(--muted) / .35); overflow-y: auto; padding: 18px 18px 90px; display: flex; flex-direction: column; gap: 14px; }
+
+  /* context strip */
+  .ctx { display: flex; align-items: center; gap: 10px; padding: 11px 22px; background: hsl(var(--card)); border-bottom: 1px solid hsl(var(--border)); }
+  .ctx .replicate { margin-left: auto; display: flex; align-items: center; gap: 10px; padding: 7px 10px 7px 13px; border-radius: 11px; background: hsl(264 60% 97%); border: 1px solid hsl(264 60% 90%); }
+  .ctx .replicate .rt { font-size: 11px; font-weight: 700; color: hsl(264 40% 40%); line-height: 1.25; }
+  .ctx .replicate .rt b { font-weight: 800; color: hsl(264 50% 32%); }
+
+  /* goals card */
+  .goals { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 13px 16px; }
+  .goals .gl { font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin-right: 2px; }
+
+  .card-body-pad { padding: 0 16px 16px; }
+  .pad16 { padding: 16px; }
+  .between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+  .ml-auto { margin-left: auto; }
+
+  /* pain antes/depois */
+  .pain-ba { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pain-box { border: 1px solid hsl(var(--border)); border-radius: 13px; padding: 13px; text-align: center; }
+  .pain-box .pl { font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
+  .pain-box .pv { font-size: 36px; font-weight: 800; line-height: 1; margin: 6px 0 3px; font-variant-numeric: tabular-nums; }
+  .pain-box .ps { font-size: 11px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  .pain-box.now { background: hsl(0 84% 98%); border-color: hsl(0 70% 90%); }
+
+  .vit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+
+  /* mini history */
+  .hrow { display: flex; align-items: center; gap: 11px; padding: 10px; border-radius: 11px; }
+  .hrow:hover { background: hsl(var(--secondary)); }
+  .hrow .hn { width: 30px; height: 30px; border-radius: 9px; background: hsl(211 100% 95%); color: hsl(211 100% 40%); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+  .hrow .hi { flex: 1; min-width: 0; }
+  .hrow .hi .ht { font-size: 12px; font-weight: 800; }
+  .hrow .hi .hs { font-size: 10.5px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .hrow .hd { font-size: 10px; font-weight: 800; color: hsl(0 70% 48%); }
+
+  /* footer action bar */
+  .footbar { position: absolute; left: 240px; right: 0; bottom: 0; height: 64px; display: flex; align-items: center; gap: 14px; padding: 0 22px; background: hsl(var(--card) / .92); backdrop-filter: blur(8px); border-top: 1px solid hsl(var(--border)); }
+  .footbar .saved { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; color: hsl(158 64% 32%); }
+  .footbar .saved svg { width: 15px; height: 15px; }
+  .content { position: relative; }
+</style>
+</head>
+<body class="frame-wrap">
+<div class="screen">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><img src="../assets/activity-logo.svg" alt=""/></div>
+      <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
+    </div>
+    <div class="sb-search"><i data-lucide="search"></i> Buscar paciente… <span class="kbd">⌘K</span></div>
+    <nav class="sb-nav">
+      <div>
+        <div class="sb-group-label">ATENDIMENTO</div>
+        <div class="sb-item"><i data-lucide="calendar-days"></i> AGENDA</div>
+        <div class="sb-item"><i data-lucide="users"></i> PACIENTES</div>
+        <div class="sb-item"><i data-lucide="message-circle"></i> WHATSAPP</div>
+      </div>
+      <div>
+        <div class="sb-group-label">CLÍNICA</div>
+        <div class="sb-item is-active"><i data-lucide="line-chart"></i> EVOLUÇÃO CLÍNICA</div>
+        <div class="sb-item"><i data-lucide="dumbbell"></i> EXERCÍCIOS</div>
+        <div class="sb-item"><i data-lucide="clipboard-list"></i> PROTOCOLOS</div>
+        <div class="sb-item"><i data-lucide="flask-conical"></i> TESTES CLÍNICOS</div>
+        <div class="sb-item"><i data-lucide="camera"></i> BIOMECÂNICA</div>
+      </div>
+      <div>
+        <div class="sb-group-label">INTELIGÊNCIA &amp; IA</div>
+        <div class="sb-item"><i data-lucide="sparkles"></i> IA STUDIO <span class="tag pro">PRO</span></div>
+        <div class="sb-item"><i data-lucide="brain"></i> HUB <span class="tag new">NEW</span></div>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- topbar -->
+    <div class="topbar">
+      <div class="crumbs">
+        <span class="live"><span class="dot"></span> REAL-TIME ACTIVE</span>
+        <span class="sep"><i data-lucide="chevron-right"></i></span>
+        <span>Evolução do Paciente</span>
+        <span class="sep"><i data-lucide="chevron-right"></i></span>
+        <span style="color:hsl(var(--foreground));font-weight:800;">Detalhes</span>
+      </div>
+      <div class="grow"></div>
+      <div class="top-search"><i data-lucide="search" style="width:14px;height:14px;"></i> Buscar <span class="kbd">⌘K</span></div>
+      <div class="top-ic"><i data-lucide="bell"></i><span class="ping"></span></div>
+      <div class="top-ic"><i data-lucide="moon"></i></div>
+      <div class="top-user"><div class="av">RM</div><div><div class="nm">Rafael Minatto</div><div class="rl">ADMIN</div></div></div>
+    </div>
+
+    <!-- patient header -->
+    <div class="phead">
+      <div class="back"><i data-lucide="arrow-left"></i></div>
+      <div class="pav">RM</div>
+      <div>
+        <div class="pname">
+          <h1>Rafael Minatto De Martino</h1>
+          <span class="sess-pill">SESSÃO #3</span>
+        </div>
+        <div class="pmeta">
+          <span><i data-lucide="user"></i> 32 anos · ♂</span><span class="dot"></span>
+          <span><i data-lucide="activity"></i> Síndrome do impacto · ombro D</span><span class="dot"></span>
+          <span><i data-lucide="clipboard-list"></i> Reabilitação de ombro · 3/12</span><span class="dot"></span>
+          <span><i data-lucide="calendar"></i> 9 jun 2026 · 19:00</span>
+        </div>
+      </div>
+      <div class="ml-auto" style="display:flex;align-items:center;gap:10px;">
+        <span class="timer"><span class="rec"></span> 00:24:18</span>
+        <button class="btn scribe"><i data-lucide="mic"></i> Voice Scribe <span class="ia">IA</span></button>
+        <button class="btn success"><i data-lucide="check-circle-2"></i> Concluir</button>
+      </div>
+    </div>
+
+    <!-- tabs -->
+    <div class="tabs">
+      <div class="tab is-active"><i data-lucide="line-chart"></i> Evolução</div>
+      <div class="tab"><i data-lucide="stethoscope"></i> Avaliação</div>
+      <div class="tab"><i data-lucide="pill"></i> Tratamento</div>
+      <div class="tab"><i data-lucide="history"></i> Histórico</div>
+      <div class="tab"><i data-lucide="sparkles"></i> Assistente</div>
+      <div class="tab"><i data-lucide="image"></i> Mídia</div>
+      <div class="tab"><i data-lucide="settings"></i> Ajustes</div>
+      <div class="grow"></div>
+      <div class="pick"><i data-lucide="user-cog"></i> Dra. Marina Alves <i data-lucide="chevron-down"></i></div>
+      <div class="ic"><i data-lucide="history"></i> Histórico</div>
+    </div>
+
+    <!-- context strip -->
+    <div class="ctx">
+      <span class="chip ghost"><i data-lucide="stethoscope"></i> Retorno médico</span>
+      <span class="chip ghost"><i data-lucide="scissors"></i> Cirurgias</span>
+      <span class="chip on"><i data-lucide="target"></i> 3 metas ativas</span>
+      <div class="replicate">
+        <i data-lucide="copy" style="width:16px;height:16px;color:hsl(264 50% 50%);"></i>
+        <div class="rt">Replicar última sessão<br/><b>26/05 · EVA 6 · 3 itens</b></div>
+        <button class="btn sm" style="background:hsl(264 60% 50%);color:#fff;border-color:hsl(264 60% 50%);">Replicar</button>
+      </div>
+    </div>
+
+    <!-- BODY -->
+    <div class="body-a">
+
+      <!-- MAIN -->
+      <div class="col-main">
+
+        <!-- objetivos -->
+        <div class="card">
+          <div class="goals">
+            <span class="gl">Objetivos de hoje</span>
+            <span class="chip teal on"><i data-lucide="check"></i> Mobilidade escapular</span>
+            <span class="chip teal on"><i data-lucide="check"></i> Fortalecer manguito rotador</span>
+            <span class="chip teal on"><i data-lucide="check"></i> Reduzir dor noturna</span>
+            <span class="chip ghost"><i data-lucide="plus"></i> Objetivo</span>
+          </div>
+        </div>
+
+        <!-- observações clínicas -->
+        <div class="card accent-top">
+          <div class="card-h">
+            <div class="ico amber"><i data-lucide="file-text"></i></div>
+            <div class="tt"><div class="t">Observações Clínicas</div><div class="s">Registro principal da sessão</div></div>
+            <button class="btn sm ghost"><i data-lucide="sparkles"></i> Estruturar c/ IA</button>
+            <button class="btn sm ghost"><i data-lucide="maximize-2"></i> Foco</button>
+          </div>
+          <div class="card-body-pad">
+            <div class="editor">
+              <div class="editor-bar">
+                <span class="eb">B</span><span class="eb" style="font-style:italic;">I</span><span class="eb" style="text-decoration:underline;">U</span>
+                <span class="div"></span>
+                <span class="eb">H2</span><span class="eb">H3</span>
+                <span class="div"></span>
+                <span class="eb"><i data-lucide="list"></i></span><span class="eb"><i data-lucide="list-ordered"></i></span><span class="eb"><i data-lucide="list-checks"></i></span>
+                <span class="div"></span>
+                <span class="eb"><i data-lucide="quote"></i></span><span class="eb"><i data-lucide="highlighter"></i></span>
+                <span class="div"></span>
+                <span class="eb"><i data-lucide="undo-2"></i></span><span class="eb"><i data-lucide="redo-2"></i></span>
+              </div>
+              <div class="editor-body">
+                Paciente refere melhora da dor noturna em relação à última sessão (chegou referindo despertar 2×/noite, hoje 1×). <strong>Amplitude de elevação do ombro D ganhou ~15° desde a S02</strong>, ainda com arco doloroso entre 70–110°. Mantida ênfase em mobilização escapular e fortalecimento progressivo do manguito. Sem sinais de irritação aguda; bem tolerado.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- procedimentos & exercícios -->
+        <div class="card">
+          <div class="card-h">
+            <div class="ico teal"><i data-lucide="activity"></i></div>
+            <div class="tt"><div class="t">Procedimentos &amp; Exercícios</div><div class="s">Sequência de trabalho da sessão · 3 itens</div></div>
+            <div class="seg">
+              <button class="on teal"><i data-lucide="hand"></i> Procedimento</button>
+              <button><i data-lucide="dumbbell"></i> Exercício</button>
+            </div>
+          </div>
+          <div class="card-body-pad stack">
+            <div class="itrow">
+              <span class="grip"><i data-lucide="grip-vertical"></i></span>
+              <span class="num">1</span>
+              <div class="thumb"><i data-lucide="hand"></i></div>
+              <div class="body"><div class="nm">Mobilização escapular grau III</div><div class="sub">Terapia manual · decúbito lateral</div></div>
+              <div class="dose"><span class="dosepill">3 séries</span><span class="dosepill">10 min</span></div>
+              <span class="done"><i data-lucide="check-circle-2"></i></span>
+            </div>
+            <div class="itrow">
+              <span class="grip"><i data-lucide="grip-vertical"></i></span>
+              <span class="num">2</span>
+              <div class="thumb"><i data-lucide="dumbbell"></i></div>
+              <div class="body"><div class="nm">Rotação externa com elástico</div><div class="sub">Fortalecimento · manguito rotador</div></div>
+              <div class="dose"><span class="dosepill">3×12</span><span class="dosepill">Faixa amarela</span></div>
+              <span class="done"><i data-lucide="check-circle-2"></i></span>
+            </div>
+            <div class="itrow">
+              <span class="grip"><i data-lucide="grip-vertical"></i></span>
+              <span class="num">3</span>
+              <div class="thumb"><i data-lucide="dumbbell"></i></div>
+              <div class="body"><div class="nm">Wall slides (deslize na parede)</div><div class="sub">Controle motor · cadeia anterior</div></div>
+              <div class="dose"><span class="dosepill">2×15</span></div>
+              <span class="done" style="color:hsl(var(--muted-foreground));opacity:.4;"><i data-lucide="circle"></i></span>
+            </div>
+            <div class="acwrap" data-ac="">
+              <div class="acbox">
+                <i data-lucide="search"></i>
+                <input type="text" placeholder="Buscar exercício, procedimento, teste ou agente físico…"/>
+                <span class="kbd">/</span>
+              </div>
+              <div class="acpanel"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- exercícios para casa -->
+        <div class="card">
+          <div class="card-h">
+            <div class="ico blue"><i data-lucide="home"></i></div>
+            <div class="tt"><div class="t">Exercícios para Casa</div><div class="s">HEP — Home Exercise Program · 2 itens</div></div>
+            <button class="btn sm"><i data-lucide="library"></i> Biblioteca</button>
+          </div>
+          <div class="card-body-pad stack">
+            <div class="itrow">
+              <span class="num">1</span>
+              <div class="thumb"><i data-lucide="dumbbell"></i></div>
+              <div class="body"><div class="nm">Pendular de Codman</div><div class="sub">2×/dia · manhã e noite</div></div>
+              <div class="dose"><span class="dosepill">3×10</span></div>
+            </div>
+            <div class="itrow">
+              <span class="num">2</span>
+              <div class="thumb"><i data-lucide="dumbbell"></i></div>
+              <div class="body"><div class="nm">Isometria de rotação externa na parede</div><div class="sub">1×/dia</div></div>
+              <div class="dose"><span class="dosepill">3×30s</span></div>
+            </div>
+            <div class="addrow"><i data-lucide="plus"></i> Novo exercício para casa</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SIDE -->
+      <div class="col-side">
+
+        <!-- dor antes/depois -->
+        <div class="card">
+          <div class="card-h" style="padding-bottom:10px;">
+            <div class="ico rose"><i data-lucide="activity"></i></div>
+            <div class="tt"><div class="t">Nível de Dor</div><div class="s">Escala Visual Analógica (EVA)</div></div>
+          </div>
+          <div class="pad16" style="padding-top:0;">
+            <div class="pain-ba">
+              <div class="pain-box"><div class="pl">Chegada</div><div class="pv" style="color:var(--color-pain-7);">6</div><div class="ps">Moderada</div></div>
+              <div class="pain-box now"><div class="pl">Saída</div><div class="pv" style="color:var(--color-pain-5);">4</div><div class="ps">Leve-moderada</div></div>
+            </div>
+            <div class="pain-track"></div>
+            <div class="pain-scale-lbl"><span>Sem dor</span><span>Moderada</span><span>Máxima</span></div>
+            <div class="between" style="margin-top:12px;">
+              <span class="badge b-teal"><i data-lucide="trending-down"></i> −2 na sessão</span>
+              <span style="font-size:11px;font-weight:700;color:hsl(var(--muted-foreground));"><i data-lucide="map-pin" style="width:12px;height:12px;vertical-align:-2px;"></i> Ombro D, face anterior</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- sinais vitais -->
+        <div class="card">
+          <div class="card-h" style="padding-bottom:10px;">
+            <div class="ico teal"><i data-lucide="heart-pulse"></i></div>
+            <div class="tt"><div class="t">Sinais vitais &amp; medições</div><div class="s">Registrados nesta sessão</div></div>
+            <button class="btn sm ghost"><i data-lucide="sliders-horizontal"></i></button>
+          </div>
+          <div class="pad16" style="padding-top:0;">
+            <div class="vit-grid">
+              <div class="mtile"><div class="l"><i data-lucide="gauge"></i> PA</div><div class="v">128/82<small> mmHg</small></div></div>
+              <div class="mtile"><div class="l"><i data-lucide="heart"></i> FC</div><div class="v">74<small> bpm</small></div></div>
+              <div class="mtile"><div class="l"><i data-lucide="wind"></i> SpO₂</div><div class="v">98<small>%</small></div></div>
+              <div class="mtile"><div class="l"><i data-lucide="move"></i> ROM elev.</div><div class="v">142<small>°</small><span class="d up"><i data-lucide="trending-up"></i> +15</span></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- comparação sessão anterior -->
+        <div class="card">
+          <div class="card-h" style="padding-bottom:10px;">
+            <div class="ico violet"><i data-lucide="git-compare"></i></div>
+            <div class="tt"><div class="t">vs. sessão anterior</div><div class="s">S02 · 26 mai 2026</div></div>
+          </div>
+          <div class="pad16" style="padding-top:0;display:flex;flex-direction:column;gap:8px;">
+            <div class="between"><span style="font-size:12px;font-weight:700;">Dor (EVA)</span><span class="badge b-teal"><i data-lucide="trending-down"></i> 6 → 4</span></div>
+            <div class="between"><span style="font-size:12px;font-weight:700;">ROM elevação</span><span class="badge b-teal"><i data-lucide="trending-up"></i> 127° → 142°</span></div>
+            <div class="between"><span style="font-size:12px;font-weight:700;">Carga elástico</span><span class="badge b-blue"><i data-lucide="trending-up"></i> Verde → Amarela</span></div>
+            <div class="between"><span style="font-size:12px;font-weight:700;">Adesão HEP</span><span class="badge b-amber">75%</span></div>
+          </div>
+        </div>
+
+        <!-- histórico -->
+        <div class="card">
+          <div class="card-h" style="padding-bottom:6px;">
+            <div class="ico slate"><i data-lucide="history"></i></div>
+            <div class="tt"><div class="t">Histórico de sessões</div><div class="s">2 evoluções recentes</div></div>
+          </div>
+          <div class="pad16" style="padding-top:0;">
+            <div class="hrow"><div class="hn">S02</div><div class="hi"><div class="ht">Cinesioterapia + manual</div><div class="hs">26 mai · 19:00 · 50 min</div></div><div class="hd">EVA 6</div></div>
+            <div class="hrow"><div class="hn">S01</div><div class="hi"><div class="ht">Avaliação inicial</div><div class="hs">19 mai · 19:00 · 60 min</div></div><div class="hd">EVA 7</div></div>
+            <div class="addrow" style="border:none;padding:6px 10px;justify-content:center;"><i data-lucide="history"></i> Abrir histórico completo</div>
+          </div>
+        </div>
+
+        <!-- anexos -->
+        <div class="card">
+          <div class="card-h" style="padding-bottom:6px;">
+            <div class="ico slate"><i data-lucide="paperclip"></i></div>
+            <div class="tt"><div class="t">Anexos</div><div class="s">Fotos, exames e documentos</div></div>
+          </div>
+          <div class="pad16" style="padding-top:0;">
+            <div class="addrow" style="justify-content:center;"><i data-lucide="upload"></i> Adicionar anexo</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- footer action bar -->
+    <div class="footbar">
+      <span class="saved"><i data-lucide="check-circle-2"></i> Salvo automaticamente · agora</span>
+      <span class="badge b-slate" style="margin-left:6px;"><i data-lucide="file-check-2"></i> 2 evoluções</span>
+      <div class="grow" style="flex:1;"></div>
+      <button class="btn"><i data-lucide="paperclip"></i> Anexar</button>
+      <button class="btn scribe"><i data-lucide="mic"></i> Voice Scribe <span class="ia">IA</span></button>
+      <button class="btn success"><i data-lucide="check-circle-2"></i> Concluir sessão</button>
+    </div>
+
+  </div>
+</div>
+<script src="conduta-autocomplete.js"></script>
+<script>if (window.lucide) lucide.createIcons();</script>
+</body>
+</html>
