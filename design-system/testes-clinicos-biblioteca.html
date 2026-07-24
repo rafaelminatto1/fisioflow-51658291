@@ -1,106 +1,149 @@
 <!doctype html>
-<!-- @dsCard group="UI Kit — Web" name="UI Kit · Testes Clínicos (web)" subtitle="Biblioteca visual de testes: cards com mídia, tempo médio, cadência de reteste (conservador × pós-op), evidência e clusters" viewport="1320x920" -->
+<!-- @dsCard group="UI Kit — Web" name="UI Kit · Testes Clínicos (web)" subtitle="Biblioteca visual de testes: barra de busca inteligente, calculadoras de LSI/PROMs, clusters clínicos e laudo SOAP" viewport="1320x920" -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8"/>
-<title>Testes Clínicos — Biblioteca — FisioFlow Clínica</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Testes Clínicos — Biblioteca &amp; Calculadoras — FisioFlow Clínica</title>
+<meta name="description" content="Biblioteca de Testes Clínicos FisioFlow: diagnósticos de ortopedia, traumatologia e fisioterapia esportiva com calculadoras de LSI, clusters de predição e laudo automático."/>
+<meta property="og:title" content="Testes Clínicos — Biblioteca &amp; Calculadoras — FisioFlow"/>
+<meta property="og:description" content="Catálogo interativo de testes biomecânicos e clínicos com calculadoras de LSI (% simetria) e diagnósticos preditivos para a clínica Activity Fisioterapia."/>
+<meta property="og:type" content="website"/>
 <link rel="stylesheet" href="colors_and_type.css"/>
 <link rel="stylesheet" href="ui_kits/web/screen-shell.css"/>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="image-slot.js"></script>
 <style>
-  .main { overflow-y: auto; min-height: 0; padding: 18px 24px 28px; }
+  .main { overflow-y: auto; min-height: 0; padding: 18px 24px 36px; }
 
-  /* head */
-  .m-head { display: flex; align-items: center; gap: 12px; }
-  .m-head h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  /* Head */
+  .m-head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
+  .m-head h1 { font-size: 20px; font-weight: 900; letter-spacing: -0.025em; margin: 0; }
   .m-stats { display: flex; gap: 14px; font-size: 12px; font-weight: 700; color: hsl(var(--muted-foreground)); }
   .m-stats b { color: hsl(var(--foreground)); font-variant-numeric: tabular-nums; }
-  .m-head .search { margin-left: auto; width: 270px; }
+  
+  /* Smart Search Box */
+  .search-box { margin-left: auto; width: 340px; position: relative; display: flex; align-items: center; }
+  .search-box input { width: 100%; padding: 10px 38px 10px 36px; border-radius: 12px; border: 1.5px solid hsl(var(--border)); background: hsl(var(--card)); font-family: var(--font-sans); font-size: 12.5px; font-weight: 600; color: hsl(var(--foreground)); transition: all 0.15s; outline: none; box-sizing: border-box; }
+  .search-box input:focus { border-color: hsl(var(--primary)); box-shadow: var(--shadow-glow-primary); }
+  .search-box .search-icon { position: absolute; left: 11px; width: 16px; height: 16px; color: hsl(var(--muted-foreground)); pointer-events: none; }
+  .search-box .clear-btn { position: absolute; right: 38px; background: none; border: none; font-size: 16px; color: hsl(var(--muted-foreground)); cursor: pointer; display: none; padding: 0 4px; }
+  .search-box kbd { position: absolute; right: 10px; background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); font-family: inherit; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 5px; pointer-events: none; border: 1px solid hsl(var(--border)); }
 
-  /* filters */
-  .filters { display: grid; grid-template-columns: auto 1px auto; gap: 16px; align-items: start; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 14px; padding: 13px 16px; margin-top: 14px; }
+  /* Filters Box */
+  .filters { display: grid; grid-template-columns: auto 1px auto; gap: 16px; align-items: start; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; padding: 14px 18px; margin-bottom: 14px; }
   .filters .sep { background: hsl(var(--border)); align-self: stretch; }
-  .fgroup h4 { font-size: 9.5px; font-weight: 800; letter-spacing: 0.1em; color: hsl(var(--muted-foreground)); margin-bottom: 8px; }
+  .fgroup h4 { font-size: 9.5px; font-weight: 800; letter-spacing: 0.1em; color: hsl(var(--muted-foreground)); text-transform: uppercase; margin: 0 0 8px; }
   .chips { display: flex; gap: 6px; flex-wrap: wrap; }
-  .fchip { padding: 6px 13px; border-radius: 999px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); font-size: 11.5px; font-weight: 700; color: hsl(var(--muted-foreground)); cursor: pointer; }
-  .fchip:hover { border-color: hsl(var(--primary) / .4); color: hsl(var(--primary)); }
-  .fchip.on { background: hsl(var(--primary)); border-color: hsl(var(--primary)); color: white; }
+  .fchip { padding: 6px 14px; border-radius: 999px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); font-size: 11.5px; font-weight: 700; color: hsl(var(--muted-foreground)); cursor: pointer; transition: all 0.15s; }
+  .fchip:hover { border-color: hsl(var(--primary) / 0.4); color: hsl(var(--primary)); }
+  .fchip.on { background: hsl(var(--primary)); border-color: hsl(var(--primary)); color: white; box-shadow: 0 2px 8px hsl(211 100% 50% / 0.3); }
 
-  /* clusters strip */
-  .clusters { display: grid; grid-template-columns: auto 1fr 1fr; gap: 10px; align-items: center; margin-top: 12px; }
-  .cl-label { font-size: 9.5px; font-weight: 800; letter-spacing: 0.1em; color: hsl(var(--muted-foreground)); display: flex; align-items: center; gap: 6px; padding-right: 4px; }
-  .cluster { display: flex; align-items: center; gap: 11px; border: 1px solid hsl(264 55% 55% / .3); background: hsl(264 55% 55% / .05); border-radius: 12px; padding: 9px 13px; cursor: pointer; }
-  .cluster:hover { border-color: hsl(264 55% 55% / .55); }
-  .cluster .ic { width: 30px; height: 30px; border-radius: 9px; background: hsl(264 55% 55% / .12); color: hsl(264 55% 48%); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .cluster .nm { font-size: 12px; font-weight: 800; }
-  .cluster .mt { font-size: 10.5px; font-weight: 600; color: hsl(var(--muted-foreground)); }
-  .cluster .go { margin-left: auto; color: hsl(264 55% 48%); display: flex; }
+  /* Clusters Strip */
+  .clusters { display: grid; grid-template-columns: auto 1fr 1fr; gap: 12px; align-items: center; margin-bottom: 16px; }
+  .cl-label { font-size: 9.5px; font-weight: 800; letter-spacing: 0.1em; color: hsl(var(--muted-foreground)); text-transform: uppercase; display: flex; align-items: center; gap: 6px; padding-right: 4px; }
+  .cluster { display: flex; align-items: center; gap: 12px; border: 1.5px solid hsl(264 55% 55% / 0.3); background: hsl(264 55% 55% / 0.05); border-radius: 14px; padding: 10px 14px; cursor: pointer; transition: all 0.15s; }
+  .cluster:hover { border-color: hsl(264 55% 55% / 0.6); box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+  .cluster .ic { width: 32px; height: 32px; border-radius: 10px; background: hsl(264 55% 55% / 0.14); color: hsl(264 55% 45%); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .cluster .nm { font-size: 12.5px; font-weight: 800; color: hsl(var(--foreground)); }
+  .cluster .mt { font-size: 10.5px; font-weight: 600; color: hsl(var(--muted-foreground)); margin-top: 1px; }
+  .cluster .go { margin-left: auto; color: hsl(264 55% 45%); display: flex; }
 
-  /* results bar */
-  .results-bar { display: flex; align-items: center; margin: 16px 0 10px; gap: 10px; }
-  .results-bar .ct { font-size: 12px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  /* Results Bar */
+  .results-bar { display: flex; align-items: center; margin-bottom: 14px; gap: 12px; }
+  .results-bar .ct { font-size: 12.5px; font-weight: 700; color: hsl(var(--muted-foreground)); }
   .results-bar .ct b { color: hsl(var(--foreground)); font-variant-numeric: tabular-nums; }
   .sort { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: hsl(var(--muted-foreground)); cursor: pointer; }
   .sort b { color: hsl(var(--foreground)); }
 
-  /* cards */
-  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-  .tcard { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
-  .tcard:hover { box-shadow: var(--shadow-md); }
+  /* Cards Grid */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .tcard { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; transition: all 0.15s; }
+  .tcard:hover { border-color: hsl(var(--primary) / 0.4); box-shadow: var(--shadow-md); transform: translateY(-2px); }
 
-  .media { position: relative; height: 148px; background: hsl(var(--muted) / .5); }
+  .media { position: relative; height: 154px; background: hsl(var(--muted) / 0.5); cursor: pointer; }
   .media image-slot { width: 100%; height: 100%; display: block; }
   .media .ov { position: absolute; display: inline-flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 800; letter-spacing: 0.06em; padding: 4px 10px; border-radius: 999px; pointer-events: none; }
   .ov.cat { top: 10px; left: 10px; background: white; color: hsl(var(--foreground)); box-shadow: var(--shadow-sm); }
-  .ov.src { top: 10px; right: 10px; background: hsl(222 25% 14% / .82); color: white; }
-  .ov.vid { bottom: 10px; right: 10px; background: hsl(222 25% 14% / .82); color: white; font-variant-numeric: tabular-nums; }
-  .ov .lucide { width: 11px; height: 11px; }
+  .ov.src { top: 10px; right: 10px; background: hsl(222 25% 14% / 0.82); color: white; }
+  .ov.vid { bottom: 10px; right: 10px; background: hsl(222 25% 14% / 0.82); color: white; font-variant-numeric: tabular-nums; }
+  .ov i { width: 11px; height: 11px; }
 
-  .tbody { padding: 13px 15px 14px; display: flex; flex-direction: column; gap: 9px; flex: 1; }
+  .tbody { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
   .eyebrow { display: flex; align-items: center; }
-  .eyebrow .reg { font-size: 9.5px; font-weight: 800; letter-spacing: 0.12em; color: hsl(var(--muted-foreground)); }
-  .eyebrow .explore { margin-left: auto; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; color: hsl(var(--primary)); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
-  .eyebrow .explore .lucide { width: 12px; height: 12px; }
-  .tt { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.2; }
-  .tt-en { font-size: 11px; font-weight: 600; font-style: italic; color: hsl(var(--muted-foreground)); margin-top: 1px; }
-  .desc { font-size: 12px; font-weight: 500; color: hsl(var(--muted-foreground)); line-height: 1.5; }
+  .eyebrow .reg { font-size: 9.5px; font-weight: 800; letter-spacing: 0.12em; color: hsl(var(--muted-foreground)); text-transform: uppercase; }
+  .eyebrow .explore { margin-left: auto; font-size: 10.5px; font-weight: 800; letter-spacing: 0.06em; color: hsl(var(--primary)); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+  .eyebrow .explore i { width: 13px; height: 13px; }
+  .tt { font-size: 15.5px; font-weight: 800; letter-spacing: -0.015em; line-height: 1.25; margin: 0; color: hsl(var(--foreground)); }
+  .tt-en { font-size: 11px; font-weight: 600; font-style: italic; color: hsl(var(--muted-foreground)); margin-top: 2px; }
+  .desc { font-size: 12px; font-weight: 500; color: hsl(var(--muted-foreground)); line-height: 1.5; margin: 0; }
 
-  /* metrics */
-  .metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; background: hsl(var(--muted) / .45); border-radius: 11px; padding: 9px 12px; }
-  .metric .lb { font-size: 8.5px; font-weight: 800; letter-spacing: 0.08em; color: hsl(var(--muted-foreground)); }
-  .metric .vl { font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 1px; }
+  /* Metrics Badge Grid */
+  .metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; background: hsl(var(--muted) / 0.45); border-radius: 12px; padding: 10px 12px; }
+  .metric .lb { font-size: 8.5px; font-weight: 800; letter-spacing: 0.08em; color: hsl(var(--muted-foreground)); text-transform: uppercase; }
+  .metric .vl { font-size: 14px; font-weight: 900; font-variant-numeric: tabular-nums; margin-top: 1px; color: hsl(var(--foreground)); }
   .metric .vl small { font-size: 9.5px; font-weight: 700; color: hsl(var(--muted-foreground)); }
-  .metric .bar { height: 3px; border-radius: 2px; background: hsl(var(--border)); margin-top: 4px; overflow: hidden; }
+  .metric .bar { height: 4px; border-radius: 2px; background: hsl(var(--border)); margin-top: 5px; overflow: hidden; }
   .metric .bar span { display: block; height: 100%; border-radius: 2px; }
 
-  /* retest cadence */
-  .retest { display: flex; align-items: center; gap: 7px; font-size: 10.5px; font-weight: 700; color: hsl(var(--muted-foreground)); }
-  .retest .lucide { width: 13px; height: 13px; color: hsl(var(--primary)); flex-shrink: 0; }
-  .retest .pill { display: inline-flex; align-items: center; gap: 4px; background: hsl(var(--primary) / .07); color: hsl(211 100% 38%); border-radius: 999px; padding: 3px 9px; font-variant-numeric: tabular-nums; }
-  .retest .pill.po { background: hsl(28 85% 52% / .1); color: hsl(28 80% 38%); }
+  /* Retest Cadence Pill */
+  .retest { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  .retest i { width: 14px; height: 14px; color: hsl(var(--primary)); flex-shrink: 0; }
+  .retest .pill { display: inline-flex; align-items: center; gap: 4px; background: hsl(var(--primary) / 0.08); color: hsl(211 100% 38%); border-radius: 999px; padding: 3px 10px; font-variant-numeric: tabular-nums; font-size: 10.5px; }
+  .retest .pill.po { background: hsl(28 85% 52% / 0.1); color: hsl(28 80% 35%); }
 
   .tags { display: flex; gap: 5px; flex-wrap: wrap; }
-  .tag { font-size: 10px; font-weight: 700; color: hsl(var(--muted-foreground)); background: hsl(var(--muted) / .7); border-radius: 999px; padding: 3px 9px; }
+  .tag { font-size: 10px; font-weight: 700; color: hsl(var(--muted-foreground)); background: hsl(var(--muted) / 0.7); border-radius: 999px; padding: 3px 9px; }
 
-  .tfoot { display: flex; align-items: center; gap: 6px; border-top: 1px solid hsl(var(--border) / .7); padding-top: 10px; margin-top: auto; }
+  .tfoot { display: flex; align-items: center; gap: 6px; border-top: 1px solid hsl(var(--border) / 0.7); padding-top: 10px; margin-top: auto; }
   .ev { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; letter-spacing: 0.04em; }
-  .ev .gr { width: 18px; height: 18px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; }
+  .ev .gr { width: 18px; height: 18px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; font-weight: 900; }
   .ev .gr.a { background: hsl(158 60% 38%); }
   .ev .gr.b { background: hsl(38 92% 45%); }
   .tfoot .links { margin-left: auto; font-size: 10.5px; font-weight: 700; color: hsl(var(--muted-foreground)); display: inline-flex; align-items: center; gap: 4px; }
-  .tfoot .links .lucide { width: 12px; height: 12px; }
+  .tfoot .links i { width: 13px; height: 13px; }
 
-  .loadmore { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; }
-  .loadmore .note { font-size: 11.5px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  /* Empty State */
+  .empty-state { display: none; text-align: center; padding: 48px 20px; background: hsl(var(--card)); border: 1px dashed hsl(var(--border)); border-radius: 16px; margin-top: 16px; }
+  .empty-state.show { display: block; }
+  .empty-state i { width: 42px; height: 42px; color: hsl(var(--muted-foreground)); margin-bottom: 12px; }
+  .empty-state h3 { font-size: 16px; font-weight: 800; margin: 0; }
+  .empty-state p { font-size: 12.5px; color: hsl(var(--muted-foreground)); margin-top: 6px; }
+
+  /* Interactive Modal Styling */
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(13,17,23,0.75); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
+  .modal-backdrop.open { display: flex; }
+  .modal-card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 20px; width: 100%; max-width: 760px; box-shadow: var(--shadow-lg); overflow: hidden; animation: modalIn 0.2s ease-out; }
+  @keyframes modalIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+  .modal-header { padding: 18px 24px; border-bottom: 1px solid hsl(var(--border)); display: flex; align-items: center; justify-content: space-between; background: hsl(var(--muted) / 0.2); }
+  .modal-header h3 { font-size: 17px; font-weight: 900; margin: 0; display: flex; align-items: center; gap: 8px; }
+  .modal-header button { background: none; border: none; font-size: 22px; cursor: pointer; color: hsl(var(--muted-foreground)); }
+  .modal-tabs { display: flex; border-bottom: 1px solid hsl(var(--border)); background: hsl(var(--card)); padding: 0 20px; gap: 8px; }
+  .mtab { padding: 12px 16px; font-size: 12.5px; font-weight: 800; color: hsl(var(--muted-foreground)); border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; }
+  .mtab.active { color: hsl(var(--primary)); border-bottom-color: hsl(var(--primary)); }
+  .modal-body { padding: 22px 24px; max-height: 75vh; overflow-y: auto; }
+
+  /* Calculator Form */
+  .calc-box { background: hsl(var(--secondary) / 0.5); border: 1px solid hsl(var(--border)); border-radius: 14px; padding: 16px 18px; margin-bottom: 16px; }
+  .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px; }
+  .calc-input label { display: block; font-size: 11px; font-weight: 800; color: hsl(var(--muted-foreground)); text-transform: uppercase; margin-bottom: 6px; }
+  .calc-input input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid hsl(var(--border)); font-family: var(--font-sans); font-size: 14px; font-weight: 800; box-sizing: border-box; }
+  
+  .lsi-result { display: flex; align-items: center; justify-content: space-between; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 14px; padding: 14px 18px; margin-top: 14px; }
+  .lsi-result .val { font-size: 26px; font-weight: 900; color: hsl(var(--primary)); font-variant-numeric: tabular-nums; }
+  .lsi-result .status-badge { font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 999px; }
+  .lsi-result .status-badge.ok { background: hsl(158 60% 45% / 0.15); color: hsl(158 60% 30%); }
+  .lsi-result .status-badge.warn { background: hsl(38 92% 50% / 0.15); color: hsl(30 85% 35%); }
+  .lsi-result .status-badge.danger { background: hsl(0 84% 60% / 0.15); color: hsl(0 75% 40%); }
 </style>
 </head>
 <body>
 <div class="pad">
 
+  <!-- Shell Sidebar -->
   <aside class="sidebar">
     <div class="sb-brand">
-      <div class="sb-logo"><img src="assets/activity-logo.svg" alt=""/></div>
+      <div class="sb-logo"><img src="assets/activity-logo.svg" alt="Activity Logo"/></div>
       <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
     </div>
     <nav class="sb-nav">
@@ -131,85 +174,108 @@
     </div>
   </aside>
 
+  <!-- Shell Main Content -->
   <div class="content">
     <div class="topbar">
-      <div class="crumbs"><strong>Testes Clínicos</strong></div>
+      <div class="crumbs"><strong>Testes Clínicos</strong> <i data-lucide="chevron-right"></i> Catálogo &amp; Calculadoras</div>
       <div class="topbar-right">
-        <button class="btn"><i data-lucide="upload"></i> Importar</button>
-        <button class="btn primary"><i data-lucide="plus"></i> Novo Teste</button>
+        <button class="btn" onclick="alert('Importando novos templates de testes clínicos da nuvem FisioFlow.')"><i data-lucide="upload"></i> Importar</button>
+        <button class="btn primary" onclick="openTestModal('Novo Teste Personalizado', 'Criar teste clínico para a biblioteca da clínica')"><i data-lucide="plus"></i> Novo Teste</button>
       </div>
     </div>
 
     <div class="main">
       <div class="m-head">
-        <h1>Biblioteca de Testes</h1>
-        <div class="m-stats"><span><b>84</b> testes</span><span><b>56</b> ortopedia</span><span><b>12</b> esportiva</span><span><b>10</b> pós-op</span></div>
-        <div class="search"><i data-lucide="search"></i> Buscar teste, tag ou articulação...</div>
+        <h1>Biblioteca de Testes Clínicos</h1>
+        <div class="m-stats">
+          <span><b id="total-count">84</b> testes</span>
+          <span><b>56</b> ortopedia</span>
+          <span><b>12</b> esportiva</span>
+          <span><b>10</b> pós-op</span>
+        </div>
+
+        <!-- Smart Search Bar -->
+        <div class="search-box">
+          <i data-lucide="search" class="search-icon"></i>
+          <input type="text" id="search-input" placeholder="Buscar por teste, patologia, articulação..." onkeyup="filterTests()"/>
+          <button id="clear-search-btn" class="clear-btn" onclick="clearSearch()">&times;</button>
+          <kbd>/</kbd>
+        </div>
       </div>
 
+      <!-- Filters Box -->
       <div class="filters">
         <div class="fgroup">
           <h4>CATEGORIAS</h4>
           <div class="chips">
-            <span class="fchip on">Todos</span>
-            <span class="fchip">Ortopedia</span>
-            <span class="fchip">Esportiva</span>
-            <span class="fchip">Neurodinâmica</span>
-            <span class="fchip">Pós-Operatório</span>
+            <span class="fchip on" onclick="filterCategory(this, 'all')">Todos</span>
+            <span class="fchip" onclick="filterCategory(this, 'ortopedia')">Ortopedia</span>
+            <span class="fchip" onclick="filterCategory(this, 'esportiva')">Esportiva</span>
+            <span class="fchip" onclick="filterCategory(this, 'neurodinamica')">Neurodinâmica</span>
+            <span class="fchip" onclick="filterCategory(this, 'pos-op')">Pós-Operatório</span>
           </div>
         </div>
         <div class="sep"></div>
         <div class="fgroup">
-          <h4>REGIÕES E FOCO</h4>
+          <h4>REGIÕES E FOCO ANATÔMICO</h4>
           <div class="chips">
-            <span class="fchip">Joelho</span>
-            <span class="fchip">Ombro</span>
-            <span class="fchip">Coluna</span>
-            <span class="fchip">Quadril</span>
-            <span class="fchip">Tornozelo</span>
-            <span class="fchip">Cervical</span>
-            <span class="fchip">Punho</span>
+            <span class="fchip" onclick="filterRegion(this, 'joelho')">Joelho</span>
+            <span class="fchip" onclick="filterRegion(this, 'ombro')">Ombro</span>
+            <span class="fchip" onclick="filterRegion(this, 'coluna')">Coluna</span>
+            <span class="fchip" onclick="filterRegion(this, 'quadril')">Quadril</span>
+            <span class="fchip" onclick="filterRegion(this, 'tornozelo')">Tornozelo</span>
+            <span class="fchip" onclick="filterRegion(this, 'cervical')">Cervical</span>
           </div>
         </div>
       </div>
 
+      <!-- Clinical Clusters Bar -->
       <div class="clusters">
-        <div class="cl-label"><i data-lucide="layers" style="width:13px;height:13px;"></i> CLUSTERS</div>
-        <div class="cluster">
-          <span class="ic"><i data-lucide="layers" style="width:15px;height:15px;"></i></span>
-          <div><div class="nm">Cluster de Laslett — sacroilíaca</div><div class="mt">5 testes em sequência · positivo com 3+ · LR+ 4,2</div></div>
-          <span class="go"><i data-lucide="arrow-right" style="width:15px;height:15px;"></i></span>
+        <div class="cl-label"><i data-lucide="layers"></i> CLUSTERS</div>
+        <div class="cluster" onclick="openTestModal('Cluster de Laslett (Sacroilíaca)', 'Avaliação de dor sacroilíaca via 5 testes provocativos')">
+          <span class="ic"><i data-lucide="layers"></i></span>
+          <div>
+            <div class="nm">Cluster de Laslett — Sacroilíaca</div>
+            <div class="mt">5 testes em sequência · positivo com 3+ · LR+ 4,16</div>
+          </div>
+          <span class="go"><i data-lucide="arrow-right"></i></span>
         </div>
-        <div class="cluster">
-          <span class="ic"><i data-lucide="layers" style="width:15px;height:15px;"></i></span>
-          <div><div class="nm">Instabilidade anterior do joelho</div><div class="mt">Lachman + Pivot-shift + Gaveta · pré-cirúrgico</div></div>
-          <span class="go"><i data-lucide="arrow-right" style="width:15px;height:15px;"></i></span>
+        <div class="cluster" onclick="openTestModal('Cluster de Instabilidade do Joelho (LCA)', 'Bateria pré e pós-cirúrgica de instabilidade ligamentar')">
+          <span class="ic"><i data-lucide="layers"></i></span>
+          <div>
+            <div class="nm">Instabilidade anterior do joelho</div>
+            <div class="mt">Lachman + Pivot-shift + Gaveta · pré-cirúrgico</div>
+          </div>
+          <span class="go"><i data-lucide="arrow-right"></i></span>
         </div>
       </div>
 
+      <!-- Results Info Bar -->
       <div class="results-bar">
-        <span class="ct">Mostrando <b>6</b> de <b>84</b> testes</span>
-        <span class="badge info">CURADORIA CLÍNICA — testes built-in exibem evidência, mídia e materiais de apoio</span>
-        <span class="sort"><i data-lucide="arrow-up-down" style="width:13px;height:13px;"></i> Ordenar: <b>Mais aplicados</b></span>
+        <span class="ct">Mostrando <b id="visible-count">6</b> de <b>84</b> testes</span>
+        <span class="badge info">CURADORIA CLÍNICA — testes com sensibilidade %, especificidade % e calculadoras LSI</span>
+        <span class="sort"><i data-lucide="arrow-up-down"></i> Ordenar: <b>Mais aplicados</b></span>
       </div>
 
-      <div class="grid">
-        <!-- Lachman -->
-        <div class="tcard">
-          <div class="media">
-            <image-slot id="ts-lachman" placeholder="Arraste foto ou vídeo do Lachman" shape="rect"></image-slot>
+      <!-- Tests Cards Grid -->
+      <div class="grid" id="tests-grid">
+        
+        <!-- Card 1: Lachman -->
+        <div class="tcard" data-name="teste de lachman lachman test joelho lca instabilidade" data-category="ortopedia" data-region="joelho">
+          <div class="media" onclick="openTestModal('Teste de Lachman', 'Avaliação da integridade do LCA a 20-30° de flexão')">
+            <image-slot id="ts-lachman" placeholder="Vídeo / Foto do Lachman" shape="rect"></image-slot>
             <span class="ov cat">ORTOPEDIA</span>
             <span class="ov src"><i data-lucide="library"></i> BIBLIOTECA</span>
             <span class="ov vid"><i data-lucide="play"></i> VÍDEO · 0:48</span>
           </div>
           <div class="tbody">
-            <div class="eyebrow"><span class="reg">JOELHO</span><span class="explore">EXPLORAR <i data-lucide="arrow-right"></i></span></div>
-            <div><div class="tt">Teste de Lachman</div><div class="tt-en">Lachman Test</div></div>
-            <p class="desc">Avaliar a integridade do LCA por translação anterior da tíbia a 20–30° de flexão.</p>
+            <div class="eyebrow"><span class="reg">JOELHO</span><span class="explore" onclick="openTestModal('Teste de Lachman', 'Avaliação do LCA')">EXPLORAR <i data-lucide="arrow-right"></i></span></div>
+            <div><h3 class="tt">Teste de Lachman</h3><div class="tt-en">Lachman Test</div></div>
+            <p class="desc">Avaliar a integridade do LCA por translação anterior da tíbia a 20–30° de flexão de joelho.</p>
             <div class="metrics">
               <div class="metric"><div class="lb">SENS.</div><div class="vl">85<small>%</small></div><div class="bar"><span style="width:85%;background:hsl(158 60% 42%);"></span></div></div>
               <div class="metric"><div class="lb">ESPEC.</div><div class="vl">94<small>%</small></div><div class="bar"><span style="width:94%;background:hsl(158 60% 42%);"></span></div></div>
-              <div class="metric"><div class="lb">TEMPO MÉDIO</div><div class="vl">2<small> min</small></div><div class="bar"><span style="width:20%;background:hsl(211 100% 50%);"></span></div></div>
+              <div class="metric"><div class="lb">TEMPO</div><div class="vl">2<small> min</small></div><div class="bar"><span style="width:20%;background:hsl(211 100% 50%);"></span></div></div>
             </div>
             <div class="retest"><i data-lucide="refresh-cw"></i> Reteste <span class="pill">conservador · 12 sem</span> <span class="pill po">pós-op · 1 sem</span></div>
             <div class="tags"><span class="tag">#joelho</span><span class="tag">#lca</span><span class="tag">#instabilidade</span></div>
@@ -220,22 +286,22 @@
           </div>
         </div>
 
-        <!-- Gaveta anterior -->
-        <div class="tcard">
-          <div class="media">
-            <image-slot id="ts-gaveta" placeholder="Arraste foto ou vídeo da Gaveta Anterior" shape="rect"></image-slot>
+        <!-- Card 2: Gaveta Anterior -->
+        <div class="tcard" data-name="gaveta anterior joelho lca instabilidade anterior drawer" data-category="ortopedia" data-region="joelho">
+          <div class="media" onclick="openTestModal('Gaveta Anterior (Joelho)', 'Teste de integridade do LCA a 90° de flexão')">
+            <image-slot id="ts-gaveta" placeholder="Vídeo / Foto Gaveta" shape="rect"></image-slot>
             <span class="ov cat">ORTOPEDIA</span>
             <span class="ov src"><i data-lucide="library"></i> BIBLIOTECA</span>
             <span class="ov vid"><i data-lucide="play"></i> VÍDEO · 1:05</span>
           </div>
           <div class="tbody">
-            <div class="eyebrow"><span class="reg">JOELHO</span><span class="explore">EXPLORAR <i data-lucide="arrow-right"></i></span></div>
-            <div><div class="tt">Gaveta Anterior (Joelho)</div><div class="tt-en">Anterior Drawer Test</div></div>
-            <p class="desc">Avaliar a integridade do Ligamento Cruzado Anterior (LCA) com o joelho a 90°.</p>
+            <div class="eyebrow"><span class="reg">JOELHO</span><span class="explore" onclick="openTestModal('Gaveta Anterior (Joelho)', 'Avaliação do LCA')">EXPLORAR <i data-lucide="arrow-right"></i></span></div>
+            <div><h3 class="tt">Gaveta Anterior (Joelho)</h3><div class="tt-en">Anterior Drawer Test</div></div>
+            <p class="desc">Avaliar a integridade do Ligamento Cruzado Anterior (LCA) com o joelho flexionado a 90°.</p>
             <div class="metrics">
               <div class="metric"><div class="lb">SENS.</div><div class="vl">55<small>%</small></div><div class="bar"><span style="width:55%;background:hsl(38 90% 50%);"></span></div></div>
               <div class="metric"><div class="lb">ESPEC.</div><div class="vl">92<small>%</small></div><div class="bar"><span style="width:92%;background:hsl(158 60% 42%);"></span></div></div>
-              <div class="metric"><div class="lb">TEMPO MÉDIO</div><div class="vl">3<small> min</small></div><div class="bar"><span style="width:30%;background:hsl(211 100% 50%);"></span></div></div>
+              <div class="metric"><div class="lb">TEMPO</div><div class="vl">3<small> min</small></div><div class="bar"><span style="width:30%;background:hsl(211 100% 50%);"></span></div></div>
             </div>
             <div class="retest"><i data-lucide="refresh-cw"></i> Reteste <span class="pill">conservador · 12 sem</span> <span class="pill po">pós-op · 1 sem</span></div>
             <div class="tags"><span class="tag">#joelho</span><span class="tag">#lca</span><span class="tag">#instabilidade</span></div>
@@ -246,22 +312,22 @@
           </div>
         </div>
 
-        <!-- Slump -->
-        <div class="tcard">
-          <div class="media">
-            <image-slot id="ts-slump" placeholder="Arraste foto ou vídeo do Slump Test" shape="rect"></image-slot>
+        <!-- Card 3: Slump Test -->
+        <div class="tcard" data-name="slump test coluna lombar radiculopatia neurodinamica dural" data-category="neurodinamica" data-region="coluna">
+          <div class="media" onclick="openTestModal('Slump Test', 'Avaliação da tensão neurodinâmica e dural')">
+            <image-slot id="ts-slump" placeholder="Vídeo / Foto Slump" shape="rect"></image-slot>
             <span class="ov cat">NEURODINÂMICA</span>
             <span class="ov src"><i data-lucide="library"></i> BIBLIOTECA</span>
             <span class="ov vid"><i data-lucide="play"></i> VÍDEO · 1:22</span>
           </div>
           <div class="tbody">
-            <div class="eyebrow"><span class="reg">COLUNA</span><span class="explore">EXPLORAR <i data-lucide="arrow-right"></i></span></div>
-            <div><div class="tt">Slump Test</div><div class="tt-en">Slump Test</div></div>
-            <p class="desc">Avaliar a tensão neural e irritação dural, especialmente das raízes lombares e do nervo isquiático.</p>
+            <div class="eyebrow"><span class="reg">COLUNA</span><span class="explore" onclick="openTestModal('Slump Test', 'Avaliação neural')">EXPLORAR <i data-lucide="arrow-right"></i></span></div>
+            <div><h3 class="tt">Slump Test</h3><div class="tt-en">Slump Test</div></div>
+            <p class="desc">Avaliar a tensão neural mecânica e irritação dural, especialmente das raízes lombares e nervo isquiático.</p>
             <div class="metrics">
               <div class="metric"><div class="lb">SENS.</div><div class="vl">84<small>%</small></div><div class="bar"><span style="width:84%;background:hsl(158 60% 42%);"></span></div></div>
               <div class="metric"><div class="lb">ESPEC.</div><div class="vl">83<small>%</small></div><div class="bar"><span style="width:83%;background:hsl(158 60% 42%);"></span></div></div>
-              <div class="metric"><div class="lb">TEMPO MÉDIO</div><div class="vl">4<small> min</small></div><div class="bar"><span style="width:40%;background:hsl(211 100% 50%);"></span></div></div>
+              <div class="metric"><div class="lb">TEMPO</div><div class="vl">4<small> min</small></div><div class="bar"><span style="width:40%;background:hsl(211 100% 50%);"></span></div></div>
             </div>
             <div class="retest"><i data-lucide="refresh-cw"></i> Reteste <span class="pill">conservador · 4 sem</span> <span class="pill po">agudo · 1 sem</span></div>
             <div class="tags"><span class="tag">#coluna</span><span class="tag">#lombar</span><span class="tag">#radiculopatia</span></div>
@@ -272,73 +338,47 @@
           </div>
         </div>
 
-        <!-- McMurray -->
-        <div class="tcard">
-          <div class="media">
-            <image-slot id="ts-mcmurray" placeholder="Arraste foto ou vídeo do McMurray" shape="rect"></image-slot>
-            <span class="ov cat">ORTOPEDIA</span>
-            <span class="ov src"><i data-lucide="library"></i> BIBLIOTECA</span>
-            <span class="ov vid"><i data-lucide="play"></i> VÍDEO · 0:56</span>
-          </div>
-          <div class="tbody">
-            <div class="eyebrow"><span class="reg">JOELHO</span><span class="explore">EXPLORAR <i data-lucide="arrow-right"></i></span></div>
-            <div><div class="tt">Teste de McMurray</div><div class="tt-en">McMurray Test</div></div>
-            <p class="desc">Detectar lesão meniscal por rotação e extensão a partir de flexão máxima do joelho.</p>
-            <div class="metrics">
-              <div class="metric"><div class="lb">SENS.</div><div class="vl">61<small>%</small></div><div class="bar"><span style="width:61%;background:hsl(38 90% 50%);"></span></div></div>
-              <div class="metric"><div class="lb">ESPEC.</div><div class="vl">84<small>%</small></div><div class="bar"><span style="width:84%;background:hsl(158 60% 42%);"></span></div></div>
-              <div class="metric"><div class="lb">TEMPO MÉDIO</div><div class="vl">3<small> min</small></div><div class="bar"><span style="width:30%;background:hsl(211 100% 50%);"></span></div></div>
-            </div>
-            <div class="retest"><i data-lucide="refresh-cw"></i> Reteste <span class="pill">conservador · 8 sem</span> <span class="pill po">pós-op · 2 sem</span></div>
-            <div class="tags"><span class="tag">#joelho</span><span class="tag">#menisco</span></div>
-            <div class="tfoot">
-              <span class="ev"><span class="gr b">B</span> EVIDÊNCIA MODERADA</span>
-              <span class="links"><i data-lucide="link"></i> 1 protocolo · aplicado 14× /mês</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Thessaly -->
-        <div class="tcard">
-          <div class="media">
-            <image-slot id="ts-thessaly" placeholder="Arraste foto ou vídeo do Thessaly" shape="rect"></image-slot>
+        <!-- Card 4: Single Leg Hop Test (Calculadora LSI) -->
+        <div class="tcard" data-name="single leg hop test salto unipodal lsi joelho tornozelo esportiva" data-category="esportiva" data-region="joelho">
+          <div class="media" onclick="openTestModal('Single Leg Hop Test for Distance', 'Cálculo de LSI (% simetria de salto) para alta esportiva')">
+            <image-slot id="ts-hop" placeholder="Vídeo / Foto Hop Test" shape="rect"></image-slot>
             <span class="ov cat">ESPORTIVA</span>
-            <span class="ov src"><i data-lucide="library"></i> BIBLIOTECA</span>
-            <span class="ov vid"><i data-lucide="play"></i> VÍDEO · 0:39</span>
+            <span class="ov src"><i data-lucide="calculator"></i> CALCULADORA LSI</span>
+            <span class="ov vid"><i data-lucide="play"></i> VÍDEO · 1:10</span>
           </div>
           <div class="tbody">
-            <div class="eyebrow"><span class="reg">JOELHO</span><span class="explore">EXPLORAR <i data-lucide="arrow-right"></i></span></div>
-            <div><div class="tt">Teste de Thessaly (20°)</div><div class="tt-en">Thessaly Test</div></div>
-            <p class="desc">Provocar sintomas meniscais em apoio unipodal com rotação do corpo sobre o joelho a 20°.</p>
+            <div class="eyebrow"><span class="reg">JOELHO / ESPORTE</span><span class="explore" onclick="openTestModal('Single Leg Hop Test', 'Cálculo de LSI %')">EXPLORAR <i data-lucide="arrow-right"></i></span></div>
+            <div><h3 class="tt">Single Leg Hop Test</h3><div class="tt-en">Hop Test para Distância (LSI %)</div></div>
+            <p class="desc">Mede a capacidade de potência e estabilidade dinâmica. Calcula o Limb Symmetry Index (LSI %).</p>
             <div class="metrics">
-              <div class="metric"><div class="lb">SENS.</div><div class="vl">75<small>%</small></div><div class="bar"><span style="width:75%;background:hsl(158 60% 42%);"></span></div></div>
-              <div class="metric"><div class="lb">ESPEC.</div><div class="vl">87<small>%</small></div><div class="bar"><span style="width:87%;background:hsl(158 60% 42%);"></span></div></div>
-              <div class="metric"><div class="lb">TEMPO MÉDIO</div><div class="vl">2<small> min</small></div><div class="bar"><span style="width:20%;background:hsl(211 100% 50%);"></span></div></div>
+              <div class="metric"><div class="lb">SENS.</div><div class="vl">88<small>%</small></div><div class="bar"><span style="width:88%;background:hsl(158 60% 42%);"></span></div></div>
+              <div class="metric"><div class="lb">ESPEC.</div><div class="vl">91<small>%</small></div><div class="bar"><span style="width:91%;background:hsl(158 60% 42%);"></span></div></div>
+              <div class="metric"><div class="lb">TEMPO</div><div class="vl">5<small> min</small></div><div class="bar"><span style="width:50%;background:hsl(211 100% 50%);"></span></div></div>
             </div>
-            <div class="retest"><i data-lucide="refresh-cw"></i> Reteste <span class="pill">conservador · 8 sem</span> <span class="pill po">retorno esporte · 2 sem</span></div>
-            <div class="tags"><span class="tag">#joelho</span><span class="tag">#menisco</span><span class="tag">#esportivo</span></div>
+            <div class="retest"><i data-lucide="refresh-cw"></i> Reteste <span class="pill">pós-op · 12 sem</span> <span class="pill po">alta esporte · W12</span></div>
+            <div class="tags"><span class="tag">#lsi</span><span class="tag">#hoptest</span><span class="tag">#retornoesporte</span></div>
             <div class="tfoot">
               <span class="ev"><span class="gr a">A</span> EVIDÊNCIA FORTE</span>
-              <span class="links"><i data-lucide="link"></i> 2 protocolos · aplicado 9× /mês</span>
+              <span class="links"><i data-lucide="link"></i> 4 protocolos · aplicado 42× /mês</span>
             </div>
           </div>
         </div>
 
-        <!-- Neer -->
-        <div class="tcard">
-          <div class="media">
-            <image-slot id="ts-neer" placeholder="Arraste foto ou vídeo do Neer" shape="rect"></image-slot>
+        <!-- Card 5: Neer (Ombro) -->
+        <div class="tcard" data-name="teste de neer neer impingement ombro impacto manguito" data-category="ortopedia" data-region="ombro">
+          <div class="media" onclick="openTestModal('Teste de Neer', 'Provocação de impacto subacromial')">
+            <image-slot id="ts-neer" placeholder="Vídeo / Foto Neer" shape="rect"></image-slot>
             <span class="ov cat">ORTOPEDIA</span>
-            <span class="ov src"><i data-lucide="user-pen"></i> PERSONALIZADO</span>
+            <span class="ov src"><i data-lucide="library"></i> BIBLIOTECA</span>
           </div>
           <div class="tbody">
-            <div class="eyebrow"><span class="reg">OMBRO</span><span class="explore">EXPLORAR <i data-lucide="arrow-right"></i></span></div>
-            <div><div class="tt">Teste de Neer</div><div class="tt-en">Neer Impingement Test</div></div>
-            <p class="desc">Reproduzir dor de impacto subacromial por elevação passiva do braço em rotação interna.</p>
+            <div class="eyebrow"><span class="reg">OMBRO</span><span class="explore" onclick="openTestModal('Teste de Neer', 'Avaliação do impacto subacromial')">EXPLORAR <i data-lucide="arrow-right"></i></span></div>
+            <div><h3 class="tt">Teste de Neer</h3><div class="tt-en">Neer Impingement Test</div></div>
+            <p class="desc">Reproduzir dor de impacto subacromial por elevação passiva do braço em rotação interna máxima.</p>
             <div class="metrics">
               <div class="metric"><div class="lb">SENS.</div><div class="vl">72<small>%</small></div><div class="bar"><span style="width:72%;background:hsl(158 60% 42%);"></span></div></div>
               <div class="metric"><div class="lb">ESPEC.</div><div class="vl">60<small>%</small></div><div class="bar"><span style="width:60%;background:hsl(38 90% 50%);"></span></div></div>
-              <div class="metric"><div class="lb">TEMPO MÉDIO</div><div class="vl">1<small> min</small></div><div class="bar"><span style="width:10%;background:hsl(211 100% 50%);"></span></div></div>
+              <div class="metric"><div class="lb">TEMPO</div><div class="vl">1<small> min</small></div><div class="bar"><span style="width:10%;background:hsl(211 100% 50%);"></span></div></div>
             </div>
             <div class="retest"><i data-lucide="refresh-cw"></i> Reteste <span class="pill">conservador · 6 sem</span> <span class="pill po">pós-op · 3 sem</span></div>
             <div class="tags"><span class="tag">#ombro</span><span class="tag">#impacto</span><span class="tag">#manguito</span></div>
@@ -348,16 +388,239 @@
             </div>
           </div>
         </div>
+
+        <!-- Card 6: Y-Balance Test -->
+        <div class="tcard" data-name="y-balance test y balance controle motor estabilidade dinamica tornozelo joelho" data-category="esportiva" data-region="tornozelo">
+          <div class="media" onclick="openTestModal('Y-Balance Test (SEBT)', 'Avaliação de controle motor dinâmico e risco de entorse')">
+            <image-slot id="ts-ybalance" placeholder="Vídeo / Foto Y-Balance" shape="rect"></image-slot>
+            <span class="ov cat">ESPORTIVA</span>
+            <span class="ov src"><i data-lucide="calculator"></i> CALCULADORA LSI</span>
+            <span class="ov vid"><i data-lucide="play"></i> VÍDEO · 1:45</span>
+          </div>
+          <div class="tbody">
+            <div class="eyebrow"><span class="reg">TORNOZELO / JOELHO</span><span class="explore" onclick="openTestModal('Y-Balance Test', 'Avaliação de estabilidade dinâmica')">EXPLORAR <i data-lucide="arrow-right"></i></span></div>
+            <div><h3 class="tt">Y-Balance Test (SEBT)</h3><div class="tt-en">Y-Balance Test</div></div>
+            <p class="desc">Avaliar a estabilidade dinâmica do membro inferior em alcance anterior, póstero-medial e póstero-lateral.</p>
+            <div class="metrics">
+              <div class="metric"><div class="lb">SENS.</div><div class="vl">80<small>%</small></div><div class="bar"><span style="width:80%;background:hsl(158 60% 42%);"></span></div></div>
+              <div class="metric"><div class="lb">ESPEC.</div><div class="vl">86<small>%</small></div><div class="bar"><span style="width:86%;background:hsl(158 60% 42%);"></span></div></div>
+              <div class="metric"><div class="lb">TEMPO</div><div class="vl">6<small> min</small></div><div class="bar"><span style="width:60%;background:hsl(211 100% 50%);"></span></div></div>
+            </div>
+            <div class="retest"><i data-lucide="refresh-cw"></i> Reteste <span class="pill">prevenção · 8 sem</span> <span class="pill po">alta esporte · W12</span></div>
+            <div class="tags"><span class="tag">#ybalance</span><span class="tag">#tornozelo</span><span class="tag">#estabilidade</span></div>
+            <div class="tfoot">
+              <span class="ev"><span class="gr a">A</span> EVIDÊNCIA FORTE</span>
+              <span class="links"><i data-lucide="link"></i> 3 protocolos · aplicado 29× /mês</span>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <div class="loadmore">
-        <button class="btn"><i data-lucide="chevrons-down"></i> Carregar mais 12 testes</button>
-        <span class="note">6 de 84</span>
+      <!-- Empty State -->
+      <div id="empty-state" class="empty-state">
+        <i data-lucide="search-x"></i>
+        <h3>Nenhum teste encontrado</h3>
+        <p>Não encontramos testes que correspondam aos filtros selecionados. Tente limpar a busca ou selecionar outra categoria.</p>
+        <button class="btn" style="margin-top: 14px;" onclick="clearSearch()">Limpar Filtros</button>
       </div>
+
     </div>
   </div>
 </div>
 
-<script>if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();</script>
+<!-- Interactive Modal for Clinical Test Details & Calculators -->
+<div id="modal-test-detail" class="modal-backdrop">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="m-test-title"><i data-lucide="flask-conical"></i> Detalhes do Teste Clínico</h3>
+      <button onclick="closeModal('modal-test-detail')">&times;</button>
+    </div>
+    
+    <!-- Modal Navigation Tabs -->
+    <div class="modal-tabs">
+      <button class="mtab active" onclick="switchModalTab('mtab-exec')"><i data-lucide="play-circle"></i> Execução &amp; Vídeo</button>
+      <button class="mtab" onclick="switchModalTab('mtab-calc')"><i data-lucide="calculator"></i> Calculadora LSI %</button>
+      <button class="mtab" onclick="switchModalTab('mtab-soap')"><i data-lucide="file-text"></i> Gerador de Laudo SOAP</button>
+    </div>
+
+    <div class="modal-body">
+      
+      <!-- Modal Tab 1: Execution & Video -->
+      <div id="mtab-exec" class="mtab-panel" style="display:block;">
+        <div style="aspect-ratio: 16 / 9; background: #0d1117; border-radius: 14px; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 16px;">
+          <div style="width: 56px; height: 56px; border-radius: 50%; background: hsl(var(--primary)); color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 24px hsl(211 100% 50% / 0.4); cursor: pointer;" onclick="alert('Tocando vídeo demonstrativo do teste.')"><i data-lucide="play" style="width: 22px; height: 22px; margin-left: 2px;"></i></div>
+          <span style="position: absolute; bottom: 12px; right: 12px; font-size: 10px; font-weight: 800; background: rgba(0,0,0,0.7); color: #fff; padding: 3px 8px; border-radius: 6px;">DEMONSTRAÇÃO HD · 3 DURAÇÕES</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div style="background: hsl(var(--secondary) / 0.4); padding: 14px; border-radius: 12px; border: 1px solid hsl(var(--border));">
+            <h4 style="font-size: 11px; font-weight: 800; color: hsl(var(--muted-foreground)); text-transform: uppercase; margin: 0 0 6px;"><i data-lucide="user" style="width:12px; vertical-align:middle;"></i> Posição do Paciente</h4>
+            <div style="font-size: 12px; font-weight: 600; line-height: 1.45;">Paciente em decúbito dorsal relaxado, com musculatura de quadríceps totalmente desacoplada.</div>
+          </div>
+          <div style="background: hsl(var(--secondary) / 0.4); padding: 14px; border-radius: 12px; border: 1px solid hsl(var(--border));">
+            <h4 style="font-size: 11px; font-weight: 800; color: hsl(var(--muted-foreground)); text-transform: uppercase; margin: 0 0 6px;"><i data-lucide="hand" style="width:12px; vertical-align:middle;"></i> Posição do Fisioterapeuta</h4>
+            <div style="font-size: 12px; font-weight: 600; line-height: 1.45;">Uma mão estabiliza o fêmur distalmente e a outra empunha a tíbia proximal na linha articular.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Tab 2: LSI Calculator -->
+      <div id="mtab-calc" class="mtab-panel" style="display:none;">
+        <div class="calc-box">
+          <div style="font-size: 13px; font-weight: 800; color: hsl(var(--foreground));"><i data-lucide="calculator" style="width:15px; vertical-align:middle;"></i> Calculadora de Ícone de Simetria de Membro (% LSI)</div>
+          <div style="font-size: 11.5px; color: hsl(var(--muted-foreground)); margin-top: 2px;">Insira a medida do membro acometido (afetado) e do membro saudável para obter o percentual de simetria e classificação de risco.</div>
+
+          <div class="calc-grid">
+            <div class="calc-input">
+              <label>Membro Afetado (ex: cm / kgf)</label>
+              <input type="number" id="lsi-afetado" value="142" oninput="calculateLSI()"/>
+            </div>
+            <div class="calc-input">
+              <label>Membro Saudável (ex: cm / kgf)</label>
+              <input type="number" id="lsi-saudavel" value="155" oninput="calculateLSI()"/>
+            </div>
+          </div>
+
+          <div class="lsi-result">
+            <div>
+              <div style="font-size: 10px; font-weight: 800; color: hsl(var(--muted-foreground)); text-transform: uppercase;">ÍNDICE LSI CALCULADO</div>
+              <div class="val" id="lsi-val">91.6%</div>
+            </div>
+            <span class="status-badge ok" id="lsi-badge">🟢 APROVADO (LSI &ge; 90%)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Tab 3: SOAP Generator -->
+      <div id="mtab-soap" class="mtab-panel" style="display:none;">
+        <div style="font-size: 12px; font-weight: 800; color: hsl(var(--muted-foreground)); text-transform: uppercase; margin-bottom: 8px;">TEXTO FORMATADO PARA A NOTA CLÍNICA (EVOLUÇÃO SOAP)</div>
+        <textarea id="soap-text" style="width: 100%; height: 110px; padding: 12px; border-radius: 12px; border: 1px solid hsl(var(--border)); font-family: var(--font-sans); font-size: 12.5px; font-weight: 600; line-height: 1.45; box-sizing: border-box; resize: none; background: hsl(var(--card));">Realizado Teste de Lachman no joelho acometido: Positivo (Grau II com translação anterior da tíbia aumentada e ausência de travamento firme). Compatível com disfunção ligamentar.</textarea>
+        
+        <button class="btn primary" style="width: 100%; justify-content: center; margin-top: 12px; padding: 11px;" onclick="copySoapText()"><i data-lucide="copy"></i> Copiar Texto para a Evolução</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+
+  let activeCategory = 'all';
+  let activeRegion = 'all';
+
+  // Keyboard shortcut '/' to focus search input
+  window.addEventListener('keydown', function(e) {
+    if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      document.getElementById('search-input').focus();
+    }
+  });
+
+  // Filter Cards Function
+  function filterTests() {
+    const query = document.getElementById('search-input').value.toLowerCase().trim();
+    const clearBtn = document.getElementById('clear-search-btn');
+    clearBtn.style.display = query ? 'inline-block' : 'none';
+
+    const cards = document.querySelectorAll('.tcard');
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+      const name = card.getAttribute('data-name').toLowerCase();
+      const cat = card.getAttribute('data-category');
+      const reg = card.getAttribute('data-region');
+
+      const matchesSearch = !query || name.includes(query);
+      const matchesCategory = activeCategory === 'all' || cat === activeCategory;
+      const matchesRegion = activeRegion === 'all' || reg === activeRegion;
+
+      if (matchesSearch && matchesCategory && matchesRegion) {
+        card.style.display = 'flex';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    document.getElementById('visible-count').innerText = visibleCount;
+    document.getElementById('empty-state').classList.toggle('show', visibleCount === 0);
+  }
+
+  function clearSearch() {
+    document.getElementById('search-input').value = '';
+    filterTests();
+  }
+
+  function filterCategory(el, cat) {
+    document.querySelectorAll('.filters .fgroup:first-child .fchip').forEach(c => c.classList.remove('on'));
+    el.classList.add('on');
+    activeCategory = cat;
+    filterTests();
+  }
+
+  function filterRegion(el, reg) {
+    const isAlreadySelected = el.classList.contains('on');
+    document.querySelectorAll('.filters .fgroup:last-child .fchip').forEach(c => c.classList.remove('on'));
+    
+    if (isAlreadySelected) {
+      activeRegion = 'all';
+    } else {
+      el.classList.add('on');
+      activeRegion = reg;
+    }
+    filterTests();
+  }
+
+  // Modal Handlers
+  function openTestModal(title, subtitle) {
+    document.getElementById('m-test-title').innerHTML = '<i data-lucide="flask-conical"></i> ' + title;
+    document.getElementById('modal-test-detail').classList.add('open');
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('open');
+  }
+
+  function switchModalTab(tabId) {
+    document.querySelectorAll('.mtab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.mtab-panel').forEach(p => p.style.display = 'none');
+
+    event.currentTarget.classList.add('active');
+    document.getElementById(tabId).style.display = 'block';
+  }
+
+  // Calculate LSI Percentage
+  function calculateLSI() {
+    const afetado = parseFloat(document.getElementById('lsi-afetado').value) || 0;
+    const saudavel = parseFloat(document.getElementById('lsi-saudavel').value) || 1;
+
+    const lsi = ((afetado / saudavel) * 100).toFixed(1);
+    const valEl = document.getElementById('lsi-val');
+    const badgeEl = document.getElementById('lsi-badge');
+
+    valEl.innerText = lsi + '%';
+
+    if (lsi >= 90) {
+      badgeEl.className = 'status-badge ok';
+      badgeEl.innerText = '🟢 APROVADO (LSI ≥ 90%)';
+    } else if (lsi >= 80) {
+      badgeEl.className = 'status-badge warn';
+      badgeEl.innerText = '🟡 ATENÇÃO (LSI 80-89%)';
+    } else {
+      badgeEl.className = 'status-badge danger';
+      badgeEl.innerText = '🔴 ALTO RISCO (LSI < 80%)';
+    }
+  }
+
+  function copySoapText() {
+    const text = document.getElementById('soap-text').value;
+    navigator.clipboard.writeText(text);
+    alert('Texto do laudo copiado com sucesso! Cole na evolução SOAP.');
+  }
+</script>
+
 </body>
 </html>
