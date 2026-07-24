@@ -52,6 +52,10 @@ export const appointmentsApi = {
       method: "POST",
       body: JSON.stringify(reason ? { reason } : {}),
     }),
+  delete: (id: string) =>
+    request<{ success: boolean }>(`/api/appointments/${id}`, {
+      method: "DELETE",
+    }),
   lastUpdated: () => request<{ data: AppointmentsLastUpdated }>("/api/appointments/last-updated"),
   generateQrToken: (id: string) =>
     request<{ data: { url: string; expiresAt: string } }>(`/api/appointments/${id}/qr-token`, {

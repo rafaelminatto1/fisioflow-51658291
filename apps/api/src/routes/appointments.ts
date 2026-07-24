@@ -7,7 +7,7 @@ import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { rateLimit } from "../middleware/rateLimit";
 import type { CustomVariables } from "../middleware/requestId";
-import { eq, and, sql, desc, lte, gte } from "drizzle-orm";
+import { eq, and, sql, desc, lte, gte, isNull } from "drizzle-orm";
 import { appointments, patients } from "@fisioflow/db";
 import {
   normalizeStatus,
@@ -79,7 +79,7 @@ app.get("/", requireAuth, async (c) => {
 
     const organizationId = user.organizationId;
 
-    let conditions: any = withTenant(appointments, organizationId);
+    let conditions: any = and(withTenant(appointments, organizationId), isNull(appointments.deletedAt));
 
     if (dateFrom) conditions = and(conditions, gte(appointments.date, dateFrom))!;
     if (dateTo) conditions = and(conditions, lte(appointments.date, dateTo))!;
@@ -394,7 +394,7 @@ app.get("/last-updated", requireAuth, async (c) => {
     const result = await db
       .select({ last_updated_at: sql<string>`MAX(${appointments.updatedAt})` })
       .from(appointments)
-      .where(withTenant(appointments, user.organizationId));
+      .where(and(withTenant(appointments, user.organizationId), isNull(appointments.deletedAt)));
 
     const lastUpdated = result[0]?.last_updated_at;
     return c.json({
@@ -437,7 +437,7 @@ app.get("/:id", requireAuth, async (c) => {
       })
       .from(appointments)
       .leftJoin(patients, eq(patients.id, appointments.patientId))
-      .where(withTenant(appointments, organizationId, eq(appointments.id, id as string)))
+      .where(and(withTenant(appointments, organizationId, eq(appointments.id, id as string)), isNull(appointments.deletedAt)))
       .limit(1);
 
     const row = result[0];

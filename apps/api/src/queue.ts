@@ -13,6 +13,9 @@ import { sendAutomationTemplate } from "./lib/whatsappAutomations";
 import type { AutomationTemplateKey } from "./lib/whatsappAutomationTemplates";
 import { reindexKbItem, type ReindexKbItemPayload } from "./lib/kbReindex";
 import { backoffDelay } from "./lib/queueBackoff";
+import { resolveOrCreateContact } from "./lib/whatsapp-identity";
+import { findOrCreateConversation, addMessage } from "./lib/whatsapp-conversations";
+import { broadcastToOrg } from "./lib/realtime";
 
 export type WhatsAppQueuePayload = {
   to: string;
@@ -304,7 +307,11 @@ async function processWhatsAppMessage(payload: WhatsAppQueuePayload, env: Env): 
     return;
   }
 
-  const metaRes = await fetch(
+  const cleanTo = payload.to.replace(/\D/g, "");
+  let metaMessageId: string | undefined;
+
+  // 1. Tenta enviar como mensagem de texto direta primeiro (usa o texto exato formatado com "sessão")
+  let metaRes = await fetch(
     `https://graph.facebook.com/v25.0/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
     {
       method: "POST",
@@ -314,46 +321,107 @@ async function processWhatsAppMessage(payload: WhatsAppQueuePayload, env: Env): 
       },
       body: JSON.stringify({
         messaging_product: "whatsapp",
-        to: payload.to.replace(/\D/g, ""),
-        type: "template",
-        template: {
-          name: payload.templateName,
-          language: { code: payload.languageCode },
-          components: [{ type: "body", parameters: payload.bodyParameters }],
-        },
+        recipient_type: "individual",
+        to: cleanTo,
+        type: "text",
+        text: { preview_url: false, body: payload.messageText },
       }),
     },
   );
 
+  // 2. Se falhar (ex: fora da janela de 24h), tenta via template cadastrado na Meta
   if (!metaRes.ok) {
+    metaRes = await fetch(
+      `https://graph.facebook.com/v25.0/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${env.WHATSAPP_ACCESS_TOKEN}`,
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: cleanTo,
+          type: "template",
+          template: {
+            name: payload.templateName,
+            language: { code: payload.languageCode },
+            components: [{ type: "body", parameters: payload.bodyParameters }],
+          },
+        }),
+      },
+    );
+  }
+
+  if (metaRes.ok) {
+    const metaData = (await metaRes.json().catch(() => ({}))) as any;
+    metaMessageId = metaData?.messages?.[0]?.id;
+  } else {
     const err = (await metaRes.json().catch(() => ({}))) as any;
     throw new Error(`WhatsApp API error ${metaRes.status}: ${err?.error?.message ?? "unknown"}`);
   }
 
-  // Log the message — non-fatal: WhatsApp was already sent, don't let a log failure trigger a retry
+  // 3. Salva a mensagem no histórico do CRM e transmite tempo real via WebSocket
   try {
     const pool = await createPoolForOrg(env, payload.organizationId);
-    await pool.query(
-      `INSERT INTO whatsapp_messages (
-        organization_id, patient_id, from_phone, to_phone, message, type, status, metadata, created_at, updated_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),NOW())`,
-      [
-        payload.organizationId,
-        payload.patientId,
-        "clinic",
-        payload.to,
-        payload.messageText,
-        "template",
-        "sent",
-        JSON.stringify({
-          appointment_id: payload.appointmentId,
-          template_key: payload.templateName,
-          via_queue: true,
-        }),
-      ],
+    const contact = await resolveOrCreateContact(
+      pool,
+      payload.organizationId,
+      cleanTo,
+      null,
+      null,
+      null,
+      null,
+      null,
     );
+
+    if (contact) {
+      const conversation = await findOrCreateConversation(
+        pool,
+        payload.organizationId,
+        contact.id,
+        "whatsapp",
+      );
+
+      if (conversation) {
+        const savedMsg = await addMessage(
+          pool,
+          conversation.id,
+          payload.organizationId,
+          contact.id,
+          "outbound",
+          "system",
+          contact.id,
+          "text",
+          payload.messageText,
+          metaMessageId,
+          {
+            status: "sent",
+            metadata: {
+              appointment_id: payload.appointmentId,
+              template_key: payload.templateName,
+              via_queue: true,
+              autoReply: true,
+            },
+          },
+        );
+
+        await broadcastToOrg(env, payload.organizationId, {
+          type: "whatsapp_message",
+          conversationId: conversation.id,
+          message: {
+            id: savedMsg?.id,
+            content: payload.messageText,
+            direction: "outbound",
+            messageType: "text",
+            status: "sent",
+            createdAt: new Date().toISOString(),
+          },
+        });
+      }
+    }
   } catch (logErr) {
-    console.warn("[Queue/WhatsApp] Failed to log message (non-fatal):", logErr);
+    console.warn("[Queue/WhatsApp] Failed to log message to CRM (non-fatal):", logErr);
   }
 
   writeEvent(env, {
@@ -1106,9 +1174,10 @@ export async function processAppointmentCompleted(
 
 function formatDatePtBr(dateVal: any): string {
   if (!dateVal) return "";
-  const str = String(dateVal).trim();
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) {
-    return str;
+  const str = String(dateVal).trim().replace(/\/+/g, "-");
+  if (/^\d{2}-\d{2}-\d{4}$/.test(str)) {
+    const [d, m, y] = str.split("-");
+    return `${d}/${m}/${y}`;
   }
   const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (isoMatch) {

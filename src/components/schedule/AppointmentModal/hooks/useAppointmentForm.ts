@@ -452,7 +452,7 @@ export const useAppointmentForm = ({
         return;
       }
       try {
-        await appointmentsApi.cancel(appointment.id);
+        await appointmentsApi.delete(appointment.id);
         await invalidateAppointmentsCache(
           queryClient,
           appointment.date,

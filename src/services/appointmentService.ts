@@ -720,7 +720,7 @@ export class AppointmentService {
    */
   static async deleteAppointment(id: string, _organizationId: string): Promise<void> {
     try {
-      await appointmentsApi.cancel(id, "Deletado pelo usuário");
+      await appointmentsApi.delete(id);
       // Log de auditoria: Exclusão (via cancelamento)
       try {
         await auditApi.create({
