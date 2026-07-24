@@ -1,6 +1,7 @@
 import { useEffect } from "react";
-import { AlertTriangle, Check, Package } from "lucide-react";
+import { AlertTriangle, Check, Package, Zap, CreditCard, Wallet, Banknote, DollarSign } from "lucide-react";
 import { useFormContext } from "react-hook-form";
+import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -18,12 +19,15 @@ import { cn } from "@/lib/utils";
 import type { AppointmentFormData } from "@/types/appointment";
 import { NewPackagePopover } from "./NewPackagePopover";
 
-const premiumFieldBaseClass =
-  "w-full justify-between rounded-xl border border-blue-100 bg-white px-3 text-left shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50/30 focus:ring-2 focus:ring-blue-100 focus:border-blue-300 data-[state=open]:border-blue-300 data-[state=open]:bg-blue-50/50";
+const AVULSA_PRICE = 180;
+const PACOTE_PRICE = 170;
 
-const premiumFieldClass = `${premiumFieldBaseClass} h-11 text-xs sm:text-sm`;
-
-const premiumSelectContentClass = "rounded-xl border border-blue-100 bg-white p-1 shadow-lg";
+const PAYMENT_METHODS = [
+  { value: "pix", label: "PIX", icon: <Wallet className="h-4 w-4" /> },
+  { value: "dinheiro", label: "Dinheiro", icon: <Banknote className="h-4 w-4" /> },
+  { value: "debito", label: "Débito", icon: <CreditCard className="h-4 w-4" /> },
+  { value: "credito", label: "Crédito", icon: <CreditCard className="h-4 w-4" /> },
+] as const;
 
 interface AppointmentPaymentTabProps {
   disabled: boolean;
@@ -55,6 +59,8 @@ export function AppointmentPaymentTab({
 
   const isPaid = watchPaymentStatus !== "pending";
   const watchedStatus = watch("status");
+  const isAvulsa = watchPaymentStatus === "paid_single";
+  const isPacote = watchPaymentStatus === "paid_package";
 
   useEffect(() => {
     const nonChargingStatuses = [
@@ -103,7 +109,7 @@ export function AppointmentPaymentTab({
   const handlePaidChange = (checked: boolean) => {
     if (checked) {
       setValue("payment_status", "paid_single");
-      setValue("payment_amount", 180);
+      setValue("payment_amount", AVULSA_PRICE);
       setValue("session_package_id", null);
     } else {
       setValue("payment_status", "pending");
@@ -117,10 +123,10 @@ export function AppointmentPaymentTab({
   const handlePaymentTypeChange = (value: string) => {
     setValue("payment_status", value);
     if (value === "paid_single") {
-      setValue("payment_amount", 180);
+      setValue("payment_amount", AVULSA_PRICE);
       setValue("session_package_id", null);
     } else if (value === "paid_package") {
-      setValue("payment_amount", 170);
+      setValue("payment_amount", PACOTE_PRICE);
       setValue("payment_method", "");
       setValue("installments", 1);
       if (activePackages.length === 1) {
@@ -131,356 +137,408 @@ export function AppointmentPaymentTab({
     }
   };
 
-  const paymentMethods = [
-    { value: "pix", label: "PIX", icon: "📲" },
-    { value: "dinheiro", label: "Dinheiro", icon: "💵" },
-    { value: "debito", label: "Débito", icon: "💳" },
-    { value: "credito", label: "Crédito", icon: "💳" },
-  ];
-
   return (
-    <div className="mt-0 space-y-4 sm:space-y-5">
-      <div className="flex items-center justify-between gap-3 rounded-[24px] border border-border/70 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.10),transparent_35%),linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.92))] p-4 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.4)] dark:bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_35%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(15,23,42,0.92))]">
-        <div className="min-w-0">
+    <div className="mt-0 space-y-3">
+
+      {/* ── Header: Sessão Paga toggle ── */}
+      <div className={cn(
+        "flex items-center justify-between gap-3 rounded-2xl border p-4 transition-all duration-300",
+        isPaid
+          ? "border-emerald-200/70 bg-gradient-to-r from-emerald-50 to-teal-50/50 dark:border-emerald-800/40 dark:from-emerald-950/30 dark:to-teal-950/20"
+          : "border-border/70 bg-gradient-to-r from-amber-50/60 to-background dark:border-amber-800/30 dark:from-amber-950/20",
+      )}>
+        <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-center gap-2">
-            <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-700 dark:text-blue-300">
+            <span className={cn(
+              "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+              isPaid
+                ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                : "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+            )}>
               Financeiro
             </span>
             <Badge
               variant="outline"
               className={cn(
-                "h-6 rounded-full border px-2.5 text-[10px] font-semibold uppercase tracking-[0.14em]",
+                "h-5 rounded-full border px-2 text-[10px] font-bold uppercase tracking-wider",
                 isPaid
-                  ? "border-blue-500/20 bg-blue-500/10 text-blue-700 dark:text-blue-300"
+                  ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
                   : "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300",
               )}
             >
               {isPaid ? "Pago" : "Pendente"}
             </Badge>
           </div>
-          <Label htmlFor="payment-status-toggle" className="flex flex-col gap-0.5">
-            <span className="font-semibold text-sm">Sessão Paga</span>
-            <span className="text-xs text-muted-foreground">
+          <Label htmlFor="payment-status-toggle" className="flex flex-col gap-0.5 cursor-pointer">
+            <span className="font-semibold text-sm text-foreground">Sessão Paga</span>
+            <span className="text-[11px] text-muted-foreground leading-snug">
               {isPaid
                 ? "Pagamento registrado e pronto para conferência."
                 : "Pagamento ainda não registrado."}
             </span>
           </Label>
         </div>
-
         <Switch
           id="payment-status-toggle"
           checked={isPaid}
           onCheckedChange={handlePaidChange}
           disabled={disabled}
-          className="data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-slate-300/80"
+          className="data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-slate-300/80 shrink-0"
         />
       </div>
 
-      {isPaid && (
-        <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="rounded-[24px] border border-border/70 bg-gradient-to-b from-background to-muted/20 p-4 shadow-[0_18px_40px_-32px_rgba(15,23,42,0.35)]">
-            <Label className="text-xs sm:text-sm font-medium mb-2 block">
-              Como foi o pagamento?
-            </Label>
-            <RadioGroup
-              value={watchPaymentStatus}
-              onValueChange={handlePaymentTypeChange}
-              className="grid grid-cols-2 gap-3"
-              disabled={disabled}
-            >
-              <Label
-                className={cn(
-                  "group relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[22px] border border-border/70 bg-gradient-to-b from-background to-muted/20 p-4 text-center transition-[transform,box-shadow,border-color,background-color] hover:-translate-y-px hover:border-primary/20 hover:shadow-[0_18px_34px_-28px_rgba(15,23,42,0.35)]",
-                  watchPaymentStatus === "paid_single" &&
-                    "border-primary/25 bg-gradient-to-b from-primary/[0.08] to-background shadow-[0_22px_40px_-30px_rgba(37,99,235,0.38)]",
-                )}
-              >
-                <RadioGroupItem value="paid_single" id="paid_single" className="sr-only" />
-                <span className="mb-2 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-700 dark:text-blue-300">
-                  Imediato
-                </span>
-                <span className="text-2xl">💵</span>
-                <span className="mt-1 font-semibold text-sm">Avulso</span>
-                <span className="mt-1 text-[11px] text-muted-foreground">
-                  Cobrança direta da sessão atual
-                </span>
-              </Label>
-              <Label
-                className={cn(
-                  "group relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[22px] border border-border/70 bg-gradient-to-b from-background to-muted/20 p-4 text-center transition-[transform,box-shadow,border-color,background-color] hover:-translate-y-px hover:border-primary/20 hover:shadow-[0_18px_34px_-28px_rgba(15,23,42,0.35)]",
-                  watchPaymentStatus === "paid_package" &&
-                    "border-primary/25 bg-gradient-to-b from-primary/[0.08] to-background shadow-[0_22px_40px_-30px_rgba(37,99,235,0.38)]",
-                  !patientId && "cursor-not-allowed opacity-60 saturate-75",
-                )}
-              >
-                <RadioGroupItem
-                  value="paid_package"
-                  id="paid_package"
-                  className="sr-only"
-                  disabled={!patientId}
-                />
-                <span className="mb-2 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-700 dark:text-blue-300">
-                  Fidelizado
-                </span>
-                <span className="text-2xl">📦</span>
-                <span className="mt-1 font-semibold text-sm">Pagou pacote</span>
-                <span className="mt-1 text-[11px] text-muted-foreground">
-                  {patientId
-                    ? "Consome saldo ja contratado"
-                    : "Escolha o paciente acima para liberar"}
-                </span>
-              </Label>
-            </RadioGroup>
-          </div>
+      <AnimatePresence>
+        {isPaid && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+            className="space-y-3"
+          >
 
-          {watchPaymentStatus === "paid_package" && (
-            <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="rounded-[24px] border border-blue-500/15 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.92))] p-4 shadow-[0_18px_40px_-32px_rgba(15,23,42,0.35)] dark:bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.14),transparent_26%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(15,23,42,0.92))]">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
-                      <Package className="h-3.5 w-3.5 text-blue-600" />
-                      Pacote vinculado ao paciente
-                    </Label>
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      O sistema usa automaticamente o paciente escolhido no campo acima. Nao precisa
-                      selecionar de novo.
-                    </p>
-                  </div>
-                  {patientId && (
-                    <Badge
-                      variant="outline"
-                      className="rounded-full border-blue-500/15 bg-blue-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-300"
-                    >
-                      Vinculado
-                    </Badge>
+            {/* ── Type selector: Avulso vs Pacote ── */}
+            <div className="rounded-2xl border border-border/70 bg-gradient-to-b from-background to-muted/20 p-4 space-y-3">
+              <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                Como foi o pagamento?
+              </Label>
+              <RadioGroup
+                value={watchPaymentStatus}
+                onValueChange={handlePaymentTypeChange}
+                className="grid grid-cols-2 gap-2.5"
+                disabled={disabled}
+              >
+                {/* Avulso */}
+                <Label
+                  htmlFor="paid_single"
+                  className={cn(
+                    "relative flex cursor-pointer flex-col items-center gap-2 overflow-hidden rounded-2xl border-2 p-4 text-center transition-all duration-200",
+                    "hover:-translate-y-0.5 hover:shadow-md",
+                    isAvulsa
+                      ? "border-amber-400/50 bg-gradient-to-b from-amber-50 to-amber-50/30 shadow-md shadow-amber-500/10 dark:border-amber-600/40 dark:from-amber-950/30"
+                      : "border-border/60 bg-gradient-to-b from-background to-muted/10 hover:border-border",
                   )}
-                </div>
+                >
+                  <RadioGroupItem value="paid_single" id="paid_single" className="sr-only" />
+                  {isAvulsa && (
+                    <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center">
+                      <Check className="h-2.5 w-2.5 text-white" />
+                    </span>
+                  )}
+                  <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
+                    Imediato
+                  </span>
+                  <Zap className="h-6 w-6 text-amber-500" />
+                  <div className="space-y-0.5">
+                    <span className="block font-bold text-sm text-foreground">Avulso</span>
+                    <span className="block text-[11px] text-muted-foreground leading-tight">
+                      Cobrança direta desta sessão
+                    </span>
+                  </div>
+                  <span className={cn(
+                    "text-base font-extrabold transition-colors",
+                    isAvulsa ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground/60",
+                  )}>
+                    R$ {AVULSA_PRICE}
+                  </span>
+                </Label>
 
-                {patientId ? (
-                  <div className="mt-3 rounded-[20px] border border-blue-500/15 bg-background/85 p-3 shadow-[0_14px_24px_-22px_rgba(15,23,42,0.28)]">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">
-                          {resolvedPatientName}
-                        </p>
-                        <p className="mt-1 text-[11px] text-muted-foreground">
-                          Este agendamento sera marcado como pago via pacote e o saldo ficara
-                          contabilizado no perfil do paciente.
-                        </p>
+                {/* Pacote */}
+                <Label
+                  htmlFor="paid_package"
+                  className={cn(
+                    "relative flex cursor-pointer flex-col items-center gap-2 overflow-hidden rounded-2xl border-2 p-4 text-center transition-all duration-200",
+                    "hover:-translate-y-0.5 hover:shadow-md",
+                    isPacote
+                      ? "border-blue-400/50 bg-gradient-to-b from-blue-50 to-blue-50/30 shadow-md shadow-blue-500/10 dark:border-blue-600/40 dark:from-blue-950/30"
+                      : "border-border/60 bg-gradient-to-b from-background to-muted/10 hover:border-border",
+                    !patientId && "cursor-not-allowed opacity-60 saturate-75",
+                  )}
+                >
+                  <RadioGroupItem
+                    value="paid_package"
+                    id="paid_package"
+                    className="sr-only"
+                    disabled={!patientId}
+                  />
+                  {isPacote && (
+                    <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
+                      <Check className="h-2.5 w-2.5 text-white" />
+                    </span>
+                  )}
+                  <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                    Fidelizado
+                  </span>
+                  <Package className="h-6 w-6 text-blue-500" />
+                  <div className="space-y-0.5">
+                    <span className="block font-bold text-sm text-foreground">Pacote</span>
+                    <span className="block text-[11px] text-muted-foreground leading-tight">
+                      {patientId ? "Consome saldo contratado" : "Escolha o paciente acima"}
+                    </span>
+                  </div>
+                  <span className={cn(
+                    "text-base font-extrabold transition-colors",
+                    isPacote ? "text-blue-700 dark:text-blue-400" : "text-muted-foreground/60",
+                  )}>
+                    R$ {PACOTE_PRICE}
+                  </span>
+                </Label>
+              </RadioGroup>
+            </div>
+
+            {/* ── Package details (only when paid_package) ── */}
+            <AnimatePresence>
+              {isPacote && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="rounded-2xl border border-blue-200/60 bg-gradient-to-b from-blue-50/80 to-background p-4 space-y-3 dark:border-blue-800/40 dark:from-blue-950/20">
+                    <div className="flex items-center justify-between gap-2">
+                      <Label className="flex items-center gap-1.5 text-xs font-bold text-blue-700 dark:text-blue-300">
+                        <Package className="h-3.5 w-3.5" />
+                        Pacote do paciente
+                      </Label>
+                      {patientId && (
+                        <Badge variant="outline" className="rounded-full border-blue-500/15 bg-blue-500/10 px-2 text-[10px] font-bold text-blue-700 dark:text-blue-300">
+                          Vinculado
+                        </Badge>
+                      )}
+                    </div>
+
+                    {patientId ? (
+                      <>
+                        {isLoadingPackages ? (
+                          <div className="h-10 rounded-xl bg-blue-100/50 animate-pulse dark:bg-blue-900/20" />
+                        ) : activePackages.length === 0 ? (
+                          <div className="space-y-2">
+                            <div className="flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-700">
+                              <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                              <span>Nenhum pacote ativo. Registre um pacote de 10 sessões para este paciente.</span>
+                            </div>
+                            <NewPackagePopover
+                              patientId={patientId}
+                              triggerLabel="Registrar 10 sessões"
+                              triggerClassName="w-full h-10 rounded-xl border-blue-500/25 bg-blue-500/10 text-xs font-bold text-blue-700 hover:bg-blue-500/15 dark:text-blue-300"
+                              presetPackage={{
+                                name: "Pacote 10 Sessões",
+                                sessionsCount: 10,
+                                totalPrice: 1700,
+                                validityDays: 365,
+                                title: "Registrar pacote de 10 sessões",
+                                description: "O paciente já vem preenchido. Ao confirmar, o pacote entra no perfil e este agendamento fica vinculado ao saldo.",
+                                submitLabel: "Registrar pacote",
+                              }}
+                              onPackageCreated={(newPackageId) => {
+                                setValue("session_package_id", newPackageId);
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {activePackages.length > 1 && (
+                              <Select
+                                value={selectedPackageId}
+                                onValueChange={(val) => setValue("session_package_id", val)}
+                                disabled={disabled}
+                              >
+                                <SelectTrigger className="h-10 rounded-xl border-blue-200/70 bg-background text-xs">
+                                  <SelectValue placeholder="Selecione o pacote para debitar" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl border border-blue-100 p-1">
+                                  {activePackages.map((pkg) => (
+                                    <SelectItem key={pkg.id} value={pkg.id}>
+                                      {pkg.package?.name} ({pkg.sessions_remaining} sessões restantes)
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+
+                            {resolvedPackage && (
+                              <div className="flex items-center justify-between gap-3 rounded-xl bg-blue-500/10 border border-blue-200/50 px-3 py-2.5 dark:border-blue-800/40 dark:bg-blue-950/30">
+                                <div className="min-w-0">
+                                  <p className="text-xs font-semibold text-blue-900 dark:text-blue-100 truncate">
+                                    {resolvedPackage.package?.name ?? "Pacote ativo"}
+                                  </p>
+                                  <p className="text-[10px] text-blue-700/70 dark:text-blue-300/70 mt-0.5">
+                                    {activePackages.length === 1
+                                      ? "Vinculado automaticamente"
+                                      : "Saldo a ser debitado"}
+                                  </p>
+                                </div>
+                                <span className="shrink-0 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-extrabold text-blue-700 shadow-sm dark:bg-blue-950/60 dark:text-blue-200">
+                                  {resolvedPackage.sessions_remaining} restantes
+                                </span>
+                              </div>
+                            )}
+
+                            {resolvedPackage && (resolvedPackage.sessions_remaining || 0) <= 1 && (
+                              <div className="flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-amber-700">
+                                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                                <span className="text-[11px] font-medium">
+                                  Última sessão deste pacote. Vale oferecer renovação.
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50/90 p-3 text-[11px] text-amber-700">
+                        Selecione o paciente no topo do modal para vincular ao pacote.
                       </div>
-                      <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-300">
-                        Perfil atualizado
-                      </span>
-                    </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="mt-3 rounded-[20px] border border-amber-200 bg-amber-50/90 p-3 text-xs text-amber-700">
-                    Selecione primeiro o paciente no topo do modal para registrar o pacote
-                    corretamente.
-                  </div>
-                )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-                {patientId && (
-                  <div className="mt-3 space-y-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                        Saldo do paciente
-                      </span>
-                      {isLoadingPackages && (
-                        <span className="text-xs text-muted-foreground animate-pulse">
-                          Carregando...
-                        </span>
-                      )}
-                      {!isLoadingPackages && activePackages.length === 0 && (
-                        <NewPackagePopover
-                          patientId={patientId}
-                          triggerLabel="Registrar 10 sessoes"
-                          triggerClassName="h-10 rounded-2xl border-blue-500/25 bg-blue-500/10 px-3 text-xs font-semibold text-blue-700 shadow-[0_16px_30px_-24px_rgba(59,130,246,0.45)] hover:bg-blue-500/15 dark:text-blue-300"
-                          presetPackage={{
-                            name: "Pacote 10 Sessoes",
-                            sessionsCount: 10,
-                            totalPrice: 1700,
-                            validityDays: 365,
-                            title: "Registrar pacote de 10 sessoes",
-                            description:
-                              "O paciente ja vem preenchido pelo modal. Ao confirmar, o pacote entra no perfil dele e este agendamento fica vinculado ao saldo.",
-                            submitLabel: "Registrar pacote",
-                          }}
-                          onPackageCreated={(newPackageId) => {
-                            setValue("session_package_id", newPackageId);
-                          }}
-                        />
-                      )}
-                    </div>
+            {/* ── Valor ── */}
+            <div className="rounded-2xl border border-border/70 bg-gradient-to-b from-background to-muted/20 p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <DollarSign className="h-3.5 w-3.5" />
+                  {isPacote ? "Valor por Sessão (R$)" : "Valor da Sessão (R$)"}
+                </Label>
+                <span className={cn(
+                  "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                  isAvulsa ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700",
+                )}>
+                  Ref: R$ {isAvulsa ? AVULSA_PRICE : PACOTE_PRICE}
+                </span>
+              </div>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-extrabold text-primary">
+                  R$
+                </span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  {...register("payment_amount", { valueAsNumber: true })}
+                  className="flex h-13 w-full rounded-xl border border-border/70 bg-background pl-12 pr-4 py-2 text-xl font-extrabold text-foreground shadow-sm transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/10 focus-visible:border-primary/40 disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={disabled}
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                {isPacote
+                  ? "Valor de referência interno por sessão. O pacote é contabilizado no perfil do paciente."
+                  : "Referência rápida: pacote R$ 170/sessão · avulso R$ 180/sessão."}
+              </p>
+            </div>
 
-                    {activePackages.length > 0 ? (
-                      <div className="space-y-2">
-                        {activePackages.length > 1 ? (
-                          <Select
-                            value={selectedPackageId}
-                            onValueChange={(val) => setValue("session_package_id", val)}
+            {/* ── Forma de Pagamento (only for avulsa) ── */}
+            <AnimatePresence>
+              {isAvulsa && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="rounded-2xl border border-border/70 bg-gradient-to-b from-background to-muted/20 p-4 space-y-3">
+                    <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Forma de Pagamento
+                    </Label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {PAYMENT_METHODS.map((method) => {
+                        const isSelected = watchPaymentMethod === method.value;
+                        return (
+                          <Button
+                            key={method.value}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className={cn(
+                              "h-16 flex-col gap-1.5 rounded-xl border-2 text-[10px] font-bold uppercase tracking-wide transition-all duration-150 hover:-translate-y-0.5",
+                              isSelected
+                                ? "border-primary bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary/90"
+                                : "border-border/60 bg-background text-muted-foreground hover:border-border hover:text-foreground hover:bg-muted/30",
+                            )}
+                            onClick={() => setValue("payment_method", method.value)}
                             disabled={disabled}
                           >
-                            <SelectTrigger
-                              className={cn(
-                                premiumFieldClass,
-                                "border-blue-200/70 bg-gradient-to-b from-blue-50/80 to-background dark:from-blue-950/20",
-                              )}
-                            >
-                              <SelectValue placeholder="Selecione o pacote para debitar" />
-                            </SelectTrigger>
-                            <SelectContent className={premiumSelectContentClass}>
-                              {activePackages.map((pkg) => (
-                                <SelectItem key={pkg.id} value={pkg.id}>
-                                  {pkg.package?.name} ({pkg.sessions_remaining} sessoes restantes)
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : null}
-
-                        {resolvedPackage && (
-                          <div className="rounded-[20px] border border-blue-500/15 bg-blue-50/70 p-3 text-blue-900 shadow-[0_16px_28px_-24px_rgba(59,130,246,0.45)] dark:bg-blue-950/20 dark:text-blue-100">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="text-sm font-semibold truncate">
-                                  {resolvedPackage.package?.name ?? "Pacote ativo"}
-                                </p>
-                                <p className="mt-1 text-[11px] text-blue-700/80 dark:text-blue-200/80">
-                                  {activePackages.length === 1
-                                    ? "O pacote ativo foi vinculado automaticamente a este agendamento."
-                                    : "Selecione qual pacote deve ser debitado neste agendamento."}
-                                </p>
-                              </div>
-                              <span className="rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-700 shadow-sm dark:bg-blue-950/40 dark:text-blue-200">
-                                {resolvedPackage.sessions_remaining} restantes
-                              </span>
-                            </div>
-                          </div>
-                        )}
-
-                        {resolvedPackage && (resolvedPackage.sessions_remaining || 0) <= 1 && (
-                          <div className="flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-amber-700">
-                            <AlertTriangle className="h-3.5 w-3.5" />
-                            <span className="text-[10px] sm:text-xs font-medium">
-                              Ultima sessao deste pacote. Vale oferecer renovacao ao paciente.
+                            <span className={isSelected ? "text-white" : "text-slate-400"}>
+                              {method.icon}
                             </span>
+                            {method.label}
+                          </Button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Parcelas para crédito */}
+                    <AnimatePresence>
+                      {watchPaymentMethod === "credito" && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.15 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="pt-2 border-t border-border/60 space-y-1.5">
+                            <Label className="text-xs text-muted-foreground">Parcelas (até 6x sem juros)</Label>
+                            <Select
+                              value={watch("installments")?.toString()}
+                              onValueChange={(value) => setValue("installments", parseInt(value))}
+                              disabled={disabled}
+                            >
+                              <SelectTrigger className="h-10 rounded-xl border-border/60 text-xs">
+                                <SelectValue placeholder="Parcelas" />
+                              </SelectTrigger>
+                              <SelectContent className="rounded-xl border border-blue-100 p-1">
+                                {[1, 2, 3, 4, 5, 6].map((num) => (
+                                  <SelectItem key={num} value={num.toString()}>
+                                    {num}x de R$ {(watchPaymentAmount / num).toFixed(2)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
-                        )}
-                      </div>
-                    ) : !isLoadingPackages ? (
-                      <div className="rounded-[20px] border border-amber-200 bg-amber-50/90 p-3 text-xs text-amber-700">
-                        <span className="flex items-center gap-1.5 font-medium">
-                          <AlertTriangle className="h-3.5 w-3.5" />
-                          Nenhum pacote ativo com saldo
-                        </span>
-                        <p className="mt-1">
-                          Registre agora um pacote de 10 sessoes para este paciente. Assim o saldo
-                          fica salvo no perfil dele e este atendimento ja aparece como pago via
-                          pacote.
-                        </p>
-                      </div>
-                    ) : null}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-1.5 rounded-[24px] border border-border/70 bg-gradient-to-b from-background to-muted/20 p-4 shadow-[0_18px_40px_-32px_rgba(15,23,42,0.35)]">
-            <Label className="text-xs sm:text-sm font-medium">
-              {watchPaymentStatus === "paid_package"
-                ? "Valor de Referência por Sessão (R$)"
-                : "Valor da Sessão (R$)"}
-            </Label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary shadow-sm">
-                R$
-              </span>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                {...register("payment_amount", { valueAsNumber: true })}
-                className="flex h-12 w-full rounded-2xl border border-border/70 bg-gradient-to-b from-background to-muted/20 px-[4.6rem] py-2 text-sm shadow-[0_12px_28px_-24px_rgba(15,23,42,0.35)] ring-offset-background transition-[border-color,box-shadow,background-color] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/10 focus-visible:border-primary/30 disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={disabled}
-              />
-            </div>
-            <p className="rounded-2xl bg-muted/40 px-3 py-2 text-[10px] sm:text-xs text-muted-foreground">
-              {watchPaymentStatus === "paid_package"
-                ? "O pacote fica contabilizado no perfil do paciente. Este valor funciona como referencia interna por sessao."
-                : "Referencia rapida: pacote R$ 170/sessao, avulso R$ 180/sessao."}
-            </p>
-          </div>
-
-          {watchPaymentStatus === "paid_single" ? (
-            <div className="space-y-3 rounded-[24px] border border-blue-500/15 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.92))] p-4 shadow-[0_18px_40px_-32px_rgba(15,23,42,0.35)] dark:bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_30%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(15,23,42,0.92))]">
-              <Label className="text-xs sm:text-sm font-medium">Forma de Pagamento</Label>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {paymentMethods.map((method) => (
-                  <Button
-                    key={method.value}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "h-14 rounded-2xl border border-border/70 bg-gradient-to-b from-background to-muted/20 text-[10px] shadow-[0_16px_30px_-26px_rgba(15,23,42,0.35)] transition-[transform,box-shadow,border-color,background-color] hover:-translate-y-px hover:border-blue-500/25 hover:bg-blue-500/[0.05]",
-                      watchPaymentMethod === method.value
-                        ? "border-blue-500/25 bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-[0_20px_36px_-28px_rgba(59,130,246,0.55)] hover:bg-blue-600"
-                        : "text-foreground",
-                    )}
-                    onClick={() => setValue("payment_method", method.value)}
-                    disabled={disabled}
-                  >
-                    <span className="text-base">{method.icon}</span>
-                    {method.label}
-                  </Button>
-                ))}
-              </div>
-
-              {watchPaymentMethod === "credito" && (
-                <div className="space-y-1.5 pt-2 border-t border-blue-500/20">
-                  <Label className="text-xs sm:text-sm">Parcelas (até 6x sem juros)</Label>
-                  <Select
-                    value={watch("installments")?.toString()}
-                    onValueChange={(value) => setValue("installments", parseInt(value))}
-                    disabled={disabled}
-                  >
-                    <SelectTrigger className={cn(premiumFieldClass, "text-sm")}>
-                      <SelectValue placeholder="Parcelas" />
-                    </SelectTrigger>
-                    <SelectContent className={premiumSelectContentClass}>
-                      {[1, 2, 3, 4, 5, 6].map((num) => (
-                        <SelectItem key={num} value={num.toString()}>
-                          {num}x de R$ {(watchPaymentAmount / num).toFixed(2)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                </motion.div>
               )}
-            </div>
-          ) : (
-            <div className="rounded-[24px] border border-blue-500/15 bg-blue-50/70 p-4 text-blue-900 shadow-[0_18px_40px_-32px_rgba(59,130,246,0.32)] dark:bg-blue-950/20 dark:text-blue-100">
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 rounded-full bg-card p-2 shadow-sm dark:bg-blue-950/40">
-                  <Check className="h-4 w-4 text-blue-600 dark:text-blue-300" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold">Pagamento identificado por pacote</p>
-                  <p className="mt-1 text-[11px] text-blue-700/80 dark:text-blue-200/80">
-                    Quando houver venda de um novo pacote, a forma de pagamento e registrada no
-                    cadastro do proprio pacote. Neste agendamento o sistema apenas vincula o saldo
-                    do paciente.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+            </AnimatePresence>
+
+            {/* ── Pacote: forma de pgto irrelevante ── */}
+            <AnimatePresence>
+              {isPacote && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/70 p-3.5 dark:border-blue-900/40 dark:bg-blue-950/20">
+                    <div className="mt-0.5 rounded-full bg-white p-1.5 shadow-sm dark:bg-blue-950/40">
+                      <Check className="h-3.5 w-3.5 text-blue-600 dark:text-blue-300" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-blue-800 dark:text-blue-200">
+                        Pagamento identificado por pacote
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-blue-700/70 dark:text-blue-300/70 leading-relaxed">
+                        A forma de pagamento é registrada no cadastro do próprio pacote. Aqui apenas vinculamos o saldo do paciente.
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

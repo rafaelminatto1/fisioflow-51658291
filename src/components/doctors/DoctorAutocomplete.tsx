@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { Check, Plus, Search, Loader2 } from "lucide-react";
+import { Check, Plus, Search, Loader2, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSearchDoctors } from "@/hooks/useDoctors";
 import type { Doctor } from "@/types/doctor";
@@ -13,6 +13,67 @@ interface DoctorAutocompleteProps {
   disabled?: boolean;
   className?: string;
   error?: boolean;
+  /** Médicos já atrelados ao paciente (dos retornos anteriores). Exibidos ao focar sem digitar. */
+  suggestedDoctors?: Doctor[];
+}
+
+function DoctorInitial({ name }: { name: string }) {
+  const initial = (name.startsWith("Dr") ? name.substring(3) : name).charAt(0).toUpperCase();
+  return (
+    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center shrink-0 border border-blue-200 dark:border-blue-800/50">
+      <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300">{initial}</span>
+    </div>
+  );
+}
+
+function DoctorItem({
+  doctor,
+  isSelected,
+  badge,
+  onClick,
+}: {
+  doctor: Doctor;
+  isSelected: boolean;
+  badge?: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      key={doctor.id}
+      onClick={onClick}
+      className="w-full text-left px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-center gap-3 border-b border-gray-50 dark:border-gray-700/30 last:border-0"
+    >
+      <DoctorInitial name={doctor.name} />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate">
+            {doctor.name}
+          </p>
+          {isSelected && <Check className="h-3.5 w-3.5 text-blue-600 shrink-0" />}
+          {badge}
+        </div>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+          {doctor.specialty && (
+            <span className="font-medium text-blue-600/70 dark:text-blue-400/70 uppercase tracking-wider">
+              {doctor.specialty}
+            </span>
+          )}
+          {doctor.crm && (
+            <span>
+              • CRM {doctor.crm}
+              {doctor.crm_state && `/${doctor.crm_state}`}
+            </span>
+          )}
+          {doctor.phone && <span>• {doctor.phone}</span>}
+        </div>
+        {doctor.clinic_name && (
+          <p className="text-[11px] text-muted-foreground mt-0.5 truncate italic">
+            {doctor.clinic_name}
+          </p>
+        )}
+      </div>
+    </button>
+  );
 }
 
 export function DoctorAutocomplete({
@@ -23,11 +84,11 @@ export function DoctorAutocomplete({
   disabled = false,
   className,
   error = false,
+  suggestedDoctors = [],
 }: DoctorAutocompleteProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(value);
   const [debouncedTerm, setDebouncedTerm] = useState(value);
-  const [, setIsFocused] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -35,7 +96,7 @@ export function DoctorAutocomplete({
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const { data: doctors = [], isLoading } = useSearchDoctors(
+  const { data: searchResults = [], isLoading } = useSearchDoctors(
     debouncedTerm,
     debouncedTerm.length >= 2,
   );
@@ -50,7 +111,6 @@ export function DoctorAutocomplete({
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
-        setIsFocused(false);
       }
     };
     if (open) {
@@ -60,6 +120,12 @@ export function DoctorAutocomplete({
   }, [open]);
 
   const normalizedSearchTerm = searchTerm.trim();
+  const isSearching = normalizedSearchTerm.length >= 2;
+
+  // When searching: show global results. When focused without text: show patient's doctors.
+  const doctors = isSearching ? searchResults : [];
+  const showSuggested = !isSearching && suggestedDoctors.length > 0;
+
   const hasExactMatch = doctors.some(
     (doctor) => doctor.name?.trim().toLowerCase() === normalizedSearchTerm.toLowerCase(),
   );
@@ -67,19 +133,20 @@ export function DoctorAutocomplete({
     onCreateNew && normalizedSearchTerm.length >= 2 && !hasExactMatch,
   );
 
+  const showDropdown =
+    open &&
+    (isLoading || doctors.length > 0 || showSuggested || shouldShowCreateOption || isSearching);
+
   const handleSelect = (doctor: Doctor) => {
     setSearchTerm(doctor.name);
     onSelect(doctor);
     setOpen(false);
-    setIsFocused(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setSearchTerm(newValue);
     setOpen(true);
-
-    // If user clears the input, clear the selection
     if (!newValue) {
       onSelect(null);
     }
@@ -88,12 +155,8 @@ export function DoctorAutocomplete({
   const handleCreateNew = () => {
     if (!shouldShowCreateOption) return;
     setOpen(false);
-    setIsFocused(false);
     onCreateNew?.(normalizedSearchTerm);
   };
-
-  const showDropdown =
-    open && (isLoading || doctors.length > 0 || shouldShowCreateOption || searchTerm.length >= 2);
 
   return (
     <div className={cn("relative w-full", className)} ref={containerRef}>
@@ -104,10 +167,7 @@ export function DoctorAutocomplete({
           placeholder={placeholder}
           value={searchTerm}
           onChange={handleInputChange}
-          onFocus={() => {
-            setIsFocused(true);
-            setOpen(true);
-          }}
+          onFocus={() => setOpen(true)}
           className={cn(
             "pl-10 h-10 w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-blue-500/40",
             error && "border-destructive focus-visible:ring-destructive",
@@ -119,7 +179,6 @@ export function DoctorAutocomplete({
         )}
       </div>
 
-      {/* Dropdown - Matching Agenda layout */}
       {showDropdown && (
         <div className="absolute top-full left-0 mt-1 w-full max-h-[300px] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150">
           {isLoading ? (
@@ -128,61 +187,48 @@ export function DoctorAutocomplete({
             </div>
           ) : (
             <div className="py-1">
-              {doctors.length > 0 ? (
-                <div className="border-b border-gray-100 dark:border-gray-700/50 mb-1">
-                  {doctors.map((doctor) => (
-                    <button
-                      key={doctor.id}
-                      onClick={() => handleSelect(doctor)}
-                      className="w-full text-left px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-center gap-3 border-b border-gray-50 dark:border-gray-700/30 last:border-0"
-                    >
-                      <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center shrink-0 border border-blue-200 dark:border-blue-800/50">
-                        <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300">
-                          {(doctor.name.startsWith("Dr") ? doctor.name.substring(3) : doctor.name)
-                            .charAt(0)
-                            .toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate">
-                            {doctor.name}
-                          </p>
-                          {searchTerm.toLowerCase() === doctor.name.toLowerCase() && (
-                            <Check className="h-3.5 w-3.5 text-blue-600" />
-                          )}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
-                          {doctor.specialty && (
-                            <span className="font-medium text-blue-600/70 dark:text-blue-400/70 uppercase tracking-wider">
-                              {doctor.specialty}
-                            </span>
-                          )}
-                          {doctor.crm && (
-                            <span>
-                              • CRM {doctor.crm}
-                              {doctor.crm_state && `/${doctor.crm_state}`}
-                            </span>
-                          )}
-                          {doctor.phone && <span>• {doctor.phone}</span>}
-                        </div>
-                        {doctor.clinic_name && (
-                          <p className="text-[11px] text-muted-foreground mt-0.5 truncate italic">
-                            {doctor.clinic_name}
-                          </p>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                searchTerm.length >= 2 && (
-                  <div className="px-4 py-4 text-center text-sm text-muted-foreground">
-                    Nenhum médico encontrado
+              {/* Médicos atrelados ao paciente (sugestões rápidas) */}
+              {showSuggested && (
+                <>
+                  <div className="px-3 py-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-gray-100 dark:border-gray-700/50">
+                    <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
+                    Médicos deste paciente
                   </div>
-                )
+                  <div className="border-b border-gray-100 dark:border-gray-700/50 mb-1">
+                    {suggestedDoctors.map((doctor) => (
+                      <DoctorItem
+                        key={doctor.id}
+                        doctor={doctor}
+                        isSelected={searchTerm.toLowerCase() === doctor.name.toLowerCase()}
+                        onClick={() => handleSelect(doctor)}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
 
+              {/* Resultados da busca global */}
+              {doctors.length > 0 && (
+                <div className="border-b border-gray-100 dark:border-gray-700/50 mb-1">
+                  {doctors.map((doctor) => (
+                    <DoctorItem
+                      key={doctor.id}
+                      doctor={doctor}
+                      isSelected={searchTerm.toLowerCase() === doctor.name.toLowerCase()}
+                      onClick={() => handleSelect(doctor)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Nenhum resultado na busca */}
+              {isSearching && !isLoading && doctors.length === 0 && (
+                <div className="px-4 py-4 text-center text-sm text-muted-foreground">
+                  Nenhum médico encontrado
+                </div>
+              )}
+
+              {/* Criar novo */}
               {shouldShowCreateOption && (
                 <button
                   onClick={handleCreateNew}

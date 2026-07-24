@@ -24,7 +24,7 @@
   --agenda-slot-height: 12px; /* Compacto: 14h × 56 slots × 12px = 672px (7h–21h) */
   --agenda-header-height: 42px;
   --agenda-grid-hour-line: hsl(var(--foreground) / 0.16);
-  --agenda-grid-day-line: hsl(var(--border) / 0.35);
+  --agenda-grid-day-line: hsl(var(--border) / 0.65); /* Aumentado de 0.35 → 0.65 para maior visibilidade entre dias */
 }
 
 .fc .fc-timegrid-slot,
@@ -91,12 +91,16 @@
 }
 
 /* 5. Wrapper do card de evento (harness) */
+/* margem-direita: cria faixa clicável para criar novos agendamentos
+   em slots que já têm eventos */
 .fc .fc-timegrid-event-harness {
   padding: 2px 4px !important;
+  margin-right: 10px !important;
 }
 
 .fc .fc-timegrid-event-harness-inset {
   padding: 2px 4px !important;
+  margin-right: 10px !important;
 }
 
 .fc .fc-v-event {
@@ -140,12 +144,12 @@
 
 /* 7. Camadas tonais das colunas */
 .fc .fc-timegrid-col {
-  border-right: 1px solid var(--agenda-grid-day-line) !important;
+  border-right: 2px solid var(--agenda-grid-day-line) !important;
 }
 
 .fc .fc-timegrid-axis,
 .fc .fc-timegrid-slot-label {
-  border-right: 1px solid var(--agenda-grid-day-line) !important;
+  border-right: 2px solid var(--agenda-grid-day-line) !important;
 }
 
 .fc .fc-day-today {
@@ -163,6 +167,7 @@
 
 .fc .fc-timegrid-event-harness {
   padding: var(--agenda-card-padding, 2px) 4px !important;
+  margin-right: 10px !important;
 }
 
 .fc .fc-v-event {

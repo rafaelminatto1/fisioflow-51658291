@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -48,10 +48,12 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { MedicalReturnService } from "@/lib/services/medicalReturnService";
 import { useSearchDoctors } from "@/hooks/useDoctors";
+import { usePatientMedicalReturns } from "@/hooks/evolution/usePatientMedicalReturns";
 import { patientsApi } from "@/api/v2/patients";
 import { uploadToR2 } from "@/lib/storage/r2-storage";
 import { useAuth } from "@/contexts/AuthContext";
 import type { MedicalReturn, MedicalReturnFormData } from "@/types/evolution";
+import type { Doctor } from "@/types/doctor";
 import {
   honorificName,
   normalizeHonorificGender,
@@ -59,7 +61,7 @@ import {
 } from "@/lib/format/honorific";
 
 const formSchema = z.object({
-  doctor_name: z.string().min(2, "Nome do médico é obrigatório"),
+  doctor_name: z.string().optional(),
   doctor_phone: z.string().optional(),
   return_date: z.string().min(1, "Data do retorno é obrigatória"),
   return_period: z.string().nullable().optional(),
@@ -129,6 +131,26 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
   const therapistGender = normalizeHonorificGender(
     (profile as { gender?: string | null } | null)?.gender,
   );
+
+  // Médicos que já aparecem nos retornos deste paciente → sugestões rápidas
+  const { data: existingReturns = [] } = usePatientMedicalReturns(patientId);
+  const patientDoctors = useMemo<Doctor[]>(() => {
+    const seen = new Set<string>();
+    return existingReturns
+      .filter((r) => r.doctor_name?.trim())
+      .reduce<Doctor[]>((acc, r) => {
+        const name = r.doctor_name.trim();
+        if (!seen.has(name.toLowerCase())) {
+          seen.add(name.toLowerCase());
+          acc.push({
+            id: `patient-doctor-${name}`,
+            name,
+            phone: r.doctor_phone ?? undefined,
+          } as unknown as Doctor);
+        }
+        return acc;
+      }, []);
+  }, [existingReturns]);
 
 
   const form = useForm<FormValues>({
@@ -284,7 +306,7 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
 
     const data: MedicalReturnFormData = {
       patient_id: patientId,
-      doctor_name: values.doctor_name,
+      doctor_name: values.doctor_name?.trim() ?? "",
       doctor_phone: values.doctor_phone || "",
       return_date: returnDate,
       return_period: values.return_period || undefined,
@@ -408,14 +430,12 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
                 <FormField
                   control={form.control}
                   name="doctor_name"
-                  render={({ field, fieldState }) => (
+                  render={({ field }) => (
                     <FormItem className="col-span-2">
-                      <FormLabel className={cn(fieldState.error && "text-destructive")}>
-                        Nome do Médico *
-                      </FormLabel>
+                      <FormLabel>Nome do Médico</FormLabel>
                       <FormControl>
                         <DoctorAutocomplete
-                          value={field.value}
+                          value={field.value ?? ""}
                           onSelect={(doctor) => {
                             if (doctor) {
                               field.onChange(doctor.name);
@@ -423,7 +443,6 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
                               form.setValue("doctor_phone", doctor.phone || "", {
                                 shouldDirty: true,
                               });
-                              form.clearErrors("doctor_name");
                             } else {
                               field.onChange("");
                             }
@@ -432,8 +451,8 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
                             setSuggestedDoctorName(searchTerm);
                             setDoctorModalOpen(true);
                           }}
-                          placeholder="Selecione ou digite o nome do médico..."
-                          error={!!fieldState.error}
+                          placeholder="Selecione ou deixe em branco..."
+                          suggestedDoctors={patientDoctors}
                         />
                       </FormControl>
                       <FormMessage />
@@ -569,11 +588,11 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
                   )}
                 />
 
-                {/* Anexo do pedido médico */}
+                {/* Anexo do relatório fisioterapêutico */}
                 <div className="col-span-2 space-y-1.5">
                   <span className="text-sm font-medium flex items-center gap-1">
                     <Paperclip className="h-3 w-3" />
-                    Pedido Médico (anexo)
+                    Relatório Fisioterapêutico (anexo)
                   </span>
                   <input
                     ref={attachmentInputRef}
@@ -617,7 +636,7 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
                       ) : (
                         <Paperclip className="h-4 w-4" />
                       )}
-                      {uploadingAttachment ? "Enviando arquivo..." : "Anexar pedido médico (PDF ou foto)"}
+                      {uploadingAttachment ? "Enviando arquivo..." : "Anexar relatório fisioterapêutico (PDF ou foto)"}
                     </Button>
                   )}
                 </div>

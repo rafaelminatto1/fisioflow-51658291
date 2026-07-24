@@ -266,6 +266,7 @@ export const EvolutionNoScrollPanel = memo(
 
     const arrival = data.painLevelArrival;
     const discharge = data.painLevelDischarge ?? data.painLevel ?? 0;
+    const delta = arrival != null ? discharge - arrival : null;
     const quality = data.painQuality ?? [];
 
     type PainData = Pick<

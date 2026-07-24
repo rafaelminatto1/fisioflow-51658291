@@ -20,7 +20,6 @@ import {
   CreditCard,
   Calendar,
   UserRound,
-  Dumbbell,
   ClipboardList,
 } from "lucide-react";
 import { LazyTaskQuickCreateModal } from "@/components/tarefas/v2/LazyComponents";
@@ -240,57 +239,37 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
         <Separator className="bg-border/50" />
 
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Button
+        <div className="flex items-center gap-2">
+          <button
             type="button"
-            variant="outline"
-            size="sm"
-            className="h-10 rounded-xl px-2 text-xs font-bold text-slate-600 hover:text-primary"
             onClick={handleOpenProfile}
+            className="flex-1 flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-xl border border-border bg-muted/20 hover:bg-muted/50 hover:border-primary/30 hover:text-primary text-slate-500 transition-all duration-150 active:scale-95 group"
           >
-            <UserRound className="mr-1.5 h-3.5 w-3.5" />
-            Perfil
-          </Button>
-          <Button
+            <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-primary/10 transition-colors">
+              <UserRound className="h-3.5 w-3.5" />
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider">Perfil</span>
+          </button>
+          <button
             type="button"
-            variant="outline"
-            size="sm"
-            className="h-10 rounded-xl px-2 text-xs font-bold text-slate-600 hover:text-primary"
             onClick={() => setTaskModalOpen(true)}
+            className="flex-1 flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-xl border border-border bg-muted/20 hover:bg-muted/50 hover:border-primary/30 hover:text-primary text-slate-500 transition-all duration-150 active:scale-95 group"
           >
-            <ClipboardList className="mr-1.5 h-3.5 w-3.5" />
-            Tarefa
-          </Button>
-          <Button
+            <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-primary/10 transition-colors">
+              <ClipboardList className="h-3.5 w-3.5" />
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider">Tarefa</span>
+          </button>
+          <button
             type="button"
-            variant="outline"
-            size="sm"
-            className="h-10 rounded-xl px-2 text-xs font-bold text-slate-600 hover:text-primary"
-            onClick={handleOpenEvolution}
-          >
-            <Play className="mr-1.5 h-3.5 w-3.5" />
-            Evolução
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-10 rounded-xl px-2 text-xs font-bold text-slate-600 hover:text-primary"
             onClick={handleOpenEvaluation}
+            className="flex-1 flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-xl border border-border bg-muted/20 hover:bg-muted/50 hover:border-primary/30 hover:text-primary text-slate-500 transition-all duration-150 active:scale-95 group"
           >
-            <FileText className="mr-1.5 h-3.5 w-3.5" />
-            Avaliação
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-10 rounded-xl px-2 text-xs font-bold text-slate-600 hover:text-primary"
-            onClick={handleOpenPrescription}
-          >
-            <Dumbbell className="mr-1.5 h-3.5 w-3.5" />
-            Prescrever
-          </Button>
+            <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-primary/10 transition-colors">
+              <FileText className="h-3.5 w-3.5" />
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider">Avaliação</span>
+          </button>
         </div>
 
         <div className="space-y-4">
@@ -507,6 +486,19 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             </Button>
           )}
 
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/10 transition-all"
+            onClick={() => {
+              setShowWaitlistQuickAdd(true);
+              onOpenChange?.(false);
+            }}
+            title="Adicionar à Lista de Espera"
+          >
+            <UserPlus className="h-4 w-4" />
+          </Button>
+
           {onDelete && (
             <Button
               variant="ghost"
@@ -521,21 +513,6 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
               <Trash2 className="h-4 w-4" />
             </Button>
           )}
-
-          <div className="h-6 w-px bg-slate-200 mx-0.5" />
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-10 px-3 rounded-xl font-bold text-xs gap-1.5 text-slate-500 hover:bg-slate-100 transition-all"
-            onClick={() => {
-              setShowWaitlistQuickAdd(true);
-              onOpenChange?.(false);
-            }}
-          >
-            <UserPlus className="h-3.5 w-3.5" />
-            Lista de Espera
-          </Button>
         </div>
       </div>
     </div>
@@ -576,8 +553,25 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             data-week-appointment="true"
             onInteractOutside={(e) => {
               const target = e.target as HTMLElement;
-              if (target.closest(`[data-appointment-popover-anchor="${appointment.id}"]`))
+              // Não fechar se o clique foi no anchor do próprio popover
+              if (target.closest(`[data-appointment-popover-anchor="${appointment.id}"]`)) {
                 e.preventDefault();
+                return;
+              }
+              // Não fechar se o clique foi dentro de um portal do Radix (modais, dialogs, selects, etc.)
+              if (
+                target.closest("[data-radix-popper-content-wrapper]") ||
+                target.closest("[data-radix-select-content]") ||
+                target.closest("[data-radix-dialog-overlay]") ||
+                target.closest("[data-radix-dialog-content]") ||
+                target.closest("[data-radix-alert-dialog-overlay]") ||
+                target.closest("[data-radix-alert-dialog-content]") ||
+                target.closest("[role='dialog']") ||
+                target.closest("[role='alertdialog']") ||
+                target.closest("[data-week-appointment='true']")
+              ) {
+                e.preventDefault();
+              }
             }}
           >
             <AnimatePresence mode="wait">
