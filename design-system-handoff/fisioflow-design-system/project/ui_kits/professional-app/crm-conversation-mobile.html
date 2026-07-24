@@ -1,0 +1,349 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Professional App" name="Professional App — CRM · Conversa (mobile)" subtitle="2 versões iOS 390×844 · Chat clássico vs. Cockpit CRM" viewport="960x980" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>CRM · Conversa — FisioFlow (mobile)</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  body { margin: 0; background: #11141a; font-family: var(--font-sans); color: hsl(var(--foreground)); }
+  .canvas { width: max-content; min-width: 100%; min-height: 100vh; box-sizing: border-box; padding: 44px; display: flex; align-items: flex-start; gap: 40px; }
+  .frame-col { flex: none; display: flex; flex-direction: column; gap: 14px; }
+  .frame-label { display:flex; align-items:center; gap: 9px; color: #e7ebf2; }
+  .frame-label .ix { font-size: 12px; font-weight: 800; letter-spacing: 0.04em; padding: 4px 10px; border-radius: 999px; background: hsl(211 100% 50%); color: white; }
+  .frame-label .tt { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; }
+  .frame-label .ds { font-size: 12px; font-weight: 600; color: #8b93a3; }
+
+  .app {
+    width: 390px; height: 844px;
+    background: hsl(var(--background)); color: hsl(var(--foreground));
+    border-radius: 48px; overflow: hidden; position: relative;
+    box-shadow: 0 0 0 12px #111, 0 0 0 14px #2a2d35, 0 30px 60px rgba(0,0,0,0.55);
+    display: flex; flex-direction: column;
+  }
+
+  /* ---- status bar ---- */
+  .statusbar { display:flex; justify-content:space-between; align-items:center; padding: 14px 32px 6px; font-size: 14px; font-weight: 700; flex-shrink: 0; position: relative; z-index: 3; }
+  .statusbar .sb-right { display:flex; align-items:center; gap: 6px; }
+  .statusbar .sb-right i { width: 16px; height: 16px; }
+
+  .avatar { width: 40px; height: 40px; border-radius: 50%; display:flex; align-items:center; justify-content:center; font-weight: 800; font-size: 14px; color: white; flex-shrink: 0; }
+  .iconbtn { width: 40px; height: 40px; border-radius: 50%; background: transparent; border: none; display:flex; align-items:center; justify-content:center; color: hsl(var(--foreground)); cursor: pointer; }
+  .iconbtn:active { background: hsl(var(--muted)); }
+  .iconbtn i { width: 21px; height: 21px; }
+
+  /* stage chips (shared) */
+  .stage { display:inline-flex; align-items:center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 0.02em; width: max-content; }
+  .stage .sd { width: 6px; height: 6px; border-radius: 50%; }
+  .stage.lead { background: hsl(264 60% 95%); color: hsl(264 50% 42%); }
+  .stage.wait { background: hsl(28 92% 94%); color: hsl(25 70% 34%); }
+  .stage.eval { background: hsl(211 100% 94%); color: hsl(211 100% 35%); }
+  .stage.treat { background: hsl(142 60% 93%); color: hsl(142 55% 28%); }
+
+  .home-indicator { position:absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 134px; height: 5px; background: hsl(var(--foreground)); border-radius: 999px; z-index: 6; }
+
+  /* =======================================================================
+     V1 — CHAT CLÁSSICO (WhatsApp-style)
+     ======================================================================= */
+  .chat-head { display:flex; align-items:center; gap: 10px; padding: 2px 12px 10px; flex-shrink: 0; border-bottom: 1px solid hsl(var(--border)); }
+  .chat-head .back { width: 34px; }
+  .chat-head .who { flex: 1; min-width: 0; display:flex; flex-direction: column; gap: 2px; }
+  .chat-head .who .nm { font-size: 16px; font-weight: 800; letter-spacing: -0.015em; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chat-head .who .pres { font-size: 11px; font-weight: 600; color: hsl(142 55% 38%); display:flex; align-items:center; gap: 5px; }
+  .chat-head .acts { display:flex; align-items:center; }
+
+  /* CRM context strip */
+  .crm-strip { display:flex; align-items:center; gap: 8px; padding: 9px 16px; background: hsl(264 60% 97%); border-bottom: 1px solid hsl(264 40% 92%); flex-shrink: 0; }
+  .crm-strip .lbl { font-size: 11px; font-weight: 700; color: hsl(264 30% 48%); }
+  .crm-strip .src { font-size: 11px; font-weight: 700; color: hsl(var(--muted-foreground)); display:flex; align-items:center; gap: 4px; }
+  .crm-strip .src i { width: 13px; height: 13px; }
+  .crm-strip .move { margin-left: auto; display:flex; align-items:center; gap: 4px; font-size: 11px; font-weight: 800; color: hsl(211 100% 45%); cursor: pointer; }
+  .crm-strip .move i { width: 13px; height: 13px; }
+
+  /* thread (wallpaper) */
+  .thread { flex: 1; overflow-y: auto; padding: 14px 14px 6px; display:flex; flex-direction: column; gap: 7px;
+    background-color: hsl(150 18% 95%);
+    background-image: radial-gradient(hsl(150 14% 90%) 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+  .thread::-webkit-scrollbar { width: 0; }
+  .daypill { align-self: center; margin: 4px 0 8px; font-size: 11px; font-weight: 800; letter-spacing: 0.02em; padding: 5px 13px; border-radius: 999px; background: hsl(150 12% 88%); color: hsl(150 12% 38%); text-transform: uppercase; }
+  .sys { align-self: center; max-width: 78%; text-align: center; font-size: 11px; font-weight: 700; color: hsl(28 60% 36%); background: hsl(45 90% 90%); padding: 6px 12px; border-radius: 10px; margin: 2px 0 6px; line-height: 1.35; }
+  .sys i { width: 12px; height: 12px; vertical-align: -2px; }
+
+  .bub { max-width: 80%; padding: 8px 11px 6px; border-radius: 14px; font-size: 14px; line-height: 1.4; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.05); }
+  .bub .mt { display:flex; align-items:center; justify-content:flex-end; gap: 3px; margin-top: 2px; }
+  .bub .mt .tm { font-size: 10px; font-weight: 600; }
+  .bub .mt i { width: 14px; height: 14px; }
+  .bub.in { align-self: flex-start; background: white; color: hsl(var(--foreground)); border-top-left-radius: 4px; }
+  .bub.in .tm { color: hsl(var(--muted-foreground)); }
+  .bub.out { align-self: flex-end; background: hsl(142 60% 88%); color: hsl(150 30% 16%); border-top-right-radius: 4px; }
+  .bub.out .tm { color: hsl(150 25% 40%); }
+  .bub.out .mt i { color: hsl(199 90% 45%); }
+
+  /* smart-reply suggestions */
+  .smart { display:flex; gap: 8px; overflow-x: auto; padding: 9px 14px; flex-shrink: 0; background: hsl(var(--background)); border-top: 1px solid hsl(var(--border)); }
+  .smart::-webkit-scrollbar { height: 0; }
+  .schip { flex: none; display:inline-flex; align-items:center; gap: 6px; padding: 8px 13px; border-radius: 999px; border: 1px solid hsl(211 100% 88%); background: hsl(211 100% 97%); color: hsl(211 100% 40%); font-size: 12.5px; font-weight: 800; cursor: pointer; }
+  .schip i { width: 14px; height: 14px; }
+  .schip.ai { background: hsl(264 70% 97%); border-color: hsl(264 60% 88%); color: hsl(264 55% 48%); }
+
+  /* compose */
+  .compose { display:flex; align-items:flex-end; gap: 8px; padding: 8px 12px 26px; background: hsl(var(--background)); flex-shrink: 0; }
+  .compose .plus { width: 42px; height: 42px; border-radius: 50%; background: hsl(var(--muted)); display:flex; align-items:center; justify-content:center; color: hsl(var(--muted-foreground)); flex-shrink: 0; cursor: pointer; }
+  .compose .plus i { width: 21px; height: 21px; }
+  .compose .field { flex: 1; display:flex; align-items:center; gap: 8px; padding: 11px 14px; border-radius: 22px; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); min-height: 42px; box-sizing: border-box; }
+  .compose .field span { font-size: 14px; color: hsl(var(--muted-foreground)); font-weight: 500; flex: 1; }
+  .compose .field i { width: 19px; height: 19px; color: hsl(var(--muted-foreground)); }
+  .compose .send { width: 46px; height: 46px; border-radius: 50%; background: hsl(142 70% 42%); color: white; display:flex; align-items:center; justify-content:center; flex-shrink: 0; cursor: pointer; box-shadow: 0 4px 12px hsl(142 70% 42% / .35); }
+  .compose .send i { width: 22px; height: 22px; }
+
+  /* =======================================================================
+     V2 — COCKPIT CRM
+     ======================================================================= */
+  .ck-head { display:flex; align-items:center; gap: 10px; padding: 2px 12px 10px; flex-shrink: 0; }
+  .ck-head .who { flex: 1; min-width: 0; }
+  .ck-head .who .nm { font-size: 16px; font-weight: 800; letter-spacing: -0.015em; line-height: 1.05; }
+  .ck-head .who .sub { font-size: 11px; font-weight: 600; color: hsl(var(--muted-foreground)); margin-top: 2px; }
+
+  /* cockpit card */
+  .cockpit { margin: 0 14px; border: 1px solid hsl(var(--border)); border-radius: 20px; background: hsl(var(--card)); padding: 14px; flex-shrink: 0; box-shadow: var(--shadow-sm); }
+  .cockpit .crow { display:flex; align-items:center; gap: 11px; }
+  .cockpit .crow .meta { flex: 1; min-width: 0; }
+  .cockpit .crow .meta .src { font-size: 11px; font-weight: 700; color: hsl(var(--muted-foreground)); display:flex; align-items:center; gap: 5px; margin-top: 3px; }
+  .cockpit .crow .meta .src i { width: 13px; height: 13px; }
+  .cockpit .crow .phone { width: 38px; height: 38px; border-radius: 50%; background: hsl(142 60% 93%); color: hsl(142 60% 34%); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .cockpit .crow .phone i { width: 18px; height: 18px; }
+
+  /* pipeline progress */
+  .pipe { display:flex; align-items:center; gap: 0; margin: 14px 2px 2px; }
+  .pipe .step { flex: 1; display:flex; flex-direction: column; align-items:center; gap: 6px; position: relative; }
+  .pipe .step .dot { width: 22px; height: 22px; border-radius: 50%; display:flex; align-items:center; justify-content:center; font-size: 11px; font-weight: 800; z-index: 2; }
+  .pipe .step .dot i { width: 13px; height: 13px; }
+  .pipe .step .nm { font-size: 9.5px; font-weight: 800; letter-spacing: 0.01em; text-align: center; line-height: 1.1; }
+  .pipe .step.done .dot { background: hsl(142 65% 42%); color: white; }
+  .pipe .step.done .nm { color: hsl(142 55% 32%); }
+  .pipe .step.curr .dot { background: hsl(211 100% 50%); color: white; box-shadow: 0 0 0 4px hsl(211 100% 50% / .18); }
+  .pipe .step.curr .nm { color: hsl(211 100% 42%); }
+  .pipe .step.todo .dot { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
+  .pipe .step.todo .nm { color: hsl(var(--muted-foreground)); }
+  .pipe .bar { height: 3px; flex: 1; margin-top: -22px; border-radius: 2px; }
+  .pipe .bar.fill { background: hsl(142 65% 48%); }
+  .pipe .bar.empty { background: hsl(var(--border)); }
+
+  /* AI next-action inside cockpit */
+  .ck-next { margin-top: 14px; display:flex; align-items:flex-start; gap: 9px; padding: 11px 12px; border-radius: 13px; background: hsl(264 70% 97%); border: 1px solid hsl(264 55% 92%); }
+  .ck-next .icn { width: 26px; height: 26px; border-radius: 8px; background: hsl(264 60% 92%); color: hsl(264 55% 48%); display:flex; align-items:center; justify-content:center; flex-shrink: 0; }
+  .ck-next .icn i { width: 15px; height: 15px; }
+  .ck-next .tx { font-size: 12.5px; font-weight: 700; color: hsl(264 35% 38%); line-height: 1.35; }
+  .ck-next .tx b { color: hsl(264 55% 44%); }
+
+  /* cockpit thread — neutral/native bubbles */
+  .ck-thread { flex: 1; overflow-y: auto; padding: 14px 16px 8px; display:flex; flex-direction: column; gap: 8px; background: hsl(var(--background)); }
+  .ck-thread::-webkit-scrollbar { width: 0; }
+  .ck-day { align-self: center; font-size: 11px; font-weight: 800; color: hsl(var(--muted-foreground)); margin-bottom: 4px; }
+  .ckb { max-width: 80%; padding: 10px 13px; border-radius: 16px; font-size: 14px; line-height: 1.42; }
+  .ckb .tm { font-size: 10px; font-weight: 600; margin-top: 3px; display:flex; align-items:center; gap: 3px; }
+  .ckb .tm i { width: 13px; height: 13px; }
+  .ckb.in { align-self: flex-start; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); color: hsl(var(--foreground)); border-bottom-left-radius: 5px; }
+  .ckb.in .tm { color: hsl(var(--muted-foreground)); }
+  .ckb.out { align-self: flex-end; background: hsl(211 100% 50%); color: white; border-bottom-right-radius: 5px; }
+  .ckb.out .tm { color: rgba(255,255,255,.8); justify-content: flex-end; }
+  .ckb.out .tm i { color: rgba(255,255,255,.9); }
+
+  /* AI suggested reply card inline */
+  .ai-sug { align-self: flex-end; max-width: 86%; border: 1px dashed hsl(264 55% 80%); background: hsl(264 70% 98%); border-radius: 16px; padding: 11px 13px; }
+  .ai-sug .hd { display:flex; align-items:center; gap: 6px; font-size: 10px; font-weight: 800; letter-spacing: 0.03em; color: hsl(264 55% 50%); text-transform: uppercase; margin-bottom: 6px; }
+  .ai-sug .hd i { width: 13px; height: 13px; }
+  .ai-sug .bd { font-size: 13.5px; font-weight: 600; color: hsl(264 30% 28%); line-height: 1.4; }
+  .ai-sug .row { display:flex; gap: 8px; margin-top: 10px; }
+  .ai-sug .row .b { flex: 1; display:flex; align-items:center; justify-content:center; gap: 5px; padding: 8px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; }
+  .ai-sug .row .b i { width: 14px; height: 14px; }
+  .ai-sug .row .b.use { background: hsl(264 55% 52%); color: white; }
+  .ai-sug .row .b.edit { background: white; border: 1px solid hsl(264 40% 86%); color: hsl(264 45% 46%); }
+
+  /* bottom action dock */
+  .dock { flex-shrink: 0; background: hsl(var(--card)); border-top: 1px solid hsl(var(--border)); padding: 11px 14px 24px; }
+  .dock .quick { display:flex; gap: 8px; margin-bottom: 11px; }
+  .dock .quick .q { flex: 1; display:flex; align-items:center; justify-content:center; gap: 6px; padding: 11px; border-radius: 13px; font-size: 12.5px; font-weight: 800; cursor: pointer; }
+  .dock .quick .q i { width: 16px; height: 16px; }
+  .dock .quick .q.a1 { background: hsl(211 100% 50%); color: white; }
+  .dock .quick .q.a2 { background: hsl(142 60% 93%); color: hsl(142 60% 30%); }
+  .dock .quick .q.a3 { background: hsl(var(--muted)); color: hsl(var(--foreground)); flex: none; width: 46px; }
+  .dock .crow2 { display:flex; align-items:center; gap: 9px; }
+  .dock .field { flex: 1; display:flex; align-items:center; gap: 8px; padding: 11px 14px; border-radius: 22px; background: hsl(var(--background)); border: 1px solid hsl(var(--border)); }
+  .dock .field span { font-size: 14px; color: hsl(var(--muted-foreground)); font-weight: 500; flex: 1; }
+  .dock .field i { width: 19px; height: 19px; color: hsl(var(--muted-foreground)); }
+  .dock .send { width: 44px; height: 44px; border-radius: 50%; background: hsl(211 100% 50%); color: white; display:flex; align-items:center; justify-content:center; flex-shrink: 0; cursor: pointer; }
+  .dock .send i { width: 21px; height: 21px; }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <!-- ===================== VERSÃO 1 — CHAT CLÁSSICO ===================== -->
+  <div class="frame-col">
+    <div class="frame-label">
+      <span class="ix">V1</span>
+      <span class="tt">Chat clássico</span>
+      <span class="ds">· mensagem em primeiro plano + respostas rápidas</span>
+    </div>
+
+    <div class="app">
+      <div class="statusbar">
+        <span>9:41</span>
+        <span class="sb-right"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+      </div>
+
+      <div class="chat-head">
+        <button class="iconbtn back"><i data-lucide="chevron-left"></i></button>
+        <div class="avatar" style="background:linear-gradient(135deg,hsl(264 55% 62%),hsl(264 55% 48%));">MA</div>
+        <div class="who">
+          <span class="nm">Marina Alves</span>
+          <span class="pres"><i data-lucide="circle" style="width:8px;height:8px;fill:currentColor;"></i> online agora</span>
+        </div>
+        <div class="acts">
+          <button class="iconbtn"><i data-lucide="phone"></i></button>
+          <button class="iconbtn"><i data-lucide="user-round"></i></button>
+        </div>
+      </div>
+
+      <div class="crm-strip">
+        <span class="stage lead"><span class="sd" style="background:hsl(264 50% 50%);"></span>NOVO LEAD</span>
+        <span class="src"><i data-lucide="megaphone"></i> Instagram Ads</span>
+        <span class="move">Mover etapa <i data-lucide="chevron-right"></i></span>
+      </div>
+
+      <div class="thread">
+        <div class="daypill">Hoje</div>
+
+        <div class="bub in">Bom dia! Gostaria de saber o valor da avaliação 😊<div class="mt"><span class="tm">09:40</span></div></div>
+        <div class="bub in">Vocês atendem dor no joelho?<div class="mt"><span class="tm">09:41</span></div></div>
+
+        <div class="bub out">Bom dia, Marina! 💙 Atendemos sim. A avaliação inicial custa R$ 180 e dura cerca de 50 min.<div class="mt"><span class="tm">09:42</span><i data-lucide="check-check"></i></div></div>
+        <div class="bub out">Posso te encaixar essa semana. Quinta às 09h fica bom pra você?<div class="mt"><span class="tm">09:42</span><i data-lucide="check-check"></i></div></div>
+
+        <div class="bub in">Perfeito! Quinta de manhã é ótimo 🙌<div class="mt"><span class="tm">09:43</span></div></div>
+
+        <div class="sys"><i data-lucide="sparkles"></i> A IA detectou intenção de agendamento — sugestão de resposta abaixo</div>
+      </div>
+
+      <div class="smart">
+        <span class="schip ai"><i data-lucide="sparkles"></i> Confirmar quinta 09h</span>
+        <span class="schip"><i data-lucide="map-pin"></i> Enviar localização</span>
+        <span class="schip"><i data-lucide="file-text"></i> Tabela de valores</span>
+      </div>
+
+      <div class="compose">
+        <div class="plus"><i data-lucide="plus"></i></div>
+        <div class="field"><span>Mensagem</span><i data-lucide="paperclip"></i><i data-lucide="camera"></i></div>
+        <div class="send"><i data-lucide="mic"></i></div>
+      </div>
+
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+
+  <!-- ===================== VERSÃO 2 — COCKPIT CRM ===================== -->
+  <div class="frame-col">
+    <div class="frame-label">
+      <span class="ix">V2</span>
+      <span class="tt">Cockpit CRM</span>
+      <span class="ds">· paciente + funil + ações fixados na conversa</span>
+    </div>
+
+    <div class="app">
+      <div class="statusbar">
+        <span>9:41</span>
+        <span class="sb-right"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+      </div>
+
+      <div class="ck-head">
+        <button class="iconbtn back" style="width:34px;"><i data-lucide="chevron-left"></i></button>
+        <div class="who">
+          <div class="nm">Marina Alves</div>
+          <div class="sub">28 anos · primeira conversa há 3 min</div>
+        </div>
+        <button class="iconbtn"><i data-lucide="ellipsis-vertical"></i></button>
+      </div>
+
+      <div class="cockpit">
+        <div class="crow">
+          <div class="avatar" style="width:44px;height:44px;font-size:15px;background:linear-gradient(135deg,hsl(264 55% 62%),hsl(264 55% 48%));">MA</div>
+          <div class="meta">
+            <span class="stage lead"><span class="sd" style="background:hsl(264 50% 50%);"></span>NOVO LEAD</span>
+            <div class="src"><i data-lucide="megaphone"></i> Instagram Ads · joelho</div>
+          </div>
+          <div class="phone"><i data-lucide="phone"></i></div>
+        </div>
+
+        <div class="pipe">
+          <div class="step curr">
+            <div class="dot"><i data-lucide="sparkles"></i></div>
+            <span class="nm">Lead</span>
+          </div>
+          <div class="bar empty"></div>
+          <div class="step todo">
+            <div class="dot"><i data-lucide="clipboard-check"></i></div>
+            <span class="nm">Avaliação</span>
+          </div>
+          <div class="bar empty"></div>
+          <div class="step todo">
+            <div class="dot"><i data-lucide="activity"></i></div>
+            <span class="nm">Tratamento</span>
+          </div>
+          <div class="bar empty"></div>
+          <div class="step todo">
+            <div class="dot"><i data-lucide="check"></i></div>
+            <span class="nm">Alta</span>
+          </div>
+        </div>
+
+        <div class="ck-next">
+          <div class="icn"><i data-lucide="sparkles"></i></div>
+          <div class="tx"><b>Próxima ação:</b> agendar avaliação. Há horário livre <b>quinta 09:00</b> compatível com o interesse dela.</div>
+        </div>
+      </div>
+
+      <div class="ck-thread">
+        <div class="ck-day">Hoje · 09:40</div>
+
+        <div class="ckb in">Bom dia! Gostaria de saber o valor da avaliação 😊<div class="tm">09:40</div></div>
+        <div class="ckb in">Vocês atendem dor no joelho?<div class="tm">09:41</div></div>
+
+        <div class="ckb out">Bom dia, Marina! 💙 Atendemos sim. A avaliação inicial é R$ 180 e dura ~50 min.<div class="tm">09:42 <i data-lucide="check-check"></i></div></div>
+
+        <div class="ckb in">Perfeito! Quinta de manhã é ótimo 🙌<div class="tm">09:43</div></div>
+
+        <div class="ai-sug">
+          <div class="hd"><i data-lucide="sparkles"></i> Resposta sugerida pela IA</div>
+          <div class="bd">"Combinado, Marina! Agendei sua avaliação para <b>quinta, 09:00</b>. Vou te enviar o endereço e o que levar. Até lá! 💙"</div>
+          <div class="row">
+            <span class="b use"><i data-lucide="send"></i> Usar e enviar</span>
+            <span class="b edit"><i data-lucide="pencil"></i> Editar</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dock">
+        <div class="quick">
+          <span class="q a1"><i data-lucide="calendar-plus"></i> Agendar avaliação</span>
+          <span class="q a2"><i data-lucide="file-text"></i> Enviar valores</span>
+          <span class="q a3"><i data-lucide="zap"></i></span>
+        </div>
+        <div class="crow2">
+          <div class="field"><span>Mensagem</span><i data-lucide="paperclip"></i></div>
+          <div class="send"><i data-lucide="send"></i></div>
+        </div>
+      </div>
+
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="UI Kit · Configurações (web)" subtitle="Configurações da clínica: perfil, horário de funcionamento, salas, equipe e integrações" viewport="1320x920" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Configurações — FisioFlow Clínica</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<link rel="stylesheet" href="screen-shell.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  .body { display: grid; grid-template-columns: 224px 1fr; min-height: 0; }
+
+  /* settings nav */
+  .setnav { border-right: 1px solid hsl(var(--border)); background: hsl(var(--muted) / .25); padding: 18px 12px; overflow-y: auto; }
+  .setnav h3 { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; color: hsl(var(--muted-foreground)); padding: 0 10px 8px; }
+  .sn { display: flex; align-items: center; gap: 9px; padding: 8px 11px; border-radius: 9px; font-size: 12.5px; font-weight: 700; color: hsl(var(--muted-foreground)); cursor: pointer; margin-bottom: 2px; }
+  .sn:hover { background: hsl(var(--card)); }
+  .sn.on { background: hsl(var(--primary) / .1); color: hsl(var(--primary)); }
+  .sn .lucide { width: 15px; height: 15px; }
+  .setnav .gap { height: 16px; }
+
+  /* main */
+  .main { overflow-y: auto; min-height: 0; padding: 22px 28px 28px; }
+  .m-head { margin-bottom: 18px; }
+  .m-head h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  .m-head .sub { font-size: 12px; color: hsl(var(--muted-foreground)); font-weight: 600; margin-top: 2px; }
+
+  .panel { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; padding: 20px 22px; margin-bottom: 14px; max-width: 760px; }
+  .panel > h2 { font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 9px; }
+  .panel > .hint { font-size: 12px; color: hsl(var(--muted-foreground)); font-weight: 500; margin: 2px 0 16px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+  .field label { font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: hsl(var(--muted-foreground)); display: block; margin-bottom: 6px; }
+  .input { width: 100%; box-sizing: border-box; padding: 10px 13px; border-radius: 10px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); font-family: var(--font-sans); font-size: 13px; font-weight: 600; color: hsl(var(--foreground)); }
+  .field { margin-bottom: 13px; }
+
+  /* logo row */
+  .logo-row { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+  .logo-box { width: 64px; height: 64px; border-radius: 16px; border: 1px solid hsl(var(--border)); background: hsl(var(--primary) / .07); display: flex; align-items: center; justify-content: center; padding: 10px; }
+  .logo-box img { width: 100%; }
+  .logo-row .tip { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; margin-top: 5px; }
+
+  /* hours */
+  .hour-row { display: grid; grid-template-columns: 130px 1fr auto; align-items: center; gap: 14px; padding: 9px 0; border-bottom: 1px solid hsl(var(--border) / .6); }
+  .hour-row:last-child { border-bottom: 0; }
+  .hour-row .day { font-size: 12.5px; font-weight: 800; }
+  .hour-row .slots { display: flex; gap: 7px; align-items: center; }
+  .timechip { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; padding: 5px 11px; border-radius: 8px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); }
+  .slots .sep { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 700; }
+  .hour-row.off .day { color: hsl(var(--muted-foreground)); }
+  .hour-row.off .closed { font-size: 11.5px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+
+  /* switch */
+  .switch { width: 36px; height: 21px; border-radius: 999px; background: hsl(220 13% 86%); position: relative; cursor: pointer; flex-shrink: 0; }
+  .switch::after { content: ""; position: absolute; top: 2.5px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: white; box-shadow: var(--shadow-sm); }
+  .switch.on { background: hsl(var(--primary)); }
+  .switch.on::after { left: auto; right: 3px; }
+
+  /* rooms */
+  .room { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid hsl(var(--border) / .6); }
+  .room:last-child { border-bottom: 0; }
+  .room .ic { width: 34px; height: 34px; border-radius: 10px; background: hsl(var(--primary) / .08); color: hsl(var(--primary)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .room .nm { font-size: 13px; font-weight: 800; }
+  .room .mt { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .room .end { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+  .save-bar { display: flex; align-items: center; gap: 10px; max-width: 760px; padding: 4px 0 8px; }
+  .save-bar .note { font-size: 11.5px; color: hsl(var(--muted-foreground)); font-weight: 600; margin-right: auto; }
+</style>
+</head>
+<body>
+<div class="pad">
+
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><img src="../../assets/activity-logo.svg" alt=""/></div>
+      <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div>
+        <div class="sb-group-label">ATENDIMENTO</div>
+        <div class="sb-item"><i data-lucide="calendar-days"></i> AGENDA</div>
+        <div class="sb-item"><i data-lucide="users"></i> PACIENTES</div>
+        <div class="sb-item"><i data-lucide="message-circle"></i> CRM · WHATSAPP</div>
+      </div>
+      <div>
+        <div class="sb-group-label">CLÍNICA</div>
+        <div class="sb-item"><i data-lucide="clipboard-check"></i> AVALIAÇÕES</div>
+        <div class="sb-item"><i data-lucide="dumbbell"></i> EXERCÍCIOS</div>
+        <div class="sb-item"><i data-lucide="clipboard-list"></i> PROTOCOLOS</div>
+        <div class="sb-item"><i data-lucide="flask-conical"></i> TESTES CLÍNICOS</div>
+        <div class="sb-item"><i data-lucide="camera"></i> BIOMECÂNICA</div>
+      </div>
+      <div>
+        <div class="sb-group-label">GESTÃO &amp; OPERAÇÃO</div>
+        <div class="sb-item"><i data-lucide="layout-dashboard"></i> BOARDS</div>
+        <div class="sb-item"><i data-lucide="wallet"></i> FINANCEIRO</div>
+        <div class="sb-item"><i data-lucide="book-open"></i> WIKI CLÍNICA</div>
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-item is-active"><i data-lucide="settings"></i> CONFIGURAÇÕES</div>
+      <div class="sb-item"><i data-lucide="log-out"></i> SAIR</div>
+    </div>
+  </aside>
+
+  <div class="content">
+    <div class="topbar">
+      <div class="crumbs">Configurações <i data-lucide="chevron-right"></i> <strong>Perfil da clínica</strong></div>
+      <div class="topbar-right">
+        <button class="btn">Descartar</button>
+        <button class="btn primary"><i data-lucide="check"></i> Salvar alterações</button>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="setnav">
+        <h3>CONFIGURAÇÕES</h3>
+        <div class="sn on"><i data-lucide="building-2"></i> Perfil da clínica</div>
+        <div class="sn"><i data-lucide="users"></i> Equipe &amp; permissões</div>
+        <div class="sn"><i data-lucide="calendar-cog"></i> Agenda &amp; horários</div>
+        <div class="sn"><i data-lucide="bell"></i> Notificações</div>
+        <div class="sn"><i data-lucide="message-circle"></i> WhatsApp &amp; CRM</div>
+        <div class="sn"><i data-lucide="wallet"></i> Faturamento &amp; convênios</div>
+        <div class="sn"><i data-lucide="plug"></i> Integrações</div>
+        <div class="gap"></div>
+        <h3>CONTA</h3>
+        <div class="sn"><i data-lucide="user"></i> Meu perfil</div>
+        <div class="sn"><i data-lucide="shield"></i> Segurança</div>
+      </div>
+
+      <div class="main">
+        <div class="m-head">
+          <h1>Perfil da clínica</h1>
+          <div class="sub">Dados exibidos em laudos, recibos e no app do paciente.</div>
+        </div>
+
+        <div class="panel">
+          <h2><i data-lucide="building-2" style="width:16px;height:16px;color:hsl(var(--primary));"></i> Identificação</h2>
+          <p class="hint">Razão social e contatos oficiais da unidade.</p>
+          <div class="logo-row">
+            <div class="logo-box"><img src="../../assets/activity-logo.svg" alt=""/></div>
+            <div>
+              <button class="btn sm"><i data-lucide="upload"></i> Trocar logo</button>
+              <div class="tip">SVG ou PNG · fundo transparente · mín. 256×256</div>
+            </div>
+          </div>
+          <div class="grid2">
+            <div class="field"><label>Nome fantasia</label><input class="input" value="Activity Fisioterapia — Mooca Fisio"/></div>
+            <div class="field"><label>CNPJ</label><input class="input" value="12.345.678/0001-90"/></div>
+            <div class="field"><label>Telefone / WhatsApp</label><input class="input" value="(11) 2601-4455"/></div>
+            <div class="field"><label>E-mail</label><input class="input" value="contato@moocafisio.com.br"/></div>
+          </div>
+          <div class="field" style="margin-bottom:0;"><label>Endereço</label><input class="input" value="Rua da Mooca, 1840 — Mooca, São Paulo/SP · 03104-002"/></div>
+        </div>
+
+        <div class="panel">
+          <h2><i data-lucide="clock" style="width:16px;height:16px;color:hsl(var(--primary));"></i> Horário de funcionamento</h2>
+          <p class="hint">Define os slots visíveis na agenda e no agendamento pelo app do paciente.</p>
+          <div class="hour-row">
+            <span class="day">Segunda a sexta</span>
+            <span class="slots"><span class="timechip">07:00</span><span class="sep">às</span><span class="timechip">12:00</span><span class="sep">·</span><span class="timechip">13:00</span><span class="sep">às</span><span class="timechip">21:00</span></span>
+            <span class="switch on"></span>
+          </div>
+          <div class="hour-row">
+            <span class="day">Sábado</span>
+            <span class="slots"><span class="timechip">08:00</span><span class="sep">às</span><span class="timechip">13:00</span></span>
+            <span class="switch on"></span>
+          </div>
+          <div class="hour-row off">
+            <span class="day">Domingo</span>
+            <span class="closed">Fechado</span>
+            <span class="switch"></span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2><i data-lucide="door-open" style="width:16px;height:16px;color:hsl(var(--primary));"></i> Salas de atendimento</h2>
+          <p class="hint">Salas disponíveis para alocação na agenda.</p>
+          <div class="room">
+            <span class="ic"><i data-lucide="bed" style="width:16px;height:16px;"></i></span>
+            <div><div class="nm">Sala 1 — Avaliação</div><div class="mt">Maca · goniômetro · dinamômetro</div></div>
+            <div class="end"><span class="badge ok">ATIVA</span><span class="switch on"></span></div>
+          </div>
+          <div class="room">
+            <span class="ic"><i data-lucide="bed" style="width:16px;height:16px;"></i></span>
+            <div><div class="nm">Sala 2 — Atendimento</div><div class="mt">Maca · eletroterapia</div></div>
+            <div class="end"><span class="badge ok">ATIVA</span><span class="switch on"></span></div>
+          </div>
+          <div class="room">
+            <span class="ic"><i data-lucide="dumbbell" style="width:16px;height:16px;"></i></span>
+            <div><div class="nm">Ginásio — Cinesioterapia</div><div class="mt">6 estações · capacidade 8 pacientes</div></div>
+            <div class="end"><span class="badge ok">ATIVA</span><span class="switch on"></span></div>
+          </div>
+          <div class="room">
+            <span class="ic"><i data-lucide="camera" style="width:16px;height:16px;"></i></span>
+            <div><div class="nm">Estúdio — Biomecânica</div><div class="mt">Captura de vídeo · em reforma até 20/06</div></div>
+            <div class="end"><span class="badge warn">INDISPONÍVEL</span><span class="switch"></span></div>
+          </div>
+        </div>
+
+        <div class="save-bar">
+          <span class="note">Última alteração por Rafael Minatto · 04/06/2026</span>
+          <button class="btn">Descartar</button>
+          <button class="btn primary"><i data-lucide="check"></i> Salvar alterações</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();</script>
+</body>
+</html>

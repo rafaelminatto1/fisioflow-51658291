@@ -508,7 +508,7 @@ export default function WhatsAppTemplatesPage() {
                   <div className="space-y-2">
                     <Label>Corpo da mensagem *</Label>
                     <Textarea
-                      placeholder="Olá {{1}}, sua consulta está confirmada para {{2}}."
+                      placeholder="Olá {{1}}, sua sessão está confirmada para {{2}}."
                       value={createForm.body}
                       onChange={(e) => setCreateForm((f) => ({ ...f, body: e.target.value }))}
                       rows={5}

@@ -54,7 +54,7 @@ const SCRIPT_TEMPLATES: ScriptTemplate[] = [
     id: "confirma-agenda",
     category: "agendamento",
     name: "Confirmação de Agendamento",
-    description: "Confirmar consulta agendada",
+    description: "Confirmar sessão agendada",
     template: `Olá {nome}! 👋
 
 Tudo bem? Estamos passando para confirmar sua sessão de fisioterapia:
@@ -72,7 +72,7 @@ Até logo! 💪`,
     id: "lembrete-24h",
     category: "lembrete",
     name: "Lembrete 24h Antes",
-    description: "Lembrar consulta um dia antes",
+    description: "Lembrar sessão um dia antes",
     template: `Oi {nome}! 🌟
 
 Só um lembrete amigável: sua sessão de fisioterapia é *amanhã* às {horario}!

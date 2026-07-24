@@ -146,11 +146,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
   type,
 }) => {
   const { exercises: libraryExercises } = useExercises();
-  const [isExpanded, setIsExpanded] = useState(() => {
-    const hasNotes = !!(item.notes?.trim() || item.intensity?.trim());
-    const hasFeedback = !!item.patientFeedback?.trim();
-    return hasNotes || hasFeedback;
-  });
+  const [isExpanded, setIsExpanded] = useState(true);
 
   const prevHasContentRef = useRef(false);
 
@@ -1081,20 +1077,20 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
       {!disabled && (
         <div className="flex flex-col gap-2 mt-2">
           {/* Header Row: Toggle & Progress */}
-          <div className="flex flex-wrap items-center justify-between gap-3 w-full mb-3">
+          <div className="flex items-center justify-between gap-2 w-full mb-3 min-w-0">
             {type === "unified" ? (
-              <div className="relative flex p-1 bg-slate-100/80 dark:bg-slate-800/40 rounded-full w-fit border border-slate-200/50 dark:border-slate-800/50">
+              <div className="relative flex p-0.5 sm:p-1 bg-slate-100/80 dark:bg-slate-800/40 rounded-full w-fit border border-slate-200/50 dark:border-slate-800/50 shrink-0">
               <button
                 type="button"
                 onClick={() => selectItemType("procedure")}
                 className={cn(
-                  "relative z-10 flex items-center h-8 pl-4 pr-2.5 rounded-full text-[11px] uppercase font-extrabold tracking-wider transition-colors duration-200",
+                  "relative z-10 flex items-center h-7 sm:h-8 pl-3 sm:pl-4 pr-2 sm:pr-2.5 rounded-full text-[10px] sm:text-[11px] uppercase font-extrabold tracking-wider transition-colors duration-200",
                   newItemType === "procedure"
                     ? "text-orange-700 dark:text-orange-300"
                     : "text-muted-foreground hover:text-slate-800 dark:hover:text-slate-200"
                 )}
               >
-                <Stethoscope className="h-3.5 w-3.5 mr-1.5" />
+                <Stethoscope className="h-3.5 w-3.5 mr-1 sm:mr-1.5" />
                 Procedimento
                 <span
                   role="button"
@@ -1111,7 +1107,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                     }
                   }}
                   className={cn(
-                    "ml-2 p-1 rounded-md hover:bg-orange-500/10 transition-colors cursor-pointer",
+                    "ml-1.5 sm:ml-2 p-0.5 sm:p-1 rounded-md hover:bg-orange-500/10 transition-colors cursor-pointer",
                     newItemType === "procedure"
                       ? "text-orange-600 dark:text-orange-400 hover:text-orange-700"
                       : "text-muted-foreground hover:text-slate-800"
@@ -1132,13 +1128,13 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                 type="button"
                 onClick={() => selectItemType("exercise")}
                 className={cn(
-                  "relative z-10 flex items-center h-8 pl-4 pr-2.5 rounded-full text-[11px] uppercase font-extrabold tracking-wider transition-colors duration-200",
+                  "relative z-10 flex items-center h-7 sm:h-8 pl-3 sm:pl-4 pr-2 sm:pr-2.5 rounded-full text-[10px] sm:text-[11px] uppercase font-extrabold tracking-wider transition-colors duration-200",
                   newItemType === "exercise"
                     ? "text-emerald-700 dark:text-emerald-300"
                     : "text-muted-foreground hover:text-slate-800 dark:hover:text-slate-200"
                 )}
               >
-                <Dumbbell className="h-3.5 w-3.5 mr-1.5" />
+                <Dumbbell className="h-3.5 w-3.5 mr-1 sm:mr-1.5" />
                 Exercício
                 <span
                   role="button"
@@ -1155,7 +1151,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                     }
                   }}
                   className={cn(
-                    "ml-2 p-1 rounded-md hover:bg-emerald-500/10 transition-colors cursor-pointer",
+                    "ml-1.5 sm:ml-2 p-0.5 sm:p-1 rounded-md hover:bg-emerald-500/10 transition-colors cursor-pointer",
                     newItemType === "exercise"
                       ? "text-emerald-600 dark:text-emerald-400 hover:text-emerald-700"
                       : "text-muted-foreground hover:text-slate-800"
@@ -1178,13 +1174,13 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
             )}
             
             {isEmbedded && totalCount > 0 && (
-              <div className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900/40 rounded-full border border-slate-100 dark:border-slate-800/80 shadow-sm shrink-0">
-                <span className="text-[10px] font-extrabold text-muted-foreground/80 uppercase tracking-wider hidden sm:inline">
+              <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 bg-slate-50 dark:bg-slate-900/40 rounded-full border border-slate-100 dark:border-slate-800/80 shadow-2xs shrink-0 ml-auto">
+                <span className="text-[10px] font-extrabold text-muted-foreground/80 uppercase tracking-wider whitespace-nowrap">
                   Concluído: {completedCount}/{totalCount}
                 </span>
-                <div className="flex items-center gap-1.5 sm:ml-2">
+                <div className="flex items-center gap-1 sm:gap-1.5 ml-1">
                   <span className="text-[10px] font-black text-slate-700 dark:text-slate-300">{Math.round(progress)}%</span>
-                  <div className="h-1.5 w-16 sm:w-20 bg-slate-200 dark:bg-slate-800 overflow-hidden rounded-full">
+                  <div className="h-1.5 w-12 sm:w-16 bg-slate-200 dark:bg-slate-800 overflow-hidden rounded-full">
                     <div
                       className="h-full bg-gradient-to-r from-orange-500 to-emerald-500 transition-all duration-500 ease-out rounded-full"
                       style={{ width: `${progress}%` }}

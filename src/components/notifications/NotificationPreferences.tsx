@@ -90,9 +90,9 @@ export function NotificationPreferences() {
 
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label htmlFor="appointment_reminders">Lembretes de Consultas</Label>
+              <Label htmlFor="appointment_reminders">Lembretes de Sessões</Label>
               <p className="text-xs text-muted-foreground">
-                Receba lembretes sobre suas consultas agendadas
+                Receba lembretes sobre suas sessões agendadas
               </p>
             </div>
             <Switch

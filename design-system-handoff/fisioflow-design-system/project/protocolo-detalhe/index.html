@@ -1,0 +1,223 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="Protocolo (detalhe) · Comparar layouts" subtitle="Switcher das 4 direções da página de cada protocolo + 12 insights de incremento" viewport="1440x980" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Página do Protocolo — Explorações de layout</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  body { margin: 0; background: hsl(var(--background)); font-family: var(--font-sans); color: hsl(var(--foreground)); }
+  .wrap { max-width: 1500px; margin: 0 auto; padding: 26px 28px 60px; }
+
+  header.hero { display: flex; align-items: flex-end; gap: 18px; margin-bottom: 20px; }
+  header.hero .logo { width: 46px; height: 46px; border-radius: 13px; background: hsl(var(--primary) / .12); color: hsl(var(--primary)); display: flex; align-items: center; justify-content: center; padding: 7px; }
+  header.hero .logo img { width: 100%; }
+  header.hero h1 { font-size: 25px; font-weight: 800; letter-spacing: -0.02em; }
+  header.hero p { font-size: 13px; color: hsl(var(--muted-foreground)); font-weight: 600; margin-top: 3px; }
+  header.hero .meta { margin-left: auto; font-size: 11.5px; font-weight: 700; color: hsl(var(--muted-foreground)); text-align: right; line-height: 1.5; }
+
+  .opts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
+  .opt { display: flex; flex-direction: column; gap: 9px; padding: 14px; border: 1.5px solid hsl(var(--border)); border-radius: 16px; background: hsl(var(--card)); cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .15s; text-align: left; font-family: var(--font-sans); }
+  .opt:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .opt.on { border-color: hsl(var(--primary)); box-shadow: var(--shadow-glow-primary); }
+  .opt .ob { width: 34px; height: 34px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 900; font-size: 15px; color: #fff; }
+  .opt:nth-child(1) .ob { background: hsl(211 100% 50%); }
+  .opt:nth-child(2) .ob { background: hsl(264 50% 55%); }
+  .opt:nth-child(3) .ob { background: hsl(0 75% 58%); }
+  .opt:nth-child(4) .ob { background: hsl(158 64% 40%); }
+  .opt .ot { font-size: 14px; font-weight: 800; letter-spacing: -0.01em; }
+  .opt .od { font-size: 11px; font-weight: 600; color: hsl(var(--muted-foreground)); margin-top: 2px; line-height: 1.4; }
+  .opt .tags { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+  .opt .tg { font-size: 9px; font-weight: 800; letter-spacing: .02em; padding: 3px 7px; border-radius: 999px; background: hsl(var(--secondary)); color: hsl(var(--muted-foreground)); }
+
+  .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .toolbar .now { font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 9px; }
+  .toolbar .now .pip { width: 10px; height: 10px; border-radius: 50%; }
+  .toolbar .grow { flex: 1; }
+  .toolbar a.open { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 10px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); font-size: 12px; font-weight: 800; color: hsl(var(--foreground)); text-decoration: none; }
+  .toolbar a.open:hover { background: hsl(var(--secondary)); }
+  .toolbar a.open svg { width: 14px; height: 14px; }
+
+  .stage { background: #0d1117; border-radius: 20px; overflow: hidden; position: relative; box-shadow: var(--shadow-lg); }
+  .scaler { transform-origin: top left; }
+  .scaler iframe { width: 1328px; height: 928px; border: 0; display: block; }
+
+  /* insights */
+  .ins-head { display: flex; align-items: baseline; gap: 12px; margin: 30px 0 14px; }
+  .ins-head h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; display: flex; align-items: center; gap: 9px; }
+  .ins-head h2 svg { width: 19px; height: 19px; color: hsl(var(--primary)); }
+  .ins-head span { font-size: 12px; font-weight: 600; color: hsl(var(--muted-foreground)); }
+  .ins { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .in { border: 1px solid hsl(var(--border)); border-radius: 16px; background: hsl(var(--card)); padding: 16px 18px; display: flex; flex-direction: column; gap: 7px; }
+  .in .top { display: flex; align-items: center; gap: 9px; }
+  .in .num { width: 26px; height: 26px; border-radius: 9px; background: hsl(var(--primary) / .1); color: hsl(var(--primary)); font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .in h3 { font-size: 13px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.3; }
+  .in p { margin: 0; font-size: 11.5px; font-weight: 600; color: hsl(var(--muted-foreground)); line-height: 1.5; }
+  .in .tags { display: flex; gap: 5px; margin-top: auto; padding-top: 7px; }
+  .in .tag { font-size: 8.5px; font-weight: 800; letter-spacing: .04em; padding: 3px 8px; border-radius: 999px; }
+  .in .tag.imp { background: hsl(211 100% 50% / .1); color: hsl(211 100% 40%); }
+  .in .tag.eff { background: hsl(var(--secondary)); color: hsl(var(--muted-foreground)); }
+  .in .tag.where { background: hsl(158 60% 45% / .1); color: hsl(158 60% 28%); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="logo"><img src="../assets/activity-logo.svg" alt=""/></div>
+    <div>
+      <h1>Página do Protocolo — 4 direções de layout</h1>
+      <p>Detalhe de um protocolo aplicado · Tendinopatia patelar — HSR (Padrão Ouro) · 12 semanas · 3 fases</p>
+    </div>
+    <div class="meta">FisioFlow · Mooca Fisio<br/>Desktop 1280 × 880</div>
+  </header>
+
+  <div class="opts">
+    <button class="opt on" data-i="0">
+      <div class="ob">A</div>
+      <div>
+        <div class="ot">Dossiê clínico</div>
+        <div class="od">Evolução do layout atual: fases com objetivos/critérios/intervenções, exercícios com vídeo e rail com marcos, testes, segurança, pacientes e evidência.</div>
+        <div class="tags"><span class="tg">COMPLETO</span><span class="tg">FAMILIAR</span><span class="tg">RAIL CLÍNICO</span></div>
+      </div>
+    </button>
+    <button class="opt" data-i="1">
+      <div class="ob">B</div>
+      <div>
+        <div class="ot">Linha do tempo</div>
+        <div class="od">As 12 semanas como timeline navegável: marcos e alertas no tempo, gate de progressão com status real, dose 15RM→6RM e pacientes posicionados na semana em que estão.</div>
+        <div class="tags"><span class="tg">TEMPORAL</span><span class="tg">GATE VISUAL</span><span class="tg">DOSE</span></div>
+      </div>
+    </button>
+    <button class="opt" data-i="2">
+      <div class="ob">C</div>
+      <div>
+        <div class="ot">Player de mídias</div>
+        <div class="od">Media-first: player grande com ângulos de câmera, playlist por fase, dose e erros comuns do exercício atual. Inclui vídeos de educação do paciente.</div>
+        <div class="tags"><span class="tg">MÍDIA</span><span class="tg">PLAYLIST</span><span class="tg">EDUCAÇÃO</span></div>
+      </div>
+    </button>
+    <button class="opt" data-i="3">
+      <div class="ob">D</div>
+      <div>
+        <div class="ot">Painel operacional</div>
+        <div class="od">O protocolo como ativo da clínica: eficácia real (ΔEVA, taxa de alta), pacientes ativos com adesão, comparação entre versões, changelog e evidência.</div>
+        <div class="tags"><span class="tg">RESULTADOS</span><span class="tg">VERSÕES</span><span class="tg">GESTÃO</span></div>
+      </div>
+    </button>
+  </div>
+
+  <div class="toolbar">
+    <div class="now"><span class="pip" id="pip"></span><span id="nowlbl">Opção A — Dossiê clínico</span></div>
+    <div class="grow"></div>
+    <a class="open" id="openlink" href="Opção A - Dossiê clínico.html" target="_blank"><i data-lucide="external-link"></i> Abrir em tela cheia</a>
+  </div>
+
+  <div class="stage">
+    <div class="scaler" id="scaler">
+      <iframe id="frame" src="Opção A - Dossiê clínico.html" title="Layout"></iframe>
+    </div>
+  </div>
+
+  <div class="ins-head">
+    <h2><i data-lucide="lightbulb"></i> 12 insights para incrementar a página do protocolo</h2>
+    <span>cada um aparece em pelo menos uma das opções acima — dá para combinar</span>
+  </div>
+  <div class="ins">
+    <div class="in">
+      <div class="top"><span class="num">1</span><h3>Critérios de progressão como gate objetivo</h3></div>
+      <p>Hoje a tela diz "sem critérios formais definidos". Cada fase deveria ter um checklist mensurável (EVA ≤ 3 no decline squat, 6RM sem dor, VISA-P ≥ 70) que trava/destrava a próxima fase — e mostra o status real do paciente.</p>
+      <div class="tags"><span class="tag imp">IMPACTO ALTO</span><span class="tag eff">ESFORÇO MÉDIO</span><span class="tag where">OPÇÕES A · B</span></div>
+    </div>
+    <div class="in">
+      <div class="top"><span class="num">2</span><h3>Testes clínicos vinculados por fase</h3></div>
+      <p>O protocolo mostra "0 testes vinculados". Sugerir automaticamente os testes da patologia (decline squat, VISA-P, hop test) e agendá-los nos marcos W4/W8/W12 — o resultado alimenta o gate do insight 1.</p>
+      <div class="tags"><span class="tag imp">IMPACTO ALTO</span><span class="tag eff">ESFORÇO BAIXO</span><span class="tag where">OPÇÕES A · B</span></div>
+    </div>
+    <div class="in">
+      <div class="top"><span class="num">3</span><h3>Mídia por exercício + capa do protocolo</h3></div>
+      <p>Vídeo demonstrativo com múltiplos ângulos, duração e marcação de "sem vídeo · gravar agora" para completar a biblioteca. A capa visual ajuda a reconhecer o protocolo na listagem.</p>
+      <div class="tags"><span class="tag imp">IMPACTO ALTO</span><span class="tag eff">ESFORÇO MÉDIO</span><span class="tag where">OPÇÃO C</span></div>
+    </div>
+    <div class="in">
+      <div class="top"><span class="num">4</span><h3>Dose progressiva visível (não só fases)</h3></div>
+      <p>HSR é definido pela progressão 15RM → 6RM com tempo 3-0-3. Mostrar a rampa de carga semana a semana — e onde o paciente está nela — em vez de esconder a dose dentro de cada exercício.</p>
+      <div class="tags"><span class="tag imp">IMPACTO ALTO</span><span class="tag eff">ESFORÇO BAIXO</span><span class="tag where">OPÇÃO B</span></div>
+    </div>
+    <div class="in">
+      <div class="top"><span class="num">5</span><h3>Pacientes ativos dentro do protocolo</h3></div>
+      <p>Quem está usando este protocolo agora, em que fase/semana, com que adesão ao HEP e quando é a próxima sessão. Transforma a página de "documento" em painel de acompanhamento.</p>
+      <div class="tags"><span class="tag imp">IMPACTO ALTO</span><span class="tag eff">ESFORÇO MÉDIO</span><span class="tag where">OPÇÕES A · B · D</span></div>
+    </div>
+    <div class="in">
+      <div class="top"><span class="num">6</span><h3>Resultados agregados — eficácia real</h3></div>
+      <p>ΔEVA médio entrada→saída, tempo médio até a alta, taxa de conclusão. É o que diferencia um protocolo "Padrão Ouro" de verdade — com dados da própria clínica, não só da literatura.</p>
+      <div class="tags"><span class="tag imp">IMPACTO ALTO</span><span class="tag eff">ESFORÇO ALTO</span><span class="tag where">OPÇÃO D</span></div>
+    </div>
+    <div class="in">
+      <div class="top"><span class="num">7</span><h3>Versionamento com changelog</h3></div>
+      <p>v1.0 → v1.3 com autor, data, o que mudou e revisão por pares. Permite comparar a eficácia entre versões (a v1.3 melhorou o VISA-P de alta?) e dá governança clínica ao acervo.</p>
+      <div class="tags"><span class="tag imp">IMPACTO MÉDIO</span><span class="tag eff">ESFORÇO MÉDIO</span><span class="tag where">OPÇÃO D</span></div>
+    </div>
+    <div class="in">
+      <div class="top"><span class="num">8</span><h3>Alertas de segurança por fase</h3></div>
+      <p>Contraindicações e red flags com destaque visual e regra de ação ("dor &gt; 5/10 por 24 h → regredir carga 20%"). Aparecem na fase em que valem, não escondidos no rodapé.</p>
+      <div class="tags"><span class="tag imp">IMPACTO ALTO</span><span class="tag eff">ESFORÇO BAIXO</span><span class="tag where">OPÇÕES A · B</span></div>
+    </div>
+    <div class="in">
+      <div class="top"><span class="num">9</span><h3>Evidência científica ligada à Wiki</h3></div>
+      <p>Referências com nível de evidência (Kongsgaard 2009, Malliaras 2015) linkadas ao módulo correspondente da Wiki Clínica. Fundamenta o selo "Nível A" que já existe na tela.</p>
+      <div class="tags"><span class="tag imp">IMPACTO MÉDIO</span><span class="tag eff">ESFORÇO BAIXO</span><span class="tag where">OPÇÕES A · D</span></div>
+    </div>
+    <div class="in">
+      <div class="top"><span class="num">10</span><h3>Versão do paciente (app + PDF)</h3></div>
+      <p>Um clique gera o que o paciente vê no app: vídeos, séries/reps e check diário — mais vídeos de educação ("o que é a tendinopatia"). Preview do lado do fisio antes de enviar.</p>
+      <div class="tags"><span class="tag imp">IMPACTO ALTO</span><span class="tag eff">ESFORÇO MÉDIO</span><span class="tag where">OPÇÕES B · C</span></div>
+    </div>
+    <div class="in">
+      <div class="top"><span class="num">11</span><h3>IA: ajuste sugerido pelo diário de dor</h3></div>
+      <p>Se o diário de dor do paciente sobe por 3 dias seguidos, a IA sugere regredir carga ou estender a semana — com justificativa. Fecha o ciclo protocolo → app do paciente → protocolo.</p>
+      <div class="tags"><span class="tag imp">IMPACTO ALTO</span><span class="tag eff">ESFORÇO ALTO</span><span class="tag where">OPÇÃO D</span></div>
+    </div>
+    <div class="in">
+      <div class="top"><span class="num">12</span><h3>Comparar protocolos da mesma patologia</h3></div>
+      <p>HSR vs excêntrico de Alfredson lado a lado: duração, adesão média, resultados na clínica. Ajuda a escolher o protocolo certo para o perfil do paciente — e substitui o box de "relacionados por IA" por algo acionável.</p>
+      <div class="tags"><span class="tag imp">IMPACTO MÉDIO</span><span class="tag eff">ESFORÇO MÉDIO</span><span class="tag where">OPÇÃO D</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const files = ['Opção A - Dossiê clínico.html','Opção B - Linha do tempo.html','Opção C - Player de mídias.html','Opção D - Painel operacional.html'];
+  const labels = ['Opção A — Dossiê clínico','Opção B — Linha do tempo','Opção C — Player de mídias','Opção D — Painel operacional'];
+  const pips = ['hsl(211 100% 50%)','hsl(264 50% 55%)','hsl(0 75% 58%)','hsl(158 64% 40%)'];
+  const opts = [...document.querySelectorAll('.opt')];
+  const frame = document.getElementById('frame');
+  const scaler = document.getElementById('scaler');
+  const stage = document.querySelector('.stage');
+  const openlink = document.getElementById('openlink');
+
+  function fit(){
+    const w = stage.clientWidth;
+    const s = w / 1328;
+    scaler.style.transform = 'scale(' + s + ')';
+    stage.style.height = (928 * s) + 'px';
+  }
+  function select(i){
+    opts.forEach((o,k)=>o.classList.toggle('on', k===i));
+    frame.src = files[i];
+    document.getElementById('nowlbl').textContent = labels[i];
+    document.getElementById('pip').style.background = pips[i];
+    openlink.setAttribute('href', files[i]);
+    fit();
+  }
+  opts.forEach((o,i)=>o.addEventListener('click',()=>select(i)));
+  window.addEventListener('resize', fit);
+  document.getElementById('pip').style.background = pips[0];
+  fit();
+  if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>

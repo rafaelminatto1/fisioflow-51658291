@@ -1,0 +1,220 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="Protocolo · C — Player de mídias" subtitle="Detalhe do protocolo media-first: player grande, playlist por fase, dose e erros comuns do exercício" viewport="1328x928" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Protocolo · Opção C — Player de mídias</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<link rel="stylesheet" href="../ui_kits/web/screen-shell.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  .body { display: grid; grid-template-columns: 1fr 348px; min-height: 0; }
+  .main { overflow-y: auto; min-height: 0; padding: 18px 22px 26px; }
+  .rail { border-left: 1px solid hsl(var(--border)); background: hsl(var(--muted) / .35); overflow-y: auto; min-height: 0; display: grid; grid-template-rows: auto auto 1fr; }
+
+  .d-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .d-head h2 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  .d-head .meta { display: flex; gap: 6px; margin-top: 4px; }
+
+  /* player */
+  .player { border-radius: 18px; overflow: hidden; border: 1px solid hsl(var(--border)); background: #0d1117; }
+  .screen-area { aspect-ratio: 16 / 8.4; position: relative; background:
+    radial-gradient(ellipse at 50% 40%, hsl(220 16% 22%), #0d1117 75%); display: flex; align-items: center; justify-content: center; }
+  .screen-area .bigplay { width: 64px; height: 64px; border-radius: 50%; background: hsl(var(--primary)); color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 32px hsl(211 100% 50% / .45); cursor: pointer; }
+  .screen-area .bigplay i { width: 26px; height: 26px; margin-left: 3px; }
+  .screen-area .corner { position: absolute; left: 14px; top: 12px; display: flex; gap: 7px; }
+  .screen-area .angle { position: absolute; right: 14px; top: 12px; display: flex; gap: 5px; }
+  .screen-area .angle span { font-size: 9.5px; font-weight: 800; letter-spacing: .04em; padding: 4px 9px; border-radius: 999px; background: rgba(255,255,255,.1); color: rgba(255,255,255,.75); }
+  .screen-area .angle span.on { background: hsl(var(--primary)); color: #fff; }
+  .pbar { display: flex; align-items: center; gap: 12px; padding: 11px 16px; background: #11161d; }
+  .pbar i { width: 16px; height: 16px; color: rgba(255,255,255,.8); cursor: pointer; }
+  .pbar .track { flex: 1; height: 5px; border-radius: 999px; background: rgba(255,255,255,.15); position: relative; }
+  .pbar .track .fill { position: absolute; inset: 0 68% 0 0; border-radius: 999px; background: hsl(var(--primary)); }
+  .pbar .tm { font-size: 10.5px; font-weight: 700; color: rgba(255,255,255,.65); font-variant-numeric: tabular-nums; }
+
+  /* exercise info under player */
+  .exinfo { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .xcard { padding: 14px 16px; }
+  .xcard h4 { font-size: 9.5px; font-weight: 800; letter-spacing: .08em; color: hsl(var(--muted-foreground)); margin-bottom: 8px; display: flex; gap: 6px; align-items: center; }
+  .xcard h4 i { width: 12px; height: 12px; }
+  .xcard .big { font-size: 16px; font-weight: 800; letter-spacing: -0.01em; }
+  .xcard .sub { font-size: 11.5px; font-weight: 600; color: hsl(var(--muted-foreground)); margin-top: 3px; line-height: 1.45; }
+  .dosegrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .dosegrid .d { text-align: center; border: 1px solid hsl(var(--border)); border-radius: 10px; padding: 8px 2px; }
+  .dosegrid .d b { display: block; font-size: 15px; font-weight: 800; }
+  .dosegrid .d span { font-size: 8.5px; font-weight: 800; letter-spacing: .04em; color: hsl(var(--muted-foreground)); }
+  .err { display: flex; gap: 7px; font-size: 11px; font-weight: 600; line-height: 1.4; }
+  .err + .err { margin-top: 6px; }
+  .err i { width: 13px; height: 13px; color: hsl(0 70% 50%); flex-shrink: 0; margin-top: 1px; }
+
+  /* rail: fase tabs + playlist */
+  .ftabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 14px 14px 10px; }
+  .ftab { text-align: center; padding: 8px 4px; border-radius: 10px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); cursor: pointer; }
+  .ftab b { display: block; font-size: 11px; font-weight: 800; }
+  .ftab span { font-size: 8.5px; font-weight: 800; letter-spacing: .05em; color: hsl(var(--muted-foreground)); }
+  .ftab.on { border-color: hsl(var(--primary)); background: hsl(var(--primary) / .07); }
+  .ftab.on b { color: hsl(var(--primary)); }
+  .plhead { display: flex; align-items: center; justify-content: space-between; padding: 4px 18px 8px; }
+  .plhead h3 { font-size: 12px; font-weight: 800; }
+  .plhead span { font-size: 10px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  .pl { overflow-y: auto; min-height: 0; padding: 0 12px 16px; }
+  .pli { display: flex; gap: 10px; padding: 8px; border-radius: 12px; cursor: pointer; align-items: center; }
+  .pli:hover { background: hsl(var(--secondary)); }
+  .pli.on { background: hsl(var(--primary) / .08); box-shadow: 0 0 0 1px hsl(var(--primary) / .4); }
+  .pli .th { width: 74px; height: 48px; border-radius: 9px; flex-shrink: 0; background: repeating-linear-gradient(45deg, hsl(220 14% 94%), hsl(220 14% 94%) 5px, hsl(220 14% 90%) 5px, hsl(220 14% 90%) 10px); border: 1px solid hsl(var(--border)); display: flex; align-items: center; justify-content: center; position: relative; }
+  .pli .th .pp { width: 18px; height: 18px; border-radius: 50%; background: hsl(var(--primary)); color: #fff; display: flex; align-items: center; justify-content: center; }
+  .pli .th .pp i { width: 9px; height: 9px; }
+  .pli .th .dur { position: absolute; right: 4px; bottom: 4px; font-size: 8px; font-weight: 800; background: rgba(13,17,23,.75); color: #fff; padding: 1px 5px; border-radius: 5px; }
+  .pli .in { flex: 1; min-width: 0; }
+  .pli .nm { font-size: 11.5px; font-weight: 800; line-height: 1.3; }
+  .pli .mt { font-size: 9.5px; font-weight: 700; color: hsl(var(--muted-foreground)); margin-top: 2px; }
+  .pli .num { font-size: 10px; font-weight: 800; color: hsl(var(--muted-foreground)); width: 14px; text-align: right; }
+</style>
+</head>
+<body>
+<div class="pad">
+
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><img src="../assets/activity-logo.svg" alt=""/></div>
+      <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div>
+        <div class="sb-group-label">ATENDIMENTO</div>
+        <div class="sb-item"><i data-lucide="calendar-days"></i> AGENDA</div>
+        <div class="sb-item"><i data-lucide="users"></i> PACIENTES</div>
+        <div class="sb-item"><i data-lucide="message-circle"></i> CRM · WHATSAPP</div>
+      </div>
+      <div>
+        <div class="sb-group-label">CLÍNICA</div>
+        <div class="sb-item"><i data-lucide="clipboard-check"></i> AVALIAÇÕES</div>
+        <div class="sb-item"><i data-lucide="dumbbell"></i> EXERCÍCIOS</div>
+        <div class="sb-item is-active"><i data-lucide="clipboard-list"></i> PROTOCOLOS</div>
+        <div class="sb-item"><i data-lucide="flask-conical"></i> TESTES CLÍNICOS</div>
+        <div class="sb-item"><i data-lucide="camera"></i> BIOMECÂNICA</div>
+      </div>
+      <div>
+        <div class="sb-group-label">GESTÃO &amp; OPERAÇÃO</div>
+        <div class="sb-item"><i data-lucide="layout-dashboard"></i> BOARDS</div>
+        <div class="sb-item"><i data-lucide="wallet"></i> FINANCEIRO</div>
+        <div class="sb-item"><i data-lucide="book-open"></i> WIKI CLÍNICA</div>
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-item"><i data-lucide="settings"></i> CONFIGURAÇÕES</div>
+      <div class="sb-item"><i data-lucide="log-out"></i> SAIR</div>
+    </div>
+  </aside>
+
+  <div class="content">
+    <div class="topbar">
+      <div class="crumbs">Protocolos <i data-lucide="chevron-right"></i> Tendinopatia patelar — HSR <i data-lucide="chevron-right"></i> <strong>Mídias</strong></div>
+      <div class="topbar-right">
+        <button class="btn"><i data-lucide="video"></i> Gravar exercício</button>
+        <button class="btn primary"><i data-lucide="send"></i> Enviar ao paciente</button>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="main">
+        <div class="d-head">
+          <div>
+            <h2>Tendinopatia patelar — HSR (Padrão Ouro)</h2>
+            <div class="meta">
+              <span class="badge info">FASE 2 · HSR</span>
+              <span class="badge muted">EXERCÍCIO 1 DE 4</span>
+              <span class="badge ok">11 DE 12 COM VÍDEO</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="player">
+          <div class="screen-area">
+            <div class="corner"><span class="badge info">DEMONSTRAÇÃO</span></div>
+            <div class="angle"><span class="on">LATERAL</span><span>FRONTAL</span><span>45°</span></div>
+            <div class="bigplay"><i data-lucide="play"></i></div>
+          </div>
+          <div class="pbar">
+            <i data-lucide="play"></i>
+            <i data-lucide="skip-forward"></i>
+            <span class="tm">0:13</span>
+            <div class="track"><div class="fill"></div></div>
+            <span class="tm">0:42</span>
+            <i data-lucide="volume-2"></i>
+            <i data-lucide="maximize"></i>
+          </div>
+        </div>
+
+        <div class="exinfo">
+          <div class="card xcard">
+            <h4><i data-lucide="dumbbell"></i> EXERCÍCIO ATUAL</h4>
+            <div class="big">Agachamento em decline 25°</div>
+            <div class="sub">Sobrecarga seletiva do tendão patelar. Tronco vertical, descida controlada em 3 s, sem pausa, subida em 3 s.</div>
+          </div>
+          <div class="card xcard">
+            <h4><i data-lucide="gauge"></i> DOSE — SEMANA 5</h4>
+            <div class="dosegrid">
+              <div class="d"><b>4×8</b><span>SÉRIES</span></div>
+              <div class="d"><b>70%</b><span>RM</span></div>
+              <div class="d"><b>3-0-3</b><span>TEMPO</span></div>
+            </div>
+            <div class="sub" style="margin-top:8px;">Descanso 2 min · dor aceitável até 3/10</div>
+          </div>
+          <div class="card xcard">
+            <h4><i data-lucide="alert-circle"></i> ERROS COMUNS</h4>
+            <div class="err"><i data-lucide="x"></i> Inclinar o tronco à frente (transfere ao quadril)</div>
+            <div class="err"><i data-lucide="x"></i> Descer rápido demais — quebrar o tempo de 3 s</div>
+            <div class="err"><i data-lucide="x"></i> Valgo dinâmico de joelho na subida</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rail">
+        <div class="ftabs">
+          <div class="ftab"><b>Fase 1</b><span>3 VÍDEOS</span></div>
+          <div class="ftab on"><b>Fase 2</b><span>4 VÍDEOS</span></div>
+          <div class="ftab"><b>Fase 3</b><span>5 VÍDEOS</span></div>
+        </div>
+        <div class="plhead"><h3>Playlist — Fase 2 · HSR</h3><span>2:43 total</span></div>
+        <div class="pl">
+          <div class="pli on">
+            <span class="num">1</span>
+            <div class="th"><span class="pp"><i data-lucide="play"></i></span><span class="dur">0:42</span></div>
+            <div class="in"><div class="nm">Agachamento em decline 25°</div><div class="mt">4×8 · 70% RM · 3 ângulos</div></div>
+          </div>
+          <div class="pli">
+            <span class="num">2</span>
+            <div class="th"><span class="pp"><i data-lucide="play"></i></span><span class="dur">0:38</span></div>
+            <div class="in"><div class="nm">Leg press 45°</div><div class="mt">4×8 · 120 kg · 1 ângulo</div></div>
+          </div>
+          <div class="pli">
+            <span class="num">3</span>
+            <div class="th"><span class="pp"><i data-lucide="play"></i></span><span class="dur">0:51</span></div>
+            <div class="in"><div class="nm">Hack squat</div><div class="mt">4×8 · 80 kg · 2 ângulos</div></div>
+          </div>
+          <div class="pli">
+            <span class="num">4</span>
+            <div class="th"><i data-lucide="video-off" style="width:14px;height:14px;color:hsl(var(--muted-foreground));"></i></div>
+            <div class="in"><div class="nm">Extensão de joelho unilateral</div><div class="mt">sem vídeo · <b style="color:hsl(var(--primary));">gravar agora</b></div></div>
+          </div>
+          <div class="plhead" style="padding: 14px 6px 8px;"><h3>Educação do paciente</h3><span>2 vídeos</span></div>
+          <div class="pli">
+            <span class="num">•</span>
+            <div class="th"><span class="pp"><i data-lucide="play"></i></span><span class="dur">1:20</span></div>
+            <div class="in"><div class="nm">O que é a tendinopatia patelar</div><div class="mt">enviado no início do protocolo</div></div>
+          </div>
+          <div class="pli">
+            <span class="num">•</span>
+            <div class="th"><span class="pp"><i data-lucide="play"></i></span><span class="dur">0:58</span></div>
+            <div class="in"><div class="nm">Como usar a escala de dor</div><div class="mt">enviado com o diário de dor</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();</script>
+</body>
+</html>

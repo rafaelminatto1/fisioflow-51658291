@@ -1,0 +1,236 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="Protocolo · B — Linha do tempo" subtitle="Detalhe do protocolo como timeline de 12 semanas: marcos, alertas, dose progressiva e pacientes posicionados" viewport="1328x928" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Protocolo · Opção B — Linha do tempo</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<link rel="stylesheet" href="../ui_kits/web/screen-shell.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  .main { overflow-y: auto; min-height: 0; padding: 20px 24px 28px; }
+
+  .d-head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .d-head h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+  .d-head .meta { display: flex; gap: 7px; margin-top: 5px; }
+
+  /* timeline hero */
+  .tl { padding: 18px 20px 16px; }
+  .tl .hd { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+  .tl .hd h3 { font-size: 13px; font-weight: 800; letter-spacing: .05em; color: hsl(var(--muted-foreground)); }
+  .tl .hd .leg { display: flex; gap: 14px; font-size: 10.5px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  .tl .hd .leg span { display: inline-flex; align-items: center; gap: 5px; }
+  .tl .hd .leg i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+  .weeks { display: grid; grid-template-columns: repeat(12, 1fr); gap: 5px; }
+  .wk { border-radius: 10px; padding: 7px 0 8px; text-align: center; position: relative; border: 1px solid transparent; }
+  .wk .n { font-size: 10px; font-weight: 800; color: hsl(var(--muted-foreground)); }
+  .wk .bar { height: 34px; border-radius: 8px; margin: 6px 5px 0; }
+  .wk.f1 .bar { background: hsl(264 50% 55% / .8); }
+  .wk.f2 .bar { background: hsl(211 100% 50% / .85); }
+  .wk.f3 .bar { background: hsl(158 55% 42% / .85); }
+  .wk.now { border-color: hsl(var(--primary)); background: hsl(var(--primary) / .05); }
+  .wk.now .n { color: hsl(var(--primary)); }
+  .wk .flag { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); width: 20px; height: 20px; border-radius: 50%; background: hsl(158 55% 38%); color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+  .wk .flag i { width: 10px; height: 10px; }
+  .wk .flag.alert { background: hsl(38 92% 45%); }
+  .phaselbl { display: grid; grid-template-columns: 2fr 6fr 4fr; gap: 5px; margin-top: 8px; }
+  .phaselbl span { font-size: 10px; font-weight: 800; letter-spacing: .04em; text-align: center; padding: 5px; border-radius: 7px; }
+  .phaselbl .p1 { color: hsl(264 45% 42%); background: hsl(264 50% 55% / .1); }
+  .phaselbl .p2 { color: hsl(211 90% 38%); background: hsl(211 100% 50% / .1); }
+  .phaselbl .p3 { color: hsl(158 50% 30%); background: hsl(158 55% 42% / .12); }
+
+  /* patients under timeline */
+  .tl-pats { display: grid; grid-template-columns: repeat(12, 1fr); gap: 5px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed hsl(var(--border)); }
+  .tl-pats .cell { display: flex; justify-content: center; gap: 2px; }
+  .tl-pats .av { width: 22px; height: 22px; font-size: 8px; border: 2px solid hsl(var(--card)); }
+
+  /* week detail grid */
+  .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; margin-top: 16px; }
+  .panel { padding: 16px 18px; }
+  .panel h3 { font-size: 13.5px; font-weight: 800; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .panel h3 i { width: 15px; height: 15px; color: hsl(var(--primary)); }
+  .panel h3 .b { margin-left: auto; }
+
+  .gate { display: flex; flex-direction: column; gap: 8px; }
+  .gate .g { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid hsl(var(--border)); border-radius: 11px; font-size: 12px; font-weight: 700; }
+  .gate .g i { width: 15px; height: 15px; color: hsl(158 60% 38%); }
+  .gate .g.todo i { color: hsl(220 10% 72%); }
+  .gate .g .v { margin-left: auto; font-size: 11px; font-weight: 800; color: hsl(var(--muted-foreground)); font-variant-numeric: tabular-nums; }
+
+  /* dose progression bars */
+  .dose-bars { display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px; align-items: end; height: 96px; margin-top: 4px; }
+  .db { display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; justify-content: flex-end; }
+  .db .bar { width: 100%; border-radius: 7px 7px 3px 3px; background: hsl(211 100% 50% / .25); }
+  .db.on .bar { background: hsl(var(--primary)); }
+  .db .l { font-size: 9px; font-weight: 800; color: hsl(var(--muted-foreground)); }
+  .db .v { font-size: 9.5px; font-weight: 800; }
+  .dose-cap { font-size: 10.5px; color: hsl(var(--muted-foreground)); font-weight: 600; margin-top: 9px; }
+
+  /* media strip */
+  .media { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+  .m { border: 1px solid hsl(var(--border)); border-radius: 12px; overflow: hidden; background: hsl(var(--card)); }
+  .m .mt { height: 64px; background: repeating-linear-gradient(45deg, hsl(220 14% 94%), hsl(220 14% 94%) 5px, hsl(220 14% 90%) 5px, hsl(220 14% 90%) 10px); display: flex; align-items: center; justify-content: center; position: relative; }
+  .m .mt .play { width: 22px; height: 22px; border-radius: 50%; background: hsl(var(--primary)); color: #fff; display: flex; align-items: center; justify-content: center; }
+  .m .mt .play i { width: 11px; height: 11px; }
+  .m .mt .dur { position: absolute; right: 5px; bottom: 5px; font-size: 8.5px; font-weight: 800; background: rgba(13,17,23,.75); color: #fff; padding: 2px 6px; border-radius: 6px; }
+  .m .mi { padding: 7px 9px; }
+  .m .mn { font-size: 10.5px; font-weight: 800; line-height: 1.25; }
+  .m .md { font-size: 9px; font-weight: 700; color: hsl(var(--muted-foreground)); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="pad">
+
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><img src="../assets/activity-logo.svg" alt=""/></div>
+      <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div>
+        <div class="sb-group-label">ATENDIMENTO</div>
+        <div class="sb-item"><i data-lucide="calendar-days"></i> AGENDA</div>
+        <div class="sb-item"><i data-lucide="users"></i> PACIENTES</div>
+        <div class="sb-item"><i data-lucide="message-circle"></i> CRM · WHATSAPP</div>
+      </div>
+      <div>
+        <div class="sb-group-label">CLÍNICA</div>
+        <div class="sb-item"><i data-lucide="clipboard-check"></i> AVALIAÇÕES</div>
+        <div class="sb-item"><i data-lucide="dumbbell"></i> EXERCÍCIOS</div>
+        <div class="sb-item is-active"><i data-lucide="clipboard-list"></i> PROTOCOLOS</div>
+        <div class="sb-item"><i data-lucide="flask-conical"></i> TESTES CLÍNICOS</div>
+        <div class="sb-item"><i data-lucide="camera"></i> BIOMECÂNICA</div>
+      </div>
+      <div>
+        <div class="sb-group-label">GESTÃO &amp; OPERAÇÃO</div>
+        <div class="sb-item"><i data-lucide="layout-dashboard"></i> BOARDS</div>
+        <div class="sb-item"><i data-lucide="wallet"></i> FINANCEIRO</div>
+        <div class="sb-item"><i data-lucide="book-open"></i> WIKI CLÍNICA</div>
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-item"><i data-lucide="settings"></i> CONFIGURAÇÕES</div>
+      <div class="sb-item"><i data-lucide="log-out"></i> SAIR</div>
+    </div>
+  </aside>
+
+  <div class="content">
+    <div class="topbar">
+      <div class="crumbs">Protocolos <i data-lucide="chevron-right"></i> <strong>Tendinopatia patelar — HSR</strong></div>
+      <div class="topbar-right">
+        <button class="btn"><i data-lucide="download"></i> Versão do paciente</button>
+        <button class="btn primary"><i data-lucide="user-plus"></i> Aplicar a paciente</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="d-head">
+        <div>
+          <h2>Tendinopatia patelar — HSR (Padrão Ouro)</h2>
+          <div class="meta">
+            <span class="badge info">JOELHO</span>
+            <span class="badge ok">NÍVEL A</span>
+            <span class="badge muted">12 SEMANAS · 3 FASES · 3 MARCOS</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- timeline -->
+      <div class="card tl">
+        <div class="hd">
+          <h3>LINHA DO TEMPO · 12 SEMANAS</h3>
+          <div class="leg">
+            <span><i style="background:hsl(264 50% 55%);"></i> F1 Controle de dor</span>
+            <span><i style="background:hsl(211 100% 50%);"></i> F2 HSR</span>
+            <span><i style="background:hsl(158 55% 42%);"></i> F3 Retorno energético</span>
+            <span><i data-lucide="flag" style="width:11px;height:11px;border-radius:0;color:hsl(158 55% 35%);"></i> marco</span>
+          </div>
+        </div>
+        <div class="weeks">
+          <div class="wk f1"><span class="flag alert"><i data-lucide="alert-triangle"></i></span><div class="n">S1</div><div class="bar"></div></div>
+          <div class="wk f1"><div class="n">S2</div><div class="bar"></div></div>
+          <div class="wk f2"><div class="n">S3</div><div class="bar"></div></div>
+          <div class="wk f2"><span class="flag"><i data-lucide="flag"></i></span><div class="n">S4</div><div class="bar"></div></div>
+          <div class="wk f2 now"><div class="n">S5</div><div class="bar"></div></div>
+          <div class="wk f2"><div class="n">S6</div><div class="bar"></div></div>
+          <div class="wk f2"><div class="n">S7</div><div class="bar"></div></div>
+          <div class="wk f2"><span class="flag"><i data-lucide="flag"></i></span><div class="n">S8</div><div class="bar"></div></div>
+          <div class="wk f3"><div class="n">S9</div><div class="bar"></div></div>
+          <div class="wk f3"><div class="n">S10</div><div class="bar"></div></div>
+          <div class="wk f3"><div class="n">S11</div><div class="bar"></div></div>
+          <div class="wk f3"><span class="flag"><i data-lucide="award"></i></span><div class="n">S12</div><div class="bar"></div></div>
+        </div>
+        <div class="phaselbl">
+          <span class="p1">FASE 1 · ISOMETRIA</span>
+          <span class="p2">FASE 2 · HSR 15RM → 6RM</span>
+          <span class="p3">FASE 3 · PLIOMETRIA</span>
+        </div>
+        <div class="tl-pats">
+          <div class="cell"></div>
+          <div class="cell"><span class="av" style="background:hsl(28 80% 52%);">CS</span></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"><span class="av" style="background:hsl(264 55% 55%);">RM</span></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"><span class="av" style="background:hsl(158 55% 42%);">DP</span></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <div class="card panel">
+            <h3><i data-lucide="git-branch"></i> Gate da Fase 2 → Fase 3 <span class="b badge info">SEMANA ATUAL: S5</span></h3>
+            <div class="gate">
+              <div class="g"><i data-lucide="check-circle-2"></i> Decline squat test com EVA ≤ 3 <span class="v">EVA 2 · S4</span></div>
+              <div class="g"><i data-lucide="check-circle-2"></i> Carga de 8RM atingida sem dor &gt; 3 <span class="v">OK · S5</span></div>
+              <div class="g todo"><i data-lucide="circle"></i> 6RM sem dor &gt; 3/10 <span class="v">PREVISTO S7</span></div>
+              <div class="g todo"><i data-lucide="circle"></i> VISA-P ≥ 70 pontos <span class="v">ATUAL 61</span></div>
+            </div>
+          </div>
+
+          <div class="card panel" style="margin-top: 14px;">
+            <h3><i data-lucide="trending-up"></i> Dose progressiva — HSR <span class="b badge muted">SEMANAS 3–8</span></h3>
+            <div class="dose-bars">
+              <div class="db"><span class="v">15RM</span><div class="bar" style="height: 28%;"></div><span class="l">S3</span></div>
+              <div class="db"><span class="v">12RM</span><div class="bar" style="height: 42%;"></div><span class="l">S4</span></div>
+              <div class="db on"><span class="v">10RM</span><div class="bar" style="height: 56%;"></div><span class="l">S5</span></div>
+              <div class="db"><span class="v">8RM</span><div class="bar" style="height: 70%;"></div><span class="l">S6</span></div>
+              <div class="db"><span class="v">7RM</span><div class="bar" style="height: 84%;"></div><span class="l">S7</span></div>
+              <div class="db"><span class="v">6RM</span><div class="bar" style="height: 100%;"></div><span class="l">S8</span></div>
+            </div>
+            <div class="dose-cap">Tempo 3-0-3 em todos os exercícios · descanso 2 min · 3 sessões/semana. Dor aceitável até 3/10; acima disso por 24 h, regredir uma semana de carga.</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card panel">
+            <h3><i data-lucide="clapperboard"></i> Mídias da semana 5 <span class="b badge muted">4 DE 12</span></h3>
+            <div class="media">
+              <div class="m"><div class="mt"><span class="play"><i data-lucide="play"></i></span><span class="dur">0:42</span></div><div class="mi"><div class="mn">Decline squat 25°</div><div class="md">4×8 · 70% RM</div></div></div>
+              <div class="m"><div class="mt"><span class="play"><i data-lucide="play"></i></span><span class="dur">0:38</span></div><div class="mi"><div class="mn">Leg press 45°</div><div class="md">4×8 · 120 kg</div></div></div>
+              <div class="m"><div class="mt"><span class="play"><i data-lucide="play"></i></span><span class="dur">0:51</span></div><div class="mi"><div class="mn">Hack squat</div><div class="md">4×8 · 80 kg</div></div></div>
+              <div class="m"><div class="mt"><i data-lucide="image-plus" style="width:16px;height:16px;color:hsl(var(--muted-foreground));"></i></div><div class="mi"><div class="mn">Extensão de joelho</div><div class="md">sem vídeo · gravar</div></div></div>
+            </div>
+          </div>
+
+          <div class="card panel" style="margin-top: 14px;">
+            <h3><i data-lucide="shield-alert"></i> Segurança nesta fase</h3>
+            <div class="gate">
+              <div class="g" style="border-color: hsl(38 92% 50% / .4); background: hsl(38 92% 50% / .07);"><i data-lucide="alert-triangle" style="color:hsl(30 85% 40%);"></i> Sem saltos ou corrida até a semana 8</div>
+              <div class="g" style="border-color: hsl(0 84% 60% / .3); background: hsl(0 84% 60% / .05);"><i data-lucide="octagon-alert" style="color:hsl(0 70% 45%);"></i> Dor &gt; 5/10 por 24 h → regredir carga 20%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();</script>
+</body>
+</html>

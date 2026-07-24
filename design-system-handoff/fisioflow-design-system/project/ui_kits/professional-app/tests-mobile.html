@@ -1,0 +1,230 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Professional App" name="Professional App — Biblioteca de Testes (mobile)" subtitle="Busca + filtros + cards de testes (métricas e vista usada)" viewport="390x844" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Biblioteca de Testes — FisioFlow Pro (mobile)</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  body { margin: 0; background: #1a1d24; min-height: 100vh; display:flex; align-items:center; justify-content:center; padding: 20px; font-family: var(--font-sans); }
+
+  .app {
+    width: 390px; height: 844px; flex-shrink: 0;
+    background: hsl(var(--background)); color: hsl(var(--foreground));
+    border-radius: 48px; overflow: hidden; position: relative;
+    box-shadow: 0 0 0 12px #111, 0 0 0 14px #2a2d35, 0 30px 60px rgba(0,0,0,0.6);
+    display: flex; flex-direction: column;
+  }
+
+  .statusbar { display:flex; justify-content:space-between; align-items:center; padding: 14px 32px 6px; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+  .statusbar .sb-right { display:flex; align-items:center; gap: 6px; }
+  .statusbar .sb-right i { width: 16px; height: 16px; }
+
+  .header { padding: 4px 20px 12px; flex-shrink: 0; }
+  .header .top { display:flex; align-items:center; }
+  .header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+  .header .sub { font-size: 12px; font-weight: 600; color: hsl(var(--muted-foreground)); margin-top: 2px; }
+  .header .add { margin-left:auto; width: 42px; height: 42px; border-radius: 13px; background: hsl(var(--primary)); color: white; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .header .add:active { background: hsl(211 100% 44%); }
+  .header .add i { width: 20px; height: 20px; }
+
+  .search-box { display:flex; align-items:center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: hsl(var(--muted) / .7); margin-top: 14px; }
+  .search-box i { width: 17px; height: 17px; color: hsl(var(--muted-foreground)); }
+  .search-box input { border:none; background:transparent; outline:none; font-family: var(--font-sans); font-size: 14px; font-weight: 600; width:100%; color: hsl(var(--foreground)); }
+  .search-box input::placeholder { color: hsl(var(--muted-foreground)); }
+
+  /* filter chips */
+  .filters { display:flex; gap: 8px; overflow-x: auto; padding: 12px 20px 4px; flex-shrink: 0; }
+  .filters::-webkit-scrollbar { height: 0; }
+  .chip { display:inline-flex; align-items:center; gap: 7px; padding: 8px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); color: hsl(var(--muted-foreground)); cursor:pointer; white-space: nowrap; flex-shrink: 0; }
+  .chip .d { width: 8px; height: 8px; border-radius: 50%; }
+  .chip.sel { background: hsl(var(--primary)); color: white; border-color: hsl(var(--primary)); }
+  .chip.sel .d { display:none; }
+
+  /* list */
+  .scroll { flex: 1; overflow-y: auto; padding: 14px 20px 30px; display:flex; flex-direction: column; gap: 12px; }
+  .scroll::-webkit-scrollbar { width: 0; }
+  .sec-title { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin: 2px 0 -2px; }
+
+  .test { display:flex; gap: 0; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; overflow: hidden; cursor: pointer; }
+  .test:active { background: hsl(var(--muted) / .4); }
+  .test .vis { width: 104px; flex-shrink: 0; display:flex; align-items:center; justify-content:center; position: relative; }
+  .test .vis svg { height: 76%; opacity: .92; }
+  .vis.knee { background: linear-gradient(160deg, hsl(211 60% 96%), hsl(211 50% 89%)); }
+  .vis.gait { background: linear-gradient(160deg, hsl(264 50% 96%), hsl(264 45% 89%)); }
+  .vis.shoulder { background: linear-gradient(160deg, hsl(28 80% 96%), hsl(28 75% 89%)); }
+  .vis.trunk { background: linear-gradient(160deg, hsl(158 50% 95%), hsl(158 45% 88%)); }
+  .test .vis .views { position:absolute; bottom: 7px; left: 7px; display:flex; gap: 4px; }
+  .test .vis .views span { padding: 2px 6px; border-radius: 5px; background: rgba(255,255,255,.88); font-size: 8px; font-weight: 800; color: hsl(224 40% 35%); letter-spacing: 0.02em; }
+  .test .b { flex: 1; min-width: 0; padding: 13px 14px; display:flex; flex-direction: column; }
+  .test .row1 { display:flex; align-items:center; gap: 8px; }
+  .test .nm { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; }
+  .test .badge { margin-left:auto; padding: 3px 8px; border-radius: 999px; font-size: 8px; font-weight: 800; letter-spacing: 0.04em; }
+  .badge.knee { background: hsl(211 100% 93%); color: hsl(211 100% 38%); }
+  .badge.gait { background: hsl(264 60% 93%); color: hsl(264 50% 45%); }
+  .badge.shoulder { background: hsl(28 92% 92%); color: hsl(25 70% 38%); }
+  .badge.trunk { background: hsl(158 60% 92%); color: hsl(158 55% 30%); }
+  .test .ds { font-size: 11px; font-weight: 600; color: hsl(var(--muted-foreground)); line-height: 1.4; margin-top: 4px; }
+  .test .metrics { display:flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
+  .mtag { padding: 3px 8px; border-radius: 7px; background: hsl(var(--muted) / .8); font-size: 10px; font-weight: 700; }
+  .test .foot { display:flex; align-items:center; gap: 12px; margin-top: 10px; }
+  .test .meta { font-size: 10px; font-weight: 700; color: hsl(var(--muted-foreground)); display:flex; align-items:center; gap: 4px; }
+  .test .meta i { width: 12px; height: 12px; }
+  .test .go { margin-left:auto; display:flex; align-items:center; gap: 4px; font-size: 11px; font-weight: 800; color: hsl(var(--primary)); }
+  .test .go i { width: 13px; height: 13px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="sb-right"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+  </div>
+
+  <div class="header">
+    <div class="top">
+      <div>
+        <h1>Biblioteca de Testes</h1>
+        <div class="sub">12 protocolos · padronizados</div>
+      </div>
+      <div class="add"><i data-lucide="plus"></i></div>
+    </div>
+    <div class="search-box">
+      <i data-lucide="search"></i>
+      <input placeholder="Buscar teste…"/>
+    </div>
+  </div>
+
+  <div class="filters" id="filters">
+    <span class="chip sel">Todos</span>
+    <span class="chip"><span class="d" style="background:hsl(211 70% 50%);"></span> Joelho</span>
+    <span class="chip"><span class="d" style="background:hsl(264 50% 55%);"></span> Marcha</span>
+    <span class="chip"><span class="d" style="background:hsl(28 75% 50%);"></span> Ombro</span>
+    <span class="chip"><span class="d" style="background:hsl(158 50% 42%);"></span> Tronco/Postura</span>
+  </div>
+
+  <div class="scroll">
+    <div class="sec-title">Mais usados</div>
+
+    <!-- Agachamento -->
+    <div class="test">
+      <div class="vis knee">
+        <svg viewBox="0 0 120 200" fill="none" stroke="hsl(211 50% 45%)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="60" cy="28" r="11" fill="hsl(211 50% 45%)"/><path d="M60 39 L66 95 L62 110"/><path d="M66 95 Q44 118 40 142 Q48 168 70 170"/><path d="M62 70 Q90 78 100 64"/></svg>
+        <div class="views"><span>SAGITAL</span><span>FRONTAL</span></div>
+      </div>
+      <div class="b">
+        <div class="row1"><span class="nm">Agachamento</span><span class="badge knee">JOELHO</span></div>
+        <div class="ds">ROM de flexão, valgo dinâmico e inclinação de tronco na descida.</div>
+        <div class="metrics"><span class="mtag">ROM joelho</span><span class="mtag">Valgo</span><span class="mtag">Tronco</span></div>
+        <div class="foot">
+          <span class="meta"><i data-lucide="clock"></i> ~2 min</span>
+          <span class="meta"><i data-lucide="repeat"></i> 5 reps</span>
+          <span class="go">Iniciar <i data-lucide="arrow-right"></i></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Marcha -->
+    <div class="test">
+      <div class="vis gait">
+        <svg viewBox="0 0 120 200" fill="none" stroke="hsl(264 45% 50%)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="60" cy="26" r="11" fill="hsl(264 45% 50%)"/><path d="M60 37 L62 100"/><path d="M62 100 L44 150 L40 175"/><path d="M62 100 L82 148 L88 172"/><path d="M58 60 L40 92"/><path d="M58 60 L82 88"/></svg>
+        <div class="views"><span>SAGITAL</span></div>
+      </div>
+      <div class="b">
+        <div class="row1"><span class="nm">Análise de marcha</span><span class="badge gait">MARCHA</span></div>
+        <div class="ds">Cadência, comprimento de passada, simetria e tempo de apoio.</div>
+        <div class="metrics"><span class="mtag">Cadência</span><span class="mtag">Simetria</span><span class="mtag">Fase apoio</span></div>
+        <div class="foot">
+          <span class="meta"><i data-lucide="clock"></i> ~3 min</span>
+          <span class="meta"><i data-lucide="ruler"></i> 6 m</span>
+          <span class="go">Iniciar <i data-lucide="arrow-right"></i></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step-down -->
+    <div class="test">
+      <div class="vis knee">
+        <svg viewBox="0 0 120 200" fill="none" stroke="hsl(211 50% 45%)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="58" cy="28" r="11" fill="hsl(211 50% 45%)"/><path d="M58 39 L62 98"/><path d="M62 98 L52 140 L50 165"/><path d="M62 98 L78 135 L82 120"/><rect x="30" y="165" width="60" height="8" rx="2" fill="hsl(211 40% 60%)" stroke="none"/></svg>
+        <div class="views"><span>FRONTAL</span></div>
+      </div>
+      <div class="b">
+        <div class="row1"><span class="nm">Step-down</span><span class="badge knee">JOELHO</span></div>
+        <div class="ds">Controle pélvico (Trendelenburg) e valgo em descida unipodal.</div>
+        <div class="metrics"><span class="mtag">Queda pélvica</span><span class="mtag">Valgo</span></div>
+        <div class="foot">
+          <span class="meta"><i data-lucide="clock"></i> ~2 min</span>
+          <span class="meta"><i data-lucide="repeat"></i> 5 reps</span>
+          <span class="go">Iniciar <i data-lucide="arrow-right"></i></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Salto -->
+    <div class="test">
+      <div class="vis knee">
+        <svg viewBox="0 0 120 200" fill="none" stroke="hsl(211 50% 45%)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="60" cy="24" r="11" fill="hsl(211 50% 45%)"/><path d="M60 35 L60 88"/><path d="M60 88 L46 120 L48 150"/><path d="M60 88 L74 120 L72 150"/><path d="M58 50 L38 30"/><path d="M58 50 L82 30"/></svg>
+        <div class="views"><span>FRONTAL</span><span>SAGITAL</span></div>
+      </div>
+      <div class="b">
+        <div class="row1"><span class="nm">Salto vertical (CMJ)</span><span class="badge knee">JOELHO</span></div>
+        <div class="ds">Altura, simetria de impulsão e absorção na aterrissagem (LSI).</div>
+        <div class="metrics"><span class="mtag">Altura</span><span class="mtag">LSI</span><span class="mtag">Aterrissagem</span></div>
+        <div class="foot">
+          <span class="meta"><i data-lucide="clock"></i> ~2 min</span>
+          <span class="meta"><i data-lucide="repeat"></i> 3 reps</span>
+          <span class="go">Iniciar <i data-lucide="arrow-right"></i></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ombro -->
+    <div class="test">
+      <div class="vis shoulder">
+        <svg viewBox="0 0 120 200" fill="none" stroke="hsl(28 70% 48%)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="60" cy="32" r="11" fill="hsl(28 70% 48%)"/><path d="M60 43 L60 120"/><path d="M58 60 Q40 40 36 18"/><path d="M62 60 Q84 42 90 20"/><path d="M60 120 L48 170"/><path d="M60 120 L72 170"/></svg>
+        <div class="views"><span>FRONTAL</span></div>
+      </div>
+      <div class="b">
+        <div class="row1"><span class="nm">Elevação de ombro</span><span class="badge shoulder">OMBRO</span></div>
+        <div class="ds">ROM de flexão/abdução glenoumeral e ritmo escapuloumeral.</div>
+        <div class="metrics"><span class="mtag">ROM ombro</span><span class="mtag">Ritmo escapular</span></div>
+        <div class="foot">
+          <span class="meta"><i data-lucide="clock"></i> ~2 min</span>
+          <span class="meta"><i data-lucide="repeat"></i> 3 reps</span>
+          <span class="go">Iniciar <i data-lucide="arrow-right"></i></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Postura -->
+    <div class="test">
+      <div class="vis trunk">
+        <svg viewBox="0 0 120 200" fill="none" stroke="hsl(158 45% 38%)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="60" cy="26" r="11" fill="hsl(158 45% 38%)"/><path d="M60 37 L60 120"/><path d="M44 56 L76 56"/><path d="M60 120 L50 170"/><path d="M60 120 L70 170"/><line x1="60" y1="10" x2="60" y2="185" stroke="hsl(158 45% 60%)" stroke-width="1.5" stroke-dasharray="4 4"/></svg>
+        <div class="views"><span>FRONTAL</span><span>SAGITAL</span></div>
+      </div>
+      <div class="b">
+        <div class="row1"><span class="nm">Avaliação postural</span><span class="badge trunk">POSTURA</span></div>
+        <div class="ds">Alinhamento de cabeça, ombros, pelve e joelhos sobre o prumo.</div>
+        <div class="metrics"><span class="mtag">Alinhamento</span><span class="mtag">Assimetrias</span></div>
+        <div class="foot">
+          <span class="meta"><i data-lucide="clock"></i> ~3 min</span>
+          <span class="meta"><i data-lucide="camera"></i> foto</span>
+          <span class="go">Iniciar <i data-lucide="arrow-right"></i></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+<script>
+  const filters=document.getElementById('filters');
+  filters.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{
+    filters.querySelectorAll('.chip').forEach(o=>o.classList.remove('sel')); c.classList.add('sel');
+  }));
+  if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+</script>
+</body>
+</html>

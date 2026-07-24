@@ -1,0 +1,446 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Professional App" name="Professional App — CRM · WhatsApp (mobile)" subtitle="2 versões iOS 390×844 · Inbox vs. Funil" viewport="960x980" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>CRM · WhatsApp — FisioFlow (mobile)</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  body { margin: 0; background: #11141a; font-family: var(--font-sans); color: hsl(var(--foreground)); }
+  .canvas { width: max-content; min-width: 100%; min-height: 100vh; box-sizing: border-box; padding: 44px; display: flex; align-items: flex-start; gap: 40px; }
+  .frame-col { flex: none; display: flex; flex-direction: column; gap: 14px; }
+  .frame-label { display:flex; align-items:center; gap: 9px; color: #e7ebf2; }
+  .frame-label .ix { font-size: 12px; font-weight: 800; letter-spacing: 0.04em; padding: 4px 10px; border-radius: 999px; background: hsl(211 100% 50%); color: white; }
+  .frame-label .tt { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; }
+  .frame-label .ds { font-size: 12px; font-weight: 600; color: #8b93a3; }
+
+  .app {
+    width: 390px; height: 844px;
+    background: hsl(var(--background)); color: hsl(var(--foreground));
+    border-radius: 48px; overflow: hidden; position: relative;
+    box-shadow: 0 0 0 12px #111, 0 0 0 14px #2a2d35, 0 30px 60px rgba(0,0,0,0.55);
+    display: flex; flex-direction: column;
+  }
+
+  /* ---- status bar ---- */
+  .statusbar { display:flex; justify-content:space-between; align-items:center; padding: 14px 32px 6px; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+  .statusbar .sb-right { display:flex; align-items:center; gap: 6px; }
+  .statusbar .sb-right i { width: 16px; height: 16px; }
+
+  /* ---- header ---- */
+  .header { display:flex; align-items:center; gap: 12px; padding: 4px 20px 12px; flex-shrink: 0; }
+  .header .ti { display:flex; flex-direction: column; gap: 4px; }
+  .header .ti .t { font-size: 22px; font-weight: 800; letter-spacing: -0.025em; line-height: 1; }
+  .wa-chip { display:inline-flex; align-items:center; gap: 5px; padding: 3px 9px; border-radius: 999px; background: hsl(142 65% 93%); color: hsl(142 58% 28%); font-size: 10px; font-weight: 800; letter-spacing: 0.02em; width: max-content; }
+  .wa-dot { width: 6px; height: 6px; border-radius: 50%; background: hsl(142 70% 42%); }
+  .header .right { margin-left: auto; display:flex; align-items:center; gap: 10px; }
+  .iconbtn { width: 40px; height: 40px; border-radius: 50%; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); display:flex; align-items:center; justify-content:center; color: hsl(var(--foreground)); cursor: pointer; }
+  .iconbtn:active { background: hsl(var(--muted)); }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; background: hsl(211 100% 92%); color: hsl(211 100% 32%); display:flex; align-items:center; justify-content:center; font-weight: 800; font-size: 13px; flex-shrink: 0; }
+
+  .scroll { flex: 1; overflow-y: auto; }
+  .scroll::-webkit-scrollbar { width: 0; }
+
+  /* ===== pipeline filter chips (V1) ===== */
+  .pipe-chips { display:flex; gap: 8px; overflow-x: auto; padding: 2px 20px 14px; }
+  .pipe-chips::-webkit-scrollbar { height: 0; }
+  .pchip { flex: none; display:inline-flex; align-items:center; gap: 7px; padding: 8px 14px; border-radius: 999px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); font-size: 13px; font-weight: 700; color: hsl(var(--muted-foreground)); cursor: pointer; }
+  .pchip .n { font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 800; padding: 1px 7px; border-radius: 999px; background: hsl(var(--secondary)); color: hsl(var(--muted-foreground)); }
+  .pchip.is-active { background: hsl(211 100% 50%); border-color: hsl(211 100% 50%); color: white; }
+  .pchip.is-active .n { background: rgba(255,255,255,.25); color: white; }
+  .pchip .sd { width: 7px; height: 7px; border-radius: 50%; }
+
+  /* ---- search ---- */
+  .search-wrap { padding: 0 20px 12px; }
+  .search-box { display:flex; align-items:center; gap: 9px; padding: 11px 14px; border-radius: 14px; background: hsl(var(--muted) / .7); }
+  .search-box i { width: 17px; height: 17px; color: hsl(var(--muted-foreground)); }
+  .search-box span { font-size: 14px; color: hsl(var(--muted-foreground)); font-weight: 500; }
+
+  /* ===== conversation list ===== */
+  .conv-list { display:flex; flex-direction: column; }
+  .conv { display:flex; gap: 12px; padding: 13px 20px; cursor: pointer; position: relative; align-items: center; }
+  .conv + .conv::before { content:''; position:absolute; left: 64px; right: 0; top: 0; height: 1px; background: hsl(var(--border) / .7); }
+  .conv:active { background: hsl(var(--muted) / .4); }
+  .conv .av { width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0; display:flex; align-items:center; justify-content:center; font-weight: 800; font-size: 15px; color: white; }
+  .conv .mid { flex: 1; min-width: 0; }
+  .conv .row1 { display:flex; align-items:center; gap: 8px; margin-bottom: 3px; }
+  .conv .name { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .conv .time { margin-left: auto; font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; flex-shrink: 0; }
+  .conv .time.green { color: hsl(142 60% 38%); font-weight: 800; }
+  .conv .preview { font-size: 13px; color: hsl(var(--muted-foreground)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display:flex; align-items:center; gap: 5px; }
+  .conv .preview i { width: 14px; height: 14px; flex-shrink: 0; color: hsl(199 90% 48%); }
+  .conv .preview.unread { color: hsl(var(--foreground)); font-weight: 700; }
+  .conv .r2 { display:flex; align-items:center; gap: 8px; }
+  .stage { display:inline-flex; align-items:center; gap: 5px; margin-top: 7px; padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 0.02em; width: max-content; }
+  .stage .sd { width: 6px; height: 6px; border-radius: 50%; }
+  .stage.lead { background: hsl(264 60% 95%); color: hsl(264 50% 42%); }
+  .stage.wait { background: hsl(28 92% 94%); color: hsl(25 70% 34%); }
+  .stage.eval { background: hsl(211 100% 94%); color: hsl(211 100% 35%); }
+  .stage.treat { background: hsl(142 60% 93%); color: hsl(142 55% 28%); }
+  .stage.done { background: hsl(220 14% 93%); color: hsl(220 9% 38%); }
+  .conv .unreadbadge { min-width: 21px; height: 21px; padding: 0 6px; border-radius: 999px; background: hsl(142 70% 42%); color: white; font-size: 11px; font-weight: 800; display:flex; align-items:center; justify-content:center; flex-shrink:0; align-self: center; font-variant-numeric: tabular-nums; }
+
+  /* ===== V2 — funnel rail ===== */
+  .sec { padding: 4px 20px 0; }
+  .sec-head { display:flex; align-items:center; margin: 18px 0 12px; }
+  .sec-head h2 { font-size: 16px; font-weight: 800; letter-spacing: -0.015em; }
+  .sec-head .link { margin-left: auto; font-size: 12px; font-weight: 700; color: hsl(var(--primary)); display:flex; align-items:center; gap: 2px; cursor: pointer; }
+  .sec-head .link i { width: 14px; height: 14px; }
+
+  .funnel-rail { display:flex; gap: 11px; overflow-x: auto; padding: 0 20px 4px; margin: 0; }
+  .funnel-rail::-webkit-scrollbar { height: 0; }
+  .fcard { flex: none; width: 132px; border-radius: 18px; padding: 14px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); cursor: pointer; display:flex; flex-direction: column; gap: 10px; }
+  .fcard:active { background: hsl(var(--muted) / .4); }
+  .fcard .ftop { display:flex; align-items:center; justify-content:space-between; }
+  .fcard .fdot { width: 30px; height: 30px; border-radius: 10px; display:flex; align-items:center; justify-content:center; }
+  .fcard .fdot i { width: 16px; height: 16px; }
+  .fcard .fnew { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; }
+  .fcard .fnum { font-size: 30px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .fcard .flabel { font-size: 12px; font-weight: 700; color: hsl(var(--muted-foreground)); line-height: 1.2; }
+
+  /* ===== V2 — action cards ===== */
+  .act-list { display:flex; flex-direction: column; gap: 11px; padding: 0 20px; }
+  .acard { border: 1px solid hsl(var(--border)); border-radius: 18px; background: hsl(var(--card)); padding: 14px; }
+  .acard .top { display:flex; align-items:center; gap: 11px; }
+  .acard .av { width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; display:flex; align-items:center; justify-content:center; font-weight: 800; font-size: 14px; color: white; }
+  .acard .who { flex: 1; min-width: 0; }
+  .acard .who .nm { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; }
+  .acard .who .sub { font-size: 12px; font-weight: 600; color: hsl(var(--muted-foreground)); margin-top: 1px; display:flex; align-items:center; gap: 6px; }
+  .acard .waited { font-size: 10px; font-weight: 800; letter-spacing: 0.02em; padding: 4px 9px; border-radius: 999px; background: hsl(28 92% 93%); color: hsl(25 72% 38%); flex-shrink: 0; }
+  .acard .nextline { margin-top: 12px; display:flex; align-items:flex-start; gap: 8px; padding: 10px 12px; border-radius: 12px; background: hsl(211 100% 96%); }
+  .acard .nextline i { width: 15px; height: 15px; color: hsl(211 100% 45%); flex-shrink: 0; margin-top: 1px; }
+  .acard .nextline .nx { font-size: 12.5px; font-weight: 700; color: hsl(211 60% 30%); line-height: 1.35; }
+  .acard .nextline .nx b { color: hsl(211 100% 35%); }
+  .acard .btns { display:flex; gap: 8px; margin-top: 12px; }
+  .acard .btn { flex: 1; display:flex; align-items:center; justify-content:center; gap: 6px; padding: 11px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; border: 1px solid transparent; }
+  .acard .btn i { width: 16px; height: 16px; }
+  .acard .btn.primary { background: hsl(142 70% 42%); color: white; }
+  .acard .btn.primary:active { background: hsl(142 70% 38%); }
+  .acard .btn.ghost { background: hsl(var(--card)); border-color: hsl(var(--border)); color: hsl(var(--foreground)); }
+  .acard .btn.ghost:active { background: hsl(var(--muted)); }
+
+  /* compact recent (V2) */
+  .conv.compact { padding: 11px 20px; }
+  .conv.compact .av { width: 42px; height: 42px; font-size: 14px; }
+  .conv.compact + .conv.compact::before { left: 58px; }
+
+  /* ---- tab bar ---- */
+  .tabbar { background: hsl(var(--card)); border-top: 1px solid hsl(var(--border)); padding: 9px 10px 22px; display:flex; justify-content: space-around; flex-shrink: 0; }
+  .tab { display:flex; flex-direction: column; align-items:center; gap: 4px; padding: 4px 8px; color: hsl(var(--muted-foreground)); cursor: pointer; min-width: 54px; position: relative; }
+  .tab i { width: 22px; height: 22px; }
+  .tab span { font-size: 10px; font-weight: 700; letter-spacing: 0.01em; }
+  .tab:active { color: hsl(var(--foreground)); }
+  .tab.is-active { color: hsl(var(--primary)); }
+  .tab .tdot { position:absolute; top: 0; right: 8px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: hsl(142 70% 42%); color: white; font-size: 9px; font-weight: 800; display:flex; align-items:center; justify-content:center; }
+
+  .home-indicator { position:absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 134px; height: 5px; background: hsl(var(--foreground)); border-radius: 999px; z-index: 5; }
+
+  /* fab (V1) */
+  .fab { position:absolute; right: 18px; bottom: 96px; width: 54px; height: 54px; border-radius: 50%; background: hsl(142 70% 42%); color: white; display:flex; align-items:center; justify-content:center; box-shadow: 0 8px 20px hsl(142 70% 42% / .4); z-index: 4; cursor: pointer; }
+  .fab i { width: 24px; height: 24px; }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <!-- ===================== VERSÃO 1 — INBOX ===================== -->
+  <div class="frame-col">
+    <div class="frame-label">
+      <span class="ix">V1</span>
+      <span class="tt">Inbox</span>
+      <span class="ds">· mensagens em primeiro plano</span>
+    </div>
+
+    <div class="app">
+      <div class="statusbar">
+        <span>9:41</span>
+        <span class="sb-right"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+      </div>
+
+      <div class="header">
+        <div class="ti">
+          <span class="t">CRM</span>
+          <span class="wa-chip"><span class="wa-dot"></span> WhatsApp conectado</span>
+        </div>
+        <div class="right">
+          <button class="iconbtn"><i data-lucide="filter" style="width:19px;height:19px;"></i></button>
+          <div class="avatar">RM</div>
+        </div>
+      </div>
+
+      <div class="pipe-chips">
+        <span class="pchip is-active">Todos <span class="n">23</span></span>
+        <span class="pchip"><span class="sd" style="background:hsl(264 50% 55%);"></span>Novos leads <span class="n">7</span></span>
+        <span class="pchip"><span class="sd" style="background:hsl(28 70% 50%);"></span>Aguardando <span class="n">5</span></span>
+        <span class="pchip"><span class="sd" style="background:hsl(211 100% 50%);"></span>Avaliação <span class="n">4</span></span>
+        <span class="pchip"><span class="sd" style="background:hsl(142 55% 42%);"></span>Em tratamento <span class="n">7</span></span>
+      </div>
+
+      <div class="search-wrap">
+        <div class="search-box"><i data-lucide="search"></i><span>Buscar conversa ou paciente…</span></div>
+      </div>
+
+      <div class="scroll">
+        <div class="conv-list">
+
+          <div class="conv">
+            <div class="av" style="background:linear-gradient(135deg,hsl(264 55% 62%),hsl(264 55% 48%));">MA</div>
+            <div class="mid">
+              <div class="row1"><span class="name">Marina Alves</span><span class="time green">09:42</span></div>
+              <div class="preview unread">Bom dia! Gostaria de saber o valor da avaliação</div>
+              <span class="stage lead"><span class="sd" style="background:hsl(264 50% 50%);"></span>NOVO LEAD</span>
+            </div>
+            <div class="unreadbadge">2</div>
+          </div>
+
+          <div class="conv">
+            <div class="av" style="background:linear-gradient(135deg,hsl(211 100% 60%),hsl(211 100% 42%));">CF</div>
+            <div class="mid">
+              <div class="row1"><span class="name">Carla Ferreira</span><span class="time">09:15</span></div>
+              <div class="preview"><i data-lucide="check-check"></i>Perfeito, confirmado para amanhã 14h</div>
+              <span class="stage treat"><span class="sd" style="background:hsl(142 55% 40%);"></span>EM TRATAMENTO</span>
+            </div>
+          </div>
+
+          <div class="conv">
+            <div class="av" style="background:linear-gradient(135deg,hsl(28 85% 58%),hsl(28 85% 46%));">RS</div>
+            <div class="mid">
+              <div class="row1"><span class="name">Rafael Souza</span><span class="time green">08:50</span></div>
+              <div class="preview unread">Posso remarcar para sexta?</div>
+              <span class="stage wait"><span class="sd" style="background:hsl(28 70% 48%);"></span>AGUARDANDO</span>
+            </div>
+            <div class="unreadbadge">1</div>
+          </div>
+
+          <div class="conv">
+            <div class="av" style="background:linear-gradient(135deg,hsl(340 70% 60%),hsl(340 70% 48%));">JP</div>
+            <div class="mid">
+              <div class="row1"><span class="name">Juliana Pires</span><span class="time">ontem</span></div>
+              <div class="preview"><i data-lucide="check-check"></i>Obrigada, doutor! Até quinta</div>
+              <span class="stage eval"><span class="sd" style="background:hsl(211 100% 50%);"></span>AVALIAÇÃO AGENDADA</span>
+            </div>
+          </div>
+
+          <div class="conv">
+            <div class="av" style="background:linear-gradient(135deg,hsl(180 50% 48%),hsl(180 50% 36%));">ET</div>
+            <div class="mid">
+              <div class="row1"><span class="name">Eduardo Tavares</span><span class="time green">ontem</span></div>
+              <div class="preview unread">Vi vocês no Instagram, atendem joelho?</div>
+              <span class="stage lead"><span class="sd" style="background:hsl(264 50% 50%);"></span>NOVO LEAD</span>
+            </div>
+            <div class="unreadbadge">3</div>
+          </div>
+
+          <div class="conv">
+            <div class="av" style="background:linear-gradient(135deg,hsl(142 50% 50%),hsl(142 50% 38%));">LM</div>
+            <div class="mid">
+              <div class="row1"><span class="name">Lucas Martins</span><span class="time">ter</span></div>
+              <div class="preview"><i data-lucide="check-check"></i>Enviei o plano de exercícios</div>
+              <span class="stage treat"><span class="sd" style="background:hsl(142 55% 40%);"></span>EM TRATAMENTO</span>
+            </div>
+          </div>
+
+          <div class="conv">
+            <div class="av" style="background:linear-gradient(135deg,hsl(220 12% 58%),hsl(220 12% 44%));">BC</div>
+            <div class="mid">
+              <div class="row1"><span class="name">Beatriz Campos</span><span class="time">seg</span></div>
+              <div class="preview"><i data-lucide="check-check"></i>Tratamento concluído. Cuide-se!</div>
+              <span class="stage done"><span class="sd" style="background:hsl(220 9% 50%);"></span>ALTA</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="fab"><i data-lucide="message-circle-plus"></i></div>
+
+      <nav class="tabbar">
+        <div class="tab"><i data-lucide="layout-dashboard"></i><span>Painel</span></div>
+        <div class="tab"><i data-lucide="calendar-days"></i><span>Agenda</span></div>
+        <div class="tab is-active"><i data-lucide="message-circle"></i><span>CRM</span><span class="tdot">7</span></div>
+        <div class="tab"><i data-lucide="users"></i><span>Pacientes</span></div>
+        <div class="tab"><i data-lucide="menu"></i><span>Mais</span></div>
+      </nav>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+
+  <!-- ===================== VERSÃO 2 — FUNIL ===================== -->
+  <div class="frame-col">
+    <div class="frame-label">
+      <span class="ix">V2</span>
+      <span class="tt">Funil</span>
+      <span class="ds">· pipeline + próxima ação em foco</span>
+    </div>
+
+    <div class="app">
+      <div class="statusbar">
+        <span>9:41</span>
+        <span class="sb-right"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+      </div>
+
+      <div class="header">
+        <div class="ti">
+          <span class="t">Funil · CRM</span>
+          <span class="wa-chip"><span class="wa-dot"></span> WhatsApp conectado</span>
+        </div>
+        <div class="right">
+          <button class="iconbtn"><i data-lucide="search" style="width:19px;height:19px;"></i></button>
+          <div class="avatar">RM</div>
+        </div>
+      </div>
+
+      <div class="scroll">
+
+        <div class="funnel-rail">
+          <div class="fcard">
+            <div class="ftop">
+              <span class="fdot" style="background:hsl(264 60% 95%);color:hsl(264 50% 48%);"><i data-lucide="sparkles"></i></span>
+              <span class="fnew" style="background:hsl(142 70% 42%);color:white;">3 novos</span>
+            </div>
+            <div>
+              <div class="fnum">7</div>
+              <div class="flabel">Novos leads</div>
+            </div>
+          </div>
+          <div class="fcard">
+            <div class="ftop">
+              <span class="fdot" style="background:hsl(28 92% 93%);color:hsl(25 72% 42%);"><i data-lucide="clock"></i></span>
+              <span class="fnew" style="background:hsl(28 92% 90%);color:hsl(25 72% 38%);">2 atrasados</span>
+            </div>
+            <div>
+              <div class="fnum">5</div>
+              <div class="flabel">Aguardando</div>
+            </div>
+          </div>
+          <div class="fcard">
+            <div class="ftop">
+              <span class="fdot" style="background:hsl(211 100% 94%);color:hsl(211 100% 45%);"><i data-lucide="clipboard-check"></i></span>
+            </div>
+            <div>
+              <div class="fnum">4</div>
+              <div class="flabel">Avaliação agendada</div>
+            </div>
+          </div>
+          <div class="fcard">
+            <div class="ftop">
+              <span class="fdot" style="background:hsl(142 60% 93%);color:hsl(142 55% 34%);"><i data-lucide="activity"></i></span>
+            </div>
+            <div>
+              <div class="fnum">7</div>
+              <div class="flabel">Em tratamento</div>
+            </div>
+          </div>
+          <div class="fcard">
+            <div class="ftop">
+              <span class="fdot" style="background:hsl(220 14% 93%);color:hsl(220 9% 42%);"><i data-lucide="check-circle-2"></i></span>
+            </div>
+            <div>
+              <div class="fnum">12</div>
+              <div class="flabel">Alta no mês</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-head">
+            <h2>Precisa de ação</h2>
+            <span class="link">Ver tudo <i data-lucide="chevron-right"></i></span>
+          </div>
+        </div>
+
+        <div class="act-list">
+
+          <div class="acard">
+            <div class="top">
+              <div class="av" style="background:linear-gradient(135deg,hsl(264 55% 62%),hsl(264 55% 48%));">MA</div>
+              <div class="who">
+                <div class="nm">Marina Alves</div>
+                <div class="sub"><span class="stage lead" style="margin-top:0;"><span class="sd" style="background:hsl(264 50% 50%);"></span>NOVO LEAD</span> Instagram Ads</div>
+              </div>
+              <span class="waited">há 1 min</span>
+            </div>
+            <div class="nextline">
+              <i data-lucide="sparkles"></i>
+              <div class="nx"><b>Confirmar horário</b> — IA sugere quinta 09:00 (livre na agenda)</div>
+            </div>
+            <div class="btns">
+              <div class="btn primary"><i data-lucide="send"></i> Responder</div>
+              <div class="btn ghost"><i data-lucide="calendar-plus"></i> Agendar</div>
+            </div>
+          </div>
+
+          <div class="acard">
+            <div class="top">
+              <div class="av" style="background:linear-gradient(135deg,hsl(28 85% 58%),hsl(28 85% 46%));">RS</div>
+              <div class="who">
+                <div class="nm">Rafael Souza</div>
+                <div class="sub"><span class="stage wait" style="margin-top:0;"><span class="sd" style="background:hsl(28 70% 48%);"></span>AGUARDANDO</span> reagendamento</div>
+              </div>
+              <span class="waited">há 51 min</span>
+            </div>
+            <div class="nextline">
+              <i data-lucide="repeat"></i>
+              <div class="nx">Pediu para <b>remarcar para sexta</b> — confirmar novo horário</div>
+            </div>
+            <div class="btns">
+              <div class="btn primary"><i data-lucide="send"></i> Responder</div>
+              <div class="btn ghost"><i data-lucide="calendar-clock"></i> Remarcar</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="sec">
+          <div class="sec-head">
+            <h2>Conversas recentes</h2>
+            <span class="link">Inbox <i data-lucide="chevron-right"></i></span>
+          </div>
+        </div>
+
+        <div class="conv-list" style="padding-bottom: 100px;">
+          <div class="conv compact">
+            <div class="av" style="background:linear-gradient(135deg,hsl(340 70% 60%),hsl(340 70% 48%));">JP</div>
+            <div class="mid">
+              <div class="row1"><span class="name">Juliana Pires</span><span class="time">ontem</span></div>
+              <div class="preview"><i data-lucide="check-check"></i>Obrigada, doutor! Até quinta</div>
+            </div>
+            <span class="stage eval" style="margin-top:0;align-self:center;"><span class="sd" style="background:hsl(211 100% 50%);"></span>AVALIAÇÃO</span>
+          </div>
+          <div class="conv compact">
+            <div class="av" style="background:linear-gradient(135deg,hsl(142 50% 50%),hsl(142 50% 38%));">LM</div>
+            <div class="mid">
+              <div class="row1"><span class="name">Lucas Martins</span><span class="time">ter</span></div>
+              <div class="preview"><i data-lucide="check-check"></i>Enviei o plano de exercícios</div>
+            </div>
+            <span class="stage treat" style="margin-top:0;align-self:center;"><span class="sd" style="background:hsl(142 55% 40%);"></span>TRATAMENTO</span>
+          </div>
+          <div class="conv compact">
+            <div class="av" style="background:linear-gradient(135deg,hsl(220 12% 58%),hsl(220 12% 44%));">BC</div>
+            <div class="mid">
+              <div class="row1"><span class="name">Beatriz Campos</span><span class="time">seg</span></div>
+              <div class="preview"><i data-lucide="check-check"></i>Tratamento concluído. Cuide-se!</div>
+            </div>
+            <span class="stage done" style="margin-top:0;align-self:center;"><span class="sd" style="background:hsl(220 9% 50%);"></span>ALTA</span>
+          </div>
+        </div>
+
+      </div>
+
+      <nav class="tabbar">
+        <div class="tab"><i data-lucide="layout-dashboard"></i><span>Painel</span></div>
+        <div class="tab"><i data-lucide="calendar-days"></i><span>Agenda</span></div>
+        <div class="tab is-active"><i data-lucide="message-circle"></i><span>CRM</span><span class="tdot">7</span></div>
+        <div class="tab"><i data-lucide="users"></i><span>Pacientes</span></div>
+        <div class="tab"><i data-lucide="menu"></i><span>Mais</span></div>
+      </nav>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();</script>
+</body>
+</html>

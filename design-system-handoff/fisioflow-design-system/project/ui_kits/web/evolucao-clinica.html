@@ -1,0 +1,420 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="UI Kit · Evolução Clínica (web)" subtitle="Timeline clínico do paciente: evoluções, métricas, metas (sem SOAP)" viewport="1320x920" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Evolução Clínica — FisioFlow Clínica</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  body { margin: 0; background: #0d1117; min-height: 100vh; display:flex; align-items:center; justify-content:center; padding: 24px; font-family: var(--font-sans); }
+  .pad { width: 1280px; height: 880px; flex-shrink: 0; background: hsl(var(--background)); border-radius: 24px; overflow: hidden; box-shadow: 0 0 0 10px #111, 0 0 0 12px #2a2d35, 0 40px 80px rgba(0,0,0,0.6); display: grid; grid-template-columns: 248px 1fr; }
+
+  /* sidebar */
+  .sidebar { background: hsl(var(--sidebar-background)); border-right: 1px solid hsl(var(--border)); display:flex; flex-direction:column; padding: 14px 10px; gap: 10px; }
+  .sb-brand { display:flex; align-items:center; gap: 10px; padding: 4px 8px 10px; border-bottom: 1px solid hsl(var(--border)); }
+  .sb-logo { width: 32px; height: 32px; border-radius: 10px; background: hsl(var(--primary) / .12); color: hsl(var(--primary)); display:flex; align-items:center; justify-content:center; padding: 4px; }
+  .sb-logo img { width: 100%; }
+  .sb-brand strong { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; }
+  .sb-brand .sub { font-size: 9px; font-weight: 800; letter-spacing: 0.12em; color: hsl(var(--primary)); }
+  .sb-nav { flex: 1; overflow: hidden; display:flex; flex-direction: column; gap: 10px; padding: 4px 0; }
+  .sb-group-label { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; color: hsl(var(--muted-foreground)); padding: 6px 10px 2px; }
+  .sb-item { display:flex; align-items:center; gap: 10px; padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: hsl(var(--foreground)); cursor: pointer; }
+  .sb-item:hover { background: hsl(var(--sidebar-accent)); }
+  .sb-item.is-active { background: hsl(var(--primary) / .10); color: hsl(var(--primary)); border-left: 3px solid hsl(var(--primary)); padding-left: 9px; }
+  .sb-item .badge { margin-left: auto; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 999px; background: hsl(var(--destructive)); color: white; }
+
+  /* content */
+  .content { display: grid; grid-template-rows: auto auto 1fr; min-height: 0; }
+
+  /* patient header */
+  .phead { padding: 16px 24px 0; }
+  .phead-top { display:flex; align-items:flex-start; gap: 16px; }
+  .pavatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, hsl(211 100% 60%), hsl(211 100% 40%)); color: white; display:flex; align-items:center; justify-content:center; font-weight: 800; font-size: 19px; flex-shrink: 0; }
+  .pinfo h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+  .pinfo .meta { font-size: 12px; color: hsl(var(--muted-foreground)); font-weight: 600; margin-top: 2px; display:flex; gap: 8px; align-items:center; flex-wrap: wrap; }
+  .pinfo .meta .dot { width: 3px; height: 3px; border-radius: 50%; background: hsl(var(--muted-foreground)); }
+  .ptags { display:flex; gap: 8px; margin-top: 10px; }
+  .ptag { display:inline-flex; align-items:center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  .ptag.dx { background: hsl(28 92% 95%); color: hsl(25 70% 30%); }
+  .ptag.proto { background: hsl(211 100% 95%); color: hsl(211 100% 30%); }
+  .ptag.adh { background: hsl(158 64% 92%); color: hsl(158 64% 25%); }
+  .phead-actions { margin-left: auto; display:flex; gap: 8px; }
+  .btn { display:inline-flex; align-items:center; gap:6px; padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 700; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); cursor:pointer; color: hsl(var(--foreground)); }
+  .btn.primary { background: hsl(var(--primary)); color: white; border-color: hsl(var(--primary)); box-shadow: var(--shadow-glow-primary); }
+  .btn-ghost { background: transparent; border-color: transparent; }
+
+  /* tabs */
+  .tabs { display:flex; gap: 4px; padding: 16px 24px 0; border-bottom: 1px solid hsl(var(--border)); }
+  .tab { padding: 10px 14px; font-size: 13px; font-weight: 700; color: hsl(var(--muted-foreground)); border-bottom: 2px solid transparent; cursor:pointer; margin-bottom: -1px; }
+  .tab.is-active { color: hsl(var(--primary)); border-color: hsl(var(--primary)); }
+
+  /* body: timeline + side */
+  .body { display: grid; grid-template-columns: 1fr 340px; min-height: 0; }
+  .timeline-wrap { overflow-y: auto; padding: 20px 24px; }
+  .side-wrap { border-left: 1px solid hsl(var(--border)); overflow-y: auto; padding: 18px 18px; display:flex; flex-direction: column; gap: 18px; background: hsl(var(--muted) / .3); }
+
+  /* composer */
+  .composer { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; padding: 14px 16px; margin-bottom: 20px; }
+  .composer-head { display:flex; align-items:center; gap: 8px; margin-bottom: 10px; }
+  .composer-head .me { width: 30px; height: 30px; border-radius: 50%; background: hsl(211 100% 92%); color: hsl(211 100% 30%); display:flex; align-items:center; justify-content:center; font-weight: 800; font-size: 11px; }
+  .composer-head .ph { flex: 1; font-size: 13px; color: hsl(var(--muted-foreground)); font-weight: 500; }
+  .composer-row { display:flex; gap: 8px; align-items:center; flex-wrap: wrap; }
+  .chiplet { display:inline-flex; align-items:center; gap: 5px; padding: 6px 10px; border-radius: 999px; border: 1px solid hsl(var(--border)); font-size: 11px; font-weight: 700; color: hsl(var(--muted-foreground)); cursor: pointer; background: hsl(var(--background)); }
+  .chiplet:hover { border-color: hsl(var(--primary) / .4); color: hsl(var(--foreground)); }
+  .composer-row .spacer { flex: 1; }
+
+  /* timeline */
+  .tl-day { display:flex; align-items:center; gap: 10px; margin: 18px 0 12px; }
+  .tl-day:first-child { margin-top: 0; }
+  .tl-day .label { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
+  .tl-day .line { flex: 1; height: 1px; background: hsl(var(--border)); }
+
+  .tl { position: relative; padding-left: 30px; }
+  .tl::before { content:''; position:absolute; left: 9px; top: 6px; bottom: 6px; width: 2px; background: hsl(var(--border)); }
+  .entry { position: relative; margin-bottom: 16px; }
+  .entry .node { position:absolute; left: -29px; top: 4px; width: 20px; height: 20px; border-radius: 50%; display:flex; align-items:center; justify-content:center; background: hsl(var(--card)); border: 2px solid hsl(var(--primary)); color: hsl(var(--primary)); }
+  .entry .node.green { border-color: hsl(158 64% 42%); color: hsl(158 64% 42%); }
+  .entry .node.amber { border-color: hsl(35 92% 50%); color: hsl(35 92% 45%); }
+  .entry .node.gray { border-color: hsl(220 9% 60%); color: hsl(220 9% 55%); }
+  .card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; padding: 16px; }
+  .card:hover { box-shadow: var(--shadow-md); }
+  .card-head { display:flex; align-items:center; gap: 10px; margin-bottom: 10px; }
+  .card-head .ttl { font-size: 14px; font-weight: 800; }
+  .card-head .who { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .card-head .time { margin-left: auto; font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .sess-badge { padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; letter-spacing: 0.04em; }
+  .sess-badge.eval { background: hsl(264 60% 94%); color: hsl(264 50% 40%); }
+  .sess-badge.sess { background: hsl(211 100% 95%); color: hsl(211 100% 35%); }
+  .sess-badge.tele { background: hsl(158 64% 92%); color: hsl(158 64% 28%); }
+  .card-body { font-size: 13px; line-height: 1.55; color: hsl(var(--foreground)); }
+  .card-body strong { font-weight: 700; }
+  .metrics-strip { display:flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .ms { display:flex; flex-direction: column; gap: 1px; padding: 7px 11px; border-radius: 10px; background: hsl(var(--muted) / .6); min-width: 64px; }
+  .ms .l { font-size: 9px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
+  .ms .v { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .ms.pain .v { color: hsl(0 70% 45%); }
+  .ms.pain.low .v { color: hsl(158 64% 32%); }
+  .card-foot { display:flex; gap: 6px; margin-top: 12px; align-items:center; }
+  .attach { display:inline-flex; align-items:center; gap: 5px; padding: 5px 10px; border-radius: 8px; background: hsl(var(--muted) / .6); font-size: 11px; font-weight: 700; color: hsl(var(--foreground)); cursor: pointer; }
+  .attach:hover { background: hsl(var(--primary) / .1); color: hsl(var(--primary)); }
+  .attach.bio { background: hsl(211 100% 95%); color: hsl(211 100% 35%); }
+  .card-foot .react { margin-left: auto; display:flex; gap: 4px; }
+  .react .ib { width: 28px; height: 28px; border-radius: 8px; border: none; background: transparent; color: hsl(var(--muted-foreground)); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .react .ib:hover { background: hsl(var(--secondary)); }
+
+  /* side widgets */
+  .widget { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; padding: 16px; }
+  .widget h4 { font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin-bottom: 12px; }
+  .kpi-2 { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpi { }
+  .kpi .v { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .kpi .l { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .kpi .d { font-size: 11px; font-weight: 700; display:flex; align-items:center; gap: 3px; margin-top: 2px; }
+  .up { color: hsl(158 64% 35%); }
+  .dn { color: hsl(0 70% 45%); }
+
+  .progress { margin-top: 4px; }
+  .progress .row { display:flex; align-items:center; justify-content:space-between; font-size: 12px; margin-bottom: 6px; }
+  .progress .row .n { font-weight: 700; }
+  .progress .bar { height: 8px; background: hsl(var(--secondary)); border-radius: 999px; overflow: hidden; margin-bottom: 12px; }
+  .progress .fill { height: 100%; border-radius: 999px; background: hsl(var(--primary)); }
+  .progress .fill.green { background: hsl(158 64% 45%); }
+
+  /* pain sparkline widget */
+  .spark-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom: 8px; }
+  .spark-head .big { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .spark-head .big small { font-size: 14px; color: hsl(var(--muted-foreground)); font-weight: 700; }
+  .spark-head .delta { font-size: 12px; font-weight: 800; color: hsl(158 64% 35%); }
+</style>
+</head>
+<body>
+<div class="pad">
+
+  <!-- sidebar -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><img src="../../assets/activity-logo.svg" alt=""/></div>
+      <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div>
+        <div class="sb-group-label">ATENDIMENTO</div>
+        <div class="sb-item"><i data-lucide="calendar-days" style="width:16px;height:16px;"></i> AGENDA</div>
+        <div class="sb-item is-active"><i data-lucide="users" style="width:16px;height:16px;"></i> PACIENTES</div>
+        <div class="sb-item"><i data-lucide="message-circle" style="width:16px;height:16px;"></i> WHATSAPP <span class="badge">3</span></div>
+      </div>
+      <div>
+        <div class="sb-group-label">CLÍNICA</div>
+        <div class="sb-item"><i data-lucide="dumbbell" style="width:16px;height:16px;"></i> EXERCÍCIOS</div>
+        <div class="sb-item"><i data-lucide="clipboard-list" style="width:16px;height:16px;"></i> PROTOCOLOS</div>
+        <div class="sb-item"><i data-lucide="camera" style="width:16px;height:16px;"></i> BIOMECÂNICA</div>
+        <div class="sb-item"><i data-lucide="clipboard-check" style="width:16px;height:16px;"></i> AVALIAÇÕES</div>
+      </div>
+      <div>
+        <div class="sb-group-label">INTELIGÊNCIA &amp; IA</div>
+        <div class="sb-item"><i data-lucide="sparkles" style="width:16px;height:16px;"></i> IA STUDIO</div>
+        <div class="sb-item"><i data-lucide="brain" style="width:16px;height:16px;"></i> HUB</div>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- content -->
+  <div class="content">
+
+    <!-- patient header -->
+    <div class="phead">
+      <div class="phead-top">
+        <div class="pavatar">CF</div>
+        <div class="pinfo">
+          <h1>Carla Ferreira</h1>
+          <div class="meta">
+            <span>34 anos · ♀</span><span class="dot"></span>
+            <span>Início em 17/03/2026</span><span class="dot"></span>
+            <span>Convênio: Unimed</span><span class="dot"></span>
+            <span>CPF 342.118.***-09</span>
+          </div>
+          <div class="ptags">
+            <span class="ptag dx"><i data-lucide="activity" style="width:12px;height:12px;"></i> Condromalácia patelar G2</span>
+            <span class="ptag proto"><i data-lucide="clipboard-list" style="width:12px;height:12px;"></i> Reabilitação joelho · sessão 12/20</span>
+            <span class="ptag adh"><i data-lucide="check-circle-2" style="width:12px;height:12px;"></i> Adesão 88%</span>
+          </div>
+        </div>
+        <div class="phead-actions">
+          <button class="btn btn-ghost"><i data-lucide="printer" style="width:14px;height:14px;"></i></button>
+          <button class="btn"><i data-lucide="paperclip" style="width:14px;height:14px;"></i> Anexar</button>
+          <button class="btn primary"><i data-lucide="plus" style="width:14px;height:14px;"></i> Nova evolução</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- tabs -->
+    <div class="tabs">
+      <div class="tab">Resumo</div>
+      <div class="tab is-active">Evolução clínica</div>
+      <div class="tab">Agendamentos</div>
+      <div class="tab">Protocolo</div>
+      <div class="tab">Avaliações</div>
+      <div class="tab">Documentos</div>
+    </div>
+
+    <!-- body -->
+    <div class="body">
+
+      <!-- timeline -->
+      <div class="timeline-wrap">
+
+        <!-- composer -->
+        <div class="composer">
+          <div class="composer-head">
+            <div class="me">RM</div>
+            <div class="ph">Registrar evolução da sessão de hoje…</div>
+          </div>
+          <div class="composer-row">
+            <span class="chiplet"><i data-lucide="activity" style="width:13px;height:13px;"></i> Dor (VAS)</span>
+            <span class="chiplet"><i data-lucide="move" style="width:13px;height:13px;"></i> ROM</span>
+            <span class="chiplet"><i data-lucide="dumbbell" style="width:13px;height:13px;"></i> Condutas</span>
+            <span class="chiplet"><i data-lucide="camera" style="width:13px;height:13px;"></i> Anexar vídeo</span>
+            <div class="spacer"></div>
+            <button class="btn primary" style="padding:7px 14px;">Publicar</button>
+          </div>
+        </div>
+
+        <!-- today -->
+        <div class="tl-day"><span class="label">Hoje · 12 mai 2026</span><span class="line"></span></div>
+        <div class="tl">
+          <div class="entry">
+            <div class="node"><i data-lucide="stethoscope" style="width:11px;height:11px;"></i></div>
+            <div class="card">
+              <div class="card-head">
+                <span class="sess-badge sess">SESSÃO 12</span>
+                <span class="ttl">Cinesioterapia + reavaliação biomecânica</span>
+                <span class="time">14:30 · 50 min</span>
+              </div>
+              <div class="card-body">
+                Paciente refere melhora progressiva da dor anterior no joelho direito. <strong>Agachamento até 90° sem pinçada patelar até a 8ª repetição.</strong> Reavaliação biomecânica do agachamento mostra ganho de ROM (78°→118° em 8 semanas) e redução da inclinação de tronco. Persiste valgo dinâmico moderado à direita (+14°) — mantida ênfase em fortalecimento de glúteo médio e controle excêntrico.
+              </div>
+              <div class="metrics-strip">
+                <div class="ms pain low"><span class="l">Dor pico</span><span class="v">3/10</span></div>
+                <div class="ms"><span class="l">ROM joelho</span><span class="v">118°</span></div>
+                <div class="ms"><span class="l">Simetria</span><span class="v">84%</span></div>
+                <div class="ms"><span class="l">Carga</span><span class="v">12kg</span></div>
+              </div>
+              <div class="card-foot">
+                <span class="attach bio"><i data-lucide="video" style="width:13px;height:13px;"></i> Análise biomecânica</span>
+                <span class="attach"><i data-lucide="git-compare" style="width:13px;height:13px;"></i> Comparar S03 ↔ S12</span>
+                <div class="react">
+                  <button class="ib"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>
+                  <button class="ib"><i data-lucide="more-horizontal" style="width:14px;height:14px;"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8 may -->
+        <div class="tl-day"><span class="label">8 mai 2026</span><span class="line"></span></div>
+        <div class="tl">
+          <div class="entry">
+            <div class="node green"><i data-lucide="dumbbell" style="width:11px;height:11px;"></i></div>
+            <div class="card">
+              <div class="card-head">
+                <span class="sess-badge sess">SESSÃO 11</span>
+                <span class="ttl">Fortalecimento progressivo</span>
+                <span class="time">15:00 · 50 min</span>
+              </div>
+              <div class="card-body">
+                Progredida carga do leg press (10→12kg) e agachamento isométrico (30s→45s). Boa ativação de quadríceps e glúteo médio. Sem queixa álgica durante a execução; leve desconforto ao final da série de step-down.
+              </div>
+              <div class="metrics-strip">
+                <div class="ms pain low"><span class="l">Dor pico</span><span class="v">3/10</span></div>
+                <div class="ms"><span class="l">ROM joelho</span><span class="v">114°</span></div>
+                <div class="ms"><span class="l">Adesão sem.</span><span class="v">100%</span></div>
+              </div>
+              <div class="card-foot">
+                <span class="attach"><i data-lucide="paperclip" style="width:13px;height:13px;"></i> Plano de exercícios.pdf</span>
+                <div class="react">
+                  <button class="ib"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>
+                  <button class="ib"><i data-lucide="more-horizontal" style="width:14px;height:14px;"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 30 apr -->
+        <div class="tl-day"><span class="label">30 abr 2026</span><span class="line"></span></div>
+        <div class="tl">
+          <div class="entry">
+            <div class="node amber"><i data-lucide="message-square" style="width:11px;height:11px;"></i></div>
+            <div class="card">
+              <div class="card-head">
+                <span class="sess-badge tele">TELE-RETORNO</span>
+                <span class="ttl">Acompanhamento remoto</span>
+                <span class="time">18:20 · 15 min</span>
+              </div>
+              <div class="card-body">
+                Contato por vídeo. Paciente relatou pico de dor (5/10) após caminhada longa no fim de semana. Orientado gelo e ajuste de volume nos exercícios domiciliares. Mantida conduta; reforçada importância de respeitar a progressão.
+              </div>
+              <div class="metrics-strip">
+                <div class="ms pain"><span class="l">Dor relatada</span><span class="v">5/10</span></div>
+                <div class="ms"><span class="l">Adesão sem.</span><span class="v">75%</span></div>
+              </div>
+              <div class="card-foot">
+                <div class="react">
+                  <button class="ib"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>
+                  <button class="ib"><i data-lucide="more-horizontal" style="width:14px;height:14px;"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 17 mar -->
+        <div class="tl-day"><span class="label">17 mar 2026</span><span class="line"></span></div>
+        <div class="tl">
+          <div class="entry">
+            <div class="node gray"><i data-lucide="clipboard-check" style="width:11px;height:11px;"></i></div>
+            <div class="card">
+              <div class="card-head">
+                <span class="sess-badge eval">AVALIAÇÃO INICIAL</span>
+                <span class="ttl">Anamnese + exame físico</span>
+                <span class="time">09:00 · 60 min</span>
+              </div>
+              <div class="card-body">
+                Quadro de dor anterior no joelho direito há ~4 meses, agravada por agachar e descer escadas. Exame: teste de compressão patelar positivo, ADM ativa limitada por dor a 78° de flexão sob carga, valgo dinâmico acentuado no agachamento. Definido protocolo de reabilitação de 20 sessões com ênfase em controle motor.
+              </div>
+              <div class="metrics-strip">
+                <div class="ms pain"><span class="l">Dor pico</span><span class="v">6/10</span></div>
+                <div class="ms"><span class="l">ROM joelho</span><span class="v">78°</span></div>
+                <div class="ms"><span class="l">Simetria</span><span class="v">71%</span></div>
+              </div>
+              <div class="card-foot">
+                <span class="attach bio"><i data-lucide="video" style="width:13px;height:13px;"></i> Baseline biomecânico</span>
+                <span class="attach"><i data-lucide="file-text" style="width:13px;height:13px;"></i> Ficha de avaliação.pdf</span>
+                <div class="react">
+                  <button class="ib"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>
+                  <button class="ib"><i data-lucide="more-horizontal" style="width:14px;height:14px;"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- side -->
+      <div class="side-wrap">
+
+        <div class="widget">
+          <h4>Dor (VAS) — evolução</h4>
+          <div class="spark-head">
+            <span class="big">3<small>/10</small></span>
+            <span class="delta"><i data-lucide="trending-down" style="width:13px;height:13px;vertical-align:middle;"></i> −3 em 8 sem</span>
+          </div>
+          <svg viewBox="0 0 300 90" preserveAspectRatio="none" style="width:100%;height:90px;">
+            <g stroke="hsl(220 13% 91%)" stroke-width="1">
+              <line x1="0" y1="15" x2="300" y2="15"/>
+              <line x1="0" y1="45" x2="300" y2="45"/>
+              <line x1="0" y1="75" x2="300" y2="75"/>
+            </g>
+            <path d="M 8 24 L 55 24 L 102 38 L 150 30 L 198 52 L 246 60 L 292 66"
+                  fill="none" stroke="hsl(var(--primary))" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M 8 24 L 55 24 L 102 38 L 150 30 L 198 52 L 246 60 L 292 66 L 292 88 L 8 88 Z"
+                  fill="hsl(var(--primary) / 0.08)" stroke="none"/>
+            <circle cx="8" cy="24" r="3.5" fill="hsl(0 70% 50%)"/>
+            <circle cx="292" cy="66" r="3.5" fill="hsl(158 64% 42%)"/>
+          </svg>
+        </div>
+
+        <div class="widget">
+          <h4>Indicadores</h4>
+          <div class="kpi-2">
+            <div class="kpi">
+              <div class="v">+40°</div>
+              <div class="l">ROM joelho</div>
+              <div class="d up"><i data-lucide="trending-up" style="width:12px;height:12px;"></i> 78°→118°</div>
+            </div>
+            <div class="kpi">
+              <div class="v">88%</div>
+              <div class="l">Adesão protocolo</div>
+              <div class="d up"><i data-lucide="trending-up" style="width:12px;height:12px;"></i> +9 p.p.</div>
+            </div>
+            <div class="kpi">
+              <div class="v">12<span style="font-size:15px;color:hsl(var(--muted-foreground));">/20</span></div>
+              <div class="l">Sessões</div>
+              <div class="d"><span style="color:hsl(var(--muted-foreground));font-weight:600;">8 restantes</span></div>
+            </div>
+            <div class="kpi">
+              <div class="v">84%</div>
+              <div class="l">Simetria L/R</div>
+              <div class="d up"><i data-lucide="trending-up" style="width:12px;height:12px;"></i> +13 p.p.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="widget">
+          <h4>Metas do protocolo</h4>
+          <div class="progress">
+            <div class="row"><span>ROM ≥ 120°</span><span class="n">98%</span></div>
+            <div class="bar"><div class="fill green" style="width:98%;"></div></div>
+            <div class="row"><span>Dor &lt; 3/10 sustentada</span><span class="n">70%</span></div>
+            <div class="bar"><div class="fill" style="width:70%;"></div></div>
+            <div class="row"><span>Valgo dinâmico &lt; 8°</span><span class="n">45%</span></div>
+            <div class="bar"><div class="fill" style="width:45%;"></div></div>
+            <div class="row"><span>Simetria ≥ 90%</span><span class="n">62%</span></div>
+            <div class="bar"><div class="fill" style="width:62%;margin-bottom:0;"></div></div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+</script>
+</body>
+</html>

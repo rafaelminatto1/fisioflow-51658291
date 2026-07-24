@@ -400,9 +400,7 @@ const ProcedureRow: React.FC<{
     disabled,
     index: _index,
   }) => {
-    const [showNotes, setShowNotes] = useState(() => {
-      return !!procedure.notes?.trim();
-    });
+    const [showNotes, setShowNotes] = useState(true);
     const [isRemoving, setIsRemoving] = useState(false);
 
     const prevHasNotesRef = useRef(false);

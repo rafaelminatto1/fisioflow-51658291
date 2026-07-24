@@ -455,7 +455,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
 
     const message = encodeURIComponent(
       `Olá ${appointment.patientName}! 👋\n\n` +
-        `Confirmamos sua consulta para o dia *${dateShort}* às *${formData.appointment_time}*.\n\n` +
+        `Confirmamos sua sessão para o dia *${dateShort}* às *${formData.appointment_time}*.\n\n` +
         `Por favor, confirme sua presença respondendo esta mensagem.\n\n` +
         `Activity Fisioterapia 💙`,
     );

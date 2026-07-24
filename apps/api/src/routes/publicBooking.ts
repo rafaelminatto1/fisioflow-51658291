@@ -283,12 +283,47 @@ app.patch("/requests/:id", requireAuth, async (c) => {
       "pt-BR",
       { weekday: "long", day: "numeric", month: "long" },
     );
+    const confirmMsgText = `Olá${row.patient_name ? " " + String(row.patient_name).split(" ")[0] : ""}! ✅ Seu agendamento foi confirmado.\n\n📅 ${dateFormatted} às ${row.requested_time}.\n\nAguardamos você!`;
     await wa
-      .sendTextMessage(
-        String(row.patient_phone),
-        `Olá${row.patient_name ? " " + String(row.patient_name).split(" ")[0] : ""}! ✅ Seu agendamento foi confirmado.\n\n📅 ${dateFormatted} às ${row.requested_time}.\n\nAguardamos você!`,
-      )
+      .sendTextMessage(String(row.patient_phone), confirmMsgText)
       .catch(() => {});
+
+    try {
+      const orgId = String(row.organization_id);
+      const phone = String(row.patient_phone);
+      const contactRes = await pool.query(
+        `SELECT id FROM whatsapp_contacts WHERE organization_id = $1 AND phone = $2 LIMIT 1`,
+        [orgId, phone]
+      );
+      if (contactRes.rows[0]?.id) {
+        const contactId = contactRes.rows[0].id;
+        const { findOrCreateConversation, addMessage } = await import("../lib/whatsapp-conversations");
+        const { broadcastToOrg } = await import("../lib/realtime");
+        const conv = await findOrCreateConversation(pool as any, orgId, contactId, "whatsapp");
+        if (conv?.id) {
+          const insertedMsg = await addMessage(
+            pool as any,
+            conv.id,
+            orgId,
+            contactId,
+            "outbound",
+            "system",
+            "system",
+            "text",
+            confirmMsgText,
+            `public_booking_${Date.now()}`,
+            { status: "sent", metadata: { autoReply: true } }
+          );
+          await broadcastToOrg(c.env, orgId, {
+            type: "whatsapp_message",
+            conversationId: conv.id,
+            message: insertedMsg,
+          });
+        }
+      }
+    } catch (e) {
+      console.error("[publicBooking] Failed to sync message to wa_messages:", e);
+    }
   }
 
   return c.json({ data: row });

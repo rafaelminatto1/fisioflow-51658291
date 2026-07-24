@@ -18,10 +18,10 @@ export async function sendAppointmentReminderEmail(
   await resend.emails.send({
     from: FROM(env),
     to,
-    subject: `Lembrete: Consulta amanhã às ${data.time}`,
+    subject: `Lembrete: Sessão amanhã às ${data.time}`,
     html: `
       <p>Olá, <strong>${data.patientName}</strong>!</p>
-      <p>Você tem uma consulta agendada para <strong>amanhã, ${data.date} às ${data.time}</strong>.</p>
+      <p>Você tem uma sessão agendada para <strong>amanhã, ${data.date} às ${data.time}</strong>.</p>
       ${data.therapistName ? `<p>Fisioterapeuta: ${data.therapistName}</p>` : ""}
       <p>Em caso de dúvidas, entre em contato conosco.</p>
       <hr><p><small>FisioFlow — Sistema de Gestão de Fisioterapia</small></p>

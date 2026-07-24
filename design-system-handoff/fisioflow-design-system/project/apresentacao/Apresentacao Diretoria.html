@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>FisioFlow — Apresentação à Diretoria</title>
+<style>
+@font-face{font-family:'Nunito';src:url('../fonts/Nunito-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap;}
+@font-face{font-family:'Nunito';src:url('../fonts/Nunito-SemiBold.ttf') format('truetype');font-weight:600;font-style:normal;font-display:swap;}
+@font-face{font-family:'Nunito';src:url('../fonts/Nunito-Bold.ttf') format('truetype');font-weight:700;font-style:normal;font-display:swap;}
+@font-face{font-family:'Nunito';src:url('../fonts/Nunito-ExtraBold.ttf') format('truetype');font-weight:800;font-style:normal;font-display:swap;}
+@font-face{font-family:'Nunito';src:url('../fonts/Nunito-Black.ttf') format('truetype');font-weight:900;font-style:normal;font-display:swap;}
+html,body{margin:0;padding:0;background:#0d1117;}
+deck-stage > section{font-family:'Nunito',sans-serif;box-sizing:border-box;}
+.slide{background:#f6f8fb;color:#0c1322;display:flex;flex-direction:column;gap:24px;padding:56px 80px 52px;}
+.slide-head{display:flex;align-items:flex-end;gap:32px;}
+.kicker{font-size:15px;font-weight:800;letter-spacing:.14em;color:#0080ff;}
+.slide-title{margin:6px 0 0;font-size:44px;font-weight:800;letter-spacing:-.02em;}
+.slide-desc{margin:0;max-width:620px;font-size:19px;line-height:1.45;color:#5b6472;font-weight:600;text-align:right;}
+.shot-wrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;}
+.shot{max-width:100%;max-height:100%;border-radius:16px;border:1px solid #dfe5ec;box-shadow:0 30px 70px rgba(10,20,40,.16);}
+.shot-dark{max-width:100%;max-height:100%;border-radius:16px;box-shadow:0 30px 70px rgba(10,20,40,.25);}
+.live{width:1240px;height:866px;border-radius:16px;overflow:hidden;box-shadow:0 30px 70px rgba(10,20,40,.25);}
+.live > iframe{width:1328px;height:928px;transform:scale(0.9337);transform-origin:0 0;border:0;pointer-events:none;}
+.divider{background:#0d1117;color:#ffffff;display:flex;flex-direction:column;justify-content:center;gap:20px;padding:0 140px;}
+.divider .num{font-size:130px;font-weight:900;line-height:1;color:#0080ff;}
+.divider h2{margin:0;font-size:76px;font-weight:900;letter-spacing:-.025em;}
+.divider .sub{margin:0;font-size:25px;font-weight:600;color:#8b94a3;max-width:1100px;line-height:1.5;}
+.badge{width:56px;height:56px;border-radius:16px;color:#fff;font-size:26px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.opt-head{flex:1;display:flex;align-items:center;gap:18px;}
+.card{background:#ffffff;border:1px solid #dfe5ec;border-radius:20px;padding:36px 40px;display:flex;flex-direction:column;gap:10px;}
+</style>
+<script src="deck-stage.js"></script>
+</head>
+<body>
+<deck-stage width="1920" height="1080">
+
+<section data-screen-label="01 Capa" class="slide" style="justify-content:center;padding:0 140px;position:relative;overflow:hidden;">
+  <div style="position:absolute;top:0;left:0;width:100%;height:10px;background:#0080ff;"></div>
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:24px;">
+    <div style="width:72px;height:72px;border-radius:20px;background:rgba(0,128,255,.10);display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;"><img src="../assets/activity-logo.svg" alt="Activity" style="width:100%;"/></div>
+    <div>
+      <div style="font-size:22px;font-weight:800;letter-spacing:-.01em;">Activity Fisioterapia</div>
+      <div style="font-size:13px;font-weight:800;letter-spacing:.16em;color:#0080ff;">MOOCA FISIO · SÃO PAULO</div>
+    </div>
+  </div>
+  <h1 style="margin:0;font-size:148px;font-weight:900;letter-spacing:-.035em;line-height:.95;">FisioFlow</h1>
+  <p style="margin:4px 0 0;font-size:30px;font-weight:600;color:#5b6472;max-width:1100px;line-height:1.4;">Plataforma de gestão clínica e análise biomecânica — todas as telas e opções desenhadas até aqui.</p>
+  <div style="position:absolute;bottom:64px;left:140px;right:140px;display:flex;justify-content:space-between;font-size:17px;font-weight:700;color:#8b94a3;">
+    <span>Apresentação à diretoria</span>
+    <span>Junho de 2026</span>
+  </div>
+</section>
+
+<section data-screen-label="02 Visão geral" class="slide" style="padding:80px 120px;gap:48px;">
+  <header>
+    <div class="kicker">O QUE FOI CONSTRUÍDO</div>
+    <h2 class="slide-title" style="font-size:56px;margin-top:8px;">Quatro entregas, todas navegáveis</h2>
+  </header>
+  <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:24px;">
+    <div class="card">
+      <div style="font-size:64px;font-weight:900;color:#0080ff;line-height:1;">15</div>
+      <div style="font-size:27px;font-weight:800;">Plataforma Web — FisioFlow Clínica</div>
+      <p style="margin:0;font-size:18px;font-weight:600;color:#5b6472;line-height:1.45;">Agenda, pacientes, prontuário, avaliação, evolução, exercícios, protocolos, testes, boards, financeiro, CRM·WhatsApp, wiki e configurações.</p>
+    </div>
+    <div class="card">
+      <div style="font-size:64px;font-weight:900;color:#0080ff;line-height:1;">5</div>
+      <div style="font-size:27px;font-weight:800;">Evolução da Sessão — opções de layout</div>
+      <p style="margin:0;font-size:18px;font-weight:600;color:#5b6472;line-height:1.45;">Cinco direções (A–E) para a tela mais usada pelo fisioterapeuta no dia a dia. Decisão em aberto para a diretoria.</p>
+    </div>
+    <div class="card">
+      <div style="font-size:64px;font-weight:900;color:#0080ff;line-height:1;">6×2</div>
+      <div style="font-size:27px;font-weight:800;">App do Profissional — biomecânica</div>
+      <p style="margin:0;font-size:18px;font-weight:600;color:#5b6472;line-height:1.45;">Painel, captura, análise de movimento, comparação antes/depois, laudo e testes — em desktop e mobile.</p>
+    </div>
+    <div class="card">
+      <div style="font-size:64px;font-weight:900;color:#0080ff;line-height:1;">+</div>
+      <div style="font-size:27px;font-weight:800;">App do Paciente + Design System</div>
+      <p style="margin:0;font-size:18px;font-weight:600;color:#5b6472;line-height:1.45;">Home do paciente (agenda, diário de dor, protocolo do dia) e o sistema de design completo: cores, tipografia Nunito e componentes.</p>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="03 Fundações" class="slide" style="padding:80px 120px;gap:44px;">
+  <header>
+    <div class="kicker">DESIGN SYSTEM</div>
+    <h2 class="slide-title" style="font-size:56px;margin-top:8px;">Fundações: calma clínica + precisão de dados</h2>
+  </header>
+  <div style="flex:1;display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:24px;">
+    <div class="card" style="gap:22px;">
+      <div style="font-size:14px;font-weight:800;letter-spacing:.12em;color:#8b94a3;">COR</div>
+      <div style="display:flex;gap:14px;">
+        <div style="flex:1;"><div style="height:84px;border-radius:14px;background:#0080ff;"></div><div style="font-size:15px;font-weight:800;margin-top:8px;">Azul Activity</div><div style="font-size:13px;font-weight:600;color:#8b94a3;">ação primária · #0080FF</div></div>
+        <div style="flex:1;"><div style="height:84px;border-radius:14px;background:#10b981;"></div><div style="font-size:15px;font-weight:800;margin-top:8px;">Teal clínico</div><div style="font-size:13px;font-weight:600;color:#8b94a3;">confirmado · ok</div></div>
+        <div style="flex:1;"><div style="height:84px;border-radius:14px;background:#f59e0b;"></div><div style="font-size:15px;font-weight:800;margin-top:8px;">Âmbar</div><div style="font-size:13px;font-weight:600;color:#8b94a3;">pendências</div></div>
+      </div>
+      <div>
+        <div style="display:flex;gap:6px;"><div style="flex:1;height:34px;border-radius:8px;background:#9ca3af;"></div><div style="flex:1;height:34px;border-radius:8px;background:#bef264;"></div><div style="flex:1;height:34px;border-radius:8px;background:#fde047;"></div><div style="flex:1;height:34px;border-radius:8px;background:#fdba74;"></div><div style="flex:1;height:34px;border-radius:8px;background:#f87171;"></div><div style="flex:1;height:34px;border-radius:8px;background:#7f1d1d;"></div></div>
+        <div style="font-size:13px;font-weight:600;color:#8b94a3;margin-top:8px;">Escala de dor (EVA 0–10) — domínio clínico</div>
+      </div>
+      <p style="margin:0;font-size:16px;font-weight:600;color:#5b6472;line-height:1.5;">Neutros frios para jornadas de 8h+ na clínica. O azul é escasso e intencional: só em ações primárias e dados críticos.</p>
+    </div>
+    <div class="card" style="gap:14px;">
+      <div style="font-size:14px;font-weight:800;letter-spacing:.12em;color:#8b94a3;">TIPOGRAFIA</div>
+      <div style="font-size:92px;font-weight:900;line-height:1;letter-spacing:-.03em;">Aa</div>
+      <div style="font-size:26px;font-weight:800;">Nunito</div>
+      <p style="margin:0;font-size:16px;font-weight:600;color:#5b6472;line-height:1.5;">Substituta aprovada pela marca para a VAG Rounded do logotipo. Self-hosted, pesos 200–900, caractere arredondado e humano.</p>
+      <div style="margin-top:auto;font-size:18px;font-weight:400;color:#5b6472;">Regular · <span style="font-weight:600;">SemiBold</span> · <span style="font-weight:800;">ExtraBold</span></div>
+    </div>
+    <div class="card" style="gap:14px;">
+      <div style="font-size:14px;font-weight:800;letter-spacing:.12em;color:#8b94a3;">FORMA</div>
+      <div style="height:120px;border:1px solid #dfe5ec;border-radius:16px;background:#f6f8fb;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#8b94a3;">cards flat · raio 16px · borda 1px</div>
+      <div style="display:flex;gap:10px;align-items:center;"><span style="padding:8px 18px;border-radius:10px;background:#0080ff;color:#fff;font-size:15px;font-weight:700;">Agendar</span><span style="padding:8px 18px;border-radius:10px;border:1px solid #dfe5ec;background:#fff;font-size:15px;font-weight:700;">Filtros</span><span style="padding:5px 12px;border-radius:999px;background:rgba(16,185,129,.12);color:#0b7a57;font-size:12px;font-weight:800;">CONFIRMADO</span></div>
+      <p style="margin:0;font-size:16px;font-weight:600;color:#5b6472;line-height:1.5;">Sem gradientes decorativos, sem sombras pesadas. Cantos generosos: look clínico-amigável, sem cair em infantil.</p>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="04 § Web" class="divider">
+  <div class="num">01</div>
+  <h2>Plataforma Web</h2>
+  <p class="sub">FisioFlow Clínica — a ferramenta de trabalho diária da equipe. 15 telas, do login às configurações.</p>
+</section>
+
+<section data-screen-label="05 Login" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">PLATAFORMA WEB · 01/15</div><h2 class="slide-title">Login</h2></div>
+    <p class="slide-desc">Entrada da equipe — e-mail e senha, com a marca FisioFlow · Mooca Fisio.</p>
+  </header>
+  <div class="shot-wrap"><img src="shots/01-web.png" alt="Login" class="shot"/></div>
+</section>
+
+<section data-screen-label="06 Agenda" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">PLATAFORMA WEB · 02/15</div><h2 class="slide-title">Agenda da Semana</h2></div>
+    <p class="slide-desc">6 dias × 12 horários sem scroll lateral · status por cor (confirmado, pendente, consulta) · alerta de pacientes sem retorno.</p>
+  </header>
+  <div class="shot-wrap"><img src="shots/02-web.png" alt="Agenda" class="shot"/></div>
+</section>
+
+<section data-screen-label="07 Pacientes" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">PLATAFORMA WEB · 03/15</div><h2 class="slide-title">Pacientes</h2></div>
+    <p class="slide-desc">248 ativos · busca, filtros e status do tratamento em uma lista densa e escaneável.</p>
+  </header>
+  <div class="shot-wrap"><img src="shots/03-web.png" alt="Pacientes" class="shot"/></div>
+</section>
+
+<section data-screen-label="08 Prontuário" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">PLATAFORMA WEB · 04/15</div><h2 class="slide-title">Prontuário do Paciente</h2></div>
+    <p class="slide-desc">Identidade, progresso do tratamento, timeline de evoluções, dor e protocolo ativo — tudo em uma página.</p>
+  </header>
+  <div class="shot-wrap"><div class="live"><iframe src="../ui_kits/web/paciente-detalhe.html" loading="lazy" title="Prontuário do Paciente"></iframe></div></div>
+</section>
+
+<section data-screen-label="09 Avaliação" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">PLATAFORMA WEB · 05/15</div><h2 class="slide-title">Avaliação Inicial · Anamnese</h2></div>
+    <p class="slide-desc">Queixa/HMA, exame físico, ADM, testes especiais, EVA, hipótese diagnóstica e plano de tratamento.</p>
+  </header>
+  <div class="shot-wrap"><img src="shots/web-avaliacao-inicial.png" alt="Avaliação Inicial" class="shot-dark"/></div>
+</section>
+
+<section data-screen-label="10 Evolução Clínica" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">PLATAFORMA WEB · 06/15</div><h2 class="slide-title">Evolução Clínica</h2></div>
+    <p class="slide-desc">Timeline clínico do paciente: evoluções por sessão, métricas e metas de tratamento.</p>
+  </header>
+  <div class="shot-wrap"><img src="shots/web-evolucao-clinica.png" alt="Evolução Clínica" class="shot-dark"/></div>
+</section>
+
+<section data-screen-label="11 Exercícios" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">PLATAFORMA WEB · 07/15</div><h2 class="slide-title">Biblioteca de Exercícios</h2></div>
+    <p class="slide-desc">351 exercícios · 211 com vídeo · templates e protocolos, com abas de mídias e IA Assistente.</p>
+  </header>
+  <div class="shot-wrap"><img src="shots/04-web.png" alt="Biblioteca de Exercícios" class="shot"/></div>
+</section>
+
+<section data-screen-label="12 Protocolos" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">PLATAFORMA WEB · 08/15</div><h2 class="slide-title">Protocolos</h2></div>
+    <p class="slide-desc">Master-detail: fases do protocolo, sequência de exercícios e pacientes ativos em cada um.</p>
+  </header>
+  <div class="shot-wrap"><div class="live"><iframe src="../ui_kits/web/protocolos.html" loading="lazy" title="Protocolos"></iframe></div></div>
+</section>
+
+<section data-screen-label="13 Testes Clínicos" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">PLATAFORMA WEB · 09/15</div><h2 class="slide-title">Testes Clínicos</h2></div>
+    <p class="slide-desc">Biblioteca visual de testes ortopédicos: mídia, métricas de acurácia e tempo de execução.</p>
+  </header>
+  <div class="shot-wrap"><div class="live"><iframe src="../ui_kits/web/testes-clinicos.html" loading="lazy" title="Testes Clínicos"></iframe></div></div>
+</section>
+
+<section data-screen-label="14 Bibl. de Testes" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">PLATAFORMA WEB · 10/15</div><h2 class="slide-title">Biblioteca de Testes — versão estendida</h2></div>
+    <p class="slide-desc">Exploração expandida da biblioteca de testes ortopédicos, com mais filtros e detalhe por teste.</p>
+  </header>
+  <div class="shot-wrap"><div class="live" style="height:775px;"><iframe src="../testes-clinicos-biblioteca.html" loading="lazy" title="Biblioteca de Testes" style="width:1440px;height:900px;transform:scale(0.861);"></iframe></div></div>
+</section>
+
+<section data-screen-label="15 Boards" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">PLATAFORMA WEB · 11/15</div><h2 class="slide-title">Boards</h2></div>
+    <p class="slide-desc">Kanban operacional do fluxo de pacientes: colunas, cartões, responsáveis e alertas de pendência.</p>
+  </header>
+  <div class="shot-wrap"><div class="live"><iframe src="../ui_kits/web/boards.html" loading="lazy" title="Boards"></iframe></div></div>
+</section>
+
+<section data-screen-label="16 Financeiro" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">PLATAFORMA WEB · 12/15</div><h2 class="slide-title">Financeiro</h2></div>
+    <p class="slide-desc">KPIs do mês, receita particular × convênio, repasses e lançamentos com status.</p>
+  </header>
+  <div class="shot-wrap"><div class="live"><iframe src="../ui_kits/web/financeiro.html" loading="lazy" title="Financeiro"></iframe></div></div>
+</section>
+
+<section data-screen-label="17 CRM WhatsApp" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">PLATAFORMA WEB · 13/15</div><h2 class="slide-title">CRM · WhatsApp</h2></div>
+    <p class="slide-desc">Inbox unificado: funil de leads, conversa do WhatsApp e painel de contexto do paciente lado a lado.</p>
+  </header>
+  <div class="shot-wrap"><img src="shots/web-crm-whatsapp.png" alt="CRM WhatsApp" class="shot-dark"/></div>
+</section>
+
+<section data-screen-label="18 Wiki Clínica" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">PLATAFORMA WEB · 14/15</div><h2 class="slide-title">Wiki Clínica — Módulos de Conhecimento</h2></div>
+    <p class="slide-desc">Base de conhecimento com evidência no ponto de uso, fila de curadoria com IA, FisioBrain com citações e trilhas de estudo.</p>
+  </header>
+  <div class="shot-wrap"><div class="live"><iframe src="../ui_kits/web/wiki-conhecimento-v3.html" loading="lazy" title="Wiki Clínica"></iframe></div></div>
+</section>
+
+<section data-screen-label="19 Configurações" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">PLATAFORMA WEB · 15/15</div><h2 class="slide-title">Configurações</h2></div>
+    <p class="slide-desc">Perfil da clínica, horários de funcionamento, salas, equipe e integrações.</p>
+  </header>
+  <div class="shot-wrap"><div class="live"><iframe src="../ui_kits/web/configuracoes.html" loading="lazy" title="Configurações"></iframe></div></div>
+</section>
+
+<section data-screen-label="20 § Evolução" class="divider">
+  <div class="num">02</div>
+  <h2>Evolução da Sessão — 5 opções</h2>
+  <p class="sub" style="max-width:1200px;">A tela mais usada pelo fisioterapeuta. Cinco direções de layout para o mesmo caso (Rafael Minatto · síndrome do impacto · ombro D). <span style="color:#ffffff;">Decisão em aberto: qual direção seguimos?</span></p>
+  <div style="display:flex;gap:14px;margin-top:24px;">
+    <div style="flex:1;border:1px solid #2a3340;border-radius:14px;padding:18px 20px;"><div style="display:inline-flex;width:34px;height:34px;border-radius:10px;background:#0080ff;color:#fff;font-weight:900;align-items:center;justify-content:center;margin-bottom:10px;">A</div><div style="font-size:19px;font-weight:800;">Workspace</div><div style="font-size:14px;font-weight:600;color:#8b94a3;margin-top:4px;">2 colunas · familiar · denso</div></div>
+    <div style="flex:1;border:1px solid #2a3340;border-radius:14px;padding:18px 20px;"><div style="display:inline-flex;width:34px;height:34px;border-radius:10px;background:#8a5cd6;color:#fff;font-weight:900;align-items:center;justify-content:center;margin-bottom:10px;">B</div><div style="font-size:19px;font-weight:800;">SOAP guiado</div><div style="font-size:14px;font-weight:600;color:#8b94a3;margin-top:4px;">por etapas · estruturado · IA</div></div>
+    <div style="flex:1;border:1px solid #2a3340;border-radius:14px;padding:18px 20px;"><div style="display:inline-flex;width:34px;height:34px;border-radius:10px;background:#e25555;color:#fff;font-weight:900;align-items:center;justify-content:center;margin-bottom:10px;">C</div><div style="font-size:19px;font-weight:800;">Modo ao vivo</div><div style="font-size:14px;font-weight:600;color:#8b94a3;margin-top:4px;">rápido · voz · feed</div></div>
+    <div style="flex:1;border:1px solid #2a3340;border-radius:14px;padding:18px 20px;"><div style="display:inline-flex;width:34px;height:34px;border-radius:10px;background:#1f9e6e;color:#fff;font-weight:900;align-items:center;justify-content:center;margin-bottom:10px;">D</div><div style="font-size:19px;font-weight:800;">Nota clínica</div><div style="font-size:14px;font-weight:600;color:#8b94a3;margin-top:4px;">EVA · narrativa · editorial</div></div>
+    <div style="flex:1;border:1px solid #2a3340;border-radius:14px;padding:18px 20px;"><div style="display:inline-flex;width:34px;height:34px;border-radius:10px;background:#e08a2e;color:#fff;font-weight:900;align-items:center;justify-content:center;margin-bottom:10px;">E</div><div style="font-size:19px;font-weight:800;">Dor-cêntrico</div><div style="font-size:14px;font-weight:600;color:#8b94a3;margin-top:4px;">EVA · medidor · tendência</div></div>
+  </div>
+</section>
+
+<section data-screen-label="21 Opção A" class="slide">
+  <header class="slide-head">
+    <div class="opt-head">
+      <div class="badge" style="background:#0080ff;">A</div>
+      <div><div class="kicker">EVOLUÇÃO DA SESSÃO · OPÇÃO A</div><h2 class="slide-title" style="margin-top:4px;">Workspace</h2></div>
+    </div>
+    <p class="slide-desc">Refina o layout atual de 2 colunas: objetivos da sessão, dor antes/depois e comparação com a sessão anterior. <strong>2 colunas · familiar · denso.</strong></p>
+  </header>
+  <div class="shot-wrap"><img src="shots/evo-a.png" alt="Opção A — Workspace" class="shot"/></div>
+</section>
+
+<section data-screen-label="22 Opção B" class="slide">
+  <header class="slide-head">
+    <div class="opt-head">
+      <div class="badge" style="background:#8a5cd6;">B</div>
+      <div><div class="kicker" style="color:#8a5cd6;">EVOLUÇÃO DA SESSÃO · OPÇÃO B</div><h2 class="slide-title" style="margin-top:4px;">SOAP Guiado</h2></div>
+    </div>
+    <p class="slide-desc">Fluxo estruturado por etapas (Subjetivo → Objetivo → Avaliação → Plano) com resumo montado por IA e assinatura. <strong>Por etapas · estruturado · IA.</strong></p>
+  </header>
+  <div class="shot-wrap"><img src="shots/evo-b.png" alt="Opção B — SOAP guiado" class="shot"/></div>
+</section>
+
+<section data-screen-label="23 Opção C" class="slide">
+  <header class="slide-head">
+    <div class="opt-head">
+      <div class="badge" style="background:#e25555;">C</div>
+      <div><div class="kicker" style="color:#e25555;">EVOLUÇÃO DA SESSÃO · OPÇÃO C</div><h2 class="slide-title" style="margin-top:4px;">Modo ao Vivo</h2></div>
+    </div>
+    <p class="slide-desc">Atendimento rápido durante a sessão: timer, captura por voz e feed cronológico do que foi feito, editável. <strong>Rápido · voz · feed.</strong></p>
+  </header>
+  <div class="shot-wrap"><img src="shots/evo-c.png" alt="Opção C — Modo ao vivo" class="shot"/></div>
+</section>
+
+<section data-screen-label="24 Opção D" class="slide">
+  <header class="slide-head">
+    <div class="opt-head">
+      <div class="badge" style="background:#1f9e6e;">D</div>
+      <div><div class="kicker" style="color:#1f9e6e;">EVOLUÇÃO DA SESSÃO · OPÇÃO D</div><h2 class="slide-title" style="margin-top:4px;">Nota Clínica</h2></div>
+    </div>
+    <p class="slide-desc">Writing-first editorial: a descrição é o herói e a EVA vira a "jornada da dor" chegada → saída. <strong>EVA · narrativa · editorial.</strong></p>
+  </header>
+  <div class="shot-wrap"><img src="shots/evo-d.png" alt="Opção D — Nota clínica" class="shot"/></div>
+</section>
+
+<section data-screen-label="25 Opção E" class="slide">
+  <header class="slide-head">
+    <div class="opt-head">
+      <div class="badge" style="background:#e08a2e;">E</div>
+      <div><div class="kicker" style="color:#e08a2e;">EVOLUÇÃO DA SESSÃO · OPÇÃO E</div><h2 class="slide-title" style="margin-top:4px;">Dor-cêntrico</h2></div>
+    </div>
+    <p class="slide-desc">Painel focado na dor: medidor radial da EVA, qualidade da dor, tendência entre sessões + descrição detalhada. <strong>EVA · medidor · tendência.</strong></p>
+  </header>
+  <div class="shot-wrap"><img src="shots/evo-e.png" alt="Opção E — Dor-cêntrico" class="shot"/></div>
+</section>
+
+<section data-screen-label="26 § Pro App" class="divider">
+  <div class="num">03</div>
+  <h2>App do Profissional</h2>
+  <p class="sub">Análise biomecânica em atendimento: do vídeo capturado ao laudo entregue. 6 telas, em desktop e mobile.</p>
+</section>
+
+<section data-screen-label="27 Painel" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">APP DO PROFISSIONAL · 01/06</div><h2 class="slide-title">Painel de Análise</h2></div>
+    <p class="slide-desc">KPIs de capturas, análises pendentes, capturas recentes e agenda do dia com atalhos.</p>
+  </header>
+  <div class="shot-wrap"><img src="shots/pro-dashboard.png" alt="Painel de Análise" class="shot-dark"/></div>
+</section>
+
+<section data-screen-label="28 Captura" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">APP DO PROFISSIONAL · 02/06</div><h2 class="slide-title">Nova Captura</h2></div>
+    <p class="slide-desc">Fluxo de gravação do movimento: paciente, teste, enquadramento e checagem antes de gravar.</p>
+  </header>
+  <div class="shot-wrap"><img src="shots/pro-capture.png" alt="Nova Captura" class="shot-dark"/></div>
+</section>
+
+<section data-screen-label="29 Análise" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">APP DO PROFISSIONAL · 03/06</div><h2 class="slide-title">Análise Biomecânica</h2></div>
+    <p class="slide-desc">Esqueleto sobre o vídeo, ângulos articulares quadro a quadro e métricas do movimento.</p>
+  </header>
+  <div class="shot-wrap"><img src="shots/pro-analise.png" alt="Análise Biomecânica" class="shot-dark"/></div>
+</section>
+
+
+
+<section data-screen-label="30 Comparação" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">APP DO PROFISSIONAL · 04/06</div><h2 class="slide-title">Comparação Antes / Depois</h2></div>
+    <p class="slide-desc">Duas sessões lado a lado: evolução de amplitude, simetria e qualidade do movimento.</p>
+  </header>
+  <div class="shot-wrap"><img src="shots/pro-comparison.png" alt="Comparação Antes/Depois" class="shot-dark"/></div>
+</section><section data-screen-label="31 Laudo" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">APP DO PROFISSIONAL · 05/06</div><h2 class="slide-title">Laudo</h2></div>
+    <p class="slide-desc">Relatório clínico da análise, pronto para revisar, assinar e exportar para o paciente ou médico.</p>
+  </header>
+  <div class="shot-wrap"><img src="shots/pro-report.png" alt="Laudo" class="shot-dark"/></div>
+</section>
+
+<section data-screen-label="32 Testes Pro" class="slide">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">APP DO PROFISSIONAL · 06/06</div><h2 class="slide-title">Biblioteca de Testes de Movimento</h2></div>
+    <p class="slide-desc">Testes padronizados (agachamento, marcha, salto…) com instruções de captura e métricas avaliadas.</p>
+  </header>
+  <div class="shot-wrap"><img src="shots/pro-tests.png" alt="Biblioteca de Testes" class="shot-dark"/></div>
+</section>
+
+<section data-screen-label="33 Pro Mobile" class="slide" style="gap:28px;">
+  <header class="slide-head">
+    <div style="flex:1;"><div class="kicker">APP DO PROFISSIONAL · MOBILE</div><h2 class="slide-title">As mesmas 6 telas, no bolso do fisio</h2></div>
+    <p class="slide-desc">Versão mobile completa para capturar e analisar direto do celular, na sala de atendimento.</p>
+  </header>
+  <div style="flex:1;min-height:0;display:flex;align-items:flex-start;justify-content:center;gap:18px;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;"><img src="shots/prom-dashboard.png" alt="Painel mobile" style="height:680px;border-radius:18px;box-shadow:0 20px 50px rgba(10,20,40,.22);"/><span style="font-size:15px;font-weight:800;color:#5b6472;">Painel</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;"><img src="shots/prom-capture.png" alt="Captura mobile" style="height:680px;border-radius:18px;box-shadow:0 20px 50px rgba(10,20,40,.22);"/><span style="font-size:15px;font-weight:800;color:#5b6472;">Captura</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;"><img src="shots/prom-analysis.png" alt="Análise mobile" style="height:680px;border-radius:18px;box-shadow:0 20px 50px rgba(10,20,40,.22);"/><span style="font-size:15px;font-weight:800;color:#5b6472;">Análise</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;"><img src="shots/prom-comparison.png" alt="Comparação mobile" style="height:680px;border-radius:18px;box-shadow:0 20px 50px rgba(10,20,40,.22);"/><span style="font-size:15px;font-weight:800;color:#5b6472;">Comparação</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;"><img src="shots/prom-report.png" alt="Laudo mobile" style="height:680px;border-radius:18px;box-shadow:0 20px 50px rgba(10,20,40,.22);"/><span style="font-size:15px;font-weight:800;color:#5b6472;">Laudo</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;"><img src="shots/prom-tests.png" alt="Testes mobile" style="height:680px;border-radius:18px;box-shadow:0 20px 50px rgba(10,20,40,.22);"/><span style="font-size:15px;font-weight:800;color:#5b6472;">Testes</span></div>
+  </div>
+</section>
+
+<section data-screen-label="34 § Paciente" class="divider">
+  <div class="num">04</div>
+  <h2>App do Paciente</h2>
+  <p class="sub">O paciente engajado entre as sessões: agenda, diário de dor e o protocolo de exercícios do dia.</p>
+</section>
+
+<section data-screen-label="35 Home Paciente" class="slide" style="flex-direction:row;padding:72px 120px;gap:80px;align-items:center;">
+  <div style="flex:1;display:flex;flex-direction:column;gap:28px;">
+    <div>
+      <div class="kicker">APP DO PACIENTE</div>
+      <h2 class="slide-title" style="font-size:52px;margin-top:8px;">Home do Paciente</h2>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:18px;">
+      <div style="background:#ffffff;border:1px solid #dfe5ec;border-radius:16px;padding:24px 28px;"><div style="font-size:21px;font-weight:800;">Próxima sessão em destaque</div><p style="margin:6px 0 0;font-size:17px;font-weight:600;color:#5b6472;line-height:1.45;">Hora, profissional e sala — com confirmação de presença em um toque, reduzindo faltas.</p></div>
+      <div style="background:#ffffff;border:1px solid #dfe5ec;border-radius:16px;padding:24px 28px;"><div style="font-size:21px;font-weight:800;">Diário de dor (EVA 0–10)</div><p style="margin:6px 0 0;font-size:17px;font-weight:600;color:#5b6472;line-height:1.45;">Registro diário com a escala visual de dor — alimenta a evolução clínica vista pelo fisio.</p></div>
+      <div style="background:#ffffff;border:1px solid #dfe5ec;border-radius:16px;padding:24px 28px;"><div style="font-size:21px;font-weight:800;">Protocolo do dia</div><p style="margin:6px 0 0;font-size:17px;font-weight:600;color:#5b6472;line-height:1.45;">Exercícios prescritos com séries, repetições e check de conclusão — adesão visível para a clínica.</p></div>
+    </div>
+  </div>
+  <div style="flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+    <img src="shots/patient-home.png" alt="Home do App do Paciente" style="height:900px;border-radius:24px;box-shadow:0 40px 90px rgba(10,20,40,.28);"/>
+  </div>
+</section>
+
+<section data-screen-label="36 Decisões" class="divider" style="justify-content:flex-start;padding:90px 140px;gap:48px;">
+  <header>
+    <div class="kicker">PARA FECHAR</div>
+    <h2 style="margin:8px 0 0;font-size:64px;">Decisões para a diretoria</h2>
+  </header>
+  <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+    <div style="border:1px solid #2a3340;border-radius:20px;padding:36px 40px;display:flex;gap:24px;">
+      <div style="font-size:44px;font-weight:900;color:#0080ff;line-height:1;">1</div>
+      <div><div style="font-size:25px;font-weight:800;">Layout da Evolução da Sessão</div><p style="margin:8px 0 0;font-size:18px;font-weight:600;color:#8b94a3;line-height:1.5;">Escolher entre as opções A–E — ou combinar elementos (ex.: Workspace + medidor de dor da E).</p></div>
+    </div>
+    <div style="border:1px solid #2a3340;border-radius:20px;padding:36px 40px;display:flex;gap:24px;">
+      <div style="font-size:44px;font-weight:900;color:#0080ff;line-height:1;">2</div>
+      <div><div style="font-size:25px;font-weight:800;">Cor primária do produto</div><p style="margin:8px 0 0;font-size:18px;font-weight:600;color:#8b94a3;line-height:1.5;">O sistema define o azul Activity #0080FF como cor canônica de ação. Confirmar e padronizar em todos os produtos.</p></div>
+    </div>
+    <div style="border:1px solid #2a3340;border-radius:20px;padding:36px 40px;display:flex;gap:24px;">
+      <div style="font-size:44px;font-weight:900;color:#0080ff;line-height:1;">3</div>
+      <div><div style="font-size:25px;font-weight:800;">Prioridade de desenvolvimento</div><p style="margin:8px 0 0;font-size:18px;font-weight:600;color:#8b94a3;line-height:1.5;">Sequenciar: plataforma web primeiro, depois app do profissional (desktop → mobile) e app do paciente?</p></div>
+    </div>
+    <div style="border:1px solid #2a3340;border-radius:20px;padding:36px 40px;display:flex;gap:24px;">
+      <div style="font-size:44px;font-weight:900;color:#0080ff;line-height:1;">4</div>
+      <div><div style="font-size:25px;font-weight:800;">Validação com a equipe clínica</div><p style="margin:8px 0 0;font-size:18px;font-weight:600;color:#8b94a3;line-height:1.5;">Todos os protótipos são clicáveis — rodar testes com os fisios da Mooca antes de iniciar o desenvolvimento.</p></div>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;color:#5b6472;">
+    <span>FisioFlow · Activity Fisioterapia</span>
+    <span>Junho de 2026</span>
+  </div>
+</section>
+
+</deck-stage>
+</body>
+</html>

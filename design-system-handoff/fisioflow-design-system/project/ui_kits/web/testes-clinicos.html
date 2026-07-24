@@ -1,0 +1,341 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="UI Kit · Testes Clínicos (web)" subtitle="Biblioteca visual de testes ortopédicos: cards com mídia, métricas de acurácia, tempo de execução e cadência de reteste" viewport="1320x920" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Testes Clínicos — Biblioteca — FisioFlow Clínica</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<link rel="stylesheet" href="screen-shell.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="image-slot.js"></script>
+<style>
+  .main { min-height: 0; display: grid; grid-template-rows: auto 1fr; }
+
+  /* header band */
+  .lib-head { padding: 16px 24px 14px; border-bottom: 1px solid hsl(var(--border)); }
+  .lh-top { display: flex; align-items: center; gap: 12px; }
+  .lh-top h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  .lh-top .sub { font-size: 12px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .lh-top .search { margin-left: auto; width: 240px; }
+  .viewtg { display: flex; border: 1px solid hsl(var(--border)); border-radius: 10px; overflow: hidden; background: hsl(var(--card)); }
+  .viewtg span { padding: 8px 11px; display: flex; align-items: center; cursor: pointer; color: hsl(var(--muted-foreground)); }
+  .viewtg span.on { background: hsl(var(--primary) / .1); color: hsl(var(--primary)); }
+  .viewtg .lucide { width: 15px; height: 15px; }
+
+  .lh-filters { display: flex; gap: 6px; margin-top: 12px; align-items: center; flex-wrap: wrap; }
+  .fchip { padding: 6px 13px; border-radius: 999px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); font-size: 11.5px; font-weight: 700; color: hsl(var(--muted-foreground)); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .fchip .ct { font-size: 9.5px; font-weight: 800; font-variant-numeric: tabular-nums; opacity: .7; }
+  .fchip.on { background: hsl(var(--primary)); border-color: hsl(var(--primary)); color: white; }
+  .fdivider { width: 1px; height: 20px; background: hsl(var(--border)); margin: 0 4px; }
+  .fchip.ghost { border-style: dashed; }
+
+  /* grid */
+  .lib-body { overflow-y: auto; min-height: 0; padding: 18px 24px 24px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+  /* card */
+  .tcard { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
+  .tcard:hover { box-shadow: var(--shadow-md); }
+
+  .media { position: relative; height: 138px; background: hsl(var(--muted) / .5); }
+  .media image-slot { width: 100%; height: 100%; display: block; }
+  .media .dur { position: absolute; right: 9px; bottom: 9px; background: rgba(13,17,23,.78); color: white; font-size: 10px; font-weight: 800; font-variant-numeric: tabular-nums; padding: 3px 8px; border-radius: 7px; display: flex; align-items: center; gap: 5px; z-index: 2; pointer-events: none; }
+  .media .dur .lucide { width: 11px; height: 11px; }
+  .media .play { position: absolute; left: 9px; bottom: 9px; background: rgba(13,17,23,.78); color: white; font-size: 10px; font-weight: 800; padding: 3px 9px 3px 7px; border-radius: 7px; display: flex; align-items: center; gap: 5px; z-index: 2; cursor: pointer; }
+  .media .play .lucide { width: 11px; height: 11px; }
+  .media .grade { position: absolute; left: 9px; top: 9px; z-index: 2; pointer-events: none; }
+  .grade-pill { font-size: 9.5px; font-weight: 800; letter-spacing: 0.06em; padding: 3px 9px; border-radius: 999px; background: hsl(158 60% 30%); color: white; display: inline-flex; align-items: center; gap: 4px; }
+  .grade-pill.b { background: hsl(38 85% 38%); }
+  .grade-pill .lucide { width: 10px; height: 10px; }
+
+  .tbody { padding: 13px 15px 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .t-top { display: flex; align-items: flex-start; gap: 8px; }
+  .t-top .nm { font-size: 14px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.25; }
+  .t-top .mt { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; margin-top: 2px; }
+  .t-top .reg { margin-left: auto; flex-shrink: 0; }
+
+  /* accuracy bars */
+  .acc { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .acc .m { background: hsl(var(--muted) / .45); border-radius: 9px; padding: 7px 9px; }
+  .acc .lb { font-size: 8.5px; font-weight: 800; letter-spacing: 0.07em; color: hsl(var(--muted-foreground)); }
+  .acc .vl { font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 1px; }
+  .acc .mbar { height: 3.5px; border-radius: 2px; background: hsl(220 13% 88%); margin-top: 5px; overflow: hidden; }
+  .acc .mbar span { display: block; height: 100%; border-radius: 2px; }
+
+  /* retest cadence */
+  .retest { border: 1px dashed hsl(var(--border)); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; }
+  .retest .rt-title { font-size: 8.5px; font-weight: 800; letter-spacing: 0.07em; color: hsl(var(--muted-foreground)); display: flex; align-items: center; gap: 5px; }
+  .retest .rt-title .lucide { width: 11px; height: 11px; }
+  .rt-row { display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; }
+  .rt-row .who { color: hsl(var(--muted-foreground)); width: 92px; flex-shrink: 0; font-weight: 600; }
+  .rt-row b { font-variant-numeric: tabular-nums; }
+  .rt-row .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  .t-foot { display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 2px; }
+  .t-foot .uses { font-size: 10.5px; font-weight: 700; color: hsl(var(--muted-foreground)); display: flex; align-items: center; gap: 4px; margin-right: auto; }
+  .t-foot .uses .lucide { width: 12px; height: 12px; }
+</style>
+</head>
+<body>
+<div class="pad">
+
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><img src="../../assets/activity-logo.svg" alt=""/></div>
+      <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div>
+        <div class="sb-group-label">ATENDIMENTO</div>
+        <div class="sb-item"><i data-lucide="calendar-days"></i> AGENDA</div>
+        <div class="sb-item"><i data-lucide="users"></i> PACIENTES</div>
+        <div class="sb-item"><i data-lucide="message-circle"></i> CRM · WHATSAPP</div>
+      </div>
+      <div>
+        <div class="sb-group-label">CLÍNICA</div>
+        <div class="sb-item"><i data-lucide="clipboard-check"></i> AVALIAÇÕES</div>
+        <div class="sb-item"><i data-lucide="dumbbell"></i> EXERCÍCIOS</div>
+        <div class="sb-item"><i data-lucide="clipboard-list"></i> PROTOCOLOS</div>
+        <div class="sb-item is-active"><i data-lucide="flask-conical"></i> TESTES CLÍNICOS</div>
+        <div class="sb-item"><i data-lucide="camera"></i> BIOMECÂNICA</div>
+      </div>
+      <div>
+        <div class="sb-group-label">GESTÃO &amp; OPERAÇÃO</div>
+        <div class="sb-item"><i data-lucide="layout-dashboard"></i> BOARDS</div>
+        <div class="sb-item"><i data-lucide="wallet"></i> FINANCEIRO</div>
+        <div class="sb-item"><i data-lucide="book-open"></i> WIKI CLÍNICA</div>
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-item"><i data-lucide="settings"></i> CONFIGURAÇÕES</div>
+      <div class="sb-item"><i data-lucide="log-out"></i> SAIR</div>
+    </div>
+  </aside>
+
+  <div class="content">
+    <div class="topbar">
+      <div class="crumbs">Testes Clínicos <i data-lucide="chevron-right"></i> <strong>Biblioteca</strong></div>
+      <div class="topbar-right">
+        <button class="btn"><i data-lucide="upload"></i> Importar</button>
+        <button class="btn primary"><i data-lucide="plus"></i> Novo Teste</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="lib-head">
+        <div class="lh-top">
+          <h1>Biblioteca de Testes</h1>
+          <span class="sub">84 testes · 61 com vídeo · 78 com imagem</span>
+          <div class="search"><i data-lucide="search"></i> Buscar por nome, estrutura ou região...</div>
+          <div class="viewtg">
+            <span class="on"><i data-lucide="layout-grid"></i></span>
+            <span><i data-lucide="list"></i></span>
+          </div>
+        </div>
+        <div class="lh-filters">
+          <span class="fchip">Todas <span class="ct">84</span></span>
+          <span class="fchip on">Joelho <span class="ct">17</span></span>
+          <span class="fchip">Ombro <span class="ct">21</span></span>
+          <span class="fchip">Coluna <span class="ct">21</span></span>
+          <span class="fchip">Quadril <span class="ct">8</span></span>
+          <span class="fchip">Tornozelo <span class="ct">10</span></span>
+          <span class="fchip">Punho &amp; mão <span class="ct">7</span></span>
+          <span class="fdivider"></span>
+          <span class="fchip ghost"><i data-lucide="award" style="width:12px;height:12px;"></i> Evidência A</span>
+          <span class="fchip ghost"><i data-lucide="video" style="width:12px;height:12px;"></i> Com vídeo</span>
+          <span class="fchip ghost"><i data-lucide="bone" style="width:12px;height:12px;"></i> Pós-operatório</span>
+        </div>
+      </div>
+
+      <div class="lib-body">
+        <div class="grid">
+
+          <!-- Lachman -->
+          <div class="tcard">
+            <div class="media">
+              <image-slot id="test-lachman" shape="rect" placeholder="Foto/ilustração — Lachman"></image-slot>
+              <span class="grade"><span class="grade-pill"><i data-lucide="award"></i> EVIDÊNCIA A</span></span>
+              <span class="play"><i data-lucide="play"></i> VÍDEO · 0:48</span>
+              <span class="dur"><i data-lucide="timer"></i> ~2 MIN</span>
+            </div>
+            <div class="tbody">
+              <div class="t-top">
+                <div><div class="nm">Lachman</div><div class="mt">LCA · decúbito dorsal · joelho 20–30°</div></div>
+                <span class="badge info reg">JOELHO</span>
+              </div>
+              <div class="acc">
+                <div class="m"><div class="lb">SENSIBILIDADE</div><div class="vl">85%</div><div class="mbar"><span style="width:85%; background:hsl(158 60% 42%);"></span></div></div>
+                <div class="m"><div class="lb">ESPECIFICIDADE</div><div class="vl">94%</div><div class="mbar"><span style="width:94%; background:hsl(158 60% 42%);"></span></div></div>
+              </div>
+              <div class="retest">
+                <span class="rt-title"><i data-lucide="repeat"></i> CADÊNCIA DE RETESTE</span>
+                <div class="rt-row"><span class="dot" style="background:hsl(211 100% 50%);"></span><span class="who">Conservador</span><b>a cada 12 semanas</b></div>
+                <div class="rt-row"><span class="dot" style="background:hsl(28 85% 52%);"></span><span class="who">Pós-operatório</span><b>semanal · 1ª–6ª sem</b></div>
+              </div>
+              <div class="t-foot">
+                <span class="uses"><i data-lucide="users"></i> 31 aplicações no mês</span>
+                <button class="btn sm"><i data-lucide="info" style="width:12px;height:12px;"></i></button>
+                <button class="btn sm primary">Aplicar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pivot-shift -->
+          <div class="tcard">
+            <div class="media">
+              <image-slot id="test-pivot" shape="rect" placeholder="Foto/ilustração — Pivot-shift"></image-slot>
+              <span class="grade"><span class="grade-pill"><i data-lucide="award"></i> EVIDÊNCIA A</span></span>
+              <span class="play"><i data-lucide="play"></i> VÍDEO · 1:12</span>
+              <span class="dur"><i data-lucide="timer"></i> ~3 MIN</span>
+            </div>
+            <div class="tbody">
+              <div class="t-top">
+                <div><div class="nm">Pivot-shift</div><div class="mt">LCA · instabilidade rotatória · valgo + RI</div></div>
+                <span class="badge info reg">JOELHO</span>
+              </div>
+              <div class="acc">
+                <div class="m"><div class="lb">SENSIBILIDADE</div><div class="vl">24%</div><div class="mbar"><span style="width:24%; background:hsl(38 90% 50%);"></span></div></div>
+                <div class="m"><div class="lb">ESPECIFICIDADE</div><div class="vl">98%</div><div class="mbar"><span style="width:98%; background:hsl(158 60% 42%);"></span></div></div>
+              </div>
+              <div class="retest">
+                <span class="rt-title"><i data-lucide="repeat"></i> CADÊNCIA DE RETESTE</span>
+                <div class="rt-row"><span class="dot" style="background:hsl(211 100% 50%);"></span><span class="who">Conservador</span><b>a cada 12 semanas</b></div>
+                <div class="rt-row"><span class="dot" style="background:hsl(28 85% 52%);"></span><span class="who">Pós-operatório</span><b>evitar até 12ª sem</b></div>
+              </div>
+              <div class="t-foot">
+                <span class="uses"><i data-lucide="users"></i> 12 aplicações no mês</span>
+                <button class="btn sm"><i data-lucide="info" style="width:12px;height:12px;"></i></button>
+                <button class="btn sm primary">Aplicar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- McMurray -->
+          <div class="tcard">
+            <div class="media">
+              <image-slot id="test-mcmurray" shape="rect" placeholder="Foto/ilustração — McMurray"></image-slot>
+              <span class="grade"><span class="grade-pill b"><i data-lucide="award"></i> EVIDÊNCIA B</span></span>
+              <span class="play"><i data-lucide="play"></i> VÍDEO · 0:56</span>
+              <span class="dur"><i data-lucide="timer"></i> ~2 MIN</span>
+            </div>
+            <div class="tbody">
+              <div class="t-top">
+                <div><div class="nm">McMurray</div><div class="mt">Meniscos · flexão máxima + rotação</div></div>
+                <span class="badge info reg">JOELHO</span>
+              </div>
+              <div class="acc">
+                <div class="m"><div class="lb">SENSIBILIDADE</div><div class="vl">61%</div><div class="mbar"><span style="width:61%; background:hsl(38 90% 50%);"></span></div></div>
+                <div class="m"><div class="lb">ESPECIFICIDADE</div><div class="vl">84%</div><div class="mbar"><span style="width:84%; background:hsl(158 60% 42%);"></span></div></div>
+              </div>
+              <div class="retest">
+                <span class="rt-title"><i data-lucide="repeat"></i> CADÊNCIA DE RETESTE</span>
+                <div class="rt-row"><span class="dot" style="background:hsl(211 100% 50%);"></span><span class="who">Conservador</span><b>a cada 8 semanas</b></div>
+                <div class="rt-row"><span class="dot" style="background:hsl(28 85% 52%);"></span><span class="who">Pós-meniscectomia</span><b>a cada 2 semanas</b></div>
+              </div>
+              <div class="t-foot">
+                <span class="uses"><i data-lucide="users"></i> 24 aplicações no mês</span>
+                <button class="btn sm"><i data-lucide="info" style="width:12px;height:12px;"></i></button>
+                <button class="btn sm primary">Aplicar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Thessaly -->
+          <div class="tcard">
+            <div class="media">
+              <image-slot id="test-thessaly" shape="rect" placeholder="Foto/ilustração — Thessaly"></image-slot>
+              <span class="grade"><span class="grade-pill"><i data-lucide="award"></i> EVIDÊNCIA A</span></span>
+              <span class="play"><i data-lucide="play"></i> VÍDEO · 0:39</span>
+              <span class="dur"><i data-lucide="timer"></i> ~1 MIN</span>
+            </div>
+            <div class="tbody">
+              <div class="t-top">
+                <div><div class="nm">Thessaly (20°)</div><div class="mt">Meniscos · apoio unipodal + rotação</div></div>
+                <span class="badge info reg">JOELHO</span>
+              </div>
+              <div class="acc">
+                <div class="m"><div class="lb">SENSIBILIDADE</div><div class="vl">75%</div><div class="mbar"><span style="width:75%; background:hsl(158 60% 42%);"></span></div></div>
+                <div class="m"><div class="lb">ESPECIFICIDADE</div><div class="vl">87%</div><div class="mbar"><span style="width:87%; background:hsl(158 60% 42%);"></span></div></div>
+              </div>
+              <div class="retest">
+                <span class="rt-title"><i data-lucide="repeat"></i> CADÊNCIA DE RETESTE</span>
+                <div class="rt-row"><span class="dot" style="background:hsl(211 100% 50%);"></span><span class="who">Conservador</span><b>a cada 8 semanas</b></div>
+                <div class="rt-row"><span class="dot" style="background:hsl(28 85% 52%);"></span><span class="who">Pós-operatório</span><b>evitar até 8ª sem</b></div>
+              </div>
+              <div class="t-foot">
+                <span class="uses"><i data-lucide="users"></i> 9 aplicações no mês</span>
+                <button class="btn sm"><i data-lucide="info" style="width:12px;height:12px;"></i></button>
+                <button class="btn sm primary">Aplicar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hop test -->
+          <div class="tcard">
+            <div class="media">
+              <image-slot id="test-hop" shape="rect" placeholder="Foto/ilustração — Hop test"></image-slot>
+              <span class="grade"><span class="grade-pill"><i data-lucide="award"></i> EVIDÊNCIA A</span></span>
+              <span class="play"><i data-lucide="play"></i> VÍDEO · 1:34</span>
+              <span class="dur"><i data-lucide="timer"></i> ~8 MIN</span>
+            </div>
+            <div class="tbody">
+              <div class="t-top">
+                <div><div class="nm">Hop test (bateria)</div><div class="mt">Funcional · single, triple e crossover · LSI</div></div>
+                <span class="badge info reg">JOELHO</span>
+              </div>
+              <div class="acc">
+                <div class="m"><div class="lb">CONFIABILIDADE (ICC)</div><div class="vl">0,92</div><div class="mbar"><span style="width:92%; background:hsl(158 60% 42%);"></span></div></div>
+                <div class="m"><div class="lb">META DE ALTA</div><div class="vl">≥ 90%</div><div class="mbar"><span style="width:90%; background:hsl(211 100% 50%);"></span></div></div>
+              </div>
+              <div class="retest">
+                <span class="rt-title"><i data-lucide="repeat"></i> CADÊNCIA DE RETESTE</span>
+                <div class="rt-row"><span class="dot" style="background:hsl(211 100% 50%);"></span><span class="who">Esportivo</span><b>a cada 4 semanas</b></div>
+                <div class="rt-row"><span class="dot" style="background:hsl(28 85% 52%);"></span><span class="who">Pós-op LCA</span><b>liberado após 16ª sem</b></div>
+              </div>
+              <div class="t-foot">
+                <span class="uses"><i data-lucide="users"></i> 18 aplicações no mês</span>
+                <button class="btn sm"><i data-lucide="info" style="width:12px;height:12px;"></i></button>
+                <button class="btn sm primary">Aplicar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Valgo stress -->
+          <div class="tcard">
+            <div class="media">
+              <image-slot id="test-valgo" shape="rect" placeholder="Foto/ilustração — Stress em valgo"></image-slot>
+              <span class="grade"><span class="grade-pill b"><i data-lucide="award"></i> EVIDÊNCIA B</span></span>
+              <span class="play" style="background:hsl(220 9% 46% / .85);"><i data-lucide="video-off"></i> SEM VÍDEO</span>
+              <span class="dur"><i data-lucide="timer"></i> ~2 MIN</span>
+            </div>
+            <div class="tbody">
+              <div class="t-top">
+                <div><div class="nm">Stress em valgo (0° e 30°)</div><div class="mt">LCM · força em valgo · estendido e a 30°</div></div>
+                <span class="badge info reg">JOELHO</span>
+              </div>
+              <div class="acc">
+                <div class="m"><div class="lb">SENSIBILIDADE</div><div class="vl">91%</div><div class="mbar"><span style="width:91%; background:hsl(158 60% 42%);"></span></div></div>
+                <div class="m"><div class="lb">ESPECIFICIDADE</div><div class="vl">49%</div><div class="mbar"><span style="width:49%; background:hsl(38 90% 50%);"></span></div></div>
+              </div>
+              <div class="retest">
+                <span class="rt-title"><i data-lucide="repeat"></i> CADÊNCIA DE RETESTE</span>
+                <div class="rt-row"><span class="dot" style="background:hsl(211 100% 50%);"></span><span class="who">Conservador</span><b>a cada 4 semanas</b></div>
+                <div class="rt-row"><span class="dot" style="background:hsl(28 85% 52%);"></span><span class="who">Pós-operatório</span><b>a cada 1 semana</b></div>
+              </div>
+              <div class="t-foot">
+                <span class="uses"><i data-lucide="users"></i> 7 aplicações no mês</span>
+                <button class="btn sm"><i data-lucide="info" style="width:12px;height:12px;"></i></button>
+                <button class="btn sm primary">Aplicar</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();</script>
+</body>
+</html>

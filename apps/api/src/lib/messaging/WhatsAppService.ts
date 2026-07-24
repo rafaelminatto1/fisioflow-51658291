@@ -60,7 +60,7 @@ export class WhatsAppService {
    * Specialized reminder message
    */
   async sendReminder(patientName: string, phoneNumber: string, date: string, time: string) {
-    const body = `Olá ${patientName}! 👋\nLembramos de sua consulta na FisioFlow para o dia ${date} às ${time}.\nPor favor, confirme respondendo 'SIM' ou solicite reagendamento.`;
+    const body = `Olá ${patientName}! 👋\nLembramos de sua sessão na FisioFlow para o dia ${date} às ${time}.\nPor favor, confirme respondendo 'SIM' ou solicite reagendamento.`;
     return this.send({ to: phoneNumber, body });
   }
 }

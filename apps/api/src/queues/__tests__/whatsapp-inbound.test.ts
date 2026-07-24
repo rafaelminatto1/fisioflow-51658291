@@ -58,7 +58,7 @@ const ENV = {
   // No DB → skip idempotency branch for simplicity.
 } as any;
 
-function makeBatch(text = "Quais os horários?") {
+function makeBatch(text = "Vocês funcionam aos domingos?") {
   const ack = vi.fn();
   const retry = vi.fn();
   return {
@@ -237,6 +237,64 @@ describe("handleWhatsAppInboundQueue — concierge auto-reply", () => {
     expect(mockSendTextMessage).toHaveBeenCalledWith(
       "5511993524642",
       "Como posso ajudar?",
+    );
+  });
+
+  it("processa clique em botão interativo de horário (button_reply) e confirma agendamento no CRM", async () => {
+    const ack = vi.fn();
+    const batch = {
+      ack,
+      retry: vi.fn(),
+      batch: {
+        messages: [
+          {
+            ack,
+            retry: vi.fn(),
+            body: {
+              type: "inbound_message",
+              metaMessageId: "wamid.button1",
+              waId: "5511993524642",
+              from: "5511993524642",
+              text: "07:00",
+              messageType: "interactive",
+              rawPayload: {
+                interactive: {
+                  type: "button_reply",
+                  button_reply: { id: "book_slot|session|2026-07-24|07:00", title: "07:00" },
+                },
+              },
+              organizationId: null,
+              phoneNumberId: "phone-1",
+              timestamp: new Date().toISOString(),
+            },
+          },
+        ],
+      } as any,
+    };
+
+    mockQuery.mockImplementation((sql: string) => {
+      if (/whatsapp_phone_number_id/.test(sql)) return Promise.resolve({ rows: [{ id: "org-1" }] });
+      if (/SELECT.*FROM profiles/.test(sql)) return Promise.resolve({ rows: [{ id: "therapist-1", full_name: "Dr. Rafael" }] });
+      if (/INSERT INTO appointments/.test(sql)) return Promise.resolve({ rows: [{ id: "appt-100" }] });
+      return Promise.resolve({ rows: [] });
+    });
+
+    await handleWhatsAppInboundQueue(batch.batch, ENV);
+
+    // Deve enviar confirmação e registrar mensagem de saída no CRM
+    expect(mockSendTextMessage).toHaveBeenCalledTimes(1);
+    expect(mockAddMessage).toHaveBeenCalledWith(
+      expect.anything(),
+      "conversation-1",
+      "org-1",
+      "contact-1",
+      "outbound",
+      "system",
+      "contact-1",
+      "text",
+      expect.stringContaining("Agendamento confirmado"),
+      expect.stringMatching(/^flow_booking_/),
+      expect.objectContaining({ status: "sent" })
     );
   });
 });

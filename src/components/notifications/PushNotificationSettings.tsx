@@ -65,7 +65,7 @@ export const PushNotificationSettings = () => {
               Notificações Push
             </CardTitle>
             <CardDescription>
-              Receba lembretes de consultas e atualizações importantes
+              Receba lembretes de sessões e atualizações importantes
             </CardDescription>
           </div>
           {getPermissionBadge()}
@@ -117,7 +117,7 @@ export const PushNotificationSettings = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Smartphone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Lembretes de consulta</span>
+                  <span className="text-sm">Lembretes de sessão</span>
                 </div>
                 <Switch defaultChecked />
               </div>

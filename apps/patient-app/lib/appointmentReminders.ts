@@ -177,16 +177,16 @@ export class AppointmentReminders {
       let message = "";
       if (hoursBefore >= 24) {
         const days = Math.floor(hoursBefore / 24);
-        message = `Sua consulta de ${appointment.type} e em ${days} dia${days !== 1 ? "s" : ""}.`;
+        message = `Sua sessão de ${appointment.type} e em ${days} dia${days !== 1 ? "s" : ""}.`;
       } else if (hoursBefore === 1) {
-        message = `Sua consulta de ${appointment.type} e em 1 hora.`;
+        message = `Sua sessão de ${appointment.type} e em 1 hora.`;
       } else {
-        message = `Sua consulta de ${appointment.type} e em ${hoursBefore} horas.`;
+        message = `Sua sessão de ${appointment.type} e em ${hoursBefore} horas.`;
       }
 
       return Notifications.scheduleNotificationAsync({
         content: {
-          title: "Lembrete de Consulta",
+          title: "Lembrete de Sessão",
           body: `${message}\nCom ${appointment.professionalName} as ${appointment.time}.`,
           data: {
             type: "appointment_reminder",
@@ -281,8 +281,8 @@ export async function createAppointmentReminder(
 
   return Notifications.scheduleNotificationAsync({
     content: {
-      title: "Lembrete de Consulta",
-      body: `Sua consulta de ${appointment.type} e em ${hoursBefore} horas.\nCom ${appointment.professionalName} as ${appointment.time}.`,
+      title: "Lembrete de Sessão",
+      body: `Sua sessão de ${appointment.type} e em ${hoursBefore} horas.\nCom ${appointment.professionalName} as ${appointment.time}.`,
       data: {
         type: "appointment_reminder",
         appointmentId: appointment.id,

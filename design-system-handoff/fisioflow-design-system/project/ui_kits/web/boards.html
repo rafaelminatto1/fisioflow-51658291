@@ -1,0 +1,217 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="UI Kit · Boards (web)" subtitle="Kanban operacional: fluxo de pacientes com colunas, cartões, responsáveis e alertas de pendência" viewport="1320x920" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Boards — FisioFlow Clínica</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<link rel="stylesheet" href="screen-shell.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  .main { min-height: 0; display: grid; grid-template-rows: auto 1fr; }
+
+  .b-head { padding: 16px 24px 0; }
+  .b-title { display: flex; align-items: center; gap: 12px; }
+  .b-title h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  .b-title .sub { font-size: 12px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .b-tabs { display: flex; gap: 2px; margin-top: 12px; border-bottom: 1px solid hsl(var(--border)); }
+  .b-tab { padding: 9px 13px; font-size: 13px; font-weight: 700; color: hsl(var(--muted-foreground)); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .b-tab.on { color: hsl(var(--primary)); border-bottom-color: hsl(var(--primary)); }
+
+  /* board */
+  .board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 16px 24px 24px; min-height: 0; overflow: hidden; }
+  .col { display: grid; grid-template-rows: auto 1fr; min-height: 0; background: hsl(var(--muted) / .4); border-radius: 16px; padding: 10px; }
+  .col-head { display: flex; align-items: center; gap: 8px; padding: 4px 6px 10px; }
+  .col-head .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .col-head .nm { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; }
+  .col-head .ct { font-size: 10px; font-weight: 800; font-variant-numeric: tabular-nums; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); color: hsl(var(--muted-foreground)); border-radius: 999px; padding: 1px 7px; }
+  .col-head .plus { margin-left: auto; color: hsl(var(--muted-foreground)); cursor: pointer; display: flex; }
+  .col-cards { overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 1px; }
+
+  .kcard { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 13px; padding: 12px 13px; cursor: grab; }
+  .kcard:hover { box-shadow: var(--shadow-md); }
+  .kcard .tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 7px; }
+  .kcard .tt { font-size: 13px; font-weight: 800; line-height: 1.3; }
+  .kcard .mt { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; margin-top: 3px; line-height: 1.45; }
+  .kcard .foot { display: flex; align-items: center; gap: 7px; margin-top: 10px; }
+  .kcard .due { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  .kcard .due.late { color: hsl(0 70% 45%); }
+  .kcard .av { width: 22px; height: 22px; font-size: 8.5px; margin-left: auto; }
+  .kcard.ghost { border: 1.5px dashed hsl(var(--border)); background: transparent; display: flex; align-items: center; justify-content: center; gap: 6px; color: hsl(var(--muted-foreground)); font-size: 12px; font-weight: 700; padding: 11px; cursor: pointer; box-shadow: none; }
+  .kcard.ghost:hover { color: hsl(var(--primary)); border-color: hsl(var(--primary) / .4); }
+</style>
+</head>
+<body>
+<div class="pad">
+
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><img src="../../assets/activity-logo.svg" alt=""/></div>
+      <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div>
+        <div class="sb-group-label">ATENDIMENTO</div>
+        <div class="sb-item"><i data-lucide="calendar-days"></i> AGENDA</div>
+        <div class="sb-item"><i data-lucide="users"></i> PACIENTES</div>
+        <div class="sb-item"><i data-lucide="message-circle"></i> CRM · WHATSAPP</div>
+      </div>
+      <div>
+        <div class="sb-group-label">CLÍNICA</div>
+        <div class="sb-item"><i data-lucide="clipboard-check"></i> AVALIAÇÕES</div>
+        <div class="sb-item"><i data-lucide="dumbbell"></i> EXERCÍCIOS</div>
+        <div class="sb-item"><i data-lucide="clipboard-list"></i> PROTOCOLOS</div>
+        <div class="sb-item"><i data-lucide="flask-conical"></i> TESTES CLÍNICOS</div>
+        <div class="sb-item"><i data-lucide="camera"></i> BIOMECÂNICA</div>
+      </div>
+      <div>
+        <div class="sb-group-label">GESTÃO &amp; OPERAÇÃO</div>
+        <div class="sb-item is-active"><i data-lucide="layout-dashboard"></i> BOARDS</div>
+        <div class="sb-item"><i data-lucide="wallet"></i> FINANCEIRO</div>
+        <div class="sb-item"><i data-lucide="book-open"></i> WIKI CLÍNICA</div>
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-item"><i data-lucide="settings"></i> CONFIGURAÇÕES</div>
+      <div class="sb-item"><i data-lucide="log-out"></i> SAIR</div>
+    </div>
+  </aside>
+
+  <div class="content">
+    <div class="topbar">
+      <div class="crumbs"><strong>Boards</strong></div>
+      <div class="topbar-right">
+        <button class="btn"><i data-lucide="filter"></i> Filtrar</button>
+        <button class="btn primary"><i data-lucide="plus"></i> Novo Cartão</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="b-head">
+        <div class="b-title">
+          <h1>Fluxo de Pacientes</h1>
+          <span class="sub">26 cartões · 3 atrasados · atualizado há 5 min</span>
+        </div>
+        <div class="b-tabs">
+          <div class="b-tab on">Fluxo de pacientes</div>
+          <div class="b-tab">Tarefas da equipe</div>
+          <div class="b-tab">Reengajamento</div>
+          <div class="b-tab" style="color:hsl(var(--primary));">+ Novo board</div>
+        </div>
+      </div>
+
+      <div class="board">
+        <!-- col 1 -->
+        <div class="col">
+          <div class="col-head"><span class="dot" style="background:hsl(211 100% 50%);"></span><span class="nm">AVALIAÇÃO AGENDADA</span><span class="ct">5</span><span class="plus"><i data-lucide="plus" style="width:14px;height:14px;"></i></span></div>
+          <div class="col-cards">
+            <div class="kcard">
+              <div class="tags"><span class="badge info">1ª CONSULTA</span></div>
+              <div class="tt">Renato Carvalho</div>
+              <div class="mt">Lombalgia aguda · indicação Dr. Sousa</div>
+              <div class="foot"><span class="due"><i data-lucide="calendar" style="width:12px;height:12px;"></i> Qui 12/06 · 09:00</span><span class="av" style="background:hsl(211 70% 50%);">CR</span></div>
+            </div>
+            <div class="kcard">
+              <div class="tags"><span class="badge info">1ª CONSULTA</span><span class="badge muted">CONVÊNIO</span></div>
+              <div class="tt">Beatriz Nunes</div>
+              <div class="mt">Pós-op manguito rotador · 3 sem pós-cirurgia</div>
+              <div class="foot"><span class="due"><i data-lucide="calendar" style="width:12px;height:12px;"></i> Sex 13/06 · 11:00</span><span class="av" style="background:hsl(28 80% 52%);">RM</span></div>
+            </div>
+            <div class="kcard">
+              <div class="tags"><span class="badge warn">DOC PENDENTE</span></div>
+              <div class="tt">Felipe Arruda</div>
+              <div class="mt">Aguardando pedido médico para liberar convênio</div>
+              <div class="foot"><span class="due late"><i data-lucide="alert-triangle" style="width:12px;height:12px;"></i> Venceu ter 10/06</span><span class="av" style="background:hsl(264 55% 55%);">JU</span></div>
+            </div>
+            <div class="kcard ghost"><i data-lucide="plus" style="width:14px;height:14px;"></i> Adicionar cartão</div>
+          </div>
+        </div>
+
+        <!-- col 2 -->
+        <div class="col">
+          <div class="col-head"><span class="dot" style="background:hsl(158 60% 42%);"></span><span class="nm">EM TRATAMENTO</span><span class="ct">12</span><span class="plus"><i data-lucide="plus" style="width:14px;height:14px;"></i></span></div>
+          <div class="col-cards">
+            <div class="kcard">
+              <div class="tags"><span class="badge ok">FASE 2</span></div>
+              <div class="tt">Marina Alves</div>
+              <div class="mt">SDPF joelho D · sessão 9/16 · adesão 86%</div>
+              <div class="foot"><span class="due"><i data-lucide="calendar" style="width:12px;height:12px;"></i> Qui 12/06 · 14:00</span><span class="av" style="background:hsl(211 70% 50%);">CR</span></div>
+            </div>
+            <div class="kcard">
+              <div class="tags"><span class="badge ok">FASE 3</span><span class="badge muted">ESPORTIVO</span></div>
+              <div class="tt">João Sampaio</div>
+              <div class="mt">LCA pós-op · 18ª semana · iniciar pliometria</div>
+              <div class="foot"><span class="due"><i data-lucide="calendar" style="width:12px;height:12px;"></i> Seg 16/06 · 07:30</span><span class="av" style="background:hsl(28 80% 52%);">RM</span></div>
+            </div>
+            <div class="kcard">
+              <div class="tags"><span class="badge warn">ADESÃO BAIXA</span></div>
+              <div class="tt">Lúcia Mendes</div>
+              <div class="mt">Lombalgia crônica · 41% no app em 14 dias — contatar</div>
+              <div class="foot"><span class="due"><i data-lucide="message-circle" style="width:12px;height:12px;"></i> Enviar follow-up</span><span class="av" style="background:hsl(264 55% 55%);">JU</span></div>
+            </div>
+            <div class="kcard">
+              <div class="tags"><span class="badge ok">FASE 1</span></div>
+              <div class="tt">Pedro Lacerda</div>
+              <div class="mt">Entorse tornozelo G2 · sessão 3/12</div>
+              <div class="foot"><span class="due"><i data-lucide="calendar" style="width:12px;height:12px;"></i> Sáb 14/06 · 10:00</span><span class="av" style="background:hsl(158 55% 42%);">TA</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- col 3 -->
+        <div class="col">
+          <div class="col-head"><span class="dot" style="background:hsl(38 92% 50%);"></span><span class="nm">REAVALIAÇÃO</span><span class="ct">6</span><span class="plus"><i data-lucide="plus" style="width:14px;height:14px;"></i></span></div>
+          <div class="col-cards">
+            <div class="kcard">
+              <div class="tags"><span class="badge warn">AGENDAR</span></div>
+              <div class="tt">Diego Santana</div>
+              <div class="mt">Manguito rotador · completou 12 sessões — marcar reaval.</div>
+              <div class="foot"><span class="due late"><i data-lucide="alert-triangle" style="width:12px;height:12px;"></i> Pendente há 4 dias</span><span class="av" style="background:hsl(28 80% 52%);">RM</span></div>
+            </div>
+            <div class="kcard">
+              <div class="tags"><span class="badge info">BIOMECÂNICA</span></div>
+              <div class="tt">Fernanda Moraes</div>
+              <div class="mt">LCA 24 sem · captura de hop test + laudo comparativo</div>
+              <div class="foot"><span class="due"><i data-lucide="calendar" style="width:12px;height:12px;"></i> Ter 17/06 · 15:30</span><span class="av" style="background:hsl(28 80% 52%);">RM</span></div>
+            </div>
+            <div class="kcard">
+              <div class="tags"><span class="badge muted">8 SEMANAS</span></div>
+              <div class="tt">Marina Alves</div>
+              <div class="mt">Reavaliação programada · goniometria + EVA</div>
+              <div class="foot"><span class="due"><i data-lucide="calendar" style="width:12px;height:12px;"></i> Seg 23/06 · 14:00</span><span class="av" style="background:hsl(211 70% 50%);">CR</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- col 4 -->
+        <div class="col">
+          <div class="col-head"><span class="dot" style="background:hsl(220 9% 60%);"></span><span class="nm">ALTA / ENCERRADO</span><span class="ct">3</span><span class="plus"><i data-lucide="plus" style="width:14px;height:14px;"></i></span></div>
+          <div class="col-cards">
+            <div class="kcard">
+              <div class="tags"><span class="badge ok">ALTA CLÍNICA</span></div>
+              <div class="tt">Gabriel Barros</div>
+              <div class="mt">Tendinopatia patelar · hop test 94% · laudo de alta emitido</div>
+              <div class="foot"><span class="due"><i data-lucide="check-circle-2" style="width:12px;height:12px;"></i> Sex 06/06</span><span class="av" style="background:hsl(158 55% 42%);">TA</span></div>
+            </div>
+            <div class="kcard">
+              <div class="tags"><span class="badge ok">ALTA CLÍNICA</span><span class="badge muted">PESQUISA NPS</span></div>
+              <div class="tt">Antônia Teles</div>
+              <div class="mt">Cervicalgia · 10 sessões · enviar pesquisa de satisfação</div>
+              <div class="foot"><span class="due"><i data-lucide="check-circle-2" style="width:12px;height:12px;"></i> Qua 04/06</span><span class="av" style="background:hsl(264 55% 55%);">JU</span></div>
+            </div>
+            <div class="kcard">
+              <div class="tags"><span class="badge bad">ABANDONO</span></div>
+              <div class="tt">Carlos Eduardo</div>
+              <div class="mt">3 faltas consecutivas · sem resposta — mover p/ reengajamento</div>
+              <div class="foot"><span class="due"><i data-lucide="x-circle" style="width:12px;height:12px;"></i> Seg 02/06</span><span class="av" style="background:hsl(264 55% 55%);">JU</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();</script>
+</body>
+</html>

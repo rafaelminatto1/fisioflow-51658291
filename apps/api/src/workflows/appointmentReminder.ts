@@ -136,8 +136,8 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
 
     let msg =
       daysAhead === 0
-        ? `Olá ${patientName}! Sua consulta com ${therapistName} é em 2 horas (${dateStr}). Te esperamos! 🏥`
-        : `Olá ${patientName}! Lembrete: sua consulta com ${therapistName} é ${daysAhead === 1 ? "amanhã" : "em 3 dias"} (${dateStr}). Confirme sua presença selecionando uma das opções abaixo:`;
+        ? `Olá ${patientName}! Sua sessão com ${therapistName} é em 2 horas (${dateStr}). Te esperamos! 🏥`
+        : `Olá ${patientName}! Lembrete: sua sessão com ${therapistName} é ${daysAhead === 1 ? "amanhã" : "em 3 dias"} (${dateStr}). Confirme sua presença selecionando uma das opções abaixo:`;
 
     // Se o risco for alto/médio, usamos IA para gerar um lembrete mais persuasivo
     if (riskLevel === "high" || riskLevel === "medium") {

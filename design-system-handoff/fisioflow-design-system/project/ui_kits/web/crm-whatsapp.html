@@ -1,0 +1,406 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="UI Kit · CRM + WhatsApp (web)" subtitle="Inbox unificado: funil de leads + conversa WhatsApp + painel de contexto CRM" viewport="1320x920" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>CRM · WhatsApp — FisioFlow Clínica</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  body { margin: 0; background: #0d1117; min-height: 100vh; display:flex; align-items:center; justify-content:center; padding: 24px; font-family: var(--font-sans); color: hsl(var(--foreground)); }
+  .pad { width: 1280px; height: 880px; flex-shrink: 0; background: hsl(var(--background)); border-radius: 24px; overflow: hidden; box-shadow: 0 0 0 10px #111, 0 0 0 12px #2a2d35, 0 40px 80px rgba(0,0,0,0.6); display: grid; grid-template-columns: 248px 1fr; }
+
+  /* sidebar */
+  .sidebar { background: hsl(var(--sidebar-background)); border-right: 1px solid hsl(var(--border)); display:flex; flex-direction:column; padding: 14px 10px; gap: 10px; }
+  .sb-brand { display:flex; align-items:center; gap: 10px; padding: 4px 8px 10px; border-bottom: 1px solid hsl(var(--border)); }
+  .sb-logo { width: 32px; height: 32px; border-radius: 10px; background: hsl(var(--primary) / .12); color: hsl(var(--primary)); display:flex; align-items:center; justify-content:center; padding: 4px; }
+  .sb-logo img { width: 100%; }
+  .sb-brand strong { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; }
+  .sb-brand .sub { font-size: 9px; font-weight: 800; letter-spacing: 0.12em; color: hsl(var(--primary)); }
+  .sb-nav { flex: 1; display:flex; flex-direction: column; gap: 10px; padding: 4px 0; }
+  .sb-group-label { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; color: hsl(var(--muted-foreground)); padding: 6px 10px 2px; }
+  .sb-item { display:flex; align-items:center; gap: 10px; padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: hsl(var(--foreground)); cursor: pointer; }
+  .sb-item:hover { background: hsl(var(--sidebar-accent)); }
+  .sb-item.is-active { background: hsl(var(--primary) / .10); color: hsl(var(--primary)); border-left: 3px solid hsl(var(--primary)); padding-left: 9px; }
+  .sb-item .badge { margin-left: auto; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 999px; background: hsl(142 70% 42%); color: white; }
+
+  /* content */
+  .content { display: grid; grid-template-rows: auto 1fr; min-height: 0; min-width: 0; }
+
+  /* topbar */
+  .topbar { display:flex; align-items:center; padding: 14px 20px; gap: 14px; border-bottom: 1px solid hsl(var(--border)); }
+  .topbar h1 { font-size: 19px; font-weight: 800; letter-spacing: -0.01em; display:flex; align-items:center; gap: 8px; }
+  .wa-chip { display:inline-flex; align-items:center; gap: 5px; padding: 3px 9px; border-radius: 999px; background: hsl(142 70% 94%); color: hsl(142 60% 28%); font-size: 10px; font-weight: 800; letter-spacing: 0.04em; }
+  .wa-dot { width: 6px; height: 6px; border-radius: 50%; background: hsl(142 70% 42%); }
+  .pipeline { margin-left: 8px; display:flex; gap: 6px; }
+  .pl { display:inline-flex; align-items:center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; color: hsl(var(--muted-foreground)); border: 1px solid hsl(var(--border)); background: hsl(var(--card)); cursor: pointer; }
+  .pl .n { font-variant-numeric: tabular-nums; padding: 0 5px; border-radius: 999px; background: hsl(var(--secondary)); font-size: 10px; }
+  .pl.is-active { background: hsl(var(--primary)); color: white; border-color: hsl(var(--primary)); }
+  .pl.is-active .n { background: rgba(255,255,255,.25); }
+  .topbar-right { margin-left: auto; display:flex; gap: 8px; align-items:center; }
+  .iconbtn { width: 36px; height: 36px; border-radius: 10px; background: transparent; border: 1px solid transparent; color: hsl(var(--muted-foreground)); display:flex; align-items:center; justify-content:center; cursor: pointer; }
+  .iconbtn:hover { background: hsl(var(--secondary)); }
+  .avatar { width: 32px; height: 32px; border-radius:50%; background: hsl(211 100% 92%); color: hsl(211 100% 30%); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px; }
+
+  /* 3-column inbox */
+  .inbox { display: grid; grid-template-columns: 326px 1fr 304px; min-height: 0; min-width: 0; }
+
+  /* conversation list */
+  .convlist { border-right: 1px solid hsl(var(--border)); display:flex; flex-direction:column; min-height:0; }
+  .conv-search { padding: 12px 14px; border-bottom: 1px solid hsl(var(--border)); }
+  .search-box { display:flex; align-items:center; gap: 8px; padding: 8px 12px; border-radius: 10px; background: hsl(var(--muted) / .6); }
+  .search-box input { border: none; background: transparent; outline: none; font-family: var(--font-sans); font-size: 13px; width: 100%; color: hsl(var(--foreground)); }
+  .search-box input::placeholder { color: hsl(var(--muted-foreground)); }
+  .conv-scroll { flex: 1; overflow-y: auto; }
+  .conv { display:flex; gap: 11px; padding: 12px 14px; cursor: pointer; border-bottom: 1px solid hsl(var(--border) / .6); position: relative; }
+  .conv:hover { background: hsl(var(--muted) / .4); }
+  .conv.is-active { background: hsl(var(--primary) / .07); }
+  .conv.is-active::before { content:''; position:absolute; left:0; top:0; bottom:0; width: 3px; background: hsl(var(--primary)); }
+  .conv .av { width: 42px; height: 42px; border-radius: 50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight: 800; font-size: 14px; color: white; }
+  .conv .mid { flex: 1; min-width: 0; }
+  .conv .row1 { display:flex; align-items:center; gap: 6px; }
+  .conv .name { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .conv .time { margin-left: auto; font-size: 10px; color: hsl(var(--muted-foreground)); font-weight: 600; flex-shrink: 0; }
+  .conv .preview { font-size: 12px; color: hsl(var(--muted-foreground)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; display:flex; align-items:center; gap: 4px; }
+  .conv .preview.unread { color: hsl(var(--foreground)); font-weight: 600; }
+  .conv .stage { display:inline-flex; align-items:center; gap: 4px; margin-top: 6px; padding: 2px 7px; border-radius: 999px; font-size: 9px; font-weight: 800; letter-spacing: 0.03em; }
+  .conv .unreadbadge { width: 18px; height: 18px; border-radius: 50%; background: hsl(142 70% 42%); color: white; font-size: 10px; font-weight: 800; display:flex; align-items:center; justify-content:center; flex-shrink:0; align-self: center; }
+  .stage.lead { background: hsl(264 60% 94%); color: hsl(264 50% 42%); }
+  .stage.wait { background: hsl(28 92% 93%); color: hsl(25 70% 34%); }
+  .stage.eval { background: hsl(211 100% 93%); color: hsl(211 100% 35%); }
+  .stage.treat { background: hsl(142 60% 92%); color: hsl(142 55% 28%); }
+  .stage.done { background: hsl(220 14% 92%); color: hsl(220 9% 38%); }
+  .stage-dot { width:6px;height:6px;border-radius:50%; }
+
+  /* chat thread */
+  .thread { display:flex; flex-direction:column; min-height: 0; min-width: 0; background: hsl(40 30% 96%); }
+  .thread-head { display:flex; align-items:center; gap: 12px; padding: 11px 18px; background: hsl(var(--card)); border-bottom: 1px solid hsl(var(--border)); }
+  .thread-head .av { width: 40px; height: 40px; border-radius: 50%; display:flex; align-items:center; justify-content:center; font-weight: 800; font-size: 14px; color: white; background: linear-gradient(135deg, hsl(264 55% 62%), hsl(264 55% 48%)); }
+  .thread-head .ti .n { font-size: 14px; font-weight: 800; }
+  .thread-head .ti .p { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; display:flex; align-items:center; gap: 6px; }
+  .thread-head .ti .p .online { color: hsl(142 60% 38%); font-weight: 700; }
+  .thread-head .acts { margin-left: auto; display:flex; gap: 4px; }
+
+  .msgs { flex: 1; overflow-y: auto; padding: 18px 22px; display:flex; flex-direction: column; gap: 8px;
+    background-image: radial-gradient(hsl(40 20% 88%) 1px, transparent 1px); background-size: 22px 22px; }
+  .daysep { align-self: center; padding: 3px 12px; border-radius: 999px; background: hsl(40 25% 90%); color: hsl(40 15% 40%); font-size: 10px; font-weight: 700; margin: 6px 0; }
+  .sys { align-self: center; padding: 6px 14px; border-radius: 10px; background: hsl(211 100% 95%); color: hsl(211 100% 32%); font-size: 11px; font-weight: 600; display:flex; align-items:center; gap: 6px; max-width: 80%; text-align:center; }
+  .bubble { max-width: 64%; padding: 8px 12px; border-radius: 12px; font-size: 13px; line-height: 1.45; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,.06); }
+  .bubble .meta { font-size: 9px; color: hsl(var(--muted-foreground)); margin-top: 3px; text-align: right; display:flex; align-items:center; justify-content:flex-end; gap: 3px; }
+  .bubble.in { align-self: flex-start; background: white; border-top-left-radius: 3px; }
+  .bubble.out { align-self: flex-end; background: hsl(142 65% 88%); border-top-right-radius: 3px; }
+  .bubble.out .meta { color: hsl(142 40% 38%); }
+  .bubble.tmpl { align-self: flex-end; background: white; border: 1px solid hsl(142 50% 75%); border-top-right-radius: 3px; }
+  .tmpl-tag { font-size: 9px; font-weight: 800; letter-spacing: 0.04em; color: hsl(142 55% 32%); display:flex; align-items:center; gap: 4px; margin-bottom: 3px; }
+  .check { color: hsl(199 90% 48%); }
+
+  /* quick replies + composer */
+  .quick { display:flex; gap: 6px; padding: 8px 16px; background: hsl(var(--card)); border-top: 1px solid hsl(var(--border)); overflow-x: auto; }
+  .qr { display:inline-flex; align-items:center; gap: 5px; padding: 6px 11px; border-radius: 999px; border: 1px solid hsl(var(--border)); background: hsl(var(--background)); font-size: 11px; font-weight: 700; color: hsl(var(--muted-foreground)); cursor: pointer; white-space: nowrap; }
+  .qr:hover { border-color: hsl(142 50% 55%); color: hsl(142 55% 30%); }
+  .qr.tmpl { background: hsl(142 60% 95%); border-color: hsl(142 50% 80%); color: hsl(142 55% 30%); }
+  .composer { display:flex; align-items:center; gap: 10px; padding: 12px 16px; background: hsl(var(--card)); border-top: 1px solid hsl(var(--border)); }
+  .composer .field { flex: 1; display:flex; align-items:center; gap: 10px; padding: 10px 14px; border-radius: 999px; background: hsl(var(--muted) / .6); color: hsl(var(--muted-foreground)); font-size: 13px; }
+  .send { width: 42px; height: 42px; border-radius: 50%; background: hsl(142 70% 42%); color: white; border: none; display:flex; align-items:center; justify-content:center; cursor: pointer; flex-shrink: 0; }
+
+  /* context / CRM panel */
+  .ctx { border-left: 1px solid hsl(var(--border)); overflow-y: auto; background: hsl(var(--muted) / .3); display:flex; flex-direction: column; }
+  .ctx-hero { padding: 20px 16px 16px; text-align: center; border-bottom: 1px solid hsl(var(--border)); background: hsl(var(--card)); }
+  .ctx-hero .av { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 10px; display:flex; align-items:center; justify-content:center; font-weight: 800; font-size: 22px; color: white; background: linear-gradient(135deg, hsl(264 55% 62%), hsl(264 55% 48%)); }
+  .ctx-hero .n { font-size: 16px; font-weight: 800; }
+  .ctx-hero .ph { font-size: 12px; color: hsl(var(--muted-foreground)); font-weight: 600; margin-top: 1px; }
+  .ctx-hero .quickacts { display:flex; gap: 6px; justify-content: center; margin-top: 12px; }
+  .qa { display:flex; flex-direction:column; align-items:center; gap: 4px; padding: 8px 12px; border-radius: 12px; background: hsl(var(--muted) / .7); font-size: 10px; font-weight: 700; color: hsl(var(--foreground)); cursor: pointer; }
+  .qa:hover { background: hsl(var(--primary) / .1); color: hsl(var(--primary)); }
+  .qa i { color: hsl(var(--primary)); }
+
+  .ctx-sec { padding: 14px 16px; border-bottom: 1px solid hsl(var(--border)); }
+  .ctx-sec h4 { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin-bottom: 10px; }
+  .stage-select { display:flex; align-items:center; justify-content:space-between; padding: 10px 12px; border-radius: 10px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); font-size: 13px; font-weight: 700; cursor: pointer; }
+  .stage-select .left { display:flex; align-items:center; gap: 8px; }
+  .stage-pill { display:inline-flex; align-items:center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; }
+
+  .pipe-track { display:flex; gap: 3px; margin-top: 12px; }
+  .pipe-step { flex: 1; height: 5px; border-radius: 999px; background: hsl(var(--secondary)); }
+  .pipe-step.done { background: hsl(var(--primary)); }
+  .pipe-labels { display:flex; justify-content:space-between; margin-top: 6px; font-size: 9px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  .pipe-labels .cur { color: hsl(var(--primary)); }
+
+  .field-row { display:flex; align-items:center; justify-content:space-between; padding: 7px 0; font-size: 12px; border-bottom: 1px solid hsl(var(--border) / .5); }
+  .field-row:last-child { border-bottom: none; }
+  .field-row .k { color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .field-row .v { font-weight: 700; }
+  .src-chip { display:inline-flex; align-items:center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: hsl(142 60% 92%); color: hsl(142 55% 28%); font-size: 11px; font-weight: 700; }
+
+  .next-action { padding: 10px 12px; border-radius: 10px; background: hsl(28 92% 95%); border: 1px solid hsl(28 80% 85%); }
+  .next-action .h { font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: hsl(25 70% 38%); display:flex; align-items:center; gap: 5px; }
+  .next-action .b { font-size: 12px; font-weight: 700; color: hsl(25 60% 25%); margin-top: 4px; }
+
+  .tags { display:flex; gap: 6px; flex-wrap: wrap; }
+  .tag { padding: 3px 9px; border-radius: 999px; background: hsl(var(--secondary)); font-size: 11px; font-weight: 700; color: hsl(var(--foreground)); }
+</style>
+</head>
+<body>
+<div class="pad">
+
+  <!-- sidebar -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><img src="../../assets/activity-logo.svg" alt=""/></div>
+      <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div>
+        <div class="sb-group-label">ATENDIMENTO</div>
+        <div class="sb-item"><i data-lucide="calendar-days" style="width:16px;height:16px;"></i> AGENDA</div>
+        <div class="sb-item"><i data-lucide="users" style="width:16px;height:16px;"></i> PACIENTES</div>
+        <div class="sb-item is-active"><i data-lucide="message-circle" style="width:16px;height:16px;"></i> CRM · WHATSAPP <span class="badge">7</span></div>
+      </div>
+      <div>
+        <div class="sb-group-label">CLÍNICA</div>
+        <div class="sb-item"><i data-lucide="dumbbell" style="width:16px;height:16px;"></i> EXERCÍCIOS</div>
+        <div class="sb-item"><i data-lucide="clipboard-list" style="width:16px;height:16px;"></i> PROTOCOLOS</div>
+        <div class="sb-item"><i data-lucide="camera" style="width:16px;height:16px;"></i> BIOMECÂNICA</div>
+      </div>
+      <div>
+        <div class="sb-group-label">INTELIGÊNCIA &amp; IA</div>
+        <div class="sb-item"><i data-lucide="sparkles" style="width:16px;height:16px;"></i> IA STUDIO</div>
+        <div class="sb-item"><i data-lucide="bar-chart-3" style="width:16px;height:16px;"></i> RELATÓRIOS</div>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- content -->
+  <div class="content">
+
+    <!-- topbar -->
+    <div class="topbar">
+      <h1>CRM <span class="wa-chip"><span class="wa-dot"></span> WhatsApp conectado</span></h1>
+      <div class="pipeline">
+        <span class="pl is-active">Todos <span class="n">23</span></span>
+        <span class="pl">Novos leads <span class="n">7</span></span>
+        <span class="pl">Aguardando <span class="n">5</span></span>
+        <span class="pl">Avaliação <span class="n">4</span></span>
+        <span class="pl">Em tratamento <span class="n">7</span></span>
+      </div>
+      <div class="topbar-right">
+        <button class="iconbtn"><i data-lucide="filter" style="width:18px;height:18px;"></i></button>
+        <button class="iconbtn"><i data-lucide="bell" style="width:18px;height:18px;"></i></button>
+        <div class="avatar">RM</div>
+      </div>
+    </div>
+
+    <!-- inbox -->
+    <div class="inbox">
+
+      <!-- conversation list -->
+      <div class="convlist">
+        <div class="conv-search">
+          <div class="search-box">
+            <i data-lucide="search" style="width:15px;height:15px;color:hsl(var(--muted-foreground));"></i>
+            <input placeholder="Buscar conversa ou paciente…"/>
+          </div>
+        </div>
+        <div class="conv-scroll">
+
+          <div class="conv is-active">
+            <div class="av" style="background:linear-gradient(135deg,hsl(264 55% 62%),hsl(264 55% 48%));">MA</div>
+            <div class="mid">
+              <div class="row1"><span class="name">Marina Alves</span><span class="time">09:42</span></div>
+              <div class="preview unread">Bom dia! Gostaria de saber o valor da avaliação</div>
+              <span class="stage lead"><span class="stage-dot" style="background:hsl(264 50% 50%);"></span>NOVO LEAD</span>
+            </div>
+            <div class="unreadbadge">2</div>
+          </div>
+
+          <div class="conv">
+            <div class="av" style="background:linear-gradient(135deg,hsl(211 100% 60%),hsl(211 100% 42%));">CF</div>
+            <div class="mid">
+              <div class="row1"><span class="name">Carla Ferreira</span><span class="time">09:15</span></div>
+              <div class="preview"><i data-lucide="check-check" style="width:13px;height:13px;color:hsl(199 90% 48%);"></i> Perfeito, confirmado para amanhã 14h</div>
+              <span class="stage treat"><span class="stage-dot" style="background:hsl(142 55% 40%);"></span>EM TRATAMENTO</span>
+            </div>
+          </div>
+
+          <div class="conv">
+            <div class="av" style="background:linear-gradient(135deg,hsl(28 85% 58%),hsl(28 85% 46%));">RS</div>
+            <div class="mid">
+              <div class="row1"><span class="name">Rafael Souza</span><span class="time">08:50</span></div>
+              <div class="preview unread">Posso remarcar para sexta?</div>
+              <span class="stage wait"><span class="stage-dot" style="background:hsl(28 70% 48%);"></span>AGUARDANDO</span>
+            </div>
+            <div class="unreadbadge">1</div>
+          </div>
+
+          <div class="conv">
+            <div class="av" style="background:linear-gradient(135deg,hsl(340 70% 60%),hsl(340 70% 48%));">JP</div>
+            <div class="mid">
+              <div class="row1"><span class="name">Juliana Pires</span><span class="time">ontem</span></div>
+              <div class="preview"><i data-lucide="check-check" style="width:13px;height:13px;color:hsl(199 90% 48%);"></i> Obrigada, doutor! Até quinta 🙏</div>
+              <span class="stage eval"><span class="stage-dot" style="background:hsl(211 100% 50%);"></span>AVALIAÇÃO AGENDADA</span>
+            </div>
+          </div>
+
+          <div class="conv">
+            <div class="av" style="background:linear-gradient(135deg,hsl(180 50% 48%),hsl(180 50% 36%));">ET</div>
+            <div class="mid">
+              <div class="row1"><span class="name">Eduardo Tavares</span><span class="time">ontem</span></div>
+              <div class="preview unread">Vi vocês no Instagram, atendem joelho?</div>
+              <span class="stage lead"><span class="stage-dot" style="background:hsl(264 50% 50%);"></span>NOVO LEAD</span>
+            </div>
+            <div class="unreadbadge">3</div>
+          </div>
+
+          <div class="conv">
+            <div class="av" style="background:linear-gradient(135deg,hsl(142 50% 50%),hsl(142 50% 38%));">LM</div>
+            <div class="mid">
+              <div class="row1"><span class="name">Lucas Martins</span><span class="time">ter</span></div>
+              <div class="preview"><i data-lucide="check-check" style="width:13px;height:13px;color:hsl(199 90% 48%);"></i> Enviei o plano de exercícios 📎</div>
+              <span class="stage treat"><span class="stage-dot" style="background:hsl(142 55% 40%);"></span>EM TRATAMENTO</span>
+            </div>
+          </div>
+
+          <div class="conv">
+            <div class="av" style="background:linear-gradient(135deg,hsl(220 12% 58%),hsl(220 12% 44%));">BC</div>
+            <div class="mid">
+              <div class="row1"><span class="name">Beatriz Campos</span><span class="time">seg</span></div>
+              <div class="preview"><i data-lucide="check-check" style="width:13px;height:13px;color:hsl(199 90% 48%);"></i> Tratamento concluído. Cuide-se!</div>
+              <span class="stage done"><span class="stage-dot" style="background:hsl(220 9% 50%);"></span>ALTA</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- chat thread -->
+      <div class="thread">
+        <div class="thread-head">
+          <div class="av">MA</div>
+          <div class="ti">
+            <div class="n">Marina Alves</div>
+            <div class="p">+55 11 98432-1170 · <span class="online">online agora</span></div>
+          </div>
+          <div class="acts">
+            <button class="iconbtn"><i data-lucide="phone" style="width:18px;height:18px;"></i></button>
+            <button class="iconbtn"><i data-lucide="calendar-plus" style="width:18px;height:18px;"></i></button>
+            <button class="iconbtn"><i data-lucide="more-vertical" style="width:18px;height:18px;"></i></button>
+          </div>
+        </div>
+
+        <div class="msgs">
+          <div class="daysep">HOJE</div>
+          <div class="sys"><i data-lucide="user-plus" style="width:13px;height:13px;"></i> Lead capturado via anúncio "Dor no joelho" · Instagram</div>
+
+          <div class="bubble in">
+            Bom dia! Vi o anúncio de vocês sobre dor no joelho. Gostaria de saber o valor da avaliação 🦵
+            <div class="meta">09:41</div>
+          </div>
+          <div class="bubble in">
+            Vocês atendem Unimed?
+            <div class="meta">09:42</div>
+          </div>
+
+          <div class="bubble tmpl out">
+            <div class="tmpl-tag"><i data-lucide="zap" style="width:11px;height:11px;"></i> RESPOSTA RÁPIDA · BOAS-VINDAS</div>
+            Olá, Marina! 😊 Que bom ter você por aqui. A avaliação fisioterapêutica completa dura 60 min e custa R$ 180 (particular). Atendemos Unimed sim — nesse caso a avaliação é coberta!
+            <div class="meta">09:43 <i data-lucide="check-check" class="check" style="width:13px;height:13px;"></i></div>
+          </div>
+          <div class="bubble out">
+            Posso já deixar um horário reservado pra você esta semana. Prefere manhã ou tarde?
+            <div class="meta">09:43 <i data-lucide="check-check" class="check" style="width:13px;height:13px;"></i></div>
+          </div>
+
+          <div class="bubble in">
+            Ah, que ótimo! Tenho Unimed sim 🙌 Prefiro de manhã
+            <div class="meta">09:44</div>
+          </div>
+
+          <div class="sys"><i data-lucide="sparkles" style="width:13px;height:13px;"></i> IA sugere: oferecer quinta 09:00 (horário livre na agenda)</div>
+        </div>
+
+        <div class="quick">
+          <span class="qr tmpl"><i data-lucide="zap" style="width:12px;height:12px;"></i> Horários disponíveis</span>
+          <span class="qr"><i data-lucide="map-pin" style="width:12px;height:12px;"></i> Endereço</span>
+          <span class="qr"><i data-lucide="file-text" style="width:12px;height:12px;"></i> Tabela de valores</span>
+          <span class="qr"><i data-lucide="calendar-plus" style="width:12px;height:12px;"></i> Agendar avaliação</span>
+        </div>
+
+        <div class="composer">
+          <button class="iconbtn"><i data-lucide="paperclip" style="width:20px;height:20px;"></i></button>
+          <div class="field"><i data-lucide="smile" style="width:18px;height:18px;"></i> Escreva uma mensagem…</div>
+          <button class="iconbtn"><i data-lucide="mic" style="width:20px;height:20px;"></i></button>
+          <button class="send"><i data-lucide="send" style="width:18px;height:18px;"></i></button>
+        </div>
+      </div>
+
+      <!-- context / CRM panel -->
+      <div class="ctx">
+        <div class="ctx-hero">
+          <div class="av">MA</div>
+          <div class="n">Marina Alves</div>
+          <div class="ph">+55 11 98432-1170</div>
+          <div class="quickacts">
+            <div class="qa"><i data-lucide="user-plus" style="width:18px;height:18px;"></i> Criar paciente</div>
+            <div class="qa"><i data-lucide="calendar-plus" style="width:18px;height:18px;"></i> Agendar</div>
+            <div class="qa"><i data-lucide="sticky-note" style="width:18px;height:18px;"></i> Nota</div>
+          </div>
+        </div>
+
+        <div class="ctx-sec">
+          <h4>Estágio no funil</h4>
+          <div class="stage-select">
+            <div class="left">
+              <span class="stage-pill" style="background:hsl(264 60% 94%);color:hsl(264 50% 42%);"><span class="stage-dot" style="background:hsl(264 50% 50%);"></span> Novo lead</span>
+            </div>
+            <i data-lucide="chevron-down" style="width:16px;height:16px;color:hsl(var(--muted-foreground));"></i>
+          </div>
+          <div class="pipe-track">
+            <div class="pipe-step done"></div>
+            <div class="pipe-step"></div>
+            <div class="pipe-step"></div>
+            <div class="pipe-step"></div>
+            <div class="pipe-step"></div>
+          </div>
+          <div class="pipe-labels">
+            <span class="cur">Lead</span><span>Contato</span><span>Avaliação</span><span>Tratamento</span><span>Alta</span>
+          </div>
+        </div>
+
+        <div class="ctx-sec">
+          <h4>Detalhes do lead</h4>
+          <div class="field-row"><span class="k">Origem</span><span class="v"><span class="src-chip"><i data-lucide="camera" style="width:11px;height:11px;"></i> Instagram Ads</span></span></div>
+          <div class="field-row"><span class="k">Campanha</span><span class="v">Dor no joelho</span></div>
+          <div class="field-row"><span class="k">Convênio</span><span class="v">Unimed</span></div>
+          <div class="field-row"><span class="k">Interesse</span><span class="v">Joelho · avaliação</span></div>
+          <div class="field-row"><span class="k">Primeiro contato</span><span class="v">Hoje, 09:41</span></div>
+          <div class="field-row"><span class="k">Responsável</span><span class="v">Dr. Rafael M.</span></div>
+        </div>
+
+        <div class="ctx-sec">
+          <h4>Próxima ação</h4>
+          <div class="next-action">
+            <div class="h"><i data-lucide="clock" style="width:12px;height:12px;"></i> Pendente</div>
+            <div class="b">Confirmar horário de avaliação — responder com slots de manhã</div>
+          </div>
+        </div>
+
+        <div class="ctx-sec">
+          <h4>Etiquetas</h4>
+          <div class="tags">
+            <span class="tag"># joelho</span>
+            <span class="tag"># convênio</span>
+            <span class="tag"># quente</span>
+            <span class="tag" style="color:hsl(var(--primary));">+ adicionar</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+</script>
+</body>
+</html>

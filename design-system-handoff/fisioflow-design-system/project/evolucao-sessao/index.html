@@ -1,0 +1,193 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="Evolução/Sessão · Comparar layouts" subtitle="Switcher das 3 direções de layout da página de evolução da sessão" viewport="1440x980" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Evolução da Sessão — Explorações de layout</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  body { margin: 0; background: hsl(var(--background)); font-family: var(--font-sans); color: hsl(var(--foreground)); }
+  .wrap { max-width: 1500px; margin: 0 auto; padding: 26px 28px 60px; }
+
+  header.hero { display: flex; align-items: flex-end; gap: 18px; margin-bottom: 20px; }
+  header.hero .logo { width: 46px; height: 46px; border-radius: 13px; background: hsl(var(--primary) / .12); color: hsl(var(--primary)); display: flex; align-items: center; justify-content: center; padding: 7px; }
+  header.hero .logo img { width: 100%; }
+  header.hero h1 { font-size: 25px; font-weight: 800; letter-spacing: -0.02em; }
+  header.hero p { font-size: 13px; color: hsl(var(--muted-foreground)); font-weight: 600; margin-top: 3px; }
+  header.hero .meta { margin-left: auto; font-size: 11.5px; font-weight: 700; color: hsl(var(--muted-foreground)); text-align: right; line-height: 1.5; }
+
+  /* option tabs */
+  .opts { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 18px; }
+  .opt { display: flex; flex-direction: column; gap: 9px; padding: 14px 14px; border: 1.5px solid hsl(var(--border)); border-radius: 16px; background: hsl(var(--card)); cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .15s; text-align: left; }
+  .opt:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .opt.on { border-color: hsl(var(--primary)); box-shadow: var(--shadow-glow-primary); }
+  .opt .ob { width: 34px; height: 34px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 900; font-size: 15px; color: #fff; }
+  .opt:nth-child(1) .ob { background: hsl(211 100% 50%); }
+  .opt:nth-child(2) .ob { background: hsl(264 50% 55%); }
+  .opt:nth-child(3) .ob { background: hsl(0 75% 58%); }
+  .opt:nth-child(4) .ob { background: hsl(158 64% 40%); }
+  .opt:nth-child(5) .ob { background: hsl(32 85% 50%); }
+  .opt .ot { font-size: 14px; font-weight: 800; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
+  .opt .od { font-size: 11px; font-weight: 600; color: hsl(var(--muted-foreground)); margin-top: 2px; line-height: 1.4; }
+  .opt .tags { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+  .opt .tg { font-size: 9px; font-weight: 800; letter-spacing: .02em; padding: 3px 7px; border-radius: 999px; background: hsl(var(--secondary)); color: hsl(var(--muted-foreground)); }
+
+  /* stage */
+  .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .toolbar .now { font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 9px; }
+  .toolbar .now .pip { width: 10px; height: 10px; border-radius: 50%; }
+  .toolbar .grow { flex: 1; }
+  .toolbar a.open { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 10px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); font-size: 12px; font-weight: 800; color: hsl(var(--foreground)); text-decoration: none; }
+  .toolbar a.open:hover { background: hsl(var(--secondary)); }
+  .toolbar a.open svg { width: 14px; height: 14px; }
+
+  .stage { background: #0d1117; border-radius: 20px; padding: 0; overflow: hidden; position: relative; box-shadow: var(--shadow-lg); }
+  .scaler { transform-origin: top left; }
+  .scaler iframe { width: 1416px; height: 1036px; border: 0; display: block; }
+
+  /* ideas note */
+  .ideas { margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .ideas .card { border: 1px solid hsl(var(--border)); border-radius: 16px; background: hsl(var(--card)); padding: 18px 20px; }
+  .ideas .card h3 { font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .ideas .card h3 svg { width: 17px; height: 17px; color: hsl(var(--primary)); }
+  .ideas ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .ideas li { display: flex; gap: 10px; font-size: 12.5px; font-weight: 600; line-height: 1.45; color: hsl(var(--foreground)); }
+  .ideas li svg { width: 15px; height: 15px; color: hsl(158 64% 42%); flex-shrink: 0; margin-top: 1px; }
+  .ideas li b { font-weight: 800; }
+  .ideas .card.tip li svg { color: hsl(211 100% 50%); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="logo"><img src="../assets/activity-logo.svg" alt=""/></div>
+    <div>
+      <h1>Página de Evolução / Sessão</h1>
+      <p>5 direções de layout para desktop · paciente Rafael Minatto · Síndrome do impacto · ombro D</p>
+    </div>
+    <div class="meta">FisioFlow · Mooca Fisio<br/>Desktop 1360 × 980</div>
+  </header>
+
+  <!-- option cards -->
+  <div class="opts">
+    <button class="opt on" data-i="0">
+      <div class="ob">A</div>
+      <div>
+        <div class="ot">Workspace</div>
+        <div class="od">Refina o layout atual de 2 colunas. Elimina o espaço vazio do topo e adiciona objetivos, dor antes/depois e comparação.</div>
+        <div class="tags"><span class="tg">2 COLUNAS</span><span class="tg">FAMILIAR</span><span class="tg">DENSO</span></div>
+      </div>
+    </button>
+    <button class="opt" data-i="1">
+      <div class="ob">B</div>
+      <div>
+        <div class="ot">SOAP guiado</div>
+        <div class="od">Fluxo estruturado por etapas (Subjetivo → Objetivo → Avaliação → Plano) com resumo montado por IA e assinatura.</div>
+        <div class="tags"><span class="tg">POR ETAPAS</span><span class="tg">ESTRUTURADO</span><span class="tg">IA</span></div>
+      </div>
+    </button>
+    <button class="opt" data-i="2">
+      <div class="ob">C</div>
+      <div>
+        <div class="ot">Modo ao vivo</div>
+        <div class="od">Atendimento rápido durante a sessão: timer, captura por voz e feed cronológico do que foi feito, editável.</div>
+        <div class="tags"><span class="tg">RÁPIDO</span><span class="tg">VOZ</span><span class="tg">FEED</span></div>
+      </div>
+    </button>
+    <button class="opt" data-i="3">
+      <div class="ob">D</div>
+      <div>
+        <div class="ot">Nota clínica</div>
+        <div class="od">Writing-first editorial: a descrição é o herói (capitular, tipografia de documento) e a EVA vira a “jornada da dor” chegada→saída.</div>
+        <div class="tags"><span class="tg">EVA</span><span class="tg">NARRATIVA</span><span class="tg">EDITORIAL</span></div>
+      </div>
+    </button>
+    <button class="opt" data-i="4">
+      <div class="ob">E</div>
+      <div>
+        <div class="ot">Dor-cêntrico</div>
+        <div class="od">Painel focado na dor: medidor radial da EVA, qualidade (pontada, peso…), tendência entre sessões + descrição detalhada.</div>
+        <div class="tags"><span class="tg">EVA</span><span class="tg">MEDIDOR</span><span class="tg">TENDÊNCIA</span></div>
+      </div>
+    </button>
+  </div>
+
+  <!-- toolbar -->
+  <div class="toolbar">
+    <div class="now"><span class="pip" id="pip"></span><span id="nowlbl">Layout A — Workspace</span></div>
+    <div class="grow"></div>
+    <a class="open" id="openlink" href="Layout A - Workspace.html" target="_blank"><i data-lucide="external-link"></i> Abrir em tela cheia</a>
+  </div>
+
+  <!-- stage -->
+  <div class="stage">
+    <div class="scaler" id="scaler">
+      <iframe id="frame" src="Layout A - Workspace.html" title="Layout"></iframe>
+    </div>
+  </div>
+
+  <!-- ideas -->
+  <div class="ideas">
+    <div class="card">
+      <h3><i data-lucide="lightbulb"></i> Itens novos incluídos nas explorações</h3>
+      <ul>
+        <li><i data-lucide="check"></i><span><b>Objetivos da sessão</b> — foco definido no início, marcado conforme cumprido.</span></li>
+        <li><i data-lucide="check"></i><span><b>Dor antes / depois (EVA)</b> — chegada vs. saída, com delta da sessão.</span></li>
+        <li><i data-lucide="check"></i><span><b>Sinais vitais</b> — PA, FC, SpO₂ junto às medições/antropometria.</span></li>
+        <li><i data-lucide="check"></i><span><b>Testes clínicos</b> — Neer, Hawkins, Jobe com resultado +/−.</span></li>
+        <li><i data-lucide="check"></i><span><b>Comparação vs. sessão anterior</b> — delta de dor, ROM, carga, adesão.</span></li>
+        <li><i data-lucide="check"></i><span><b>Timer ao vivo</b> e <b>resumo por IA</b> via Voice Scribe.</span></li>
+        <li><i data-lucide="check"></i><span><b>Assinatura / conclusão</b> do fisioterapeuta com CREFITO.</span></li>
+      </ul>
+    </div>
+    <div class="card tip">
+      <h3><i data-lucide="sparkles"></i> Outras ideias para considerar</h3>
+      <ul>
+        <li><i data-lucide="plus"></i><span><b>Percepção de esforço (Borg)</b> — complementa a EVA na carga do exercício.</span></li>
+        <li><i data-lucide="plus"></i><span><b>Escalas funcionais</b> — Lysholm, DASH, EQ-5D conforme o protocolo.</span></li>
+        <li><i data-lucide="plus"></i><span><b>Próxima sessão</b> — plano de continuidade e foco do próximo atendimento.</span></li>
+        <li><i data-lucide="plus"></i><span><b>Atalho de biomecânica</b> — anexar análise/comparar vídeos S0X ↔ S0Y.</span></li>
+        <li><i data-lucide="plus"></i><span><b>Adesão ao HEP</b> — % de exercícios de casa feitos desde a última sessão.</span></li>
+        <li><i data-lucide="plus"></i><span><b>Alertas clínicos</b> — bandeiras amarelas/vermelhas e contraindicações.</span></li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const files = ['Layout A - Workspace.html','Layout B - SOAP guiado.html','Layout C - Modo ao vivo.html','Layout D - Nota clínica.html','Layout E - Dor-cêntrico.html'];
+  const labels = ['Layout A — Workspace','Layout B — SOAP guiado','Layout C — Modo ao vivo','Layout D — Nota clínica','Layout E — Dor-cêntrico'];
+  const pips = ['hsl(211 100% 50%)','hsl(264 50% 55%)','hsl(0 75% 58%)','hsl(158 64% 40%)','hsl(32 85% 50%)'];
+  const opts = [...document.querySelectorAll('.opt')];
+  const frame = document.getElementById('frame');
+  const scaler = document.getElementById('scaler');
+  const stage = document.querySelector('.stage');
+  const openlink = document.getElementById('openlink');
+  let cur = 0;
+
+  function fit(){
+    const w = stage.clientWidth;
+    const s = w / 1416;
+    scaler.style.transform = 'scale(' + s + ')';
+    stage.style.height = (1036 * s) + 'px';
+  }
+  function select(i){
+    cur = i;
+    opts.forEach((o,k)=>o.classList.toggle('on', k===i));
+    frame.src = files[i];
+    document.getElementById('nowlbl').textContent = labels[i];
+    document.getElementById('pip').style.background = pips[i];
+    openlink.setAttribute('href', files[i]);
+    fit();
+  }
+  opts.forEach((o,i)=>o.addEventListener('click',()=>select(i)));
+  window.addEventListener('resize', fit);
+  document.getElementById('pip').style.background = pips[0];
+  fit();
+  if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>

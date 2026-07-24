@@ -232,7 +232,7 @@ function ViewControls({
               control={
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground w-4 text-right">{fontScale}</span>
-                  <input type="range" min={1} max={10} value={fontScale} onChange={(e) => onFontScale(Number(e.target.value))} className="w-24 accent-primary" />
+                  <input type="range" min={1} max={10} value={fontScale} onChange={(e) => onFontScale(Number(e.target.value))} className="w-24 accent-primary" aria-label="Fonte" />
                 </div>
               }
             />
@@ -241,7 +241,7 @@ function ViewControls({
               control={
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground w-4 text-right">{paddingScale}</span>
-                  <input type="range" min={1} max={10} value={paddingScale} onChange={(e) => onPaddingScale(Number(e.target.value))} className="w-24 accent-primary" />
+                  <input type="range" min={1} max={10} value={paddingScale} onChange={(e) => onPaddingScale(Number(e.target.value))} className="w-24 accent-primary" aria-label="Espaçamento" />
                 </div>
               }
             />
@@ -250,7 +250,7 @@ function ViewControls({
               control={
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground w-4 text-right">{opacity}%</span>
-                  <input type="range" min={20} max={100} step={10} value={opacity} onChange={(e) => onOpacity(Number(e.target.value))} className="w-24 accent-primary" />
+                  <input type="range" min={20} max={100} step={10} value={opacity} onChange={(e) => onOpacity(Number(e.target.value))} className="w-24 accent-primary" aria-label="Opacidade" />
                 </div>
               }
             />
@@ -525,7 +525,7 @@ export function AparenciaTab({ registerHandle }: TabComponentProps) {
                   />
                   <SimpleFieldRow
                     label="Telefone"
-                    control={<Switch checked={display.showPhone} onCheckedChange={(v) => setDisplay({ showPhone: v })} />}
+                    control={<Switch checked={display.showPhone} onCheckedChange={(v) => setDisplay({ showPhone: v })} aria-label="Telefone" />}
                   />
                 </CardContent>
               </Card>
@@ -571,7 +571,7 @@ export function AparenciaTab({ registerHandle }: TabComponentProps) {
             </div>
             
             {/* The mock agenda grid */}
-            <div className="flex-1 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-inner flex flex-col relative"
+            <div data-testid="aparencia-preview" className="flex-1 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-inner flex flex-col relative"
                  style={{ opacity: activeOpacity / 100 }}>
               
               {/* Fake Time Axis and Grid lines */}

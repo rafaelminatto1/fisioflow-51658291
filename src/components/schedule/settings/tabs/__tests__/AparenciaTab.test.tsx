@@ -47,9 +47,9 @@ describe("AparenciaTab — presets", () => {
 });
 
 describe("AparenciaTab — seção global", () => {
-  it("alternar 'Mostrar telefone' persiste display.showPhone", () => {
+  it("alternar 'Telefone' persiste display.showPhone", () => {
     renderTab();
-    const sw = screen.getByLabelText(/Mostrar telefone/i);
+    const sw = screen.getByLabelText(/Telefone/i);
     fireEvent.click(sw);
     const saved = JSON.parse(localStorage.getItem("agenda_appearance_v2")!);
     expect(saved.display.showPhone).toBe(true);

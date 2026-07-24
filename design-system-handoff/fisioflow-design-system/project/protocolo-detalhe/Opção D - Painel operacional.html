@@ -1,0 +1,235 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="Protocolo · D — Painel operacional" subtitle="Detalhe do protocolo orientado a resultados: pacientes ativos, eficácia agregada, versões e evidência" viewport="1328x928" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Protocolo · Opção D — Painel operacional</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<link rel="stylesheet" href="../ui_kits/web/screen-shell.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  .main { overflow-y: auto; min-height: 0; padding: 20px 24px 28px; }
+
+  .d-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .d-head h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+  .d-head .meta { display: flex; gap: 7px; margin-top: 5px; }
+
+  /* mini stepper */
+  .steps { display: flex; gap: 6px; margin-bottom: 16px; }
+  .step { flex: 1; display: flex; align-items: center; gap: 9px; padding: 9px 13px; border: 1px solid hsl(var(--border)); border-radius: 12px; background: hsl(var(--card)); }
+  .step .n { width: 22px; height: 22px; border-radius: 8px; font-size: 11px; font-weight: 800; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step .t { font-size: 11.5px; font-weight: 800; line-height: 1.2; }
+  .step .s { font-size: 9.5px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+
+  /* KPI row */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi { padding: 14px 17px; }
+  .kpi .kl { font-size: 9.5px; font-weight: 800; letter-spacing: .07em; color: hsl(var(--muted-foreground)); display: flex; align-items: center; gap: 6px; }
+  .kpi .kl i { width: 12px; height: 12px; }
+  .kpi .kv { font-size: 27px; font-weight: 800; letter-spacing: -0.02em; margin-top: 5px; font-variant-numeric: tabular-nums; }
+  .kpi .kv small { font-size: 13px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  .kpi .kd { font-size: 10.5px; font-weight: 700; margin-top: 3px; }
+  .kpi .kd.up { color: hsl(158 60% 32%); }
+  .kpi .kd.mut { color: hsl(var(--muted-foreground)); }
+
+  .grid { display: grid; grid-template-columns: 1.45fr 1fr; gap: 14px; }
+  .panel { padding: 16px 18px; }
+  .panel h3 { font-size: 13.5px; font-weight: 800; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .panel h3 i { width: 15px; height: 15px; color: hsl(var(--primary)); }
+  .panel h3 .b { margin-left: auto; }
+
+  /* patient table */
+  .pt-head, .pt-row { display: grid; grid-template-columns: 1.5fr 92px 1fr 70px 96px; gap: 10px; align-items: center; }
+  .pt-head { font-size: 9px; font-weight: 800; letter-spacing: .07em; color: hsl(var(--muted-foreground)); padding: 0 10px 8px; border-bottom: 1px solid hsl(var(--border)); }
+  .pt-row { padding: 9px 10px; border-radius: 11px; }
+  .pt-row:hover { background: hsl(var(--secondary)); }
+  .pt-row + .pt-row { margin-top: 2px; }
+  .pt-row .who { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .pt-row .av { width: 26px; height: 26px; font-size: 9px; }
+  .pt-row .pn { font-size: 12px; font-weight: 800; }
+  .pt-row .ps { font-size: 9.5px; font-weight: 600; color: hsl(var(--muted-foreground)); }
+  .pt-row .ph { font-size: 10px; font-weight: 800; }
+  .adh { display: flex; align-items: center; gap: 8px; }
+  .adh .bar { flex: 1; height: 6px; border-radius: 999px; background: hsl(var(--muted)); overflow: hidden; }
+  .adh .bar i { display: block; height: 100%; border-radius: 999px; background: hsl(158 55% 42%); }
+  .adh .bar i.warn { background: hsl(38 92% 48%); }
+  .adh .bar i.bad { background: hsl(0 75% 55%); }
+  .adh b { font-size: 10.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .eva { font-size: 11.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .eva small { color: hsl(var(--muted-foreground)); font-weight: 700; }
+
+  /* outcome compare */
+  .vrow { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+  .vrow + .vrow { border-top: 1px dashed hsl(var(--border)); }
+  .vrow .vl { width: 42px; font-size: 10.5px; font-weight: 800; }
+  .vrow .bar { flex: 1; height: 18px; border-radius: 7px; background: hsl(var(--muted)); overflow: hidden; }
+  .vrow .bar i { display: block; height: 100%; background: hsl(211 100% 50% / .8); border-radius: 7px; }
+  .vrow .vv { width: 74px; font-size: 10.5px; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
+  .vcap { font-size: 10px; font-weight: 700; color: hsl(var(--muted-foreground)); margin-top: 8px; }
+
+  /* changelog */
+  .ch { display: flex; gap: 10px; padding: 8px 0; font-size: 11px; font-weight: 600; line-height: 1.4; }
+  .ch + .ch { border-top: 1px dashed hsl(var(--border)); }
+  .ch .v { font-size: 9.5px; font-weight: 800; color: hsl(var(--primary)); background: hsl(var(--primary) / .09); border-radius: 7px; padding: 3px 7px; height: fit-content; flex-shrink: 0; }
+  .ch b { font-weight: 800; }
+  .ch .dt { color: hsl(var(--muted-foreground)); font-size: 9.5px; font-weight: 700; }
+
+  .ref { font-size: 10.5px; font-weight: 600; line-height: 1.45; color: hsl(var(--muted-foreground)); padding: 7px 0; display: flex; gap: 8px; }
+  .ref + .ref { border-top: 1px dashed hsl(var(--border)); }
+  .ref i { width: 13px; height: 13px; color: hsl(var(--primary)); flex-shrink: 0; margin-top: 1px; }
+  .ref b { color: hsl(var(--foreground)); font-weight: 800; }
+  .ref .lv { margin-left: auto; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="pad">
+
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><img src="../assets/activity-logo.svg" alt=""/></div>
+      <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div>
+        <div class="sb-group-label">ATENDIMENTO</div>
+        <div class="sb-item"><i data-lucide="calendar-days"></i> AGENDA</div>
+        <div class="sb-item"><i data-lucide="users"></i> PACIENTES</div>
+        <div class="sb-item"><i data-lucide="message-circle"></i> CRM · WHATSAPP</div>
+      </div>
+      <div>
+        <div class="sb-group-label">CLÍNICA</div>
+        <div class="sb-item"><i data-lucide="clipboard-check"></i> AVALIAÇÕES</div>
+        <div class="sb-item"><i data-lucide="dumbbell"></i> EXERCÍCIOS</div>
+        <div class="sb-item is-active"><i data-lucide="clipboard-list"></i> PROTOCOLOS</div>
+        <div class="sb-item"><i data-lucide="flask-conical"></i> TESTES CLÍNICOS</div>
+        <div class="sb-item"><i data-lucide="camera"></i> BIOMECÂNICA</div>
+      </div>
+      <div>
+        <div class="sb-group-label">GESTÃO &amp; OPERAÇÃO</div>
+        <div class="sb-item"><i data-lucide="layout-dashboard"></i> BOARDS</div>
+        <div class="sb-item"><i data-lucide="wallet"></i> FINANCEIRO</div>
+        <div class="sb-item"><i data-lucide="book-open"></i> WIKI CLÍNICA</div>
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-item"><i data-lucide="settings"></i> CONFIGURAÇÕES</div>
+      <div class="sb-item"><i data-lucide="log-out"></i> SAIR</div>
+    </div>
+  </aside>
+
+  <div class="content">
+    <div class="topbar">
+      <div class="crumbs">Protocolos <i data-lucide="chevron-right"></i> Tendinopatia patelar — HSR <i data-lucide="chevron-right"></i> <strong>Resultados</strong></div>
+      <div class="topbar-right">
+        <button class="btn"><i data-lucide="git-compare"></i> Comparar com Alfredson</button>
+        <button class="btn primary"><i data-lucide="user-plus"></i> Aplicar a paciente</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="d-head">
+        <div>
+          <h2>Tendinopatia patelar — HSR (Padrão Ouro)</h2>
+          <div class="meta">
+            <span class="badge info">JOELHO</span>
+            <span class="badge ok">NÍVEL A</span>
+            <span class="badge muted">v1.3 · ATUALIZADO HÁ 12 DIAS</span>
+            <span class="badge warn">REVISÃO ANUAL EM SET/2026</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step"><span class="n" style="background:hsl(264 50% 55%);">1</span><div><div class="t">Controle de dor</div><div class="s">SEM 1–2 · ISOMETRIA</div></div></div>
+        <div class="step"><span class="n" style="background:hsl(211 100% 50%);">2</span><div><div class="t">HSR — carga pesada e lenta</div><div class="s">SEM 3–8 · 15RM → 6RM</div></div></div>
+        <div class="step"><span class="n" style="background:hsl(158 55% 42%);">3</span><div><div class="t">Retorno energético</div><div class="s">SEM 9–12 · PLIOMETRIA</div></div></div>
+      </div>
+
+      <div class="kpis">
+        <div class="card kpi">
+          <div class="kl"><i data-lucide="users"></i> PACIENTES (HISTÓRICO)</div>
+          <div class="kv">31</div>
+          <div class="kd mut">3 ativos · 23 concluíram · 5 interromperam</div>
+        </div>
+        <div class="card kpi">
+          <div class="kl"><i data-lucide="trending-down"></i> ΔEVA MÉDIO</div>
+          <div class="kv">−4,2 <small>pts</small></div>
+          <div class="kd up">entrada 6,8 → saída 2,6</div>
+        </div>
+        <div class="card kpi">
+          <div class="kl"><i data-lucide="clock"></i> TEMPO MÉDIO DE ALTA</div>
+          <div class="kv">11,3 <small>sem</small></div>
+          <div class="kd mut">previsto: 12 semanas</div>
+        </div>
+        <div class="card kpi">
+          <div class="kl"><i data-lucide="award"></i> TAXA DE ALTA</div>
+          <div class="kv">87<small>%</small></div>
+          <div class="kd up">+9 p.p. vs versão 1.2</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <div class="card panel">
+            <h3><i data-lucide="users"></i> Pacientes ativos neste protocolo <span class="b badge muted">3 DE 31</span></h3>
+            <div class="pt-head"><span>PACIENTE</span><span>FASE</span><span>ADESÃO HEP</span><span>EVA</span><span>PRÓX. SESSÃO</span></div>
+            <div class="pt-row">
+              <div class="who"><span class="av" style="background:hsl(264 55% 55%);">RM</span><div><div class="pn">Rafael Minatto</div><div class="ps">semana 5 · 78% do protocolo</div></div></div>
+              <span class="ph" style="color:hsl(211 90% 40%);">FASE 2 · HSR</span>
+              <div class="adh"><div class="bar"><i style="width:78%;"></i></div><b>78%</b></div>
+              <span class="eva">3 <small>→ meta ≤3</small></span>
+              <span class="badge info">HOJE 15H</span>
+            </div>
+            <div class="pt-row">
+              <div class="who"><span class="av" style="background:hsl(28 80% 52%);">CS</span><div><div class="pn">Carla Sanches</div><div class="ps">semana 2 · 14% do protocolo</div></div></div>
+              <span class="ph" style="color:hsl(264 45% 45%);">FASE 1</span>
+              <div class="adh"><div class="bar"><i style="width:91%;"></i></div><b>91%</b></div>
+              <span class="eva">5 <small>→ caindo</small></span>
+              <span class="badge muted">SEX 9H</span>
+            </div>
+            <div class="pt-row">
+              <div class="who"><span class="av" style="background:hsl(158 55% 42%);">DP</span><div><div class="pn">Diego Prado</div><div class="ps">semana 10 · 81% do protocolo</div></div></div>
+              <span class="ph" style="color:hsl(158 50% 32%);">FASE 3</span>
+              <div class="adh"><div class="bar"><i class="warn" style="width:64%;"></i></div><b>64%</b></div>
+              <span class="eva">2 <small>→ estável</small></span>
+              <span class="badge warn">SEM AGENDAMENTO</span>
+            </div>
+          </div>
+
+          <div class="card panel" style="margin-top: 14px;">
+            <h3><i data-lucide="git-compare"></i> Eficácia por versão do protocolo <span class="b badge muted">VISA-P NA ALTA</span></h3>
+            <div class="vrow"><span class="vl">v1.0</span><div class="bar"><i style="width:64%;"></i></div><span class="vv">76 pts · n=9</span></div>
+            <div class="vrow"><span class="vl">v1.2</span><div class="bar"><i style="width:74%;"></i></div><span class="vv">83 pts · n=14</span></div>
+            <div class="vrow"><span class="vl">v1.3</span><div class="bar"><i style="width:84%;"></i></div><span class="vv">89 pts · n=8</span></div>
+            <div class="vcap">VISA-P médio na alta por versão. A v1.3 introduziu o gate objetivo de 6RM e o decline squat test na fase 1.</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card panel">
+            <h3><i data-lucide="history"></i> Versões e revisão</h3>
+            <div class="ch"><span class="v">v1.3</span><div><b>Gate objetivo F2→F3</b> — 6RM sem dor + VISA-P ≥ 70. Revisado por Dra. Paula L. <div class="dt">31 MAI 2026 · RAFAEL M.</div></div></div>
+            <div class="ch"><span class="v">v1.2</span><div><b>Isometria nos dias sem treino</b> — 45 s × 5 para analgesia. <div class="dt">14 FEV 2026 · DRA. PAULA L.</div></div></div>
+            <div class="ch"><span class="v">v1.0</span><div><b>Protocolo criado</b> a partir do template HSR da biblioteca. <div class="dt">02 NOV 2025 · RAFAEL M.</div></div></div>
+          </div>
+
+          <div class="card panel" style="margin-top: 14px;">
+            <h3><i data-lucide="book-open"></i> Evidência científica</h3>
+            <div class="ref"><i data-lucide="file-text"></i><span><b>Kongsgaard et al., 2009</b> — HSR vs excêntrico, RCT.</span><span class="lv badge ok">NÍVEL A</span></div>
+            <div class="ref"><i data-lucide="file-text"></i><span><b>Malliaras et al., 2015</b> — revisão de programas de carga.</span><span class="lv badge ok">NÍVEL A</span></div>
+            <div class="ref"><i data-lucide="file-text"></i><span><b>Rio et al., 2017</b> — isometria para analgesia imediata.</span><span class="lv badge info">NÍVEL B</span></div>
+          </div>
+
+          <div class="card panel" style="margin-top: 14px;">
+            <h3><i data-lucide="sparkles"></i> Sugestão da IA</h3>
+            <div class="ch" style="border:0; padding-top:0;"><span class="v" style="background:hsl(38 92% 50% / .15); color:hsl(30 85% 35%);">DIEGO P.</span><div>Diário de dor subiu de 2 → 4 após sessões de salto. Considerar <b>manter S10 por mais uma semana</b> antes do hop test de alta.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Professional App" name="Professional App — Laudo (mobile)" subtitle="Documento rolável · frames antes/depois · tabela · assinatura digital" viewport="390x844" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Laudo Biomecânico — FisioFlow Pro (mobile)</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  body { margin: 0; background: #1a1d24; min-height: 100vh; display:flex; align-items:center; justify-content:center; padding: 20px; font-family: var(--font-sans); }
+
+  .app {
+    width: 390px; height: 844px; flex-shrink: 0;
+    background: hsl(var(--background)); color: hsl(var(--foreground));
+    border-radius: 48px; overflow: hidden; position: relative;
+    box-shadow: 0 0 0 12px #111, 0 0 0 14px #2a2d35, 0 30px 60px rgba(0,0,0,0.6);
+    display: flex; flex-direction: column;
+  }
+
+  .statusbar { display:flex; justify-content:space-between; align-items:center; padding: 14px 32px 6px; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+  .statusbar .sb-right { display:flex; align-items:center; gap: 6px; }
+  .statusbar .sb-right i { width: 16px; height: 16px; }
+
+  /* app header */
+  .appbar { display:flex; align-items:center; gap: 12px; padding: 4px 14px 12px; flex-shrink: 0; border-bottom: 1px solid hsl(var(--border)); }
+  .round-btn { width: 38px; height: 38px; border-radius: 50%; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); display:flex; align-items:center; justify-content:center; color: hsl(var(--foreground)); cursor:pointer; flex-shrink:0; }
+  .round-btn:active { background: hsl(var(--muted)); }
+  .round-btn i { width: 18px; height: 18px; }
+  .appbar .title { min-width: 0; }
+  .appbar .title .tn { font-size: 15px; font-weight: 800; letter-spacing: -0.015em; line-height: 1.1; }
+  .appbar .title .ts { font-size: 11px; font-weight: 600; color: hsl(var(--muted-foreground)); margin-top: 1px; }
+  .appbar .spacer { margin-left:auto; }
+
+  /* scroll doc */
+  .scroll { flex: 1; overflow-y: auto; padding: 16px 16px 100px; }
+  .scroll::-webkit-scrollbar { width: 0; }
+
+  .doc { background: white; border: 1px solid hsl(var(--border)); border-radius: 16px; overflow: hidden; }
+  .doc-head { padding: 20px 18px 16px; border-bottom: 2px solid hsl(var(--primary)); display:flex; gap: 12px; align-items:flex-start; }
+  .doc-head .logo { width: 40px; height: 40px; flex-shrink: 0; }
+  .doc-head .clinic strong { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; color: hsl(224 71% 20%); display:block; }
+  .doc-head .clinic .x { font-size: 10px; color: hsl(var(--muted-foreground)); font-weight: 600; line-height: 1.4; margin-top: 2px; }
+
+  .doc-banner { padding: 12px 18px; background: hsl(var(--primary) / .06); display:flex; align-items:center; justify-content:space-between; border-bottom: 1px solid hsl(var(--border)); }
+  .doc-banner .t { font-size: 12px; font-weight: 800; letter-spacing: 0.04em; color: hsl(var(--primary)); }
+  .doc-banner .s { font-size: 10px; font-weight: 700; color: hsl(var(--muted-foreground)); font-variant-numeric: tabular-nums; }
+
+  .doc-body { padding: 18px; }
+  .pinfo { display:grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; padding-bottom: 18px; border-bottom: 1px solid hsl(var(--border)); }
+  .pi .k { font-size: 9px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
+  .pi .v { font-size: 13px; font-weight: 700; margin-top: 2px; }
+
+  .sec { margin-top: 20px; }
+  .sec h2 { font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: hsl(var(--primary)); margin-bottom: 9px; display:flex; align-items:center; gap: 8px; }
+  .sec h2 .num { width: 20px; height: 20px; border-radius: 50%; background: hsl(var(--primary)); color: white; display:flex; align-items:center; justify-content:center; font-size: 11px; flex-shrink:0; }
+  .sec p { font-size: 13px; line-height: 1.6; color: hsl(220 20% 25%); margin: 0; }
+  .sec p strong { font-weight: 800; }
+
+  /* frames */
+  .frames { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .frame { border: 1px solid hsl(var(--border)); border-radius: 12px; overflow: hidden; }
+  .frame .img { height: 130px; background: #0f1420; display:flex; align-items:center; justify-content:center; position:relative; }
+  .frame .img.before { filter: grayscale(.3); }
+  .frame .ang { position:absolute; left: 8px; bottom: 8px; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; color: white; font-variant-numeric: tabular-nums; }
+  .frame .cap { font-size: 10px; font-weight: 700; padding: 7px 10px; background: hsl(var(--muted) / .5); color: hsl(var(--muted-foreground)); }
+
+  /* metric table */
+  .mtable { border: 1px solid hsl(var(--border)); border-radius: 12px; overflow: hidden; margin-top: 4px; }
+  .mrow { display:grid; grid-template-columns: 1fr 46px 46px 58px; align-items:center; padding: 10px 12px; border-bottom: 1px solid hsl(var(--border) / .7); }
+  .mrow:last-child { border-bottom: none; }
+  .mrow.head { background: hsl(var(--muted) / .6); }
+  .mrow.head .c { font-size: 9px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
+  .mrow .mn { font-size: 12px; font-weight: 700; }
+  .mrow .c { text-align: right; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .delta { display:inline-block; font-weight: 800; padding: 2px 6px; border-radius: 5px; font-size: 11px; font-variant-numeric: tabular-nums; }
+  .delta.up { background: hsl(158 64% 92%); color: hsl(158 64% 25%); }
+  .delta.warn { background: hsl(28 92% 92%); color: hsl(25 70% 32%); }
+
+  /* verdict */
+  .verdict { margin-top: 12px; padding: 14px; border-radius: 12px; background: hsl(158 64% 96%); border: 1px solid hsl(158 50% 80%); }
+  .verdict .vh { font-size: 12px; font-weight: 800; color: hsl(158 64% 22%); display:flex; align-items:center; gap: 6px; }
+  .verdict .vh i { width: 14px; height: 14px; }
+  .verdict p { font-size: 12px; line-height: 1.55; color: hsl(158 64% 18%); margin: 7px 0 0; }
+
+  /* signature */
+  .sign { margin-top: 22px; padding-top: 16px; border-top: 1px solid hsl(var(--border)); display:flex; align-items:center; justify-content:space-between; }
+  .sign .signed { display:flex; align-items:center; gap: 8px; }
+  .sign .badge { width: 38px; height: 38px; border-radius: 50%; background: hsl(158 64% 92%); color: hsl(158 64% 32%); display:flex; align-items:center; justify-content:center; }
+  .sign .badge i { width: 19px; height: 19px; }
+  .sign .name { font-size: 13px; font-weight: 800; }
+  .sign .reg { font-size: 10px; font-weight: 600; color: hsl(var(--muted-foreground)); margin-top: 1px; }
+  .sign .when { text-align:right; font-size: 10px; font-weight: 700; color: hsl(var(--muted-foreground)); font-variant-numeric: tabular-nums; }
+
+  /* bottom action bar */
+  .actionbar { position:absolute; bottom: 0; left: 0; right: 0; background: hsl(var(--card)); border-top: 1px solid hsl(var(--border)); padding: 12px 16px 26px; display:flex; gap: 10px; }
+  .btn { flex: 1; display:flex; align-items:center; justify-content:center; gap: 8px; padding: 13px; border-radius: 13px; font-size: 14px; font-weight: 800; cursor: pointer; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); color: hsl(var(--foreground)); }
+  .btn:active { background: hsl(var(--muted)); }
+  .btn i { width: 17px; height: 17px; }
+  .btn.primary { background: hsl(var(--primary)); color: white; border-color: hsl(var(--primary)); }
+  .btn.primary:active { background: hsl(211 100% 44%); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="sb-right"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span>
+  </div>
+
+  <div class="appbar">
+    <div class="round-btn"><i data-lucide="chevron-left"></i></div>
+    <div class="title">
+      <div class="tn">Laudo biomecânico</div>
+      <div class="ts">Carla Ferreira · Sessão 12</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="round-btn"><i data-lucide="pencil"></i></div>
+  </div>
+
+  <div class="scroll">
+    <div class="doc">
+
+      <div class="doc-head">
+        <img class="logo" src="../../assets/activity-logo.svg" alt=""/>
+        <div class="clinic">
+          <strong>Activity Fisioterapia</strong>
+          <div class="x">Mooca Fisio · CNPJ 12.345.678/0001-90<br/>R. da Mooca, 1234 · São Paulo/SP</div>
+        </div>
+      </div>
+
+      <div class="doc-banner">
+        <span class="t">LAUDO BIOMECÂNICO</span>
+        <span class="s">Nº 2026-0602-CF · 02/06/2026</span>
+      </div>
+
+      <div class="doc-body">
+        <div class="pinfo">
+          <div class="pi"><div class="k">Paciente</div><div class="v">Carla Ferreira</div></div>
+          <div class="pi"><div class="k">Nascimento</div><div class="v">14/08/1991 (34a)</div></div>
+          <div class="pi"><div class="k">Diagnóstico</div><div class="v">Condromalácia G2 (D)</div></div>
+          <div class="pi"><div class="k">Sessão</div><div class="v">12 de 20</div></div>
+          <div class="pi"><div class="k">Teste</div><div class="v">Agachamento · sagital</div></div>
+          <div class="pi"><div class="k">Responsável</div><div class="v">Dr. Rafael Minatto</div></div>
+        </div>
+
+        <div class="sec">
+          <h2><span class="num">1</span> Queixa &amp; objetivo</h2>
+          <p>Paciente em reabilitação de <strong>condromalácia patelar grau II</strong> à direita, com dor anterior no joelho agravada por agachar e descer escadas. Reavaliação do agachamento para mensurar evolução do controle motor e amplitude após 8 semanas.</p>
+        </div>
+
+        <div class="sec">
+          <h2><span class="num">2</span> Achados biomecânicos</h2>
+          <p>A captura sagital evidenciou <strong>ganho expressivo de flexão do joelho</strong> (118°) sem dor até a 8ª repetição. Inclinação de tronco reduziu para 32°. Persiste <strong>valgo dinâmico moderado à direita (+14°)</strong> na fase descendente.</p>
+          <div class="frames">
+            <div class="frame">
+              <div class="img before">
+                <svg height="104" viewBox="0 0 100 200" fill="none" stroke="#94a3b8" stroke-width="3"><circle cx="50" cy="22" r="9" fill="#94a3b8"/><path d="M50 31 L62 95 L68 130"/><path d="M62 95 Q45 120 38 145"/></svg>
+                <span class="ang" style="background:hsl(0 72% 50%);">78°</span>
+              </div>
+              <div class="cap">17 mar · pico 78°</div>
+            </div>
+            <div class="frame">
+              <div class="img">
+                <svg height="104" viewBox="0 0 100 200" fill="none" stroke="#cbd5e1" stroke-width="3"><circle cx="50" cy="22" r="9" fill="#cbd5e1"/><path d="M50 31 L56 95 L40 125"/><path d="M56 95 Q40 130 55 160"/></svg>
+                <span class="ang" style="background:hsl(158 64% 42%);">118°</span>
+              </div>
+              <div class="cap">02 jun · pico 118°</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <h2><span class="num">3</span> Comparativo de métricas</h2>
+          <div class="mtable">
+            <div class="mrow head">
+              <span class="c" style="text-align:left;">Métrica</span>
+              <span class="c">S03</span>
+              <span class="c">S12</span>
+              <span class="c">Δ</span>
+            </div>
+            <div class="mrow">
+              <span class="mn">ROM joelho</span>
+              <span class="c">78°</span>
+              <span class="c">118°</span>
+              <span class="c"><span class="delta up">+40°</span></span>
+            </div>
+            <div class="mrow">
+              <span class="mn">Tronco</span>
+              <span class="c">48°</span>
+              <span class="c">32°</span>
+              <span class="c"><span class="delta up">−16°</span></span>
+            </div>
+            <div class="mrow">
+              <span class="mn">Valgo (D)</span>
+              <span class="c">+18°</span>
+              <span class="c">+14°</span>
+              <span class="c"><span class="delta warn">−4°</span></span>
+            </div>
+            <div class="mrow">
+              <span class="mn">Simetria L/R</span>
+              <span class="c">71%</span>
+              <span class="c">84%</span>
+              <span class="c"><span class="delta up">+13</span></span>
+            </div>
+            <div class="mrow">
+              <span class="mn">Dor (EVA)</span>
+              <span class="c">6/10</span>
+              <span class="c">3/10</span>
+              <span class="c"><span class="delta up">−3</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <h2><span class="num">4</span> Conclusão &amp; conduta</h2>
+          <div class="verdict">
+            <div class="vh"><i data-lucide="trending-up"></i> Evolução positiva consistente</div>
+            <p>Ganho de ROM e redução de dor confirmam boa resposta ao protocolo. Mantém-se o valgo dinâmico residual como foco terapêutico. <strong>Conduta:</strong> progredir fortalecimento de glúteo médio e controle excêntrico; reavaliar em 4 semanas (S16).</p>
+          </div>
+          <div class="sign">
+            <div class="signed">
+              <div class="badge"><i data-lucide="shield-check"></i></div>
+              <div>
+                <div class="name">Dr. Rafael Minatto</div>
+                <div class="reg">CREFITO-3 123456-F</div>
+              </div>
+            </div>
+            <div class="when">Assinado digitalmente<br/>02/06/2026 · 15:12</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actionbar">
+    <button class="btn"><i data-lucide="share-2"></i> Compartilhar</button>
+    <button class="btn primary"><i data-lucide="download"></i> Exportar PDF</button>
+  </div>
+
+</div>
+<script>if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();</script>
+</body>
+</html>

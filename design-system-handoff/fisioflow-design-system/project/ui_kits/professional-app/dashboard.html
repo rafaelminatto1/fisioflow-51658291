@@ -1,0 +1,263 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Professional App" name="UI Kit · Pro App — Painel (dashboard)" subtitle="Hub: KPIs, análises pendentes, capturas recentes, agenda + atalhos" viewport="1320x920" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Painel — FisioFlow Pro</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  body { margin: 0; background: #0d1117; min-height: 100vh; display:flex; align-items:center; justify-content:center; padding: 24px; font-family: var(--font-sans); color: hsl(var(--foreground)); }
+  .pad { width: 1280px; height: 880px; flex-shrink: 0; background: hsl(var(--background)); border-radius: 24px; overflow: hidden; box-shadow: 0 0 0 10px #111, 0 0 0 12px #2a2d35, 0 40px 80px rgba(0,0,0,0.6); display: grid; grid-template-columns: 68px 1fr; }
+
+  /* icon rail */
+  .rail { background: hsl(224 50% 14%); display:flex; flex-direction:column; align-items:center; padding: 14px 0; gap: 4px; }
+  .rail-logo { width: 40px; height: 40px; border-radius: 12px; background: white; display:flex; align-items:center; justify-content:center; padding: 6px; margin-bottom: 14px; }
+  .rail-logo img { width: 100%; }
+  .rail-item { width: 44px; height: 44px; border-radius: 12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color: hsl(211 40% 70%); cursor: pointer; position: relative; }
+  .rail-item:hover { background: hsl(224 40% 22%); color: white; }
+  .rail-item.is-active { background: hsl(var(--primary)); color: white; }
+  .rail-item .lbl { font-size: 7px; font-weight: 800; letter-spacing: 0.03em; }
+  .rail-spacer { flex: 1; }
+  .rail-avatar { width: 36px; height: 36px; border-radius: 50%; background: hsl(211 100% 70%); color: hsl(224 60% 20%); display:flex; align-items:center; justify-content:center; font-weight: 800; font-size: 12px; margin-top: 8px; }
+
+  /* main */
+  .main { display:flex; flex-direction: column; min-width: 0; min-height: 0; }
+  .topbar { display:flex; align-items:center; padding: 18px 28px; gap: 16px; border-bottom: 1px solid hsl(var(--border)); }
+  .topbar h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+  .topbar .sub { font-size: 12px; color: hsl(var(--muted-foreground)); font-weight: 600; margin-top: 1px; }
+  .topbar-right { margin-left: auto; display:flex; gap: 10px; align-items:center; }
+  .search-box { display:flex; align-items:center; gap: 8px; padding: 9px 14px; border-radius: 10px; background: hsl(var(--muted) / .6); width: 240px; }
+  .search-box input { border: none; background: transparent; outline: none; font-family: var(--font-sans); font-size: 13px; width: 100%; color: hsl(var(--foreground)); }
+  .btn { display:inline-flex; align-items:center; gap:7px; padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); cursor:pointer; color: hsl(var(--foreground)); }
+  .btn.primary { background: hsl(var(--primary)); color: white; border-color: hsl(var(--primary)); box-shadow: var(--shadow-glow-primary); }
+
+  .scroll { flex:1; overflow-y: auto; padding: 24px 28px; }
+
+  /* stat cards */
+  .stats { display:grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 26px; }
+  .stat { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; padding: 18px; }
+  .stat .ico { width: 38px; height: 38px; border-radius: 11px; display:flex; align-items:center; justify-content:center; margin-bottom: 12px; }
+  .stat .v { font-size: 30px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1; }
+  .stat .l { font-size: 12px; color: hsl(var(--muted-foreground)); font-weight: 600; margin-top: 4px; }
+  .stat .d { font-size: 11px; font-weight: 700; margin-top: 6px; display:flex; align-items:center; gap: 3px; }
+  .up { color: hsl(158 64% 35%); } .dn { color: hsl(0 70% 45%); }
+
+  .cols { display:grid; grid-template-columns: 1fr 340px; gap: 24px; }
+  .section-head { display:flex; align-items:center; margin-bottom: 14px; }
+  .section-head h2 { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; }
+  .section-head .link { margin-left:auto; font-size: 12px; font-weight: 700; color: hsl(var(--primary)); cursor: pointer; }
+
+  /* capture cards grid */
+  .cap-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .cap { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; overflow: hidden; cursor: pointer; }
+  .cap:hover { box-shadow: var(--shadow-md); }
+  .cap .thumb { height: 124px; background: linear-gradient(180deg, #1a2030, #0f1420); position: relative; display:flex; align-items:center; justify-content:center; }
+  .cap .thumb .silh { height: 80%; opacity: .85; }
+  .cap .thumb .dur { position:absolute; bottom: 8px; right: 8px; padding: 2px 7px; border-radius: 6px; background: rgba(0,0,0,.6); color: white; font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .cap .thumb .test-tag { position:absolute; top: 8px; left: 8px; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.92); color: hsl(224 60% 25%); font-size: 9px; font-weight: 800; letter-spacing: 0.04em; }
+  .cap .thumb .play { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,.92); color: hsl(var(--primary)); display:flex; align-items:center; justify-content:center; }
+  .cap .body { padding: 12px 14px; }
+  .cap .body .row { display:flex; align-items:center; gap: 8px; }
+  .cap .body .pa { width: 26px; height: 26px; border-radius: 50%; color:white; font-size: 10px; font-weight: 800; display:flex; align-items:center; justify-content:center; }
+  .cap .body .nm { font-size: 13px; font-weight: 700; }
+  .cap .body .dt { margin-left: auto; font-size: 10px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .cap .body .status { margin-top: 10px; display:inline-flex; align-items:center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 0.03em; }
+  .status.pending { background: hsl(28 92% 93%); color: hsl(25 70% 34%); }
+  .status.ready { background: hsl(158 60% 92%); color: hsl(158 55% 28%); }
+  .status.shared { background: hsl(211 100% 93%); color: hsl(211 100% 35%); }
+
+  /* right column */
+  .panel { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; padding: 16px; margin-bottom: 18px; }
+  .panel h3 { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin-bottom: 12px; }
+  .sched { display:flex; gap: 11px; padding: 9px 0; border-bottom: 1px solid hsl(var(--border) / .5); }
+  .sched:last-child { border-bottom:none; }
+  .sched .t { font-size: 12px; font-weight: 800; color: hsl(var(--primary)); font-variant-numeric: tabular-nums; width: 42px; flex-shrink: 0; }
+  .sched .n { font-size: 13px; font-weight: 700; }
+  .sched .x { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .quick-actions { display:flex; flex-direction: column; gap: 8px; }
+  .qa-row { display:flex; align-items:center; gap: 10px; padding: 11px 13px; border-radius: 12px; background: hsl(var(--muted) / .5); cursor:pointer; font-size: 13px; font-weight: 700; }
+  .qa-row:hover { background: hsl(var(--primary) / .1); color: hsl(var(--primary)); }
+  .qa-row .qi { width: 32px; height: 32px; border-radius: 9px; background: hsl(var(--primary) / .12); color: hsl(var(--primary)); display:flex; align-items:center; justify-content:center; }
+</style>
+</head>
+<body>
+<div class="pad">
+
+  <!-- icon rail -->
+  <nav class="rail">
+    <div class="rail-logo"><img src="../../assets/activity-logo.svg" alt=""/></div>
+    <div class="rail-item is-active"><i data-lucide="layout-dashboard" style="width:19px;height:19px;"></i><span class="lbl">PAINEL</span></div>
+    <div class="rail-item"><i data-lucide="users" style="width:19px;height:19px;"></i><span class="lbl">PACIENTES</span></div>
+    <div class="rail-item"><i data-lucide="video" style="width:19px;height:19px;"></i><span class="lbl">CAPTURAR</span></div>
+    <div class="rail-item"><i data-lucide="activity" style="width:19px;height:19px;"></i><span class="lbl">ANÁLISES</span></div>
+    <div class="rail-item"><i data-lucide="list-checks" style="width:19px;height:19px;"></i><span class="lbl">TESTES</span></div>
+    <div class="rail-item"><i data-lucide="file-text" style="width:19px;height:19px;"></i><span class="lbl">LAUDOS</span></div>
+    <div class="rail-spacer"></div>
+    <div class="rail-item"><i data-lucide="settings" style="width:19px;height:19px;"></i></div>
+    <div class="rail-avatar">RM</div>
+  </nav>
+
+  <!-- main -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h1>Painel de Análise</h1>
+        <div class="sub">Dr. Rafael Minatto · Activity Fisioterapia</div>
+      </div>
+      <div class="topbar-right">
+        <div class="search-box">
+          <i data-lucide="search" style="width:15px;height:15px;color:hsl(var(--muted-foreground));"></i>
+          <input placeholder="Buscar paciente ou captura…"/>
+        </div>
+        <button class="btn primary"><i data-lucide="video" style="width:16px;height:16px;"></i> Nova captura</button>
+      </div>
+    </div>
+
+    <div class="scroll">
+
+      <!-- stats -->
+      <div class="stats">
+        <div class="stat">
+          <div class="ico" style="background:hsl(211 100% 93%);color:hsl(211 100% 40%);"><i data-lucide="video" style="width:19px;height:19px;"></i></div>
+          <div class="v">34</div>
+          <div class="l">Capturas este mês</div>
+          <div class="d up"><i data-lucide="trending-up" style="width:12px;height:12px;"></i> +8 vs. abril</div>
+        </div>
+        <div class="stat">
+          <div class="ico" style="background:hsl(28 92% 93%);color:hsl(25 70% 40%);"><i data-lucide="clock" style="width:19px;height:19px;"></i></div>
+          <div class="v">5</div>
+          <div class="l">Análises pendentes</div>
+          <div class="d" style="color:hsl(var(--muted-foreground));font-weight:600;">2 desde ontem</div>
+        </div>
+        <div class="stat">
+          <div class="ico" style="background:hsl(142 60% 92%);color:hsl(142 55% 32%);"><i data-lucide="users" style="width:19px;height:19px;"></i></div>
+          <div class="v">62</div>
+          <div class="l">Pacientes ativos</div>
+          <div class="d up"><i data-lucide="trending-up" style="width:12px;height:12px;"></i> +4 este mês</div>
+        </div>
+        <div class="stat">
+          <div class="ico" style="background:hsl(264 60% 93%);color:hsl(264 50% 45%);"><i data-lucide="gauge" style="width:19px;height:19px;"></i></div>
+          <div class="v">6,2<span style="font-size:16px;color:hsl(var(--muted-foreground));">min</span></div>
+          <div class="l">Tempo médio de análise</div>
+          <div class="d up"><i data-lucide="trending-down" style="width:12px;height:12px;"></i> −1,4min com IA</div>
+        </div>
+      </div>
+
+      <div class="cols">
+        <!-- left: captures -->
+        <div>
+          <div class="section-head">
+            <h2>Análises pendentes</h2>
+            <span class="link">Ver todas →</span>
+          </div>
+          <div class="cap-grid">
+
+            <div class="cap">
+              <div class="thumb">
+                <span class="test-tag">AGACHAMENTO</span>
+                <svg class="silh" viewBox="0 0 100 200" fill="#94a3b8"><circle cx="50" cy="22" r="9"/><path d="M50 31 L54 90 L44 90 Z"/><rect x="42" y="88" width="6" height="60" rx="3"/><rect x="52" y="88" width="6" height="60" rx="3"/></svg>
+                <span class="dur">00:11</span>
+              </div>
+              <div class="body">
+                <div class="row"><span class="pa" style="background:hsl(211 100% 50%);">CF</span><span class="nm">Carla Ferreira</span><span class="dt">hoje 14:30</span></div>
+                <span class="status pending"><i data-lucide="clock" style="width:11px;height:11px;"></i> AGUARDANDO ANÁLISE</span>
+              </div>
+            </div>
+
+            <div class="cap">
+              <div class="thumb">
+                <span class="test-tag">MARCHA</span>
+                <svg class="silh" viewBox="0 0 100 200" fill="#94a3b8"><circle cx="50" cy="22" r="9"/><path d="M50 31 L56 95 L44 95 Z"/><rect x="40" y="92" width="6" height="62" rx="3" transform="rotate(12 43 120)"/><rect x="54" y="92" width="6" height="62" rx="3" transform="rotate(-8 57 120)"/></svg>
+                <span class="dur">00:18</span>
+              </div>
+              <div class="body">
+                <div class="row"><span class="pa" style="background:hsl(28 85% 52%);">RS</span><span class="nm">Rafael Souza</span><span class="dt">hoje 11:05</span></div>
+                <span class="status pending"><i data-lucide="clock" style="width:11px;height:11px;"></i> AGUARDANDO ANÁLISE</span>
+              </div>
+            </div>
+
+            <div class="cap">
+              <div class="thumb">
+                <span class="test-tag">SALTO VERTICAL</span>
+                <svg class="silh" viewBox="0 0 100 200" fill="#94a3b8"><circle cx="50" cy="20" r="9"/><path d="M50 29 L54 84 L46 84 Z"/><rect x="44" y="82" width="6" height="54" rx="3"/><rect x="50" y="82" width="6" height="54" rx="3"/></svg>
+                <span class="dur">00:07</span>
+              </div>
+              <div class="body">
+                <div class="row"><span class="pa" style="background:hsl(340 70% 55%);">JP</span><span class="nm">Juliana Pires</span><span class="dt">ontem</span></div>
+                <span class="status pending"><i data-lucide="clock" style="width:11px;height:11px;"></i> AGUARDANDO ANÁLISE</span>
+              </div>
+            </div>
+
+            <div class="cap">
+              <div class="thumb">
+                <span class="test-tag">STEP-DOWN</span>
+                <svg class="silh" viewBox="0 0 100 200" fill="#94a3b8"><circle cx="50" cy="22" r="9"/><path d="M50 31 L55 92 L45 92 Z"/><rect x="42" y="90" width="6" height="58" rx="3"/><rect x="52" y="90" width="6" height="48" rx="3"/></svg>
+                <span class="dur">00:09</span>
+              </div>
+              <div class="body">
+                <div class="row"><span class="pa" style="background:hsl(142 50% 44%);">LM</span><span class="nm">Lucas Martins</span><span class="dt">ontem</span></div>
+                <span class="status pending"><i data-lucide="clock" style="width:11px;height:11px;"></i> AGUARDANDO ANÁLISE</span>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="section-head" style="margin-top:24px;">
+            <h2>Concluídas recentemente</h2>
+            <span class="link">Ver todas →</span>
+          </div>
+          <div class="cap-grid">
+            <div class="cap">
+              <div class="thumb" style="filter:grayscale(.1);">
+                <span class="test-tag">AGACHAMENTO</span>
+                <svg class="silh" viewBox="0 0 100 200" fill="#94a3b8"><circle cx="50" cy="22" r="9"/><path d="M50 31 L54 90 L44 90 Z"/><rect x="42" y="88" width="6" height="60" rx="3"/><rect x="52" y="88" width="6" height="60" rx="3"/></svg>
+                <span class="dur">00:10</span>
+              </div>
+              <div class="body">
+                <div class="row"><span class="pa" style="background:hsl(211 100% 50%);">CF</span><span class="nm">Carla Ferreira · S03</span><span class="dt">17 mar</span></div>
+                <span class="status shared"><i data-lucide="check-check" style="width:11px;height:11px;"></i> COMPARTILHADA</span>
+              </div>
+            </div>
+            <div class="cap">
+              <div class="thumb" style="filter:grayscale(.1);">
+                <span class="test-tag">MARCHA</span>
+                <svg class="silh" viewBox="0 0 100 200" fill="#94a3b8"><circle cx="50" cy="22" r="9"/><path d="M50 31 L56 95 L44 95 Z"/><rect x="40" y="92" width="6" height="62" rx="3" transform="rotate(10 43 120)"/><rect x="54" y="92" width="6" height="62" rx="3" transform="rotate(-6 57 120)"/></svg>
+                <span class="dur">00:16</span>
+              </div>
+              <div class="body">
+                <div class="row"><span class="pa" style="background:hsl(180 50% 42%);">ET</span><span class="nm">Eduardo Tavares</span><span class="dt">2 mai</span></div>
+                <span class="status ready"><i data-lucide="circle-check" style="width:11px;height:11px;"></i> LAUDO PRONTO</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- right -->
+        <div>
+          <div class="panel">
+            <h3>Captura agendada hoje</h3>
+            <div class="sched"><span class="t">14:30</span><div><div class="n">Carla Ferreira</div><div class="x">Reavaliação · agachamento + step-down</div></div></div>
+            <div class="sched"><span class="t">15:30</span><div><div class="n">Marina Alves</div><div class="x">Avaliação inicial · marcha</div></div></div>
+            <div class="sched"><span class="t">17:00</span><div><div class="n">Bruno Dias</div><div class="x">Controle · salto vertical</div></div></div>
+          </div>
+
+          <div class="panel">
+            <h3>Atalhos</h3>
+            <div class="quick-actions">
+              <div class="qa-row"><span class="qi"><i data-lucide="video" style="width:17px;height:17px;"></i></span> Nova captura de vídeo</div>
+              <div class="qa-row"><span class="qi"><i data-lucide="git-compare" style="width:17px;height:17px;"></i></span> Comparar sessões</div>
+              <div class="qa-row"><span class="qi"><i data-lucide="file-text" style="width:17px;height:17px;"></i></span> Gerar laudo</div>
+              <div class="qa-row"><span class="qi"><i data-lucide="list-checks" style="width:17px;height:17px;"></i></span> Biblioteca de testes</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();</script>
+</body>
+</html>

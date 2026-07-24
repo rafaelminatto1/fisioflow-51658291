@@ -54,7 +54,7 @@ describe("AparenciaTab", () => {
 
   it("Restaurar padrões chama resetAll", () => {
     render(<AparenciaTab registerHandle={() => {}} />);
-    fireEvent.click(screen.getByText("Restaurar padrões"));
+    fireEvent.click(screen.getByText(/Restaurar padrões/i));
     expect(resetAll).toHaveBeenCalledTimes(1);
   });
 });

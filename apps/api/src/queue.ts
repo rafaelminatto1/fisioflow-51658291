@@ -1241,7 +1241,7 @@ async function handleAppointmentUpdated(data: any, env: Env) {
     const formattedDate = formatDatePtBr(apt.date || date);
     const time = (apt.startTime || startTime)?.substring(0, 5) || "";
 
-    const messageText = `Olá, ${firstName}! 🗓️ Sua consulta no FisioFlow foi reagendada para o dia ${formattedDate} às ${time}. Qualquer dúvida, estamos à disposição!`;
+    const messageText = `Olá, ${firstName}! 🗓️ Sua sessão no FisioFlow foi reagendada para o dia ${formattedDate} às ${time}. Qualquer dúvida, estamos à disposição!`;
 
     await processWhatsAppMessage(
       {

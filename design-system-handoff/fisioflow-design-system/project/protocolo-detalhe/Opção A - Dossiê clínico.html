@@ -1,0 +1,315 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="Protocolo · A — Dossiê clínico" subtitle="Detalhe do protocolo: fases com critérios de progressão, exercícios com mídia, rail de marcos/testes/segurança" viewport="1328x928" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Protocolo · Opção A — Dossiê clínico</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<link rel="stylesheet" href="../ui_kits/web/screen-shell.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  .body { display: grid; grid-template-columns: 1fr 324px; min-height: 0; }
+  .main { overflow-y: auto; min-height: 0; padding: 20px 24px 28px; }
+  .rail { border-left: 1px solid hsl(var(--border)); background: hsl(var(--muted) / .35); overflow-y: auto; min-height: 0; padding: 18px 18px 28px; display: flex; flex-direction: column; gap: 12px; }
+
+  .d-head { display: flex; align-items: flex-start; gap: 14px; }
+  .d-head h2 { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; }
+  .d-head .meta { display: flex; gap: 7px; align-items: center; margin-top: 7px; flex-wrap: wrap; }
+  .d-head .desc { font-size: 12.5px; color: hsl(var(--muted-foreground)); font-weight: 500; margin-top: 8px; max-width: 600px; line-height: 1.5; }
+  .d-actions { margin-left: auto; display: flex; gap: 8px; flex-shrink: 0; }
+
+  /* progress strip */
+  .prog { margin-top: 18px; padding: 14px 16px; }
+  .prog .lbl { display: flex; justify-content: space-between; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; color: hsl(var(--muted-foreground)); }
+  .prog .track { display: flex; height: 9px; border-radius: 999px; overflow: hidden; margin-top: 9px; gap: 3px; }
+  .prog .seg { border-radius: 999px; }
+  .prog .ticks { display: flex; justify-content: space-between; margin-top: 7px; font-size: 10px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+
+  /* phase stepper */
+  .phases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+  .phase { border: 1px solid hsl(var(--border)); background: hsl(var(--card)); border-radius: 13px; padding: 12px 14px; cursor: pointer; }
+  .phase.on { border-color: hsl(var(--primary) / .5); background: hsl(var(--primary) / .05); box-shadow: 0 0 0 1px hsl(var(--primary) / .4); }
+  .phase .tag { font-size: 9.5px; font-weight: 800; letter-spacing: 0.07em; color: hsl(var(--muted-foreground)); }
+  .phase.on .tag { color: hsl(var(--primary)); }
+  .phase .nm { font-size: 13px; font-weight: 800; margin-top: 2px; }
+  .phase .mt { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; margin-top: 2px; }
+
+  /* expanded phase detail */
+  .ph-detail { margin-top: 12px; border: 1px solid hsl(var(--primary) / .35); border-radius: 16px; background: hsl(var(--card)); overflow: hidden; }
+  .ph-detail .hd { display: flex; align-items: center; gap: 10px; padding: 13px 18px; background: hsl(var(--primary) / .05); border-bottom: 1px solid hsl(var(--border)); }
+  .ph-detail .hd .n { width: 26px; height: 26px; border-radius: 9px; background: hsl(var(--primary)); color: #fff; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  .ph-detail .hd h3 { font-size: 14px; font-weight: 800; }
+  .ph-detail .hd .sp { margin-left: auto; display: flex; gap: 7px; }
+  .ph-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+  .ph-col { padding: 14px 18px; }
+  .ph-col + .ph-col { border-left: 1px solid hsl(var(--border)); }
+  .ph-col .cl { font-size: 9.5px; font-weight: 800; letter-spacing: .08em; color: hsl(var(--muted-foreground)); margin-bottom: 9px; display: flex; align-items: center; gap: 6px; }
+  .ph-col .cl i { width: 12px; height: 12px; }
+  .ph-col ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .ph-col li { display: flex; gap: 8px; font-size: 11.5px; font-weight: 600; line-height: 1.4; }
+  .ph-col li i { width: 13px; height: 13px; flex-shrink: 0; margin-top: 1px; color: hsl(var(--muted-foreground)); }
+  .ph-col.gate li i { color: hsl(158 60% 38%); }
+  .ph-col.gate li.todo i { color: hsl(220 10% 70%); }
+
+  /* exercise rows */
+  .sec-title { display: flex; align-items: center; justify-content: space-between; margin: 20px 0 10px; }
+  .sec-title h3 { font-size: 14px; font-weight: 800; }
+  .sec-title .hint { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .exrow { display: grid; grid-template-columns: 26px 58px 1fr 104px 84px 72px; gap: 12px; align-items: center; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 13px; padding: 9px 14px; margin-bottom: 7px; }
+  .exrow .ord { font-size: 11px; font-weight: 800; color: hsl(var(--muted-foreground)); font-variant-numeric: tabular-nums; }
+  .thumb { width: 58px; height: 42px; border-radius: 9px; background: repeating-linear-gradient(45deg, hsl(220 14% 94%), hsl(220 14% 94%) 5px, hsl(220 14% 90%) 5px, hsl(220 14% 90%) 10px); border: 1px solid hsl(var(--border)); display: flex; align-items: center; justify-content: center; color: hsl(var(--muted-foreground)); position: relative; }
+  .thumb .play { position: absolute; width: 20px; height: 20px; border-radius: 50%; background: hsl(var(--primary)); color: #fff; display: flex; align-items: center; justify-content: center; }
+  .thumb .play i { width: 10px; height: 10px; }
+  .exrow .nm { font-size: 13px; font-weight: 700; }
+  .exrow .mt { font-size: 10.5px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .exrow .dose { font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .exrow .dose small { font-weight: 600; color: hsl(var(--muted-foreground)); }
+
+  /* rail cards */
+  .rcard { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 14px; padding: 14px 16px; }
+  .rcard h4 { font-size: 10px; font-weight: 800; letter-spacing: .08em; color: hsl(var(--muted-foreground)); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .rcard h4 i { width: 13px; height: 13px; }
+  .nums { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .nums .nb { text-align: center; border: 1px solid hsl(var(--border)); border-radius: 10px; padding: 8px 2px; }
+  .nums .nb b { display: block; font-size: 17px; font-weight: 800; color: hsl(var(--primary)); }
+  .nums .nb span { font-size: 8.5px; font-weight: 800; letter-spacing: .05em; color: hsl(var(--muted-foreground)); }
+  .marco { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+  .marco + .marco { border-top: 1px dashed hsl(var(--border)); }
+  .marco .w { width: 32px; height: 32px; border-radius: 9px; font-size: 10px; font-weight: 800; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: hsl(158 55% 42%); }
+  .marco .t { font-size: 11.5px; font-weight: 700; line-height: 1.3; }
+  .marco .s { font-size: 10px; font-weight: 600; color: hsl(var(--muted-foreground)); }
+  .trow { display: flex; align-items: center; gap: 9px; padding: 7px 0; font-size: 11.5px; font-weight: 700; }
+  .trow + .trow { border-top: 1px dashed hsl(var(--border)); }
+  .trow i { width: 14px; height: 14px; color: hsl(var(--primary)); flex-shrink: 0; }
+  .trow .b { margin-left: auto; }
+  .alert { display: flex; gap: 9px; padding: 9px 11px; border-radius: 11px; background: hsl(38 92% 50% / .1); border: 1px solid hsl(38 92% 50% / .3); font-size: 11px; font-weight: 600; line-height: 1.4; }
+  .alert i { width: 14px; height: 14px; color: hsl(30 85% 40%); flex-shrink: 0; margin-top: 1px; }
+  .alert + .alert { margin-top: 7px; }
+  .alert.bad { background: hsl(0 84% 60% / .08); border-color: hsl(0 84% 60% / .25); }
+  .alert.bad i { color: hsl(0 70% 45%); }
+  .prow { display: flex; align-items: center; gap: 9px; padding: 7px 0; }
+  .prow + .prow { border-top: 1px dashed hsl(var(--border)); }
+  .prow .av { width: 26px; height: 26px; font-size: 9px; }
+  .prow .pi { flex: 1; min-width: 0; }
+  .prow .pn { font-size: 11.5px; font-weight: 800; }
+  .prow .ps { font-size: 9.5px; font-weight: 600; color: hsl(var(--muted-foreground)); }
+  .ref { font-size: 10.5px; font-weight: 600; line-height: 1.45; color: hsl(var(--muted-foreground)); padding: 7px 0; display: flex; gap: 8px; }
+  .ref + .ref { border-top: 1px dashed hsl(var(--border)); }
+  .ref i { width: 13px; height: 13px; color: hsl(var(--primary)); flex-shrink: 0; margin-top: 1px; }
+  .ref b { color: hsl(var(--foreground)); font-weight: 800; }
+</style>
+</head>
+<body>
+<div class="pad">
+
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><img src="../assets/activity-logo.svg" alt=""/></div>
+      <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div>
+        <div class="sb-group-label">ATENDIMENTO</div>
+        <div class="sb-item"><i data-lucide="calendar-days"></i> AGENDA</div>
+        <div class="sb-item"><i data-lucide="users"></i> PACIENTES</div>
+        <div class="sb-item"><i data-lucide="message-circle"></i> CRM · WHATSAPP</div>
+      </div>
+      <div>
+        <div class="sb-group-label">CLÍNICA</div>
+        <div class="sb-item"><i data-lucide="clipboard-check"></i> AVALIAÇÕES</div>
+        <div class="sb-item"><i data-lucide="dumbbell"></i> EXERCÍCIOS</div>
+        <div class="sb-item is-active"><i data-lucide="clipboard-list"></i> PROTOCOLOS</div>
+        <div class="sb-item"><i data-lucide="flask-conical"></i> TESTES CLÍNICOS</div>
+        <div class="sb-item"><i data-lucide="camera"></i> BIOMECÂNICA</div>
+      </div>
+      <div>
+        <div class="sb-group-label">GESTÃO &amp; OPERAÇÃO</div>
+        <div class="sb-item"><i data-lucide="layout-dashboard"></i> BOARDS</div>
+        <div class="sb-item"><i data-lucide="wallet"></i> FINANCEIRO</div>
+        <div class="sb-item"><i data-lucide="book-open"></i> WIKI CLÍNICA</div>
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-item"><i data-lucide="settings"></i> CONFIGURAÇÕES</div>
+      <div class="sb-item"><i data-lucide="log-out"></i> SAIR</div>
+    </div>
+  </aside>
+
+  <div class="content">
+    <div class="topbar">
+      <div class="crumbs">Protocolos <i data-lucide="chevron-right"></i> <strong>Tendinopatia patelar — HSR</strong></div>
+      <div class="topbar-right">
+        <button class="btn"><i data-lucide="share-2"></i></button>
+        <button class="btn"><i data-lucide="pencil"></i> Editar</button>
+        <button class="btn primary"><i data-lucide="user-plus"></i> Aplicar a paciente</button>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="main">
+        <div class="d-head">
+          <div>
+            <h2>Tendinopatia patelar — HSR (Padrão Ouro)</h2>
+            <div class="meta">
+              <span class="badge info">JOELHO · PATOLOGIA</span>
+              <span class="badge ok">NÍVEL A DE EVIDÊNCIA</span>
+              <span class="badge muted">12 SEMANAS · 3×/SEM</span>
+              <span class="badge muted">v1.3 · REVISADO POR DRA. PAULA L.</span>
+            </div>
+            <p class="desc">Heavy Slow Resistance para tendinopatia patelar: carga pesada e lenta (tempo 3-0-3) com progressão de 15RM a 6RM, precedida de isometria analgésica e finalizada com reintrodução de saltos.</p>
+          </div>
+          <div class="d-actions"></div>
+        </div>
+
+        <div class="card prog">
+          <div class="lbl"><span>PROGRESSÃO CLÍNICA</span><span>12 SEMANAS</span></div>
+          <div class="track">
+            <div class="seg" style="flex: 2; background: hsl(264 50% 55%);"></div>
+            <div class="seg" style="flex: 6; background: hsl(211 100% 50%);"></div>
+            <div class="seg" style="flex: 4; background: hsl(158 55% 42%);"></div>
+          </div>
+          <div class="ticks"><span>Fase 1 · Sem 1–2</span><span>Fase 2 · Sem 3–8</span><span>Fase 3 · Sem 9–12</span></div>
+        </div>
+
+        <div class="phases">
+          <div class="phase">
+            <div class="tag">FASE 1 · SEM 1–2</div>
+            <div class="nm">Controle de dor e edema</div>
+            <div class="mt">3 exercícios · isometria analgésica</div>
+          </div>
+          <div class="phase on">
+            <div class="tag">FASE 2 · SEM 3–8</div>
+            <div class="nm">HSR — carga pesada e lenta</div>
+            <div class="mt">4 exercícios · 15RM → 6RM</div>
+          </div>
+          <div class="phase">
+            <div class="tag">FASE 3 · SEM 9–12</div>
+            <div class="nm">Retorno energético</div>
+            <div class="mt">5 exercícios · pliometria + salto</div>
+          </div>
+        </div>
+
+        <div class="ph-detail">
+          <div class="hd">
+            <span class="n">2</span>
+            <h3>Fase 2 — HSR · carga pesada e lenta</h3>
+            <div class="sp"><span class="badge info">SEMANAS 3–8</span><span class="badge warn">2 ALERTAS</span></div>
+          </div>
+          <div class="ph-cols">
+            <div class="ph-col">
+              <div class="cl"><i data-lucide="target"></i> OBJETIVOS TERAPÊUTICOS</div>
+              <ul>
+                <li><i data-lucide="dot"></i> Remodelar o tendão com carga progressiva</li>
+                <li><i data-lucide="dot"></i> Recuperar força de quadríceps (≥ 80% contralateral)</li>
+                <li><i data-lucide="dot"></i> Manter dor ≤ 3/10 durante e 24h após</li>
+              </ul>
+            </div>
+            <div class="ph-col gate">
+              <div class="cl"><i data-lucide="git-branch"></i> CRITÉRIOS DE PROGRESSÃO</div>
+              <ul>
+                <li><i data-lucide="check-circle-2"></i> Decline squat com EVA ≤ 3</li>
+                <li><i data-lucide="check-circle-2"></i> 6RM atingido sem dor &gt; 3</li>
+                <li class="todo"><i data-lucide="circle"></i> VISA-P ≥ 70 pontos</li>
+              </ul>
+            </div>
+            <div class="ph-col">
+              <div class="cl"><i data-lucide="zap"></i> INTERVENÇÕES-CHAVE</div>
+              <ul>
+                <li><i data-lucide="dot"></i> HSR 4×8 · tempo 3-0-3 · 2 min descanso</li>
+                <li><i data-lucide="dot"></i> Educação de carga: dor aceitável até 3/10</li>
+                <li><i data-lucide="dot"></i> Isometria nos dias sem treino (45 s × 5)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec-title">
+          <h3>Exercícios — Fase 2 · HSR</h3>
+          <span class="hint">Dose padrão da semana 5 · ajustável por paciente</span>
+        </div>
+
+        <div class="exrow">
+          <span class="ord">1</span>
+          <span class="thumb"><span class="play"><i data-lucide="play"></i></span></span>
+          <div><div class="nm">Agachamento em decline 25°</div><div class="mt">Tendão patelar · tempo 3-0-3 · barra nas costas</div></div>
+          <span class="dose">4 × 8 <small>reps</small></span>
+          <span class="dose">70% RM</span>
+          <span class="badge info">VÍDEO</span>
+        </div>
+        <div class="exrow">
+          <span class="ord">2</span>
+          <span class="thumb"><span class="play"><i data-lucide="play"></i></span></span>
+          <div><div class="nm">Leg press 45°</div><div class="mt">Arco 10–90° · pés na metade inferior da plataforma</div></div>
+          <span class="dose">4 × 8 <small>reps</small></span>
+          <span class="dose">120 kg</span>
+          <span class="badge info">VÍDEO</span>
+        </div>
+        <div class="exrow">
+          <span class="ord">3</span>
+          <span class="thumb"><span class="play"><i data-lucide="play"></i></span></span>
+          <div><div class="nm">Hack squat</div><div class="mt">Tempo 3-0-3 · sem bloqueio de joelho no topo</div></div>
+          <span class="dose">4 × 8 <small>reps</small></span>
+          <span class="dose">80 kg</span>
+          <span class="badge info">VÍDEO</span>
+        </div>
+        <div class="exrow">
+          <span class="ord">4</span>
+          <span class="thumb"><i data-lucide="image" style="width:15px;height:15px;"></i></span>
+          <div><div class="nm">Extensão de joelho unilateral</div><div class="mt">Arco 90–10° · isometria 2 s no topo</div></div>
+          <span class="dose">3 × 10 <small>/lado</small></span>
+          <span class="dose">35 kg</span>
+          <span class="badge muted">SEM VÍDEO</span>
+        </div>
+      </div>
+
+      <div class="rail">
+        <div class="rcard">
+          <h4><i data-lucide="gauge"></i> VISÃO GERAL</h4>
+          <div class="nums">
+            <div class="nb"><b>12</b><span>SEMANAS</span></div>
+            <div class="nb"><b>3</b><span>FASES</span></div>
+            <div class="nb"><b>3</b><span>MARCOS</span></div>
+            <div class="nb"><b>12</b><span>EXERC.</span></div>
+          </div>
+        </div>
+
+        <div class="rcard">
+          <h4><i data-lucide="flag"></i> MARCOS</h4>
+          <div class="marco"><span class="w">W4</span><div><div class="t">Reavaliação VISA-P</div><div class="s">meta ≥ 55 pontos</div></div></div>
+          <div class="marco"><span class="w">W8</span><div><div class="t">Transição para pliometria</div><div class="s">6RM sem dor · VISA-P ≥ 70</div></div></div>
+          <div class="marco"><span class="w" style="background: hsl(211 100% 50%);">W12</span><div><div class="t">Critério de alta</div><div class="s">VISA-P ≥ 90 · hop test ≥ 90%</div></div></div>
+        </div>
+
+        <div class="rcard">
+          <h4><i data-lucide="flask-conical"></i> TESTES VINCULADOS</h4>
+          <div class="trow"><i data-lucide="activity"></i> Decline squat test <span class="b badge muted">F1 → F2</span></div>
+          <div class="trow"><i data-lucide="clipboard-list"></i> VISA-P (questionário) <span class="b badge muted">W4 · W8 · W12</span></div>
+          <div class="trow"><i data-lucide="move-diagonal"></i> Single-leg hop <span class="b badge muted">ALTA</span></div>
+        </div>
+
+        <div class="rcard">
+          <h4><i data-lucide="shield-alert"></i> SEGURANÇA CLÍNICA</h4>
+          <div class="alert"><i data-lucide="alert-triangle"></i><span>Evitar agachamentos profundos e saltos até a semana 8.</span></div>
+          <div class="alert bad"><i data-lucide="octagon-alert"></i><span>Dor &gt; 5/10 por mais de 24 h → regredir carga em 20%.</span></div>
+        </div>
+
+        <div class="rcard">
+          <h4><i data-lucide="users"></i> PACIENTES NESTE PROTOCOLO</h4>
+          <div class="prow"><span class="av" style="background:hsl(264 55% 55%);">RM</span><div class="pi"><div class="pn">Rafael Minatto</div><div class="ps">Fase 2 · semana 5 · adesão 78%</div></div><span class="badge ok">EM DIA</span></div>
+          <div class="prow"><span class="av" style="background:hsl(28 80% 52%);">CS</span><div class="pi"><div class="pn">Carla Sanches</div><div class="ps">Fase 1 · semana 2 · adesão 91%</div></div><span class="badge ok">EM DIA</span></div>
+          <div class="prow"><span class="av" style="background:hsl(158 55% 42%);">DP</span><div class="pi"><div class="pn">Diego Prado</div><div class="ps">Fase 3 · semana 10 · adesão 64%</div></div><span class="badge warn">ATRASADO</span></div>
+        </div>
+
+        <div class="rcard">
+          <h4><i data-lucide="book-open"></i> EVIDÊNCIA · WIKI</h4>
+          <div class="ref"><i data-lucide="file-text"></i><span><b>Kongsgaard et al., 2009</b> — HSR vs excêntrico na tendinopatia patelar. RCT, nível A.</span></div>
+          <div class="ref"><i data-lucide="file-text"></i><span><b>Malliaras et al., 2015</b> — revisão de programas de carga. Ver módulo na Wiki Clínica.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();</script>
+</body>
+</html>

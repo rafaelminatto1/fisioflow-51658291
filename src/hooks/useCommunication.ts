@@ -71,11 +71,11 @@ const MOCK_TEMPLATES: CommunicationTemplate[] = [
   },
   {
     id: "2",
-    name: "Confirmação de Agendamento",
+    name: "Confirmação de Sessão",
     type: "email",
-    subject: "Consulta Agendada - FisioFlow",
+    subject: "Sessão Agendada - FisioFlow",
     content:
-      "Prezado(a) {{patient_name}},\n\nSua consulta foi agendada com sucesso!\n\nDetalhes:\n- Data: {{appointment_date}}\n- Horário: {{appointment_time}}\n- Fisioterapeuta: {{therapist_name}}\n- Local: {{clinic_address}}\n\nEm caso de dúvidas, entre em contato conosco.\n\nAtenciosamente,\nEquipe FisioFlow",
+      "Prezado(a) {{patient_name}},\n\nSua sessão foi agendada com sucesso!\n\nDetalhes:\n- Data: {{appointment_date}}\n- Horário: {{appointment_time}}\n- Fisioterapeuta: {{therapist_name}}\n- Local: {{clinic_address}}\n\nEm caso de dúvidas, entre em contato conosco.\n\nAtenciosamente,\nEquipe FisioFlow",
     variables: [
       "patient_name",
       "appointment_date",
@@ -93,7 +93,7 @@ const MOCK_TEMPLATES: CommunicationTemplate[] = [
     name: "SMS Lembrete Urgente",
     type: "sms",
     content:
-      "URGENTE: {{patient_name}}, sua consulta é HOJE às {{appointment_time}}. Confirme: SIM ou NÃO. FisioFlow",
+      "URGENTE: {{patient_name}}, sua sessão é HOJE às {{appointment_time}}. Confirme: SIM ou NÃO. FisioFlow",
     variables: ["patient_name", "appointment_time"],
     category: "emergency",
     is_active: true,
@@ -102,7 +102,7 @@ const MOCK_TEMPLATES: CommunicationTemplate[] = [
   },
   {
     id: "4",
-    name: "Follow-up Pós Consulta",
+    name: "Follow-up Pós Sessão",
     type: "whatsapp",
     content:
       "Oi {{patient_name}}! Como você está se sentindo após a sessão de hoje? Lembre-se de fazer os exercícios recomendados. Qualquer dúvida, estamos aqui! 💪",
@@ -134,9 +134,9 @@ const MOCK_HISTORY: CommunicationHistory[] = [
     patient_name: "Maria Silva",
     type: "whatsapp",
     template_id: "1",
-    template_name: "Lembrete de Consulta",
+    template_name: "Lembrete de Sessão",
     content:
-      "Olá Maria Silva! Lembramos que você tem uma consulta marcada para 25/01/2024 às 14:00 com Dr. João Santos.",
+      "Olá Maria Silva! Lembramos que você tem uma sessão marcada para 25/01/2024 às 14:00 com Dr. João Santos.",
     status: "read",
     sent_at: "2024-01-24T10:00:00Z",
     delivered_at: "2024-01-24T10:01:00Z",
@@ -150,7 +150,7 @@ const MOCK_HISTORY: CommunicationHistory[] = [
     template_id: "2",
     template_name: "Confirmação de Agendamento",
     content:
-      "Prezado Carlos Oliveira, sua consulta foi agendada com sucesso para 26/01/2024 às 09:30.",
+      "Prezado Carlos Oliveira, sua sessão foi agendada com sucesso para 26/01/2024 às 09:30.",
     status: "delivered",
     sent_at: "2024-01-24T15:30:00Z",
     delivered_at: "2024-01-24T15:31:00Z",
@@ -162,7 +162,7 @@ const MOCK_HISTORY: CommunicationHistory[] = [
     type: "sms",
     template_id: "3",
     template_name: "SMS Lembrete Urgente",
-    content: "URGENTE: Ana Costa, sua consulta é HOJE às 16:00. Confirme: SIM ou NÃO.",
+    content: "URGENTE: Ana Costa, sua sessão é HOJE às 16:00. Confirme: SIM ou NÃO.",
     status: "failed",
     sent_at: "2024-01-24T14:00:00Z",
     error_message: "Número de telefone inválido",

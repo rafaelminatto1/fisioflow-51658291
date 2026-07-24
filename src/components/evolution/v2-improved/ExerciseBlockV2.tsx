@@ -228,15 +228,7 @@ const ExerciseV2Row: React.FC<{
     onUpdateObservations,
     disabled,
   }) => {
-    const [expanded, setExpanded] = useState(() => {
-      const hasFeedback = !!(
-        exercise.patientFeedback?.pain ||
-        exercise.patientFeedback?.fatigue ||
-        exercise.patientFeedback?.difficultyPerforming
-      );
-      const hasObs = !!exercise.observations?.trim();
-      return hasFeedback || hasObs;
-    });
+    const [expanded, setExpanded] = useState(true);
     const [isRemoving, setIsRemoving] = useState(false);
 
     const prevHasContentRef = useRef(false);

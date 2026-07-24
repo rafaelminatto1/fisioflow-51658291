@@ -223,7 +223,7 @@ export async function handleWhatsAppInboundQueue(
       if (nfmReply?.response_json) {
         try { bookingPayload = JSON.parse(nfmReply.response_json); } catch { /* payload inválido */ }
       } else {
-        bookingPayload = parseBookListId(listReplyId);
+        bookingPayload = parseBookListId(listReplyId) || parseBookListId(buttonId);
       }
       if (bookingPayload?.date && bookingPayload?.slot) {
         if (bookingPayload.slot === "outra_hora") {
@@ -311,7 +311,7 @@ export async function handleWhatsAppInboundQueue(
             console.error("[Reschedule Waitlist Trigger Error]", err);
           }
 
-          const rescheduleAck = "Entendido, você quer remarcar sua consulta. Vou consultar nossa agenda de horários livres para sugerir opções para você...";
+          const rescheduleAck = "Entendido, você quer remarcar sua sessão. Vou consultar nossa agenda de horários livres para sugerir opções para você...";
           const whatsapp = new WhatsAppService(env);
           await whatsapp.sendTextMessage(msg.from || msg.waId, rescheduleAck);
           
@@ -386,7 +386,7 @@ export async function handleWhatsAppInboundQueue(
 
         // Enviar confirmação via WhatsApp
         const whatsapp = new WhatsAppService(env);
-        const confirmMsg = "Obrigado! Sua consulta está confirmada com sucesso. Te esperamos na clínica! 🏥";
+        const confirmMsg = "Obrigado! Sua sessão está confirmada com sucesso. Te esperamos na clínica! 🏥";
         await whatsapp.sendTextMessage(msg.from || msg.waId, confirmMsg);
 
         // Salvar mensagem automática de confirmação

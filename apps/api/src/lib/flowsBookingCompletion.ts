@@ -129,7 +129,9 @@ function typeLabelFor(typeId: string | undefined): string {
 }
 
 function formatBrDate(iso: string): string {
-  const [y, m, d] = iso.split("-");
+  if (!iso) return "";
+  const clean = String(iso).replace(/\/+/g, "-");
+  const [y, m, d] = clean.split("-");
   return d && m && y ? `${d}/${m}/${y}` : iso;
 }
 

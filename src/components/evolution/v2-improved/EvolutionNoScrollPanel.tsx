@@ -286,6 +286,14 @@ export const EvolutionNoScrollPanel = memo(
     const [isRegionPopoverOpen, setIsRegionPopoverOpen] = useState(false);
     const autoLoadedMembersRef = useRef(false);
 
+    const filteredRegions = useMemo(() => {
+      const query = regionSearch.trim().toLowerCase();
+      if (!query) return COMMON_ANATOMICAL_REGIONS;
+      return COMMON_ANATOMICAL_REGIONS.filter((region) =>
+        region.toLowerCase().includes(query)
+      );
+    }, [regionSearch]);
+
     const currentPainData: PainData = useMemo(
       () => ({
         painLevelArrival: data.painLevelArrival,
@@ -342,6 +350,78 @@ export const EvolutionNoScrollPanel = memo(
     const setDischarge = (v: number) =>
       commitPainChange({ painLevelDischarge: v, painLevel: v });
     const setLocation = (v: string) => commitPainChange({ painLocation: v });
+
+    const addPainMember = useCallback(
+      (memberName: string) => {
+        const trimmed = memberName.trim();
+        if (!trimmed) return;
+
+        const currentMembers = data.locationMembers ?? [];
+        const exists = currentMembers.some(
+          (m) => m.member.toLowerCase() === trimmed.toLowerCase(),
+        );
+        if (exists) return;
+
+        const newMember: PainLocationMember = {
+          member: trimmed,
+          arrival: data.painLevelArrival ?? 0,
+          discharge: data.painLevelDischarge ?? data.painLevel ?? 0,
+        };
+        const nextMembers = [...currentMembers, newMember];
+        const nextLocation = nextMembers.map((m) => m.member).join(", ");
+
+        commitPainChange({
+          locationMembers: nextMembers,
+          painLocation: nextLocation,
+        });
+      },
+      [
+        data.locationMembers,
+        data.painLevelArrival,
+        data.painLevelDischarge,
+        data.painLevel,
+        commitPainChange,
+      ],
+    );
+
+    const removePainMember = useCallback(
+      (memberName: string) => {
+        const currentMembers = data.locationMembers ?? [];
+        const nextMembers = currentMembers.filter(
+          (m) => m.member.toLowerCase() !== memberName.toLowerCase(),
+        );
+        const nextLocation = nextMembers.map((m) => m.member).join(", ");
+
+        commitPainChange({
+          locationMembers: nextMembers,
+          painLocation: nextLocation,
+        });
+      },
+      [data.locationMembers, commitPainChange],
+    );
+
+    const toggleIndividualPain = useCallback(
+      (isIndividual: boolean) => {
+        commitPainChange({ isIndividualPain: isIndividual });
+      },
+      [commitPainChange],
+    );
+
+    const updatePainMemberLevel = useCallback(
+      (memberName: string, field: "arrival" | "discharge", value: number) => {
+        const currentMembers = data.locationMembers ?? [];
+        const nextMembers = currentMembers.map((m) => {
+          if (m.member.toLowerCase() === memberName.toLowerCase()) {
+            return { ...m, [field]: value };
+          }
+          return m;
+        });
+
+        commitPainChange({ locationMembers: nextMembers });
+      },
+      [data.locationMembers, commitPainChange],
+    );
+
     const toggleQuality = (type: string) => {
       const exists = quality.find((q) => q.type === type);
       let nextQuality;
@@ -398,6 +478,20 @@ export const EvolutionNoScrollPanel = memo(
       () => (evolutionId ? rawRecords.find((r) => r.id !== evolutionId) : rawRecords[0]),
       [rawRecords, evolutionId],
     );
+    const prevPainDetail = useMemo(() => {
+      if (!prevRecord?.measurements) return null;
+      return parsePainDetail((prevRecord.measurements as any[]) ?? [], prevRecord.pain_scale);
+    }, [prevRecord]);
+
+    const handleCopyPrevLocation = useCallback(() => {
+      if (!prevPainDetail) return;
+      commitPainChange({
+        locationMembers: prevPainDetail.locationMembers,
+        painLocation: prevPainDetail.location,
+        isIndividualPain: prevPainDetail.isIndividualPain,
+      });
+    }, [prevPainDetail, commitPainChange]);
+
     const prevRom = extractRom((prevRecord?.measurements as any[]) ?? []);
     const curRom = extractRom((data.measurements as any[]) ?? []);
 
@@ -690,6 +784,18 @@ export const EvolutionNoScrollPanel = memo(
                   )}
                 </div>
 
+                {/* Botão de Cópia da Sessão Anterior (se vazio) */}
+                {(data.locationMembers?.length ?? 0) === 0 && (prevPainDetail?.location || (prevPainDetail?.locationMembers?.length ?? 0) > 0) && (
+                  <button
+                    type="button"
+                    onClick={handleCopyPrevLocation}
+                    className="text-[10px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 px-2 py-0.5 rounded-lg transition-colors flex items-center gap-1 shrink-0"
+                    title={`Importar local da última sessão: ${prevPainDetail?.location}`}
+                  >
+                    <Undo2 className="h-3 w-3" /> Usar anterior ({prevPainDetail?.location})
+                  </button>
+                )}
+
                 {/* Alternador Global vs Individual */}
                 {(data.locationMembers?.length ?? 0) > 0 && (
                   <div className="flex shrink-0 items-center gap-0.5 rounded-lg bg-slate-200/70 p-0.5 text-[9.5px] font-extrabold">
@@ -728,10 +834,12 @@ export const EvolutionNoScrollPanel = memo(
                         setRegionSearch(e.target.value);
                         if (!isRegionPopoverOpen) setIsRegionPopoverOpen(true);
                       }}
+                      onFocus={() => setIsRegionPopoverOpen(true)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && regionSearch.trim()) {
                           e.preventDefault();
-                          addPainMember(regionSearch);
+                          const targetRegion = filteredRegions.length > 0 ? filteredRegions[0] : regionSearch.trim();
+                          addPainMember(targetRegion);
                           setRegionSearch("");
                           setIsRegionPopoverOpen(false);
                         }
@@ -739,9 +847,25 @@ export const EvolutionNoScrollPanel = memo(
                       placeholder="Adicionar membro (ex: Ombro D, Lombar)..."
                       className="w-full bg-transparent text-[11px] font-semibold text-slate-700 placeholder:text-slate-400 focus:outline-none"
                     />
+                    {regionSearch && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setRegionSearch("");
+                        }}
+                        className="text-slate-400 hover:text-slate-600 p-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
                   </div>
                 </PopoverTrigger>
-                <PopoverContent className="w-64 p-1 max-h-48 overflow-y-auto" align="start">
+                <PopoverContent
+                  className="w-64 p-1 max-h-48 overflow-y-auto"
+                  align="start"
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                >
                   {filteredRegions.length > 0 ? (
                     filteredRegions.map((region) => {
                       const isSelected = data.locationMembers?.some(
@@ -751,16 +875,26 @@ export const EvolutionNoScrollPanel = memo(
                         <button
                           key={region}
                           type="button"
+                          onMouseDown={(e) => e.preventDefault()}
                           onClick={() => {
-                            addPainMember(region);
+                            if (isSelected) {
+                              removePainMember(region);
+                            } else {
+                              addPainMember(region);
+                            }
                             setRegionSearch("");
                             setIsRegionPopoverOpen(false);
                           }}
-                          className="w-full text-left px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-rose-50 hover:text-rose-700 rounded-md transition-colors flex items-center justify-between"
+                          className={cn(
+                            "w-full text-left px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors flex items-center justify-between",
+                            isSelected
+                              ? "bg-rose-50/70 text-rose-700 font-bold hover:bg-rose-100/80"
+                              : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                          )}
                         >
                           <span>{region}</span>
                           {isSelected && (
-                            <span className="text-[9px] font-bold text-rose-500">Adicionado</span>
+                            <span className="text-[9px] font-extrabold text-rose-600 bg-rose-100 px-1.5 py-0.2 rounded">✓ Adicionado</span>
                           )}
                         </button>
                       );
@@ -776,6 +910,7 @@ export const EvolutionNoScrollPanel = memo(
                     ) && (
                       <button
                         type="button"
+                        onMouseDown={(e) => e.preventDefault()}
                         onClick={() => {
                           addPainMember(regionSearch);
                           setRegionSearch("");

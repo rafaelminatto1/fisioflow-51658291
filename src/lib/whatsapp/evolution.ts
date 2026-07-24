@@ -342,11 +342,11 @@ export function renderAppointmentConfirmation(data: AppointmentMessageData): str
   const location = data.location ? `\n📍 *Local*: ${data.location}` : "";
 
   return `
-✅ *Consulta Confirmada*
+✅ *Sessão Confirmada*
 
 Olá *${data.patientName}*!
 
-Sua consulta foi agendada com sucesso:
+Sua sessão foi agendada com sucesso:
 
 📅 *Data*: ${data.date}
 ⏰ *Horário*: ${data.time}
@@ -365,11 +365,11 @@ _${data.organizationName}_
  */
 export function renderAppointmentReminder(data: AppointmentMessageData): string {
   return `
-🔔 *Lembrete de Consulta*
+🔔 *Lembrete de Sessão*
 
 Olá *${data.patientName}*!
 
-Você tem uma consulta *amanhã* às *${data.time}*.
+Você tem uma sessão *amanhã* às *${data.time}*.
 
 📅 *Data*: ${data.date}
 👨‍⚕️ *Fisioterapeuta*: ${data.therapistName}

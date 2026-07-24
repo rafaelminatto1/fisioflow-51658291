@@ -1,0 +1,840 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Web" name="UI Kit · Wiki Clínica (web)" subtitle="Wiki & Documentação: abas Dashboard / AI Hub / Artigos / Dicionário, página de diretriz com AI Insights e modal de edição — clique nas abas e em Editar" viewport="1320x920" -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Wiki &amp; Documentação — FisioFlow Clínica</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<link rel="stylesheet" href="screen-shell.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  .pad { position: relative; }
+  .body { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
+
+  /* ---- page header ---- */
+  .wiki-head { display: flex; align-items: center; gap: 14px; padding: 22px 28px 0; }
+  .wiki-head .pic { width: 42px; height: 42px; border-radius: 13px; background: hsl(var(--primary) / .1); color: hsl(var(--primary)); display: flex; align-items: center; justify-content: center; }
+  .wiki-head .pic .lucide { width: 21px; height: 21px; }
+  .wiki-head h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+  .wiki-head .sub { font-size: 12px; font-weight: 600; color: hsl(var(--muted-foreground)); margin-top: 1px; }
+
+  /* ---- tab toolbar ---- */
+  .wiki-tabs { display: flex; align-items: center; gap: 2px; padding: 14px 28px 0; border-bottom: 1px solid hsl(var(--border)); margin: 6px 0 0; }
+  .wtab { display: flex; align-items: center; gap: 7px; padding: 9px 13px 11px; font-size: 12.5px; font-weight: 700; color: hsl(var(--muted-foreground)); border-bottom: 2px solid transparent; cursor: pointer; border-radius: 8px 8px 0 0; }
+  .wtab:hover { color: hsl(var(--foreground)); background: hsl(var(--muted) / .5); }
+  .wtab.on { color: hsl(var(--primary)); border-bottom-color: hsl(var(--primary)); }
+  .wtab .lucide { width: 14px; height: 14px; }
+  .wtab .chev { width: 12px; height: 12px; opacity: .6; }
+  .wiki-tabs .sep { width: 1px; height: 18px; background: hsl(var(--border)); margin: 0 8px 2px; }
+  .wiki-tabs .search { margin: 0 0 6px auto; width: 220px; padding: 7px 12px; font-size: 12px; }
+
+  .view { display: none; }
+  .view.on { display: block; }
+
+  /* ---- dashboard layout ---- */
+  .dash { display: grid; grid-template-columns: 252px 1fr; gap: 20px; padding: 20px 28px 28px; align-items: start; }
+  .rail { display: flex; flex-direction: column; gap: 14px; }
+  .rail-card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .rail-title { display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 800; letter-spacing: 0.09em; color: hsl(var(--muted-foreground)); }
+  .rail-title .lucide { width: 13px; height: 13px; color: hsl(var(--primary)); }
+  .flabel { font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em; color: hsl(var(--muted-foreground)); margin-bottom: 5px; }
+  .fgroup { border-top: 1px solid hsl(var(--border) / .7); padding-top: 11px; }
+  .fgroup:first-of-type { border-top: 0; padding-top: 0; }
+  .fopt { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; color: hsl(var(--muted-foreground)); cursor: pointer; }
+  .fopt:hover { background: hsl(var(--muted) / .6); }
+  .fopt.on { background: hsl(var(--primary)); color: white; font-weight: 700; }
+  .fopt.on.teal { background: hsl(var(--accent)); color: hsl(158 80% 12%); }
+
+  .select { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 11px; border-radius: 10px; border: 1px solid hsl(var(--input)); background: hsl(var(--card)); font-size: 12.5px; font-weight: 600; color: hsl(var(--foreground)); cursor: pointer; }
+  .select.ghost { color: hsl(var(--muted-foreground)); }
+  .select .lucide { width: 13px; height: 13px; color: hsl(var(--muted-foreground)); flex-shrink: 0; }
+
+  /* base certificada */
+  .base-cert { background: hsl(224 47% 11%); color: hsl(210 40% 98%); border-radius: 16px; padding: 16px; position: relative; overflow: hidden; }
+  .base-cert .wm { position: absolute; right: -8px; top: 6px; opacity: .08; }
+  .base-cert .wm .lucide { width: 74px; height: 74px; }
+  .base-cert .bt { display: flex; align-items: center; gap: 8px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; }
+  .base-cert .bt .lucide { width: 15px; height: 15px; color: hsl(var(--accent)); }
+  .base-cert .row { display: flex; align-items: baseline; justify-content: space-between; margin-top: 14px; }
+  .base-cert .lbl { font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; color: hsl(215 20% 65%); }
+  .base-cert .num { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .base-cert .bar { height: 5px; border-radius: 99px; background: hsl(217 33% 22%); margin-top: 8px; overflow: hidden; }
+  .base-cert .bar i { display: block; height: 100%; width: 64%; border-radius: 99px; background: hsl(var(--accent)); }
+  .base-cert .note { font-size: 10px; font-style: italic; color: hsl(215 20% 65%); margin-top: 8px; }
+
+  /* importação IA */
+  .main-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .import-card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; padding: 20px 22px; box-shadow: var(--shadow-sm); }
+  .import-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; }
+  .import-head .pic { width: 38px; height: 38px; border-radius: 12px; background: hsl(var(--primary) / .1); color: hsl(var(--primary)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .import-head .pic .lucide { width: 19px; height: 19px; }
+  .import-head h2 { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
+  .import-head p { font-size: 12.5px; color: hsl(var(--muted-foreground)); font-weight: 600; margin-top: 1px; }
+  .import-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .field-lbl { font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em; color: hsl(var(--muted-foreground)); margin-bottom: 5px; }
+  .textarea { border: 1px solid hsl(var(--input)); border-radius: 12px; background: hsl(var(--background)); padding: 12px 14px; font-size: 12.5px; font-weight: 600; color: hsl(var(--muted-foreground)); min-height: 86px; }
+  .import-foot { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  .import-foot .hint { display: flex; align-items: center; gap: 7px; font-size: 11px; font-style: italic; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .import-foot .hint .lucide { width: 13px; height: 13px; color: hsl(var(--accent)); }
+  .import-foot .btn { margin-left: auto; }
+
+  /* search row */
+  .list-toolbar { display: flex; align-items: center; gap: 10px; }
+  .list-toolbar .search { flex: 1; }
+  .toggle { display: flex; align-items: center; gap: 8px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.06em; color: hsl(var(--muted-foreground)); }
+  .toggle .tk { width: 32px; height: 18px; border-radius: 99px; background: hsl(var(--muted)); border: 1px solid hsl(var(--border)); position: relative; cursor: pointer; }
+  .toggle .tk::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: white; box-shadow: var(--shadow-sm); }
+  .icon-btn { width: 32px; height: 32px; border-radius: 9px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); display: flex; align-items: center; justify-content: center; color: hsl(var(--muted-foreground)); cursor: pointer; }
+  .icon-btn:hover { background: hsl(var(--sidebar-accent)); color: hsl(var(--foreground)); }
+  .icon-btn .lucide { width: 15px; height: 15px; }
+  .icon-btn.on { background: hsl(var(--primary) / .1); color: hsl(var(--primary)); border-color: hsl(var(--primary) / .35); }
+
+  /* article cards grid */
+  .art-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .art-card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: box-shadow .15s ease, translate .15s ease; }
+  .art-card:hover { box-shadow: var(--shadow-md); translate: 0 -2px; }
+  .art-card .topbarra { height: 4px; background: hsl(var(--accent)); }
+  .art-card .topbarra.pend { background: hsl(38 92% 50%); }
+  .art-card .inner { padding: 13px 14px 14px; display: flex; flex-direction: column; gap: 9px; flex: 1; }
+  .art-card h3 { font-size: 13px; font-weight: 800; line-height: 1.3; letter-spacing: -0.01em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .art-card .meta { display: flex; align-items: center; gap: 6px; font-size: 9.5px; font-weight: 800; letter-spacing: 0.06em; color: hsl(var(--muted-foreground)); flex-wrap: wrap; }
+  .art-card .meta .dot { width: 3px; height: 3px; border-radius: 50%; background: hsl(var(--border)); }
+  .art-card .meta .spec { color: hsl(var(--primary)); }
+  .art-card .ev-row { display: flex; align-items: center; gap: 7px; }
+  .art-card .ev-row .yr { font-size: 10.5px; font-weight: 700; color: hsl(var(--muted-foreground)); font-variant-numeric: tabular-nums; }
+  .art-card .kf-lbl { font-size: 9px; font-weight: 800; letter-spacing: 0.09em; color: hsl(var(--muted-foreground)); border-top: 1px solid hsl(var(--border) / .7); padding-top: 9px; }
+  .art-card .kf { font-size: 11px; font-weight: 600; line-height: 1.45; color: hsl(var(--foreground)); display: flex; gap: 6px; }
+  .art-card .kf::before { content: "•"; color: hsl(var(--accent)); font-weight: 800; }
+  .art-card .foot { display: flex; align-items: center; gap: 5px; margin-top: auto; padding-top: 8px; }
+  .art-card .tag { font-size: 9px; font-weight: 700; color: hsl(var(--primary)); background: hsl(var(--primary) / .07); border-radius: 6px; padding: 2px 6px; }
+  .art-card .src { margin-left: auto; font-size: 10px; font-weight: 800; color: hsl(var(--primary)); display: flex; align-items: center; gap: 4px; }
+  .art-card .src .lucide { width: 11px; height: 11px; }
+
+  /* ---- article view ---- */
+  .art-page { padding: 18px 28px 28px; }
+  .art-head { display: flex; align-items: center; gap: 13px; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 14px; padding: 13px 16px; margin-bottom: 16px; }
+  .art-head .back { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: hsl(var(--muted-foreground)); cursor: pointer; flex-shrink: 0; }
+  .art-head .back:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+  .art-head .back .lucide { width: 17px; height: 17px; }
+  .art-head h2 { font-size: 16.5px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.25; }
+  .art-head .meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+  .art-head .meta .bp { font-size: 10.5px; font-weight: 700; color: hsl(var(--muted-foreground)); display: flex; align-items: center; gap: 6px; }
+  .art-head .meta .bp::before { content: ""; width: 3px; height: 3px; border-radius: 50%; background: hsl(var(--border)); }
+  .art-head .actions { margin-left: auto; display: flex; gap: 7px; align-items: center; flex-shrink: 0; }
+  .btn.study { border-color: hsl(38 92% 50% / .45); color: hsl(30 85% 36%); background: hsl(38 92% 50% / .07); }
+  .btn.study:hover { background: hsl(38 92% 50% / .14); }
+
+  .art-cols { display: grid; grid-template-columns: 1fr 332px; gap: 16px; align-items: start; }
+  .panel { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; }
+  .panel-head { display: flex; align-items: center; gap: 9px; padding: 15px 18px; border-bottom: 1px solid hsl(var(--border)); }
+  .panel-head .lucide { width: 16px; height: 16px; color: hsl(var(--primary)); }
+  .panel-head h3 { font-size: 14px; font-weight: 800; letter-spacing: -0.01em; }
+  .panel-head .badge { margin-left: auto; }
+  .panel-body { padding: 16px 18px 18px; }
+
+  .sec-lbl { display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; color: hsl(var(--muted-foreground)); margin-bottom: 10px; }
+  .sec-lbl .lucide { width: 13px; height: 13px; }
+  .sec-lbl .refine { margin-left: auto; display: flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 800; color: hsl(var(--primary)); cursor: pointer; letter-spacing: 0.06em; }
+  .sec-lbl .refine .lucide { width: 12px; height: 12px; color: hsl(var(--primary)); }
+  .kf-item { display: flex; gap: 11px; align-items: flex-start; background: hsl(var(--muted) / .45); border: 1px solid hsl(var(--border) / .7); border-radius: 11px; padding: 12px 14px; margin-bottom: 8px; }
+  .kf-item .n { width: 21px; height: 21px; border-radius: 50%; background: hsl(var(--primary) / .1); color: hsl(var(--primary)); font-size: 10.5px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .kf-item p { font-size: 12.5px; font-weight: 600; line-height: 1.5; }
+  .obs { display: flex; gap: 10px; border: 1px dashed hsl(var(--accent) / .55); background: hsl(var(--accent) / .06); border-radius: 11px; padding: 12px 14px; }
+  .obs .lucide { width: 15px; height: 15px; color: hsl(158 60% 32%); flex-shrink: 0; margin-top: 1px; }
+  .obs p { font-size: 12px; font-weight: 600; font-style: italic; color: hsl(158 45% 22%); line-height: 1.5; }
+
+  .seg-tabs { display: flex; background: hsl(var(--muted) / .6); border: 1px solid hsl(var(--border)); border-radius: 11px; padding: 3px; margin: 16px 0; }
+  .seg-tabs span { flex: 1; text-align: center; padding: 8px 0; font-size: 10.5px; font-weight: 800; letter-spacing: 0.07em; color: hsl(var(--muted-foreground)); border-radius: 8px; cursor: pointer; }
+  .seg-tabs span.on { background: hsl(var(--card)); color: hsl(var(--foreground)); box-shadow: var(--shadow-xs); }
+
+  .pdf-head { display: flex; align-items: center; gap: 10px; }
+  .pdf-head h3 { font-size: 14.5px; font-weight: 800; }
+  .pdf-head p { font-size: 11.5px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .pdf-head .btn { margin-left: auto; }
+  .empty { border: 1.5px dashed hsl(var(--border)); border-radius: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 30px 20px; text-align: center; margin-top: 14px; }
+  .empty .pic { width: 40px; height: 40px; border-radius: 50%; background: hsl(var(--muted)); display: flex; align-items: center; justify-content: center; color: hsl(var(--muted-foreground)); }
+  .empty .pic .lucide { width: 18px; height: 18px; }
+  .empty .t { font-size: 12.5px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  .empty .link { font-size: 12px; font-weight: 800; color: hsl(var(--primary)); cursor: pointer; }
+
+  /* right column — AI insights */
+  .right-col { display: flex; flex-direction: column; gap: 14px; }
+  .ai-panel { background: hsl(224 47% 11%); border-radius: 16px; color: hsl(210 40% 98%); overflow: hidden; }
+  .ai-panel .hd { display: flex; align-items: center; gap: 8px; padding: 14px 17px; border-bottom: 1px solid hsl(217 33% 18%); font-size: 11px; font-weight: 800; letter-spacing: 0.09em; }
+  .ai-panel .hd .lucide { width: 15px; height: 15px; color: hsl(258 90% 76%); }
+  .ai-panel .bd { padding: 15px 17px; display: flex; flex-direction: column; gap: 15px; }
+  .ai-ins { display: flex; gap: 11px; }
+  .ai-ins .ic { width: 28px; height: 28px; border-radius: 9px; background: hsl(217 33% 17%); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .ai-ins .ic .lucide { width: 14px; height: 14px; color: hsl(38 92% 60%); }
+  .ai-ins.teal .ic .lucide { color: hsl(var(--accent)); }
+  .ai-ins .tt { font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em; color: hsl(215 20% 65%); margin-bottom: 3px; }
+  .ai-ins p { font-size: 12px; font-weight: 600; line-height: 1.5; color: hsl(210 40% 94%); }
+  .ai-panel .ft { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 17px 16px; }
+  .ai-btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 0; border-radius: 10px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.07em; cursor: pointer; background: hsl(217 33% 17%); color: hsl(210 40% 94%); }
+  .ai-btn.primary { background: hsl(var(--primary)); color: white; }
+  .ai-btn .lucide { width: 13px; height: 13px; }
+
+  .attr-row { display: flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 600; color: hsl(var(--muted-foreground)); padding: 7px 0; }
+  .attr-row .lucide { width: 14px; height: 14px; }
+  .attr-row b { margin-left: auto; color: hsl(var(--foreground)); font-weight: 800; font-variant-numeric: tabular-nums; }
+  .attr-row .badge { margin-left: auto; }
+  .idx-lbl { font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em; color: hsl(var(--muted-foreground)); margin: 12px 0 7px; border-top: 1px solid hsl(var(--border) / .7); padding-top: 12px; }
+  .idx-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .idx-tags span { font-size: 10px; font-weight: 700; background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); border-radius: 7px; padding: 3px 8px; }
+  .src-btn { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 13px; padding: 9px 0; border-radius: 10px; border: 1px solid hsl(var(--border)); font-size: 10.5px; font-weight: 800; letter-spacing: 0.07em; cursor: pointer; }
+  .src-btn:hover { background: hsl(var(--sidebar-accent)); }
+  .src-btn .lucide { width: 13px; height: 13px; }
+
+  .curadoria { border: 1px solid hsl(var(--accent) / .4); background: hsl(var(--accent) / .07); border-radius: 16px; padding: 15px 17px; }
+  .curadoria .tt { font-size: 10px; font-weight: 800; letter-spacing: 0.09em; color: hsl(158 50% 26%); margin-bottom: 9px; display: flex; align-items: center; gap: 7px; }
+  .curadoria .tt .lucide { width: 13px; height: 13px; }
+  .curadoria .box { background: hsl(var(--card)); border: 1px dashed hsl(var(--accent) / .4); border-radius: 10px; padding: 11px 13px; font-size: 11.5px; font-style: italic; font-weight: 600; color: hsl(var(--muted-foreground)); line-height: 1.5; }
+
+  /* ---- AI hub ---- */
+  .hub { padding: 22px 28px 28px; }
+  .hub-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+  .hub-head .pic { width: 40px; height: 40px; border-radius: 12px; background: hsl(var(--accent) / .14); color: hsl(158 60% 30%); display: flex; align-items: center; justify-content: center; }
+  .hub-head .pic .lucide { width: 20px; height: 20px; }
+  .hub-head h2 { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; }
+  .hub-head p { font-size: 12.5px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .pill-tabs { display: inline-flex; gap: 3px; background: hsl(var(--muted) / .7); border: 1px solid hsl(var(--border)); border-radius: 12px; padding: 4px; margin-bottom: 18px; }
+  .pill-tabs span { display: flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 9px; font-size: 12px; font-weight: 700; color: hsl(var(--muted-foreground)); cursor: pointer; }
+  .pill-tabs span.on { background: hsl(var(--card)); color: hsl(var(--foreground)); box-shadow: var(--shadow-xs); }
+  .pill-tabs span .lucide { width: 13px; height: 13px; }
+  .hub-grid { display: grid; grid-template-columns: 1fr 290px; gap: 18px; align-items: start; }
+  .query-card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; padding: 17px 19px; }
+  .query-card .tt { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 800; color: hsl(158 55% 30%); margin-bottom: 11px; }
+  .query-card .tt .lucide { width: 15px; height: 15px; }
+  .query-foot { display: flex; gap: 10px; align-items: flex-end; margin-top: 12px; }
+  .query-foot .fld { flex: 1; }
+  .hub-empty { border: 1.5px dashed hsl(var(--border)); border-radius: 16px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 44px 20px; text-align: center; margin-top: 16px; }
+  .hub-empty .lucide { width: 34px; height: 34px; color: hsl(var(--muted-foreground) / .6); }
+  .hub-empty .t { font-size: 14px; font-weight: 800; }
+  .hub-empty p { font-size: 12px; font-weight: 600; color: hsl(var(--muted-foreground)); max-width: 340px; }
+  .hist { font-size: 12px; }
+  .hist .tt { display: flex; align-items: center; gap: 7px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; color: hsl(var(--muted-foreground)); margin-bottom: 10px; }
+  .hist .tt .lucide { width: 13px; height: 13px; }
+  .hist .q { display: flex; gap: 8px; align-items: flex-start; padding: 9px 11px; border: 1px solid hsl(var(--border)); border-radius: 10px; background: hsl(var(--card)); margin-bottom: 7px; font-weight: 600; cursor: pointer; line-height: 1.4; }
+  .hist .q:hover { border-color: hsl(var(--primary) / .4); }
+  .hist .q .lucide { width: 12px; height: 12px; color: hsl(var(--muted-foreground)); flex-shrink: 0; margin-top: 2px; }
+
+  /* ---- dicionário ---- */
+  .dic { padding: 22px 28px 28px; }
+  .dic-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+  .dic-head .pic { width: 40px; height: 40px; border-radius: 12px; background: hsl(var(--primary) / .1); color: hsl(var(--primary)); display: flex; align-items: center; justify-content: center; }
+  .dic-head .pic .lucide { width: 20px; height: 20px; }
+  .dic-head h2 { font-size: 18px; font-weight: 800; }
+  .dic-head p { font-size: 12px; color: hsl(var(--muted-foreground)); font-weight: 600; max-width: 520px; }
+  .dic-head .btn { margin-left: auto; }
+  .dic .search.big { padding: 12px 15px; font-size: 13px; border-radius: 12px; margin-bottom: 13px; }
+  .chips { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 18px; }
+  .chip { padding: 6px 13px; border-radius: 999px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); font-size: 11.5px; font-weight: 700; color: hsl(var(--muted-foreground)); cursor: pointer; }
+  .chip:hover { border-color: hsl(var(--primary) / .4); color: hsl(var(--foreground)); }
+  .chip.on { background: hsl(var(--primary)); border-color: hsl(var(--primary)); color: white; }
+  .term-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .term-card { position: relative; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 14px; padding: 14px 15px; display: flex; flex-direction: column; gap: 9px; }
+  .term-card:hover { box-shadow: var(--shadow-md); }
+  .term-card .cat { position: absolute; top: 12px; right: 12px; }
+  .term-card h3 { font-size: 14px; font-weight: 800; color: hsl(var(--primary)); line-height: 1.25; padding-right: 76px; }
+  .term-card .en { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; color: hsl(158 55% 30%); }
+  .term-card .en .lucide { width: 13px; height: 13px; }
+  .syn-lbl { font-size: 9.5px; font-weight: 800; letter-spacing: 0.05em; color: hsl(var(--muted-foreground)); margin-bottom: 4px; }
+  .syn-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .syn-tags span { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
+  .syn-tags.en span { background: hsl(var(--primary) / .08); color: hsl(var(--primary)); }
+  .term-card .region { display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 9px; border-top: 1px solid hsl(var(--border) / .7); font-size: 10.5px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+  .term-card .region .lucide { width: 12px; height: 12px; }
+  .term-card .hover-actions { position: absolute; top: -11px; right: 12px; display: none; gap: 4px; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 9px; padding: 4px; box-shadow: var(--shadow-md); }
+  .term-card:hover .hover-actions { display: flex; }
+  .hover-actions .icon-btn { width: 26px; height: 26px; border: 0; }
+  .hover-actions .icon-btn .lucide { width: 13px; height: 13px; }
+  .hover-actions .icon-btn.del { color: hsl(var(--destructive)); }
+  .term-card.editing { border-left: 3px solid hsl(var(--primary)); }
+
+  /* ---- artigos científicos ---- */
+  .arts { padding: 22px 28px 28px; }
+
+  /* ---- modal ---- */
+  .modal-ov { position: absolute; inset: 0; background: hsl(224 47% 8% / .55); backdrop-filter: blur(2px); display: none; align-items: center; justify-content: center; z-index: 50; }
+  .modal-ov.open { display: flex; }
+  .modal { width: 720px; max-height: 86%; background: hsl(var(--card)); border-radius: 18px; box-shadow: var(--shadow-popover); display: flex; flex-direction: column; overflow: hidden; }
+  .modal-hd { display: flex; align-items: center; gap: 10px; padding: 16px 22px; border-bottom: 1px solid hsl(var(--border)); }
+  .modal-hd .lucide { width: 17px; height: 17px; color: hsl(var(--primary)); }
+  .modal-hd h3 { font-size: 15px; font-weight: 800; }
+  .modal-hd .x { margin-left: auto; }
+  .modal-bd { padding: 18px 22px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+  .modal-ft { display: flex; justify-content: flex-end; gap: 9px; padding: 14px 22px; border-top: 1px solid hsl(var(--border)); background: hsl(var(--muted) / .35); }
+  .frow { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .frow.two { grid-template-columns: 1fr 1fr; }
+  .input { display: flex; align-items: center; gap: 8px; border: 1px solid hsl(var(--input)); border-radius: 10px; background: hsl(var(--background)); padding: 9px 12px; font-size: 12.5px; font-weight: 600; color: hsl(var(--foreground)); }
+  .input.ghost { color: hsl(var(--muted-foreground)); }
+  .input.focus { border-color: hsl(var(--ring)); box-shadow: var(--shadow-glow-primary); }
+  .input .lucide { width: 13px; height: 13px; color: hsl(var(--muted-foreground)); flex-shrink: 0; }
+  .add-row { display: flex; gap: 8px; align-items: center; }
+  .add-row .input { flex: 1; }
+  .add-btn { width: 34px; height: 34px; border-radius: 10px; background: hsl(var(--primary)); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .add-btn .lucide { width: 15px; height: 15px; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chip-row .tagx { display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; padding: 4px 9px; border-radius: 999px; background: hsl(var(--primary) / .08); color: hsl(var(--primary)); }
+  .chip-row .tagx .lucide { width: 11px; height: 11px; cursor: pointer; }
+  .pill-list { display: flex; gap: 6px; }
+  .pill-list .it { background: hsl(var(--muted) / .5); border: 1px solid hsl(var(--border) / .8); border-radius: 9px; padding: 7px 11px; font-size: 11.5px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+  .pill-list .it .lucide { width: 11px; height: 11px; color: hsl(var(--muted-foreground)); cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="pad">
+
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><img src="../../assets/activity-logo.svg" alt=""/></div>
+      <div><strong>FisioFlow</strong><div class="sub">MOOCA FISIO</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div>
+        <div class="sb-group-label">ATENDIMENTO</div>
+        <div class="sb-item"><i data-lucide="calendar-days"></i> AGENDA</div>
+        <div class="sb-item"><i data-lucide="users"></i> PACIENTES</div>
+        <div class="sb-item"><i data-lucide="message-circle"></i> CRM · WHATSAPP</div>
+      </div>
+      <div>
+        <div class="sb-group-label">CLÍNICA</div>
+        <div class="sb-item"><i data-lucide="clipboard-check"></i> AVALIAÇÕES</div>
+        <div class="sb-item"><i data-lucide="dumbbell"></i> EXERCÍCIOS</div>
+        <div class="sb-item"><i data-lucide="clipboard-list"></i> PROTOCOLOS</div>
+        <div class="sb-item"><i data-lucide="flask-conical"></i> TESTES CLÍNICOS</div>
+        <div class="sb-item"><i data-lucide="camera"></i> BIOMECÂNICA</div>
+      </div>
+      <div>
+        <div class="sb-group-label">GESTÃO &amp; OPERAÇÃO</div>
+        <div class="sb-item"><i data-lucide="layout-dashboard"></i> BOARDS</div>
+        <div class="sb-item"><i data-lucide="wallet"></i> FINANCEIRO</div>
+        <div class="sb-item is-active"><i data-lucide="book-open"></i> WIKI CLÍNICA</div>
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-item"><i data-lucide="settings"></i> CONFIGURAÇÕES</div>
+      <div class="sb-item"><i data-lucide="log-out"></i> SAIR</div>
+    </div>
+  </aside>
+
+  <div class="content">
+    <div class="topbar">
+      <div class="crumbs">Início <i data-lucide="chevron-right"></i> <strong>Wiki</strong></div>
+      <div class="topbar-right">
+        <button class="btn"><i data-lucide="history"></i> Sincronizar</button>
+        <button class="btn primary"><i data-lucide="plus"></i> Nova Página</button>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="wiki-head">
+        <div class="pic"><i data-lucide="library"></i></div>
+        <div>
+          <h1>WIKI &amp; DOCUMENTAÇÃO</h1>
+          <div class="sub">Base de conhecimento clínico, diretrizes curadas e documentação interna da clínica.</div>
+        </div>
+      </div>
+
+      <div class="wiki-tabs">
+        <span class="wtab on" data-goto="dashboard"><i data-lucide="layout-grid"></i> Dashboard</span>
+        <span class="wtab" data-goto="hub"><i data-lucide="activity"></i> AI Hub</span>
+        <span class="wtab" data-goto="artigos"><i data-lucide="book-open"></i> Artigos</span>
+        <span class="wtab" data-goto="dicionario"><i data-lucide="languages"></i> Dicionário</span>
+        <span class="sep"></span>
+        <span class="wtab"><i data-lucide="git-branch"></i> Trilhas <i data-lucide="chevron-down" class="chev"></i></span>
+        <span class="wtab"><i data-lucide="folder"></i> Explorar <i data-lucide="chevron-down" class="chev"></i></span>
+        <span class="wtab"><i data-lucide="clock"></i> Acesso Rápido <i data-lucide="chevron-down" class="chev"></i></span>
+        <div class="search"><i data-lucide="search"></i> Buscar na wiki...</div>
+      </div>
+
+      <!-- ============ VIEW: DASHBOARD ============ -->
+      <section class="view on" data-view="dashboard" data-screen-label="Wiki · Dashboard">
+        <div class="dash">
+          <div class="rail">
+            <div class="rail-card">
+              <div class="rail-title"><i data-lucide="sliders-horizontal"></i> FILTROS AVANÇADOS</div>
+              <div class="fgroup">
+                <div class="flabel">ESPECIALIDADE</div>
+                <div class="select">Todas <i data-lucide="chevron-down"></i></div>
+              </div>
+              <div class="fgroup">
+                <div class="flabel">NÍVEL DE EVIDÊNCIA</div>
+                <div class="fopt on">Todas as fontes</div>
+                <div class="fopt">Diretriz Clínica</div>
+                <div class="fopt">Consenso</div>
+                <div class="fopt">Guia</div>
+                <div class="fopt">Revisão Sistemática</div>
+              </div>
+              <div class="fgroup">
+                <div class="flabel">STATUS DE CURADORIA</div>
+                <div class="fopt on teal">Todos</div>
+                <div class="fopt">Verificados</div>
+                <div class="fopt">Pendentes</div>
+              </div>
+            </div>
+            <div class="base-cert">
+              <div class="wm"><i data-lucide="stethoscope"></i></div>
+              <div class="bt"><i data-lucide="shield-check"></i> BASE CERTIFICADA</div>
+              <div class="row"><span class="lbl">STATUS DA BASE</span><span class="num">39</span></div>
+              <div class="bar"><i></i></div>
+              <div class="note">A meta é manter 90% da base "Verificada".</div>
+            </div>
+          </div>
+
+          <div class="main-col">
+            <div class="import-card">
+              <div class="import-head">
+                <div class="pic"><i data-lucide="brain"></i></div>
+                <div>
+                  <h2>Importação Clínica IA</h2>
+                  <p>Alimente o "cérebro" do sistema com artigos e protocolos internos.</p>
+                </div>
+              </div>
+              <div class="import-grid">
+                <div><div class="field-lbl">ESPECIALIDADE</div><div class="select ghost">Selecione... <i data-lucide="chevron-down"></i></div></div>
+                <div><div class="field-lbl">PARTE DO CORPO</div><div class="select ghost">Selecione... <i data-lucide="chevron-down"></i></div></div>
+                <div><div class="field-lbl">TIPO DE CONTEÚDO</div><div class="select ghost">Selecione... <i data-lucide="chevron-down"></i></div></div>
+              </div>
+              <div class="field-lbl">CONTEÚDO CLÍNICO (TEXTO OU RESUMO)</div>
+              <div class="textarea">Cole aqui o texto do artigo, protocolo ou diretriz clínica...</div>
+              <div class="import-foot">
+                <div class="hint"><i data-lucide="sparkles"></i> Este conteúdo será processado e salvo no banco vetorial da clínica.</div>
+                <button class="btn primary"><i data-lucide="upload"></i> Alimentar IA</button>
+              </div>
+            </div>
+
+            <div class="list-toolbar">
+              <div class="search"><i data-lucide="search"></i> Pesquisar diretrizes clínicas...</div>
+              <div class="toggle"><span class="tk"></span> IA SEMANTIC</div>
+              <span class="icon-btn on"><i data-lucide="layout-grid"></i></span>
+              <span class="icon-btn"><i data-lucide="share-2"></i></span>
+              <button class="btn primary sm"><i data-lucide="plus"></i> Novo</button>
+            </div>
+
+            <div class="art-grid">
+              <div class="art-card" data-open="article">
+                <div class="topbarra"></div>
+                <div class="inner">
+                  <h3>Effectiveness of early versus delayed rehabilitation following rotator cuff repair</h3>
+                  <div class="meta"><span class="spec">PÓS-OP ESPORTIVO</span><span class="dot"></span><span>OMBRO</span></div>
+                  <div class="ev-row"><span class="badge ok"><i data-lucide="shield-check" style="width:10px;height:10px;"></i> REVISÃO SISTEM.</span><span class="yr">2021</span></div>
+                  <div class="kf-lbl">KEY FINDINGS</div>
+                  <div class="kf">Mobilização precoce melhora ROM inicial após reparo do manguito</div>
+                  <div class="foot"><span class="tag">#Manguito</span><span class="tag">#Reparo</span><span class="src">Ver Fonte <i data-lucide="arrow-up-right"></i></span></div>
+                </div>
+              </div>
+              <div class="art-card" data-open="article">
+                <div class="topbarra"></div>
+                <div class="inner">
+                  <h3>Systematic review and meta-analysis of the Y-Balance Test Lower Quarter</h3>
+                  <div class="meta"><span class="spec">ESPORTIVA</span><span class="dot"></span><span>MEMBRO INFERIOR</span></div>
+                  <div class="ev-row"><span class="badge ok"><i data-lucide="trending-up" style="width:10px;height:10px;"></i> REVISÃO SISTEM.</span><span class="yr">2021</span></div>
+                  <div class="kf-lbl">KEY FINDINGS</div>
+                  <div class="kf">YBT-LQ confiável para monitorar assimetrias funcionais em atletas</div>
+                  <div class="foot"><span class="tag">#YBT</span><span class="tag">#RTS</span><span class="src">Ver Fonte <i data-lucide="arrow-up-right"></i></span></div>
+                </div>
+              </div>
+              <div class="art-card" data-open="article">
+                <div class="topbarra"></div>
+                <div class="inner">
+                  <h3>Diagnostic accuracy of clinical tests for subacromial pain syndrome</h3>
+                  <div class="meta"><span class="spec">ORTOPEDIA</span><span class="dot"></span><span>OMBRO</span></div>
+                  <div class="ev-row"><span class="badge ok"><i data-lucide="stethoscope" style="width:10px;height:10px;"></i> REVISÃO SISTEM.</span><span class="yr">2012</span></div>
+                  <div class="kf-lbl">KEY FINDINGS</div>
+                  <div class="kf">Combinação de testes supera testes isolados no diagnóstico</div>
+                  <div class="foot"><span class="tag">#Diagnóstico</span><span class="src">Ver Fonte <i data-lucide="arrow-up-right"></i></span></div>
+                </div>
+              </div>
+              <div class="art-card" data-open="article">
+                <div class="topbarra pend"></div>
+                <div class="inner">
+                  <h3>Value of clinical tests in diagnosis of ACL ruptures</h3>
+                  <div class="meta"><span class="spec">ORTOPEDIA</span><span class="dot"></span><span>JOELHO</span></div>
+                  <div class="ev-row"><span class="badge warn"><i data-lucide="clock" style="width:10px;height:10px;"></i> AGUARDANDO CURADORIA</span><span class="yr">2022</span></div>
+                  <div class="kf-lbl">KEY FINDINGS</div>
+                  <div class="kf">Lachman é o teste mais sensível para ruptura de LCA</div>
+                  <div class="foot"><span class="tag">#LCA</span><span class="tag">#Lachman</span><span class="src">Ver Fonte <i data-lucide="arrow-up-right"></i></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW: ARTIGO ============ -->
+      <section class="view" data-view="article" data-screen-label="Wiki · Diretriz (detalhe)">
+        <div class="art-page">
+          <div class="art-head">
+            <span class="back" data-goto="dashboard"><i data-lucide="arrow-left"></i></span>
+            <div>
+              <h2>Effectiveness of early versus delayed rehabilitation following rotator cuff repair</h2>
+              <div class="meta"><span class="badge info">PÓS-OPERATÓRIO ESPORTIVO</span><span class="bp">Ombro</span></div>
+            </div>
+            <div class="actions">
+              <span class="icon-btn"><i data-lucide="message-circle"></i></span>
+              <span class="icon-btn"><i data-lucide="share-2"></i></span>
+              <button class="btn study"><i data-lucide="book-open"></i> Modo Estudo IA</button>
+              <button class="btn primary" data-modal="open"><i data-lucide="pencil"></i> Editar</button>
+            </div>
+          </div>
+
+          <div class="art-cols">
+            <div style="display:flex;flex-direction:column;gap:0;min-width:0;">
+              <div class="panel">
+                <div class="panel-head">
+                  <i data-lucide="file-text"></i><h3>Conteúdo e Destaques</h3>
+                  <span class="badge ok">REVISÃO SISTEM.</span>
+                </div>
+                <div class="panel-body">
+                  <div class="sec-lbl"><i data-lucide="bookmark"></i> PRINCIPAIS ACHADOS (KEY FINDINGS) <span class="refine"><i data-lucide="sparkles"></i> REFINAR IA</span></div>
+                  <div class="kf-item"><span class="n">1</span><p>Mobilização precoce melhora ROM inicial após reparo do manguito rotador.</p></div>
+                  <div class="kf-item"><span class="n">2</span><p>Na maioria dos desfechos não houve diferença clínica relevante entre protocolos.</p></div>
+                  <div class="kf-item"><span class="n">3</span><p>Reabilitação precoce não aumentou risco de re-ruptura nessa síntese.</p></div>
+                  <div class="sec-lbl" style="margin-top:16px;"><i data-lucide="clipboard-list"></i> OBSERVAÇÕES CLÍNICAS &amp; PRÁTICA</div>
+                  <div class="obs"><i data-lucide="trending-up"></i><p>Usar para calibrar sling, progressão de movimento e expectativas por fase.</p></div>
+                </div>
+              </div>
+
+              <div class="seg-tabs">
+                <span class="on">DOCUMENTOS PDF</span>
+                <span>APRESENTAÇÕES EQUIPE</span>
+              </div>
+
+              <div class="panel">
+                <div class="panel-body">
+                  <div class="pdf-head">
+                    <div>
+                      <h3>Artigos e Fontes</h3>
+                      <p>Documentos originais e anexos técnicos.</p>
+                    </div>
+                    <button class="btn sm"><i data-lucide="upload"></i> Subir PDF</button>
+                  </div>
+                  <div class="empty">
+                    <div class="pic"><i data-lucide="file"></i></div>
+                    <div class="t">Nenhum PDF anexado a esta diretriz.</div>
+                    <div class="link">Fazer o primeiro upload</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="right-col">
+              <div class="ai-panel">
+                <div class="hd"><i data-lucide="sparkles"></i> AI INSIGHTS PANEL</div>
+                <div class="bd">
+                  <div class="ai-ins">
+                    <div class="ic"><i data-lucide="lightbulb"></i></div>
+                    <div><div class="tt">ESTRATÉGIA CLÍNICA</div><p>Priorizar treino excêntrico de alta carga conforme tolerância. Monitorar EVA após 24h.</p></div>
+                  </div>
+                  <div class="ai-ins teal">
+                    <div class="ic"><i data-lucide="trending-up"></i></div>
+                    <div><div class="tt">PROGNÓSTICO ESTIMADO</div><p>Melhora esperada de 40% em 6 semanas com protocolo de carga linear.</p></div>
+                  </div>
+                </div>
+                <div class="ft">
+                  <span class="ai-btn"><i data-lucide="book-open"></i> ESTUDAR</span>
+                  <span class="ai-btn primary"><i data-lucide="sparkles"></i> RESUMO</span>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-head"><i data-lucide="database"></i><h3>Atributos Técnicos</h3></div>
+                <div class="panel-body" style="padding-top:10px;">
+                  <div class="attr-row"><i data-lucide="calendar"></i> Publicado em <b>2021</b></div>
+                  <div class="attr-row"><i data-lucide="user"></i> Veículo/Fonte <b>PLoS One</b></div>
+                  <div class="attr-row"><i data-lucide="shield"></i> Qualidade <span class="badge info">CERTIFICADA</span></div>
+                  <div class="idx-lbl">INDEXAÇÃO</div>
+                  <div class="idx-tags"><span>#Manguito Rotador</span><span>#Reparo</span><span>#Mobilização</span></div>
+                  <div class="src-btn"><i data-lucide="external-link"></i> ACESSAR FONTE EXTERNA</div>
+                </div>
+              </div>
+
+              <div class="curadoria">
+                <div class="tt"><i data-lucide="shield-check"></i> PARECER DA CURADORIA</div>
+                <div class="box">Diretriz importada via IA. Aguardando parecer clínico oficial sobre a aplicabilidade nesta organização.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW: AI HUB ============ -->
+      <section class="view" data-view="hub" data-screen-label="Wiki · AI Hub">
+        <div class="hub">
+          <div class="hub-head">
+            <div class="pic"><i data-lucide="brain"></i></div>
+            <div>
+              <h2>FisioBrain + AI Hub</h2>
+              <p>Base de conhecimento clínico com IA e ferramentas de revisão.</p>
+            </div>
+          </div>
+          <div class="pill-tabs">
+            <span class="on"><i data-lucide="brain"></i> FisioBrain</span>
+            <span><i data-lucide="stethoscope"></i> SOAP Review</span>
+            <span><i data-lucide="message-square"></i> Simulator</span>
+            <span><i data-lucide="book-open"></i> Artigos Científicos</span>
+          </div>
+          <div class="hub-grid">
+            <div>
+              <div class="query-card">
+                <div class="tt"><i data-lucide="brain"></i> FisioBrain — Busca por evidência clínica</div>
+                <div class="textarea">Ex: Quais exercícios são recomendados para lombalgia crônica não específica?</div>
+                <div class="query-foot">
+                  <div class="fld"><div class="field-lbl">FONTE</div><div class="select">Todas <i data-lucide="chevron-down"></i></div></div>
+                  <div class="fld"><div class="field-lbl">ÁREA CLÍNICA</div><div class="select">Todas as áreas <i data-lucide="chevron-down"></i></div></div>
+                  <button class="btn primary"><i data-lucide="send"></i> Buscar</button>
+                </div>
+              </div>
+              <div class="hub-empty">
+                <i data-lucide="brain"></i>
+                <div class="t">Faça uma pergunta clínica ao FisioBrain</div>
+                <p>O FisioBrain busca em artigos científicos, protocolos, exercícios e páginas Wiki indexadas.</p>
+              </div>
+            </div>
+            <div class="hist">
+              <div class="tt"><i data-lucide="history"></i> HISTÓRICO DA SESSÃO</div>
+              <div class="q"><i data-lucide="message-circle"></i> Critério de alta para corrida pós-LCA?</div>
+              <div class="q"><i data-lucide="message-circle"></i> Dosagem de exercício para tendinopatia patelar</div>
+              <div class="q"><i data-lucide="message-circle"></i> Evidência de tração para lombalgia?</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW: ARTIGOS ============ -->
+      <section class="view" data-view="artigos" data-screen-label="Wiki · Artigos Científicos">
+        <div class="arts">
+          <div class="dic-head">
+            <div class="pic" style="background:hsl(var(--accent) / .14); color:hsl(158 60% 30%);"><i data-lucide="book-open"></i></div>
+            <div>
+              <h2>Artigos Científicos</h2>
+              <p>PDFs indexados no FisioBrain para busca com IA.</p>
+            </div>
+            <button class="btn primary"><i data-lucide="plus"></i> Adicionar Artigo</button>
+          </div>
+          <div class="hub-empty" style="padding:56px 20px;">
+            <i data-lucide="file-text"></i>
+            <div class="t">Nenhum artigo indexado</div>
+            <p>Faça upload de artigos científicos em PDF para que o FisioBrain use como base de evidência nas buscas clínicas.</p>
+            <button class="btn primary" style="margin-top:8px;"><i data-lucide="upload"></i> Upload do primeiro artigo</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW: DICIONÁRIO ============ -->
+      <section class="view" data-view="dicionario" data-screen-label="Wiki · Dicionário Bilíngue">
+        <div class="dic">
+          <div class="dic-head">
+            <div class="pic"><i data-lucide="languages"></i></div>
+            <div>
+              <h2>Dicionário Bilíngue</h2>
+              <p>Pesquise termos técnicos em português ou inglês e encontre traduções e sinônimos aplicados em toda a plataforma.</p>
+            </div>
+            <button class="btn primary"><i data-lucide="plus"></i> Novo Termo</button>
+          </div>
+          <div class="search big"><i data-lucide="search"></i> Buscar termo em PT ou EN (ex: LCA, Squat, Isquiotibiais)...</div>
+          <div class="chips">
+            <span class="chip on">Todos</span>
+            <span class="chip">Músculos</span>
+            <span class="chip">Articulações</span>
+            <span class="chip">Ligamentos</span>
+            <span class="chip">Patologias</span>
+            <span class="chip">Exercícios</span>
+            <span class="chip">Testes Clínicos</span>
+            <span class="chip">Movimentos</span>
+            <span class="chip">Questionários</span>
+            <span class="chip">Protocolos</span>
+          </div>
+          <div class="term-grid">
+            <div class="term-card">
+              <span class="badge muted cat">EXERCÍCIOS</span>
+              <h3>Abdominal</h3>
+              <div class="en"><i data-lucide="languages"></i> Crunch</div>
+              <div>
+                <div class="syn-lbl">Sinônimos (PT):</div>
+                <div class="syn-tags"><span>abdominal parcial</span><span>crunch</span></div>
+              </div>
+              <div>
+                <div class="syn-lbl">Synonyms (EN):</div>
+                <div class="syn-tags en"><span>sit-up</span><span>curl-up</span></div>
+              </div>
+              <div class="region"><i data-lucide="map-pin"></i> Core</div>
+            </div>
+            <div class="term-card editing">
+              <div class="hover-actions">
+                <span class="icon-btn"><i data-lucide="pencil"></i></span>
+                <span class="icon-btn del"><i data-lucide="trash-2"></i></span>
+              </div>
+              <span class="badge muted cat">EXERCÍCIOS</span>
+              <h3>Abdominal Bicicleta</h3>
+              <div class="en"><i data-lucide="languages"></i> Bicycle Crunch</div>
+              <div>
+                <div class="syn-lbl">Sinônimos (PT):</div>
+                <div class="syn-tags"><span>bicicleta</span><span>abdominal cruzado</span></div>
+              </div>
+              <div>
+                <div class="syn-lbl">Synonyms (EN):</div>
+                <div class="syn-tags en"><span>bicycle</span></div>
+              </div>
+              <div class="region"><i data-lucide="map-pin"></i> Core</div>
+            </div>
+            <div class="term-card">
+              <span class="badge muted cat">MOVIMENTOS</span>
+              <h3>Abdução</h3>
+              <div class="en"><i data-lucide="languages"></i> Abduction</div>
+              <div>
+                <div class="syn-lbl">Sinônimos (PT):</div>
+                <div class="syn-tags"><span>abrir</span><span>afastar</span></div>
+              </div>
+              <div>
+                <div class="syn-lbl">Synonyms (EN):</div>
+                <div class="syn-tags en"><span>open</span><span>move away</span></div>
+              </div>
+              <div class="region"><i data-lucide="map-pin"></i> Quadril · Ombro</div>
+            </div>
+            <div class="term-card">
+              <span class="badge muted cat">PATOLOGIAS</span>
+              <h3>Acidente Vascular Cerebral (AVC)</h3>
+              <div class="en"><i data-lucide="languages"></i> Stroke (CVA)</div>
+              <div>
+                <div class="syn-lbl">Sinônimos (PT):</div>
+                <div class="syn-tags"><span>AVC</span><span>AVE</span><span>derrame</span></div>
+              </div>
+              <div>
+                <div class="syn-lbl">Synonyms (EN):</div>
+                <div class="syn-tags en"><span>CVA</span><span>cerebrovascular accident</span></div>
+              </div>
+              <div class="region"><i data-lucide="map-pin"></i> Neurologia</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: EDITAR DIRETRIZ ============ -->
+  <div class="modal-ov" data-screen-label="Wiki · Modal Editar Diretriz">
+    <div class="modal">
+      <div class="modal-hd">
+        <i data-lucide="pencil"></i>
+        <h3>Editar Diretriz</h3>
+        <span class="icon-btn x" data-modal="close"><i data-lucide="x"></i></span>
+      </div>
+      <div class="modal-bd">
+        <div>
+          <div class="field-lbl">TÍTULO DO ARTIGO / DIRETRIZ</div>
+          <div class="input focus">Effectiveness of early versus delayed rehabilitation following rotator cuff repair</div>
+        </div>
+        <div>
+          <div class="field-lbl">URL DA FONTE PRINCIPAL (PUBMED / PDF / JOURNAL)</div>
+          <div class="input"><i data-lucide="link"></i> https://pubmed.ncbi.nlm.nih.gov/34458318/</div>
+        </div>
+        <div class="frow">
+          <div><div class="field-lbl">ESPECIALIDADE</div><div class="select">Pós-op Esportivo <i data-lucide="chevron-down"></i></div></div>
+          <div><div class="field-lbl">SUBGRUPO / PATOLOGIA</div><div class="input">Ombro</div></div>
+          <div><div class="field-lbl">STATUS</div><div class="select">Verificado / Ouro <i data-lucide="chevron-down"></i></div></div>
+        </div>
+        <div class="frow">
+          <div><div class="field-lbl">NÍVEL DE EVIDÊNCIA</div><div class="select">Revisão Sistem. <i data-lucide="chevron-down"></i></div></div>
+          <div><div class="field-lbl">ANO DE PUBLICAÇÃO</div><div class="input">2021</div></div>
+          <div><div class="field-lbl">FONTE (EX: JOSPT, APTA)</div><div class="input">PLoS One</div></div>
+        </div>
+        <div>
+          <div class="field-lbl">RESUMO EXECUTIVO (CLINICAL SUMMARY)</div>
+          <div class="textarea" style="min-height:64px;color:hsl(var(--foreground));">Síntese sobre mobilização precoce vs. tardia após reparo do manguito rotador: ROM inicial, risco de re-ruptura e desfechos funcionais.</div>
+        </div>
+        <div class="frow two">
+          <div>
+            <div class="field-lbl">DESTAQUES (KEY FINDINGS)</div>
+            <div class="add-row"><div class="input ghost">Novo destaque...</div><span class="add-btn"><i data-lucide="plus"></i></span></div>
+            <div class="pill-list" style="flex-direction:column;margin-top:8px;">
+              <div class="it">Mobilização precoce melhora ROM inicial <i data-lucide="x"></i></div>
+              <div class="it">Sem diferença clínica relevante entre protocolos <i data-lucide="x"></i></div>
+            </div>
+          </div>
+          <div>
+            <div class="field-lbl">OBSERVAÇÕES CLÍNICAS (INTERNAL)</div>
+            <div class="add-row"><div class="input ghost">Nova observação...</div><span class="add-btn"><i data-lucide="plus"></i></span></div>
+            <div class="pill-list" style="flex-direction:column;margin-top:8px;">
+              <div class="it">Usar para calibrar sling e progressão <i data-lucide="x"></i></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="field-lbl">PERGUNTAS QUE ESTE ARTIGO RESPONDE (Q&amp;A)</div>
+          <div class="add-row"><div class="input ghost">Ex: Qual o critério de alta para corrida?</div><span class="add-btn"><i data-lucide="plus"></i></span></div>
+        </div>
+        <div class="frow two">
+          <div>
+            <div class="field-lbl">TESTES CLÍNICOS (IDS)</div>
+            <div class="add-row"><div class="input ghost"><i data-lucide="stethoscope"></i> Ex: lasegue-test</div><span class="add-btn"><i data-lucide="plus"></i></span></div>
+          </div>
+          <div>
+            <div class="field-lbl">EXERCÍCIOS SUGERIDOS (IDS)</div>
+            <div class="add-row"><div class="input ghost"><i data-lucide="dumbbell"></i> Ex: pelvic-tilt</div><span class="add-btn"><i data-lucide="plus"></i></span></div>
+          </div>
+        </div>
+        <div>
+          <div class="field-lbl">ANEXOS E DOCUMENTOS SUPLEMENTARES</div>
+          <div class="add-row">
+            <div class="select" style="flex:0 0 130px;">Arquivo <i data-lucide="chevron-down"></i></div>
+            <div class="input ghost" style="flex:0 0 160px;">Nome</div>
+            <div class="input ghost">URL ou Caminho</div>
+            <span class="add-btn"><i data-lucide="plus"></i></span>
+          </div>
+        </div>
+        <div>
+          <div class="field-lbl">TAGS DE BUSCA</div>
+          <div class="add-row"><div class="input ghost">Adicionar tag...</div><span class="add-btn"><i data-lucide="plus"></i></span></div>
+          <div class="chip-row">
+            <span class="tagx">#Manguito Rotador <i data-lucide="x"></i></span>
+            <span class="tagx">#Reparo <i data-lucide="x"></i></span>
+            <span class="tagx">#Mobilização <i data-lucide="x"></i></span>
+            <span class="tagx">#Pós-operatório <i data-lucide="x"></i></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-ft">
+        <button class="btn" data-modal="close">Cancelar</button>
+        <button class="btn primary" data-modal="close"><i data-lucide="check"></i> Atualizar Diretriz</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+
+  // tab + view navigation
+  var tabs = document.querySelectorAll('[data-goto]');
+  function goTo(name) {
+    document.querySelectorAll('.view').forEach(function (v) {
+      v.classList.toggle('on', v.getAttribute('data-view') === name);
+    });
+    document.querySelectorAll('.wtab[data-goto]').forEach(function (t) {
+      // a página de artigo pertence à aba Dashboard
+      var owns = t.getAttribute('data-goto') === name || (name === 'article' && t.getAttribute('data-goto') === 'dashboard');
+      t.classList.toggle('on', owns);
+    });
+  }
+  tabs.forEach(function (el) {
+    el.addEventListener('click', function () { goTo(el.getAttribute('data-goto')); });
+  });
+  document.querySelectorAll('[data-open="article"]').forEach(function (el) {
+    el.addEventListener('click', function () { goTo('article'); });
+  });
+
+  // modal
+  var ov = document.querySelector('.modal-ov');
+  document.querySelectorAll('[data-modal="open"]').forEach(function (el) {
+    el.addEventListener('click', function () { ov.classList.add('open'); });
+  });
+  document.querySelectorAll('[data-modal="close"]').forEach(function (el) {
+    el.addEventListener('click', function (e) { e.stopPropagation(); ov.classList.remove('open'); });
+  });
+  ov.addEventListener('click', function (e) { if (e.target === ov) ov.classList.remove('open'); });
+</script>
+</body>
+</html>
