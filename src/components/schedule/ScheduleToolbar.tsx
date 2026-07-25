@@ -214,6 +214,8 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
       <div className="flex items-center gap-1.5">
         <div className="relative w-[200px] hidden xl:block">
           <Input
+            id="agenda-patient-search"
+            name="agendaPatientSearch"
             value={patientFilter}
             onChange={(event) => onPatientFilterChange(event.target.value)}
             placeholder="Buscar paciente"

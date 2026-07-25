@@ -8,31 +8,6 @@
     <meta name="app-version" content="%APP_VERSION%" />
     <meta name="build-time" content="%BUILD_TIME%" />
 
-    <!-- Cache Control - Previne cache agressivo do navegador -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-    <script>
-      // Cache Busting: detecta nova versão via app-version meta e força reload
-      (function() {
-        var meta = document.querySelector('meta[name="app-version"]');
-        if (!meta) return;
-        var currentVersion = meta.getAttribute('content');
-        var storedVersion = sessionStorage.getItem('__ff_app_version__');
-        if (storedVersion && storedVersion !== currentVersion) {
-          console.log('[Cache Bust] Nova versão detectada:', storedVersion, '->', currentVersion);
-          sessionStorage.setItem('__ff_app_version__', currentVersion);
-          if (!sessionStorage.getItem('__ff_reloaded__')) {
-            sessionStorage.setItem('__ff_reloaded__', '1');
-            window.location.reload(true);
-          }
-        } else if (!storedVersion) {
-          sessionStorage.setItem('__ff_app_version__', currentVersion);
-        }
-        setTimeout(function() { sessionStorage.removeItem('__ff_reloaded__'); }, 30000);
-      })();
-    </script>
-
     <title>FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia</title>
     <meta
       name="description"
@@ -51,11 +26,6 @@
     <!-- Design System v2.0 - Premium Identity -->
     <link rel="stylesheet" href="/styles/premium-design-system.css?v=%CACHE_BUSTER%" />
 
-    <!-- Otimização de Carregamento (Hints para o Cloudflare Early Hints) -->
-
-    <link rel="prefetch" href="/favicon.svg" as="image" />
-    <link rel="prefetch" href="/manifest.json" as="fetch" />
-
     <!-- PWA Configuration -->
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#0ea5e9" />
@@ -63,14 +33,8 @@
     <meta name="display" content="standalone" />
     <meta name="orientation" content="portrait" />
 
-    <!-- PWA Configuration for Mobile -->
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="FisioFlow" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.avif" />
-
     <!-- Critical Preconnects -->
+    <link rel="preconnect" href="https://api-pro.moocafisio.com.br" crossorigin />
     <link rel="preconnect" href="https://db.moocafisio.com.br" crossorigin />
     <link rel="preconnect" href="https://auth.neon.tech" crossorigin />
 
@@ -418,17 +382,6 @@
     </script>
 
     <!-- MediaPipe CDN (Defered to avoid blocking initial render) -->
-    <script
-      src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"
-      crossorigin="anonymous"
-      defer
-    ></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
-      crossorigin="anonymous"
-      defer
-    ></script>
-
     <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>

@@ -33,9 +33,7 @@ import {
   Trash2,
   UserPlus,
   Zap,
-  TrendingUp,
   Calendar,
-  AlertTriangle,
 } from "lucide-react";
 import { Instagram } from "@/components/icons/InstagramIcon";
 import { toast } from "sonner";
@@ -47,7 +45,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { TaskQuickCreateModal } from "@/components/tarefas/v2/TaskQuickCreateModal";
-import { QuickBookingCard, type BookingSlot } from "@/components/whatsapp/QuickBookingCard";
+import { QuickBookingCard } from "@/components/whatsapp/QuickBookingCard";
 import {
   addTags,
   deleteConversation,
@@ -1261,6 +1259,8 @@ export default function CrmWhatsApp() {
                 <div className="flex items-center gap-2.5 rounded-xl bg-muted/80 px-3.5 py-2.5 transition-colors focus-within:bg-muted focus-within:ring-2 focus-within:ring-primary/20">
                   <Search className="h-4 w-4 text-muted-foreground shrink-0" />
                   <Input
+                    id="crm-search-input"
+                    name="crmSearchInput"
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="Buscar conversa ou paciente..."
@@ -1776,22 +1776,22 @@ export default function CrmWhatsApp() {
                         Detalhes do lead
                       </h4>
                       {selectedConversationVm.channel === "instagram" && (
-                        <div className="mb-3.5 overflow-hidden rounded-xl border border-purple-500/30 bg-gradient-to-br from-purple-500/10 via-rose-500/5 to-amber-500/10 p-3 shadow-2xs">
+                        <div className="mb-3.5 overflow-hidden rounded-2xl border border-primary/20 bg-primary/5 p-3 shadow-xs">
                           <div className="flex items-center justify-between gap-2 mb-2">
                             <div className="flex items-center gap-1.5 font-bold text-xs">
-                              <Instagram className="h-4 w-4 text-rose-500" />
+                              <Instagram className="h-4 w-4 text-primary" />
                               <span>Perfil do Instagram</span>
                             </div>
-                            <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
+                            <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
                               Direct
                             </span>
                           </div>
                           <div className="text-xs space-y-1.5">
-                            <div className="flex items-center justify-between font-medium border-b border-purple-500/10 pb-1">
+                            <div className="flex items-center justify-between font-medium border-b border-border/40 pb-1">
                               <span className="text-muted-foreground">Handle IG:</span>
                               <span className="font-bold text-foreground">{selectedConversationVm.instagramHandle || "@instagram_user"}</span>
                             </div>
-                            <div className="flex items-center justify-between font-medium border-b border-purple-500/10 pb-1">
+                            <div className="flex items-center justify-between font-medium border-b border-border/40 pb-1">
                               <span className="text-muted-foreground">Interações:</span>
                               <span className="font-semibold text-emerald-600 dark:text-emerald-400">1 Collab · 2 Stories</span>
                             </div>
@@ -1799,7 +1799,7 @@ export default function CrmWhatsApp() {
                               href={`https://instagram.com/${(selectedConversationVm.instagramHandle || "").replace(/^@/, "")}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="mt-2 flex items-center justify-center gap-1 rounded-lg bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 px-2.5 py-1.5 text-[11px] font-bold text-white shadow-2xs hover:opacity-95 transition-opacity"
+                              className="mt-2 flex items-center justify-center gap-1 rounded-xl bg-primary px-2.5 py-1.5 text-[11px] font-bold text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors"
                             >
                               <Instagram className="h-3.5 w-3.5" />
                               Ver Perfil no Instagram
@@ -2113,6 +2113,7 @@ export default function CrmWhatsApp() {
             <div className="space-y-3">
               <Input
                 id="new-conversation-search"
+                name="newConversationSearch"
                 placeholder="Pesquisar nome ou número"
                 value={newConversationQuery}
                 onChange={(event) => setNewConversationQuery(event.target.value)}

@@ -157,7 +157,7 @@ export const copilotApi = {
 export type ActivityFeedItem = { kind: "automation" | "calendar"; title: string; status: string; at: string };
 
 export const eventsApi = {
-  feed: () => request<{ data: ActivityFeedItem[] }>("/api/events/feed"),
+  feed: () => request<{ data: ActivityFeedItem[] }>("/api/activities/feed"),
 };
 
 export type DailyBriefing = {

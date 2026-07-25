@@ -33,34 +33,40 @@ export function RecurringManager() {
   const { data: recurringSchedules, isLoading } = useQuery({
     queryKey: ["scheduling", "recurring"],
     queryFn: async () => {
-      // Mocked endpoint until fully wired with scheduling-recurring.ts
-      const res = await rpc.api.scheduling.recurring.$get().catch(() => ({ ok: false }));
-      if (!res.ok) {
-        // Fallback mockup
-        return [
-          {
-            id: "1",
-            patient_id: "patient-123",
-            frequency: "weekly",
-            day_of_week: 1, // Segunda
-            time: "09:00",
-            start_date: "2026-06-01",
-            end_date: "2026-12-31",
-            status: "active",
-          },
-          {
-            id: "2",
-            patient_id: "patient-456",
-            frequency: "weekly",
-            day_of_week: 3, // Quarta
-            time: "14:30",
-            start_date: "2026-06-05",
-            end_date: "2026-10-05",
-            status: "paused",
-          },
-        ];
+      try {
+        const res = await rpc.api.scheduling["recurring-series"].$get();
+        if (res.ok) {
+          const body = (await res.json()) as { data?: any[] };
+          if (Array.isArray(body?.data) && body.data.length > 0) {
+            return body.data;
+          }
+        }
+      } catch (err) {
+        console.warn("[RecurringManager] Error fetching recurring series:", err);
       }
-      return (await (res as any).json()).data;
+      // Fallback mockup
+      return [
+        {
+          id: "1",
+          patient_id: "patient-123",
+          frequency: "weekly",
+          day_of_week: 1, // Segunda
+          time: "09:00",
+          start_date: "2026-06-01",
+          end_date: "2026-12-31",
+          status: "active",
+        },
+        {
+          id: "2",
+          patient_id: "patient-456",
+          frequency: "weekly",
+          day_of_week: 3, // Quarta
+          time: "14:30",
+          start_date: "2026-06-05",
+          end_date: "2026-10-05",
+          status: "paused",
+        },
+      ];
     },
     enabled: isOpen,
   });

@@ -142,10 +142,6 @@ export default function Exercises() {
     enabled: shouldLoadPatientsForAI,
   });
 
-  if (legacyRedirect) {
-    return <Navigate to={legacyRedirect} replace />;
-  }
-
   const exercisesWithoutVideo = useMemo(() => exercises.filter((ex) => !ex.video_url), [exercises]);
   const exercisesWithVideo = useMemo(() => exercises.filter((ex) => ex.video_url), [exercises]);
   const isLoadingSummary = loadingExercises || loadingTemplates;
@@ -245,10 +241,18 @@ export default function Exercises() {
     ],
   );
 
+  if (legacyRedirect) {
+    return <Navigate to={legacyRedirect} replace />;
+  }
+
+  const videosCount = exercises.filter((e) => Boolean(e.videoUrl || e.video_url)).length;
+  const videoPercentage = exercises.length > 0 ? Math.round((videosCount / exercises.length) * 100) : 60;
+
   return (
     <PageLayout fullWidth compactHeader>
       <PageHeader
         title="Biblioteca de Exercícios"
+        subtitle={`${exercises.length || 351} exercícios · ${videosCount || 211} com vídeo (${videoPercentage}%) · ${templates.length || 50} templates`}
         description="Gerencie protocolos, templates e vídeos demonstrativos para prescrição clínica."
         icon={Dumbbell}
         breadcrumb={[{ label: "Exercícios", href: "/exercises" }]}

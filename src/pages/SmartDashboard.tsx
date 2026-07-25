@@ -24,7 +24,7 @@ import { BenchmarkWidget } from "@/components/analytics/BenchmarkWidget";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { PageHeader } from "@/components/layout/PageHeader";
+
 import { PageContainer } from "@/components/layout/PageContainer";
 import { SmartDashboardWidgets } from "@/components/blocks/SmartDashboardWidgets";
 import { PostDischargeAlert } from "@/components/dashboard/PostDischargeAlert";
@@ -71,12 +71,18 @@ export function SmartDashboardContent() {
   return (
     <PageContainer maxWidth="full">
       <div data-testid="smart-dashboard-page">
-        <PageHeader
-          title="Fisio Intelligence"
-          subtitle="Acompanhe a saúde da sua clínica em tempo real"
-          icon={LayoutDashboard}
-          actions={dashboardActions}
-        />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-border/40">
+          <div>
+            <h2 className="text-xl font-black tracking-tight text-foreground flex items-center gap-2 font-display uppercase">
+              <LayoutDashboard className="h-5 w-5 text-primary" />
+              Fisio Intelligence
+            </h2>
+            <p className="text-xs font-medium text-muted-foreground">
+              Acompanhe a saúde da sua clínica em tempo real
+            </p>
+          </div>
+          {dashboardActions}
+        </div>
 
         <div className="space-y-8 animate-fade-in">
           {/* AI Command Center Widgets */}

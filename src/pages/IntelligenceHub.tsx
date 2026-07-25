@@ -13,7 +13,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
 import { cn } from "@/lib/utils";
 
@@ -220,45 +220,29 @@ export default function IntelligenceHub() {
           actions={actions}
         />
 
-        <section className="rounded-[1.75rem] border border-border/60 bg-background p-4 shadow-sm md:p-5">
-          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <Activity className="h-5 w-5" />
+        <Tabs value={tab} onValueChange={handleTabChange} className="space-y-6">
+          <section className="rounded-[1.75rem] border border-border/60 bg-card/80 backdrop-blur-sm p-4 shadow-sm md:p-5">
+            <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Activity className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                    Inteligência & IA
+                  </p>
+                  <h2 className="text-lg font-black tracking-tight text-foreground">
+                    Escolha o modo de trabalho
+                  </h2>
+                </div>
               </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                  Inteligência & IA
-                </p>
-                <h2 className="text-lg font-black tracking-tight text-foreground">
-                  Escolha o modo de trabalho
-                </h2>
+              <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/40 px-3 py-2 text-xs font-semibold text-muted-foreground">
+                <LineChart className="h-4 w-4 text-emerald-500" />
+                Atualizado com dados clínicos, operacionais e financeiros.
               </div>
             </div>
-            <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/40 px-3 py-2 text-xs font-semibold text-muted-foreground">
-              <LineChart className="h-4 w-4 text-emerald-500" />
-              Atualizado com dados clínicos, operacionais e financeiros.
-            </div>
-          </div>
-          <IntelligenceCommandDeck activeTab={tab} onSelectTab={handleTabChange} />
-        </section>
-
-        <Tabs value={tab} onValueChange={handleTabChange} className="space-y-5">
-          <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl border border-border/60 bg-muted/40 p-1 md:inline-grid md:w-auto md:grid-cols-4">
-            {HUB_TABS.map((item) => {
-              const Icon = item.icon;
-              return (
-                <TabsTrigger
-                  key={item.value}
-                  value={item.value}
-                  className="h-10 rounded-xl text-xs font-black uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
-                >
-                  <Icon className="mr-2 hidden h-4 w-4 sm:block" />
-                  {item.label}
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
+            <IntelligenceCommandDeck activeTab={tab} onSelectTab={handleTabChange} />
+          </section>
 
           <TabsContent value="overview" className="m-0 outline-none">
             <Suspense fallback={<IntelligenceContentSkeleton />}>

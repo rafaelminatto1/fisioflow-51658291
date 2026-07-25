@@ -15,7 +15,7 @@ import {
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 // Recurring Series
-app.get("/recurring-series", requireAuth, async (c) => {
+const getRecurringSeriesHandler = async (c: any) => {
   const user = c.get("user");
   const pool = await createPool(c.env);
   try {
@@ -40,7 +40,10 @@ app.get("/recurring-series", requireAuth, async (c) => {
   } catch {
     return c.json(emptyData());
   }
-});
+};
+
+app.get("/recurring-series", requireAuth, getRecurringSeriesHandler);
+app.get("/recurring", requireAuth, getRecurringSeriesHandler);
 
 app.post("/recurring-series", requireAuth, async (c) => {
   const user = c.get("user");

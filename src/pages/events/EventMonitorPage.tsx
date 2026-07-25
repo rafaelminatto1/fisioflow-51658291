@@ -35,7 +35,12 @@ export default function EventMonitorPage() {
       const res = await eventsApi.feed();
       setItems(res.data ?? []);
     } catch (e) {
-      setError((e as Error).message ?? "Falha ao carregar atividades");
+      const msg = (e as Error)?.message ?? "";
+      if (msg.includes("BLOCKED_BY_CLIENT") || msg.includes("Failed to fetch")) {
+        setError("Não foi possível carregar o feed (requisição bloqueada pelo navegador ou extensão).");
+      } else {
+        setError(msg || "Falha ao carregar atividades");
+      }
     } finally {
       setLoading(false);
     }

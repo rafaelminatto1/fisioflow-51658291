@@ -3,6 +3,7 @@ import { createPool } from "../lib/db";
 import { requireAuth, type AuthUser } from "../lib/auth";
 import type { Env } from "../types/env";
 import type { WhatsAppQueuePayload } from "../queue";
+import { WhatsAppService } from "../lib/messaging/WhatsAppService";
 
 const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
 
@@ -143,8 +144,8 @@ app.post("/trigger-followup", requireAuth, async (c) => {
     try {
       const wa = new WhatsAppService(c.env);
       const cleanPhone = patient.phone.replace(/\D/g, "");
-      const res = (await wa.sendTextMessage(cleanPhone, messageText)) as { messages?: Array<{ id: string }> };
-      if (res?.messages?.[0]?.id) {
+      const res = await wa.send({ to: cleanPhone, body: messageText });
+      if (res?.sid) {
         sendStatus = "delivered";
       } else {
         sendStatus = "failed";

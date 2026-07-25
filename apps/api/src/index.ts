@@ -227,6 +227,18 @@ app.use(
   }),
 );
 app.use("*", requestIdMiddleware);
+
+// ===== CLOUDFLARE EDGE CACHE CONTROL MIDDLEWARE =====
+app.use("*", async (c, next) => {
+  await next();
+  const path = c.req.path;
+  if (path === "/api/health" || path.startsWith("/api/public/")) {
+    c.header("Cache-Control", "public, max-age=300, stale-while-revalidate=60");
+  } else if (path.startsWith("/api/")) {
+    c.header("Cache-Control", "private, no-cache, no-store, must-revalidate");
+    c.header("Vary", "Authorization, Cookie");
+  }
+});
 // Analytics Engine — instrumentação automática de todas as rotas (fire-and-forget)
 app.use("*", (c, next) => analyticsMiddleware(c.env)(c, next));
 
@@ -392,6 +404,7 @@ const apiRoutes = [
   ["/api/search", searchRoutes],
   ["/api/reports/pdf", reportsPdfRoutes],
   ["/api/events", businessEventsRoutes],
+  ["/api/activities", businessEventsRoutes],
   ["/api/ai-search", aiSearchApp],
   ["/api/ai-config", aiConfigRoutes],
   ["/api/ai-clinical-search", aiClinicalSearchRoutes],
