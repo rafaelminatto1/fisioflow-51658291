@@ -60,6 +60,27 @@ export const bio = {
   avatarPink: "hsl(340, 70%, 55%)",
   avatarGreen: "hsl(142, 50%, 44%)",
   avatarPurple: "hsl(264, 55%, 55%)",
+
+  // Categorias do Design System Handoff (colors_and_type.css)
+  cOrto: "hsl(211, 100%, 50%)",
+  cOrtoBg: "hsl(211, 100%, 94%)",
+  cOrtoText: "hsl(211, 100%, 38%)",
+
+  cSport: "hsl(264, 55%, 55%)",
+  cSportBg: "hsl(264, 55%, 94%)",
+  cSportText: "hsl(264, 55%, 42%)",
+
+  cPosOp: "hsl(158, 62%, 40%)",
+  cPosOpBg: "hsl(158, 62%, 93%)",
+  cPosOpText: "hsl(158, 62%, 30%)",
+
+  cCustom: "hsl(38, 92%, 50%)",
+  cCustomBg: "hsl(38, 92%, 93%)",
+  cCustomText: "hsl(38, 85%, 35%)",
+
+  cDor: "hsl(0, 74%, 58%)",
+  cDorBg: "hsl(0, 74%, 95%)",
+  cDorText: "hsl(0, 74%, 40%)",
 } as const;
 
 /** Escala de dor (VAS 0–10) do design system. */
@@ -76,3 +97,29 @@ export const painScale = [
   "#ef4444",
   "#7f1d1d",
 ];
+
+/** Sombras padronizadas do Design System Handoff */
+export const shadows = {
+  sm: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  md: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  glowPrimary: {
+    shadowColor: "#0080FF",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+};
+

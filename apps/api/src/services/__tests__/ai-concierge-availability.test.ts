@@ -392,6 +392,7 @@ describe("ai-concierge — disponibilidade automática", () => {
   });
 
   it("entende janela antes das 10h", async () => {
+    vi.setSystemTime(new Date("2026-07-02T09:00:00Z")); // 06:00 BRT
     mockQuery.mockImplementation((sql: string) => {
       if (sql.includes("FROM organizations")) {
         return Promise.resolve({
@@ -695,5 +696,61 @@ describe("ai-concierge — disponibilidade automática", () => {
     expect(response.answerable).toBe(true);
     expect(requestedDates).toEqual(["2026-07-14", "2026-07-15"]);
     expect(response.reply).toContain("terça ou quarta que vem");
+  });
+
+  it("responde claramente que a clínica não abre aos domingos quando perguntado hoje no domingo", async () => {
+    vi.setSystemTime(new Date("2026-07-26T15:00:00Z")); // Domingo
+    mockQuery.mockImplementation((sql: string) => {
+      if (sql.includes("FROM organizations")) {
+        return Promise.resolve({
+          rows: [{ concierge: { availabilityAutoReply: true, availabilityScope: "organization" } }],
+        });
+      }
+      if (sql.includes("FROM profiles")) {
+        return Promise.resolve({ rows: [{ id: "ther-1" }] });
+      }
+      return Promise.resolve({ rows: [] });
+    });
+
+    const { AIConciergeService } = await import("../ai-concierge");
+    const response = await AIConciergeService.processMessage(
+      {} as any,
+      "org-1",
+      "tem horário para hoje?",
+      [],
+    );
+
+    expect(response.answerable).toBe(true);
+    expect(response.intent).toBe("scheduling");
+    expect(response.reply).toContain("não abre aos domingos");
+    expect(response.reply).toContain("07h às 21h");
+  });
+
+  it("responde claramente que a clínica não abre aos domingos quando pedido explicitamente para domingo", async () => {
+    vi.setSystemTime(new Date("2026-07-23T15:00:00Z")); // Quinta-feira
+    mockQuery.mockImplementation((sql: string) => {
+      if (sql.includes("FROM organizations")) {
+        return Promise.resolve({
+          rows: [{ concierge: { availabilityAutoReply: true, availabilityScope: "organization" } }],
+        });
+      }
+      if (sql.includes("FROM profiles")) {
+        return Promise.resolve({ rows: [{ id: "ther-1" }] });
+      }
+      return Promise.resolve({ rows: [] });
+    });
+
+    const { AIConciergeService } = await import("../ai-concierge");
+    const response = await AIConciergeService.processMessage(
+      {} as any,
+      "org-1",
+      "tem horário domingo de manhã?",
+      [],
+    );
+
+    expect(response.answerable).toBe(true);
+    expect(response.intent).toBe("scheduling");
+    expect(response.reply).toContain("não abre aos domingos");
+    expect(response.reply).toContain("segunda a sexta");
   });
 });

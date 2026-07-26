@@ -28,6 +28,7 @@ import { useVideoPlayer, VideoView } from "expo-video";
 import {
   ChevronLeft,
   GitCompare,
+  FileText,
   Share2,
   ChevronUp,
   ChevronDown,
@@ -369,12 +370,35 @@ export default function AnalysisScreen() {
                 setActiveTool(protocol === "GENERIC" ? "angle" : "line");
               }
             }}
+            hitSlop={6}
           >
             {activeTool !== "view" ? (
               <Check size={19} color="#fff" />
             ) : (
               <PenTool size={19} color="#fff" />
             )}
+          </Pressable>
+          <Pressable
+            style={styles.roundBtn}
+            onPress={() =>
+              router.push(
+                `/biomecanica/comparison?patientId=${encodeURIComponent(patientId || "demo")}&patientName=${encodeURIComponent(patientName || "")}` as never,
+              )
+            }
+            hitSlop={6}
+          >
+            <GitCompare size={19} color="#fff" strokeWidth={2.2} />
+          </Pressable>
+          <Pressable
+            style={styles.roundBtn}
+            onPress={() =>
+              router.push(
+                `/biomecanica/report?assessmentId=${encodeURIComponent(assessmentId || "demo")}&patientId=${encodeURIComponent(patientId || "demo")}&patientName=${encodeURIComponent(patientName || "")}` as never,
+              )
+            }
+            hitSlop={6}
+          >
+            <FileText size={19} color="#fff" strokeWidth={2.2} />
           </Pressable>
         </View>
 

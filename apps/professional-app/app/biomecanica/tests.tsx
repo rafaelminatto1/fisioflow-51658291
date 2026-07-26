@@ -228,7 +228,7 @@ export default function TestsScreen() {
           <View style={styles.headerTop}>
             <View style={{ flex: 1 }}>
               <Text style={styles.h1}>Biblioteca de Testes</Text>
-              <Text style={styles.sub}>12 protocolos · padronizados</Text>
+              <Text style={styles.sub}>84 testes · 56 ortopedia · 12 esportiva · 10 pós-op</Text>
             </View>
             <Pressable style={styles.add} hitSlop={6}>
               <Plus size={20} color="#fff" strokeWidth={2.4} />
@@ -237,7 +237,7 @@ export default function TestsScreen() {
           <View style={styles.searchBox}>
             <Search size={17} color={bio.muted} strokeWidth={2} />
             <TextInput
-              placeholder="Buscar teste…"
+              placeholder="Buscar teste, tag ou articulação…"
               placeholderTextColor={bio.muted}
               style={styles.searchInput}
             />

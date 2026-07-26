@@ -302,6 +302,13 @@ export default function ReportScreen() {
           <Pressable style={styles.roundBtn} hitSlop={6}>
             <Pencil size={18} color={bio.fg} strokeWidth={2.2} />
           </Pressable>
+          <Pressable
+            style={[styles.roundBtn, { backgroundColor: bio.primarySoft }]}
+            onPress={() => router.replace("/biomecanica")}
+            hitSlop={6}
+          >
+            <ShieldCheck size={18} color={bio.primary} strokeWidth={2.2} />
+          </Pressable>
         </View>
       </SafeAreaView>
 

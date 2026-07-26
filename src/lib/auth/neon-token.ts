@@ -71,11 +71,19 @@ function setCachedJwt(token: string): void {
 }
 
 async function fetchJwtFromSdk(): Promise<string | null> {
-  // 1. Tenta o método recomendado .token() (disponível no SDK do Neon Auth / Better Auth)
+  // 1. Tenta obter da sessão ativa (utiliza /get-session que não dispara 401 no console se não logado)
   try {
-    // NOTA: authClient é um Proxy. Não utilize `.call(authClient)` aqui,
-    // pois o Proxy intercepta chamadas internas (como fetchOptions)
-    // e constrói caminhos de API inválidos (ex: /fetch-options/method/to-upper-case).
+    const { data } = await authClient.getSession();
+    const sessionData = data as SessionTokenData | null | undefined;
+    const token =
+      sessionData?.session?.token || sessionData?.token || sessionData?.session?.access_token;
+    if (typeof token === "string" && looksLikeJwt(token)) return token;
+  } catch {
+    // Fallback abaixo
+  }
+
+  // 2. Tenta o método .token() caso getSession não tenha incluído a propriedade token no objeto de sessão
+  try {
     const tokenClient = authClient as TokenCapableAuthClient;
     if (typeof tokenClient.token === "function") {
       const { data } = await tokenClient.token();
@@ -84,17 +92,6 @@ async function fetchJwtFromSdk(): Promise<string | null> {
     }
   } catch {
     // Silently continue to next fallback
-  }
-
-  // 2. Tenta obter da sessão ativa
-  try {
-    const { data } = await authClient.getSession();
-    const sessionData = data as SessionTokenData | null | undefined;
-    const token =
-      sessionData?.session?.token || sessionData?.token || sessionData?.session?.access_token;
-    if (typeof token === "string" && looksLikeJwt(token)) return token;
-  } catch {
-    // Fallback below
   }
 
   return null;

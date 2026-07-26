@@ -239,7 +239,7 @@ export function humanOwnsConversation(
 // Em PT-BR o gatilho é "atendente/humano/pessoa/recepção/alguém" — NÃO usamos a
 // palavra "agente" (evita falso-positivo "sou corretor/agente da Caixa").
 const HANDOFF_HUMAN_NOUN =
-  "(atendentes?|human[oa]|uma pessoa|pessoa de verdade|pessoa real|recep[çc][aã]o|recepcionista|secret[aá]ri[oa]|algu[eé]m|respons[aá]vel)";
+  "(atendentes?|human[oa]|uma pessoa|pessoa de verdade|pessoa real|recep[çc][aã]o|recepcionista|secret[aá]ri[oa]|algu[eé]m|respons[aá]vel|fisioterapeuta|doutor|doutora|m[eé]dic[oa]|equipe)";
 const HANDOFF_WANT =
   "(falar|conversar|transfer\\w*|me\\s+passa\\w*|passar|chama\\w*|quero|queria|gostaria|preciso|prefiro|poderia)";
 const WANTS_HUMAN_RE = new RegExp(
@@ -247,11 +247,11 @@ const WANTS_HUMAN_RE = new RegExp(
   "i",
 );
 const HUMAN_DIRECT_RE =
-  /\b(atend(?:imento|ente)\s+human[oa]|human[oa]\s+de\s+verdade|quero\s+um\s+human[oa]|falar\s+com\s+gente|ser\s+atendid[oa]\s+por\s+(uma\s+pessoa|um\s+human[oa]))\b/i;
+  /\b(atend(?:imento|ente)\s+human[oa]|human[oa]\s+de\s+verdade|quero\s+um\s+human[oa]|falar\s+com\s+(gente|equipe|o\s+doutor|a\s+doutora|o\s+fisioterapeuta|a\s+fisioterapeuta)|ser\s+atendid[oa]\s+por\s+(uma\s+pessoa|um\s+human[oa]))\b/i;
 const HUMAN_AVAIL_RE =
-  /\b(tem|t[eê]m|cad[êe]|h[áa])\s+(?:o|a|os|as|um|uma)?\s*(algu[eé]m|atendentes?|recepcionista|recep[çc][aã]o)\b/i;
+  /\b(tem|t[eê]m|cad[êe]|h[áa])\s+(?:o|a|os|as|um|uma)?\s*(algu[eé]m|atendentes?|recepcionista|recep[çc][aã]o|fisioterapeuta|doutor|doutora)\b/i;
 const HUMAN_STANDALONE_RE =
-  /^\s*(atendentes?|humano|human[oa]|recep[çc][aã]o|recepcionista)(\s+(por\s+favor|pfv|pf))?\s*[?!.]*$/i;
+  /^\s*(atendentes?|humano|human[oa]|recep[çc][aã]o|recepcionista|secret[aá]ri[oa]|fisioterapeuta|doutor|doutora)(\s+(por\s+favor|pfv|pf))?\s*[?!.]*$/i;
 const NOT_HANDOFF_RE =
   /\b(sou|s[oó]u|trabalho\s+(como|de|no|na)|atuo\s+como|virei|me\s+tornei|era)\s+\w*\s*(atendentes?|recepcionista|secret[aá]ri[oa]|corretor|personal)/i;
 
@@ -353,7 +353,7 @@ export function resolveWebchatConciergeConfig(raw: unknown): WebchatConciergeCon
 }
 
 function isAvailabilityQuestion(message: string): boolean {
-  return /(hor[aá]ri|dispon[ií]v|agenda|vaga|tem (algo|algum|alguma))/i.test(message);
+  return /(hor[aá]ri|dispon[ií]v|agenda|vaga|atend|abert|abrem|funciona|marcar|agendar|passar|consulta|tem (algo|algum|alguma))/i.test(message);
 }
 
 function detectAvailabilityPeriod(message: string): AvailabilityPeriod {
@@ -697,8 +697,29 @@ function filterSlotsByTiming(
   slots: string[],
   period: AvailabilityPeriod,
   timeWindow?: AvailabilityTimeWindow | null,
+  isToday: boolean = false,
 ): string[] {
   let filtered = slots;
+
+  if (isToday) {
+    const nowBrt = new Date();
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Sao_Paulo",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(nowBrt);
+    const hour = Number(parts.find((p) => p.type === "hour")?.value ?? "0");
+    const minute = Number(parts.find((p) => p.type === "minute")?.value ?? "0");
+    const currentMinutes = hour * 60 + minute;
+
+    filtered = filtered.filter((slot) => {
+      const [slotH, slotM] = slot.split(":").map(Number);
+      const slotMinutes = slotH * 60 + slotM;
+      return slotMinutes >= currentMinutes + 30;
+    });
+  }
+
   if (period) {
     filtered = filtered.filter((slot) => {
       const hour = Number(slot.slice(0, 2));
@@ -870,12 +891,65 @@ function buildAvailabilityReply(
   if (nonEmpty.length === 0) {
     const holidayName = slotsByDate
       .map((item) => holidays.get(item.date))
-      .find((name) => name);
-    const reason = holidayName
-      ? ` — é feriado (${holidayName}) e a clínica não abre`
-      : "";
+      .find((name) => Boolean(name));
+
+    if (holidayName) {
+      return {
+        reply: `Para ${request.label}${periodLabel(request.period)}${timeWindowLabel(request.timeWindow)} é feriado (${holidayName}) e a clínica não abre.`,
+        intent: "scheduling",
+        answerable: true,
+      };
+    }
+
+    const hasClosedDay = slotsByDate.some(
+      (item) => clinicHoursForDate(item.date) === null,
+    );
+
+    if (hasClosedDay) {
+      const isSundayOnly = slotsByDate.every(
+        (item) => new Date(`${item.date}T12:00:00Z`).getUTCDay() === 0,
+      );
+      const closedReason = isSundayOnly
+        ? "a clínica não abre aos domingos"
+        : "a clínica não abre neste dia";
+
+      return {
+        reply: `Para ${request.label}${periodLabel(request.period)}${timeWindowLabel(request.timeWindow)} ${closedReason}. Nosso horário de funcionamento é de segunda a sexta das 07h às 21h e aos sábados das 07h às 13h. Quer agendar para outro dia?`,
+        intent: "scheduling",
+        answerable: true,
+      };
+    }
+
+    const todayIso = getBrtTodayIso();
+    const isTodayRequested = slotsByDate.length === 1 && slotsByDate[0].date === todayIso;
+    if (isTodayRequested) {
+      const hours = clinicHoursForDate(todayIso);
+      if (hours) {
+        const nowBrt = new Date();
+        const parts = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "America/Sao_Paulo",
+          hour: "2-digit",
+          hour12: false,
+        }).formatToParts(nowBrt);
+        const currentHour = Number(parts.find((p) => p.type === "hour")?.value ?? "0");
+        if (currentHour >= hours.endHour - 1) {
+          const nextDayIso = addDaysIso(todayIso, 1);
+          const isNextSunday = new Date(`${nextDayIso}T12:00:00Z`).getUTCDay() === 0;
+          const targetDayIso = isNextSunday ? addDaysIso(todayIso, 2) : nextDayIso;
+          const targetHours = clinicHoursForDate(targetDayIso);
+          const dayName = isNextSunday ? "na segunda-feira" : "amanhã";
+
+          return {
+            reply: `Para hoje já encerramos os atendimentos do dia. Nosso atendimento retoma ${dayName} às ${targetHours?.startHour ?? 7}h. Quer agendar?`,
+            intent: "scheduling",
+            answerable: true,
+          };
+        }
+      }
+    }
+
     return {
-      reply: `Para ${request.label}${periodLabel(request.period)}${timeWindowLabel(request.timeWindow)} não temos horários livres no momento${reason}.`,
+      reply: `Para ${request.label}${periodLabel(request.period)}${timeWindowLabel(request.timeWindow)} não temos horários livres no momento.`,
       intent: "scheduling",
       answerable: true,
     };
@@ -929,9 +1003,10 @@ async function maybeAnswerAvailability(
     if (slotsByDate.some((item) => item.slots == null)) {
       return { reply: "", intent: "scheduling", answerable: false };
     }
+    const todayIso = getBrtTodayIso();
     const filtered = slotsByDate.map((item) => ({
       date: item.date,
-      slots: filterSlotsByTiming(item.slots, request.period, request.timeWindow),
+      slots: filterSlotsByTiming(item.slots, request.period, request.timeWindow, item.date === todayIso),
     }));
     return buildAvailabilityReply(request, filtered, holidays);
   } catch (error) {
@@ -1137,14 +1212,38 @@ export class AIConciergeService {
     const identity = conciergeIdentity(settings);
     const knowledgeBase = settings.knowledgeBase || CLINIC_KB;
 
-    // Saudação conforme o horário de Brasília (UTC-3).
-    const brtHour = (new Date().getUTCHours() - 3 + 24) % 24;
+    // Contexto temporal de Brasília (America/Sao_Paulo)
+    const nowBrt = new Date();
+    const parts = new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      weekday: "long",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(nowBrt);
+
+    const weekdayStr = parts.find((p) => p.type === "weekday")?.value ?? "";
+    const dayStr = parts.find((p) => p.type === "day")?.value ?? "";
+    const monthStr = parts.find((p) => p.type === "month")?.value ?? "";
+    const yearStr = parts.find((p) => p.type === "year")?.value ?? "";
+    const hourStr = parts.find((p) => p.type === "hour")?.value ?? "";
+    const minuteStr = parts.find((p) => p.type === "minute")?.value ?? "";
+    const currentDateBrtStr = `${weekdayStr}, ${dayStr}/${monthStr}/${yearStr} às ${hourStr}:${minuteStr}`;
+
+    const brtHour = Number(hourStr) || ((nowBrt.getUTCHours() - 3 + 24) % 24);
     const saudacao = brtHour >= 5 && brtHour < 12 ? "Bom dia" : brtHour < 18 ? "Boa tarde" : "Boa noite";
     const apresentacao = `${saudacao}, tudo bem?\n${identity.signature}.\nComo posso ajudar?`;
 
     const systemPrompt = `
 Você é o atendente virtual da ${identity.clinicName} (assine como "${identity.attendantName}" quando fizer sentido).
 Atende leads e pacientes via WhatsApp e Instagram.
+
+CONTEXTO TEMPORAL DE HOJE:
+Hoje em São Paulo: ${currentDateBrtStr}.
+ATENÇÃO COM DOMINGOS E DIAS FECHADOS: A clínica NÃO abre aos domingos. Se hoje for domingo ou se a pessoa perguntar sobre atendimento no domingo/hoje, informe com clareza que a clínica não atende aos domingos e passe o horário de funcionamento oficial (segunda a sexta das 07h às 21h, sábado das 07h às 13h).
 
 REGRAS ABSOLUTAS:
 1. Use EXCLUSIVAMENTE as informações oficiais abaixo. NUNCA invente preços, horários, endereço, telefone, nomes de profissionais, disponibilidade de agenda, promoções, prazos ou qualquer dado que não esteja listado.

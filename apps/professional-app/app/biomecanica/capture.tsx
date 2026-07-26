@@ -107,6 +107,19 @@ export default function CaptureScreen() {
   const ty = useSharedValue(COLLAPSED);
   const start = useSharedValue(COLLAPSED);
 
+  const handleToggleRecording = () => {
+    if (recording) {
+      setRecording(false);
+      const params = new URLSearchParams();
+      if (patientId) params.append("patientId", patientId);
+      if (patientName) params.append("patientName", patientName);
+      if (protocol) params.append("protocolName", protocol);
+      router.push(`/biomecanica/analysis?${params.toString()}`);
+    } else {
+      setRecording(true);
+    }
+  };
+
   const handlePickVideo = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["videos"],
@@ -295,7 +308,7 @@ export default function CaptureScreen() {
           <Pressable style={styles.recSide} hitSlop={6} onPress={handlePickVideo}>
             <FolderUp size={20} color="#fff" strokeWidth={2.2} />
           </Pressable>
-          <Pressable style={styles.recBtn} onPress={() => setRecording((r) => !r)}>
+          <Pressable style={styles.recBtn} onPress={handleToggleRecording}>
             <View style={[styles.recInner, recording && styles.recInnerActive]} />
           </Pressable>
           <Pressable style={styles.recSide} hitSlop={6}>

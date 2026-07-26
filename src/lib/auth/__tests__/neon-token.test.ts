@@ -41,39 +41,37 @@ describe("neon-token", () => {
     vi.unstubAllGlobals();
   });
 
-  it("uses authClient.token() when the SDK already has a JWT", async () => {
+  it("uses getSession() when the SDK session already has a JWT", async () => {
     const jwt = createJwt();
-    mockAuthClient.token.mockResolvedValue({ data: { token: jwt } });
+    mockAuthClient.getSession.mockResolvedValue({ data: { session: { token: jwt } } });
     const fetchMock = vi.mocked(fetch);
 
     const { getNeonAccessToken } = await import("../neon-token");
 
     await expect(getNeonAccessToken()).resolves.toBe(jwt);
-    expect(mockAuthClient.token).toHaveBeenCalledTimes(1);
-    expect(mockAuthClient.getSession).not.toHaveBeenCalled();
+    expect(mockAuthClient.getSession).toHaveBeenCalledTimes(1);
+    expect(mockAuthClient.token).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("falls back to getSession() when token() fails", async () => {
+  it("falls back to token() when getSession() lacks a JWT token", async () => {
     const jwt = createJwt();
-    mockAuthClient.token.mockResolvedValue({ data: null, error: "fail" });
-    mockAuthClient.getSession.mockResolvedValue({
-      data: { session: { token: jwt } },
-    });
+    mockAuthClient.getSession.mockResolvedValue({ data: null });
+    mockAuthClient.token.mockResolvedValue({ data: { token: jwt } });
 
     const { getNeonAccessToken } = await import("../neon-token");
 
     await expect(getNeonAccessToken()).resolves.toBe(jwt);
-    expect(mockAuthClient.token).toHaveBeenCalledTimes(1);
     expect(mockAuthClient.getSession).toHaveBeenCalledTimes(1);
+    expect(mockAuthClient.token).toHaveBeenCalledTimes(1);
   });
 
-  it("falls back to direct /get-session fetch when SDK session lacks a token", async () => {
+  it("falls back to direct /get-session fetch when SDK session and token() lack a token", async () => {
     const jwt = createJwt();
-    mockAuthClient.token.mockResolvedValue({ data: null });
     mockAuthClient.getSession.mockResolvedValue({
       data: { user: { id: "user-123" } },
     });
+    mockAuthClient.token.mockResolvedValue({ data: null });
 
     const headers = new Headers({ "set-auth-jwt": jwt });
     vi.mocked(fetch).mockResolvedValue(new Response("{}", { status: 200, headers }));
@@ -92,31 +90,31 @@ describe("neon-token", () => {
 
   it("reuses the cached JWT until the cache is invalidated", async () => {
     const jwt = createJwt();
-    mockAuthClient.token.mockResolvedValue({ data: { token: jwt } });
+    mockAuthClient.getSession.mockResolvedValue({ data: { session: { token: jwt } } });
 
     const { getNeonAccessToken, invalidateNeonTokenCache } = await import("../neon-token");
 
     await expect(getNeonAccessToken()).resolves.toBe(jwt);
     await expect(getNeonAccessToken()).resolves.toBe(jwt);
-    expect(mockAuthClient.token).toHaveBeenCalledTimes(1);
+    expect(mockAuthClient.getSession).toHaveBeenCalledTimes(1);
 
     invalidateNeonTokenCache();
     await expect(getNeonAccessToken()).resolves.toBe(jwt);
-    expect(mockAuthClient.token).toHaveBeenCalledTimes(2);
+    expect(mockAuthClient.getSession).toHaveBeenCalledTimes(2);
   });
 
   it("ignores cache when forceSessionReload is requested", async () => {
     const cachedJwt = createJwt(3600);
     const refreshedJwt = createJwt(7200);
-    mockAuthClient.token
-      .mockResolvedValueOnce({ data: { token: cachedJwt } })
-      .mockResolvedValueOnce({ data: { token: refreshedJwt } });
+    mockAuthClient.getSession
+      .mockResolvedValueOnce({ data: { session: { token: cachedJwt } } })
+      .mockResolvedValueOnce({ data: { session: { token: refreshedJwt } } });
 
     const { getNeonAccessToken } = await import("../neon-token");
 
     await expect(getNeonAccessToken()).resolves.toBe(cachedJwt);
     await expect(getNeonAccessToken({ forceSessionReload: true })).resolves.toBe(refreshedJwt);
-    expect(mockAuthClient.token).toHaveBeenCalledTimes(2);
+    expect(mockAuthClient.getSession).toHaveBeenCalledTimes(2);
   });
 
   it("throws a clear error when Neon Auth is disabled", async () => {
@@ -128,8 +126,8 @@ describe("neon-token", () => {
   });
 
   it("rejects expired JWTs returned by the SDK", async () => {
-    mockAuthClient.token.mockResolvedValue({
-      data: { token: createJwt(-60) },
+    mockAuthClient.getSession.mockResolvedValue({
+      data: { session: { token: createJwt(-60) } },
     });
 
     const { getNeonAccessToken } = await import("../neon-token");

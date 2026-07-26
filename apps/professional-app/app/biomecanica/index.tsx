@@ -96,15 +96,25 @@ const AGENDA = [
   },
 ];
 
-function SectionHead({ title, count, link }: { title: string; count?: string; link: string }) {
+function SectionHead({
+  title,
+  count,
+  link,
+  onPress,
+}: {
+  title: string;
+  count?: string;
+  link: string;
+  onPress?: () => void;
+}) {
   return (
     <View style={styles.sectionHead}>
       <Text style={styles.sectionTitle}>{title}</Text>
       {count ? <Text style={styles.sectionCount}>{count}</Text> : null}
-      <View style={styles.sectionLink}>
+      <Pressable style={styles.sectionLink} onPress={onPress} hitSlop={8}>
         <Text style={styles.sectionLinkText}>{link}</Text>
         <ChevronRight size={14} color={bio.primary} strokeWidth={2.5} />
-      </View>
+      </Pressable>
     </View>
   );
 }
@@ -185,7 +195,13 @@ export default function PainelScreen() {
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
             <Text style={styles.greet}>Olá, Dr. Rafael</Text>
-            <Text style={styles.date}>terça, 2 de junho</Text>
+            <Text style={styles.date}>
+              {new Date().toLocaleDateString("pt-BR", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              })}
+            </Text>
           </View>
           <Pressable style={styles.bell} hitSlop={6}>
             <Bell size={19} color={bio.fg} strokeWidth={2} />
@@ -202,6 +218,27 @@ export default function PainelScreen() {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
+        {/* Featured Hero Banner (Claude Design System Handoff) */}
+        <View style={styles.heroCard}>
+          <View style={styles.heroMain}>
+            <Text style={styles.heroEyebrow}>BIOMECÂNICA DIGITAL · CLÍNICA</Text>
+            <Text style={styles.heroTitle}>Análise Cinemática & Postural</Text>
+            <Text style={styles.heroSub}>
+              Rastreio de 17 articulações em tempo real com goniômetro vetorial e laudo em PDF.
+            </Text>
+          </View>
+          <View style={styles.heroStats}>
+            <View style={styles.hstat}>
+              <Text style={styles.hstatV}>84</Text>
+              <Text style={styles.hstatL}>TESTES</Text>
+            </View>
+            <View style={styles.hstat}>
+              <Text style={styles.hstatV}>98%</Text>
+              <Text style={styles.hstatL}>PRECISÃO</Text>
+            </View>
+          </View>
+        </View>
+
         {/* KPIs */}
         <View style={styles.kpis}>
           {kpis.map((k) => (
@@ -217,7 +254,12 @@ export default function PainelScreen() {
 
         {/* Pending analyses */}
         <View style={{ gap: 12 }}>
-          <SectionHead title="Análises pendentes" count="5" link="Ver todas" />
+          <SectionHead
+            title="Análises pendentes"
+            count={String(pending.length)}
+            link="Ver todas"
+            onPress={() => router.push("/biomecanica/tests")}
+          />
           <View style={{ gap: 10 }}>
             {pending.map((p) => (
               <Pressable
@@ -225,7 +267,7 @@ export default function PainelScreen() {
                 style={styles.pend}
                 onPress={() =>
                   router.push(
-                    `/biomecanica/analysis?assessmentId=${encodeURIComponent(p.id)}` as never,
+                    `/biomecanica/analysis?assessmentId=${encodeURIComponent(p.id)}&patientName=${encodeURIComponent(p.name)}` as never,
                   )
                 }
               >
@@ -250,7 +292,11 @@ export default function PainelScreen() {
 
         {/* Recent captures */}
         <View style={{ gap: 12 }}>
-          <SectionHead title="Capturas recentes" link="Ver todas" />
+          <SectionHead
+            title="Capturas recentes"
+            link="Ver todas"
+            onPress={() => router.push("/biomecanica/tests")}
+          />
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -260,7 +306,11 @@ export default function PainelScreen() {
               <Pressable
                 key={c.id}
                 style={styles.cap}
-                onPress={() => router.push("/biomecanica/analysis" as never)}
+                onPress={() =>
+                  router.push(
+                    `/biomecanica/analysis?protocolName=${encodeURIComponent(c.tag)}&patientName=${encodeURIComponent(c.name)}` as never,
+                  )
+                }
               >
                 <View style={styles.thumb}>
                   <View style={styles.tag}>
@@ -284,7 +334,11 @@ export default function PainelScreen() {
 
         {/* Agenda */}
         <View style={{ gap: 12 }}>
-          <SectionHead title="Agenda do dia" link="Ver agenda" />
+          <SectionHead
+            title="Agenda do dia"
+            link="Ver agenda"
+            onPress={() => router.push("/(tabs)" as never)}
+          />
           <View style={styles.agenda}>
             {AGENDA.map((a, i) => (
               <View
@@ -368,6 +422,57 @@ const styles = StyleSheet.create({
   avatarText: { fontFamily: font.extrabold, fontSize: 14, color: "hsl(211, 100%, 32%)" },
 
   scroll: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 24, gap: 22 },
+
+  heroCard: {
+    backgroundColor: "#0B1220",
+    borderRadius: 18,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "hsla(211, 100%, 50%, 0.35)",
+    gap: 14,
+  },
+  heroMain: { flex: 1 },
+  heroEyebrow: {
+    color: bio.primary,
+    fontSize: 10,
+    fontFamily: font.extrabold,
+    letterSpacing: 1.2,
+  },
+  heroTitle: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontFamily: font.extrabold,
+    letterSpacing: -0.3,
+    marginTop: 4,
+  },
+  heroSub: {
+    color: "hsl(214, 30%, 80%)",
+    fontSize: 12,
+    fontFamily: font.medium,
+    lineHeight: 17,
+    marginTop: 4,
+  },
+  heroStats: {
+    flexDirection: "row",
+    gap: 20,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.12)",
+    paddingTop: 12,
+  },
+  hstat: { flex: 1 },
+  hstatV: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    fontFamily: font.extrabold,
+    letterSpacing: -0.4,
+  },
+  hstatL: {
+    color: "hsl(214, 25%, 68%)",
+    fontSize: 9,
+    fontFamily: font.extrabold,
+    letterSpacing: 0.8,
+    marginTop: 1,
+  },
 
   kpis: { flexDirection: "row", gap: 10 },
   kpi: {
