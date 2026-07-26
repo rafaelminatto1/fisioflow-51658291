@@ -1192,7 +1192,7 @@ export default function CrmWhatsApp() {
   return (
     <PageLayout fullWidth noPadding compactHeader hideDefaultHeader showBreadcrumbs={false} fillViewport>
       <PageContainer maxWidth="full" noPadding className="h-full">
-        <div className="flex h-full min-h-0 flex-col bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex h-full min-h-0 flex-col bg-background">
           <div className="flex items-center gap-4 border-b border-border/50 bg-background/95 px-6 py-4 shadow-sm z-10">
             <h1 className="flex items-center gap-3 text-xl font-extrabold tracking-tight">
               CRM

@@ -98,7 +98,7 @@ export default function BiomechanicsAnalysisPage() {
             transition={{ delay: idx * 0.1 }}
           >
             <Card
-              className="group cursor-pointer bg-slate-900/40 border-white/5 hover:border-primary/40 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)] transition-all duration-500 overflow-hidden"
+              className="group cursor-pointer bg-card border-border hover:border-primary/50 hover:shadow-lg transition-all duration-300 overflow-hidden"
               onClick={() => {
                 setSelectedTest(cat.id);
                 setActiveTab("instructions");
@@ -106,50 +106,50 @@ export default function BiomechanicsAnalysisPage() {
             >
               <CardContent className="p-0">
                 <div
-                  className={`p-8 ${cat.bg} relative overflow-hidden group-hover:scale-105 transition-transform duration-700`}
+                  className={`p-6 ${cat.bg} relative overflow-hidden group-hover:scale-105 transition-transform duration-500`}
                 >
                   <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                     <cat.icon className="h-24 w-24 -mr-8 -mt-8 rotate-12" />
                   </div>
                   <div
-                    className={`p-4 rounded-2xl bg-slate-950 shadow-2xl border border-white/10 ${cat.color} relative z-10`}
+                    className={`p-3 w-fit rounded-xl bg-card shadow-md border border-border ${cat.color} relative z-10`}
                   >
-                    <cat.icon className="h-7 w-7" />
+                    <cat.icon className="h-6 w-6" />
                   </div>
-                  <div className="mt-6 relative z-10">
+                  <div className="mt-4 relative z-10">
                     <Badge
                       variant="outline"
-                      className="text-[9px] font-black uppercase text-white/40 border-white/10 bg-black/20"
+                      className="text-[9px] font-black uppercase text-foreground/80 border-border bg-card"
                     >
                       {cat.reference}
                     </Badge>
                   </div>
                 </div>
-                <div className="p-8 space-y-3 bg-gradient-to-b from-transparent to-slate-950/50">
+                <div className="p-6 space-y-3 bg-card">
                   <div>
-                    <p className="text-[10px] font-black uppercase text-primary/80 tracking-[0.2em] mb-1">
+                    <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em] mb-1">
                       {cat.subtitle}
                     </p>
-                    <h3 className="text-2xl font-black tracking-tighter text-white">{cat.title}</h3>
+                    <h3 className="text-xl font-extrabold tracking-tight text-foreground">{cat.title}</h3>
                   </div>
-                  <p className="text-sm text-slate-400 font-medium leading-relaxed">
+                  <p className="text-xs text-muted-foreground font-medium leading-relaxed">
                     {cat.description}
                   </p>
-                  <div className="grid grid-cols-1 gap-2 rounded-2xl border border-white/5 bg-white/[0.02] p-3 text-xs text-slate-300">
+                  <div className="grid grid-cols-1 gap-2 rounded-xl border border-border bg-muted/40 p-3 text-xs text-foreground">
                     <div>
-                      <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                      <p className="mb-0.5 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
                         Captura ideal
                       </p>
-                      <p>{biomechanicsProtocols[cat.id].captureAngles[0]}</p>
+                      <p className="font-semibold text-xs text-foreground">{biomechanicsProtocols[cat.id].captureAngles[0]}</p>
                     </div>
                     <div>
-                      <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                      <p className="mb-0.5 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
                         Saída principal
                       </p>
-                      <p>{biomechanicsProtocols[cat.id].measuredOutputs[0]}</p>
+                      <p className="font-semibold text-xs text-foreground">{biomechanicsProtocols[cat.id].measuredOutputs[0]}</p>
                     </div>
                   </div>
-                  <div className="pt-4 flex items-center text-[10px] font-black text-primary tracking-widest uppercase opacity-0 group-hover:opacity-100 translate-y-2group-hover:translate-y-0 transition-all duration-300">
+                  <div className="pt-2 flex items-center text-[10px] font-black text-primary tracking-widest uppercase opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300">
                     INICIAR PROTOCOLO <PlayCircle className="ml-2 h-4 w-4" />
                   </div>
                 </div>
@@ -233,28 +233,28 @@ export default function BiomechanicsAnalysisPage() {
             />
             <div className="grid gap-4 lg:grid-cols-2">
               {protocol.guidedTemplates.map((template) => (
-                <Card key={template.id} className="border-white/10 bg-slate-950/40">
+                <Card key={template.id} className="border-border bg-card">
                   <CardContent className="space-y-4 p-5">
                     <div className="space-y-2">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-primary/70">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-primary">
                         Template guiado
                       </p>
-                      <h3 className="text-lg font-black tracking-tight text-white">
+                      <h3 className="text-lg font-black tracking-tight text-foreground">
                         {template.title}
                       </h3>
-                      <p className="text-sm text-slate-400">{template.goal}</p>
+                      <p className="text-sm text-muted-foreground">{template.goal}</p>
                     </div>
-                    <div className="space-y-2 text-sm text-slate-300">
+                    <div className="space-y-2 text-sm text-foreground">
                       <p>
-                        <span className="font-bold text-slate-100">Captura:</span>{" "}
+                        <span className="font-bold text-foreground">Captura:</span>{" "}
                         {template.capturePreset}
                       </p>
                       <p>
-                        <span className="font-bold text-slate-100">Ideal para:</span>{" "}
+                        <span className="font-bold text-foreground">Ideal para:</span>{" "}
                         {template.idealFor}
                       </p>
                     </div>
-                    <ul className="space-y-1 text-sm text-slate-400">
+                    <ul className="space-y-1 text-sm text-muted-foreground">
                       {template.checklist.map((item) => (
                         <li key={item}>• {item}</li>
                       ))}

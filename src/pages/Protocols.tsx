@@ -481,7 +481,7 @@ export default function Protocols() {
           </Card>
         </div>
 
-        <Card className="sticky top-0 z-20 mt-5 border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur">
+        <Card className="sticky top-0 z-20 mt-5 border-border bg-card p-4 shadow-sm">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
             <div className="relative min-w-0 flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />

@@ -113,7 +113,7 @@ export function BrainDashboardPage() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <Input
                       placeholder="Ex: reabilitação de LCA fase inicial..."
-                      className="pl-10 h-12 rounded-xl border-primary/20 bg-background/50 backdrop-blur-sm focus-visible:ring-primary/50 text-base shadow-sm"
+                      className="pl-10 h-12 rounded-xl border-border bg-background focus-visible:ring-primary/50 text-base shadow-sm"
                       value={searchInput}
                       onChange={(e) => setSearchInput(e.target.value)}
                     />
@@ -161,7 +161,7 @@ export function BrainDashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-border/50">
+            <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-primary">
                   <Info className="w-5 h-5" />

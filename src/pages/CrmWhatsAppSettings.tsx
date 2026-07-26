@@ -1439,7 +1439,7 @@ export default function CrmWhatsAppSettings() {
 
         {/* Save bar (Concierge + Funil) */}
         {dirty && (
-          <div className="sticky bottom-0 mt-6 flex items-center justify-end gap-3 border-t border-border bg-background/95 py-3 backdrop-blur-sm">
+          <div className="sticky bottom-0 mt-6 flex items-center justify-end gap-3 border-t border-border bg-background py-3">
             <span className="mr-auto text-sm text-muted-foreground">Alterações não salvas</span>
             <Button
               variant="ghost"
