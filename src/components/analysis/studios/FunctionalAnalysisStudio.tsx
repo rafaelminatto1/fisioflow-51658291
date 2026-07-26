@@ -249,14 +249,14 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="absolute top-6 left-6 z-20 bg-slate-900/80 text-white text-2xl font-black px-5 py-2 rounded-2xl border border-white/10 shadow-2xl"
+              className="absolute top-6 left-6 z-20 bg-slate-900 text-white text-2xl font-black px-5 py-2 rounded-2xl border border-slate-700 shadow-2xl"
             >
               {currentAngle}°
             </motion.div>
           )}
 
           {/* Control HUD */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-slate-900/60 p-3 rounded-[2rem] border border-white/10 z-30 shadow-2xl">
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-slate-900 p-3 rounded-[2rem] border border-slate-700 z-30 shadow-2xl overflow-x-auto max-w-[95%]">
             <input
               type="file"
               className="hidden"
@@ -268,9 +268,9 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
               variant="ghost"
               size="icon"
               onClick={() => fileInputRef.current?.click()}
-              className="rounded-full h-10 w-10 hover:bg-white/10 transition-colors"
+              className="rounded-full h-10 w-10 text-blue-400 hover:bg-slate-800 hover:text-blue-300 transition-colors"
             >
-              <Upload className="h-5 w-5 text-blue-400" />
+              <Upload className="h-5 w-5" />
             </Button>
 
             <Button
@@ -278,7 +278,7 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
               size="icon"
               onClick={togglePlayback}
               disabled={!videoSrc}
-              className="rounded-full h-10 w-10 hover:bg-white/10"
+              className="rounded-full h-10 w-10 text-slate-200 hover:bg-slate-800 hover:text-white"
             >
               {isPlaying ? (
                 <Pause className="h-5 w-5 fill-current" />
@@ -287,33 +287,33 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
               )}
             </Button>
 
-            <div className="h-8 w-px bg-white/10 mx-1" />
+            <div className="h-8 w-px bg-slate-700 mx-1" />
 
             <Button
               variant={aiEnabled ? "default" : "ghost"}
               size="sm"
               disabled={aiLoading || !videoSrc}
               onClick={() => (aiEnabled ? stopMoveNet() : startMoveNet())}
-              className={`rounded-2xl gap-2 text-[10px] font-black tracking-widest uppercase px-4 h-10 transition-all ${aiEnabled ? "bg-green-600 hover:bg-green-700 shadow-[0_0_20px_rgba(34,197,94,0.4)] border-none" : "hover:bg-white/5"}`}
+              className={`rounded-2xl gap-2 text-[10px] font-black tracking-widest uppercase px-4 h-10 transition-all ${aiEnabled ? "bg-emerald-600 hover:bg-emerald-700 text-white border-none" : "text-slate-200 hover:bg-slate-800"}`}
             >
               <Cpu className={`h-4 w-4 ${aiLoading ? "animate-spin" : ""}`} />
               {aiLoading ? "Loading..." : aiEnabled ? "AI Active" : "Pose Detection"}
             </Button>
-            <div className="h-6 w-px bg-white/20 mx-1" />
+            <div className="h-6 w-px bg-slate-700 mx-1" />
             <Button
               variant={activeTool === "auto_angles" ? "default" : "ghost"}
               size="sm"
               onClick={() => setActiveTool(activeTool === "auto_angles" ? "none" : "auto_angles")}
-              className={`rounded-xl gap-2 text-xs font-black ${activeTool === "auto_angles" ? "bg-indigo-600 shadow-lg shadow-indigo-500/30" : ""}`}
+              className={`rounded-xl gap-2 text-xs font-black ${activeTool === "auto_angles" ? "bg-indigo-600 text-white" : "text-slate-200 hover:bg-slate-800"}`}
             >
               <Cpu className="h-4 w-4" /> ÂNGULOS AUTO
             </Button>
-            <div className="h-6 w-px bg-white/20 mx-1" />
+            <div className="h-6 w-px bg-slate-700 mx-1" />
             <Button
               variant={activeTool === "goniometer" ? "default" : "ghost"}
               size="sm"
               onClick={() => setActiveTool(activeTool === "goniometer" ? "none" : "goniometer")}
-              className="rounded-xl gap-2 text-xs font-black"
+              className={`rounded-xl gap-2 text-xs font-black ${activeTool === "goniometer" ? "bg-emerald-600 text-white" : "text-slate-200 hover:bg-slate-800"}`}
             >
               <Ruler className="h-4 w-4" /> GONIÔMETRO
             </Button>
@@ -321,7 +321,7 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
               variant={activeTool === "trajectory" ? "default" : "ghost"}
               size="sm"
               onClick={() => setActiveTool(activeTool === "trajectory" ? "none" : "trajectory")}
-              className="rounded-xl gap-2 text-xs font-black"
+              className={`rounded-xl gap-2 text-xs font-black ${activeTool === "trajectory" ? "bg-blue-600 text-white" : "text-slate-200 hover:bg-slate-800"}`}
             >
               <TrendingUp className="h-4 w-4" /> TRAJETÓRIA
             </Button>
@@ -329,24 +329,24 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
               variant={activeTool === "tracking" ? "default" : "ghost"}
               size="sm"
               onClick={() => setActiveTool(activeTool === "tracking" ? "none" : "tracking")}
-              className="rounded-xl gap-2 text-xs font-black"
+              className={`rounded-xl gap-2 text-xs font-black ${activeTool === "tracking" ? "bg-amber-600 text-white" : "text-slate-200 hover:bg-slate-800"}`}
             >
-              <TrendingUp className="h-4 w-4 text-amber-500" /> GENERIC TRACK
+              <TrendingUp className="h-4 w-4" /> GENERIC TRACK
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={captureKeyframe}
-              className="rounded-xl gap-2 text-xs font-black text-blue-500"
+              className="rounded-xl gap-2 text-xs font-black text-blue-400 hover:bg-slate-800 hover:text-blue-300"
             >
               <Cpu className="h-4 w-4" /> SNAPSHOT
             </Button>
-            <div className="h-8 w-px bg-white/10 mx-1" />
-            <div className="flex gap-1 bg-white/5 p-1 rounded-2xl border border-white/5">
+            <div className="h-8 w-px bg-slate-700 mx-1" />
+            <div className="flex gap-1 bg-slate-800 p-1 rounded-2xl border border-slate-700">
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 text-white/60 hover:text-white rounded-xl"
+                className="h-8 w-8 text-slate-200 hover:text-white hover:bg-slate-700 rounded-xl"
                 onClick={() => seekToFrame(Math.max(0, currentFrame - 1))}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -355,12 +355,12 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
                 <span className="text-white text-[10px] font-black tracking-tighter tabular-nums">
                   {currentFrame}
                 </span>
-                <span className="text-[6px] text-white/40 font-black uppercase">Frame</span>
+                <span className="text-[6px] text-slate-400 font-black uppercase">Frame</span>
               </div>
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 text-white/60 hover:text-white rounded-xl"
+                className="h-8 w-8 text-slate-200 hover:text-white hover:bg-slate-700 rounded-xl"
                 onClick={() => seekToFrame(currentFrame + 1)}
               >
                 <ChevronRight className="h-4 w-4" />
@@ -368,7 +368,7 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
             </div>
             <Badge
               variant="outline"
-              className="text-[9px] font-black border-white/10 text-white/60 px-3 py-1 rounded-full"
+              className="text-[9px] font-black border-slate-700 bg-slate-800 text-slate-200 px-3 py-1 rounded-full"
             >
               {fps} FPS
             </Badge>

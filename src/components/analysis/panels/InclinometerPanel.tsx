@@ -27,16 +27,16 @@ export const InclinometerPanel: React.FC = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Card className="border-none shadow-xl bg-slate-900/40 border border-white/5 overflow-hidden">
+      <Card className="border border-border shadow-sm bg-card overflow-hidden">
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <h4 className="text-[10px] font-black uppercase tracking-widest text-orange-500 flex items-center gap-2">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
               <Compass className="h-3.5 w-3.5 animate-pulse" /> Inclinômetro Premium
             </h4>
             {isSupported && permissionGranted && (
               <Badge
                 variant="outline"
-                className="text-[8px] bg-green-500/10 text-green-500 border-none"
+                className="text-[8px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-bold"
               >
                 LIVE
               </Badge>
@@ -48,15 +48,15 @@ export const InclinometerPanel: React.FC = () => {
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-[9px] text-muted-foreground bg-white/5 p-2 rounded-lg"
+                className="text-[9px] text-muted-foreground bg-muted p-2 rounded-lg"
               >
                 Hardware não detectado. Use em um dispositivo com giroscópio.
               </motion.p>
             ) : !permissionGranted ? (
               <Button
                 size="sm"
-                variant="outline"
-                className="w-full text-[9px] font-black h-9 bg-orange-500/10 border-orange-500/20 text-orange-500 hover:bg-orange-500 hover:text-white transition-all uppercase"
+                variant="default"
+                className="w-full text-[9px] font-black h-9 bg-primary text-primary-foreground hover:bg-primary/90 transition-all uppercase"
                 onClick={requestPermission}
               >
                 <Smartphone className="w-4 h-4 mr-2" /> Solicitar Acesso Sensor
@@ -67,15 +67,15 @@ export const InclinometerPanel: React.FC = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 className="space-y-4"
               >
-                <div className="relative flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white/5 to-transparent rounded-2xl border border-white/5 shadow-inner">
+                <div className="relative flex flex-col items-center justify-center p-6 bg-slate-900 rounded-2xl border border-slate-800 shadow-inner">
                   {/* Visual Gauge Component */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-10">
                     <div className="w-32 h-32 border-4 border-dashed border-orange-500 rounded-full animate-[spin_10s_linear_infinite]" />
                   </div>
-                  <span className="text-4xl font-black text-white drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]">
+                  <span className="text-4xl font-black text-white">
                     {angle}°
                   </span>
-                  <span className="text-[8px] text-orange-400 font-bold uppercase tracking-tighter mt-1 bg-orange-500/10 px-2 py-0.5 rounded-full">
+                  <span className="text-[8px] text-orange-300 font-bold uppercase tracking-tighter mt-1 bg-orange-500/20 px-2 py-0.5 rounded-full">
                     Pitch / Tilt Digital
                   </span>
                 </div>
@@ -84,7 +84,7 @@ export const InclinometerPanel: React.FC = () => {
                   <Button
                     variant={leftAngle !== null ? "default" : "outline"}
                     size="sm"
-                    className={`h-9 text-[10px] font-black uppercase transition-all ${leftAngle !== null ? "bg-orange-600 border-none" : "border-white/10 hover:bg-white/5"}`}
+                    className={`h-9 text-[10px] font-black uppercase transition-all ${leftAngle !== null ? "bg-primary text-white border-none" : "border-border hover:bg-muted text-foreground"}`}
                     onClick={() => setLeftAngle(angle)}
                   >
                     ESQ: {leftAngle !== null ? `${leftAngle}°` : "CAPTURAR"}
@@ -92,7 +92,7 @@ export const InclinometerPanel: React.FC = () => {
                   <Button
                     variant={rightAngle !== null ? "default" : "outline"}
                     size="sm"
-                    className={`h-9 text-[10px] font-black uppercase transition-all ${rightAngle !== null ? "bg-orange-600 border-none" : "border-white/10 hover:bg-white/5"}`}
+                    className={`h-9 text-[10px] font-black uppercase transition-all ${rightAngle !== null ? "bg-primary text-white border-none" : "border-border hover:bg-muted text-foreground"}`}
                     onClick={() => setRightAngle(angle)}
                   >
                     DIR: {rightAngle !== null ? `${rightAngle}°` : "CAPTURAR"}

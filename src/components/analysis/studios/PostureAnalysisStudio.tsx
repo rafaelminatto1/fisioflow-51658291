@@ -153,12 +153,12 @@ export const PostureAnalysisStudio: React.FC<PostureAnalysisStudioProps> = ({ on
           </div>
 
           {activeTool === "goniometer" && (
-            <div className="absolute top-8 left-8 z-20 bg-slate-900/80 text-white text-lg font-black px-6 py-2 rounded-2xl border border-white/10 shadow-2xl">
+            <div className="absolute top-8 left-8 z-20 bg-slate-900 text-white text-lg font-black px-6 py-2 rounded-2xl border border-slate-700 shadow-2xl">
               {currentAngle}°
             </div>
           )}
 
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-slate-900/60 p-3 rounded-[2rem] border border-white/10 z-30 shadow-2xl">
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-slate-900 p-3 rounded-[2rem] border border-slate-700 z-30 shadow-2xl">
             <input
               type="file"
               className="hidden"
@@ -170,32 +170,32 @@ export const PostureAnalysisStudio: React.FC<PostureAnalysisStudioProps> = ({ on
               variant="ghost"
               size="icon"
               onClick={() => fileInputRef.current?.click()}
-              className="rounded-full h-10 w-10 hover:bg-white/10 transition-colors"
+              className="rounded-full h-10 w-10 text-blue-400 hover:bg-slate-800 hover:text-blue-300 transition-colors"
             >
-              <Upload className="h-5 w-5 text-blue-400" />
+              <Upload className="h-5 w-5" />
             </Button>
 
-            <div className="h-8 w-px bg-white/10 mx-1" />
+            <div className="h-8 w-px bg-slate-700 mx-1" />
 
             <Button
               variant={aiEnabled ? "default" : "ghost"}
               size="sm"
               disabled={aiLoading || !videoSrc || mediaKind !== "video"}
               onClick={() => (aiEnabled ? stopMoveNet() : startMoveNet())}
-              className={`rounded-2xl gap-2 text-[10px] font-black tracking-widest uppercase px-4 h-10 transition-all ${aiEnabled ? "bg-green-600 hover:bg-green-700 shadow-[0_0_20px_rgba(34,197,94,0.4)] border-none" : "hover:bg-white/5"}`}
+              className={`rounded-2xl gap-2 text-[10px] font-black tracking-widest uppercase px-4 h-10 transition-all ${aiEnabled ? "bg-emerald-600 hover:bg-emerald-700 text-white border-none" : "text-slate-200 hover:bg-slate-800"}`}
             >
               <Cpu className={`h-4 w-4 ${aiLoading ? "animate-spin" : ""}`} />
               {aiLoading ? "Loading..." : aiEnabled ? "AI Active" : "Pose Detection"}
             </Button>
 
-            <div className="h-8 w-px bg-white/10 mx-1" />
+            <div className="h-8 w-px bg-slate-700 mx-1" />
 
-            <div className="flex gap-1 bg-white/5 p-1 rounded-2xl border border-white/5">
+            <div className="flex gap-1 bg-slate-800 p-1 rounded-2xl border border-slate-700">
               <Button
                 variant={activeTool === "goniometer" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setActiveTool(activeTool === "goniometer" ? "none" : "goniometer")}
-                className={`rounded-xl px-4 h-8 text-[10px] font-black uppercase transition-all ${activeTool === "goniometer" ? "bg-emerald-600 hover:bg-emerald-700" : "text-white/60 hover:text-white"}`}
+                className={`rounded-xl px-4 h-8 text-[10px] font-black uppercase transition-all ${activeTool === "goniometer" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "text-slate-300 hover:text-white hover:bg-slate-700"}`}
               >
                 <Ruler className="h-3 w-3 mr-1" /> Goniometer
               </Button>
@@ -203,7 +203,7 @@ export const PostureAnalysisStudio: React.FC<PostureAnalysisStudioProps> = ({ on
                 variant={showPlumbLine ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setShowPlumbLine((p) => !p)}
-                className={`rounded-xl px-4 h-8 text-[10px] font-black uppercase transition-all ${showPlumbLine ? "bg-blue-600 hover:bg-blue-700" : "text-white/60 hover:text-white"}`}
+                className={`rounded-xl px-4 h-8 text-[10px] font-black uppercase transition-all ${showPlumbLine ? "bg-blue-600 hover:bg-blue-700 text-white" : "text-slate-300 hover:text-white hover:bg-slate-700"}`}
               >
                 PLUMB LINE
               </Button>
@@ -211,12 +211,12 @@ export const PostureAnalysisStudio: React.FC<PostureAnalysisStudioProps> = ({ on
 
             {videoSrc && mediaKind === "video" && (
               <>
-                <div className="h-8 w-px bg-white/10 mx-1" />
+                <div className="h-8 w-px bg-slate-700 mx-1" />
                 <div className="flex items-center gap-1">
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8 text-white/60 hover:text-white rounded-xl"
+                    className="h-8 w-8 text-slate-200 hover:text-white hover:bg-slate-800 rounded-xl"
                     onClick={() => seekToFrame(Math.max(0, currentFrame - 1))}
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -224,7 +224,7 @@ export const PostureAnalysisStudio: React.FC<PostureAnalysisStudioProps> = ({ on
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8 text-white/60 hover:text-white rounded-xl"
+                    className="h-8 w-8 text-slate-200 hover:text-white hover:bg-slate-800 rounded-xl"
                     onClick={togglePlayback}
                   >
                     {isPlaying ? (
@@ -236,14 +236,14 @@ export const PostureAnalysisStudio: React.FC<PostureAnalysisStudioProps> = ({ on
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8 text-white/60 hover:text-white rounded-xl"
+                    className="h-8 w-8 text-slate-200 hover:text-white hover:bg-slate-800 rounded-xl"
                     onClick={() => seekToFrame(currentFrame + 1)}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                   <Badge
                     variant="outline"
-                    className="ml-2 text-[9px] font-black border-white/10 text-white/40 tabular-nums"
+                    className="ml-2 text-[9px] font-black border-slate-700 bg-slate-800 text-slate-200 tabular-nums"
                   >
                     #{currentFrame}
                   </Badge>
@@ -254,15 +254,15 @@ export const PostureAnalysisStudio: React.FC<PostureAnalysisStudioProps> = ({ on
         </Card>
 
         <div className="space-y-4 overflow-y-auto max-h-[600px] pr-2">
-          <Card className="border-none shadow-sm bg-muted/5">
+          <Card className="border border-border shadow-sm bg-card">
             <CardContent className="p-4 space-y-3">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">
                 Medições Posturais
               </h4>
               <div className="space-y-2">
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   className="w-full text-xs font-bold"
                   onClick={clearGoniometer}
                 >
@@ -270,7 +270,7 @@ export const PostureAnalysisStudio: React.FC<PostureAnalysisStudioProps> = ({ on
                 </Button>
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   className="w-full text-xs font-bold"
                   onClick={() => setPlumbX(400)}
                 >

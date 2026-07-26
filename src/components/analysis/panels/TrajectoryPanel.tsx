@@ -22,9 +22,9 @@ export const TrajectoryPanel: React.FC<TrajectoryPanelProps> = ({
   clearTrajectories,
 }) => {
   return (
-    <Card className="border-none shadow-sm bg-orange-500/5">
+    <Card className="border border-border shadow-sm bg-card">
       <CardContent className="p-4 space-y-3">
-        <h4 className="text-[10px] font-black uppercase tracking-widest text-orange-500 flex items-center gap-2">
+        <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
           <TrendingUp className="h-3 w-3" /> Rastreamento de Ponto
         </h4>
         {aiEnabled ? (
