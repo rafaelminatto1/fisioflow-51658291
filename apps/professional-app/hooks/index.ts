@@ -34,3 +34,5 @@ export {
 export { useProtocols } from "./useProtocols";
 export { useProtocol } from "./useProtocol";
 export { usePatientProtocols } from "./usePatientProtocols";
+export { useBiomechanicsAnalysis } from "./useBiomechanicsAnalysis";
+export { useGoniometerCanvas } from "./useGoniometerCanvas";

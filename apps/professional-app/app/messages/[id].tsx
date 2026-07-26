@@ -60,7 +60,7 @@ export default function ChatDetailScreen() {
 
   const ws = useRef<WebSocket | null>(null);
   const reconnectAttempts = useRef(0);
-  const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const connectWebSocket = useCallback(() => {
     if (ws.current) {

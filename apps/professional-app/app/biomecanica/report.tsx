@@ -304,7 +304,32 @@ export default function ReportScreen() {
           </Pressable>
           <Pressable
             style={[styles.roundBtn, { backgroundColor: bio.primarySoft }]}
-            onPress={() => router.replace("/biomecanica")}
+            onPress={() => {
+              Alert.alert(
+                "Finalizar Avaliação Biomecânica",
+                `O laudo de ${resolvedPatientName} está pronto. Como deseja proceder?`,
+                [
+                  {
+                    text: "Enviar no WhatsApp",
+                    onPress: async () => {
+                      const pdf = pdfResult ?? (await handleGeneratePdf(false));
+                      const message = encodeURIComponent(
+                        `Olá ${resolvedPatientName}! Segue o link do seu Laudo Biomecânico FisioFlow:\n\n${pdf?.pdfUrl || "https://www.moocafisio.com.br"}`,
+                      );
+                      Linking.openURL(`whatsapp://send?text=${message}`).catch(() => {
+                        Alert.alert("Atenção", "WhatsApp não instalado no dispositivo.");
+                      });
+                    },
+                  },
+                  {
+                    text: "Concluir e Voltar",
+                    style: "default",
+                    onPress: () => router.replace("/biomecanica"),
+                  },
+                  { text: "Cancelar", style: "cancel" },
+                ],
+              );
+            }}
             hitSlop={6}
           >
             <ShieldCheck size={18} color={bio.primary} strokeWidth={2.2} />

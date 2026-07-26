@@ -57,6 +57,8 @@ import { MeasurementLayer, Annotation } from "@/components/biomecanica/Measureme
 import { JumpAnalysis } from "@/components/biomecanica/JumpAnalysis";
 import { fetchApi } from "@/lib/api";
 
+import { useGoniometerCanvas } from "@/hooks/useGoniometerCanvas";
+
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const PROTOCOLS = [
@@ -98,9 +100,17 @@ export default function AnalysisScreen() {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [jobStatus, setJobStatus] = useState<string | null>(null);
 
-  const [activeTool, setActiveTool] = useState<"view" | "line" | "angle">("view");
-  const [annotations, setAnnotations] = useState<Annotation[]>([]);
-  const [draftPoints, setDraftPoints] = useState<{ x: number; y: number }[]>([]);
+  const {
+    activeTool,
+    setActiveTool,
+    annotations,
+    setAnnotations,
+    currentDraftPoints: draftPoints,
+    setCurrentDraftPoints: setDraftPoints,
+    handleCanvasTap,
+    undoLastAnnotation,
+    clearAllAnnotations,
+  } = useGoniometerCanvas();
 
   useEffect(() => {
     if (!assessmentId) return;
