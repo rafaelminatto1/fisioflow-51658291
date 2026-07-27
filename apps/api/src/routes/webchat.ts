@@ -329,14 +329,10 @@ app.post("/message", messageRateLimit, async (c: any) => {
 				// WhatsApp/Instagram via humanOwnsConversation + humanReplyPauseHours).
 				const takeover = await pool.query(
 					`SELECT
-             GREATEST(
-               (SELECT MAX(created_at) FROM wa_messages
-                  WHERE conversation_id = $1::uuid
-                    AND direction = 'outbound'
-                    AND sender_type = 'agent'),
-               (SELECT (metadata->>'concierge_handoff_at')::timestamptz
-                  FROM wa_conversations WHERE id = $1::uuid)
-             ) AS last_agent_at,
+             (SELECT MAX(created_at) FROM wa_messages
+                WHERE conversation_id = $1::uuid
+                  AND direction = 'outbound'
+                  AND sender_type = 'agent') AS last_agent_at,
              (SELECT status FROM wa_conversations WHERE id = $1::uuid) AS conv_status`,
 					[conversation.id],
 				);
