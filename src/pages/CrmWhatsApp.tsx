@@ -369,12 +369,17 @@ const ConversationCard = memo(function ConversationCard({
           )}
           <span className="truncate">{item.preview}</span>
         </div>
-        <div className="mt-1.5 flex items-center gap-2">
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
           <StageChip
             view={resolveStageView(item.stage, funnelMap)}
             uppercase
             className="px-2 py-0.5 text-[9px] font-extrabold tracking-[0.03em]"
           />
+          {item.channel === "webchat" && (
+            <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[9px] font-extrabold text-blue-600 dark:text-blue-400 border border-blue-500/20">
+              🌐 Site / Webchat
+            </span>
+          )}
         </div>
       </div>
       {item.unreadCount > 0 && (
