@@ -574,7 +574,7 @@ app.get("/widget.js", (_c) => {
 	return new Response(js, {
 		headers: {
 			"Content-Type": "application/javascript; charset=utf-8",
-			"Cache-Control": "public, max-age=300",
+			"Cache-Control": "no-cache, no-store, must-revalidate",
 		},
 	});
 });
