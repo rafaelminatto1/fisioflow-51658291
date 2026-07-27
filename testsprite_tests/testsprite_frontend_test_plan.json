@@ -1,0 +1,796 @@
+[
+  {
+    "id": "TC001",
+    "title": "Block unauthenticated access to the dashboard",
+    "description": "Verifies that a guest user cannot open the protected dashboard route without authenticating first.",
+    "category": "User Authentication",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the sign-in page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard is not displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Sign in and reach the dashboard",
+    "description": "Verifies that a user can sign in with email and password and arrive at the main dashboard with clinic stats visible.",
+    "category": "User Authentication",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the main dashboard is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify clinic stats are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Review clinic dashboard metrics after sign-in",
+    "description": "This verifies that a user can sign in and land on the main dashboard to review clinic stats and upcoming appointments.",
+    "category": "Clinic Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the main dashboard is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify clinic stats and upcoming appointments are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Enter as a guest user",
+    "description": "Verifies that a user can continue in guest mode and access the application workspace without signing in.",
+    "category": "User Authentication",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Continue in guest mode"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the application workspace is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user can access the main clinic pages"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Review dashboard metrics and appointments",
+    "description": "Verifies that an authenticated user can open the dashboard and review clinic metrics alongside the daily appointments list.",
+    "category": "Dashboard Overview",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the dashboard metrics section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify clinic stats are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify upcoming appointments are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Review and update an appointment attendance status",
+    "description": "This verifies that a logged-in user can open the schedule, inspect appointments, change an attendance status, and see the schedule update accordingly.",
+    "category": "Appointment Schedule",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /schedule"
+      },
+      {
+        "type": "action",
+        "description": "Update an appointment attendance status"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the appointment schedule is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated attendance status is reflected in the schedule"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Review the schedule and confirm attendance status",
+    "description": "Verifies that an authenticated user can open the schedule, inspect appointments, and update an appointment attendance status so the change is reflected in the calendar.",
+    "category": "Schedule Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the schedule link"
+      },
+      {
+        "type": "action",
+        "description": "Select an appointment from the calendar"
+      },
+      {
+        "type": "action",
+        "description": "Update the attendance status"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated attendance status is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the appointment remains visible in the schedule"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Search for a patient and open the record",
+    "description": "Verifies that an authenticated user can search the patient directory and open a patient record from the filtered results.",
+    "category": "Patient Directory",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the patient directory link"
+      },
+      {
+        "type": "action",
+        "description": "Search for a patient by name"
+      },
+      {
+        "type": "action",
+        "description": "Select a patient row"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify patient details are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Open a patient record from the patient list",
+    "description": "This verifies that a logged-in user can search or filter the patient list and open a patient record from a row.",
+    "category": "Patient Directory",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /patients"
+      },
+      {
+        "type": "action",
+        "description": "Search or filter the patient list"
+      },
+      {
+        "type": "action",
+        "description": "Open a patient record from the list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify patient details are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected patient record is open"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Filter patients by status and open a result",
+    "description": "Verifies that an authenticated user can filter the patient list by status and open a patient record from the updated results.",
+    "category": "Patient Directory",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the patient directory link"
+      },
+      {
+        "type": "action",
+        "description": "Filter patients by status"
+      },
+      {
+        "type": "action",
+        "description": "Select a patient row"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify patient details are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "View the appointment calendar as a logged-in user",
+    "description": "This verifies that a logged-in user can open the schedule page and review the appointment calendar and upcoming appointments.",
+    "category": "Appointment Schedule",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /schedule"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the appointment calendar is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify scheduled appointments are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "Open a dashboard metric for more detail",
+    "description": "Verifies that an authenticated user can open a dashboard metric card and view its detailed information.",
+    "category": "Dashboard Overview",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Click a dashboard metric card"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify detailed metric information is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "Find patients using search or filters",
+    "description": "This verifies that a logged-in user can search or filter the patient directory and see matching results or a valid empty state.",
+    "category": "Patient Directory",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /patients"
+      },
+      {
+        "type": "action",
+        "description": "Search or filter the patient list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify matching patient results are displayed or an empty state message is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC014",
+    "title": "Review financial metrics and invoice status details",
+    "description": "Verifies that an authenticated user can open the financial page, review clinic financial metrics, and inspect invoice status details.",
+    "category": "Financial Overview",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the financial page link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify financial metrics are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify invoice status details are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC015",
+    "title": "Review financial metrics and invoice statuses",
+    "description": "This verifies that a logged-in user can open the financial page, review clinic metrics, and inspect invoice status details.",
+    "category": "Financial Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /financial"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify financial metrics are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify invoice status details are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC016",
+    "title": "Review exercise details from the library",
+    "description": "Verifies that an authenticated user can browse the exercise library and open an exercise entry to review its clinical details.",
+    "category": "Exercise Library",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the exercise library link"
+      },
+      {
+        "type": "action",
+        "description": "Open an exercise entry"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify exercise details are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC017",
+    "title": "Review exercise library entries",
+    "description": "This verifies that a logged-in user can browse the exercise library and open an exercise entry to review its details.",
+    "category": "Exercise Library",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /exercises"
+      },
+      {
+        "type": "action",
+        "description": "Open an exercise entry"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the exercise library is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify exercise details are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC018",
+    "title": "Show an error for invalid sign-in credentials",
+    "description": "Verifies that incorrect email or password input produces a visible sign-in error and prevents access to the protected workspace.",
+    "category": "User Authentication",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with an invalid email"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with an invalid password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a sign-in error is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the main dashboard is not displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC019",
+    "title": "Handle an empty patient search result",
+    "description": "This verifies that a logged-in user can search the patient directory for a value with no matches and see an empty state.",
+    "category": "Patient Directory",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /patients"
+      },
+      {
+        "type": "action",
+        "description": "Search or filter the patient list for a value with no matches"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an empty state message is visible"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC020",
+    "title": "Reject incomplete sign-in submission",
+    "description": "Verifies that submitting sign-in with missing required credentials shows validation feedback and does not enter the app.",
+    "category": "User Authentication",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form without filling credentials"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify validation errors are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the main dashboard is not displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC021",
+    "title": "Show an empty state for no matching patients",
+    "description": "Verifies that searching for a non-matching patient name shows an empty patient list state.",
+    "category": "Patient Directory",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the patient directory link"
+      },
+      {
+        "type": "action",
+        "description": "Search for a patient name that does not exist"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an empty state message is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify patient results are not displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC022",
+    "title": "Show an empty state on the financial page",
+    "description": "Verifies that the financial page displays an empty state when there are no financial records to review.",
+    "category": "Financial Overview",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /auth"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the financial page link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an empty state message is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify financial metrics are not displayed"
+      }
+    ],
+    "priority": "Low"
+  }
+]

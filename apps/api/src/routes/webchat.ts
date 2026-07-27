@@ -294,10 +294,10 @@ app.post("/message", messageRateLimit, async (c: any) => {
 		});
 		writeEvent(c.env, { orgId, event: "webchat_received" });
 
-		// -- AI Concierge: responde automaticamente com delay de 10s --
-		// Da chance do humano atender primeiro e evita duplicacao quando o atendente responde pelo CRM.
+		// -- AI Concierge: responde automaticamente --
 		// A mensagem de captura de nome (widget manda `name` === texto na 1ª mensagem)
 		// não aciona o concierge: o widget já cumprimenta localmente logo em seguida.
+		let directReply: string | null = null;
 		const isNameCapture = !!providedName && providedName === text;
 		try {
 			// Carrega config do Concierge da organizacao
@@ -325,138 +325,117 @@ app.post("/message", messageRateLimit, async (c: any) => {
 			})();
 
 			if (webchatCfg.enabled && !isNameCapture) {
-				// Agenda resposta com delay - mantem o Worker vivo via waitUntil
-				const delayedReply = new Promise<void>((resolve) => {
-					setTimeout(async () => {
+				// Re-check: um humano assumiu a conversa? (unificado com
+				// WhatsApp/Instagram via humanOwnsConversation + humanReplyPauseHours).
+				const takeover = await pool.query(
+					`SELECT
+             GREATEST(
+               (SELECT MAX(created_at) FROM wa_messages
+                  WHERE conversation_id = $1::uuid
+                    AND direction = 'outbound'
+                    AND sender_type = 'agent'),
+               (SELECT (metadata->>'concierge_handoff_at')::timestamptz
+                  FROM wa_conversations WHERE id = $1::uuid)
+             ) AS last_agent_at,
+             (SELECT status FROM wa_conversations WHERE id = $1::uuid) AS conv_status`,
+					[conversation.id],
+				);
+
+				if (
+					!humanOwnsConversation(
+						takeover.rows[0]?.last_agent_at,
+						takeover.rows[0]?.conv_status,
+						rawConciergeCfg,
+					)
+				) {
+					// Handoff determinístico (antes do LLM): o visitante pediu um humano.
+					if (wantsHumanAgent(text)) {
+						const bridge = conciergeHandoffMessage(rawConciergeCfg);
+						const handoffMsg = await addMessage(
+							pool,
+							conversation.id,
+							orgId,
+							contact.id,
+							"outbound",
+							"system",
+							contact.id,
+							"text",
+							bridge,
+							`web_handoff_${crypto.randomUUID()}`,
+						);
+						await pool.query(
+							`UPDATE wa_conversations
+               SET metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{concierge_handoff_at}', to_jsonb(now()::text)),
+                   status = 'pending', updated_at = now()
+             WHERE id = $1::uuid`,
+							[conversation.id],
+						);
+						await createConciergeHandoffTask(pool, orgId, conversation.id, text);
+						await broadcastToOrg(c.env, orgId, {
+							type: "webchat_message",
+							conversationId: conversation.id,
+							message: { content: bridge, direction: "outbound" },
+							contact: { id: contact.id, visitorId },
+						});
+						writeEvent(c.env, { orgId, event: "webchat_concierge_handoff" });
+						directReply = bridge;
+					} else {
+						// Busca historico recente para contexto (ultimas 10 mensagens)
+						let history: ReturnType<typeof buildConciergeHistory> = [];
 						try {
-							// Re-check: um humano assumiu a conversa? (unificado com
-							// WhatsApp/Instagram via humanOwnsConversation + humanReplyPauseHours).
-							const takeover = await pool.query(
-								`SELECT
-                   GREATEST(
-                     (SELECT MAX(created_at) FROM wa_messages
-                        WHERE conversation_id = $1::uuid
-                          AND direction = 'outbound'
-                          AND sender_type = 'agent'),
-                     (SELECT (metadata->>'concierge_handoff_at')::timestamptz
-                        FROM wa_conversations WHERE id = $1::uuid)
-                   ) AS last_agent_at,
-                   (SELECT status FROM wa_conversations WHERE id = $1::uuid) AS conv_status`,
+							const historyRes = await pool.query(
+								`SELECT direction, content FROM wa_messages
+                 WHERE conversation_id = $1::uuid AND message_type = 'text'
+                   AND direction IN ('inbound', 'outbound')
+                 ORDER BY created_at DESC LIMIT 10`,
 								[conversation.id],
 							);
-
-							if (
-								humanOwnsConversation(
-									takeover.rows[0]?.last_agent_at,
-									takeover.rows[0]?.conv_status,
-									rawConciergeCfg,
-								)
-							) {
-								// Humano é o dono da conversa - nao envia resposta automatica
-								console.log(
-									"[Webchat] Atendente assumiu a conversa - Concierge pulando.",
-								);
-								resolve();
-								return;
-							}
-
-							// Handoff determinístico (antes do LLM): o visitante pediu um humano.
-							if (wantsHumanAgent(text)) {
-								const bridge = conciergeHandoffMessage(rawConciergeCfg);
-								await addMessage(
-									pool,
-									conversation.id,
-									orgId,
-									contact.id,
-									"outbound",
-									"system",
-									contact.id,
-									"text",
-									bridge,
-									`web_handoff_${crypto.randomUUID()}`,
-								);
-								await pool.query(
-									`UPDATE wa_conversations
-                     SET metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{concierge_handoff_at}', to_jsonb(now()::text)),
-                         status = 'pending', updated_at = now()
-                   WHERE id = $1::uuid`,
-									[conversation.id],
-								);
-								await createConciergeHandoffTask(pool, orgId, conversation.id, text);
-								await broadcastToOrg(c.env, orgId, {
-									type: "webchat_message",
-									conversationId: conversation.id,
-									message: { content: bridge, direction: "outbound" },
-									contact: { id: contact.id, visitorId },
-								});
-								writeEvent(c.env, { orgId, event: "webchat_concierge_handoff" });
-								resolve();
-								return;
-							}
-
-							// Busca historico recente para contexto (ultimas 10 mensagens)
-							let history: ReturnType<typeof buildConciergeHistory> = [];
-							try {
-								const historyRes = await pool.query(
-									`SELECT direction, content FROM wa_messages
-                   WHERE conversation_id = $1::uuid AND message_type = 'text'
-                     AND direction IN ('inbound', 'outbound')
-                   ORDER BY created_at DESC LIMIT 10`,
-									[conversation.id],
-								);
-								history = buildConciergeHistory([...historyRes.rows].reverse());
-								// Remove a mensagem atual (já persistida) do fim — ela é passada à parte.
-								const last = history[history.length - 1];
-								if (last && last.role === "user" && last.content === text)
-									history.pop();
-							} catch (histErr) {
-								console.warn(
-									"[Webchat] Concierge history load failed:",
-									histErr,
-								);
-							}
-
-							const concierge = await AIConciergeService.processMessage(
-								c.env,
-								orgId,
-								text,
-								history,
-								"webchat",
+							history = buildConciergeHistory([...historyRes.rows].reverse());
+							// Remove a mensagem atual (já persistida) do fim — ela é passada à parte.
+							const last = history[history.length - 1];
+							if (last && last.role === "user" && last.content === text)
+								history.pop();
+						} catch (histErr) {
+							console.warn(
+								"[Webchat] Concierge history load failed:",
+								histErr,
 							);
+						}
 
-							// Fora do escopo OU conteúdo clínico sensível → humano assume.
-							// O visitante recebe um handoff (não fica no vácuo) e o time
-							// é acionado por tarefa no CRM.
-							const needsHuman =
-								!concierge.answerable || needsHumanApproval(concierge.intent, text);
-							if (needsHuman) {
-								writeEvent(c.env, {
-									orgId,
-									event: concierge.answerable
-										? "webchat_concierge_needs_human"
-										: "webchat_concierge_unanswerable",
-								});
-								await sendWebchatHandoff(
-									c.env,
-									pool,
-									orgId,
-									conversation.id,
-									contact.id,
-									visitorId,
-									text,
-								);
-								resolve();
-								return;
-							}
+						const concierge = await AIConciergeService.processMessage(
+							c.env,
+							orgId,
+							text,
+							history,
+							"webchat",
+						);
 
-							// No webchat o widget SEMPRE se apresenta localmente (esse greet não
-							// vai ao banco, então o histórico não serve de sinal). Nunca nos
-							// reapresentamos: remove a frase de apresentação, mantendo o resto.
+						// Fora do escopo OU conteúdo clínico sensível → humano assume.
+						const needsHuman =
+							!concierge.answerable || needsHumanApproval(concierge.intent, text);
+						if (needsHuman) {
+							writeEvent(c.env, {
+								orgId,
+								event: concierge.answerable
+									? "webchat_concierge_needs_human"
+									: "webchat_concierge_unanswerable",
+							});
+							await sendWebchatHandoff(
+								c.env,
+								pool,
+								orgId,
+								conversation.id,
+								contact.id,
+								visitorId,
+								text,
+							);
+							directReply = conciergeHandoffMessage(rawConciergeCfg);
+						} else {
+							// Remove frase de apresentação duplicada
 							const reply = stripGreetingIntro(concierge.reply, greetingSignature);
 
 							if (reply && reply.length >= 2) {
-								// Insere a resposta do Concierge como mensagem outbound
-								await addMessage(
+								const autoMsg = await addMessage(
 									pool,
 									conversation.id,
 									orgId,
@@ -482,7 +461,6 @@ app.post("/message", messageRateLimit, async (c: any) => {
 									event: "webchat_concierge_replied",
 								});
 
-								// Lead confirmou horário → tarefa p/ a equipe efetivar a reserva.
 								if (concierge.bookingRequest) {
 									await createConciergeBookingTask(
 										pool,
@@ -493,28 +471,17 @@ app.post("/message", messageRateLimit, async (c: any) => {
 									);
 									writeEvent(c.env, { orgId, event: "webchat_concierge_booking" });
 								}
-								console.log("[Webchat] Concierge respondeu apos delay.");
+								directReply = reply;
 							}
-						} catch (delayedErr) {
-							console.error("[Webchat] Concierge delayed error:", delayedErr);
 						}
-						resolve();
-					}, webchatCfg.delayMs);
-				});
-
-				// Mantem o Worker vivo durante o delay (Cloudflare Workers)
-				if (c?.executionCtx?.waitUntil) {
-					c.executionCtx.waitUntil(delayedReply);
-				} else {
-					delayedReply.catch(() => {});
+					}
 				}
 			}
 		} catch (conciergeErr) {
-			// Falha no Concierge nao bloqueia o fluxo - o humano assume
 			console.error("[Webchat] Concierge error:", conciergeErr);
 		}
 
-		return c.json({ ok: true, visitorId });
+		return c.json({ ok: true, visitorId, reply: directReply });
 	} catch (err) {
 		console.error("[Webchat] POST /message error:", err);
 		return c.json({ error: "Erro interno" }, 500);
@@ -604,7 +571,7 @@ app.get("/widget.js", (_c) => {
   }
   function add(t,mine){var d=document.createElement('div');d.style.cssText='margin:6px 0;display:flex;'+(mine?'justify-content:flex-end':'');var b=document.createElement('div');if(mine){b.textContent=t;}else{b.innerHTML=fmt(t);}b.style.cssText='max-width:85%;padding:8px 11px;border-radius:12px;white-space:pre-line;'+(mine?'background:#d8ebff':'background:#fff;border:1px solid #eee');d.appendChild(b);m.appendChild(d);m.scrollTop=m.scrollHeight;}
   function poll(){fetch(API+'/api/webchat/poll?org='+encodeURIComponent(ORG)+'&visitorId='+encodeURIComponent(VID)+'&after='+encodeURIComponent(last)).then(function(r){return r.json()}).then(function(d){(d.messages||[]).forEach(function(x){if(!seenIds.has(x.id)){seenIds.add(x.id);add(x.text,false);last=x.at;}});}).catch(function(){});}
-  function send(){var t=i.value.trim();if(!t)return;i.value='';add(t,true);var firstName=!NAME;var payload={org:ORG,visitorId:VID,text:t};if(firstName){NAME=t.slice(0,80);localStorage.setItem('ff_webchat_name',NAME);payload.name=NAME;}fetch(API+'/api/webchat/message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json()}).then(function(){started=true;if(firstName){setTimeout(function(){add(greet(),false);},400);}}).catch(function(){});}
+  function send(){var t=i.value.trim();if(!t)return;i.value='';add(t,true);var firstName=!NAME;var payload={org:ORG,visitorId:VID,text:t};if(firstName){NAME=t.slice(0,80);localStorage.setItem('ff_webchat_name',NAME);payload.name=NAME;}fetch(API+'/api/webchat/message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json()}).then(function(d){started=true;if(firstName){setTimeout(function(){add(greet(),false);},400);}else if(d&&d.reply){add(d.reply,false);}}).catch(function(){});}
   c.querySelector('#ffb').onclick=function(){open=!open;p.style.display=open?'flex':'none';if(open){if(!m.childNodes.length)add(NAME?('Olá de novo! Como posso ajudar?'):'Olá! 😊 Para começarmos, qual é o seu nome?',false);poll();if(!timer)timer=setInterval(poll,4000);}};
   c.querySelector('#ffs').onclick=send;i.addEventListener('keydown',function(e){if(e.key==='Enter')send();});
 })();`;
