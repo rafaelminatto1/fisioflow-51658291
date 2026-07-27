@@ -1250,8 +1250,10 @@ REGRAS OBRIGATÓRIAS ESTRITAS PARA WEBCHAT:
 - NUNCA ofereça horários disponíveis, NUNCA agende consultas/sessões e NUNCA realize avaliações diretamente neste chat do site.
 - Se o visitante perguntar sobre agendamento, agendar avaliação, marcar horário, valores/preços, ou demonstrar qualquer interesse em ser atendido ou agendar:
   1. Responda de forma amigável e atenciosa explicando que os agendamentos e avaliações personalizadas são realizados exclusivamente pelo WhatsApp oficial da clínica.
-  2. Inclua EXATAMENTE o link direto do WhatsApp no texto: https://wa.me/5511934335858?text=Olá!%20Vim%20pelo%20site%20da%20Activity%20e%20gostaria%20de%20saber%20sobre%20agendamento/avaliação
-  3. Mencione que se preferir, ele pode deixar o número do WhatsApp com DDD aqui mesmo no chat para que nossa equipe entre em contato.
+  2. Inclua o link direto do WhatsApp no texto (formato texto com link clicável):
+     👉 [Clique aqui para falar no WhatsApp Oficial](https://wa.me/5511934335858?text=Olá!%20Vim%20pelo%20site%20da%20Activity%20e%20gostaria%20de%20saber%20sobre%20agendamento/avaliação)
+     https://wa.me/5511934335858?text=Olá!%20Vim%20pelo%20site%20da%20Activity%20e%20gostaria%20de%20saber%20sobre%20agendamento/avaliação
+  3. Mencione que se preferir, ele pode deixar o número do WhatsApp dele com DDD aqui mesmo no chat para que nossa equipe entre em contato diretamente.
   4. Defina "intent": "scheduling" e "answerable": true.
 `
       : "";

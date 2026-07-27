@@ -217,16 +217,51 @@ app.post("/message", messageRateLimit, async (c: any) => {
 				.catch(() => {});
 		}
 
-		// telefone informado pelo visitante → tenta vincular paciente / guarda no contato
-		if (body.phone) {
-			const phone = body.phone.toString().replace(/\D/g, "").slice(0, 15);
-			if (phone.length >= 10) {
-				await pool
-					.query(
-						`UPDATE whatsapp_contacts SET phone = COALESCE(phone, $2) WHERE id = $1`,
-						[contact.id, phone],
-					)
-					.catch(() => {});
+		// Telefone informado pelo visitante via payload ou extraído no próprio texto da mensagem
+		let detectedPhone = body.phone ? body.phone.toString().replace(/\D/g, "").slice(0, 15) : "";
+		if (!detectedPhone || detectedPhone.length < 10) {
+			const phoneMatch = text.match(/(?:\+?55\s?)?(?:\(?([1-9]{2})\)?\s?)?(?:(9\d{4})[-\s]?(\d{4}))/);
+			if (phoneMatch) {
+				const ddd = phoneMatch[1] || "11";
+				detectedPhone = `55${ddd}${phoneMatch[2]}${phoneMatch[3]}`;
+			}
+		}
+
+		if (detectedPhone && detectedPhone.length >= 10) {
+			await pool
+				.query(
+					`UPDATE whatsapp_contacts SET phone = $2 WHERE id = $1`,
+					[contact.id, detectedPhone],
+				)
+				.catch(() => {});
+
+			// Cria tarefa de alta prioridade no CRM quando o lead deixa seu número no chat do site
+			try {
+				const dupPhoneTask = await pool.query(
+					`SELECT 1 FROM tarefas
+           WHERE organization_id = $1 AND linked_entity_id = $2
+             AND titulo ILIKE 'Ligar para lead do site%'
+             AND created_at > now() - interval '1 day'
+           LIMIT 1`,
+					[orgId, contact.id],
+				);
+				if (dupPhoneTask.rows.length === 0) {
+					await pool.query(
+						`INSERT INTO tarefas (organization_id, created_by, titulo, descricao, status, prioridade, tipo,
+               order_index, tags, label_ids, checklists, attachments, task_references, dependencies,
+               requires_acknowledgment, acknowledgments, linked_entity_type, linked_entity_id)
+             VALUES ($1, 'system', $2, $3, 'A_FAZER', 'ALTA', 'TAREFA',
+               0, '{"Origem: Site"}', '{}', '[]', '[]', '[]', '[]', false, '[]', 'contact', $4)`,
+						[
+							orgId,
+							`Ligar para lead do site — WhatsApp: ${detectedPhone}`,
+							`O visitante deixou o seu número de WhatsApp no chat do site:\n\nTelefone: ${detectedPhone}\nMensagem: "${text}"\n\nChamar no WhatsApp ou ligar para agendar avaliação.`,
+							contact.id,
+						],
+					);
+				}
+			} catch (taskErr) {
+				console.warn("[Webchat] Task creation for lead phone failed:", taskErr);
 			}
 		}
 
