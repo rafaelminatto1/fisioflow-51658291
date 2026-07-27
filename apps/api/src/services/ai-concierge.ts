@@ -1164,6 +1164,7 @@ export class AIConciergeService {
     orgId: string,
     message: string,
     history: any[] = [],
+    channel: "webchat" | "whatsapp" | "instagram" = "whatsapp",
   ): Promise<ConciergeResponse> {
     // Bloqueio determinístico: menções em stories, compartilhamentos, mídia sem
     // texto ou rótulos entre colchetes NÃO são respondidos (não dependemos do LLM).
@@ -1191,21 +1192,25 @@ export class AIConciergeService {
     }
 
     const settings = await loadConciergeSettings(env, orgId);
-    const availabilityReply = await maybeAnswerAvailability(env, orgId, trimmed, settings);
-    if (availabilityReply) return availabilityReply;
 
-    // Lead confirmou um horário concreto → conduz o fechamento: confirma que a
-    // equipe reserva e sinaliza o canal p/ criar a tarefa (bookingRequest).
-    // Mesmo gate da disponibilidade (o bot só conduz se também oferece horários).
-    if (settings.availabilityAutoReply) {
-      const booking = parseBookingConfirmation(trimmed);
-      if (booking) {
-        return {
-          reply: `Perfeito! Anotei ${booking.slotLabel} aqui. Nossa equipe já vai confirmar a reserva por esta conversa. Se precisar ajustar, é só me avisar.`,
-          intent: "scheduling",
-          answerable: true,
-          bookingRequest: booking,
-        };
+    // No canal webchat (site), NUNCA oferecemos horários nem agendamentos diretos.
+    if (channel !== "webchat") {
+      const availabilityReply = await maybeAnswerAvailability(env, orgId, trimmed, settings);
+      if (availabilityReply) return availabilityReply;
+
+      // Lead confirmou um horário concreto → conduz o fechamento: confirma que a
+      // equipe reserva e sinaliza o canal p/ criar a tarefa (bookingRequest).
+      // Mesmo gate da disponibilidade (o bot só conduz se também oferece horários).
+      if (settings.availabilityAutoReply) {
+        const booking = parseBookingConfirmation(trimmed);
+        if (booking) {
+          return {
+            reply: `Perfeito! Anotei ${booking.slotLabel} aqui. Nossa equipe já vai confirmar a reserva por esta conversa. Se precisar ajustar, é só me avisar.`,
+            intent: "scheduling",
+            answerable: true,
+            bookingRequest: booking,
+          };
+        }
       }
     }
 
@@ -1237,9 +1242,23 @@ export class AIConciergeService {
     const saudacao = brtHour >= 5 && brtHour < 12 ? "Bom dia" : brtHour < 18 ? "Boa tarde" : "Boa noite";
     const apresentacao = `${saudacao}, tudo bem?\n${identity.signature}.\nComo posso ajudar?`;
 
+    const isWebchat = channel === "webchat";
+    const webchatRule = isWebchat
+      ? `
+8. CANAL ATUAL: CHAT DO SITE (WEBCHAT).
+REGRAS OBRIGATÓRIAS ESTRITAS PARA WEBCHAT:
+- NUNCA ofereça horários disponíveis, NUNCA agende consultas/sessões e NUNCA realize avaliações diretamente neste chat do site.
+- Se o visitante perguntar sobre agendamento, agendar avaliação, marcar horário, valores/preços, ou demonstrar qualquer interesse em ser atendido ou agendar:
+  1. Responda de forma amigável e atenciosa explicando que os agendamentos e avaliações personalizadas são realizados exclusivamente pelo WhatsApp oficial da clínica.
+  2. Inclua EXATAMENTE o link direto do WhatsApp no texto: https://wa.me/5511934335858?text=Olá!%20Vim%20pelo%20site%20da%20Activity%20e%20gostaria%20de%20saber%20sobre%20agendamento/avaliação
+  3. Mencione que se preferir, ele pode deixar o número do WhatsApp com DDD aqui mesmo no chat para que nossa equipe entre em contato.
+  4. Defina "intent": "scheduling" e "answerable": true.
+`
+      : "";
+
     const systemPrompt = `
 Você é o atendente virtual da ${identity.clinicName} (assine como "${identity.attendantName}" quando fizer sentido).
-Atende leads e pacientes via WhatsApp e Instagram.
+Atende leads e pacientes via WhatsApp, Instagram e Webchat do site.
 
 CONTEXTO TEMPORAL DE HOJE:
 Hoje em São Paulo: ${currentDateBrtStr}.
@@ -1251,10 +1270,11 @@ REGRAS ABSOLUTAS:
 "${apresentacao}"
 NÃO adiante informações (valores, horário, endereço etc.) enquanto a pessoa não perguntar algo.
 3. SEM TEXTO/SEM PERGUNTA: se a mensagem não tiver pergunta nem for uma saudação (ex.: menção em stories, compartilhamento de publicação, mídia/foto/áudio sem texto, ou texto entre colchetes como "[story_mention]"), defina "answerable": false e deixe "reply" vazio. Não responda nada.
-4. Se houver uma pergunta coberta pelas informações oficiais (endereço/localização, telefone, WhatsApp, e-mail, valores, formas de pagamento, horário de funcionamento, se aceita convênio, especialidades, tratamentos oferecidos, como funciona/dura a avaliação, estacionamento/acessibilidade, como agendar) → responda de forma acolhedora e concisa e defina "answerable": true.
+4. Se houver uma pergunta coberta pelas informações oficiais (endereço/localização, telefone, WhatsApp, e-mail, valores, formas de pagamento, horário de funcionamento, se aceita convênio, especialidades, tratamentos oferecidos, como funciona/dura a avaliação, estacionamento/acessibilidade) → responda de forma acolhedora e concisa e defina "answerable": true.
 5. Se a pergunta NÃO puder ser respondida com as informações oficiais (disponibilidade de horário na agenda, reagendamento, confirmação de agendamento, dúvida clínica sobre um caso, se tratam uma condição/lesão específica, se atendem um público específico como crianças/gestantes/idade mínima, qualquer assunto não listado), defina "answerable": false e "reply" vazio. NÃO afirme nem negue que tratam condição específica nem que atendem determinado público — isso é com o humano.
 6. Se houver sinal de urgência, dor forte ou queixa clínica, defina "answerable": false e "intent": "urgent" (um humano assume imediatamente).
 7. Responda em português do Brasil, tom acolhedor e profissional, conciso para chat. Sem excesso de emojis.
+${webchatRule}
 
 INFORMAÇÕES OFICIAIS (única fonte permitida):
 ${knowledgeBase}

@@ -30,7 +30,7 @@ const App = () => {
         "/tarefas", "/cadastros", "/communications", "/reports", "/goals",
         "/prescricoes", "/agendar", "/satisfacao", "/checkin", "/assinar",
         "/nps", "/install", "/seed-data", "/error", "/inteligencia",
-        "/biomechanics", "/clinical", "/computer-vision", "/augmented-reality",
+        "/biomechanics", "/clinical", "/clinical-tests", "/computer-vision", "/augmented-reality",
         "/boards", "/gamification", "/enterprise", "/marketing",
       ];
 

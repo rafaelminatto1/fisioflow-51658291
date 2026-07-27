@@ -1689,7 +1689,7 @@ app.get("/:id/export", async (c) => {
     // 5. Histórico Financeiro
     const financialHistory = await db
       .select()
-      .from(sql`financial_transactions`)
+      .from(sql`payments`)
       .where(
         and(sql`patient_id = ${id}::uuid`, sql`organization_id = ${user.organizationId}::uuid`),
       );

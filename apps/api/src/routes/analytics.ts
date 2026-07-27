@@ -225,6 +225,92 @@ app.get("/dashboard", async (c) => {
   }
 });
 
+/**
+ * GET /financial
+ * Relatório financeiro por período.
+ * Path completo: /api/insights/financial
+ */
+app.get("/financial", async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+  const startDate = c.req.query("startDate") || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0];
+  const endDate = c.req.query("endDate") || new Date().toISOString().split("T")[0];
+
+  try {
+    const [revenueRes, expensesRes, pendingRes, categoriesRes] = await Promise.all([
+      pool.query(
+        `SELECT COALESCE(SUM(amount), 0)::numeric AS total_revenue
+         FROM payments
+         WHERE organization_id = $1
+           AND status IN ('completed', 'paid', 'realizado')
+           AND created_at >= $2::timestamptz AND created_at <= ($3::timestamptz + interval '1 day')
+           AND deleted_at IS NULL`,
+        [user.organizationId, startDate, endDate],
+      ),
+      pool.query(
+        `SELECT COALESCE(SUM(amount), 0)::numeric AS total_expenses
+         FROM transactions
+         WHERE organization_id = $1
+           AND type IN ('despesa', 'expense')
+           AND created_at >= $2::timestamptz AND created_at <= ($3::timestamptz + interval '1 day')
+           AND deleted_at IS NULL`,
+        [user.organizationId, startDate, endDate],
+      ),
+      pool.query(
+        `SELECT COALESCE(SUM(amount), 0)::numeric AS pending_payments
+         FROM financial_accounts
+         WHERE organization_id = $1
+           AND status IN ('pending', 'pendente')
+           AND deleted_at IS NULL`,
+        [user.organizationId],
+      ),
+      pool.query(
+        `SELECT
+           COALESCE(category, dre_category, 'Outros') AS category,
+           COALESCE(SUM(amount), 0)::numeric AS amount
+         FROM transactions
+         WHERE organization_id = $1
+           AND created_at >= $2::timestamptz AND created_at <= ($3::timestamptz + interval '1 day')
+           AND deleted_at IS NULL
+         GROUP BY 1
+         ORDER BY amount DESC`,
+        [user.organizationId, startDate, endDate],
+      ),
+    ]);
+
+    const totalRevenue = Number(revenueRes.rows[0]?.total_revenue || 0);
+    const totalExpenses = Number(expensesRes.rows[0]?.total_expenses || 0);
+    const netProfit = totalRevenue - totalExpenses;
+    const pendingPayments = Number(pendingRes.rows[0]?.pending_payments || 0);
+
+    const categorySum = categoriesRes.rows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+    const details = categoriesRes.rows.map((row) => {
+      const amt = Number(row.amount || 0);
+      return {
+        category: String(row.category || "Outros"),
+        amount: amt,
+        percentage: categorySum > 0 ? Number(((amt / categorySum) * 100).toFixed(1)) : 0,
+      };
+    });
+
+    return c.json({
+      data: {
+        summary: {
+          totalRevenue,
+          totalExpenses,
+          netProfit,
+          pendingPayments,
+        },
+        details,
+      },
+    });
+  } catch (error) {
+    console.error("[Analytics] Financial report error:", error);
+    return c.json({ error: "Failed to fetch financial report" }, 500);
+  }
+});
+
+
 app.get("/bi", async (c) => {
   const user = c.get("user");
   const pool = createPool(c.env);

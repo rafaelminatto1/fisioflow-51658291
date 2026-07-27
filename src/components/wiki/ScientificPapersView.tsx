@@ -22,6 +22,8 @@ import {
 import { FileText, Upload, CheckCircle2, Loader2, Plus, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { getWorkersApiUrl } from "@/lib/api/config";
+import { request } from "@/api/v2/base";
+import { getNeonAccessToken } from "@/lib/auth/neon-token";
 
 interface ScientificPaper {
   id: string;
@@ -47,15 +49,23 @@ const AREAS_CLINICAS = [
 ];
 
 async function fetchPapers(): Promise<ScientificPaper[]> {
-  const res = await fetch(`${getWorkersApiUrl()}/api/knowledge/articles?type=pdf&limit=50`);
-  if (!res.ok) return [];
-  const json = await res.json();
-  return (json.data ?? json.articles ?? []) as ScientificPaper[];
+  try {
+    const json = await request<{ data?: ScientificPaper[]; articles?: ScientificPaper[] }>(
+      "/api/knowledge/articles?type=pdf&limit=50",
+    );
+    return (json.data ?? json.articles ?? []) as ScientificPaper[];
+  } catch {
+    return [];
+  }
 }
 
 async function uploadPaper(data: FormData): Promise<{ id: string; indexed: boolean }> {
+  const token = await getNeonAccessToken();
   const res = await fetch(`${getWorkersApiUrl()}/api/knowledge/upload-paper`, {
     method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
     body: data,
   });
   if (!res.ok) {

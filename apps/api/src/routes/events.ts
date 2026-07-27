@@ -11,11 +11,19 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 app.get("/feed", requireAuth, async (c) => {
   const user = c.get("user");
   const sql = getRawSql(c.env, "read");
-  const autos = await sql(
-    `SELECT automation_name, event_type, status, created_at
-       FROM automation_logs WHERE organization_id = $1 ORDER BY created_at DESC LIMIT 50`,
-    [user.organizationId],
-  );
+  let autoRows: Record<string, unknown>[] = [];
+  try {
+    const autos = await sql(
+      `SELECT automation_name, event_type, status, created_at
+         FROM automation_logs WHERE organization_id = $1 ORDER BY created_at DESC LIMIT 50`,
+      [user.organizationId],
+    );
+    autoRows = autos.rows ?? [];
+  } catch (err) {
+    console.error("[Events /feed] Error querying automation_logs:", err);
+    autoRows = [];
+  }
+
   let gcalRows: Record<string, unknown>[] = [];
   try {
     const gcal = await sql(
@@ -26,10 +34,11 @@ app.get("/feed", requireAuth, async (c) => {
       [user.organizationId],
     );
     gcalRows = gcal.rows ?? [];
-  } catch {
+  } catch (err) {
+    console.error("[Events /feed] Error querying google_sync_logs:", err);
     gcalRows = [];
   }
-  return c.json({ data: mergeFeed(autos.rows ?? [], gcalRows) });
+  return c.json({ data: mergeFeed(autoRows, gcalRows) });
 });
 
 type BusinessEvent = {

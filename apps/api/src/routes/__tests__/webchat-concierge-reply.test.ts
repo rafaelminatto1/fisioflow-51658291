@@ -237,5 +237,12 @@ describe("POST /api/webchat/message — saudação duplicada", () => {
 		await post(app, { org: ORG, visitorId: "v1", text: "Aceitam convênio?" });
 		await vi.waitFor(() => expect(autoReplies()).toHaveLength(1));
 		expect(String(autoReplies()[0][8])).toContain("nota fiscal");
+		expect(mockProcessMessage).toHaveBeenCalledWith(
+			expect.anything(),
+			ORG,
+			"Aceitam convênio?",
+			expect.anything(),
+			"webchat",
+		);
 	});
 });

@@ -75,7 +75,10 @@ export async function request<T>(
   options: RequestInit & { keepalive?: boolean } = {},
 ): Promise<T> {
   const authHeaders = await getAuthHeader();
-  const url = `${getWorkersApiUrl()}${path}`;
+  const baseUrl = getWorkersApiUrl();
+  const url = path.startsWith("http://") || path.startsWith("https://")
+    ? path
+    : `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
   const method = options.method || "GET";
 
   try {
@@ -172,7 +175,10 @@ export async function request<T>(
 }
 
 export async function requestPublic<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const url = `${getWorkersApiUrl()}${path}`;
+  const baseUrl = getWorkersApiUrl();
+  const url = path.startsWith("http://") || path.startsWith("https://")
+    ? path
+    : `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
 
   const res = await fetch(url, {
     ...options,

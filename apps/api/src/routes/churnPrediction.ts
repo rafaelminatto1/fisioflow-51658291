@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { createReplicaPool } from "../lib/db";
-import { requireAuth, type AuthVariables } from "../lib/auth";
+import { requireAuth, DEFAULT_ORG_ID, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -39,7 +39,8 @@ const RISK_PRIORITY: Record<RiskLevel, number> = {
 
 // GET /api/churn-prediction/at-risk-signals
 app.get("/at-risk-signals", requireAuth, async (c) => {
-  const organizationId = c.get("user").organizationId;
+  const user = c.get("user");
+  const organizationId = user?.organizationId || DEFAULT_ORG_ID;
   const pool = createReplicaPool(c.env);
 
   try {
@@ -62,7 +63,7 @@ app.get("/at-risk-signals", requireAuth, async (c) => {
          JOIN patients p ON p.id = a.patient_id
          WHERE a.organization_id = $1
            AND a.status = 'no_show'
-           AND a.start_time >= NOW() - INTERVAL '60 days'
+           AND a.date >= CURRENT_DATE - INTERVAL '60 days'
          GROUP BY p.id, p.full_name, p.phone, p.whatsapp
          HAVING COUNT(*) >= 3`,
         [organizationId]
@@ -78,17 +79,17 @@ app.get("/at-risk-signals", requireAuth, async (c) => {
         signal_type: string;
         risk_level: string;
       }>(
-        `SELECT DISTINCT p.id, p.full_name, p.phone, p.whatsapp,
-                DATE_PART('day', NOW() - MAX(a.start_time)) AS days_since_last,
+        `SELECT p.id, p.full_name, p.phone, p.whatsapp,
+                EXTRACT(DAY FROM CURRENT_DATE - MAX(a.date)) AS days_since_last,
                 'scheduling_gap' AS signal_type,
                 'medium' AS risk_level
          FROM patients p
          JOIN appointments a ON a.patient_id = p.id
          WHERE p.organization_id = $1
-           AND a.start_time >= NOW() - INTERVAL '90 days'
+           AND a.date >= CURRENT_DATE - INTERVAL '90 days'
          GROUP BY p.id, p.full_name, p.phone, p.whatsapp
-         HAVING MAX(a.start_time) < NOW() - INTERVAL '21 days'
-            AND MAX(a.start_time) >= NOW() - INTERVAL '90 days'`,
+         HAVING MAX(a.date) < CURRENT_DATE - INTERVAL '21 days'
+            AND MAX(a.date) >= CURRENT_DATE - INTERVAL '90 days'`,
         [organizationId]
       ),
     ]);

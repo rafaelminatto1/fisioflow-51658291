@@ -386,6 +386,7 @@ app.post("/message", messageRateLimit, async (c: any) => {
 								orgId,
 								text,
 								history,
+								"webchat",
 							);
 
 							// Fora do escopo OU conteúdo clínico sensível → humano assume.

@@ -756,11 +756,12 @@ app.get("/cac-ltv", requireAuth, async (c) => {
        ),
        custo_marketing AS (
          SELECT COALESCE(SUM(amount), 0) AS total
-         FROM financial_entries
+         FROM transactions
          WHERE organization_id = $1
-           AND type = 'expense'
-           AND category IN ('marketing', 'publicidade', 'captacao', 'ads')
-           AND date >= NOW() - INTERVAL '1 month' * $2
+           AND type IN ('despesa', 'expense')
+           AND (category IN ('marketing', 'publicidade', 'captacao', 'ads') OR dre_category = 'marketing' OR description ILIKE '%marketing%' OR description ILIKE '%tráfego%')
+           AND created_at >= NOW() - INTERVAL '1 month' * $2
+           AND deleted_at IS NULL
        )
        SELECT
          np.total AS novos_pacientes,
@@ -780,9 +781,10 @@ app.get("/cac-ltv", requireAuth, async (c) => {
          COUNT(pr.patient_id) AS total_pacientes_com_receita
        FROM (
          SELECT ft.patient_id, SUM(ft.amount) AS total_receita
-         FROM financial_transactions ft
+         FROM payments ft
          WHERE ft.organization_id = $1
-           AND ft.status IN ('paid', 'completed')
+           AND ft.status IN ('paid', 'completed', 'realizado')
+           AND ft.deleted_at IS NULL
            AND ft.patient_id IS NOT NULL
          GROUP BY ft.patient_id
        ) AS pr`,
@@ -797,8 +799,8 @@ app.get("/cac-ltv", requireAuth, async (c) => {
          COALESCE(SUM(ft.amount), 0) AS receita_total_cohort,
          COALESCE(ROUND(SUM(ft.amount) / NULLIF(COUNT(DISTINCT p.id), 0), 2), 0) AS ltv_cohort
        FROM patients p
-       LEFT JOIN financial_transactions ft
-         ON ft.patient_id = p.id AND ft.status IN ('paid', 'completed')
+       LEFT JOIN payments ft
+         ON ft.patient_id = p.id AND ft.status IN ('paid', 'completed', 'realizado') AND ft.deleted_at IS NULL
        WHERE p.organization_id = $1
          AND p.created_at >= NOW() - INTERVAL '1 month' * $2
        GROUP BY DATE_TRUNC('month', p.created_at)
@@ -813,12 +815,13 @@ app.get("/cac-ltv", requireAuth, async (c) => {
          p.id, p.full_name, p.photo_url,
          SUM(ft.amount) AS receita_total,
          COUNT(ft.id) AS num_transacoes,
-         MIN(ft.payment_date) AS primeira_sessao,
-         MAX(ft.payment_date) AS ultima_sessao
+         MIN(COALESCE(ft.paid_at::timestamp, ft.created_at)) AS primeira_sessao,
+         MAX(COALESCE(ft.paid_at::timestamp, ft.created_at)) AS ultima_sessao
        FROM patients p
-       JOIN financial_transactions ft ON ft.patient_id = p.id
+       JOIN payments ft ON ft.patient_id = p.id
        WHERE p.organization_id = $1
-         AND ft.status IN ('paid', 'completed')
+         AND ft.status IN ('paid', 'completed', 'realizado')
+         AND ft.deleted_at IS NULL
        GROUP BY p.id, p.full_name, p.photo_url
        ORDER BY receita_total DESC
        LIMIT 10`,
@@ -831,10 +834,11 @@ app.get("/cac-ltv", requireAuth, async (c) => {
          ROUND(AVG(ft.amount), 2) AS ticket_medio,
          COUNT(ft.id) AS total_transacoes,
          SUM(ft.amount) AS receita_total_periodo
-       FROM financial_transactions ft
+       FROM payments ft
        WHERE ft.organization_id = $1
-         AND ft.status IN ('paid', 'completed')
-         AND ft.payment_date >= NOW() - INTERVAL '1 month' * $2`,
+         AND ft.status IN ('paid', 'completed', 'realizado')
+         AND ft.deleted_at IS NULL
+         AND ft.created_at >= NOW() - INTERVAL '1 month' * $2`,
       [user.organizationId, periodMonths],
     );
 

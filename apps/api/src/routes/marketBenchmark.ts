@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { createReplicaPool } from "../lib/db";
-import { requireAuth, type AuthVariables } from "../lib/auth";
+import { requireAuth, DEFAULT_ORG_ID, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -67,7 +67,8 @@ function toNumber(value: unknown, fallback = 0): number {
 
 // GET /api/benchmark/market-position
 app.get("/market-position", requireAuth, async (c) => {
-  const organizationId = c.get("user").organizationId;
+  const user = c.get("user");
+  const organizationId = user?.organizationId || DEFAULT_ORG_ID;
   const pool = createReplicaPool(c.env);
 
   try {
@@ -85,17 +86,18 @@ app.get("/market-position", requireAuth, async (c) => {
            COUNT(*) AS total
          FROM appointments
          WHERE organization_id = $1
-           AND start_time >= NOW() - INTERVAL '30 days'`,
+           AND date >= CURRENT_DATE - INTERVAL '30 days'`,
         [organizationId]
       ),
 
-      // Ticket médio (AVG financial_transactions últimos 30 dias)
+      // Ticket médio (AVG payments últimos 30 dias)
       pool.query<{ avg_ticket: string }>(
         `SELECT COALESCE(AVG(amount), 0) AS avg_ticket
-         FROM financial_transactions
+         FROM payments
          WHERE organization_id = $1
-           AND created_at >= NOW() - INTERVAL '30 days'
-           AND type = 'income'`,
+           AND status IN ('completed', 'paid', 'realizado')
+           AND deleted_at IS NULL
+           AND created_at >= NOW() - INTERVAL '30 days'`,
         [organizationId]
       ),
 
@@ -106,7 +108,7 @@ app.get("/market-position", requireAuth, async (c) => {
            COUNT(*) AS total
          FROM appointments
          WHERE organization_id = $1
-           AND start_time >= NOW() - INTERVAL '30 days'`,
+           AND date >= CURRENT_DATE - INTERVAL '30 days'`,
         [organizationId]
       ),
 
@@ -126,15 +128,15 @@ app.get("/market-position", requireAuth, async (c) => {
            SELECT DISTINCT patient_id
            FROM appointments
            WHERE organization_id = $1
-             AND start_time >= NOW() - INTERVAL '60 days'
-             AND start_time < NOW() - INTERVAL '30 days'
+             AND date >= CURRENT_DATE - INTERVAL '60 days'
+             AND date < CURRENT_DATE - INTERVAL '30 days'
              AND status = 'completed'
          ),
          period2 AS (
            SELECT DISTINCT patient_id
            FROM appointments
            WHERE organization_id = $1
-             AND start_time >= NOW() - INTERVAL '30 days'
+             AND date >= CURRENT_DATE - INTERVAL '30 days'
              AND status = 'completed'
          )
          SELECT
