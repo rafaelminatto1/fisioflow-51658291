@@ -329,7 +329,7 @@ export interface WebchatConciergeConfig {
   delayMs: number;
 }
 
-const WEBCHAT_DEFAULT_DELAY_S = 10;
+const WEBCHAT_DEFAULT_DELAY_S = 2;
 const WEBCHAT_MAX_DELAY_S = 20;
 
 export function resolveWebchatConciergeConfig(raw: unknown): WebchatConciergeConfig {
@@ -1139,17 +1139,27 @@ export async function createConciergeHandoffTask(
  */
 const CLINIC_KB = `
 Activity Fisioterapia — informações oficiais:
-- Clínica PARTICULAR de fisioterapia. NÃO aceita convênios. Para o reembolso pelo convênio, fornecemos nota fiscal e relatório.
+- Resposta Padrão de Convênio:
+  "Somos uma clínica particular de fisioterapia, não aceitamos convênios.
+
+🏅 Especialidades: Fisioterapia esportiva, ortopédica e pós-operatória.
+🔹 Atendimento individual e humanizado de 60 minutos.
+💡 Tratamentos: Laser Terapia, Ultrassom, Liberação Miofascial, Eletroestimulação, Crioterapia e mais!
+🔹 Emitimos nota fiscal e te auxiliamos no processo de reembolso do convênio.
+🎯 Marque já sua avaliação e inicie seu plano de tratamento exclusivo!"
+
+- Horário de funcionamento:
+  Atendemos de segunda a sexta das 07h às 21h; sábado das 07h às 13h. Não atende aos domingos.
+
+- Valores e Formas de Pagamento:
+  - Avaliação: R$ 180,00 (dura cerca de 1 hora, inclui anamnese, testes físicos e definição do plano de tratamento).
+  - Sessão avulsa: R$ 180,00.
+  - Pacote com 10 sessões: R$ 170,00 por sessão.
+  - Formas de pagamento: transferência, pix, cartão de débito ou crédito em até 6x.
+
 - Endereço: Rua Manuel Vieira de Sousa, 166 — Mooca, São Paulo/SP, CEP 03124-110 (próximo ao Clube Juventus da Mooca). Localização no mapa: https://maps.app.goo.gl/m6ckoNd8m97z4Nyq5
-- Contato: WhatsApp (11) 93433-5858; telefone (11) 5874-9885; e-mail contato@activityfisioterapia.com.br.
+- Contatos Oficiais: WhatsApp (11) 93433-5858; telefone (11) 5874-9885; e-mail contato@activityfisioterapia.com.br.
 - Estrutura: há vaga de estacionamento em frente à clínica; calçada rebaixada (acessível para cadeirantes).
-- Especialidades: fisioterapia esportiva, ortopédica, gerontológica (atendimento a idosos) e reabilitação pré e pós-operatória.
-- Atendimento 100% individualizado, sessões de 60 minutos, com equipamentos de alta tecnologia.
-- Tratamentos e técnicas: Laser Terapia, Ultrassom, Liberação Miofascial, Eletroestimulação, Crioterapia, RPG (Reeducação Postural Global), Dry Needling (agulhamento a seco), Recovery Esportivo e Recovery Pump (botas pneumáticas de compressão), entre outros.
-- Horário de funcionamento: segunda a sexta das 07h às 21h; sábado das 07h às 13h. Não atende aos domingos.
-- Valores: avaliação R$ 180,00; sessão avulsa R$ 180,00; pacote de 10 sessões por R$ 170,00 cada sessão.
-- Formas de pagamento: transferência, pix, cartão de débito ou crédito em até 6x.
-- Para iniciar o tratamento é necessário agendar uma avaliação. A avaliação dura cerca de 1 hora e inclui anamnese, testes físicos e a definição do plano de tratamento.
 - Orientações para o atendimento: em caso de atraso ou necessidade de remarcar o horário, avisar com no mínimo 3 horas de antecedência. Venha com roupas leves e de fácil acesso (recomendamos às mulheres shorts e top de academia); há espaço para se trocar na clínica.
 - Atendente: Rafael, da Activity Fisioterapia.
 `.trim();
