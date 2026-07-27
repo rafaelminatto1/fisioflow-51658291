@@ -343,7 +343,7 @@ export function resolveWebchatConciergeConfig(raw: unknown): WebchatConciergeCon
   } else if (raw && typeof raw === "object") {
     cfg = raw as Record<string, unknown>;
   }
-  const enabled = cfg?.enabled !== false && cfg?.webchatAutoReply !== false;
+  const enabled = cfg?.webchatAutoReply !== false;
   const rawDelay = cfg?.webchatReplyDelaySeconds;
   const delayS =
     typeof rawDelay === "number" && Number.isFinite(rawDelay)
