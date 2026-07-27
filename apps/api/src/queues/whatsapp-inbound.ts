@@ -500,13 +500,13 @@ export async function processConciergeAsync(
     );
     const raw = conciergeCfgRes.rows[0]?.concierge;
     const cfg = typeof raw === "string" ? JSON.parse(raw) : raw;
-    const conciergeEnabled = cfg?.enabled !== false;
-    const autoReplyNewLeads = cfg?.autoReplyNewLeads !== false;
+		const conciergeEnabled = cfg?.enabled !== false;
+		const autoReplyNewLeads = cfg?.autoReplyNewLeads !== false;
 
-    if (!conciergeEnabled || !autoReplyNewLeads) {
-      console.log(`[WA Queue] Concierge is disabled for org ${orgId}. Skipping auto-reply.`);
-      return;
-    }
+		if (!conciergeEnabled || !autoReplyNewLeads) {
+			console.log(`[WA Queue] WhatsApp Concierge is disabled for org ${orgId} (enabled=${conciergeEnabled}, autoReplyNewLeads=${autoReplyNewLeads}). Skipping auto-reply.`);
+			return;
+		}
 
     // 2. Defer to a human who has taken over the conversation (unificado com
     // Instagram/webchat via humanOwnsConversation): se um atendente humano

@@ -508,30 +508,18 @@ export default function CrmWhatsAppSettings() {
             {/* ── AI Concierge ── */}
             <TabsContent value="concierge">
               <div className="max-w-2xl space-y-6">
+                {/* ── Motor de IA Geral ── */}
                 <div className="rounded-xl border border-border bg-card p-5 space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label className="text-sm font-bold">Concierge ativo</Label>
+                      <Label className="text-sm font-bold">Motor de IA Geral</Label>
                       <p className="text-xs text-muted-foreground">
-                        Liga/desliga toda a triagem automática por IA.
+                        Chave mestra do assistente virtual (triagem e respostas automáticas).
                       </p>
                     </div>
                     <Switch
                       checked={concierge.enabled}
                       onCheckedChange={(v) => setConcierge({ ...concierge, enabled: v })}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-sm font-bold">Responder leads novos automaticamente</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Saudação imediata para contatos sem cadastro de paciente.
-                      </p>
-                    </div>
-                    <Switch
-                      checked={concierge.autoReplyNewLeads}
-                      disabled={!concierge.enabled}
-                      onCheckedChange={(v) => setConcierge({ ...concierge, autoReplyNewLeads: v })}
                     />
                   </div>
                   <div>
@@ -556,6 +544,124 @@ export default function CrmWhatsAppSettings() {
                   </div>
                 </div>
 
+                {/* ── Canais de Atendimento por Plataforma (Ativação Independente) ── */}
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="text-base font-bold tracking-tight">Ativação por Plataforma</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Ligue ou desligue o Concierge individualmente em cada canal de atendimento.
+                    </p>
+                  </div>
+
+                  {/* 🟢 WhatsApp */}
+                  <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 font-bold text-sm">
+                          💬
+                        </div>
+                        <div>
+                          <Label className="text-sm font-bold">Concierge WhatsApp</Label>
+                          <p className="text-xs text-muted-foreground">
+                            Responda automaticamente a novos pacientes e leads recebidos no WhatsApp.
+                          </p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={concierge.autoReplyNewLeads}
+                        onCheckedChange={(v) => setConcierge({ ...concierge, autoReplyNewLeads: v })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* 📸 Instagram */}
+                  <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 font-bold text-sm">
+                          📸
+                        </div>
+                        <div>
+                          <Label className="text-sm font-bold">Concierge Instagram</Label>
+                          <p className="text-xs text-muted-foreground">
+                            Responda a dúvidas em Direct Messages (DMs) do Instagram.
+                          </p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={concierge.instagramAutoReply}
+                        onCheckedChange={(v) => setConcierge({ ...concierge, instagramAutoReply: v })}
+                      />
+                    </div>
+                    {concierge.instagramAutoReply && (
+                      <div className="flex items-center gap-3 pt-1 border-t border-border/50">
+                        <Label className="text-sm">Atraso para resposta:</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={120}
+                          value={concierge.instagramReplyDelayMinutes}
+                          onChange={(e) =>
+                            setConcierge({
+                              ...concierge,
+                              instagramReplyDelayMinutes: Number(e.target.value) || 0,
+                            })
+                          }
+                          className="w-20"
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          minutos (dá tempo do atendente humano responder 1º)
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 🌐 Chat do Site (Webchat) */}
+                  <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 font-bold text-sm">
+                          🌐
+                        </div>
+                        <div>
+                          <Label className="text-sm font-bold">Concierge Chat do Site (Webchat)</Label>
+                          <p className="text-xs text-muted-foreground">
+                            Responda dúvidas no widget do site e direcione interessados para o WhatsApp.
+                          </p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={concierge.webchatAutoReply !== false}
+                        onCheckedChange={(v) => setConcierge({ ...concierge, webchatAutoReply: v })}
+                      />
+                    </div>
+                    {concierge.webchatAutoReply !== false && (
+                      <div className="flex items-center gap-3 pt-1 border-t border-border/50">
+                        <Label className="text-sm">Atraso para resposta:</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={20}
+                          value={concierge.webchatReplyDelaySeconds ?? 10}
+                          onChange={(e) =>
+                            setConcierge({
+                              ...concierge,
+                              webchatReplyDelaySeconds: Math.min(
+                                Math.max(Number(e.target.value) || 0, 0),
+                                20,
+                              ),
+                            })
+                          }
+                          className="w-20"
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          segundos no chat do site
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="rounded-xl border border-border bg-card p-5 space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -569,7 +675,6 @@ export default function CrmWhatsAppSettings() {
                     </div>
                     <Switch
                       checked={concierge.availabilityAutoReply}
-                      disabled={!concierge.enabled}
                       onCheckedChange={(v) =>
                         setConcierge({ ...concierge, availabilityAutoReply: v })
                       }
@@ -650,81 +755,6 @@ export default function CrmWhatsAppSettings() {
                       className="w-20"
                     />
                     <span className="text-sm text-muted-foreground">minutos sem resposta</span>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-border bg-card p-5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-sm font-bold">Auto-resposta no Instagram</Label>
-                      <p className="text-xs text-muted-foreground">
-                        A IA responde DMs do Instagram automaticamente se ninguém atender no prazo.
-                      </p>
-                    </div>
-                    <Switch
-                      checked={concierge.instagramAutoReply}
-                      onCheckedChange={(v) => setConcierge({ ...concierge, instagramAutoReply: v })}
-                    />
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Label className="text-sm">Responder após</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={120}
-                      value={concierge.instagramReplyDelayMinutes}
-                      disabled={!concierge.instagramAutoReply}
-                      onChange={(e) =>
-                        setConcierge({
-                          ...concierge,
-                          instagramReplyDelayMinutes: Number(e.target.value) || 0,
-                        })
-                      }
-                      className="w-20"
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      min sem resposta humana (0 = imediato)
-                    </span>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-border bg-card p-5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-sm font-bold">Auto-resposta no chat do site</Label>
-                      <p className="text-xs text-muted-foreground">
-                        A IA responde visitantes do chat do site automaticamente se ninguém
-                        atender no prazo.
-                      </p>
-                    </div>
-                    <Switch
-                      checked={concierge.webchatAutoReply !== false}
-                      disabled={!concierge.enabled}
-                      onCheckedChange={(v) => setConcierge({ ...concierge, webchatAutoReply: v })}
-                    />
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Label className="text-sm">Responder após</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={20}
-                      value={concierge.webchatReplyDelaySeconds ?? 10}
-                      disabled={!concierge.enabled || concierge.webchatAutoReply === false}
-                      onChange={(e) =>
-                        setConcierge({
-                          ...concierge,
-                          webchatReplyDelaySeconds: Math.min(
-                            Math.max(Number(e.target.value) || 0, 0),
-                            20,
-                          ),
-                        })
-                      }
-                      className="w-20"
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      segundos sem resposta humana (0 = imediato)
-                    </span>
                   </div>
                 </div>
 
