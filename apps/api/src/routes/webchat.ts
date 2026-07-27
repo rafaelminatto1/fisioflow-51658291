@@ -588,7 +588,21 @@ app.get("/widget.js", (_c) => {
   '<button id=ffs style="border:none;background:#1f7aec;color:#fff;border-radius:8px;padding:0 14px;cursor:pointer">➤</button></div></div>';
   document.body.appendChild(c);
   var p=c.querySelector('#ffp'),m=c.querySelector('#ffm'),i=c.querySelector('#ffi');
-  function add(t,mine){var d=document.createElement('div');d.style.cssText='margin:6px 0;display:flex;'+(mine?'justify-content:flex-end':'');var b=document.createElement('div');b.textContent=t;b.style.cssText='max-width:80%;padding:8px 11px;border-radius:12px;white-space:pre-line;'+(mine?'background:#d8ebff':'background:#fff;border:1px solid #eee');d.appendChild(b);m.appendChild(d);m.scrollTop=m.scrollHeight;}
+  function fmt(t){
+    if(!t)return'';
+    var esc=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    var res=esc.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,function(_,lbl,url){
+      if(/wa\.me|whatsapp/i.test(url)){
+        return '<a href="'+url+'" target="_blank" rel="noopener" style="display:block;margin:8px 0 4px;padding:10px 14px;background:#25D366;color:#fff;font-weight:700;text-align:center;border-radius:20px;text-decoration:none;box-shadow:0 3px 10px rgba(37,211,102,0.35);font-size:13px">💬 '+lbl+'</a>';
+      }
+      return '<a href="'+url+'" target="_blank" rel="noopener" style="color:#1f7aec;text-decoration:underline;font-weight:600">'+lbl+'</a>';
+    });
+    res=res.replace(/(^|[\s\n])((https?:\/\/wa\.me\/[^\s<]+))/g,function(_,prefix,url){
+      return prefix+'<a href="'+url+'" target="_blank" rel="noopener" style="display:block;margin:8px 0 4px;padding:10px 14px;background:#25D366;color:#fff;font-weight:700;text-align:center;border-radius:20px;text-decoration:none;box-shadow:0 3px 10px rgba(37,211,102,0.35);font-size:13px">💬 Falar no WhatsApp Oficial</a>';
+    });
+    return res;
+  }
+  function add(t,mine){var d=document.createElement('div');d.style.cssText='margin:6px 0;display:flex;'+(mine?'justify-content:flex-end':'');var b=document.createElement('div');if(mine){b.textContent=t;}else{b.innerHTML=fmt(t);}b.style.cssText='max-width:85%;padding:8px 11px;border-radius:12px;white-space:pre-line;'+(mine?'background:#d8ebff':'background:#fff;border:1px solid #eee');d.appendChild(b);m.appendChild(d);m.scrollTop=m.scrollHeight;}
   function poll(){fetch(API+'/api/webchat/poll?org='+encodeURIComponent(ORG)+'&visitorId='+encodeURIComponent(VID)+'&after='+encodeURIComponent(last)).then(function(r){return r.json()}).then(function(d){(d.messages||[]).forEach(function(x){if(!seenIds.has(x.id)){seenIds.add(x.id);add(x.text,false);last=x.at;}});}).catch(function(){});}
   function send(){var t=i.value.trim();if(!t)return;i.value='';add(t,true);var firstName=!NAME;var payload={org:ORG,visitorId:VID,text:t};if(firstName){NAME=t.slice(0,80);localStorage.setItem('ff_webchat_name',NAME);payload.name=NAME;}fetch(API+'/api/webchat/message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json()}).then(function(){started=true;if(firstName){setTimeout(function(){add(greet(),false);},400);}}).catch(function(){});}
   c.querySelector('#ffb').onclick=function(){open=!open;p.style.display=open?'flex':'none';if(open){if(!m.childNodes.length)add(NAME?('Olá de novo! Como posso ajudar?'):'Olá! 😊 Para começarmos, qual é o seu nome?',false);poll();if(!timer)timer=setInterval(poll,4000);}};
