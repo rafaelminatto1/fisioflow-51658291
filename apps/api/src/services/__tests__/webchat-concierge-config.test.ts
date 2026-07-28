@@ -5,35 +5,35 @@ import {
 } from "../ai-concierge";
 
 describe("resolveWebchatConciergeConfig", () => {
-  it("defaults: habilitado com delay de 10s quando não há config", () => {
+  it("defaults: habilitado com delay de 2s quando não há config", () => {
     expect(resolveWebchatConciergeConfig(null)).toEqual({
       enabled: true,
-      delayMs: 10_000,
+      delayMs: 2_000,
     });
     expect(resolveWebchatConciergeConfig(undefined)).toEqual({
       enabled: true,
-      delayMs: 10_000,
+      delayMs: 2_000,
     });
     expect(resolveWebchatConciergeConfig({})).toEqual({
       enabled: true,
-      delayMs: 10_000,
+      delayMs: 2_000,
     });
   });
 
   it("aceita config vinda como string JSON (jsonb)", () => {
     expect(
       resolveWebchatConciergeConfig('{"enabled":true,"webchatAutoReply":true}'),
-    ).toEqual({ enabled: true, delayMs: 10_000 });
+    ).toEqual({ enabled: true, delayMs: 2_000 });
     expect(resolveWebchatConciergeConfig("not-json")).toEqual({
       enabled: true,
-      delayMs: 10_000,
+      delayMs: 2_000,
     });
   });
 
-  it("concierge desligado desativa o webchat", () => {
-    expect(resolveWebchatConciergeConfig({ enabled: false }).enabled).toBe(
-      false,
-    );
+  it("enabled (master concierge WhatsApp) NÃO controla o webchat (independente)", () => {
+    // Ver commit 4ee42d893: o webchat é habilitado independentemente das
+    // settings do WhatsApp; só webchatAutoReply=false o desativa.
+    expect(resolveWebchatConciergeConfig({ enabled: false }).enabled).toBe(true);
   });
 
   it("webchatAutoReply=false desativa só o webchat", () => {
@@ -65,7 +65,7 @@ describe("resolveWebchatConciergeConfig", () => {
     ).toBe(20_000);
     expect(
       resolveWebchatConciergeConfig({ webchatReplyDelaySeconds: "7" }).delayMs,
-    ).toBe(10_000);
+    ).toBe(2_000);
   });
 });
 
