@@ -1,6 +1,7 @@
 import type { QuickReply } from "@/services/whatsapp-api";
 import type { Conversation } from "@/services/whatsapp-api";
 import { onlyDigits, formatBrazilPhone } from "@/lib/phone";
+import { cleanMarkdownLinks } from "./messageDisplay";
 
 export type CrmStage = "lead" | "contact" | "evaluation" | "treatment";
 
@@ -268,7 +269,7 @@ export function toCrmConversationViewModel(conversation: Conversation): CrmConve
     presenceLabel: formatPresenceLabel(conversation),
     lastMessage: conversation.lastMessage ?? "",
     lastMessageAt: conversation.lastMessageAt ?? null,
-    preview: (conversation.lastMessage ?? "").trim(),
+    preview: cleanMarkdownLinks((conversation.lastMessage ?? "").trim()),
     previewDirection: conversation.lastMessageDirection ?? null,
     displayTime: formatDisplayTime(conversation.lastMessageAt ?? conversation.createdAt),
     unreadCount: conversation.unreadCount ?? 0,

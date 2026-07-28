@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import type { Env } from "../types/env";
 import type { AuthVariables } from "../lib/auth";
-import { requireAuth } from "../lib/auth";
+import { requireAuth, requireRole } from "../lib/auth";
 import { getRawSql } from "../lib/db";
 import { SearchParamsSchema, SummarizeBodySchema, SaveBodySchema } from "../lib/evidence/types";
 import { searchPubmed } from "../lib/evidence/sources/pubmed";
@@ -158,10 +158,66 @@ app.get("/exercises/:id", requireAuth, async (c) => {
   const id = c.req.param("id");
   const sql = getRawSql(c.env, "read");
   const res = await sql(
-    `SELECT id, exercise_id, pmid, doi, title, abstract, evidence_level, clinical_recommendation, icd10_codes, source_db, retrieved_at FROM exercise_evidence WHERE exercise_id = $1 ORDER BY retrieved_at DESC`,
+    `SELECT id, exercise_id, pmid, doi, title, abstract, evidence_level, clinical_recommendation, icd10_codes, source_db, status, retrieved_at FROM exercise_evidence WHERE exercise_id = $1 ORDER BY retrieved_at DESC`,
     [id],
   );
   return c.json({ data: res.rows ?? [] });
+});
+
+// GET /api/evidence/exercises/:id/pending — list pending evidence awaiting clinical review
+app.get("/exercises/:id/pending", requireAuth, async (c) => {
+  const id = c.req.param("id");
+  const sql = getRawSql(c.env, "read");
+  const res = await sql(
+    `SELECT id, exercise_id, pmid, doi, title, abstract, evidence_level, clinical_recommendation, icd10_codes, source_db, retrieved_at FROM exercise_evidence WHERE exercise_id = $1 AND status = 'pending' ORDER BY retrieved_at DESC`,
+    [id],
+  );
+  return c.json({ data: res.rows ?? [] });
+});
+
+// POST /api/evidence/exercises/:id/approve — approve all pending evidence and persist references + icd10_codes to exercise
+app.post("/exercises/:id/approve", requireAuth, requireRole("admin"), async (c) => {
+  const id = c.req.param("id");
+  const sql = getRawSql(c.env, "write");
+  const user = c.get("user");
+  const pendingRes = await sql(
+    `SELECT id, pmid, doi, title, abstract, evidence_level, clinical_recommendation, icd10_codes, source_db FROM exercise_evidence WHERE exercise_id = $1 AND status = 'pending' ORDER BY retrieved_at DESC`,
+    [id],
+  );
+  const pending = pendingRes.rows ?? [];
+  if (pending.length === 0) {
+    return c.json({ error: "no_pending_evidence" }, 400);
+  }
+  const references = pending.map(
+    (r: { doi?: string | null; source_db: string; evidence_level: string; title: string; pmid?: string | null }) =>
+      r.doi
+        ? { doi: r.doi, source: r.source_db, level: r.evidence_level, title: r.title }
+        : { pmid: r.pmid, source: r.source_db, level: r.evidence_level, title: r.title },
+  );
+  const icd10Set = new Set<string>();
+  pending.forEach((r: { icd10_codes?: string[] | null }) => {
+    (r.icd10_codes ?? []).forEach((code: string) => {
+      icd10Set.add(code);
+    });
+  });
+  const icd10_codes = Array.from(icd10Set);
+  await (sql as any).transaction([
+    { text: `UPDATE exercises SET references = $2, icd10_codes = $3, updated_by = $4, updated_at = now() WHERE id = $1`, values: [id, JSON.stringify(references), icd10_codes, user.uid] },
+    { text: `UPDATE exercise_evidence SET status = 'approved', approved_by = $2, approved_at = now() WHERE exercise_id = $1 AND status = 'pending'`, values: [id, user.uid] },
+  ]);
+  return c.json({ approved: pending.length, references, icd10_codes });
+});
+
+// POST /api/evidence/exercises/:id/reject — reject all pending evidence
+app.post("/exercises/:id/reject", requireAuth, requireRole("admin"), async (c) => {
+  const id = c.req.param("id");
+  const sql = getRawSql(c.env, "write");
+  const user = c.get("user");
+  const res = await sql(
+    `UPDATE exercise_evidence SET status = 'rejected', rejected_by = $2, rejected_at = now() WHERE exercise_id = $1 AND status = 'pending' RETURNING id`,
+    [id, user.uid],
+  );
+  return c.json({ rejected: (res as any).rowCount ?? 0 });
 });
 
 export default app;

@@ -9,9 +9,11 @@ import {
   ContextMenuSubTrigger,
   ContextMenuSubContent,
 } from "@/components/ui/context-menu";
-import { MessageSquare, Clock, Edit2, Trash2, Copy, ArrowRight } from "lucide-react";
+import { MessageSquare, Clock, Edit2, Trash2, Copy, ArrowRight, Play } from "lucide-react";
 import { useStatusConfig } from "@/hooks/useStatusConfig";
 import type { Appointment } from "@/types/appointment";
+
+const STARTABLE_STATUSES = new Set(["agendado", "presenca_confirmada"]);
 
 interface AppointmentContextMenuProps {
   children: React.ReactNode;
@@ -46,6 +48,10 @@ export const AppointmentContextMenu = ({
     }
   };
 
+  const handleStartAttendance = () => {
+    onStatusChange(appointment.status === "avaliacao" ? "avaliacao" : "atendido");
+  };
+
   const extraProps = { ...dataProps, ...(ref ? { ref } : {}) };
   const trigger =
     Object.keys(extraProps).length > 0 && React.isValidElement(children)
@@ -59,6 +65,20 @@ export const AppointmentContextMenu = ({
         <div className="px-3 py-2 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 mb-1">
           {appointment.patientName}
         </div>
+
+        {STARTABLE_STATUSES.has(appointment.status) && (
+          <ContextMenuItem
+            onClick={handleStartAttendance}
+            className="gap-2 focus:bg-emerald-50 dark:focus:bg-emerald-900/20"
+          >
+            <Play className="w-4 h-4 fill-current text-emerald-500" />
+            <span>
+              {appointment.status === "avaliacao"
+                ? "Iniciar Avaliação"
+                : "Iniciar Atendimento"}
+            </span>
+          </ContextMenuItem>
+        )}
 
         <ContextMenuItem
           onClick={onEdit}

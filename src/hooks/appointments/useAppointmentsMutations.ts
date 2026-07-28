@@ -246,7 +246,12 @@ export function useUpdateAppointment() {
       }
 
       if (!isOffline && typeof navigator !== "undefined" && navigator.onLine) {
-        await invalidateAppointmentsCache(queryClient, data.date, organizationId);
+        // Revalida em BACKGROUND — não bloquear a resolução da mutation. Os caches
+        // já receberam o dado autoritativo do servidor via mergeAppointmentIntoCaches,
+        // então esperar o refetch completo da agenda só mantinha o indicador
+        // "Atualizando..." na tela por 1 roundtrip extra (PUT + refetch = 2 idas).
+        // O invalidateQueries dispara o refetch em background e reconcilia sozinho.
+        void invalidateAppointmentsCache(queryClient, data.date, organizationId);
       }
 
       if (!variables.suppressSuccessToast) {

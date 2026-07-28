@@ -670,6 +670,7 @@ app.put("/:id", requireAuth, updateAppointmentHandler);
 app.post("/:id/cancel", requireAuth, async (c) => {
   const user = c.get("user");
   const db = createDb(c.env, "write");
+  const pool = createPool(c.env);
   const id = c.req.param("id");
   if (!id) return c.json({ error: "ID é obrigatório" }, 400);
   if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
@@ -678,6 +679,21 @@ app.post("/:id/cancel", requireAuth, async (c) => {
     const body = await c.req.json().catch(() => ({}));
 
     const organizationId = user.organizationId;
+
+    // Get appointment details before canceling (for waitlist notification)
+    const apptResult = await db
+      .select({
+        id: appointments.id,
+        date: appointments.date,
+        startTime: appointments.startTime,
+        patientId: appointments.patientId,
+      })
+      .from(appointments)
+      .where(withTenant(appointments, organizationId, eq(appointments.id, id)))
+      .limit(1);
+
+    const currentAppt = apptResult[0];
+    if (!currentAppt) return c.json({ error: "Agendamento não encontrado" }, 404);
 
     const result = await db
       .update(appointments)
@@ -694,17 +710,57 @@ app.post("/:id/cancel", requireAuth, async (c) => {
 
     if (!row) return c.json({ error: "Agendamento não encontrado" }, 404);
 
-    // Real-time Broadcast in background
+    // Check waitlist for this specific date/time slot
     c.executionCtx.waitUntil(
       (async () => {
         try {
+          // Broadcast appointment cancellation
           await broadcastToOrg(c.env, organizationId, {
             type: "APPOINTMENT_UPDATED",
             payload: { id, action: "cancelado", timestamp: new Date().toISOString() },
           });
           console.log(`[Audit] Appointment ${id} cancelled by user ${user.uid}`);
+
+          // Check appointment_waitlist for matching slot
+          const waitlistResult = await pool.query(
+            `SELECT * FROM appointment_waitlist
+             WHERE clinic_id = $1
+               AND target_date = $2
+               AND target_time = $3
+               AND status = 'waiting'
+             ORDER BY created_at ASC
+             LIMIT 1`,
+            [organizationId, currentAppt.date, currentAppt.startTime],
+          );
+
+          if (waitlistResult.rows.length > 0) {
+            const waitlistEntry = waitlistResult.rows[0];
+
+            // Update waitlist entry to notified
+            await pool.query(
+              `UPDATE appointment_waitlist
+               SET status = 'notified', notified_at = NOW(), updated_at = NOW()
+               WHERE id = $1`,
+              [waitlistEntry.id],
+            );
+
+            // Broadcast waitlist notification
+            await broadcastToOrg(c.env, organizationId, {
+              type: "WAITLIST_SLOT_AVAILABLE",
+              payload: {
+                waitlist_id: waitlistEntry.id,
+                patient_id: waitlistEntry.patient_id,
+                patient_name: waitlistEntry.patient_name,
+                patient_phone: waitlistEntry.patient_phone,
+                target_date: waitlistEntry.target_date,
+                target_time: waitlistEntry.target_time?.slice(0, 5),
+              },
+            });
+
+            console.log(`[Waitlist] Notified patient ${waitlistEntry.patient_name} for slot ${currentAppt.date} ${currentAppt.startTime}`);
+          }
         } catch (err) {
-          console.error("[Appointments/Cancel] Broadcast failed:", err);
+          console.error("[Appointments/Cancel] Broadcast/Waitlist failed:", err);
         }
       })(),
     );
@@ -718,12 +774,28 @@ app.post("/:id/cancel", requireAuth, async (c) => {
 app.delete("/:id", requireAuth, async (c) => {
   const user = c.get("user");
   const db = createDb(c.env, "write");
+  const pool = createPool(c.env);
   const id = c.req.param("id");
   if (!id) return c.json({ error: "ID é obrigatório" }, 400);
   if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
 
   try {
     const organizationId = user.organizationId;
+
+    // Get appointment details before deleting (for waitlist notification)
+    const apptResult = await db
+      .select({
+        id: appointments.id,
+        date: appointments.date,
+        startTime: appointments.startTime,
+        patientId: appointments.patientId,
+      })
+      .from(appointments)
+      .where(withTenant(appointments, organizationId, eq(appointments.id, id)))
+      .limit(1);
+
+    const currentAppt = apptResult[0];
+    if (!currentAppt) return c.json({ error: "Agendamento não encontrado" }, 404);
 
     const result = await db
       .update(appointments)
@@ -735,11 +807,59 @@ app.delete("/:id", requireAuth, async (c) => {
 
     if (!row) return c.json({ error: "Agendamento não encontrado" }, 404);
 
-    // Real-time Broadcast
-    await broadcastToOrg(c.env, organizationId, {
-      type: "APPOINTMENT_UPDATED",
-      payload: { id, action: "deleted", timestamp: new Date().toISOString() },
-    });
+    // Check waitlist for this specific date/time slot
+    c.executionCtx.waitUntil(
+      (async () => {
+        try {
+          // Broadcast appointment deletion
+          await broadcastToOrg(c.env, organizationId, {
+            type: "APPOINTMENT_UPDATED",
+            payload: { id, action: "deleted", timestamp: new Date().toISOString() },
+          });
+
+          // Check appointment_waitlist for matching slot
+          const waitlistResult = await pool.query(
+            `SELECT * FROM appointment_waitlist
+             WHERE clinic_id = $1
+               AND target_date = $2
+               AND target_time = $3
+               AND status = 'waiting'
+             ORDER BY created_at ASC
+             LIMIT 1`,
+            [organizationId, currentAppt.date, currentAppt.startTime],
+          );
+
+          if (waitlistResult.rows.length > 0) {
+            const waitlistEntry = waitlistResult.rows[0];
+
+            // Update waitlist entry to notified
+            await pool.query(
+              `UPDATE appointment_waitlist
+               SET status = 'notified', notified_at = NOW(), updated_at = NOW()
+               WHERE id = $1`,
+              [waitlistEntry.id],
+            );
+
+            // Broadcast waitlist notification
+            await broadcastToOrg(c.env, organizationId, {
+              type: "WAITLIST_SLOT_AVAILABLE",
+              payload: {
+                waitlist_id: waitlistEntry.id,
+                patient_id: waitlistEntry.patient_id,
+                patient_name: waitlistEntry.patient_name,
+                patient_phone: waitlistEntry.patient_phone,
+                target_date: waitlistEntry.target_date,
+                target_time: waitlistEntry.target_time?.slice(0, 5),
+              },
+            });
+
+            console.log(`[Waitlist] Notified patient ${waitlistEntry.patient_name} for slot ${currentAppt.date} ${currentAppt.startTime}`);
+          }
+        } catch (err) {
+          console.error("[Appointments/Delete] Broadcast/Waitlist failed:", err);
+        }
+      })(),
+    );
 
     return c.json({ success: true });
   } catch (error: any) {

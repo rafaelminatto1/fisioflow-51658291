@@ -277,6 +277,12 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               }
               return next;
             });
+          } else if (data.type === "WAITLIST_SLOT_AVAILABLE") {
+            queryClient.invalidateQueries({ queryKey: ["appointment-waitlist"] });
+            queryClient.invalidateQueries({ queryKey: ["appointment-waitlist-stats"] });
+            window.dispatchEvent(
+              new CustomEvent("waitlist_slot_available", { detail: data.payload })
+            );
           }
         } catch (e) {
           // Heartbeat or other non-json messages

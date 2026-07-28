@@ -89,7 +89,7 @@ import {
 } from "@/features/whatsapp/inboxFilters";
 import { InboxFiltersPopover } from "@/components/whatsapp/InboxFiltersPopover";
 import { InboxNotificationsPopover } from "@/components/whatsapp/InboxNotificationsPopover";
-import { resolveMessageDisplayText, parseInstagramAttachment, type InstagramAttachmentData } from "@/features/whatsapp/messageDisplay";
+import { resolveMessageDisplayText, renderFormattedMessageText, parseInstagramAttachment, type InstagramAttachmentData } from "@/features/whatsapp/messageDisplay";
 import { InstagramCollabCard } from "@/components/whatsapp/InstagramCollabCard";
 import { InstagramCollabModal } from "@/components/whatsapp/InstagramCollabModal";
 import { summarizeConversation, suggestReply, suggestNextAction } from "@/services/whatsapp-api";
@@ -629,24 +629,24 @@ function MessageBubble({
             className="max-h-[280px] w-full rounded-lg object-cover"
             loading="lazy"
           />
-          {text ? <div>{text}</div> : null}
+          {text ? <div>{renderFormattedMessageText(text)}</div> : null}
         </div>
       ) : isImage ? (
         <div className="space-y-2">
           <div className="rounded-lg border border-dashed border-border/70 bg-muted/35 px-3 py-6 text-center text-xs font-semibold text-muted-foreground">
             Imagem recebida
           </div>
-          {text ? <div>{text}</div> : null}
+          {text ? <div>{renderFormattedMessageText(text)}</div> : null}
         </div>
       ) : isVideo && mediaUrl ? (
         <div className="space-y-2">
           <video src={mediaUrl} controls preload="metadata" className="max-h-[280px] w-full rounded-lg" />
-          {text ? <div>{text}</div> : null}
+          {text ? <div>{renderFormattedMessageText(text)}</div> : null}
         </div>
       ) : isAudio && mediaUrl ? (
         <div className="space-y-2">
           <audio src={mediaUrl} controls preload="metadata" className="w-full" />
-          {text ? <div>{text}</div> : null}
+          {text ? <div>{renderFormattedMessageText(text)}</div> : null}
         </div>
       ) : isFile && mediaUrl ? (
         <a
@@ -659,7 +659,7 @@ function MessageBubble({
           {text || "Abrir arquivo"}
         </a>
       ) : (
-        <div>{resolveMessageDisplayText(message.type, text)}</div>
+        <div>{renderFormattedMessageText(resolveMessageDisplayText(message.type, text))}</div>
       )}
       <div
         className={cn(

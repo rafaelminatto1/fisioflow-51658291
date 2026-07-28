@@ -10,10 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Clock, Calendar, AlertCircle } from "lucide-react";
-import { useAddToWaitlist } from "@/hooks/useWaitlist";
+import { useAddToAppointmentWaitlist } from "@/hooks/useAppointmentWaitlist";
 import { usePatients } from "@/hooks/patients/usePatients";
 import { toast } from "sonner";
 import { PatientCombobox } from "@/components/ui/patient-combobox";
@@ -28,25 +26,6 @@ interface WaitlistQuickAddProps {
   defaultPatientId?: string;
 }
 
-const DAY_MAP: Record<number, string> = {
-  0: "sunday",
-  1: "monday",
-  2: "tuesday",
-  3: "wednesday",
-  4: "thursday",
-  5: "friday",
-  6: "saturday",
-};
-
-const getTimeSlot = (time: string): string => {
-  // Safety check for time - handle null, undefined, or empty string
-  if (!time || !time.trim()) return "morning";
-  const [hour] = time.split(":").map(Number);
-  if (hour < 12) return "morning";
-  if (hour < 18) return "afternoon";
-  return "evening";
-};
-
 export function WaitlistQuickAdd({
   open,
   onOpenChange,
@@ -55,8 +34,6 @@ export function WaitlistQuickAdd({
   defaultPatientId = "",
 }: WaitlistQuickAddProps) {
   const [patientId, setPatientId] = useState(defaultPatientId);
-  const [priority, setPriority] = useState<"normal" | "high" | "urgent">("normal");
-  const [notes, setNotes] = useState("");
 
   // Quick Patient Creation State
   const [quickPatientModalOpen, setQuickPatientModalOpen] = useState(false);
@@ -67,7 +44,7 @@ export function WaitlistQuickAdd({
   } | null>(null);
 
   const queryClient = useQueryClient();
-  const { mutate: addToWaitlist, isPending: isAdding } = useAddToWaitlist();
+  const { mutate: addToWaitlist, isPending: isAdding } = useAddToAppointmentWaitlist();
   const { data: patients = [] } = usePatients();
 
   // Update local state when prop changes
@@ -79,8 +56,8 @@ export function WaitlistQuickAdd({
 
   // Safely handle potentially invalid dates
   const safeDate = date instanceof Date && !isNaN(date.getTime()) ? date : new Date();
-  const dayOfWeek = DAY_MAP[safeDate.getDay()];
-  const timeSlot = getTimeSlot(time);
+  const targetDateStr = format(safeDate, "yyyy-MM-dd");
+  const targetTimeStr = time.trim() ? time.substring(0, 5) : "00:00";
 
   const handleSubmit = () => {
     if (!patientId) {
@@ -88,20 +65,25 @@ export function WaitlistQuickAdd({
       return;
     }
 
+    const patient = patients.find((p) => p.id === patientId);
+    const patientPhone = patient?.phone || "";
+
+    if (!patientPhone) {
+      toast.error("Paciente não possui telefone cadastrado");
+      return;
+    }
+
     addToWaitlist({
       patient_id: patientId,
-      preferred_days: [dayOfWeek],
-      preferred_periods: [timeSlot],
-      priority,
-      notes:
-        notes ||
-        `Interesse registrado para ${format(safeDate, "EEEE, d 'de' MMMM", { locale: ptBR })} às ${time}`,
+      patient_phone: patientPhone,
+      patient_name: patient?.fullName || patient?.name || "",
+      target_date: targetDateStr,
+      target_time: targetTimeStr,
+      type: "session",
     });
 
     onOpenChange(false);
     setPatientId("");
-    setPriority("normal");
-    setNotes("");
     setLastCreatedPatient(null);
   };
 
@@ -145,52 +127,6 @@ export function WaitlistQuickAdd({
                 fallbackDisplayName={
                   lastCreatedPatient?.id === patientId ? lastCreatedPatient.name : undefined
                 }
-              />
-            </div>
-
-            {/* Priority */}
-            <div className="space-y-2">
-              <Label>Prioridade</Label>
-              <RadioGroup
-                value={priority}
-                onValueChange={(v) => setPriority(v as typeof priority)}
-                className="flex gap-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="normal" id="normal" />
-                  <Label htmlFor="normal" className="text-sm font-normal cursor-pointer">
-                    Normal
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="high" id="high" />
-                  <Label
-                    htmlFor="high"
-                    className="text-sm font-normal cursor-pointer text-orange-600"
-                  >
-                    Alta
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="urgent" id="urgent" />
-                  <Label
-                    htmlFor="urgent"
-                    className="text-sm font-normal cursor-pointer text-red-600"
-                  >
-                    Urgente
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {/* Notes */}
-            <div className="space-y-2">
-              <Label>Observações (opcional)</Label>
-              <Textarea
-                placeholder="Alguma observação sobre o interesse..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={2}
               />
             </div>
 

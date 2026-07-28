@@ -542,7 +542,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             )}
           </PopoverAnchor>
           <PopoverContent
-            className="w-[340px] max-w-sm p-0 bg-card border border-border shadow-2xl z-50 rounded-2xl overflow-hidden"
+            className="w-[480px] max-w-sm p-0 bg-card border border-border shadow-2xl z-50 rounded-2xl overflow-hidden"
             align="start"
             side="right"
             sideOffset={12}

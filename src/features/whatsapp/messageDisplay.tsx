@@ -42,6 +42,102 @@ export function resolveMessageDisplayText(
   return friendlyMessageLabel(type) || "[mensagem sem texto]";
 }
 
+import type React from "react";
+import { MessageCircle } from "lucide-react";
+
+/**
+ * Remove sintaxe de link markdown [Rótulo](https://...) deixando apenas o rótulo legível
+ * para previews de mensagens (listas de conversa, notificações).
+ */
+export function cleanMarkdownLinks(text: string): string {
+  if (!text) return "";
+  return text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, "$1").trim();
+}
+
+/**
+ * Renderiza textos de mensagens no chat convertendo links markdown [Rótulo](URL) em
+ * botões/links interativos (estilo WhatsApp) e URLs puras em <a> clicáveis.
+ */
+export function renderFormattedMessageText(content: string): React.ReactNode {
+  if (!content) return null;
+
+  const markdownLinkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+  const hasMarkdownLinks = markdownLinkRegex.test(content);
+  markdownLinkRegex.lastIndex = 0;
+
+  if (!hasMarkdownLinks) {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = content.split(urlRegex);
+    if (parts.length === 1) return content;
+
+    return parts.map((part, idx) => {
+      if (/^https?:\/\//i.test(part)) {
+        return (
+          <a
+            key={idx}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-emerald-700 underline underline-offset-2 hover:text-emerald-800 dark:text-emerald-400 break-all"
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  }
+
+  const nodes: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = markdownLinkRegex.exec(content)) !== null) {
+    const [fullMatch, label, url] = match;
+    const matchIndex = match.index;
+
+    if (matchIndex > lastIndex) {
+      nodes.push(content.substring(lastIndex, matchIndex));
+    }
+
+    const isWhatsApp = url.includes("wa.me") || url.includes("whatsapp.com");
+    const displayLabel = label.trim().startsWith("💬") ? label.trim() : `💬 ${label.trim()}`;
+
+    nodes.push(
+      isWhatsApp ? (
+        <a
+          key={`md-link-${matchIndex}`}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="my-2.5 flex w-full max-w-[300px] items-center justify-center gap-1.5 rounded-full bg-[#25D366] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#20bd5a] transition-all no-underline"
+        >
+          <MessageCircle className="h-4 w-4 shrink-0" />
+          {displayLabel}
+        </a>
+      ) : (
+        <a
+          key={`md-link-${matchIndex}`}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-emerald-700 underline underline-offset-2 hover:text-emerald-800 dark:text-emerald-400 break-all"
+        >
+          {label}
+        </a>
+      )
+    );
+
+    lastIndex = matchIndex + fullMatch.length;
+  }
+
+  if (lastIndex < content.length) {
+    nodes.push(content.substring(lastIndex));
+  }
+
+  return nodes;
+}
+
 export interface InstagramAttachmentData {
   kind: "collab" | "share" | "reel" | "story" | "attachment";
   title: string;

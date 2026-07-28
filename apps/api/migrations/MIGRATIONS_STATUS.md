@@ -57,6 +57,8 @@
 | `0130_whatsapp_raw_event_observability.sql`        | Observabilidade de eventos WA (processing_state, failure_reason, etc.)     | —       | ✅   | ✅   | Aplicada em 2026-06-25. Novas colunas e 3 índices confirmados em produção                                          | ✅      | ✅   | ✅   | Aplicada via psql na master em 2026-06-16                                                                          |
 | `0140_tarefas_integracoes.sql`                     | Integrações de tarefas (Jira/Asana/Monday parity)                              | —       | ✅   | ✅   | Aplicada ~2026-07-09                                                                                               |
 | `0141_kb_index_chunks.sql`                          | Contagem de chunks por doc p/ limpeza determinística do reindex de RAG        | —       | ✅   | ✅   | Aplicada via Neon MCP em 2026-07-23 (purple-union). Tabela `kb_index_chunks` confirmada em prod                    |
+| `0146_exercise_evidence_status.sql`            | Adiciona coluna `status` para workflow de curadoria clínica (US-L3) | ⏳ | ⏳ | ⏳ | Adiciona coluna status ('pending'/'approved'/'rejected') para controle de aprovação clínica antes de persistir referências em produção |
+
 | `0145_exercise_evidence_table.sql`            | Cria tabela `exercise_evidence` com evidências por exercício (US-L2)       | ⏳      | ⏳   | ✅   | Criação da tabela para curadoria de literatura com evidence_level (Oxford CEBM), DOI/PMID e recomendação clínica |
 
 ---

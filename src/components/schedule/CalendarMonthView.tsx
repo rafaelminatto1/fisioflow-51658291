@@ -67,7 +67,7 @@ const CalendarMonthView = memo(
     return (
       <div
         className="h-full flex flex-col bg-gradient-to-br from-background to-muted/20 overflow-hidden"
-        role="region"
+        role="grid"
         aria-label="Visualização mensal do calendário"
       >
         <div
@@ -109,47 +109,53 @@ const CalendarMonthView = memo(
                   const isCurrentMonth = isSameMonth(day, currentDate);
                   const dayString = format(day, "dd/MM/yyyy");
 
+                  const handleDayKeyDown = (e: React.KeyboardEvent) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onDateChange(day);
+                      if (onTimeSlotClick) {
+                        onTimeSlotClick(day, "08:00");
+                      }
+                    }
+                  };
+
                   return (
                     <div
                       key={day.toISOString()}
                       className={cn(
-                        "flex h-full min-h-[9.5rem] flex-col border-r border-border/50 p-2.5 md:p-3 cursor-pointer transition-colors duration-200 group relative overflow-hidden",
+                        "flex h-full min-h-[9.5rem] flex-col border-r border-border/50 p-2.5 md:p-3 relative overflow-hidden",
                         !isCurrentMonth && "bg-muted/30 text-muted-foreground",
                         isToday(day) && "bg-primary/5 ring-1 ring-inset ring-primary/15 shadow-sm",
                         isCurrentMonth &&
                           !isToday(day) &&
                           "hover:bg-primary/5 active:bg-primary/10",
                       )}
-                      onClick={(e) => {
-                        const target = e.target as HTMLElement;
-                        if (
-                          target.closest('[data-week-appointment="true"]') ||
-                          target.closest('[role="dialog"]') ||
-                          target.closest('[role="alertdialog"]')
-                        ) {
-                          return;
-                        }
-                        if (onTimeSlotClick) {
-                          onTimeSlotClick(day, "08:00");
-                        }
-                        onDateChange(day);
-                      }}
                       role="gridcell"
+                      tabIndex={-1}
                       aria-label={`${dayString}${isToday(day) ? " (Hoje)" : ""}${!isCurrentMonth ? " - Outro mês" : ""}`}
                       aria-current={isToday(day) ? "date" : undefined}
                     >
                       <div className="mb-3 flex items-start justify-between gap-2">
-                        <div
+                        <button
+                          type="button"
                           className={cn(
-                            "text-xs xs:text-sm font-semibold transition-all duration-200 w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-2xl shrink-0",
+                            "text-xs xs:text-sm font-semibold transition-all duration-200 w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-2xl shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
                             isToday(day)
                               ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-bold shadow-lg ring-2 ring-primary/20"
                               : "group-hover:text-primary group-hover:bg-primary/10",
                           )}
+                          onClick={() => {
+                            onDateChange(day);
+                            if (onTimeSlotClick) {
+                              onTimeSlotClick(day, "08:00");
+                            }
+                          }}
+                          onKeyDown={handleDayKeyDown}
+                          tabIndex={0}
                         >
                           {format(day, "d")}
                           <span className="sr-only">{format(day, "EEEE", { locale: ptBR })}</span>
-                        </div>
+                        </button>
 
                         {dayAppointments.length > 0 && (
                           <div className="rounded-full bg-background/90 px-2 py-0.5 text-[10px] md:text-[11px] font-semibold text-muted-foreground shadow-sm border border-border/60">
@@ -192,10 +198,17 @@ const CalendarMonthView = memo(
                                   isOverCapacity(apt) && "animate-pulse ring-1 ring-amber-400",
                                 )}
                                 title={`${apt.patientName} • ${apt.time}${apt.type ? " • " + apt.type : ""}`}
-                                onPointerDownCapture={(e) => e.stopPropagation()}
+                                onPointerDownCapture={(e) => {
+                                  if (e.button === 0) e.stopPropagation();
+                                }}
                                 onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenPopoverId(apt.id);
+                                  if (e.button === 0) setOpenPopoverId(apt.id);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    setOpenPopoverId(apt.id);
+                                  }
                                 }}
                                 role="button"
                                 tabIndex={0}
