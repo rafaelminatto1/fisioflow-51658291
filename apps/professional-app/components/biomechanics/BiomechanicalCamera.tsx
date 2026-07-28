@@ -65,6 +65,7 @@ export const BiomechanicalCamera: React.FC<BiomechanicalCameraProps> = ({
     leftKnee: 0,
     rightKnee: 0,
     asymmetry: 0,
+    mqiScore: 100,
     risk: "low" as "low" | "moderate" | "high",
   });
 
@@ -103,11 +104,13 @@ export const BiomechanicalCamera: React.FC<BiomechanicalCameraProps> = ({
       );
       const asym = calculateAsymmetry(lK, rK);
       const risk = evaluateRisk(asym);
+      const mqi = Math.max(0, Math.min(100, Math.round(100 - asym * 1.5)));
 
       setMetrics({
         leftKnee: lK,
         rightKnee: rK,
         asymmetry: asym,
+        mqiScore: mqi,
         risk,
       });
     }

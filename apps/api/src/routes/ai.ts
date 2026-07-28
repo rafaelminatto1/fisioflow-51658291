@@ -13,6 +13,8 @@ import { aiBrainChatRoutes } from "./ai/brain-chat";
 import { aiRetentionRoutes } from "./ai/retention";
 import { aiDictationRoutes } from "./ai/aiDictation";
 
+import { aiVisionRoutes } from "./ai/ai-vision";
+
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 // Rate limiting: 100 chamadas AI por org por hora
@@ -23,6 +25,7 @@ app.route("/", aiChatRoutes);
 app.route("/", aiAudioRoutes);
 app.route("/", aiDocumentRoutes);
 app.route("/", aiClinicalRoutes);
+app.route("/vision", aiVisionRoutes);
 app.route("/insights", aiInsightsRoutes);
 app.route("/brain/insights", aiBrainInsightsRoutes);
 app.route("/brain/chat", aiBrainChatRoutes);
