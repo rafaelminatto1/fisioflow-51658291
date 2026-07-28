@@ -153,4 +153,15 @@ app.delete("/link/:id", requireAuth, async (c) => {
   return c.json({ ok: true });
 });
 
+// GET /api/evidence/exercises/:id — retrieve curated evidence for an exercise
+app.get("/exercises/:id", requireAuth, async (c) => {
+  const id = c.req.param("id");
+  const sql = getRawSql(c.env, "read");
+  const res = await sql(
+    `SELECT id, exercise_id, pmid, doi, title, abstract, evidence_level, clinical_recommendation, icd10_codes, source_db, retrieved_at FROM exercise_evidence WHERE exercise_id = $1 ORDER BY retrieved_at DESC`,
+    [id],
+  );
+  return c.json({ data: res.rows ?? [] });
+});
+
 export default app;
