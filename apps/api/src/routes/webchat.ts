@@ -477,12 +477,26 @@ app.post("/message", messageRateLimit, async (c: any) => {
 			console.error("[Webchat] Concierge error:", conciergeErr);
 		}
 
-		return c.json({ ok: true, visitorId, reply: directReply });
+		return c.json({ ok: true, visitorId, reply: directReply ? formatWebchatHtml(directReply) : directReply });
 	} catch (err) {
 		console.error("[Webchat] POST /message error:", err);
 		return c.json({ error: "Erro interno" }, 500);
 	}
 });
+
+export function formatWebchatHtml(text: string): string {
+	if (!text) return "";
+	return text
+		.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, label, url) => {
+			if (/wa\.me|whatsapp/i.test(url)) {
+				return `<a href="${url}" target="_blank" rel="noopener" style="display:inline-block;margin:8px 0 4px;padding:10px 16px;background:#25D366;color:#fff;font-weight:700;text-align:center;border-radius:20px;text-decoration:none;box-shadow:0 3px 10px rgba(37,211,102,0.35);font-size:13px">💬 ${label}</a>`;
+			}
+			return `<a href="${url}" target="_blank" rel="noopener" style="color:#1f7aec;text-decoration:underline;font-weight:600">${label}</a>`;
+		})
+		.replace(/(^|[\s\n])(https?:\/\/wa\.me\/[^\s<]+)/g, (_, prefix, url) => {
+			return `${prefix}<a href="${url}" target="_blank" rel="noopener" style="display:inline-block;margin:8px 0 4px;padding:10px 16px;background:#25D366;color:#fff;font-weight:700;text-align:center;border-radius:20px;text-decoration:none;box-shadow:0 3px 10px rgba(37,211,102,0.35);font-size:13px">💬 Falar no WhatsApp Oficial</a>`;
+		});
+}
 
 // Polling: respostas do atendente desde `after`.
 app.get("/poll", pollRateLimit, async (c) => {
@@ -516,7 +530,7 @@ app.get("/poll", pollRateLimit, async (c) => {
 		return c.json({
 			messages: msgs.rows.map((m: any) => ({
 				id: m.id,
-				text: textOf(m.content),
+				text: formatWebchatHtml(textOf(m.content)),
 				at: m.at,
 			})),
 		});
