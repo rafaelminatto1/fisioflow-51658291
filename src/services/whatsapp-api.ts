@@ -161,7 +161,10 @@ export interface Tag {
 
 export interface QuickReply {
   id: string;
-  name: string;
+  /** Rótulo persistido em wa_quick_replies.title. */
+  title?: string;
+  /** Legado: alguns consumidores ainda enviam `name`. */
+  name?: string;
   content: string;
   team?: string;
   category?: string;
@@ -411,6 +414,15 @@ export async function markConversationRead(conversationId: string) {
     {
       method: "POST",
     },
+  );
+  return unwrapData(res);
+}
+
+/** Mostra "digitando…" para o contato no WhatsApp (expira sozinho em ~25s). */
+export async function sendTypingIndicator(conversationId: string) {
+  const res = await request<{ data: { sent: boolean } } | { sent: boolean }>(
+    `${BASE}/conversations/${conversationId}/typing`,
+    { method: "POST" },
   );
   return unwrapData(res);
 }

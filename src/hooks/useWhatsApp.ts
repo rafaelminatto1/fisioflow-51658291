@@ -103,6 +103,46 @@ export function useWhatsAppInbox(filters?: ConversationFilters) {
     };
   }, [refetch]);
 
+  // Zera o badge de não lidas da conversa imediatamente (WhatsApp Web-like):
+  // ao abrir a conversa o backend marca last_read_at, mas a lista só refletiria
+  // isso no próximo poll. Atualiza o estado local e o cache na hora.
+  const clearUnreadBadge = useCallback(
+    (conversationId: string) => {
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === conversationId && (conv.unreadCount || 0) > 0
+            ? { ...conv, unreadCount: 0 }
+            : conv,
+        ),
+      );
+
+      queryClient.setQueryData(["whatsapp", "inbox"], (old: any) => {
+        if (!old?.data) return old;
+        return {
+          ...old,
+          data: old.data.map((conv: any) =>
+            conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv,
+          ),
+        };
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["whatsapp", "unread-count"] });
+    },
+    [queryClient],
+  );
+
+  // Espelha a leitura feita em outra aba/dispositivo (broadcast `whatsapp_read`).
+  useEffect(() => {
+    const handleRead = (event: Event) => {
+      const data = (event as CustomEvent).detail;
+      if (!data || data.type !== "whatsapp_read" || !data.conversationId) return;
+      clearUnreadBadge(data.conversationId);
+    };
+
+    window.addEventListener("websocket_message", handleRead);
+    return () => window.removeEventListener("websocket_message", handleRead);
+  }, [clearUnreadBadge]);
+
   // Listen for real-time WhatsApp new messages via WebSocket
   useEffect(() => {
     const handleNewMessage = (event: Event) => {
@@ -174,8 +214,9 @@ export function useWhatsAppInbox(filters?: ConversationFilters) {
     conversations, 
     loading, 
     error, 
-    refetch, 
+    refetch,
     pagination,
+    clearUnreadBadge,
     newMessageIds,
     hasNewMessages: newMessageIds.size > 0,
   };

@@ -128,3 +128,49 @@ export class WhatsAppService {
     return result;
   }
 }
+
+/**
+ * Marca uma mensagem recebida como lida na Meta (o contato passa a ver os
+ * dois tiques azuis) e, opcionalmente, exibe o indicador "digitando…".
+ *
+ * Best-effort: nunca lança — falhar aqui não pode derrubar o request do inbox.
+ */
+export async function sendWhatsAppReadReceipt(
+  env: Env,
+  metaMessageId: string,
+  options: { typing?: boolean } = {},
+): Promise<{ ok: boolean; reason?: string }> {
+  const phoneId = env?.WHATSAPP_PHONE_NUMBER_ID;
+  const token = env?.WHATSAPP_ACCESS_TOKEN;
+
+  if (!metaMessageId) return { ok: false, reason: "missing_message_id" };
+  if (!phoneId || !token) return { ok: false, reason: "missing_credentials" };
+
+  const payload: Record<string, unknown> = {
+    messaging_product: "whatsapp",
+    status: "read",
+    message_id: metaMessageId,
+  };
+  if (options.typing) payload.typing_indicator = { type: "text" };
+
+  try {
+    const response = await fetch(`https://graph.facebook.com/v25.0/${phoneId}/messages`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      console.warn("[WhatsApp] read receipt falhou", response.status, body);
+      return { ok: false, reason: `http_${response.status}` };
+    }
+    return { ok: true };
+  } catch (error) {
+    console.warn("[WhatsApp] read receipt erro", error);
+    return { ok: false, reason: "network_error" };
+  }
+}

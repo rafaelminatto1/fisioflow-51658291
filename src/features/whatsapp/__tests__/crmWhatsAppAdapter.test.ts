@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Conversation } from "@/services/whatsapp-api";
-import { toCrmConversationViewModel } from "../crmWhatsAppAdapter";
+import { toCrmConversationViewModel, toCrmQuickReplies } from "../crmWhatsAppAdapter";
 
 describe("crmWhatsAppAdapter", () => {
   beforeEach(() => {
@@ -82,5 +82,107 @@ describe("crmWhatsAppAdapter", () => {
     expect(vm.presenceLabel).toContain("Atualizado em");
     expect(vm.nextActionTitle).toBe("Pendente");
     expect(vm.nextActionBody).toBe("Qualificar lead e responder a primeira mensagem.");
+  });
+
+  it("usa o title vindo da API como rótulo da resposta rápida", () => {
+    const items = toCrmQuickReplies([
+      { id: "q1", title: "Valores", content: "A avaliação custa..." },
+      { id: "q2", name: "Endereço", content: "Ficamos na..." },
+    ] as never);
+
+    expect(items[0].label).toBe("Valores");
+    expect(items[1].label).toBe("Endereço");
+  });
+
+  it("descarta respostas rápidas sem rótulo (evita pílulas vazias)", () => {
+    const items = toCrmQuickReplies([
+      { id: "q1", content: "sem titulo" },
+      { id: "q2", title: "  ", content: "espacos" },
+      { id: "q3", title: "Horários", content: "Atendemos..." },
+    ] as never);
+
+    expect(items).toHaveLength(1);
+    expect(items[0].label).toBe("Horários");
+  });
+});
+
+describe("crmWhatsAppAdapter · card da lista", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-20T12:00:00.000Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const base: Conversation = {
+    id: "conv-1",
+    contactId: "contact-1",
+    contactName: "Maria",
+    contactPhone: "5511999999999",
+    status: "open",
+    unreadCount: 0,
+    tags: [],
+    metadata: {},
+    createdAt: "2026-06-18T09:00:00.000Z",
+    updatedAt: "2026-06-20T11:30:00.000Z",
+  };
+
+  it("expõe prévia, direção e horário da última mensagem", () => {
+    const vm = toCrmConversationViewModel({
+      ...base,
+      lastMessage: "  Bom dia, gostaria de saber os valores  ",
+      lastMessageAt: "2026-06-20T11:30:00.000Z",
+      lastMessageDirection: "outbound",
+    });
+
+    expect(vm.preview).toBe("Bom dia, gostaria de saber os valores");
+    expect(vm.previewDirection).toBe("outbound");
+    expect(vm.displayTime).toMatch(/\d{2}:\d{2}/);
+  });
+
+  it("mostra 'Ontem' e a data para mensagens mais antigas", () => {
+    const ontem = toCrmConversationViewModel({ ...base, lastMessageAt: "2026-06-19T22:00:00.000Z" });
+    const antigo = toCrmConversationViewModel({ ...base, lastMessageAt: "2026-06-10T10:00:00.000Z" });
+
+    expect(ontem.displayTime).toBe("Ontem");
+    expect(antigo.displayTime).toBe("10/06");
+  });
+
+  it("marca conversas aguardando resposta da equipe", () => {
+    const aguardando = toCrmConversationViewModel({
+      ...base,
+      lastMessageDirection: "inbound",
+      lastMessageAt: "2026-06-20T06:00:00.000Z",
+    });
+    const respondida = toCrmConversationViewModel({
+      ...base,
+      lastMessageDirection: "outbound",
+      lastMessageAt: "2026-06-20T06:00:00.000Z",
+    });
+
+    expect(aguardando.awaitingReply).toBe(true);
+    expect(aguardando.hoursSinceLastMessage).toBe(6);
+    expect(respondida.awaitingReply).toBe(false);
+  });
+
+  it("expõe responsável e lembrete (snooze) do metadata", () => {
+    const vencido = toCrmConversationViewModel({
+      ...base,
+      assignedTo: "user-1",
+      assignedToName: "Rafael",
+      metadata: { snoozedUntil: "2026-06-20T11:00:00.000Z" },
+    });
+    const futuro = toCrmConversationViewModel({
+      ...base,
+      metadata: { snoozedUntil: "2026-06-20T18:00:00.000Z" },
+    });
+
+    expect(vencido.assignedTo).toBe("user-1");
+    expect(vencido.ownerLabel).toBe("Rafael");
+    expect(vencido.snoozedUntil).toBe("2026-06-20T11:00:00.000Z");
+    expect(vencido.isSnoozeDue).toBe(true);
+    expect(futuro.isSnoozeDue).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-import { Fragment, memo, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -6,6 +6,7 @@ import {
   BellOff,
   CalendarPlus,
   Camera,
+  Check,
   CheckCheck,
   ChevronDown,
   Clock3,
@@ -61,6 +62,8 @@ import {
   pinConversation,
   removeTag,
   resolveContact,
+  sendTypingIndicator,
+  updateConversation,
   updateMessage,
   type FunnelStage,
   type Message,
@@ -77,6 +80,16 @@ import {
   type CrmStage,
   type CrmStageMeta,
 } from "@/features/whatsapp/crmWhatsAppAdapter";
+import {
+  applyInboxFilters,
+  EMPTY_INBOX_FILTERS,
+  resolveSnoozeTarget,
+  sortInboxCards,
+  type InboxFilters,
+  type SnoozeOption,
+} from "@/features/whatsapp/inboxFilters";
+import { InboxFiltersPopover } from "@/components/whatsapp/InboxFiltersPopover";
+import { InboxNotificationsPopover } from "@/components/whatsapp/InboxNotificationsPopover";
 import { resolveMessageDisplayText, parseInstagramAttachment, type InstagramAttachmentData } from "@/features/whatsapp/messageDisplay";
 import { InstagramCollabCard } from "@/components/whatsapp/InstagramCollabCard";
 import { InstagramCollabModal } from "@/components/whatsapp/InstagramCollabModal";
@@ -166,6 +179,29 @@ const QUICK_REPLY_FALLBACKS: Array<{ label: string; content: string }> = [
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+/** Bipe curto via WebAudio — evita carregar um asset de áudio só para isso. */
+function playNewMessageSound() {
+  try {
+    const AudioCtx =
+      window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.value = 880;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.22);
+    oscillator.connect(gain).connect(ctx.destination);
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.24);
+    oscillator.onended = () => void ctx.close();
+  } catch {
+    // Autoplay bloqueado ou WebAudio indisponível: silencia sem quebrar o inbox.
+  }
 }
 
 function getMessageText(content: unknown): string {
@@ -305,6 +341,21 @@ const ChannelBadge = memo(function ChannelBadge({
 
 type CrmConversationViewModel = ReturnType<typeof toCrmConversationViewModel>;
 
+/** "Hoje 15:30" / "Amanhã 09:00" / "24/07 09:00" para o chip de lembrete. */
+function formatSnoozeLabel(value: string) {
+  const date = new Date(value);
+  const time = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(date);
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const startOfTomorrow = new Date(startOfToday.getTime() + 24 * 3600 * 1000);
+  const startOfDayAfter = new Date(startOfToday.getTime() + 48 * 3600 * 1000);
+
+  if (date < startOfTomorrow) return `HOJE ${time}`;
+  if (date < startOfDayAfter) return `AMANHÃ ${time}`;
+  return `${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(date)} ${time}`;
+}
+
 const ConversationCard = memo(function ConversationCard({
   item,
   isSelected,
@@ -312,6 +363,7 @@ const ConversationCard = memo(function ConversationCard({
   funnelMap,
   onSelect,
   onContextMenu,
+  registerRef,
 }: {
   item: CrmConversationViewModel;
   isSelected: boolean;
@@ -319,10 +371,15 @@ const ConversationCard = memo(function ConversationCard({
   funnelMap: Map<string, FunnelStage>;
   onSelect: (id: string) => void;
   onContextMenu: (e: React.MouseEvent, id: string) => void;
+  registerRef?: (id: string, node: HTMLButtonElement | null) => void;
 }) {
+  const isPinned = isRecord(item.metadata) && item.metadata.pinned === true;
+  const isMuted = isRecord(item.metadata) && typeof item.metadata.mutedUntil === "string";
+
   return (
     <button
       type="button"
+      ref={(node) => registerRef?.(item.id, node)}
       onClick={() => onSelect(item.id)}
       onContextMenu={(e) => {
         e.preventDefault();
@@ -351,6 +408,8 @@ const ConversationCard = memo(function ConversationCard({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <span className="truncate text-[13px] font-bold">{item.name}</span>
+          {isPinned && <Pin className="h-3 w-3 shrink-0 text-muted-foreground" aria-label="Fixada" />}
+          {isMuted && <BellOff className="h-3 w-3 shrink-0 text-muted-foreground" aria-label="Silenciada" />}
           {item.temperature === "quente" && (
             <Flame className="h-3 w-3 shrink-0 text-orange-500" aria-label="Lead quente" />
           )}
@@ -380,6 +439,34 @@ const ConversationCard = memo(function ConversationCard({
               🌐 Site / Webchat
             </span>
           )}
+          {item.snoozedUntil && (
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-extrabold border",
+                item.isSnoozeDue
+                  ? "border-amber-500/30 bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                  : "border-border bg-muted text-muted-foreground",
+              )}
+              title={`Lembrete: ${new Date(item.snoozedUntil).toLocaleString("pt-BR")}`}
+            >
+              <Clock3 className="h-2.5 w-2.5" />
+              {item.isSnoozeDue ? "LEMBRETE VENCIDO" : formatSnoozeLabel(item.snoozedUntil)}
+            </span>
+          )}
+          {item.tags.slice(0, 2).map((tag) => (
+            <span
+              key={tag.id}
+              className="rounded-full px-2 py-0.5 text-[9px] font-extrabold"
+              style={{ backgroundColor: `${tag.color}22`, color: tag.color }}
+            >
+              {tag.name}
+            </span>
+          ))}
+          {item.tags.length > 2 && (
+            <span className="text-[9px] font-bold text-muted-foreground">
+              +{item.tags.length - 2}
+            </span>
+          )}
         </div>
       </div>
       {item.unreadCount > 0 && (
@@ -391,6 +478,28 @@ const ConversationCard = memo(function ConversationCard({
   );
 });
 
+/**
+ * Recibo estilo WhatsApp: ✓ enviada, ✓✓ entregue, ✓✓ azul lida, ⚠ falhou.
+ * Antes exibia sempre ✓✓ azul, o que dava falsa sensação de leitura.
+ */
+function DeliveryReceipt({ status }: { status?: Message["status"] }) {
+  if (status === "failed") {
+    return (
+      <span className="text-[9px] font-bold text-destructive" title="Falha no envio">
+        ⚠ falhou
+      </span>
+    );
+  }
+  if (status === "read") {
+    return <CheckCheck className="h-[13px] w-[13px] text-sky-500" aria-label="Lida" />;
+  }
+  if (status === "delivered") {
+    return <CheckCheck className="h-[13px] w-[13px] text-muted-foreground" aria-label="Entregue" />;
+  }
+  if (status === "deleted") return null;
+  return <Check className="h-[13px] w-[13px] text-muted-foreground" aria-label="Enviada" />;
+}
+
 function MessageBubble({
   message,
   isOutbound,
@@ -400,6 +509,8 @@ function MessageBubble({
   text,
   timeLabel,
   isReplying,
+  searchHit,
+  currentSearchHit,
   channel,
   contactName,
   onContextMenu,
@@ -420,6 +531,8 @@ function MessageBubble({
   text: string;
   timeLabel: string;
   isReplying: boolean;
+  searchHit?: boolean;
+  currentSearchHit?: boolean;
   channel?: string;
   contactName?: string;
   onContextMenu: (e: React.MouseEvent) => void;
@@ -486,13 +599,17 @@ function MessageBubble({
       onPointerCancel={onPointerCancel}
       onPointerLeave={onPointerLeave}
       className={cn(
-        "relative max-w-[64%] rounded-xl px-3 py-2 text-[13px] leading-[1.45] shadow-[0_1px_1px_rgba(0,0,0,0.06)]",
+        // break-words/pre-wrap: links longos sem espaço não podem estourar a
+        // largura do chat (gerava scroll horizontal na conversa).
+        "relative max-w-[64%] whitespace-pre-wrap break-words rounded-xl px-3 py-2 text-[13px] leading-[1.45] shadow-[0_1px_1px_rgba(0,0,0,0.06)]",
         isOutbound
           ? isTemplate
             ? "ml-auto rounded-tr-[3px] border border-[hsl(142_50%_75%)] bg-white"
             : "ml-auto rounded-tr-[3px] bg-[hsl(142_65%_88%)]"
           : "rounded-tl-[3px] bg-white",
         isReplying && "ring-2 ring-primary/35",
+        searchHit && "ring-2 ring-amber-400/60",
+        currentSearchHit && "ring-2 ring-amber-500",
       )}
     >
       {isTemplate && (
@@ -552,9 +669,7 @@ function MessageBubble({
         )}
       >
         {timeLabel}
-        {isOutbound && message.status !== "failed" && (
-          <CheckCheck className="h-[13px] w-[13px] text-sky-500" />
-        )}
+        {isOutbound && <DeliveryReceipt status={message.status} />}
       </div>
     </div>
   );
@@ -610,6 +725,13 @@ export default function CrmWhatsApp() {
     x: number;
     y: number;
   } | null>(null);
+  const [inboxFilters, setInboxFilters] = useState<InboxFilters>(EMPTY_INBOX_FILTERS);
+  const [soundEnabled, setSoundEnabled] = useState(
+    () => localStorage.getItem("crm:newMessageSound") !== "off",
+  );
+  const [messageSearchOpen, setMessageSearchOpen] = useState(false);
+  const [messageSearch, setMessageSearch] = useState("");
+  const [messageMatchIndex, setMessageMatchIndex] = useState(0);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [editDraft, setEditDraft] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -618,8 +740,12 @@ export default function CrmWhatsApp() {
   const [newConversationQuery, setNewConversationQuery] = useState("");
   const [startingConversation, setStartingConversation] = useState(false);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const composerRef = useRef<HTMLInputElement>(null);
+  const conversationRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const lastTypingSentAt = useRef(0);
 
-  const { conversations, loading, refetch, newMessageIds } = useWhatsAppInbox({
+  const { conversations, loading, refetch, newMessageIds, clearUnreadBadge } = useWhatsAppInbox({
     search: search || undefined,
     limit: 100,
   });
@@ -714,8 +840,25 @@ export default function CrmWhatsApp() {
         return nameMatch || phoneMatch || previewMatch;
       });
     }
-    return list;
-  }, [conversationCards, pipelineFilter, search]);
+
+    return sortInboxCards(applyInboxFilters(list, inboxFilters));
+  }, [conversationCards, pipelineFilter, search, inboxFilters]);
+
+  // Opções dos filtros derivadas das conversas carregadas.
+  const assigneeOptions = useMemo(() => {
+    const byId = new Map<string, string>();
+    conversationCards.forEach((card) => {
+      if (card.assignedTo) byId.set(card.assignedTo, card.ownerLabel);
+    });
+    return [...byId.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [conversationCards]);
+
+  const unreadCards = useMemo(
+    () => conversationCards.filter((card) => card.unreadCount > 0).slice(0, 20),
+    [conversationCards],
+  );
   const selectedCard = useMemo(
     () => filteredConversations.find((item) => item.id === selectedId) ?? conversationCards.find((item) => item.id === selectedId) ?? null,
     [conversationCards, filteredConversations, selectedId],
@@ -729,8 +872,10 @@ export default function CrmWhatsApp() {
 
   useEffect(() => {
     if (!selectedId) return;
+    // Some o badge na hora (WhatsApp Web-like); o backend confirma em seguida.
+    clearUnreadBadge(selectedId);
     markConversationRead(selectedId).catch(() => {});
-  }, [selectedId]);
+  }, [selectedId, clearUnreadBadge]);
 
   const pipelineCounts = useMemo(() => {
     return {
@@ -1073,6 +1218,103 @@ export default function CrmWhatsApp() {
     await refetch();
   };
 
+  // Busca dentro da conversa: ids das mensagens que casam com o termo.
+  const messageMatches = useMemo(() => {
+    const term = messageSearch.trim().toLowerCase();
+    if (!term) return [] as string[];
+    return messages
+      .filter((message) => getMessageText(message.content).toLowerCase().includes(term))
+      .map((message) => message.id);
+  }, [messages, messageSearch]);
+
+  const goToMatch = useCallback(
+    (delta: number) => {
+      if (messageMatches.length === 0) return;
+      const nextIndex =
+        (messageMatchIndex + delta + messageMatches.length) % messageMatches.length;
+      setMessageMatchIndex(nextIndex);
+      messageRefs.current[messageMatches[nextIndex]]?.scrollIntoView({
+        block: "center",
+        behavior: "smooth",
+      });
+    },
+    [messageMatches, messageMatchIndex],
+  );
+
+  const closeMessageSearch = useCallback(() => {
+    setMessageSearchOpen(false);
+    setMessageSearch("");
+    setMessageMatchIndex(0);
+  }, []);
+
+  // Ao digitar, salta para a primeira ocorrência.
+  useEffect(() => {
+    if (messageMatches.length === 0) return;
+    messageRefs.current[messageMatches[0]]?.scrollIntoView({ block: "center", behavior: "smooth" });
+    // Só quando o conjunto de matches muda (novo termo), não a cada navegação.
+  }, [messageMatches]);
+
+  // Fecha a busca ao trocar de conversa.
+  useEffect(() => {
+    closeMessageSearch();
+  }, [selectedId, closeMessageSearch]);
+
+  // Identidade estável: o ConversationCard é memo, um inline callback o
+  // re-renderizaria a cada digitação na busca.
+  const registerConversationRef = useCallback((id: string, node: HTMLButtonElement | null) => {
+    conversationRefs.current[id] = node;
+  }, []);
+
+  const handleToggleSound = (enabled: boolean) => {
+    setSoundEnabled(enabled);
+    localStorage.setItem("crm:newMessageSound", enabled ? "on" : "off");
+    if (enabled) playNewMessageSound();
+  };
+
+  // Lembrete de follow-up: guarda o instante no metadata da conversa. O card
+  // volta ao topo da lista quando o horário vence (sortInboxCards).
+  const handleSnoozeConversation = async (conversationId: string, option: SnoozeOption) => {
+    const conv = conversationCards.find((c) => c.id === conversationId);
+    const target = resolveSnoozeTarget(option);
+    setConversationMenu(null);
+    try {
+      await updateConversation(conversationId, {
+        metadata: {
+          ...(isRecord(conv?.metadata) ? conv!.metadata : {}),
+          snoozedUntil: target,
+        },
+      });
+      toast.success(
+        target
+          ? `Lembrete criado para ${new Intl.DateTimeFormat("pt-BR", {
+              day: "2-digit",
+              month: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+            }).format(new Date(target))}`
+          : "Lembrete removido",
+      );
+      await refetch();
+    } catch (error) {
+      toast.error("Não foi possível criar o lembrete.", {
+        description: error instanceof Error ? error.message : undefined,
+      });
+    }
+  };
+
+  // Ligação: abre o discador e registra a tentativa na timeline da conversa.
+  const handleCallContact = async () => {
+    const phone = selectedConversationVm?.phoneDigits;
+    if (!phone) return;
+    window.open(`tel:+${phone}`, "_self");
+    try {
+      await addNote(`📞 Ligação iniciada para ${selectedConversationVm?.phoneLabel ?? phone}`);
+      await refetchConversation();
+    } catch {
+      // A ligação é o que importa; falha ao registrar a nota não bloqueia.
+    }
+  };
+
   const handleDeleteConversation = async (conversationId: string) => {
     await deleteConversation(conversationId);
     toast.success("Conversa excluída");
@@ -1133,6 +1375,18 @@ export default function CrmWhatsApp() {
 
   const quickReplyItems = useMemo(() => buildQuickReplies(quickReplies), [quickReplies]);
   const selectedConversationVm = selectedCard ?? (conversation ? toCrmConversationViewModel(conversation) : null);
+
+  // "Digitando…" no WhatsApp do contato. A Meta mantém o indicador por ~25s,
+  // então basta reavisar a cada 10s enquanto o atendente escreve.
+  const notifyTyping = useCallback(() => {
+    if (!selectedId) return;
+    if (selectedConversationVm?.channel !== "whatsapp") return;
+    const now = Date.now();
+    if (now - lastTypingSentAt.current < 10_000) return;
+    lastTypingSentAt.current = now;
+    sendTypingIndicator(selectedId).catch(() => {});
+  }, [selectedId, selectedConversationVm?.channel]);
+
   const availableTagOptions = useMemo(() => {
     const currentTagIds = new Set(conversation?.tags.map((tag) => tag.id) ?? []);
     return availableTags.filter((tag) => !currentTagIds.has(tag.id));
@@ -1194,6 +1448,58 @@ export default function CrmWhatsApp() {
     return () => window.removeEventListener('keydown', handler);
   }, [selectedId]);
 
+  // Navegação da lista pelo teclado (↑/↓ percorre, Enter foca o compositor).
+  useEffect(() => {
+    const isTypingTarget = (target: EventTarget | null) => {
+      const el = target as HTMLElement | null;
+      if (!el) return false;
+      return el.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName);
+    };
+
+    const handler = (event: KeyboardEvent) => {
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp" && event.key !== "Enter") return;
+      if (isTypingTarget(event.target)) return;
+      if (filteredConversations.length === 0) return;
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        composerRef.current?.focus();
+        return;
+      }
+
+      event.preventDefault();
+      const currentIndex = filteredConversations.findIndex((item) => item.id === selectedId);
+      const delta = event.key === "ArrowDown" ? 1 : -1;
+      const nextIndex =
+        currentIndex === -1
+          ? 0
+          : Math.min(filteredConversations.length - 1, Math.max(0, currentIndex + delta));
+      setSelectedId(filteredConversations[nextIndex].id);
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [filteredConversations, selectedId]);
+
+  // Som de nova mensagem (desligável pelo sino).
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const data = (event as CustomEvent).detail;
+      if (!data || data.type !== "whatsapp_new_message") return;
+      if (!soundEnabled) return;
+      if (data.message?.direction === "outbound") return;
+      playNewMessageSound();
+    };
+    window.addEventListener("websocket_message", handler);
+    return () => window.removeEventListener("websocket_message", handler);
+  }, [soundEnabled]);
+
+  // Mantém o card selecionado visível ao navegar pelo teclado.
+  useEffect(() => {
+    if (!selectedId) return;
+    conversationRefs.current[selectedId]?.scrollIntoView({ block: "nearest" });
+  }, [selectedId]);
+
   return (
     <PageLayout fullWidth noPadding compactHeader hideDefaultHeader showBreadcrumbs={false} fillViewport>
       <PageContainer maxWidth="full" noPadding className="h-full">
@@ -1242,12 +1548,18 @@ export default function CrmWhatsApp() {
                 Nova conversa
               </Button>
               <div className="h-4 w-px bg-border/50 mx-1"></div>
-              <button type="button" className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                <Filter className="h-[18px] w-[18px]" />
-              </button>
-              <button type="button" className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                <Bell className="h-[18px] w-[18px]" />
-              </button>
+              <InboxFiltersPopover
+                filters={inboxFilters}
+                onChange={setInboxFilters}
+                assignees={assigneeOptions}
+                tags={availableTags}
+              />
+              <InboxNotificationsPopover
+                unread={unreadCards}
+                soundEnabled={soundEnabled}
+                onToggleSound={handleToggleSound}
+                onSelectConversation={setSelectedId}
+              />
               <button
                 type="button"
                 onClick={() => navigate("/crm-whatsapp/configuracoes")}
@@ -1281,8 +1593,18 @@ export default function CrmWhatsApp() {
                     isSelected={selectedId === item.id}
                     isNew={newMessageIds.has(item.id)}
                     funnelMap={funnelMap}
+                    registerRef={registerConversationRef}
                     onSelect={setSelectedId}
-                    onContextMenu={(e, id) => setConversationMenu({ conversationId: id, x: e.clientX, y: e.clientY })}
+                    onContextMenu={(e, id) => {
+                      // Ancora o menu no próprio card (não no cursor): evita que
+                      // ele "voe" para o meio da tela em telas com escala/zoom.
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setConversationMenu({
+                        conversationId: id,
+                        x: rect.left + 12,
+                        y: rect.bottom - 8,
+                      });
+                    }}
                   />
                 ))}
                 {!loading && filteredConversations.length === 0 && (
@@ -1331,7 +1653,29 @@ export default function CrmWhatsApp() {
                         <span>📌 Horários</span>
                       </Button>
 
-                      <button type="button" className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary">
+                      <button
+                        type="button"
+                        onClick={() => setMessageSearchOpen((prev) => !prev)}
+                        aria-label="Buscar nesta conversa"
+                        className={cn(
+                          "flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary",
+                          messageSearchOpen && "bg-secondary text-foreground",
+                        )}
+                      >
+                        <Search className="h-[18px] w-[18px]" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleCallContact()}
+                        disabled={!selectedConversationVm.phoneDigits}
+                        aria-label="Ligar para o contato"
+                        title={
+                          selectedConversationVm.phoneDigits
+                            ? `Ligar para ${selectedConversationVm.phoneLabel}`
+                            : "Contato sem telefone"
+                        }
+                        className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                      >
                         <Phone className="h-[18px] w-[18px]" />
                       </button>
                       <button
@@ -1399,6 +1743,62 @@ export default function CrmWhatsApp() {
                     </div>
                   )}
 
+                  {messageSearchOpen && (
+                    <div className="flex items-center gap-2 border-b border-border bg-card px-4 py-2">
+                      <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <Input
+                        autoFocus
+                        value={messageSearch}
+                        onChange={(event) => {
+                          setMessageSearch(event.target.value);
+                          setMessageMatchIndex(0);
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            goToMatch(event.shiftKey ? -1 : 1);
+                          }
+                          if (event.key === "Escape") closeMessageSearch();
+                        }}
+                        placeholder="Buscar nesta conversa..."
+                        className="h-8 flex-1 text-sm"
+                      />
+                      <span className="shrink-0 text-[11px] font-semibold tabular-nums text-muted-foreground">
+                        {messageSearch.trim()
+                          ? messageMatches.length > 0
+                            ? `${messageMatchIndex + 1}/${messageMatches.length}`
+                            : "0 resultados"
+                          : ""}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => goToMatch(-1)}
+                        disabled={messageMatches.length === 0}
+                        aria-label="Ocorrência anterior"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary disabled:opacity-40"
+                      >
+                        <ChevronDown className="h-4 w-4 rotate-180" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => goToMatch(1)}
+                        disabled={messageMatches.length === 0}
+                        aria-label="Próxima ocorrência"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary disabled:opacity-40"
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={closeMessageSearch}
+                        aria-label="Fechar busca"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+
                   <div className="flex min-h-0 flex-1 flex-col bg-[radial-gradient(hsl(40_20%_88%)_1px,transparent_1px)] bg-[length:22px_22px] px-5 py-4">
                     <div ref={messagesScrollRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
                       {loadingConversation ? (
@@ -1451,12 +1851,19 @@ export default function CrmWhatsApp() {
                             );
                           }
 
+                          const isSearchHit = messageMatches.includes(message.id);
+                          const isCurrentSearchHit =
+                            isSearchHit && messageMatches[messageMatchIndex] === message.id;
+
                           return (
                             <Fragment key={message.id}>
                             {daySeparator}
                             {leadBanner}
+                            <div ref={(node) => { messageRefs.current[message.id] = node; }}>
                             <MemoMessageBubble
                               message={message}
+                              searchHit={isSearchHit}
+                              currentSearchHit={isCurrentSearchHit}
                               isOutbound={isOutbound}
                               isTemplate={isTemplate}
                               isImage={isImage}
@@ -1495,6 +1902,7 @@ export default function CrmWhatsApp() {
                               onPointerCancel={() => clearLongPress()}
                               onPointerLeave={() => clearLongPress()}
                             />
+                            </div>
                             </Fragment>
                           );
                         })
@@ -1621,8 +2029,12 @@ export default function CrmWhatsApp() {
                         <div className="flex items-center gap-2">
                           <Smile className="h-[18px] w-[18px] text-muted-foreground" />
                           <input
+                            ref={composerRef}
                             value={composer}
-                            onChange={(event) => setComposer(event.target.value)}
+                            onChange={(event) => {
+                              setComposer(event.target.value);
+                              notifyTyping();
+                            }}
                             onKeyDown={(event) => {
                               if (event.key === "Enter" && !event.shiftKey) {
                                 event.preventDefault();
@@ -1690,11 +2102,17 @@ export default function CrmWhatsApp() {
                       <Button
                         variant="secondary"
                         size="sm"
-                        disabled={!selectedConversationVm.patientId}
+                        title={
+                          selectedConversationVm.patientId
+                            ? "Agendar para este paciente"
+                            : "Criar o paciente para poder agendar"
+                        }
                         onClick={() =>
                           selectedConversationVm.patientId
                             ? navigate(`/schedule?patientId=${selectedConversationVm.patientId}`)
-                            : undefined
+                            : navigate(
+                                `/patients/new?name=${encodeURIComponent(selectedConversationVm.name)}&phone=${encodeURIComponent(selectedConversationVm.phoneDigits)}&next=schedule`,
+                              )
                         }
                         className="h-auto flex-col gap-1 rounded-xl px-3 py-2 text-[10px] font-bold"
                       >
@@ -2022,10 +2440,19 @@ export default function CrmWhatsApp() {
 
         {conversationMenu ? (
           <div
+            ref={(node) => {
+              if (!node) return;
+              // Reposiciona após medir: nunca sai da viewport nem cobre o chat.
+              const rect = node.getBoundingClientRect();
+              const maxLeft = window.innerWidth - rect.width - 8;
+              const maxTop = window.innerHeight - rect.height - 8;
+              node.style.left = `${Math.max(8, Math.min(conversationMenu.x, maxLeft))}px`;
+              node.style.top = `${Math.max(8, Math.min(conversationMenu.y, maxTop))}px`;
+            }}
             className="fixed z-50 min-w-[220px] rounded-2xl border border-border bg-card p-1.5 shadow-2xl"
             style={{
-              left: Math.min(conversationMenu.x, window.innerWidth - 236),
-              top: Math.min(conversationMenu.y, window.innerHeight - 280),
+              left: conversationMenu.x,
+              top: conversationMenu.y,
             }}
             onPointerDown={(event) => event.stopPropagation()}
           >
@@ -2056,6 +2483,41 @@ export default function CrmWhatsApp() {
                 );
               })()}
             </button>
+            <div className="my-1 border-t border-border/60" />
+            <div className="px-3 pb-1 pt-1.5 text-[10px] font-extrabold uppercase tracking-wide text-muted-foreground">
+              Lembrar depois
+            </div>
+            <div className="flex gap-1 px-1.5 pb-1">
+              {([
+                { option: "1h" as SnoozeOption, label: "1h" },
+                { option: "3h" as SnoozeOption, label: "3h" },
+                { option: "tomorrow" as SnoozeOption, label: "Amanhã 9h" },
+              ]).map(({ option, label }) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => void handleSnoozeConversation(conversationMenu.conversationId, option)}
+                  className="flex-1 rounded-lg border border-border px-2 py-1.5 text-[11px] font-bold transition-colors hover:bg-secondary"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {(() => {
+              const conv = conversationCards.find((c) => c.id === conversationMenu.conversationId);
+              if (!conv?.snoozedUntil) return null;
+              return (
+                <button
+                  type="button"
+                  onClick={() => void handleSnoozeConversation(conversationMenu.conversationId, "clear")}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left transition-colors hover:bg-secondary"
+                >
+                  <Clock3 className="h-4 w-4 text-muted-foreground" />
+                  Remover lembrete
+                </button>
+              );
+            })()}
+            <div className="my-1 border-t border-border/60" />
             <button
               type="button"
               onClick={() => void handleMarkUnread(conversationMenu.conversationId)}

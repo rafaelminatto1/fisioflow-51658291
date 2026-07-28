@@ -43,7 +43,7 @@ import {
 } from "../lib/inboxAi";
 import { searchAiSearch } from "../lib/cloudflareAiSearch";
 import { writeEvent } from "../lib/analytics";
-import { WhatsAppService } from "../lib/whatsapp";
+import { WhatsAppService, sendWhatsAppReadReceipt } from "../lib/whatsapp";
 import { AUTOMATION_TEMPLATES, automationTemplatePayload } from "../lib/whatsappAutomationTemplates";
 import { DEFAULT_REMINDER_CONFIG, resolveReminderConfig } from "../lib/reminderScheduling";
 import {
@@ -733,6 +733,28 @@ app.get("/conversations/:id", requireAuth, async (c) => {
       readBy: user.uid,
     });
 
+    // Espelha a leitura na Meta: o contato passa a ver os tiques azuis.
+    // Best-effort e fora do caminho crítico da resposta.
+    const lastInbound = await pool.query(
+      `SELECT m.meta_message_id
+         FROM wa_messages m
+         JOIN wa_conversations c ON c.id = m.conversation_id
+        WHERE m.conversation_id = $1
+          AND c.organization_id = $2
+          AND m.direction = 'inbound'
+          AND m.meta_message_id IS NOT NULL
+          AND COALESCE(c.channel, 'whatsapp') = 'whatsapp'
+        ORDER BY m.created_at DESC
+        LIMIT 1`,
+      [id, user.organizationId],
+    );
+    const lastInboundMetaId = lastInbound.rows[0]?.meta_message_id as string | undefined;
+    if (lastInboundMetaId) {
+      const receipt = sendWhatsAppReadReceipt(c.env, lastInboundMetaId);
+      if (c.executionCtx?.waitUntil) c.executionCtx.waitUntil(receipt);
+      else await receipt;
+    }
+
     // Refetch para retornar o unread_count atualizado (0 após marcar lido).
     const refreshed = await getConversationWithMessages(
       pool,
@@ -1075,6 +1097,42 @@ app.post("/conversations/:id/read", requireAuth, async (c) => {
   } catch (err) {
     console.error("[WhatsApp Inbox] POST /conversations/:id/read error:", err);
     return c.json({ error: "Failed to mark conversation as read" }, 500);
+  }
+});
+
+/**
+ * Mostra "digitando…" para o contato no WhatsApp enquanto o atendente escreve.
+ * A Meta só aceita o indicador junto de um read receipt da última mensagem
+ * recebida, e ele expira sozinho em ~25s ou quando a resposta é enviada.
+ */
+app.post("/conversations/:id/typing", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { id } = c.req.param();
+  const pool = await createPool(c.env);
+
+  try {
+    const result = await pool.query(
+      `SELECT m.meta_message_id
+         FROM wa_messages m
+         JOIN wa_conversations c ON c.id = m.conversation_id
+        WHERE m.conversation_id = $1
+          AND c.organization_id = $2
+          AND m.direction = 'inbound'
+          AND m.meta_message_id IS NOT NULL
+          AND COALESCE(c.channel, 'whatsapp') = 'whatsapp'
+        ORDER BY m.created_at DESC
+        LIMIT 1`,
+      [id, user.organizationId],
+    );
+
+    const metaMessageId = result.rows[0]?.meta_message_id as string | undefined;
+    if (!metaMessageId) return c.json({ data: { sent: false, reason: "no_inbound_message" } });
+
+    const receipt = await sendWhatsAppReadReceipt(c.env, metaMessageId, { typing: true });
+    return c.json({ data: { sent: receipt.ok, reason: receipt.reason } });
+  } catch (err) {
+    console.error("[WhatsApp Inbox] POST /conversations/:id/typing error:", err);
+    return c.json({ error: "Failed to send typing indicator" }, 500);
   }
 });
 

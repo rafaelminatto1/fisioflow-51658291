@@ -27,7 +27,18 @@ export interface CrmConversationViewModel {
   presenceLabel: string;
   lastMessage: string;
   lastMessageAt: string | null;
+  /** Prévia exibida no card da lista. */
+  preview: string;
+  previewDirection: "inbound" | "outbound" | null;
+  /** "14:32" hoje, "Ontem", ou "10/06". */
+  displayTime: string;
   unreadCount: number;
+  /** Última mensagem é do contato → a equipe ainda não respondeu. */
+  awaitingReply: boolean;
+  assignedTo?: string;
+  snoozedUntil: string | null;
+  /** Lembrete agendado que já venceu → precisa voltar ao topo. */
+  isSnoozeDue: boolean;
   tags: { id: string; name: string; color: string }[];
   stage: CrmStageMeta;
   sourceLabel: string;
@@ -161,6 +172,25 @@ function formatPresenceLabel(conversation: Conversation) {
   return "Sem atividade recente";
 }
 
+/** Horário curto no padrão WhatsApp: hoje → HH:mm, ontem → "Ontem", antes → dd/MM. */
+function formatDisplayTime(value?: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  if (date.getTime() >= startOfToday.getTime()) {
+    return new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(date);
+  }
+
+  const startOfYesterday = new Date(startOfToday.getTime() - 24 * 3600 * 1000);
+  if (date.getTime() >= startOfYesterday.getTime()) return "Ontem";
+
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(date);
+}
+
 function formatLabel(value: unknown, fallback: string) {
   if (typeof value !== "string") return fallback;
   const normalized = value.trim();
@@ -213,6 +243,10 @@ export function toCrmConversationViewModel(conversation: Conversation): CrmConve
     conversation.status !== "resolved" &&
     conversation.status !== "closed";
 
+  const snoozedRaw = readStringMetadata(metadata, ["snoozedUntil", "snoozed_until"]);
+  const snoozedUntil =
+    snoozedRaw && !Number.isNaN(new Date(snoozedRaw).getTime()) ? snoozedRaw : null;
+
   const instagramHandle =
     channelValue === "instagram"
       ? readStringMetadata(metadata, ["username", "authorUsername", "instagramHandle"]) ||
@@ -234,7 +268,14 @@ export function toCrmConversationViewModel(conversation: Conversation): CrmConve
     presenceLabel: formatPresenceLabel(conversation),
     lastMessage: conversation.lastMessage ?? "",
     lastMessageAt: conversation.lastMessageAt ?? null,
+    preview: (conversation.lastMessage ?? "").trim(),
+    previewDirection: conversation.lastMessageDirection ?? null,
+    displayTime: formatDisplayTime(conversation.lastMessageAt ?? conversation.createdAt),
     unreadCount: conversation.unreadCount ?? 0,
+    awaitingReply: conversation.lastMessageDirection === "inbound",
+    assignedTo: conversation.assignedTo ?? undefined,
+    snoozedUntil,
+    isSnoozeDue: snoozedUntil ? new Date(snoozedUntil).getTime() <= Date.now() : false,
     tags: (conversation.tags ?? []).map((tag) => ({
       id: tag.id,
       name: tag.name,
@@ -263,10 +304,15 @@ export function toCrmConversationViewModel(conversation: Conversation): CrmConve
 }
 
 export function toCrmQuickReplies(quickReplies: QuickReply[]): CrmQuickReplyViewModel[] {
-  return quickReplies.slice(0, 4).map((qr, index) => ({
-    id: qr.id,
-    label: qr.name,
-    content: qr.content,
-    prominent: index === 0,
-  }));
+  // A API retorna a coluna `title`; versões antigas do tipo usavam `name`.
+  // Sem o fallback as pílulas saíam vazias no rodapé do chat.
+  return quickReplies
+    .map((qr) => ({
+      id: qr.id,
+      label: (qr.title ?? qr.name ?? "").trim(),
+      content: qr.content,
+    }))
+    .filter((item) => item.label.length > 0)
+    .slice(0, 4)
+    .map((item, index) => ({ ...item, prominent: index === 0 }));
 }
