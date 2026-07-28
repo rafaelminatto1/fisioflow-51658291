@@ -529,7 +529,7 @@ app.get("/poll", pollRateLimit, async (c) => {
 // Widget embarcável (vanilla JS, sem dependências).
 app.get("/widget.js", (_c) => {
 	const js = `(function(){
-  var s=document.currentScript;
+  var s=document.currentScript||document.querySelector('script[data-org]');
   var ORG=(s&&s.getAttribute('data-org'))||window.FISIOFLOW_WEBCHAT_ORG;
   var API=(s&&s.getAttribute('data-api'))||'https://api-pro.moocafisio.com.br';
   var TITLE=(s&&s.getAttribute('data-title'))||'Fale com a Activity Fisioterapia';
