@@ -541,16 +541,17 @@ app.get("/widget.js", (_c) => {
   var last='1970-01-01T00:00:00Z',open=false,started=false,timer=null,seenIds=new Set();
   var NAME=localStorage.getItem('ff_webchat_name')||'';
   function greet(){var h;try{h=parseInt(new Intl.DateTimeFormat('pt-BR',{hour:'numeric',hour12:false,timeZone:'America/Sao_Paulo'}).format(new Date()),10);}catch(e){h=(new Date().getUTCHours()-3+24)%24;}var s=h>=5&&h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';return s+', tudo bem?\\nSou o Rafael da Activity Fisioterapia.\\nComo posso ajudar?';}
-    var c=document.createElement('div');c.id='fisioflow-webchat';c.style.cssText='position:fixed;'+POS+';bottom:'+BOT+'px;z-index:99999;font-family:system-ui,sans-serif'; // eslint-disable-line
+  var side=(s&&s.getAttribute('data-position'))==='left'?'left:0':'right:0';
+  var c=document.createElement('div');c.id='fisioflow-webchat';c.style.cssText='position:fixed;'+POS+';bottom:'+BOT+'px;z-index:99999;font-family:system-ui,sans-serif'; // eslint-disable-line
   c.innerHTML='<button id=ffb style="width:56px;height:56px;border:none;border-radius:50%;background:#1f7aec;color:#fff;font-size:24px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.25)">💬</button>'+
-  '<div id=ffp style="display:none;flex-direction:column;width:330px;height:440px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.3)">'+
-  '<div style="background:#1f7aec;color:#fff;padding:12px 14px;font-weight:700">'+TITLE+'</div>'+
+  '<div id=ffp style="position:absolute;bottom:68px;'+side+';display:none;flex-direction:column;width:330px;height:440px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.3)">'+
+  '<div style="background:#1f7aec;color:#fff;padding:12px 14px;font-weight:700;display:flex;justify-content:space-between;align-items:center"><span>'+TITLE+'</span><span id=ffc style="cursor:pointer;font-size:16px;opacity:0.85">✕</span></div>'+
   '<div id=ffm style="flex:1;overflow-y:auto;padding:12px;background:#f6f7f9;font-size:14px"></div>'+
-  '<div style="display:flex;gap:6px;padding:10px;border-top:1px solid #eee">'+
+  '<div style="display:flex;gap:6px;padding:10px;border-top:1px solid #eee;background:#fff">'+
   '<input id=ffi placeholder="Escreva sua mensagem..." style="flex:1;border:1px solid #ddd;border-radius:8px;padding:9px;font-size:14px;outline:none">'+
-  '<button id=ffs style="border:none;background:#1f7aec;color:#fff;border-radius:8px;padding:0 14px;cursor:pointer">➤</button></div></div>';
+  '<button id=ffs style="border:none;background:#1f7aec;color:#fff;border-radius:8px;padding:0 14px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center">➤</button></div></div>';
   document.body.appendChild(c);
-  var p=c.querySelector('#ffp'),m=c.querySelector('#ffm'),i=c.querySelector('#ffi');
+  var p=c.querySelector('#ffp'),m=c.querySelector('#ffm'),i=c.querySelector('#ffi'),ffc=c.querySelector('#ffc');
   function fmt(t){
     if(!t)return'';
     var reLink=new RegExp('\\[([^\\]]+)\\]\\((https?:\\/\\/[^\\s)]+)\\)','g');
@@ -572,6 +573,7 @@ app.get("/widget.js", (_c) => {
   function poll(){fetch(API+'/api/webchat/poll?org='+encodeURIComponent(ORG)+'&visitorId='+encodeURIComponent(VID)+'&after='+encodeURIComponent(last)).then(function(r){return r.json()}).then(function(d){(d.messages||[]).forEach(function(x){if(!seenIds.has(x.id)){seenIds.add(x.id);add(x.text,false);last=x.at;}});}).catch(function(){});}
   function send(){var t=i.value.trim();if(!t)return;i.value='';add(t,true);var firstName=!NAME;var payload={org:ORG,visitorId:VID,text:t};if(firstName){NAME=t.slice(0,80);localStorage.setItem('ff_webchat_name',NAME);payload.name=NAME;}fetch(API+'/api/webchat/message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json()}).then(function(d){started=true;if(firstName){setTimeout(function(){add(greet(),false);if(d&&d.reply){setTimeout(function(){add(d.reply,false);},500);}},400);}else if(d&&d.reply){add(d.reply,false);}}).catch(function(){});}
   c.querySelector('#ffb').onclick=function(){open=!open;p.style.display=open?'flex':'none';if(open){if(!m.childNodes.length)add(NAME?('Olá de novo! Como posso ajudar?'):'Olá! 😊 Para começarmos, qual é o seu nome?',false);poll();if(!timer)timer=setInterval(poll,4000);}};
+  if(ffc)ffc.onclick=function(){open=false;p.style.display='none';};
   c.querySelector('#ffs').onclick=send;i.addEventListener('keydown',function(e){if(e.key==='Enter')send();});
 })();`;
 	return new Response(js, {
