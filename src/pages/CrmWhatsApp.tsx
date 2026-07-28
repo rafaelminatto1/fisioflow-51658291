@@ -12,7 +12,6 @@ import {
   Clock3,
   Copy,
   Edit3,
-  Filter,
   Flame,
   Globe,
   ListTodo,
