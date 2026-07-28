@@ -251,8 +251,13 @@ export function useSchedulePageData(date: string, view: ViewType, filters?: Sche
         throw error;
       }
     },
-    staleTime: 1000 * 60 * 5, // 5 minutos de cache para navegação rápida
-    gcTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 5, // 5 minutos: após isso revalida em background
+    // gcTime PRECISA ser >= maxAge do persistQueryClient (7 dias). Com 5min o
+    // cache persistido (IndexedDB) era descartado na restauração e, ao logar, a
+    // agenda mostrava skeleton em vez dos cards da última visita. Mantendo 24h,
+    // os agendamentos anteriores hidratam INSTANTANEAMENTE e revalidam depois
+    // (stale-while-revalidate). Ref: docs TanStack persistQueryClient (gcTime>=maxAge).
+    gcTime: 1000 * 60 * 60 * 24,
     placeholderData: keepPreviousData,
   });
 

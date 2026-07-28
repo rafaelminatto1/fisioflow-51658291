@@ -16,6 +16,10 @@ export const useAppointmentData = (
   options?: {
     initialPatientId?: string;
     initialPatientData?: Partial<Patient>;
+    // Agendamento já conhecido (ex.: vindo da agenda via navigation state) usado
+    // como placeholderData para renderizar o cabeçalho INSTANTANEAMENTE enquanto
+    // o fetch real revalida em background — sem skeleton de tela cheia.
+    initialAppointmentData?: Partial<AppointmentUnified>;
   },
 ) => {
   // Buscar dados do agendamento do PostgreSQL via Cloudflare Workers
@@ -77,6 +81,16 @@ export const useAppointmentData = (
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     staleTime: 1000 * 60 * 2, // 2 minutos
+    // placeholderData: mostra o agendamento conhecido (nome do paciente, data,
+    // hora) na hora, evitando o skeleton de tela cheia ao "Iniciar atendimento".
+    // O queryFn substitui pelos dados completos assim que a rede responde.
+    placeholderData:
+      options?.initialAppointmentData && appointmentId
+        ? ({
+            ...options.initialAppointmentData,
+            id: options.initialAppointmentData.id ?? appointmentId,
+          } as unknown as AppointmentUnified)
+        : undefined,
   });
 
   // Use initialPatientId from navigation state if available, otherwise fall back to appointment data

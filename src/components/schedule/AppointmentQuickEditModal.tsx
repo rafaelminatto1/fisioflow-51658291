@@ -23,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { appointmentsApi } from "@/api/v2";
 import { toLocalYMD } from "@/lib/date-utils";
+import { prefetchRoute, RouteKeys } from "@/lib/routing/routePrefetch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -475,7 +476,27 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
         description: `Avaliação de ${appointment.patientName}`,
       });
     } else {
-      navigate(`/patient-evolution/${appointment.id}`);
+      // Prefetch do chunk da página + navigation state para hidratar o cabeçalho
+      // na hora (sem skeleton de tela cheia). Ver useAppointmentData.placeholderData.
+      prefetchRoute(() => import("../../pages/PatientEvolution"), RouteKeys.PATIENT_EVOLUTION);
+      navigate(`/patient-evolution/${appointment.id}`, {
+        state: {
+          patientId: appointment.patientId,
+          patientName: appointment.patientName,
+          appointment: {
+            id: appointment.id,
+            patientId: appointment.patientId,
+            patient_id: appointment.patientId,
+            patientName: appointment.patientName,
+            date:
+              appointment.date instanceof Date
+                ? toLocalYMD(appointment.date)
+                : String(appointment.date),
+            time: appointment.time,
+            status: appointment.status,
+          },
+        },
+      });
       toast.success("Iniciando atendimento", {
         description: `Atendimento de ${appointment.patientName}`,
       });

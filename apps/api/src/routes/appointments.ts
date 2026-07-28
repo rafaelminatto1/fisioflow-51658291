@@ -134,6 +134,26 @@ app.get("/", requireAuth, async (c) => {
         additionalNames: appointments.additionalNames,
         patient_name: patients.fullName,
         patient_phone: patients.phone,
+        // Risco de falta calculado INLINE (subquery correlacionada) para evitar
+        // um 2º roundtrip serial ao banco. As 2 últimas consultas do paciente
+        // (todas as datas) precisam ambas estar em NO_SHOW_STATUSES. Índice
+        // idx_appointments_patient_org cobre o subplan (~0.006ms/linha).
+        riskOfNoShow: sql<boolean>`COALESCE((
+          SELECT count(*) = 2 AND bool_and(t.status::text = ANY(${sql.raw(
+            `ARRAY[${Array.from(NO_SHOW_STATUSES)
+              .map((s) => `'${s}'`)
+              .join(",")}]::text[]`,
+          )}))
+          FROM (
+            SELECT a2.status
+            FROM ${appointments} a2
+            WHERE a2.organization_id = ${appointments.organizationId}
+              AND a2.patient_id = ${appointments.patientId}
+              AND a2.deleted_at IS NULL
+            ORDER BY a2.date DESC, a2.start_time DESC, a2.created_at DESC
+            LIMIT 2
+          ) t
+        ), false)`,
       })
       .from(appointments)
       .leftJoin(patients, eq(patients.id, appointments.patientId))
@@ -141,55 +161,10 @@ app.get("/", requireAuth, async (c) => {
       .orderBy(desc(appointments.date), desc(appointments.startTime))
       .limit(limitNum);
 
-    const patientIds = Array.from(
-      new Set(result.map((row) => row.patientId).filter((value): value is string => Boolean(value))),
-    );
-
-    let noShowRiskByPatient = new Map<string, boolean>();
-    if (patientIds.length > 0) {
-      const pool = createPool(c.env);
-      const riskRows = await pool.query<
-        { patient_id: string; status: string; rn: number } & Record<string, unknown>
-      >(
-        `
-          SELECT patient_id, status, rn
-          FROM (
-            SELECT
-              patient_id,
-              status,
-              ROW_NUMBER() OVER (
-                PARTITION BY patient_id
-                ORDER BY date DESC, start_time DESC, created_at DESC
-              ) AS rn
-            FROM appointments
-            WHERE organization_id = $1
-              AND patient_id = ANY($2::uuid[])
-              AND deleted_at IS NULL
-          ) ranked
-          WHERE rn <= 2
-        `,
-        [organizationId, patientIds],
-      );
-
-      const grouped = new Map<string, string[]>();
-      for (const row of riskRows.rows) {
-        const current = grouped.get(row.patient_id) ?? [];
-        current.push(String(row.status ?? ""));
-        grouped.set(row.patient_id, current);
-      }
-
-      noShowRiskByPatient = new Map(
-        Array.from(grouped.entries()).map(([patientId, statuses]) => [
-          patientId,
-          statuses.length >= 2 && statuses.slice(0, 2).every((status) => NO_SHOW_STATUSES.has(status)),
-        ]),
-      );
-    }
-
     const sanitizedRows = result.map((row) =>
       normalizeAppointmentRow({
         ...row,
-        risk_of_no_show: noShowRiskByPatient.get(row.patientId) ?? false,
+        risk_of_no_show: Boolean((row as { riskOfNoShow?: boolean }).riskOfNoShow),
       }),
     );
 

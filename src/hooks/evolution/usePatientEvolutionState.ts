@@ -48,6 +48,7 @@ export function usePatientEvolutionState() {
   const navigationState = location.state as {
     patientId?: string;
     patientName?: string;
+    appointment?: Record<string, unknown>;
   } | null;
   const { user } = useAuth();
   const { therapists } = useTherapists();
@@ -95,6 +96,8 @@ export function usePatientEvolutionState() {
           full_name: navigationState.patientName,
         } as any)
       : undefined,
+    // Cabeçalho instantâneo: reaproveita o agendamento já carregado na agenda.
+    initialAppointmentData: navigationState?.appointment as any,
   });
 
   const {
