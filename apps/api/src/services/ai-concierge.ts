@@ -1202,6 +1202,31 @@ export class AIConciergeService {
       return { reply: "", intent: "information", answerable: false };
     }
 
+    // Atendimento determinístico de Vendas para Convênio / Reembolso (alta conversão)
+    if (/conv[êe]nio|reembolso|plano de sa[úu]de|aceit\w*\s+conv/i.test(trimmed)) {
+      const reply = channel === "webchat"
+        ? `Na Activity Fisioterapia realizamos atendimentos 100% individuais e humanizados de 60 minutos com fisioterapeutas altamente especializados.
+
+🏅 Especialidades: Fisioterapia Esportiva, Ortopédica e Pós-Operatória.
+💡 Tratamentos inclusos: Laser Terapia, Ultrassom, Liberação Miofascial, Eletroestimulação, Crioterapia e mais!
+
+🔹 Atendimento por REEMBOLSO: Emitimos nota fiscal completa e laudo detalhado para você solicitar o reembolso diretamente com seu convênio e recuperar o valor da sua sessão.
+
+🎯 Clique no botão abaixo para falar com nossa equipe no WhatsApp, tirar suas dúvidas de reembolso e agendar sua avaliação:
+
+[💬 Falar com a Equipe no WhatsApp](https://wa.me/5511934335858?text=Olá!%20Vim%20pelo%20site%20da%20Activity%20e%20gostaria%20de%20saber%20sobre%20reembolso%20e%20agendamento)`
+        : `Na Activity Fisioterapia realizamos atendimentos 100% individuais e humanizados de 60 minutos com fisioterapeutas altamente especializados.
+
+🏅 Especialidades: Fisioterapia Esportiva, Ortopédica e Pós-Operatória.
+💡 Tratamentos inclusos: Laser Terapia, Ultrassom, Liberação Miofascial, Eletroestimulação, Crioterapia e mais!
+
+🔹 Atendimento por REEMBOLSO: Emitimos nota fiscal completa e laudo detalhado para você solicitar o reembolso diretamente com seu convênio e recuperar o valor da sua sessão.
+
+🎯 Fale com a nossa equipe no WhatsApp para orientarmos sobre o seu reembolso e agendarmos sua avaliação: https://wa.me/5511934335858?text=Olá!%20Gostaria%20de%20saber%20sobre%20reembolso%20e%20agendamento`;
+
+      return { reply, intent: "information", answerable: true };
+    }
+
     const settings = await loadConciergeSettings(env, orgId);
 
     // No canal webchat (site), NUNCA oferecemos horários nem agendamentos diretos.
