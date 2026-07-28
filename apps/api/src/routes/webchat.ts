@@ -477,26 +477,12 @@ app.post("/message", messageRateLimit, async (c: any) => {
 			console.error("[Webchat] Concierge error:", conciergeErr);
 		}
 
-		return c.json({ ok: true, visitorId, reply: directReply ? formatWebchatHtml(directReply) : directReply });
+		return c.json({ ok: true, visitorId, reply: directReply });
 	} catch (err) {
 		console.error("[Webchat] POST /message error:", err);
 		return c.json({ error: "Erro interno" }, 500);
 	}
 });
-
-export function formatWebchatHtml(text: string): string {
-	if (!text) return "";
-	return text
-		.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, label, url) => {
-			if (/wa\.me|whatsapp/i.test(url)) {
-				return `<a href="${url}" target="_blank" rel="noopener" style="display:inline-block;margin:8px 0 4px;padding:10px 16px;background:#25D366;color:#fff;font-weight:700;text-align:center;border-radius:20px;text-decoration:none;box-shadow:0 3px 10px rgba(37,211,102,0.35);font-size:13px">💬 ${label}</a>`;
-			}
-			return `<a href="${url}" target="_blank" rel="noopener" style="color:#1f7aec;text-decoration:underline;font-weight:600">${label}</a>`;
-		})
-		.replace(/(^|[\s\n])(https?:\/\/wa\.me\/[^\s<]+)/g, (_, prefix, url) => {
-			return `${prefix}<a href="${url}" target="_blank" rel="noopener" style="display:inline-block;margin:8px 0 4px;padding:10px 16px;background:#25D366;color:#fff;font-weight:700;text-align:center;border-radius:20px;text-decoration:none;box-shadow:0 3px 10px rgba(37,211,102,0.35);font-size:13px">💬 Falar no WhatsApp Oficial</a>`;
-		});
-}
 
 // Polling: respostas do atendente desde `after`.
 app.get("/poll", pollRateLimit, async (c) => {
@@ -530,7 +516,7 @@ app.get("/poll", pollRateLimit, async (c) => {
 		return c.json({
 			messages: msgs.rows.map((m: any) => ({
 				id: m.id,
-				text: formatWebchatHtml(textOf(m.content)),
+				text: textOf(m.content),
 				at: m.at,
 			})),
 		});
@@ -567,19 +553,20 @@ app.get("/widget.js", (_c) => {
   var p=c.querySelector('#ffp'),m=c.querySelector('#ffm'),i=c.querySelector('#ffi');
   function fmt(t){
     if(!t)return'';
-    var esc=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     var reLink=new RegExp('\\[([^\\]]+)\\]\\((https?:\\/\\/[^\\s)]+)\\)','g');
-    var res=esc.replace(reLink,function(_,lbl,url){
-      if(/wa\.me|whatsapp/i.test(url)){
-        return '<a href="'+url+'" target="_blank" rel="noopener" style="display:block;margin:8px 0 4px;padding:10px 14px;background:#25D366;color:#fff;font-weight:700;text-align:center;border-radius:20px;text-decoration:none;box-shadow:0 3px 10px rgba(37,211,102,0.35);font-size:13px">💬 '+lbl+'</a>';
-      }
-      return '<a href="'+url+'" target="_blank" rel="noopener" style="color:#1f7aec;text-decoration:underline;font-weight:600">'+lbl+'</a>';
+    var res=t.replace(reLink,function(_,lbl,url){
+      return '___WA_BTN_START___'+url+'___WA_BTN_MID___'+lbl+'___WA_BTN_END___';
+    });
+    var esc=res.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    esc=esc.replace(/___WA_BTN_START___(.*?)___WA_BTN_MID___(.*?)___WA_BTN_END___/g, function(_,url,lbl){
+      var displayLbl = lbl.trim().indexOf('💬') === 0 ? lbl : '💬 ' + lbl;
+      return '<a href="'+url+'" target="_blank" rel="noopener" style="display:block;margin:8px 0 4px;padding:10px 14px;background:#25D366;color:#fff;font-weight:700;text-align:center;border-radius:20px;text-decoration:none;box-shadow:0 3px 10px rgba(37,211,102,0.35);font-size:13px">'+displayLbl+'</a>';
     });
     var reWa=new RegExp('(^|[\\s\\n])((https?:\\/\\/wa\\.me\\/[^\\s<]+))','g');
-    res=res.replace(reWa,function(_,prefix,url){
+    esc=esc.replace(reWa,function(_,prefix,url){
       return prefix+'<a href="'+url+'" target="_blank" rel="noopener" style="display:block;margin:8px 0 4px;padding:10px 14px;background:#25D366;color:#fff;font-weight:700;text-align:center;border-radius:20px;text-decoration:none;box-shadow:0 3px 10px rgba(37,211,102,0.35);font-size:13px">💬 Falar no WhatsApp Oficial</a>';
     });
-    return res;
+    return esc;
   }
   function add(t,mine){var d=document.createElement('div');d.style.cssText='margin:6px 0;display:flex;'+(mine?'justify-content:flex-end':'');var b=document.createElement('div');if(mine){b.textContent=t;}else{b.innerHTML=fmt(t);}b.style.cssText='max-width:85%;padding:8px 11px;border-radius:12px;white-space:pre-line;'+(mine?'background:#d8ebff':'background:#fff;border:1px solid #eee');d.appendChild(b);m.appendChild(d);m.scrollTop=m.scrollHeight;}
   function poll(){fetch(API+'/api/webchat/poll?org='+encodeURIComponent(ORG)+'&visitorId='+encodeURIComponent(VID)+'&after='+encodeURIComponent(last)).then(function(r){return r.json()}).then(function(d){(d.messages||[]).forEach(function(x){if(!seenIds.has(x.id)){seenIds.add(x.id);add(x.text,false);last=x.at;}});}).catch(function(){});}
