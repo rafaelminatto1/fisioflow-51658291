@@ -40,31 +40,27 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Open the sign-in page (navigate to /auth) and wait for the login form to appear.
-        await page.goto("http://localhost:5173/auth")
+        # -> Navigate to the login page at http://localhost:5173/auth/login and load the login form.
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
-        # -> Reload the 'Sign in' page and wait for the email and password fields to appear.
+        # -> Navigate to the '/auth' page to try to load the login form and reveal the email and password fields.
         await page.goto("http://localhost:5173/auth")
-        try:
-            await page.wait_for_load_state("domcontentloaded", timeout=5000)
-        except Exception:
-            pass
-        
-        # -> Navigate to the 'Login' page (/login) and wait for the email and password fields to appear.
-        await page.goto("http://localhost:5173/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
         # --> Assertions to verify final state
-        current_url = await page.evaluate("() => window.location.href")
-        # Assert: page loaded with a URL (final outcome verified by the AI judge during the run)
-        assert current_url, 'Page should have loaded with a URL'
+        # Assert: Verify matching patient results are displayed or an empty state message is visible
+        assert False, "Expected: Verify matching patient results are displayed or an empty state message is visible (could not be verified on the page)"
+        
+        # --> Test blocked by environment/access constraints during agent run
+        # Reason: TEST BLOCKED The test could not be run — the login page did not render and no login form was available. Observations: - The /auth page displayed a blank page with no interactive elements. - Multiple attempts to wait and re-navigate (including a 3s wait and a 5s wait) did not cause the SPA to render or show email/password fields.
+        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the login page did not render and no login form was available. Observations: - The /auth page displayed a blank page with no interactive elements. - Multiple attempts to wait and re-navigate (including a 3s wait and a 5s wait) did not cause the SPA to render or show email/password fields." + " — the exported script cannot reproduce a PASS in this environment.")
         await asyncio.sleep(5)
 
     finally:

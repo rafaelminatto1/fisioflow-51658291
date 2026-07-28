@@ -18,6 +18,7 @@ import { Dumbbell, ArrowRight, AlertTriangle, Check, Video, VideoOff } from "luc
 import { cn } from "@/lib/utils";
 import type { Exercise } from "@/types";
 import { withImageParams } from "@/lib/storageProxy";
+import { ExerciseDifficultyBadge } from "./ExerciseDifficultyBadge";
 
 interface MergeExercisesModalProps {
   open: boolean;
@@ -143,9 +144,7 @@ export function MergeExercisesModal({
                             </Badge>
                           )}
                           {exercise.difficulty && (
-                            <Badge variant="outline" className="text-xs">
-                              {exercise.difficulty}
-                            </Badge>
+                            <ExerciseDifficultyBadge difficulty={exercise.difficulty} size="sm" />
                           )}
                           {exercise.video_url ? (
                             <Badge

@@ -40,7 +40,14 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Open the authentication (sign-in) page so the login form can render and be inspected.
+        # -> Navigate to the login page at http://localhost:5173/auth/login and wait for the login form to appear.
+        await page.goto("http://localhost:5173/auth/login")
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=5000)
+        except Exception:
+            pass
+        
+        # -> Navigate to the '/auth' page (look for the login form or any authentication UI).
         await page.goto("http://localhost:5173/auth")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
@@ -54,8 +61,8 @@ async def run_test():
         assert False, "Expected: Verify invoice status details are displayed (could not be verified on the page)"
         
         # --> Test blocked by environment/access constraints during agent run
-        # Reason: TEST BLOCKED The test could not be run because the authentication page is not reachable at the expected route, so the login and subsequent financial page checks cannot be performed. Observations: - Navigating to http://localhost:5173/auth returned a 404 page with the text 'This localhost page can’t be found'. - The page only shows a 'Reload' button and no sign-in form fields are available. - Th...
-        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run because the authentication page is not reachable at the expected route, so the login and subsequent financial page checks cannot be performed. Observations: - Navigating to http://localhost:5173/auth returned a 404 page with the text 'This localhost page can\u2019t be found'. - The page only shows a 'Reload' button and no sign-in form fields are available. - Th..." + " — the exported script cannot reproduce a PASS in this environment.")
+        # Reason: TEST BLOCKED The test could not be run — the application's login page did not load and the login form is not reachable. Observations: - Navigated to /auth and /auth/login but the page shows no interactive elements (empty DOM). - Screenshot and page state indicate the SPA did not render and there is no login form to interact with.
+        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the application's login page did not load and the login form is not reachable. Observations: - Navigated to /auth and /auth/login but the page shows no interactive elements (empty DOM). - Screenshot and page state indicate the SPA did not render and there is no login form to interact with." + " — the exported script cannot reproduce a PASS in this environment.")
         await asyncio.sleep(5)
 
     finally:

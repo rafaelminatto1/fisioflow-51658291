@@ -40,31 +40,22 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Navigate to the '/auth' sign-in page and load the login form.
+        # -> Open the authentication login page (the app's Login page at /auth/login).
+        await page.goto("http://localhost:5173/auth/login")
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=5000)
+        except Exception:
+            pass
+        
+        # -> Open the authentication page at /auth (http://localhost:5173/auth) to load the login UI so the email and password fields can be inspected.
         await page.goto("http://localhost:5173/auth")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
-        # -> Wait briefly then reload the 'FisioFlow - Sistema de Gestão' sign-in page to trigger the login form to render.
-        await page.goto("http://localhost:5173/auth")
-        try:
-            await page.wait_for_load_state("domcontentloaded", timeout=5000)
-        except Exception:
-            pass
-        
-        # -> Open the sign-in page at http://127.0.0.1:5173/auth in a new tab and check whether the login form renders.
-        # Open URL in new tab
-        page = await context.new_page()
-        await page.goto("http://127.0.0.1:5173/auth")
-        try:
-            await page.wait_for_load_state("domcontentloaded", timeout=5000)
-        except Exception:
-            pass
-        
-        # -> Load the sign-in page 'FisioFlow - Sistema de Gestão' (127.0.0.1/auth) with a cache-busting reload and wait for the login form to render.
-        await page.goto("http://127.0.0.1:5173/auth?_cb=3")
+        # -> Open the login page using the hash route 'http://localhost:5173/#/auth/login' to check if the login form renders.
+        await page.goto("http://localhost:5173/#/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
@@ -77,8 +68,8 @@ async def run_test():
         assert False, "Expected: Verify scheduled appointments are displayed (could not be verified on the page)"
         
         # --> Test blocked by environment/access constraints during agent run
-        # Reason: TEST BLOCKED The test could not be run — the sign-in page did not render and the UI cannot be interacted with. Observations: - The page shows no interactive elements and the screenshot displays a blank/empty viewport with no sign-in form. - Multiple loads were attempted on both http://localhost:5173/auth and http://127.0.0.1:5173/auth (including waits and cache-busting reloads) but the login fo...
-        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the sign-in page did not render and the UI cannot be interacted with. Observations: - The page shows no interactive elements and the screenshot displays a blank/empty viewport with no sign-in form. - Multiple loads were attempted on both http://localhost:5173/auth and http://127.0.0.1:5173/auth (including waits and cache-busting reloads) but the login fo..." + " — the exported script cannot reproduce a PASS in this environment.")
+        # Reason: TEST BLOCKED The test could not be run — the login UI did not render and the page remained empty. Observations: - The app page at http://localhost:5173/#/auth/login showed an empty viewport with no interactive elements. - Multiple navigations (/, /auth/login, /auth, /#/auth/login) and waits (3s and 5s) did not reveal the login form.
+        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the login UI did not render and the page remained empty. Observations: - The app page at http://localhost:5173/#/auth/login showed an empty viewport with no interactive elements. - Multiple navigations (/, /auth/login, /auth, /#/auth/login) and waits (3s and 5s) did not reveal the login form." + " — the exported script cannot reproduce a PASS in this environment.")
         await asyncio.sleep(5)
 
     finally:

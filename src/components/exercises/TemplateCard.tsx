@@ -1,20 +1,15 @@
 import { memo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dumbbell, FlaskConical, BarChart, Stethoscope, Maximize2, Timer } from "lucide-react";
+import { Dumbbell, FlaskConical, Stethoscope, Maximize2, Timer } from "lucide-react";
 import type { ExerciseTemplate } from "@/types/workers";
+import { ExerciseDifficultyBadge } from "./ExerciseDifficultyBadge";
 
 interface TemplateCardProps {
   template: ExerciseTemplate;
   isSelected: boolean;
   onClick: () => void;
 }
-
-const DIFFICULTY_LABELS: Record<string, string> = {
-  iniciante: "Iniciante",
-  intermediario: "Intermediário",
-  avancado: "Avançado",
-};
 
 const PHASE_LABELS: Record<string, string> = {
   fase_aguda: "Fase Aguda",
@@ -84,13 +79,10 @@ export const TemplateCard = memo(function TemplateCard({
       {/* Primary Badges (Clinical Info) */}
       <div className="flex flex-wrap gap-1.5 mb-3">
         {template.difficultyLevel && (
-          <Badge
-            variant="secondary"
-            className="bg-muted/50 text-[10px] px-1.5 py-0 h-5 font-semibold text-muted-foreground border-none"
-          >
-            <BarChart className="h-2.5 w-2.5 mr-1" />
-            {DIFFICULTY_LABELS[template.difficultyLevel] || template.difficultyLevel}
-          </Badge>
+          <ExerciseDifficultyBadge
+            difficulty={template.difficultyLevel}
+            size="sm"
+          />
         )}
         {template.treatmentPhase && (
           <Badge

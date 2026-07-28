@@ -40,7 +40,14 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Open the sign-in page by navigating to http://localhost:5173/auth so the sign-in form can be filled.
+        # -> Open the login page at http://localhost:5173/auth/login so the sign-in form is visible.
+        await page.goto("http://localhost:5173/auth/login")
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=5000)
+        except Exception:
+            pass
+        
+        # -> Navigate to the '/auth' path to try to load the login UI.
         await page.goto("http://localhost:5173/auth")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
@@ -54,8 +61,8 @@ async def run_test():
         assert False, "Expected: Verify upcoming appointments are displayed (could not be verified on the page)"
         
         # --> Test blocked by environment/access constraints during agent run
-        # Reason: TEST BLOCKED The test could not be run — the sign-in/dashboard UI did not render, preventing interaction and authentication. Observations: - Navigated to /auth and the page shows no interactive elements; the sign-in form is not present. - The screenshot and browser_state show a blank/empty SPA viewport with no controls to enter credentials or proceed.
-        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the sign-in/dashboard UI did not render, preventing interaction and authentication. Observations: - Navigated to /auth and the page shows no interactive elements; the sign-in form is not present. - The screenshot and browser_state show a blank/empty SPA viewport with no controls to enter credentials or proceed." + " — the exported script cannot reproduce a PASS in this environment.")
+        # Reason: TEST BLOCKED The test could not be run — the login UI did not load and the SPA returned an empty DOM, preventing the test from performing the required sign-in and dashboard verification. Observations: - Navigating to http://localhost:5173/auth and http://localhost:5173/auth/login resulted in a page with 0 interactive elements. - The screenshot and page stats show an empty/light background with ...
+        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the login UI did not load and the SPA returned an empty DOM, preventing the test from performing the required sign-in and dashboard verification. Observations: - Navigating to http://localhost:5173/auth and http://localhost:5173/auth/login resulted in a page with 0 interactive elements. - The screenshot and page stats show an empty/light background with ..." + " — the exported script cannot reproduce a PASS in this environment.")
         await asyncio.sleep(5)
 
     finally:

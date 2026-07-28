@@ -40,15 +40,15 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Open the sign-in page at /auth and check that the email and password fields and the sign-in button are present.
-        await page.goto("http://localhost:5173/auth")
+        # -> Open the login page at http://localhost:5173/auth/login so the email and password fields can be filled.
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
-        # -> Wait for the sign-in page to finish loading so the email and password fields and the 'Sign in' button become visible.
-        await page.goto("http://localhost:5173/auth")
+        # -> Reload the login page (open 'http://localhost:5173/auth/login') and let the SPA reinitialize so the email and password fields can appear.
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
@@ -61,8 +61,8 @@ async def run_test():
         assert False, "Expected: Verify patient results are not displayed (could not be verified on the page)"
         
         # --> Test blocked by environment/access constraints during agent run
-        # Reason: TEST BLOCKED The test could not be run — the sign-in page at /auth could not be reached in this environment, preventing the sign-in and patient search steps from being executed. Observations: - Navigating to http://localhost:5173/auth returned an HTTP 404 page with the message "This localhost page can’t be found". - The page only shows a single 'Reload' button and does not display the sign-in f...
-        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the sign-in page at /auth could not be reached in this environment, preventing the sign-in and patient search steps from being executed. Observations: - Navigating to http://localhost:5173/auth returned an HTTP 404 page with the message \"This localhost page can\u2019t be found\". - The page only shows a single 'Reload' button and does not display the sign-in f..." + " — the exported script cannot reproduce a PASS in this environment.")
+        # Reason: TEST BLOCKED The test could not be run — the login page did not render and the UI cannot be interacted with. Observations: - The /auth/login page rendered a blank page with 0 interactive elements. - Multiple navigation and wait attempts (2 navigations, waits of 3s and 5s) did not make the login form appear. - Without the login form, the patient search flow (login → Patient Directory → search) c...
+        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the login page did not render and the UI cannot be interacted with. Observations: - The /auth/login page rendered a blank page with 0 interactive elements. - Multiple navigation and wait attempts (2 navigations, waits of 3s and 5s) did not make the login form appear. - Without the login form, the patient search flow (login \u2192 Patient Directory \u2192 search) c..." + " — the exported script cannot reproduce a PASS in this environment.")
         await asyncio.sleep(5)
 
     finally:

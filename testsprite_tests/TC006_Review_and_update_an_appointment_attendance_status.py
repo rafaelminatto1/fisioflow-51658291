@@ -40,22 +40,22 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Open the login page (visit the 'Sign in' / authentication page) and display the sign-in form so the email and password fields are visible.
+        # -> Open the login page at http://localhost:5173/auth/login (the 'Login' page) so the email and password fields can be filled.
+        await page.goto("http://localhost:5173/auth/login")
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=5000)
+        except Exception:
+            pass
+        
+        # -> Open the authentication page by navigating to 'http://localhost:5173/auth' to try to load the login UI.
         await page.goto("http://localhost:5173/auth")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
-        # -> Reload the 'Sign in' page (visit /auth) and wait for the sign-in form to appear so the email and password fields are visible.
-        await page.goto("http://localhost:5173/auth")
-        try:
-            await page.wait_for_load_state("domcontentloaded", timeout=5000)
-        except Exception:
-            pass
-        
-        # -> Reload the 'Sign in' page (open /auth) and wait for the sign-in form to appear so the email and password fields are visible.
-        await page.goto("http://localhost:5173/auth?cb=1")
+        # -> Open the 'Login' page (http://localhost:5173/auth/login) so the email and password fields can appear and be inspected.
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
@@ -68,8 +68,8 @@ async def run_test():
         assert False, "Expected: Verify the updated attendance status is reflected in the schedule (could not be verified on the page)"
         
         # --> Test blocked by environment/access constraints during agent run
-        # Reason: TEST BLOCKED The test could not be run — the application's sign-in page did not render and no interactive elements were available, preventing login and further actions. Observations: - Navigated to /auth and /auth?cb=1 but the page remained blank. - The page showed 0 interactive elements (no inputs, buttons, or forms) so the sign-in form could not be accessed.
-        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the application's sign-in page did not render and no interactive elements were available, preventing login and further actions. Observations: - Navigated to /auth and /auth?cb=1 but the page remained blank. - The page showed 0 interactive elements (no inputs, buttons, or forms) so the sign-in form could not be accessed." + " — the exported script cannot reproduce a PASS in this environment.")
+        # Reason: TEST BLOCKED The test could not be run — the application's UI did not load, preventing interaction with the login or schedule features. Observations: - The /auth/login page displayed a blank/empty UI with no email/password inputs or login button. - Multiple navigations and wait attempts were performed; the page state did not change and no interactive elements appeared. - Because the login UI ca...
+        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the application's UI did not load, preventing interaction with the login or schedule features. Observations: - The /auth/login page displayed a blank/empty UI with no email/password inputs or login button. - Multiple navigations and wait attempts were performed; the page state did not change and no interactive elements appeared. - Because the login UI ca..." + " — the exported script cannot reproduce a PASS in this environment.")
         await asyncio.sleep(5)
 
     finally:

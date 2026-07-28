@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getBestImageUrl, getImageUrlCandidates } from "@/lib/imageUtils";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { resolveContact, findOrCreateConversation, sendMessage } from "@/services/whatsapp-api";
+import { ExerciseDifficultyBadge } from "./ExerciseDifficultyBadge";
 
 interface ShareExerciseToWhatsAppModalProps {
   open: boolean;
@@ -212,9 +213,7 @@ export function ShareExerciseToWhatsAppModal({
                           </Badge>
                         )}
                         {exercise.difficulty && (
-                          <Badge variant="outline" className="text-xs">
-                            {exercise.difficulty}
-                          </Badge>
+                          <ExerciseDifficultyBadge difficulty={exercise.difficulty} size="sm" />
                         )}
                       </div>
                     </div>

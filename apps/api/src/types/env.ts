@@ -269,6 +269,9 @@ export interface Env {
   CF_ACCOUNT_ID?: string;
   WHATSAPP_BUSINESS_ACCOUNT_ID?: string;
 
+  // TEMPORARY: token for /api/exercises/content/backfill/preview (dry-run only)
+  ADMIN_PREVIEW_TOKEN?: string;
+
   // Axiom Logging Configuration
   AXIOM_TOKEN?: string;
   AXIOM_ORG_ID?: string;

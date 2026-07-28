@@ -40,34 +40,36 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Open the sign-in page by navigating to /auth (the app's authentication page).
-        await page.goto("http://localhost:5173/auth")
+        # -> Open the login page by navigating to 'http://localhost:5173/auth/login' so the email and password fields can be filled.
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
-        # -> Reload the 'FisioFlow - Sistema de Gestão' sign-in page (navigate to /auth) to attempt to load the login form.
-        await page.goto("http://localhost:5173/auth")
+        # -> Wait for the login form on the FisioFlow login page to appear, then reload the login page if it does not render.
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
-        # -> Reload the 'FisioFlow - Sistema de Gestão' sign-in page to attempt to load the login form.
-        await page.goto("http://localhost:5173/auth?nocache=1")
+        # -> Navigate to the '/auth' page (http://localhost:5173/auth) to try to load the login UI.
+        await page.goto("http://localhost:5173/auth")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
         # --> Assertions to verify final state
-        current_url = await page.evaluate("() => window.location.href")
-        # Assert: page loaded with a URL (final outcome verified by the AI judge during the run)
-        assert current_url, 'Page should have loaded with a URL'
-        current_url = await page.evaluate("() => window.location.href")
-        # Assert: page loaded with a URL (final outcome verified by the AI judge during the run)
-        assert current_url, 'Page should have loaded with a URL'
+        # Assert: Verify the main dashboard is displayed
+        assert False, "Expected: Verify the main dashboard is displayed (could not be verified on the page)"
+        # Assert: Verify clinic stats and upcoming appointments are displayed
+        assert False, "Expected: Verify clinic stats and upcoming appointments are displayed (could not be verified on the page)"
+        
+        # --> Test blocked by environment/access constraints during agent run
+        # Reason: TEST BLOCKED The test could not be run — the login UI did not render and the page provides no interactive elements to perform the login. Observations: - The page at http://localhost:5173/auth (and earlier attempts to /auth/login) showed 0 interactive elements and a blank rendering. - Multiple navigations and waits were performed but the login form (email, password, submit) never appeared.
+        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the login UI did not render and the page provides no interactive elements to perform the login. Observations: - The page at http://localhost:5173/auth (and earlier attempts to /auth/login) showed 0 interactive elements and a blank rendering. - Multiple navigations and waits were performed but the login form (email, password, submit) never appeared." + " — the exported script cannot reproduce a PASS in this environment.")
         await asyncio.sleep(5)
 
     finally:

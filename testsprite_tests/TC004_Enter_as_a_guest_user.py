@@ -40,36 +40,40 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Open the authentication page at /auth and look for a 'Continue in guest mode' or 'Continue as guest' button.
+        # -> Open the login page at /auth/login (navigate to the site's Login page).
+        await page.goto("http://localhost:5173/auth/login")
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=5000)
+        except Exception:
+            pass
+        
+        # -> Navigate to the '/auth' page and look for a visible 'Continue as guest' / 'Continue without signing in' button.
         await page.goto("http://localhost:5173/auth")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
-        # -> Open the authentication page at http://127.0.0.1:5173/auth and look for a 'Continue in guest mode' or 'Continue as guest' button.
-        await page.goto("http://127.0.0.1:5173/auth")
-        try:
-            await page.wait_for_load_state("domcontentloaded", timeout=5000)
-        except Exception:
-            pass
-        
-        # -> Reload the application's root page (FisioFlow - Sistema de Gestão) and wait for the authentication UI or a 'Continue in guest mode' / 'Continue as guest' button to appear.
-        await page.goto("http://127.0.0.1:5173")
+        # -> Open the Login page and wait for the authentication UI to render (navigate to the Login page and allow the app to load).
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
         # --> Assertions to verify final state
+        
+        # --> Verify the user can access the main clinic pages
+        # Assert: Expected the URL to contain '/app' indicating the application workspace was displayed.
+        await expect(page).to_have_url(re.compile("/app"), timeout=15000), "Expected the URL to contain '/app' indicating the application workspace was displayed."
+        # Assert: Expected the URL to contain '/clinic' indicating the user could access the main clinic pages.
+        await expect(page).to_have_url(re.compile("/clinic"), timeout=15000), "Expected the URL to contain '/clinic' indicating the user could access the main clinic pages."
         # Assert: Verify the application workspace is displayed
         assert False, "Expected: Verify the application workspace is displayed (could not be verified on the page)"
-        # Assert: Verify the user can access the main clinic pages
-        assert False, "Expected: Verify the user can access the main clinic pages (could not be verified on the page)"
         
         # --> Test blocked by environment/access constraints during agent run
-        # Reason: TEST BLOCKED The test could not be run — the application's authentication page did not render, preventing reaching the guest flow. Observations: - Multiple navigations to the root and /auth (both localhost and 127.0.0.1) showed a blank page with 0 interactive elements. - The SPA did not load and no 'Continue in guest mode' / 'Continuar como convidado' controls were present. - No error messages ...
-        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the application's authentication page did not render, preventing reaching the guest flow. Observations: - Multiple navigations to the root and /auth (both localhost and 127.0.0.1) showed a blank page with 0 interactive elements. - The SPA did not load and no 'Continue in guest mode' / 'Continuar como convidado' controls were present. - No error messages ..." + " — the exported script cannot reproduce a PASS in this environment.")
+        # Reason: TEST BLOCKED The test could not be run — the application UI did not load and the authentication SPA returned an empty DOM, preventing interaction. Observations: - Navigation to http://localhost:5173/auth/login showed an empty page with no interactive elements. - Repeated navigations to / and /auth also returned empty DOMs, so the authentication UI could not be reached.
+        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the application UI did not load and the authentication SPA returned an empty DOM, preventing interaction. Observations: - Navigation to http://localhost:5173/auth/login showed an empty page with no interactive elements. - Repeated navigations to / and /auth also returned empty DOMs, so the authentication UI could not be reached." + " — the exported script cannot reproduce a PASS in this environment.")
         await asyncio.sleep(5)
 
     finally:

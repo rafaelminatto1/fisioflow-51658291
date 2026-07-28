@@ -40,52 +40,43 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Open the sign-in page at /auth and sign in using the provided credentials (username: rafael.minatto@yahoo.com.br).
+        # -> Open the login page at /auth/login and wait for the login form to appear.
+        await page.goto("http://localhost:5173/auth/login")
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=5000)
+        except Exception:
+            pass
+        
+        # -> Open the '/auth' page and wait for the login email and password fields to appear.
         await page.goto("http://localhost:5173/auth")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
-        # -> Wait for the sign-in form to appear on the 'FisioFlow - Sistema de Gestão' sign-in page, then reload the page if it remains invisible.
-        await page.goto("http://localhost:5173/auth")
+        # -> Open the login page and wait for the email and password fields to appear on the 'FisioFlow - Sistema de Gestão' login page.
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
-        # -> Scroll the 'FisioFlow - Sistema de Gestão' sign-in page to reveal the sign-in form.
-        await page.mouse.wheel(0, 300)
-        
-        # -> Open the sign-in page 'FisioFlow - Sistema de Gestão' by navigating to http://127.0.0.1:5173/auth in a new tab and check whether the sign-in form renders.
-        await page.goto("http://127.0.0.1:5173/auth")
+        # -> Reload the 'FisioFlow - Sistema de Gestão' login page and wait for the email and password fields to appear.
+        await page.goto("http://127.0.0.1:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
-        
-        # -> Navigate to the Patients page (open the /patients URL) to check whether the patient list renders or the app redirects to the sign-in page.
-        await page.goto("http://127.0.0.1:5173/patients")
-        try:
-            await page.wait_for_load_state("domcontentloaded", timeout=5000)
-        except Exception:
-            pass
-        
-        # -> Switch to the 'FisioFlow - Sistema de Gestão' tab that opened /auth and inspect whether the sign-in form is rendered (reload if it remains blank).
-        # Switch to tab E628
-        page = context.pages[-1]  # switch to most recently active tab
-        
-        # -> Switch to the '127.0.0.1:5173/patients' tab and check whether the patient list or any UI elements render (wait for the page to settle).
-        # Switch to tab C606
-        page = context.pages[-1]  # switch to most recently active tab
         
         # --> Assertions to verify final state
-        current_url = await page.evaluate("() => window.location.href")
-        # Assert: page loaded with a URL (final outcome verified by the AI judge during the run)
-        assert current_url, 'Page should have loaded with a URL'
-        current_url = await page.evaluate("() => window.location.href")
-        # Assert: page loaded with a URL (final outcome verified by the AI judge during the run)
-        assert current_url, 'Page should have loaded with a URL'
+        # Assert: Verify patient details are displayed
+        assert False, "Expected: Verify patient details are displayed (could not be verified on the page)"
+        # Assert: Verify the selected patient record is open
+        assert False, "Expected: Verify the selected patient record is open (could not be verified on the page)"
+        
+        # --> Test blocked by environment/access constraints during agent run
+        # Reason: TEST BLOCKED The test could not be run — the login page failed to render and no UI elements were available. Observations: - The login page at 'FisioFlow - Sistema de Gestão' showed a blank screen with 0 interactive elements. - Navigations to http://localhost:5173/, http://localhost:5173/auth, http://localhost:5173/auth/login and http://127.0.0.1:5173/auth/login all resulted in blank pages after...
+        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the login page failed to render and no UI elements were available. Observations: - The login page at 'FisioFlow - Sistema de Gest\u00e3o' showed a blank screen with 0 interactive elements. - Navigations to http://localhost:5173/, http://localhost:5173/auth, http://localhost:5173/auth/login and http://127.0.0.1:5173/auth/login all resulted in blank pages after..." + " — the exported script cannot reproduce a PASS in this environment.")
         await asyncio.sleep(5)
 
     finally:

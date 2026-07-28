@@ -40,34 +40,36 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Open the sign-in page by navigating to /auth (the app's sign-in route).
-        await page.goto("http://localhost:5173/auth")
+        # -> Open the login page by navigating to http://localhost:5173/auth/login so the email and password fields become visible.
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
-        # -> Reload the 'Sign in' page (navigate to the 'Sign in' route) so the sign-in form can be observed and surveyed.
-        await page.goto("http://localhost:5173/auth")
+        # -> Reload the login page and wait for the login form (email, password, and Sign In) to appear.
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
-        # -> Survey the 'Sign in' page and observe all visible sign-in form fields.
-        await page.goto("http://localhost:5173/auth?cb=1")
+        # -> Reload the login page and wait for the login form (email, password, Sign In) to appear.
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
         # --> Assertions to verify final state
-        current_url = await page.evaluate("() => window.location.href")
-        # Assert: page loaded with a URL (final outcome verified by the AI judge during the run)
-        assert current_url, 'Page should have loaded with a URL'
-        current_url = await page.evaluate("() => window.location.href")
-        # Assert: page loaded with a URL (final outcome verified by the AI judge during the run)
-        assert current_url, 'Page should have loaded with a URL'
+        # Assert: Verify financial metrics are displayed
+        assert False, "Expected: Verify financial metrics are displayed (could not be verified on the page)"
+        # Assert: Verify invoice status details are displayed
+        assert False, "Expected: Verify invoice status details are displayed (could not be verified on the page)"
+        
+        # --> Test blocked by environment/access constraints during agent run
+        # Reason: TEST BLOCKED The test could not be run — the login page did not render and the UI did not present the login form needed to continue. Observations: - The page displayed a blank SPA viewport with no interactive elements (no email, password, or Sign In controls). - Multiple reloads and waits were performed but no UI elements appeared. - Without the login form, authentication and subsequent navigat...
+        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the login page did not render and the UI did not present the login form needed to continue. Observations: - The page displayed a blank SPA viewport with no interactive elements (no email, password, or Sign In controls). - Multiple reloads and waits were performed but no UI elements appeared. - Without the login form, authentication and subsequent navigat..." + " — the exported script cannot reproduce a PASS in this environment.")
         await asyncio.sleep(5)
 
     finally:

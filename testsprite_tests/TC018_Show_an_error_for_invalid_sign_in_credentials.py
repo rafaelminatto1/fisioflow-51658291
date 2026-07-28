@@ -40,22 +40,29 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Open the sign-in page by navigating to the '/auth' sign-in route.
+        # -> Open the sign-in page by navigating to http://localhost:5173/auth/login so the login form can be tested.
+        await page.goto("http://localhost:5173/auth/login")
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=5000)
+        except Exception:
+            pass
+        
+        # -> Open the authentication page by navigating to http://localhost:5173/auth to attempt to load the sign-in UI.
         await page.goto("http://localhost:5173/auth")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
-        # -> Reload the '/auth' sign-in page and wait for the sign-in form to appear so the email and password fields can be observed.
-        await page.goto("http://localhost:5173/auth")
+        # -> Navigate to the sign-in page at http://localhost:5173/auth/login so the login form can render.
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
-        # -> Open the site root (FisioFlow home) and wait for the sign-in form or interactive elements to appear.
-        await page.goto("http://localhost:5173")
+        # -> Wait for the sign-in page to finish rendering and show the login form (the visible email/password fields and Sign in button).
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
@@ -68,8 +75,8 @@ async def run_test():
         assert False, "Expected: Verify the main dashboard is not displayed (could not be verified on the page)"
         
         # --> Test blocked by environment/access constraints during agent run
-        # Reason: TEST BLOCKED The sign-in page could not be reached — the SPA did not render the sign-in form or any interactive elements, preventing the test from running. Observations: - Navigation to both /auth and / returned pages with no interactive elements and no visible sign-in form. - The provided screenshot shows an empty page (no form fields, buttons, or other UI controls) so the sign-in flow cannot ...
-        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The sign-in page could not be reached \u2014 the SPA did not render the sign-in form or any interactive elements, preventing the test from running. Observations: - Navigation to both /auth and / returned pages with no interactive elements and no visible sign-in form. - The provided screenshot shows an empty page (no form fields, buttons, or other UI controls) so the sign-in flow cannot ..." + " — the exported script cannot reproduce a PASS in this environment.")
+        # Reason: TEST BLOCKED The sign-in UI could not be reached — the login form did not render on the page, preventing the test from entering credentials and verifying the error flow. Observations: - The page at http://localhost:5173/auth/login displayed an empty viewport with 0 interactive elements (screenshot shows blank page). - Multiple navigation and wait attempts were performed (navigated to '/', '/aut...
+        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The sign-in UI could not be reached \u2014 the login form did not render on the page, preventing the test from entering credentials and verifying the error flow. Observations: - The page at http://localhost:5173/auth/login displayed an empty viewport with 0 interactive elements (screenshot shows blank page). - Multiple navigation and wait attempts were performed (navigated to '/', '/aut..." + " — the exported script cannot reproduce a PASS in this environment.")
         await asyncio.sleep(5)
 
     finally:

@@ -1140,13 +1140,14 @@ export async function createConciergeHandoffTask(
 const CLINIC_KB = `
 Activity Fisioterapia — informações oficiais:
 - Resposta Padrão de Convênio:
-  "Somos uma clínica particular de fisioterapia, não aceitamos convênios.
+  "Na Activity Fisioterapia realizamos atendimentos 100% individuais e humanizados de 60 minutos com fisioterapeutas altamente especializados.
 
-🏅 Especialidades: Fisioterapia esportiva, ortopédica e pós-operatória.
-🔹 Atendimento individual e humanizado de 60 minutos.
-💡 Tratamentos: Laser Terapia, Ultrassom, Liberação Miofascial, Eletroestimulação, Crioterapia e mais!
-🔹 Emitimos nota fiscal e te auxiliamos no processo de reembolso do convênio.
-🎯 Marque já sua avaliação e inicie seu plano de tratamento exclusivo!"
+🏅 Especialidades: Fisioterapia Esportiva, Ortopédica e Pós-Operatória.
+💡 Tratamentos inclusos: Laser Terapia, Ultrassom, Liberação Miofascial, Eletroestimulação, Crioterapia e mais!
+
+🔹 Atendimento por REEMBOLSO: Emitimos nota fiscal completa e fornecemos o laudo detalhado para você solicitar o reembolso diretamente com seu convênio e recuperar o valor da sua sessão.
+
+🎯 Clique abaixo para falar com nossa equipe no WhatsApp, entender sobre o reembolso do seu plano e agendar sua avaliação exclusiva!"
 
 - Horário de funcionamento:
   Atendemos de segunda a sexta das 07h às 21h; sábado das 07h às 13h. Não atende aos domingos.
@@ -1258,12 +1259,11 @@ export class AIConciergeService {
 8. CANAL ATUAL: CHAT DO SITE (WEBCHAT).
 REGRAS OBRIGATÓRIAS ESTRITAS PARA WEBCHAT:
 - NUNCA ofereça horários disponíveis, NUNCA agende consultas/sessões e NUNCA realize avaliações diretamente neste chat do site.
-- Se o visitante perguntar sobre agendamento, agendar avaliação, marcar horário, valores/preços, ou demonstrar qualquer interesse em ser atendido ou agendar:
-  1. Responda de forma amigável e atenciosa explicando que os agendamentos e avaliações personalizadas são realizados exclusivamente pelo WhatsApp oficial da clínica.
-  2. Inclua o link direto do WhatsApp no texto (formato texto com link clicável):
-     👉 [Clique aqui para falar no WhatsApp Oficial](https://wa.me/5511934335858?text=Olá!%20Vim%20pelo%20site%20da%20Activity%20e%20gostaria%20de%20saber%20sobre%20agendamento/avaliação)
-     https://wa.me/5511934335858?text=Olá!%20Vim%20pelo%20site%20da%20Activity%20e%20gostaria%20de%20saber%20sobre%20agendamento/avaliação
-  3. Mencione que se preferir, ele pode deixar o número do WhatsApp dele com DDD aqui mesmo no chat para que nossa equipe entre em contato diretamente.
+- Se o visitante perguntar sobre agendamento, agendar avaliação, convênio, reembolso, marcar horário, valores/preços, ou demonstrar qualquer interesse em ser atendido:
+  1. Responda de forma altamente acolhedora e focado em vendas, destacando que os atendimentos são 100% individuais de 60 minutos e que auxiliamos com nota fiscal e laudo para REEMBOLSO do convênio.
+  2. Inclua o botão de ação do WhatsApp no texto exatamente no formato markdown abaixo (NÃO escreva a URL pura solta no texto):
+     [💬 Falar com a Equipe no WhatsApp](https://wa.me/5511934335858?text=Olá!%20Vim%20pelo%20site%20da%20Activity%20e%20gostaria%20de%20saber%20sobre%20reembolso%20e%20agendamento)
+  3. Mencione amigavelmente que se preferir ele também pode deixar o número do WhatsApp dele com DDD aqui no chat para entrarmos em contato.
   4. Defina "intent": "scheduling" e "answerable": true.
 `
       : "";

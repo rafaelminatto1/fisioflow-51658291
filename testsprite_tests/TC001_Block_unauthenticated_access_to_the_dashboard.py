@@ -40,22 +40,8 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Open the sign-in page ('/auth') and check that the sign-in form is displayed.
-        await page.goto("http://localhost:5173/auth")
-        try:
-            await page.wait_for_load_state("domcontentloaded", timeout=5000)
-        except Exception:
-            pass
-        
-        # -> Open the application's root URL (http://localhost:5173/) and check that the sign-in page is displayed.
-        await page.goto("http://localhost:5173/")
-        try:
-            await page.wait_for_load_state("domcontentloaded", timeout=5000)
-        except Exception:
-            pass
-        
-        # -> Open the sign-in page by navigating to /auth and check that the sign-in form or visible 'Sign in' text is displayed.
-        await page.goto("http://localhost:5173/auth")
+        # -> Open the Sign In page by navigating to http://localhost:5173/auth/login and verify the sign-in form appears (look for 'Email', 'Password', or a 'Sign In' button).
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
@@ -68,8 +54,8 @@ async def run_test():
         assert False, "Expected: Verify the dashboard is not displayed (could not be verified on the page)"
         
         # --> Test blocked by environment/access constraints during agent run
-        # Reason: TEST BLOCKED The test could not be run — the application UI did not render the sign-in page, preventing verification of redirect and dashboard protection. Observations: - Navigations to / and /auth were performed but the page remained blank with 0 interactive elements. - Multiple wait attempts (2–3 seconds each) did not cause the SPA to render or display sign-in form fields. - The browser tab t...
-        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the application UI did not render the sign-in page, preventing verification of redirect and dashboard protection. Observations: - Navigations to / and /auth were performed but the page remained blank with 0 interactive elements. - Multiple wait attempts (2\u20133 seconds each) did not cause the SPA to render or display sign-in form fields. - The browser tab t..." + " — the exported script cannot reproduce a PASS in this environment.")
+        # Reason: TEST BLOCKED The sign-in page could not be reached because the SPA did not render at the required entry URL. Observations: - Navigation to http://localhost:5173/auth/login returned a blank page with no visible interactive elements. - The page reported 0 interactive elements and the screenshot shows an empty/blank render area. - Multiple waits and an explicit navigation to the login path were at...
+        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The sign-in page could not be reached because the SPA did not render at the required entry URL. Observations: - Navigation to http://localhost:5173/auth/login returned a blank page with no visible interactive elements. - The page reported 0 interactive elements and the screenshot shows an empty/blank render area. - Multiple waits and an explicit navigation to the login path were at..." + " — the exported script cannot reproduce a PASS in this environment.")
         await asyncio.sleep(5)
 
     finally:

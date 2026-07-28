@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { eq, and, inArray, sql, cosineDistance } from "drizzle-orm";
 import { createDb, createPool, getRawSql } from "../lib/db";
-import { requireAuth, type AuthVariables } from "../lib/auth";
+import { requireAuth, type AuthVariables, type AuthUser } from "../lib/auth";
 import type { Env } from "../types/env";
 import { searchAiSearch } from "../lib/cloudflareAiSearch";
 import {
@@ -21,6 +21,262 @@ const KV_TTL = 3600; // 1 hora
 const KV_CATEGORIES = "exercises:v2:categories";
 const KV_LIST_PREFIX = "exercises:v3:list:";
 const KV_CATALOG = "exercises:v1:catalog";
+
+const CONTENT_BACKFILL_FIELDS = [
+  "description",
+  "tips",
+  "precautions",
+  "benefits",
+  "category_id",
+  "subcategory",
+  "muscles_primary",
+  "muscles_secondary",
+  "body_parts",
+  "equipment",
+] as const;
+
+type ContentBackfillField = (typeof CONTENT_BACKFILL_FIELDS)[number];
+
+const DEFAULT_CONTENT_BACKFILL_FIELDS: ContentBackfillField[] = [
+  "description",
+  "tips",
+  "precautions",
+  "benefits",
+];
+
+const CONTENT_BACKFILL_PREDICATES: Record<ContentBackfillField, string> = {
+  description: "e.description IS NULL OR btrim(e.description) = ''",
+  tips: "e.tips IS NULL OR btrim(e.tips) = ''",
+  precautions: "e.precautions IS NULL OR btrim(e.precautions) = ''",
+  benefits: "e.benefits IS NULL OR btrim(e.benefits) = ''",
+  category_id: "e.category_id IS NULL",
+  subcategory: "e.subcategory IS NULL OR btrim(e.subcategory) = ''",
+  muscles_primary: "e.muscles_primary IS NULL OR cardinality(e.muscles_primary) = 0",
+  muscles_secondary: "e.muscles_secondary IS NULL OR cardinality(e.muscles_secondary) = 0",
+  body_parts: "e.body_parts IS NULL OR cardinality(e.body_parts) = 0",
+  equipment: "e.equipment IS NULL OR cardinality(e.equipment) = 0",
+};
+
+function normalizeBackfillTerm(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLocaleLowerCase("pt-BR")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function createBackfillVocabulary(canonicalTerms: string[], aliases: Record<string, string> = {}) {
+  const vocabulary = new Map<string, string>();
+  for (const term of canonicalTerms) vocabulary.set(normalizeBackfillTerm(term), term);
+  for (const [alias, canonical] of Object.entries(aliases)) {
+    if (canonicalTerms.includes(canonical)) vocabulary.set(normalizeBackfillTerm(alias), canonical);
+  }
+  return vocabulary;
+}
+
+const BACKFILL_BODY_PARTS = createBackfillVocabulary(
+  [
+    "Core",
+    "Abdômen",
+    "Coluna Cervical",
+    "Coluna Torácica",
+    "Coluna Lombar",
+    "Ombro",
+    "Cotovelo",
+    "Punho/Mão",
+    "Quadril",
+    "Joelho",
+    "Tornozelo/Pé",
+    "Panturrilha",
+    "Membro Superior",
+    "Membro Inferior",
+    "Cintura Escapular",
+    "Cintura Pélvica",
+  ],
+  {
+    "abdomen": "Abdômen",
+    "pescoço": "Coluna Cervical",
+    "cervical": "Coluna Cervical",
+    "toracica": "Coluna Torácica",
+    "lombar": "Coluna Lombar",
+    "punho": "Punho/Mão",
+    "mão": "Punho/Mão",
+    "tornozelo": "Tornozelo/Pé",
+    "pé": "Tornozelo/Pé",
+    "perna": "Membro Inferior",
+    "membros inferiores": "Membro Inferior",
+    "membros superiores": "Membro Superior",
+  },
+);
+
+const BACKFILL_EQUIPMENT = createBackfillVocabulary(
+  [
+    "Sem Equipamento",
+    "Colchonete",
+    "Faixa Elástica",
+    "Mini Band",
+    "Halteres",
+    "Caneleira",
+    "Bola Suíça",
+    "Bola Pequena",
+    "Rolo de Espuma",
+    "Medicine Ball",
+    "Kettlebell",
+    "Barra Fixa",
+    "Banco",
+    "Caixa",
+    "Degrau",
+    "Bicicleta Ergométrica",
+    "Esteira",
+    "BOSU",
+    "Roda Abdominal",
+  ],
+  {
+    nenhum: "Sem Equipamento",
+    "sem equipamento": "Sem Equipamento",
+    "peso corporal": "Sem Equipamento",
+    chão: "Sem Equipamento",
+    tapete: "Colchonete",
+    theraband: "Faixa Elástica",
+    elástico: "Faixa Elástica",
+    "elástico forte": "Faixa Elástica",
+    "ab wheel": "Roda Abdominal",
+    bosu: "BOSU",
+  },
+);
+
+const BACKFILL_EQUIPMENT_CONTEXT: Record<string, string[]> = {
+  Colchonete: ["colchonete"],
+  "Faixa Elástica": ["faixa elastica", "theraband", "elastico"],
+  "Mini Band": ["mini band", "loop band"],
+  Halteres: ["halter", "dumbbell"],
+  Caneleira: ["caneleira"],
+  "Bola Suíça": ["bola suica", "bola de pilates", "swiss ball"],
+  "Bola Pequena": ["bola pequena"],
+  "Rolo de Espuma": ["rolo de espuma", "foam roller"],
+  "Medicine Ball": ["medicine ball"],
+  Kettlebell: ["kettlebell"],
+  "Barra Fixa": ["barra fixa"],
+  Banco: ["banco"],
+  Caixa: ["caixa", "box pliometrico"],
+  Degrau: ["degrau", "escada"],
+  "Bicicleta Ergométrica": ["bicicleta ergonometrica", "bike ergonometrica"],
+  Esteira: ["esteira"],
+  BOSU: ["bosu"],
+  "Roda Abdominal": ["roda abdominal", "ab wheel"],
+};
+
+const BACKFILL_MUSCLES = createBackfillVocabulary(
+  [
+    "Reto Abdominal",
+    "Oblíquos",
+    "Transverso do Abdômen",
+    "Eretores da Espinha",
+    "Multífidos",
+    "Quadríceps",
+    "Isquiotibiais",
+    "Glúteo Máximo",
+    "Glúteo Médio",
+    "Glúteo Mínimo",
+    "Adutores",
+    "Abdutores do Quadril",
+    "Gastrocnêmio",
+    "Sóleo",
+    "Tibial Anterior",
+    "Peitoral Maior",
+    "Peitoral Menor",
+    "Latíssimo do Dorso",
+    "Trapézio",
+    "Romboides",
+    "Deltoide",
+    "Bíceps Braquial",
+    "Tríceps Braquial",
+    "Serrátil Anterior",
+    "Manguito Rotador",
+    "Flexores do Punho",
+    "Extensores do Punho",
+    "Assoalho Pélvico",
+  ],
+  {
+    abdominal: "Reto Abdominal",
+    "obliquo abdominal": "Oblíquos",
+    "abdominal obliquo": "Oblíquos",
+    "eretor da coluna": "Eretores da Espinha",
+    "musculatura da região lombar": "Eretores da Espinha",
+    "gluteos": "Glúteo Máximo",
+    "gluteo medio": "Glúteo Médio",
+    "gluteo minimo": "Glúteo Mínimo",
+    "triceps": "Tríceps Braquial",
+    "biceps": "Bíceps Braquial",
+  },
+);
+
+function parseBackfillFields(value: unknown): ContentBackfillField[] {
+  if (!Array.isArray(value)) return DEFAULT_CONTENT_BACKFILL_FIELDS;
+
+  const fields = value.filter(
+    (field): field is ContentBackfillField =>
+      typeof field === "string" && (CONTENT_BACKFILL_FIELDS as readonly string[]).includes(field),
+  );
+
+  return fields.length > 0 ? [...new Set(fields)] : DEFAULT_CONTENT_BACKFILL_FIELDS;
+}
+
+function cleanBackfillString(value: unknown, maxLength = 4_000): string | null {
+  if (typeof value !== "string") return null;
+  const cleaned = value.trim().replace(/\s{3,}/g, "\n\n");
+  if (["n a", "na", "null", "subcategory"].includes(normalizeBackfillTerm(cleaned))) return null;
+  return cleaned.length > 0 ? cleaned.slice(0, maxLength) : null;
+}
+
+function cleanBackfillArray(value: unknown, vocabulary?: Map<string, string>): string[] | null {
+  const input = Array.isArray(value) ? value : typeof value === "string" ? [value] : null;
+  if (!input) return null;
+
+  const seen = new Set<string>();
+  const cleaned = input
+    .map((item) => cleanBackfillString(item, 200))
+    .filter((item): item is string => item !== null)
+    .map((item) => vocabulary?.get(normalizeBackfillTerm(item)) ?? (vocabulary ? null : item))
+    .filter((item): item is string => item !== null)
+    .filter((item) => {
+      const key = item.toLocaleLowerCase("pt-BR");
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 10);
+
+  return cleaned.length > 0 ? cleaned : null;
+}
+
+function cleanBackfillEquipment(value: unknown, context: string): string[] | null {
+  const equipment = cleanBackfillArray(value, BACKFILL_EQUIPMENT);
+  if (!equipment) return null;
+
+  const normalizedContext = normalizeBackfillTerm(context);
+  const supported = equipment.filter((item) => {
+    if (item === "Sem Equipamento") return true;
+    return BACKFILL_EQUIPMENT_CONTEXT[item]?.some((term) => normalizedContext.includes(normalizeBackfillTerm(term)));
+  });
+
+  return supported.length > 0 ? supported : null;
+}
+
+function parseBackfillJson(text: string): Record<string, unknown> {
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) return {};
+
+  try {
+    const parsed = JSON.parse(jsonMatch[0]);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
+}
 
 async function kvGet(env: Env, key: string): Promise<unknown | null> {
   if (!env.FISIOFLOW_CONFIG) return null;
@@ -347,14 +603,27 @@ app.get("/catalog", requireAuth, async (c) => {
     );
 
     const gapRows = await db.query(
-      `SELECT e.id, e.slug, e.name, e.difficulty
+      `SELECT e.id, e.slug, e.name, e.difficulty,
+              (e.description IS NULL OR btrim(e.description) = '') AS missing_description,
+              (e.tips IS NULL OR btrim(e.tips) = '') AS missing_tips,
+              (e.precautions IS NULL OR btrim(e.precautions) = '') AS missing_precautions,
+              (e.benefits IS NULL OR btrim(e.benefits) = '') AS missing_benefits,
+              e.category_id IS NULL AS missing_category,
+              (e.muscles_primary IS NULL OR cardinality(e.muscles_primary) = 0) AS missing_muscles_primary,
+              (e.body_parts IS NULL OR cardinality(e.body_parts) = 0) AS missing_body_parts,
+              (e.equipment IS NULL OR cardinality(e.equipment) = 0) AS missing_equipment
        FROM exercises e
        WHERE e.is_active = true
-         AND e.is_public = true
-         AND (e.description IS NULL OR btrim(e.description) = ''
-              OR e.tips IS NULL OR btrim(e.tips) = ''
-              OR e.precautions IS NULL OR btrim(e.precautions) = '')
-       ORDER BY e.difficulty, e.name`,
+          AND e.is_public = true
+          AND (e.description IS NULL OR btrim(e.description) = ''
+               OR e.tips IS NULL OR btrim(e.tips) = ''
+               OR e.precautions IS NULL OR btrim(e.precautions) = ''
+               OR e.benefits IS NULL OR btrim(e.benefits) = ''
+               OR e.category_id IS NULL
+               OR e.muscles_primary IS NULL OR cardinality(e.muscles_primary) = 0
+               OR e.body_parts IS NULL OR cardinality(e.body_parts) = 0
+               OR e.equipment IS NULL OR cardinality(e.equipment) = 0)
+        ORDER BY e.difficulty, e.name`,
     );
 
     const byDifficulty: Record<string, { count: number; categories: Array<{ slug: string; name: string; color: string; count: number }> }> = {};
@@ -372,12 +641,33 @@ app.get("/catalog", requireAuth, async (c) => {
       }
     }
 
-    const gaps = (gapRows.rows as Array<{ id: string; slug: string; name: string; difficulty: string }>).map((r) => ({
-      id: r.id,
-      slug: r.slug,
-      name: r.name,
-      difficulty: r.difficulty,
-    }));
+    const gaps = (gapRows.rows as Array<{
+      id: string;
+      slug: string;
+      name: string;
+      difficulty: string;
+      missing_description?: boolean;
+      missing_tips?: boolean;
+      missing_precautions?: boolean;
+      missing_benefits?: boolean;
+      missing_category?: boolean;
+      missing_muscles_primary?: boolean;
+      missing_body_parts?: boolean;
+      missing_equipment?: boolean;
+    }>).map((r) => {
+      const missing = [
+        r.missing_description && "description",
+        r.missing_tips && "tips",
+        r.missing_precautions && "precautions",
+        r.missing_benefits && "benefits",
+        r.missing_category && "category_id",
+        r.missing_muscles_primary && "muscles_primary",
+        r.missing_body_parts && "body_parts",
+        r.missing_equipment && "equipment",
+      ].filter((field): field is string => Boolean(field));
+
+      return { id: r.id, slug: r.slug, name: r.name, difficulty: r.difficulty, missing };
+    });
 
     const total = Object.values(byDifficulty).reduce((sum, d) => sum + d.count, 0);
 
@@ -876,23 +1166,50 @@ app.post("/embeddings/backfill", requireAuth, async (c) => {
   return c.json({ processed, remaining: (rem.rows?.[0] as { n?: number })?.n ?? 0 });
 });
 
-// ===== AI BACKFILL DE CONTEÚDO =====
-app.post("/content/backfill", requireAuth, async (c) => {
-  const user = c.get("user");
-  if (user.role !== "admin") return c.json({ error: "Apenas admin" }, 403);
+async function authorizeBackfill(c: any, next: any) {
+  const previewToken = c.req.header("X-Preview-Token");
+  if (previewToken && c.env.ADMIN_PREVIEW_TOKEN && previewToken === c.env.ADMIN_PREVIEW_TOKEN) {
+    c.set("user", { uid: "preview-admin", organizationId: "preview", role: "admin", email: "preview@admin" } as unknown as AuthUser);
+    await next();
+    return;
+  }
+  await requireAuth(c, next);
+}
 
+// ===== AI BACKFILL DE CONTEÚDO =====
+
+// TEMPORARY: dry-run-only preview endpoint guarded by ADMIN_PREVIEW_TOKEN.
+// Allows validating AI output quality in production without minting a JWT.
+// Will be removed after backfill completes.
+app.post("/content/backfill/preview", async (c) => {
+  const previewToken = c.env.ADMIN_PREVIEW_TOKEN;
+  if (!previewToken || c.req.header("X-Preview-Token") !== previewToken) {
+    return c.json({ error: "preview_unauthorized" }, 401);
+  }
+  const body = await c.req.json().catch(() => ({})) as { batchSize?: unknown; fields?: unknown };
+  const fields = parseBackfillFields(body.fields);
+  const batchSize = Math.max(1, Math.min(20, Math.floor(typeof body.batchSize === "number" ? body.batchSize : 10)));
   const sqlRaw = getRawSql(c.env, "write");
 
-  const sel = await sqlRaw(
-    `SELECT id, name, description, tips, precautions
-     FROM exercises
-     WHERE is_active = true
-       AND is_public = true
-       AND (description IS NULL OR btrim(description) = ''
-            OR tips IS NULL OR btrim(tips) = ''
-            OR precautions IS NULL OR btrim(precautions) = '')
-     LIMIT 10`,
+  const categoryResult = await sqlRaw(
+    `SELECT id, slug, name FROM exercise_categories WHERE organization_id IS NULL ORDER BY name`,
     [],
+  );
+  const categories = (categoryResult.rows ?? []) as Array<{ id: string; slug: string; name: string }>;
+  const categoryIdBySlug = new Map(categories.map((category) => [category.slug, category.id]));
+  const predicates = fields.map((field) => `(${CONTENT_BACKFILL_PREDICATES[field]})`);
+
+  const sel = await sqlRaw(
+    `SELECT e.id, e.name, e.description, e.tips, e.precautions, e.benefits,
+            e.category_id, e.subcategory, e.muscles_primary, e.muscles_secondary,
+            e.body_parts, e.equipment
+     FROM exercises e
+       WHERE e.is_active = true
+         AND e.is_public = true
+         AND (${predicates.join(" OR ")})
+       ORDER BY e.name
+       LIMIT $1`,
+    [batchSize],
   );
 
   const rows = (sel.rows ?? []) as Array<{
@@ -901,26 +1218,46 @@ app.post("/content/backfill", requireAuth, async (c) => {
     description: string | null;
     tips: string | null;
     precautions: string | null;
+    benefits: string | null;
+    category_id: string | null;
+    subcategory: string | null;
+    muscles_primary: string[] | null;
+    muscles_secondary: string[] | null;
+    body_parts: string[] | null;
+    equipment: string[] | null;
   }>;
 
-  let processed = 0;
   const model = WORKERS_AI_MODELS.llama_3_1_8b;
+  const samples: Array<{ id: string; name: string; raw: string; parsed: Record<string, unknown>; updates: Record<string, unknown> }> = [];
 
   for (const r of rows) {
-    const needDesc = !r.description || r.description.trim().length === 0;
-    const needTips = !r.tips || r.tips.trim().length === 0;
-    const needPrec = !r.precautions || r.precautions.trim().length === 0;
+    const needs = {
+      description: fields.includes("description") && !cleanBackfillString(r.description),
+      tips: fields.includes("tips") && !cleanBackfillString(r.tips),
+      precautions: fields.includes("precautions") && !cleanBackfillString(r.precautions),
+      benefits: fields.includes("benefits") && !cleanBackfillString(r.benefits),
+      category_id: fields.includes("category_id") && !r.category_id,
+      subcategory: fields.includes("subcategory") && !cleanBackfillString(r.subcategory, 100),
+      muscles_primary: fields.includes("muscles_primary") && !cleanBackfillArray(r.muscles_primary),
+      muscles_secondary: fields.includes("muscles_secondary") && !cleanBackfillArray(r.muscles_secondary),
+      body_parts: fields.includes("body_parts") && !cleanBackfillArray(r.body_parts),
+      equipment: fields.includes("equipment") && !cleanBackfillArray(r.equipment),
+    };
+    const fieldsToFill = Object.entries(needs).filter(([, needed]) => needed).map(([field]) => field);
+    if (fieldsToFill.length === 0) continue;
 
-    const fields: string[] = [];
-    if (needDesc) fields.push("descrição técnica e concisa (2-3 frases)");
-    if (needTips) fields.push("dicas de execução (3 bullets curtos)");
-    if (needPrec) fields.push("precauções e contraindicações (2 bullets)");
+    const prompt = `Você é um fisioterapeuta especialista. Gere dados clínicos em português brasileiro para o exercício abaixo.
+Retorne SOMENTE JSON válido, sem markdown ou explicações.
 
-    if (fields.length === 0) continue;
+Exercício: ${r.name}
+Descrição atual: ${r.description ?? "vazia"}
+Campos a preencher: ${fieldsToFill.join(", ")}.
+Categorias válidas (use somente o slug em category_slug): ${JSON.stringify(categories.map(({ slug, name }) => ({ slug, name })))}.
+Partes do corpo permitidas: ${JSON.stringify([...new Set(BACKFILL_BODY_PARTS.values())])}.
+Equipamentos permitidos: ${JSON.stringify([...new Set(BACKFILL_EQUIPMENT.values())])}.
+Músculos permitidos: ${JSON.stringify([...new Set(BACKFILL_MUSCLES.values())])}.
 
-    const prompt = `Você é um fisioterapeuta especialista. Gere conteúdo em português brasileiro para o exercício "${r.name}".
-Retorne JSON válido: {"description": "...", "tips": "...", "precautions": "..."}.
-Inclua apenas os campos solicitados: ${fields.join(", ")}.`;
+Formato JSON: {"description":"...","tips":"...","precautions":"...","benefits":"...","category_slug":"...","subcategory":"...","muscles_primary":["..."],"muscles_secondary":["..."],"body_parts":["..."],"equipment":["..."]}.`;
 
     try {
       const resp = await runAi(c.env, model, {
@@ -934,57 +1271,224 @@ Inclua apenas os campos solicitados: ${fields.join(", ")}.`;
         ],
       }, { cache: false });
 
-      const text = readAiText(resp);
-      let parsed: Record<string, string> = {};
-      try {
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
-      } catch { /* ignore parse error */ }
-
-      const updates: string[] = [];
-      const params: unknown[] = [];
-      const addParam = (val: unknown) => {
-        params.push(val);
-        return `$${params.length}`;
+      const rawText = readAiText(resp);
+      const parsed = parseBackfillJson(rawText);
+      const updates: Record<string, unknown> = {};
+      const addString = (field: keyof typeof needs, column: string, maxLength?: number) => {
+        const value = cleanBackfillString(parsed[field], maxLength);
+        if (needs[field] && value) updates[column] = value;
       };
 
-      if (needDesc && parsed.description) {
-        updates.push(`description = ${addParam(parsed.description)}`);
-      }
-      if (needTips && parsed.tips) {
-        updates.push(`tips = ${addParam(parsed.tips)}`);
-      }
-      if (needPrec && parsed.precautions) {
-        updates.push(`precautions = ${addParam(parsed.precautions)}`);
+      addString("description", "description");
+      addString("tips", "tips");
+      addString("precautions", "precautions");
+      addString("benefits", "benefits");
+      addString("subcategory", "subcategory", 100);
+      const addVocabularyArray = (
+        field: "muscles_primary" | "muscles_secondary" | "body_parts" | "equipment",
+        column: string,
+        vocabulary: Map<string, string>,
+      ) => {
+        const value = cleanBackfillArray(parsed[field], vocabulary);
+        if (needs[field] && value) updates[column] = value;
+      };
+
+      addVocabularyArray("muscles_primary", "muscles_primary", BACKFILL_MUSCLES);
+      addVocabularyArray("muscles_secondary", "muscles_secondary", BACKFILL_MUSCLES);
+      addVocabularyArray("body_parts", "body_parts", BACKFILL_BODY_PARTS);
+      const equipment = cleanBackfillEquipment(parsed.equipment, `${r.name} ${r.description ?? ""}`);
+      if (needs.equipment && equipment) updates.equipment = equipment;
+
+      const categorySlug = cleanBackfillString(parsed.category_slug, 100)?.toLocaleLowerCase("pt-BR");
+      if (needs.category_id && categorySlug && categoryIdBySlug.has(categorySlug)) {
+        updates.category_id = categoryIdBySlug.get(categorySlug)!;
       }
 
-      if (updates.length > 0) {
-        params.push(r.id);
-        await sqlRaw(
-          `UPDATE exercises SET ${updates.join(", ")} WHERE id = $${params.length}`,
-          params,
-        );
-        processed++;
-      }
+      if (samples.length < 20) samples.push({ id: r.id, name: r.name, raw: rawText.slice(0, 1000), parsed, updates });
     } catch (e) {
-      console.error("[Exercises/ContentBackfill] Error for", r.id, e);
+      if (samples.length < 20) samples.push({ id: r.id, name: r.name, raw: `ERROR: ${(e as Error).message}`, parsed: {}, updates: {} });
     }
   }
 
+  return c.json({ fields, batchSize, samples, count: samples.length });
+});
+
+app.post("/content/backfill", authorizeBackfill, async (c) => {
+  const user = c.get("user");
+  if (user.role !== "admin") return c.json({ error: "Apenas admin" }, 403);
+
+  const body = await c.req.json().catch(() => ({})) as {
+    batchSize?: unknown;
+    dryRun?: unknown;
+    fields?: unknown;
+  };
+  const fields = parseBackfillFields(body.fields);
+  const requestedBatchSize = typeof body.batchSize === "number" ? body.batchSize : 10;
+  const batchSize = Math.max(1, Math.min(20, Math.floor(requestedBatchSize)));
+  const dryRun = body.dryRun === true;
+  const sqlRaw = getRawSql(c.env, "write");
+
+  const categoryResult = await sqlRaw(
+    `SELECT id, slug, name
+     FROM exercise_categories
+     WHERE organization_id IS NULL
+     ORDER BY name`,
+    [],
+  );
+  const categories = (categoryResult.rows ?? []) as Array<{ id: string; slug: string; name: string }>;
+  const categoryIdBySlug = new Map(categories.map((category) => [category.slug, category.id]));
+  const predicates = fields.map((field) => `(${CONTENT_BACKFILL_PREDICATES[field]})`);
+
+  const sel = await sqlRaw(
+    `SELECT e.id, e.name, e.description, e.tips, e.precautions, e.benefits,
+            e.category_id, e.subcategory, e.muscles_primary, e.muscles_secondary,
+            e.body_parts, e.equipment
+     FROM exercises e
+       WHERE e.is_active = true
+         AND e.is_public = true
+         AND (${predicates.join(" OR ")})
+       ORDER BY e.name
+       LIMIT $1`,
+    [batchSize],
+  );
+
+  const rows = (sel.rows ?? []) as Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    tips: string | null;
+    precautions: string | null;
+    benefits: string | null;
+    category_id: string | null;
+    subcategory: string | null;
+    muscles_primary: string[] | null;
+    muscles_secondary: string[] | null;
+    body_parts: string[] | null;
+    equipment: string[] | null;
+  }>;
+
+  let processed = 0;
+  let failed = 0;
+  const samples: Array<{ id: string; name: string; updates: Record<string, unknown> }> = [];
+  const model = WORKERS_AI_MODELS.llama_3_1_8b;
+
+  for (const r of rows) {
+    const needs = {
+      description: fields.includes("description") && !cleanBackfillString(r.description),
+      tips: fields.includes("tips") && !cleanBackfillString(r.tips),
+      precautions: fields.includes("precautions") && !cleanBackfillString(r.precautions),
+      benefits: fields.includes("benefits") && !cleanBackfillString(r.benefits),
+      category_id: fields.includes("category_id") && !r.category_id,
+      subcategory: fields.includes("subcategory") && !cleanBackfillString(r.subcategory, 100),
+      muscles_primary: fields.includes("muscles_primary") && !cleanBackfillArray(r.muscles_primary),
+      muscles_secondary: fields.includes("muscles_secondary") && !cleanBackfillArray(r.muscles_secondary),
+      body_parts: fields.includes("body_parts") && !cleanBackfillArray(r.body_parts),
+      equipment: fields.includes("equipment") && !cleanBackfillArray(r.equipment),
+    };
+    const fieldsToFill = Object.entries(needs)
+      .filter(([, needed]) => needed)
+      .map(([field]) => field);
+
+    if (fieldsToFill.length === 0) continue;
+
+    const prompt = `Você é um fisioterapeuta especialista. Gere dados clínicos em português brasileiro para o exercício abaixo.
+Retorne SOMENTE JSON válido, sem markdown ou explicações.
+
+Exercício: ${r.name}
+Descrição atual: ${r.description ?? "vazia"}
+Campos a preencher: ${fieldsToFill.join(", ")}.
+Categorias válidas (use somente o slug em category_slug): ${JSON.stringify(categories.map(({ slug, name }) => ({ slug, name })))}.
+Partes do corpo permitidas: ${JSON.stringify([...new Set(BACKFILL_BODY_PARTS.values())])}.
+Equipamentos permitidos: ${JSON.stringify([...new Set(BACKFILL_EQUIPMENT.values())])}.
+Músculos permitidos: ${JSON.stringify([...new Set(BACKFILL_MUSCLES.values())])}.
+
+Formato JSON: {"description":"...","tips":"...","precautions":"...","benefits":"...","category_slug":"...","subcategory":"...","muscles_primary":["..."],"muscles_secondary":["..."],"body_parts":["..."],"equipment":["..."]}.`;
+
+    try {
+      const resp = await runAi(c.env, model, {
+        messages: [
+          {
+            role: "system",
+            content:
+              "Você é um assistente especializado em fisioterapia. Gere conteúdo técnico e clínico em português brasileiro. Responda sempre em formato JSON válido.",
+          },
+          { role: "user", content: prompt },
+        ],
+      }, { cache: false });
+
+      const parsed = parseBackfillJson(readAiText(resp));
+      const updates: Record<string, unknown> = {};
+      const addString = (field: keyof typeof needs, column: string, maxLength?: number) => {
+        const value = cleanBackfillString(parsed[field], maxLength);
+        if (needs[field] && value) updates[column] = value;
+      };
+
+      addString("description", "description");
+      addString("tips", "tips");
+      addString("precautions", "precautions");
+      addString("benefits", "benefits");
+      addString("subcategory", "subcategory", 100);
+      const addVocabularyArray = (
+        field: "muscles_primary" | "muscles_secondary" | "body_parts" | "equipment",
+        column: string,
+        vocabulary: Map<string, string>,
+      ) => {
+        const value = cleanBackfillArray(parsed[field], vocabulary);
+        if (needs[field] && value) updates[column] = value;
+      };
+
+      addVocabularyArray("muscles_primary", "muscles_primary", BACKFILL_MUSCLES);
+      addVocabularyArray("muscles_secondary", "muscles_secondary", BACKFILL_MUSCLES);
+      addVocabularyArray("body_parts", "body_parts", BACKFILL_BODY_PARTS);
+      const equipment = cleanBackfillEquipment(parsed.equipment, `${r.name} ${r.description ?? ""}`);
+      if (needs.equipment && equipment) updates.equipment = equipment;
+
+      const categorySlug = cleanBackfillString(parsed.category_slug, 100)?.toLocaleLowerCase("pt-BR");
+      if (needs.category_id && categorySlug && categoryIdBySlug.has(categorySlug)) {
+        updates.category_id = categoryIdBySlug.get(categorySlug)!;
+      }
+
+      if (Object.keys(updates).length === 0) {
+        failed++;
+        continue;
+      }
+
+      if (!dryRun) {
+        const updateColumns = Object.keys(updates);
+        const params = updateColumns.map((column) => updates[column]);
+        params.push(r.id);
+        await sqlRaw(
+          `UPDATE exercises
+           SET ${updateColumns.map((column, index) => `${column} = $${index + 1}`).join(", ")},
+               updated_at = now()
+           WHERE id = $${params.length}`,
+          params,
+        );
+      }
+      processed++;
+      if (samples.length < 3) samples.push({ id: r.id, name: r.name, updates });
+    } catch (e) {
+      console.error("[Exercises/ContentBackfill] Error for", r.id, e);
+      failed++;
+    }
+  }
+
+  const remainingPredicates = fields.map((field) => `(${CONTENT_BACKFILL_PREDICATES[field]})`);
   const remaining = await sqlRaw(
-    `SELECT count(*)::int AS n FROM exercises
-     WHERE is_active = true AND is_public = true
-       AND (description IS NULL OR btrim(description) = ''
-            OR tips IS NULL OR btrim(tips) = ''
-            OR precautions IS NULL OR btrim(precautions) = '')`,
+    `SELECT count(*)::int AS n FROM exercises e
+     WHERE e.is_active = true AND e.is_public = true
+       AND (${remainingPredicates.join(" OR ")})`,
     [],
   );
 
-  // Invalidate catalog cache (gap counts changed)
-  await kvDelete(c.env, KV_CATALOG);
+  if (!dryRun) c.executionCtx.waitUntil(kvDelete(c.env, KV_CATALOG));
 
   return c.json({
     processed,
+    failed,
+    dryRun,
+    fields,
+    samples,
     remaining: (remaining.rows?.[0] as { n?: number })?.n ?? 0,
   });
 });

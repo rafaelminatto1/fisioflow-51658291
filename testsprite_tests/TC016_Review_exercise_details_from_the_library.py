@@ -40,29 +40,22 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Open the sign-in page by navigating to /auth and verify the sign-in form and its fields are present (email and password).
+        # -> Navigate to the login page at /auth/login (open 'http://localhost:5173/auth/login') so the sign-in form can be filled.
+        await page.goto("http://localhost:5173/auth/login")
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=5000)
+        except Exception:
+            pass
+        
+        # -> Navigate to the '/auth' path (http://localhost:5173/auth) to try loading the authentication page and sign-in form.
         await page.goto("http://localhost:5173/auth")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
-        # -> Reload the sign-in page and verify the email and password fields are visible on the /auth sign-in page.
-        await page.goto("http://localhost:5173/auth")
-        try:
-            await page.wait_for_load_state("domcontentloaded", timeout=5000)
-        except Exception:
-            pass
-        
-        # -> Reload the application by navigating to the app root and wait for the sign-in page to render so the 'Email' and 'Password' fields become visible.
-        await page.goto("http://localhost:5173/")
-        try:
-            await page.wait_for_load_state("domcontentloaded", timeout=5000)
-        except Exception:
-            pass
-        
-        # -> Reload the application and wait for the sign-in page to render so the 'Email' and 'Password' fields become visible.
-        await page.goto("http://localhost:5173/?_forceReload=1")
+        # -> Open the login page at /auth/login so the sign-in form can appear.
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
@@ -73,8 +66,8 @@ async def run_test():
         assert False, "Expected: Verify exercise details are displayed (could not be verified on the page)"
         
         # --> Test blocked by environment/access constraints during agent run
-        # Reason: TEST BLOCKED The test could not be run — the sign-in page did not render and no interactive elements were available to perform authentication or navigate to the exercise library. Observations: - The page showed no interactive elements (0 interactive elements) and appeared blank in the viewport. - Multiple reloads and waits were performed (navigations to / and /auth, waits of 3s, 5s, 5s, and 2s,...
-        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the sign-in page did not render and no interactive elements were available to perform authentication or navigate to the exercise library. Observations: - The page showed no interactive elements (0 interactive elements) and appeared blank in the viewport. - Multiple reloads and waits were performed (navigations to / and /auth, waits of 3s, 5s, 5s, and 2s,..." + " — the exported script cannot reproduce a PASS in this environment.")
+        # Reason: TEST BLOCKED The test could not be run — the login page did not render, preventing interaction with the sign-in form and subsequent flows. Observations: - The browser reached http://localhost:5173/auth/login but the page is blank with no interactive elements (0 fields, links, or buttons). - Multiple navigations (/, /auth, /auth/login) and waits were performed and did not cause the SPA to render.
+        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the login page did not render, preventing interaction with the sign-in form and subsequent flows. Observations: - The browser reached http://localhost:5173/auth/login but the page is blank with no interactive elements (0 fields, links, or buttons). - Multiple navigations (/, /auth, /auth/login) and waits were performed and did not cause the SPA to render." + " — the exported script cannot reproduce a PASS in this environment.")
         await asyncio.sleep(5)
 
     finally:

@@ -40,22 +40,15 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Open the sign-in page at '/auth' to load the login form.
-        await page.goto("http://localhost:5173/auth")
+        # -> Open the login page at /auth/login and wait for the login form to appear.
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
-        # -> Load the 'FisioFlow - Sistema de Gestão' sign-in page and wait for the login form to appear (reload /auth if needed).
-        await page.goto("http://localhost:5173/auth")
-        try:
-            await page.wait_for_load_state("domcontentloaded", timeout=5000)
-        except Exception:
-            pass
-        
-        # -> Open the 'FisioFlow - Sistema de Gestão' sign-in page and wait for the login form to render.
-        await page.goto("http://localhost:5173/auth")
+        # -> Wait for the login form to appear on the 'FisioFlow - Sistema de Gestão' login page so the email and password fields become visible.
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
@@ -68,8 +61,8 @@ async def run_test():
         assert False, "Expected: Verify the appointment remains visible in the schedule (could not be verified on the page)"
         
         # --> Test blocked by environment/access constraints during agent run
-        # Reason: TEST BLOCKED The test could not be run — the sign-in page did not render and the UI is not accessible, preventing authentication and further verification steps. Observations: - The /auth page displayed a blank page (screenshot shows a white/empty viewport). - Browser state reports 0 interactive elements and the sign-in form did not appear after multiple reloads/waits. - Multiple attempts to loa...
-        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the sign-in page did not render and the UI is not accessible, preventing authentication and further verification steps. Observations: - The /auth page displayed a blank page (screenshot shows a white/empty viewport). - Browser state reports 0 interactive elements and the sign-in form did not appear after multiple reloads/waits. - Multiple attempts to loa..." + " — the exported script cannot reproduce a PASS in this environment.")
+        # Reason: TEST BLOCKED The test could not be run — the SPA login page did not render, preventing interaction with the UI. Observations: - The browser is at http://localhost:5173/auth/login but the page shows an empty DOM with 0 interactive elements. - Multiple waits and a re-navigation were attempted and the login form never appeared (no email/password inputs or buttons visible in the screenshot).
+        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the SPA login page did not render, preventing interaction with the UI. Observations: - The browser is at http://localhost:5173/auth/login but the page shows an empty DOM with 0 interactive elements. - Multiple waits and a re-navigation were attempted and the login form never appeared (no email/password inputs or buttons visible in the screenshot)." + " — the exported script cannot reproduce a PASS in this environment.")
         await asyncio.sleep(5)
 
     finally:

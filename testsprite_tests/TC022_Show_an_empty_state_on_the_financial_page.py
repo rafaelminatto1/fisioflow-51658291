@@ -40,15 +40,21 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Open the authentication page (navigate to the /auth sign-in page) so the sign-in form can be tested.
-        await page.goto("http://localhost:5173/auth")
+        # -> Navigate to the login page at /auth/login so the login form can be observed and filled.
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
-        # -> Final action — this is where the agent failed
-        # Error observed by agent: Navigation failed - site unavailable: http://localhost:5173/auth
+        # -> Load the login page so the email and password fields and the sign-in button become visible.
+        await page.goto("http://localhost:5173/auth/login")
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=5000)
+        except Exception:
+            pass
+        
+        # -> Open the authentication page by navigating to http://localhost:5173/auth so the login form can be observed.
         await page.goto("http://localhost:5173/auth")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
@@ -62,8 +68,8 @@ async def run_test():
         assert False, "Expected: Verify financial metrics are not displayed (could not be verified on the page)"
         
         # --> Test blocked by environment/access constraints during agent run
-        # Reason: TEST BLOCKED The test could not be run — the application UI did not render and the sign-in page was unreachable. Observations: - Navigated to /auth but the page showed 0 interactive elements (sign-in form not present). - Multiple waits (3s, 5s, 10s) and a reload were attempted; the final navigation returned a site-unavailable error.
-        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the application UI did not render and the sign-in page was unreachable. Observations: - Navigated to /auth but the page showed 0 interactive elements (sign-in form not present). - Multiple waits (3s, 5s, 10s) and a reload were attempted; the final navigation returned a site-unavailable error." + " — the exported script cannot reproduce a PASS in this environment.")
+        # Reason: TEST BLOCKED The login page could not be reached — the SPA did not render the login form so the test cannot continue. Observations: - Navigating to /auth and /auth/login repeatedly resulted in a page with 0 interactive elements (no email/password inputs or sign-in button were visible). - Waiting (2s and 5s) and reloading did not cause the SPA to render; the page remained empty. - Because the ap...
+        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The login page could not be reached \u2014 the SPA did not render the login form so the test cannot continue. Observations: - Navigating to /auth and /auth/login repeatedly resulted in a page with 0 interactive elements (no email/password inputs or sign-in button were visible). - Waiting (2s and 5s) and reloading did not cause the SPA to render; the page remained empty. - Because the ap..." + " — the exported script cannot reproduce a PASS in this environment.")
         await asyncio.sleep(5)
 
     finally:

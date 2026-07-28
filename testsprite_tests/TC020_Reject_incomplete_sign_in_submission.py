@@ -40,15 +40,22 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Open the Sign-in page by navigating to /auth (the app's authentication route).
+        # -> Open the login page at /auth/login (navigate to the app's Login page).
+        await page.goto("http://localhost:5173/auth/login")
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=5000)
+        except Exception:
+            pass
+        
+        # -> Navigate to the '/auth' page (open the authentication entry page) and wait for the login form to appear so the empty-submission test can be executed.
         await page.goto("http://localhost:5173/auth")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
             pass
         
-        # -> Reload the sign-in page (navigate to '/auth') and wait for the sign-in form to appear so it can be submitted empty.
-        await page.goto("http://localhost:5173/auth")
+        # -> Open the 'FisioFlow - Sistema de Gestão' Login page (visit /auth/login) and wait for the login form to appear.
+        await page.goto("http://localhost:5173/auth/login")
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:
@@ -61,8 +68,8 @@ async def run_test():
         assert False, "Expected: Verify the main dashboard is not displayed (could not be verified on the page)"
         
         # --> Test blocked by environment/access constraints during agent run
-        # Reason: TEST BLOCKED The sign-in page could not be reached — the SPA returned a blank page with no interactive elements, so the required sign-in form could not be tested. Observations: - The /auth page shows a blank screen with no interactive elements or form fields. - Multiple waits and a reload were attempted but the UI did not appear.
-        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The sign-in page could not be reached \u2014 the SPA returned a blank page with no interactive elements, so the required sign-in form could not be tested. Observations: - The /auth page shows a blank screen with no interactive elements or form fields. - Multiple waits and a reload were attempted but the UI did not appear." + " — the exported script cannot reproduce a PASS in this environment.")
+        # Reason: TEST BLOCKED The test could not be run — the login page did not render its form or interactive controls, preventing the empty-sign-in submission. Observations: - The page at http://localhost:5173/auth/login shows a blank/empty viewport and the browser reports 0 interactive elements. - Multiple waits were attempted (2s, 5s, 10s) and navigating to /auth was also attempted; no login form or inputs...
+        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the login page did not render its form or interactive controls, preventing the empty-sign-in submission. Observations: - The page at http://localhost:5173/auth/login shows a blank/empty viewport and the browser reports 0 interactive elements. - Multiple waits were attempted (2s, 5s, 10s) and navigating to /auth was also attempted; no login form or inputs..." + " — the exported script cannot reproduce a PASS in this environment.")
         await asyncio.sleep(5)
 
     finally:
