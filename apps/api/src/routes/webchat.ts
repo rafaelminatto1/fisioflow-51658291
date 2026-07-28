@@ -568,13 +568,15 @@ app.get("/widget.js", (_c) => {
   function fmt(t){
     if(!t)return'';
     var esc=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    var res=esc.replace(/\\[([^\\]]+)\\]\\((https?:\\/\\/[^\\s)]+)\\)/g,function(_,lbl,url){
-      if(/wa\\.me|whatsapp/i.test(url)){
+    var reLink=new RegExp('\\[([^\\]]+)\\]\\((https?:\\/\\/[^\\s)]+)\\)','g');
+    var res=esc.replace(reLink,function(_,lbl,url){
+      if(/wa\.me|whatsapp/i.test(url)){
         return '<a href="'+url+'" target="_blank" rel="noopener" style="display:block;margin:8px 0 4px;padding:10px 14px;background:#25D366;color:#fff;font-weight:700;text-align:center;border-radius:20px;text-decoration:none;box-shadow:0 3px 10px rgba(37,211,102,0.35);font-size:13px">💬 '+lbl+'</a>';
       }
       return '<a href="'+url+'" target="_blank" rel="noopener" style="color:#1f7aec;text-decoration:underline;font-weight:600">'+lbl+'</a>';
     });
-    res=res.replace(/(^|[\\s\\n])((https?:\\/\\/wa\\.me\\/[^\\s<]+))/g,function(_,prefix,url){
+    var reWa=new RegExp('(^|[\\s\\n])((https?:\\/\\/wa\\.me\\/[^\\s<]+))','g');
+    res=res.replace(reWa,function(_,prefix,url){
       return prefix+'<a href="'+url+'" target="_blank" rel="noopener" style="display:block;margin:8px 0 4px;padding:10px 14px;background:#25D366;color:#fff;font-weight:700;text-align:center;border-radius:20px;text-decoration:none;box-shadow:0 3px 10px rgba(37,211,102,0.35);font-size:13px">💬 Falar no WhatsApp Oficial</a>';
     });
     return res;
