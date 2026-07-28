@@ -8,7 +8,10 @@ export function toVancouver(
   doi: string | null,
 ): string {
   const authorStr = typeof authors === "string" ? authors : Array.isArray(authors) ? authors.join(", ") : "";
-  const parts = [authorStr ? `${authorStr}.` : "", title ? `${title}.` : ""];
+  const parts = [
+    authorStr ? `${authorStr.replace(/\.$/, "")}.` : "",
+    title ? `${title}.` : "",
+  ];
   if (journal) parts.push(`${journal}.`);
   if (year) parts.push(`${year}`);
   if (volume) parts.push(`${volume}`);

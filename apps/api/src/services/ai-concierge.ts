@@ -278,7 +278,11 @@ export function wantsHumanAgent(text: string): boolean {
  * uma pessoa vai assumir (não fica no vácuo). Referências: "warm bridge".
  */
 export function conciergeHandoffMessage(_cfg?: unknown): string {
-  return "Claro! Já estou passando você para alguém da nossa equipe. Em instantes uma pessoa continua o atendimento por aqui. 🙂";
+  return `Essa pergunta será respondida diretamente por nossa equipe especializada! 😊
+
+Você pode clicar no botão abaixo para falar agora mesmo no WhatsApp ou enviar seu telefone por aqui que um profissional da nossa equipe vai te chamar pelo WhatsApp:
+
+[💬 Falar com a Equipe no WhatsApp](https://wa.me/5511934335858?text=Olá!%20Vim%20pelo%20site%20da%20Activity%20e%20gostaria%20de%20falar%20com%20um%20especialista)`;
 }
 
 /**
@@ -1202,17 +1206,12 @@ export class AIConciergeService {
       return { reply: "", intent: "information", answerable: false };
     }
 
-    // Atendimento determinístico de Vendas para Convênio / Reembolso (alta conversão)
+    // Atendimento determinístico de Vendas para Convênio / Reembolso (canal webchat = resposta simples direcionando pro WhatsApp)
     if (/conv[êe]nio|reembolso|plano de sa[úu]de|aceit\w*\s+conv/i.test(trimmed)) {
       const reply = channel === "webchat"
-        ? `Na Activity Fisioterapia realizamos atendimentos 100% individuais e humanizados de 60 minutos com fisioterapeutas altamente especializados.
+        ? `Essa pergunta será respondida diretamente por nossa equipe especializada! 😊
 
-🏅 Especialidades: Fisioterapia Esportiva, Ortopédica e Pós-Operatória.
-💡 Tratamentos inclusos: Laser Terapia, Ultrassom, Liberação Miofascial, Eletroestimulação, Crioterapia e mais!
-
-🔹 Atendimento por REEMBOLSO: Emitimos nota fiscal completa e laudo detalhado para você solicitar o reembolso diretamente com seu convênio e recuperar o valor da sua sessão.
-
-🎯 Clique no botão abaixo para falar com nossa equipe no WhatsApp, tirar suas dúvidas de reembolso e agendar sua avaliação:
+Você pode clicar no botão abaixo para falar agora mesmo no WhatsApp ou enviar seu telefone por aqui que um profissional da nossa equipe vai te chamar pelo WhatsApp:
 
 [💬 Falar com a Equipe no WhatsApp](https://wa.me/5511934335858?text=Olá!%20Vim%20pelo%20site%20da%20Activity%20e%20gostaria%20de%20saber%20sobre%20reembolso%20e%20agendamento)`
         : `Na Activity Fisioterapia realizamos atendimentos 100% individuais e humanizados de 60 minutos com fisioterapeutas altamente especializados.
