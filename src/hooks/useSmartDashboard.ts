@@ -179,7 +179,7 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
     },
     enabled: !!organizationId,
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60 * 24, // persiste p/ hidratação instantânea do dashboard
   });
 
   const { data: therapists = [], isLoading: isLoadingTherapists } = useQuery({
@@ -195,7 +195,7 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
     },
     enabled: !!organizationId,
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60 * 24, // persiste p/ hidratação instantânea do dashboard
   });
 
   const { data: appointmentsToday = [], isLoading: isLoadingToday } = useQuery({
@@ -215,7 +215,7 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
     },
     enabled: !!organizationId,
     staleTime: 1000 * 60 * 1,
-    gcTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 60 * 24,
   });
 
   const { data: appointments30d = [], isLoading: isLoading30d } = useQuery({
@@ -235,7 +235,7 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
     },
     enabled: !!organizationId,
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60 * 24, // persiste p/ hidratação instantânea do dashboard
   });
 
   const { data: appointmentsWeek = [], isLoading: isLoadingWeek } = useQuery({
@@ -255,7 +255,7 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
     },
     enabled: !!organizationId,
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60 * 24, // persiste p/ hidratação instantânea do dashboard
   });
 
   const { data: appointmentsMonth = [], isLoading: isLoadingMonth } = useQuery({
@@ -275,7 +275,7 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
     },
     enabled: !!organizationId,
     staleTime: 1000 * 60 * 10,
-    gcTime: 1000 * 60 * 30,
+    gcTime: 1000 * 60 * 60 * 24,
   });
 
   const { data: contas = [], isLoading: isLoadingContas } = useQuery({
@@ -295,7 +295,7 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
     },
     enabled: !!organizationId,
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60 * 24, // persiste p/ hidratação instantânea do dashboard
   });
 
   const { isLoading: isLoadingPagamentos } = useQuery({
@@ -311,7 +311,7 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
     },
     enabled: !!organizationId,
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60 * 24, // persiste p/ hidratação instantânea do dashboard
   });
 
   const { data: gamificationStats = null, isLoading: isLoadingGamification } = useQuery({
@@ -374,7 +374,7 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
     },
     enabled: !!organizationId,
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60 * 24, // persiste p/ hidratação instantânea do dashboard
   });
 
   const { data: forecasts = [], isLoading: isLoadingForecasts } = useQuery({
@@ -390,7 +390,7 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
     },
     enabled: !!organizationId,
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60 * 24, // persiste p/ hidratação instantânea do dashboard
   });
 
   const { data: staffPerformance = [], isLoading: isLoadingStaff } = useQuery({
@@ -406,7 +406,7 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
     },
     enabled: !!organizationId,
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60 * 24, // persiste p/ hidratação instantânea do dashboard
   });
 
   const { data: selfAssessments = [], isLoading: isLoadingAssessments } = useQuery({
@@ -424,7 +424,7 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
     },
     enabled: !!organizationId,
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60 * 24, // persiste p/ hidratação instantânea do dashboard
   });
 
   const { data: notifications = [], isLoading: isLoadingNotifications } = useQuery({
@@ -440,7 +440,7 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
     },
     enabled: !!organizationId,
     staleTime: 1000 * 60 * 1,
-    gcTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 60 * 24,
   });
 
   // Calculate birthdays
