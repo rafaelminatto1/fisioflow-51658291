@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { patientsApi, type PatientsListFacets, type PatientsListSummary } from "@/api/v2/patients";
 import { isOfflineEnqueuedResponse, isOfflinePlaceholder } from "@/api/v2/base";
@@ -142,7 +142,12 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
     },
     enabled: Boolean(organizationId),
     staleTime: 1000 * 60 * 2,
-    gcTime: 1000 * 60 * 5,
+    // gcTime >= maxAge do persistQueryClient (7d) para a lista de pacientes
+    // hidratar INSTANTANEAMENTE ao logar (IndexedDB), revalidando em background.
+    // Antes: 5min descartava o cache persistido e mostrava skeleton. Ver agenda.
+    gcTime: 1000 * 60 * 60 * 24,
+    // Mantém a lista anterior na tela ao paginar/filtrar (sem flash de skeleton).
+    placeholderData: keepPreviousData,
   });
 
   const patients = patientsResponse?.data ?? [];

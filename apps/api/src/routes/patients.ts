@@ -921,11 +921,16 @@ app.get("/", async (c) => {
         break;
     }
 
-    let dataResult;
-    let summaryResult;
-    let facetsResult;
-    let totalResult;
+    // Tipados como any + defaults: as atribuições agora acontecem dentro de
+    // closures (runData/…), então o TS não consegue provar que foram definidas.
+    let dataResult: any;
+    let summaryResult: any = { rows: [] };
+    let facetsResult: any = { rows: [] };
+    let totalResult: any = { rows: [] };
 
+    // Otimização: data/summary/facets/total são independentes — rodam em
+    // paralelo (Promise.all), 1 roundtrip em vez de 4 seriais ao banco.
+    const runData = async () => {
     try {
       const startData = Date.now();
       const safeLimit = isNaN(limit) ? 20 : limit;
@@ -965,7 +970,9 @@ app.get("/", async (c) => {
       });
       throw new Error(`Data query failed: ${e.message}`);
     }
+    };
 
+    const runSummary = async () => {
     let summaryParams: any[] = [];
     try {
       const startSummary = Date.now();
@@ -1013,7 +1020,9 @@ app.get("/", async (c) => {
       // Do not throw, return partial data
       summaryResult = { rows: [] };
     }
+    };
 
+    const runFacets = async () => {
     try {
       const startFacets = Date.now();
       facetsResult = await pool.query(
@@ -1069,7 +1078,9 @@ app.get("/", async (c) => {
       console.error("[Patients/List] Facets Query Error:", e.message, e.stack);
       facetsResult = { rows: [] };
     }
+    };
 
+    const runTotal = async () => {
     try {
       const startTotal = Date.now();
       totalResult = await pool.query(
@@ -1086,13 +1097,16 @@ app.get("/", async (c) => {
       console.error("[Patients/List] Total Query Error:", e.message, e.stack);
       totalResult = { rows: [] };
     }
+    };
+
+    await Promise.all([runData(), runSummary(), runFacets(), runTotal()]);
 
     const total = Number(totalResult.rows[0]?.total ?? (dataResult.rows[0] as any)?.__total ?? 0);
     const summaryRow = (summaryResult.rows[0] ?? {}) as Record<string, unknown>;
     const facetsRow = (facetsResult.rows[0] ?? {}) as Record<string, unknown>;
 
     return c.json({
-      data: dataResult.rows.map((row) => normalizePatientDirectoryRow(row as DbRow)),
+      data: dataResult.rows.map((row: DbRow) => normalizePatientDirectoryRow(row)),
       total,
       page: Math.floor(offset / limit) + 1,
       perPage: limit,
