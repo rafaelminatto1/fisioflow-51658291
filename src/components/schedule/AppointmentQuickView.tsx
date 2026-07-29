@@ -19,6 +19,7 @@ import {
   NotepadText,
   CreditCard,
   Calendar,
+  CalendarClock,
   UserRound,
   ClipboardList,
 } from "lucide-react";
@@ -69,6 +70,7 @@ interface AppointmentQuickViewProps {
   children: React.ReactNode;
   onEdit?: () => void;
   onDelete?: () => void;
+  onMoveToToday?: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -78,6 +80,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   children,
   onEdit,
   onDelete,
+  onMoveToToday,
   open,
   onOpenChange,
 }) => {
@@ -483,6 +486,21 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             >
               <Edit className="h-3.5 w-3.5" />
               Editar
+            </Button>
+          )}
+
+          {onMoveToToday && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 flex-1 rounded-xl font-bold text-xs gap-1.5 border-blue-200 bg-blue-50/50 text-blue-700 hover:bg-blue-100 hover:border-blue-300 transition-all"
+              onClick={() => {
+                onMoveToToday();
+                onOpenChange?.(false);
+              }}
+            >
+              <CalendarClock className="h-3.5 w-3.5" />
+              Mover p/ hoje
             </Button>
           )}
 

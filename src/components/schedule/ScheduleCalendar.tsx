@@ -107,6 +107,7 @@ export interface ScheduleCalendarProps {
   onAppointmentReschedule?: (id: string, start: string, end: string) => void;
   onEditAppointment?: (id: string) => void;
   onDeleteAppointment?: (id: string) => void;
+  onMoveAppointmentToToday?: (id: string) => void;
   onStatusChange?: (id: string, status: string) => void;
   isSelectionMode?: boolean;
   selectionMode?: boolean;
@@ -141,6 +142,7 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
     onAppointmentReschedule,
     onEditAppointment,
     onDeleteAppointment,
+    onMoveAppointmentToToday,
     isSelectionMode,
     selectionMode,
     selectedIds,
@@ -712,6 +714,12 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
             setQuickViewAppointment(null);
             setPopoverAnchorRect(null);
             onDeleteAppointment?.(id);
+          }}
+          onMoveToToday={() => {
+            const id = String(quickViewAppointment.id);
+            setQuickViewAppointment(null);
+            setPopoverAnchorRect(null);
+            onMoveAppointmentToToday?.(id);
           }}
         >
           <div

@@ -288,6 +288,16 @@ export default function Schedule() {
                     const appointment = appointments.find((a) => a.id === id);
                     if (appointment) actions.handleDeleteAppointment(appointment);
                   }}
+                  onMoveAppointmentToToday={(id) => {
+                    const appointment = appointments.find((a) => a.id === id);
+                    if (!appointment) return;
+                    const today = new Date();
+                    actions.handleAppointmentReschedule(
+                      appointment,
+                      today,
+                      appointment.time,
+                    );
+                  }}
                   onStatusChange={actions.handleUpdateStatus}
                   isSelectionMode={isSelectionMode}
                   selectedIds={selectedIds}

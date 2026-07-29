@@ -6,13 +6,20 @@ import { broadcastToOrg } from "../lib/realtime";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
+// A tabela usa organization_id/target_slot; o front espera clinic_id/target_time.
 const mapWaitlistRow = (row: Record<string, any>): Record<string, any> => ({
-  ...row,
+  id: row.id,
+  clinic_id: row.organization_id,
+  patient_id: row.patient_id,
+  patient_phone: row.patient_phone,
+  patient_name: row.patient_name,
   target_date: row.target_date,
-  target_time: row.target_time ? row.target_time.slice(0, 5) : null,
+  target_time: typeof row.target_slot === "string" ? row.target_slot.slice(0, 5) : row.target_slot,
+  type: row.type,
+  status: row.status,
+  notified_at: row.notified_at,
   created_at: row.created_at,
   updated_at: row.updated_at,
-  notified_at: row.notified_at,
 });
 
 app.get("/", requireAuth, async (c) => {
@@ -22,14 +29,14 @@ app.get("/", requireAuth, async (c) => {
     const { date, time, status } = c.req.query();
     const params: unknown[] = [user.organizationId];
     let idx = 2;
-    let sql = "SELECT * FROM appointment_waitlist WHERE clinic_id = $1";
+    let sql = "SELECT * FROM appointment_waitlist WHERE organization_id = $1";
 
     if (date) {
       sql += ` AND target_date = $${idx++}`;
       params.push(date);
     }
     if (time) {
-      sql += ` AND target_time = $${idx++}`;
+      sql += ` AND target_slot = $${idx++}`;
       params.push(time);
     }
     if (status) {
@@ -41,6 +48,42 @@ app.get("/", requireAuth, async (c) => {
 
     const result = await pool.query(sql, params);
     return c.json({ data: result.rows.map(mapWaitlistRow) });
+  } catch {
+    return c.json({ data: [] });
+  }
+});
+
+app.get("/stats/:date", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  const { date } = c.req.param();
+  try {
+    const result = await pool.query(
+      `SELECT target_slot,
+        COUNT(*) FILTER (WHERE status = 'waiting') AS waiting,
+        COUNT(*) FILTER (WHERE status = 'notified') AS notified,
+        COUNT(*) FILTER (WHERE status = 'fulfilled') AS fulfilled
+       FROM appointment_waitlist
+       WHERE organization_id = $1 AND target_date = $2
+       GROUP BY target_slot
+       ORDER BY target_slot ASC`,
+      [user.organizationId, date],
+    );
+
+    const data = result.rows.map((row) => {
+      const waiting = Number(row.waiting) || 0;
+      const notified = Number(row.notified) || 0;
+      const fulfilled = Number(row.fulfilled) || 0;
+      return {
+        target_time: typeof row.target_slot === "string" ? row.target_slot.slice(0, 5) : row.target_slot,
+        waiting_count: waiting,
+        waiting,
+        notified,
+        fulfilled,
+      };
+    });
+
+    return c.json({ data });
   } catch {
     return c.json({ data: [] });
   }
@@ -59,7 +102,7 @@ app.post("/", requireAuth, async (c) => {
 
     const result = await pool.query(
       `INSERT INTO appointment_waitlist (
-        clinic_id, patient_id, patient_phone, patient_name, target_date, target_time, type, status
+        organization_id, patient_id, patient_phone, patient_name, target_date, target_slot, type, status
       )
        VALUES ($1, $2, $3, $4, $5, $6, $7, 'waiting')
        RETURNING *`,
@@ -78,7 +121,7 @@ app.post("/", requireAuth, async (c) => {
 
     const positionResult = await pool.query(
       `SELECT COUNT(*) as position FROM appointment_waitlist
-       WHERE clinic_id = $1 AND target_date = $2 AND target_time = $3 AND status = 'waiting'
+       WHERE organization_id = $1 AND target_date = $2 AND target_slot = $3 AND status = 'waiting'
        AND created_at <= $4`,
       [user.organizationId, target_date, target_time, entry.created_at],
     );
@@ -97,7 +140,7 @@ app.get("/:id", requireAuth, async (c) => {
   const { id } = c.req.param();
   try {
     const result = await pool.query(
-      "SELECT * FROM appointment_waitlist WHERE id = $1 AND clinic_id = $2",
+      "SELECT * FROM appointment_waitlist WHERE id = $1 AND organization_id = $2",
       [id, user.organizationId],
     );
 
@@ -117,14 +160,24 @@ app.put("/:id", requireAuth, async (c) => {
   const { id } = c.req.param();
   try {
     const body = await c.req.json();
-    const allowed = ["patient_id", "patient_phone", "patient_name", "target_date", "target_time", "type", "status", "notified_at"] as const;
+    // Chaves do front → colunas reais da tabela.
+    const columnMap: Record<string, string> = {
+      patient_id: "patient_id",
+      patient_phone: "patient_phone",
+      patient_name: "patient_name",
+      target_date: "target_date",
+      target_time: "target_slot",
+      type: "type",
+      status: "status",
+      notified_at: "notified_at",
+    };
     const sets: string[] = [];
     const params: unknown[] = [];
     let idx = 1;
 
-    for (const key of allowed) {
+    for (const key of Object.keys(columnMap)) {
       if (!(key in body)) continue;
-      sets.push(`${key} = $${idx++}`);
+      sets.push(`${columnMap[key]} = $${idx++}`);
       params.push(body[key]);
     }
 
@@ -136,7 +189,7 @@ app.put("/:id", requireAuth, async (c) => {
     params.push(id, user.organizationId);
 
     const result = await pool.query(
-      `UPDATE appointment_waitlist SET ${sets.join(", ")} WHERE id = $${idx++} AND clinic_id = $${idx++} RETURNING *`,
+      `UPDATE appointment_waitlist SET ${sets.join(", ")} WHERE id = $${idx++} AND organization_id = $${idx++} RETURNING *`,
       params,
     );
 
@@ -156,7 +209,7 @@ app.delete("/:id", requireAuth, async (c) => {
   const { id } = c.req.param();
   try {
     await pool.query(
-      "DELETE FROM appointment_waitlist WHERE id = $1 AND clinic_id = $2",
+      "DELETE FROM appointment_waitlist WHERE id = $1 AND organization_id = $2",
       [id, user.organizationId],
     );
     return c.json({ success: true });
@@ -173,7 +226,7 @@ app.post("/:id/notify", requireAuth, async (c) => {
     const result = await pool.query(
       `UPDATE appointment_waitlist
        SET status = 'notified', notified_at = NOW(), updated_at = NOW()
-       WHERE id = $1 AND clinic_id = $2 AND status = 'waiting'
+       WHERE id = $1 AND organization_id = $2 AND status = 'waiting'
        RETURNING *`,
       [id, user.organizationId],
     );
@@ -210,7 +263,7 @@ app.post("/:id/fulfill", requireAuth, async (c) => {
     const result = await pool.query(
       `UPDATE appointment_waitlist
        SET status = 'fulfilled', updated_at = NOW()
-       WHERE id = $1 AND clinic_id = $2
+       WHERE id = $1 AND organization_id = $2
        RETURNING *`,
       [id, user.organizationId],
     );
@@ -233,7 +286,7 @@ app.post("/:id/decline", requireAuth, async (c) => {
     const result = await pool.query(
       `UPDATE appointment_waitlist
        SET status = 'declined', updated_at = NOW()
-       WHERE id = $1 AND clinic_id = $2
+       WHERE id = $1 AND organization_id = $2
        RETURNING *`,
       [id, user.organizationId],
     );

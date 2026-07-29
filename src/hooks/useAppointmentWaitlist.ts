@@ -43,7 +43,7 @@ export function useAppointmentWaitlist(filters?: {
 
       const res = await schedulingApi.request<{ data: AppointmentWaitlistEntry[] }>({
         method: "GET",
-        path: `/api/scheduling/waitlist?${params.toString()}`,
+        path: `/api/scheduling/appointment-waitlist?${params.toString()}`,
       });
       return res.data ?? [];
     },
@@ -64,7 +64,7 @@ export function useAppointmentWaitlistStats(date: string) {
         fulfilled: number;
       }> }>({
         method: "GET",
-        path: `/api/scheduling/waitlist/stats/${encodeURIComponent(date)}`,
+        path: `/api/scheduling/appointment-waitlist/stats/${encodeURIComponent(date)}`,
       });
       return res.data ?? [];
     },
@@ -80,7 +80,7 @@ export function useAddToAppointmentWaitlist() {
     mutationFn: async (input: AddToAppointmentWaitlistInput) => {
       const res = await schedulingApi.request<{ data: AppointmentWaitlistEntry }>({
         method: "POST",
-        path: "/api/scheduling/waitlist",
+        path: "/api/scheduling/appointment-waitlist",
         body: input,
       });
       return res.data!;
@@ -103,7 +103,7 @@ export function useRemoveFromAppointmentWaitlist() {
     mutationFn: async (id: string) => {
       await schedulingApi.request({
         method: "DELETE",
-        path: `/api/scheduling/waitlist/${encodeURIComponent(id)}`,
+        path: `/api/scheduling/appointment-waitlist/${encodeURIComponent(id)}`,
       });
     },
     onSuccess: () => {
@@ -124,7 +124,7 @@ export function useNotifyAppointmentWaitlist() {
     mutationFn: async (id: string) => {
       const res = await schedulingApi.request<{ data: AppointmentWaitlistEntry }>({
         method: "POST",
-        path: `/api/scheduling/waitlist/${encodeURIComponent(id)}/notify`,
+        path: `/api/scheduling/appointment-waitlist/${encodeURIComponent(id)}/notify`,
       });
       return res.data!;
     },
@@ -146,7 +146,7 @@ export function useFulfillAppointmentWaitlist() {
     mutationFn: async (id: string) => {
       const res = await schedulingApi.request<{ data: AppointmentWaitlistEntry }>({
         method: "POST",
-        path: `/api/scheduling/waitlist/${encodeURIComponent(id)}/fulfill`,
+        path: `/api/scheduling/appointment-waitlist/${encodeURIComponent(id)}/fulfill`,
       });
       return res.data!;
     },
@@ -168,7 +168,7 @@ export function useDeclineAppointmentWaitlist() {
     mutationFn: async (id: string) => {
       const res = await schedulingApi.request<{ data: AppointmentWaitlistEntry }>({
         method: "POST",
-        path: `/api/scheduling/waitlist/${encodeURIComponent(id)}/decline`,
+        path: `/api/scheduling/appointment-waitlist/${encodeURIComponent(id)}/decline`,
       });
       return res.data!;
     },
