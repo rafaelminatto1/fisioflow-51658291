@@ -169,6 +169,10 @@ class_name = "VoiceScribeAgent"
 name = "EVOLUTION_COLLABORATION"
 class_name = "EvolutionCollaborationSql"
 
+[[durable_objects.bindings]]
+name = "NOTES_COLLABORATION"
+class_name = "NotesCollaboration"
+
 [[migrations]]
 tag = "v1"
 
@@ -234,6 +238,10 @@ new_sqlite_classes = ["EvolutionCollaborationSql"]
 [[migrations]]
 tag = "v14"
 deleted_classes = ["EvolutionCollaboration"]
+
+[[migrations]]
+tag = "v15"
+new_sqlite_classes = ["NotesCollaboration"]
 
 # ===== AI & BROWSER RENDERING =====
 [ai]
@@ -449,6 +457,7 @@ bindings = [
   { name = "CLINIC_AGENT", class_name = "ClinicAgentSql" },
   { name = "VOICE_SCRIBE_AGENT", class_name = "VoiceScribeAgent" },
   { name = "EVOLUTION_COLLABORATION", class_name = "EvolutionCollaborationSql" },
+  { name = "NOTES_COLLABORATION", class_name = "NotesCollaboration" },
 ]
 
 [[env.production.migrations]]
@@ -476,6 +485,10 @@ new_sqlite_classes = ["EvolutionCollaborationSql"]
 [[env.production.migrations]]
 tag = "v14"
 deleted_classes = ["EvolutionCollaboration"]
+
+[[env.production.migrations]]
+tag = "v15"
+new_sqlite_classes = ["NotesCollaboration"]
 
 [env.production.ai]
 binding = "AI"

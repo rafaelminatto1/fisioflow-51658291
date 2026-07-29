@@ -463,6 +463,7 @@ export { VoiceScribeAgent } from "./agents/VoiceScribeAgent";
 export {
   EvolutionCollaborationSql,
 } from "./agents/EvolutionCollaboration";
+export { NotesCollaboration } from "./agents/NotesCollaboration";
 
 export { SessionSummaryWorkflow } from "./workflows/sessionSummary";
 export {
