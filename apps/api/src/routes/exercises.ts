@@ -13,6 +13,7 @@ import {
 } from "@fisioflow/db";
 import { removeExerciseFromIndex, syncExerciseToIndex } from "../lib/contentIndexing";
 import { generateEmbedding1024, generateTurboSketch, runAi, readAiText } from "../lib/ai-native";
+import { withAIRetry } from "../lib/ai/retry";
 import { WORKERS_AI_MODELS } from "../lib/workersAi";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -1405,16 +1406,27 @@ Músculos permitidos: ${JSON.stringify([...new Set(BACKFILL_MUSCLES.values())])}
 Formato JSON: {"description":"...","tips":"...","precautions":"...","benefits":"...","category_slug":"...","subcategory":"...","muscles_primary":["..."],"muscles_secondary":["..."],"body_parts":["..."],"equipment":["..."]}.`;
 
     try {
-      const resp = await runAi(c.env, model, {
-        messages: [
-          {
-            role: "system",
-            content:
-              "Você é um assistente especializado em fisioterapia. Gere conteúdo técnico e clínico em português brasileiro. Responda sempre em formato JSON válido.",
-          },
-          { role: "user", content: prompt },
-        ],
-      }, { cache: false });
+      // Retry em erro transitório da Workers AI (429/5xx/timeout) — reduz as
+      // falhas recorrentes do backfill sem re-tentar erros determinísticos.
+      const resp = await withAIRetry(
+        () =>
+          runAi(
+            c.env,
+            model,
+            {
+              messages: [
+                {
+                  role: "system",
+                  content:
+                    "Você é um assistente especializado em fisioterapia. Gere conteúdo técnico e clínico em português brasileiro. Responda sempre em formato JSON válido.",
+                },
+                { role: "user", content: prompt },
+              ],
+            },
+            { cache: false },
+          ),
+        { retries: 1 },
+      );
 
       const parsed = parseBackfillJson(readAiText(resp));
       const updates: Record<string, unknown> = {};
@@ -1468,7 +1480,14 @@ Formato JSON: {"description":"...","tips":"...","precautions":"...","benefits":"
       processed++;
       if (samples.length < 3) samples.push({ id: r.id, name: r.name, updates });
     } catch (e) {
-      console.error("[Exercises/ContentBackfill] Error for", r.id, e);
+      // warn (não error): já retentou o transitório; falha persistente aqui é
+      // por-item e não-fatal. Loga nome p/ diagnóstico sem poluir o stream de erros.
+      console.warn(
+        "[Exercises/ContentBackfill] IA falhou para",
+        r.id,
+        r.name,
+        e instanceof Error ? e.message : e,
+      );
       failed++;
     }
   }

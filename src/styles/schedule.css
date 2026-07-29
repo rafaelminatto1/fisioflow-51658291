@@ -72,7 +72,9 @@
   text-transform: uppercase !important;
   letter-spacing: 0.1em !important;
   font-weight: 800 !important;
-  color: hsl(var(--muted-foreground)) !important;
+  /* a11y: --muted-foreground em 10px não batia 4.5:1; --foreground passa e
+     mantém o header legível (cabeçalhos de dia devem ser bem lidos). */
+  color: hsl(var(--foreground)) !important;
   padding: 8px 4px !important;
 }
 
