@@ -56,7 +56,7 @@ export function useTarefas() {
     queryKey: TAREFAS_QUERY_KEY,
     queryFn: fetchTarefas,
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 30,
+    gcTime: 1000 * 60 * 60 * 24, // SWR: hidratação instantânea
     refetchOnWindowFocus: false,
   });
 }
@@ -71,7 +71,7 @@ export function useProjectTarefas(projectId: string | undefined) {
     },
     enabled: !!projectId,
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 30,
+    gcTime: 1000 * 60 * 60 * 24, // SWR: hidratação instantânea
     refetchOnWindowFocus: false,
   });
 }

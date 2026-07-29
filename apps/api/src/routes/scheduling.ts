@@ -7,8 +7,12 @@ import { appointmentWaitlistRoutes } from "./appointment-waitlist";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-app.route("/settings", settingsRoutes);
-app.route("/recurring", recurringRoutes);
+// settingsRoutes e recurringRoutes já definem os caminhos completos
+// (/settings/*, /capacity-config, /recurring-series, /appointment-types), então
+// montam na RAIZ. Montar em /settings ou /recurring duplicava o prefixo e gerava
+// 404 (o front chama /api/scheduling/settings/* e /api/scheduling/recurring-series).
+app.route("/", settingsRoutes);
+app.route("/", recurringRoutes);
 app.route("/appointment-waitlist", appointmentWaitlistRoutes);
 
 export { app as schedulingRoutes };

@@ -30,7 +30,7 @@ describe("runHealthMonitor", () => {
     await runHealthMonitor(makeEnv());
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://api-pro.moocafisio.com.br/api/health",
+      "https://fisioflow-api.rafalegollas.workers.dev/api/health",
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
   });

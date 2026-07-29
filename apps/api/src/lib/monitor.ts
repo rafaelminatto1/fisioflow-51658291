@@ -1,6 +1,9 @@
 import type { Env } from "../types/env";
 
-const DEFAULT_HEALTH_URL = "https://api-pro.moocafisio.com.br/api/health";
+// Monitora o MESMO endpoint que o frontend de produção usa
+// (VITE_WORKERS_API_URL em .env.production). O domínio api-pro.moocafisio.com.br
+// dá 522 intermitente (origem proxied) mas NÃO é usado pelo app → alarme falso.
+const DEFAULT_HEALTH_URL = "https://fisioflow-api.rafalegollas.workers.dev/api/health";
 const RENOTIFY_INTERVAL_MS = 30 * 60 * 1000;
 const REQUEST_TIMEOUT_MS = 8_000;
 
@@ -52,13 +55,27 @@ async function pingUrl(
   }
 }
 
+/**
+ * Ping com 1 retry após 2s. Um blip transitório (cold start do compute, timeout
+ * momentâneo) não deve disparar "API DOWN" — só alarma se DUAS tentativas
+ * seguidas falharem. Corta o grosso dos falsos positivos de 522.
+ */
+async function pingWithRetry(
+  url: string,
+): Promise<{ healthy: boolean; status: number; latencyMs: number }> {
+  const first = await pingUrl(url);
+  if (first.healthy) return first;
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  return pingUrl(url);
+}
+
 export async function runHealthMonitor(env: Env): Promise<void> {
   const kv = env.FISIOFLOW_CONFIG!;
   const topic = env.MONITOR_NTFY_TOPIC ?? "fisioflow-monitor";
   const apiUrl = env.MONITOR_HEALTH_URL ?? DEFAULT_HEALTH_URL;
 
-  // --- Verificar API principal ---
-  const { healthy: isHealthy, status: statusCode, latencyMs } = await pingUrl(apiUrl);
+  // --- Verificar API principal (com retry p/ evitar falso positivo) ---
+  const { healthy: isHealthy, status: statusCode, latencyMs } = await pingWithRetry(apiUrl);
 
   const [lastStatus, downSince, lastNotifyStr] = await Promise.all([
     kv.get("monitor:status"),

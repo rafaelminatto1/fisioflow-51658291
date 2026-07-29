@@ -16,7 +16,7 @@ export function useContasFinanceiras(tipo?: "receber" | "pagar", status?: string
       return (res?.data ?? res ?? []) as ContaFinanceira[];
     },
     staleTime: 1000 * 60 * 2,
-    gcTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 60 * 24, // SWR: hidrata a lista na hora do cache persistido
   });
 }
 
