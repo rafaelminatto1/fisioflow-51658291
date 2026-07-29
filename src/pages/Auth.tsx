@@ -216,13 +216,6 @@ export default function Auth() {
           variant: "destructive",
         });
       } else {
-        if (inviteToken) {
-          try {
-            await invitationsApi.use(inviteToken);
-          } catch (consumeErr) {
-            logger.error("Error consuming invitation after login", consumeErr, "Auth");
-          }
-        }
         toast({
           title: "Login realizado com sucesso!",
           description: "Bem-vindo ao FisioFlow",
@@ -337,14 +330,9 @@ export default function Auth() {
 
       logger.info("Conta criada com sucesso", { userId: newUser.uid }, "Auth");
 
-      if (newUser && inviteToken) {
-        try {
-          await invitationsApi.use(inviteToken);
-          logger.info("Invitation consumed after signup", { userId: newUser.uid }, "Auth");
-        } catch (consumeErr) {
-          logger.error("Error consuming invitation", consumeErr, "Auth");
-        }
-      }
+      // O convite é consumido pelo webhook user.created, que também define o papel
+      // do perfil. Queimar o token aqui criaria uma corrida: se chegasse primeiro,
+      // o webhook não acharia o convite e o perfil nasceria 'pending'.
 
       // Sucesso no cadastro
       toast({

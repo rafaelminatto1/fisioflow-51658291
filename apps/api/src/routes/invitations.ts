@@ -1,11 +1,34 @@
 import { Hono } from "hono";
 import { createPool } from "../lib/db";
-import { requireAuth, type AuthVariables } from "../lib/auth";
+import { requireAuth, requireRole, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-app.get("/", requireAuth, async (c) => {
+// Um convite pendente define o papel com que o perfil nasce no signup
+// (webhook user.created). Só admin pode criar/ver/alterar convites.
+const requireAdmin = requireRole("admin");
+
+// Espelha a allowlist de POST /profile/admin/approve/:profileId
+const ALLOWED_INVITE_ROLES = [
+  "admin",
+  "fisioterapeuta",
+  "estagiario",
+  "paciente",
+  "parceiro",
+  "recepcionista",
+];
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function normalizeEmail(value: unknown): string | null {
+  const email = String(value ?? "")
+    .trim()
+    .toLowerCase();
+  return EMAIL_RE.test(email) ? email : null;
+}
+
+app.get("/", requireAuth, requireAdmin, async (c) => {
   const user = c.get("user");
   const db = await createPool(c.env);
   const result = await db.query(
@@ -19,15 +42,24 @@ app.get("/", requireAuth, async (c) => {
   }
 });
 
-app.post("/", requireAuth, async (c) => {
+app.post("/", requireAuth, requireAdmin, async (c) => {
   const user = c.get("user");
-  const body = await c.req.json();
+  const body = await c.req.json().catch(() => ({}) as any);
+
+  const email = normalizeEmail(body?.email);
+  if (!email) return c.json({ error: "email inválido" }, 400);
+
+  const role = String(body?.role ?? "fisioterapeuta")
+    .trim()
+    .toLowerCase();
+  if (!ALLOWED_INVITE_ROLES.includes(role)) return c.json({ error: "role inválido" }, 400);
+
   const db = await createPool(c.env);
 
   // Check for pending invitation with same email
   const existing = await db.query(
     `SELECT id FROM user_invitations WHERE organization_id = $1 AND email = $2 AND used_at IS NULL AND expires_at > NOW()`,
-    [user.organizationId, body.email.trim().toLowerCase()],
+    [user.organizationId, email],
   );
   if (existing.rowCount && existing.rowCount > 0) {
     return c.json({ error: "Já existe um convite pendente para este email" }, 409);
@@ -40,41 +72,41 @@ app.post("/", requireAuth, async (c) => {
   const result = await db.query(
     `INSERT INTO user_invitations (organization_id, email, role, token, invited_by, expires_at)
      VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-    [
-      user.organizationId,
-      body.email.trim().toLowerCase(),
-      body.role ?? "fisioterapeuta",
-      token,
-      user.uid,
-      expiresAt.toISOString(),
-    ],
+    [user.organizationId, email, role, token, user.uid, expiresAt.toISOString()],
   );
   return c.json({ data: result.rows[0] }, 201);
 });
 
-app.patch("/:id", requireAuth, async (c) => {
+app.patch("/:id", requireAuth, requireAdmin, async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
-  const body = await c.req.json();
+  const body = await c.req.json().catch(() => ({}) as any);
+
+  let email: string | null = null;
+  if (body?.email !== undefined && body?.email !== null) {
+    email = normalizeEmail(body.email);
+    if (!email) return c.json({ error: "email inválido" }, 400);
+  }
+
+  let role: string | null = null;
+  if (body?.role !== undefined && body?.role !== null) {
+    role = String(body.role).trim().toLowerCase();
+    if (!ALLOWED_INVITE_ROLES.includes(role)) return c.json({ error: "role inválido" }, 400);
+  }
+
   const db = await createPool(c.env);
 
   const result = await db.query(
     `UPDATE user_invitations SET email = COALESCE($1, email), role = COALESCE($2, role),
        expires_at = COALESCE($3, expires_at)
      WHERE id = $4 AND organization_id = $5 AND used_at IS NULL RETURNING *`,
-    [
-      body.email ? body.email.trim().toLowerCase() : null,
-      body.role ?? null,
-      body.expires_at ?? null,
-      id,
-      user.organizationId,
-    ],
+    [email, role, body?.expires_at ?? null, id, user.organizationId],
   );
   if (!result.rowCount) return c.json({ error: "Not found or already used" }, 404);
   return c.json({ data: result.rows[0] });
 });
 
-app.delete("/:id", requireAuth, async (c) => {
+app.delete("/:id", requireAuth, requireAdmin, async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
   const db = await createPool(c.env);
