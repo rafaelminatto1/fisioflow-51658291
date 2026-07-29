@@ -107,16 +107,6 @@ export const DEFAULT_SHORTCUTS: Record<string, KeyboardShortcut[]> = {
       category: "navigation",
       preventDefault: true,
     },
-    {
-      key: "w",
-      shiftKey: true,
-      description: "Ir para Lista de Espera",
-      action: () => {
-        window.location.href = "/waitlist";
-      },
-      category: "navigation",
-      preventDefault: true,
-    },
   ],
 
   actions: [

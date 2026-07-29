@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAppointmentActions } from "@/hooks/useAppointmentActions";
-import { useWaitlistMatch } from "@/hooks/useWaitlistMatch";
 import { usePatientPackages } from "@/hooks/usePackages";
 import { useUpdateAppointment } from "@/hooks/useAppointments";
 import { APP_ROUTES, patientRoutes } from "@/lib/routing/appRoutes";
@@ -26,11 +25,9 @@ export const useAppointmentQuickViewLogic = ({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { updateStatus, isUpdatingStatus } = useAppointmentActions();
-  const { getInterestCount } = useWaitlistMatch();
   const { data: patientPackages = [] } = usePatientPackages(appointment.patientId);
   const { mutateAsync: updateAppointment, isPending: isUpdatingAppointment } = useUpdateAppointment();
 
-  const [showWaitlistNotification, setShowWaitlistNotification] = useState(false);
   const [showWaitlistQuickAdd, setShowWaitlistQuickAdd] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showNoShowConfirmDialog, setShowNoShowConfirmDialog] = useState(false);
@@ -99,9 +96,6 @@ export const useAppointmentQuickViewLogic = ({
     return new Date();
   }, [appointment.date]);
 
-  const interestCount = getInterestCount(appointmentDate, appointment.time);
-  const hasWaitlistInterest = interestCount > 0;
-
   const prefetchEvolution = useCallback(() => {
     prefetchRoute(() => import("../../../pages/PatientEvolution"), RouteKeys.PATIENT_EVOLUTION);
     void queryClient.prefetchQuery({
@@ -166,11 +160,8 @@ export const useAppointmentQuickViewLogic = ({
       setLocalStatus(normalized as AppointmentStatus);
       updateStatus({ appointmentId: appointment.id, status: newStatus });
       onOpenChange?.(false);
-      if ((newStatus === "cancelado" || newStatus === "falta") && hasWaitlistInterest) {
-        setTimeout(() => setShowWaitlistNotification(true), 500);
-      }
     },
-    [appointment, localStatus, updateStatus, onOpenChange, hasWaitlistInterest],
+    [appointment, localStatus, updateStatus, onOpenChange],
   );
 
   const handleNoShowConfirm = useCallback(() => {
@@ -254,10 +245,6 @@ export const useAppointmentQuickViewLogic = ({
     localPaymentStatus,
     localTherapistId,
     appointmentDate,
-    interestCount,
-    hasWaitlistInterest,
-    showWaitlistNotification,
-    setShowWaitlistNotification,
     showWaitlistQuickAdd,
     setShowWaitlistQuickAdd,
     showPaymentModal,

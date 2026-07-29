@@ -156,7 +156,7 @@ export function prefetchRelatedRoutes(currentRoute: string): void {
   // Define related routes for each section
   const routeMap: Record<string, string[]> = {
     [APP_ROUTES.PATIENTS]: [APP_ROUTES.AGENDA, APP_ROUTES.EXERCISES, "/medical-record"],
-    [APP_ROUTES.AGENDA]: [APP_ROUTES.PATIENTS, "/waitlist"],
+    [APP_ROUTES.AGENDA]: [APP_ROUTES.PATIENTS],
     [APP_ROUTES.FINANCIAL]: [APP_ROUTES.REPORTS, APP_ROUTES.PATIENTS],
     [`${APP_ROUTES.PATIENTS}/:id`]: ["/patient-evolution/:appointmentId", "/medical-record"],
     [APP_ROUTES.SETTINGS]: ["/admin/users", "/security-settings"],

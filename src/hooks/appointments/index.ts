@@ -85,22 +85,6 @@ export { useRealtimeAppointments } from "../useRealtimeAppointments";
 export { useAppointmentOptimistic } from "../appointmentOptimistic";
 
 // ============================================================================
-// Waitlist Hooks
-// ============================================================================
-
-export {
-  useWaitlist,
-  useWaitlistCounts,
-  useAddToWaitlist,
-  useRemoveFromWaitlist,
-  useOfferSlot,
-  useAcceptOffer,
-  useRejectOffer,
-  useUpdatePriority,
-  useWaitlistOffers,
-} from "../useWaitlist";
-
-// ============================================================================
 // Types
 // ============================================================================
 

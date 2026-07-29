@@ -32,7 +32,6 @@ import { cn } from "@/lib/utils";
 import { AdvancedFilters } from "./AdvancedFilters";
 import type { TherapistSummary } from "@/types/workers";
 import { ScheduleConfigIconButton } from "./ScheduleConfigButton";
-import { WaitlistManager } from "./WaitlistManager";
 import { RecurringManager } from "./RecurringManager";
 
 export interface ScheduleToolbarProps {
@@ -261,7 +260,6 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
         <ScheduleConfigIconButton className="h-9 w-9 rounded-lg border border-border/50 bg-background/50 text-muted-foreground hover:bg-muted hover:text-primary transition-colors shadow-sm" />
 
         <RecurringManager />
-        <WaitlistManager />
 
         <Button
           onClick={onCreateAppointment}

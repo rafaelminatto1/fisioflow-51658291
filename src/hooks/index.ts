@@ -32,7 +32,6 @@ export { useFilteredAppointments } from "./useFilteredAppointments";
 export { useScheduleHandlers } from "./useScheduleHandlers";
 export { useScheduleState } from "./useScheduleState";
 export { usePrefetchAdjacentPeriods } from "./usePrefetchAdjacentPeriods";
-export { useWaitlist, useWaitlistOffers } from "./useWaitlist";
 
 // ============================================================================
 // Quick Wins Hooks (Fase 1)
@@ -93,7 +92,6 @@ export { useDashboardStats } from "./useDashboardStats";
 
 export { useAppointmentActions } from "./useAppointmentActions";
 export { useAutoSave } from "./useAutoSave";
-export { useWaitlist, useWaitlistOffers } from "./useWaitlist";
 export { usePainMaps } from "./usePainMaps";
 export { usePatientDocuments } from "./usePatientDocuments";
 

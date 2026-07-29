@@ -58,7 +58,6 @@ import {
   getTherapistById,
   THERAPIST_SELECT_NONE,
 } from "@/hooks/useTherapists";
-import { WaitlistNotification } from "./WaitlistNotification";
 import { WaitlistQuickAdd } from "./WaitlistQuickAdd";
 import { PaymentRegistrationModal } from "./PaymentRegistrationModal";
 import { Appointment } from "@/types/appointment";
@@ -99,10 +98,6 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
     localPaymentStatus,
     localTherapistId,
     appointmentDate,
-    interestCount,
-    hasWaitlistInterest,
-    showWaitlistNotification,
-    setShowWaitlistNotification,
     showWaitlistQuickAdd,
     setShowWaitlistQuickAdd,
     showPaymentModal,
@@ -175,30 +170,6 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           </Button>
         )}
       </div>
-
-      {hasWaitlistInterest && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          className="flex items-center gap-2 px-4 py-3 bg-amber-500/10 border-b border-amber-500/20 cursor-pointer hover:bg-amber-500/15 transition-colors group"
-          onClick={() => setShowWaitlistNotification(true)}
-          role="button"
-          tabIndex={0}
-        >
-          <div className="p-1.5 bg-amber-500/20 rounded-lg group-hover:scale-110 transition-transform">
-            <Users className="h-4 w-4 text-amber-600" aria-hidden="true" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-bold text-amber-800 dark:text-amber-400">
-              {interestCount} interessado{interestCount !== 1 ? "s" : ""}
-            </span>
-            <span className="text-[10px] text-amber-700/70 dark:text-amber-400/70 font-medium">
-              Clique para gerenciar fila
-            </span>
-          </div>
-          <Bell className="h-3.5 w-3.5 text-amber-600 ml-auto animate-pulse" aria-hidden="true" />
-        </motion.div>
-      )}
 
       <div className="p-4 space-y-4 flex-1 overflow-y-auto custom-scrollbar">
         <div className="flex items-start justify-between gap-3">
@@ -607,12 +578,6 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         </Popover>
       )}
 
-      <WaitlistNotification
-        open={showWaitlistNotification}
-        onOpenChange={setShowWaitlistNotification}
-        date={appointmentDate}
-        time={time}
-      />
       <WaitlistQuickAdd
         open={showWaitlistQuickAdd}
         onOpenChange={setShowWaitlistQuickAdd}

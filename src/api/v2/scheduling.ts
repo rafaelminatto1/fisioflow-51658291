@@ -149,24 +149,6 @@ export interface ScheduleSlotConfig {
   updated_at?: string;
 }
 
-export interface WaitlistEntry {
-  id: string;
-  patient_id: string;
-  organization_id?: string;
-  preferred_days?: string[];
-  preferred_periods?: string[];
-  preferred_therapist_id?: string | null;
-  priority?: "normal" | "high" | "urgent" | string;
-  status?: "waiting" | "offered" | "scheduled" | "removed" | string;
-  notes?: string | null;
-  refusal_count?: number;
-  offered_slot?: string | null;
-  offered_at?: string | null;
-  offer_expires_at?: string | null;
-  created_at: string;
-  updated_at?: string;
-}
-
 export interface RecurringSeries {
   id: string;
   patient_id?: string;
@@ -295,46 +277,6 @@ export const schedulingApi = {
         `/api/scheduling/settings/blocked-times/${encodeURIComponent(id)}`,
         {
           method: "DELETE",
-        },
-      ),
-  },
-  waitlist: {
-    list: (params?: { status?: string; priority?: string }) =>
-      request<{ data: WaitlistEntry[] }>(withQuery("/api/scheduling/waitlist", params)),
-    create: (data: Record<string, unknown>) =>
-      request<{ data: WaitlistEntry }>("/api/scheduling/waitlist", {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
-    update: (id: string, data: Record<string, unknown>) =>
-      request<{ data: WaitlistEntry }>(`/api/scheduling/waitlist/${encodeURIComponent(id)}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      }),
-    delete: (id: string) =>
-      request<{ ok?: boolean; success?: boolean }>(
-        `/api/scheduling/waitlist/${encodeURIComponent(id)}`,
-        {
-          method: "DELETE",
-        },
-      ),
-  },
-  waitlistOffers: {
-    list: (waitlistId?: string) =>
-      request<{ data: Array<Record<string, unknown>> }>(
-        withQuery("/api/scheduling/waitlist-offers", { waitlistId }),
-      ),
-    create: (data: Record<string, unknown>) =>
-      request<{ data: Record<string, unknown> }>("/api/scheduling/waitlist-offers", {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
-    respond: (id: string, data: Record<string, unknown>) =>
-      request<{ data: Record<string, unknown> }>(
-        `/api/scheduling/waitlist-offers/${encodeURIComponent(id)}/respond`,
-        {
-          method: "POST",
-          body: JSON.stringify(data),
         },
       ),
   },
