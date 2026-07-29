@@ -729,7 +729,8 @@ app.post("/:id/cancel", requireAuth, async (c) => {
                AND target_time = $3
                AND status = 'waiting'
              ORDER BY created_at ASC
-             LIMIT 1`,
+             LIMIT 1
+             FOR UPDATE SKIP LOCKED`,
             [organizationId, currentAppt.date, currentAppt.startTime],
           );
 
@@ -825,7 +826,8 @@ app.delete("/:id", requireAuth, async (c) => {
                AND target_time = $3
                AND status = 'waiting'
              ORDER BY created_at ASC
-             LIMIT 1`,
+             LIMIT 1
+             FOR UPDATE SKIP LOCKED`,
             [organizationId, currentAppt.date, currentAppt.startTime],
           );
 
