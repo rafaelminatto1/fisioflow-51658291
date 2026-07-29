@@ -23,6 +23,4 @@ echo "🏗️  Para criar Development Build:"
 echo "   npx expo run:ios"
 echo "   ou"
 echo "   npx expo run:android"
-echo ""
-echo "🔙 Para voltar ao Expo Go:"
-echo "   ./scripts/switch-to-expo-go.sh"
+

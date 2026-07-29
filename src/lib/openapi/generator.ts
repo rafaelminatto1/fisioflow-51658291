@@ -109,7 +109,7 @@ export function generateOpenAPISpec(): OpenAPISpec {
         description: "Produção (Cloudflare Workers)",
       },
       {
-        url: "http://localhost:5001/fisioflow-51658291/us-central1",
+        url: "http://localhost:8787",
         description: "Desenvolvimento Local (Cloudflare Workers)",
       },
     ],

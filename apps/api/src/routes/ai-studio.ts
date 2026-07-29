@@ -71,18 +71,18 @@ app.post("/scribe/process", requireAuth, async (c) => {
     const result = await callAI(c.env, {
       task: "soap",
       systemInstruction:
-        "Você é um redator de prontuários de fisioterapia experiente. Retorne APENAS o parágrafo refinado, sem introduções ou conclusões.",
+        "Você é um fisioterapeuta especialista e redator de prontuários clínicos no Brasil. Retorne APENAS o parágrafo refinado e evoluído, seguindo os padrões do COFFITO e ABRAFITO, sem introduções ou conclusões.",
       prompt: `
 Contexto clínico: Condição: ${condition}
 Seção SOAP alvo: ${sectionName}
-Texto bruto transcrito: "${rawText}"
+Texto bruto transcrito da observação livre: "${rawText}"
 
-Diretrizes:
-1. Use terminologia clínica avançada (ADM, algia, hipertonia, disfunção biomecânica).
-2. Mantenha texto conciso e focado em fatos clínicos.
-3. Corrija erros gramaticais típicos de transcrição.
-4. Formate medições claramente (ângulos, repetições).
-5. NÃO invente fatos.
+Diretrizes OBRIGATÓRIAS:
+1. Use terminologia clínica avançada e vocabulário técnico padrão do Brasil (ex: ADM, EVA, algia, hipertonia, disfunção biomecânica, MMSS, MMII).
+2. Mantenha texto conciso, direto e focado exclusivamente em fatos clínicos.
+3. Corrija erros gramaticais típicos de transcrição de áudio e organize as ideias de forma lógica.
+4. Formate medições claramente (graus de angulação, número de repetições, força muscular graus 0-5).
+5. NÃO invente fatos, medições ou procedimentos não mencionados no áudio original.
       `.trim(),
       temperature: 0.15,
       maxTokens: 512,

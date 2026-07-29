@@ -53,6 +53,14 @@
       "url": "https://mcp.cloudflare.com/mcp",
       "enabled": true
     },
+    "nano-banana": {
+      "type": "local",
+      "command": ["npx", "-y", "nano-banana-mcp"],
+      "enabled": true,
+      "environment": {
+        "GEMINI_API_KEY": "AIzaSyAiDeqaBUrQw8NNVdYXIVLzkZ2k2n0GiEI"
+      }
+    },
     "context7": {
       "type": "remote",
       "url": "https://mcp.context7.com/mcp",

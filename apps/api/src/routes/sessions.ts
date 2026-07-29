@@ -557,8 +557,35 @@ app.put("/:id", requireAuth, async (c) => {
 
   const body = (await c.req.json()) as Record<string, any>;
 
+  // Check existing session BEFORE processing payload to enforce OCC and business rules
+  const [existingSession] = await db
+    .select({ status: sessions.status, version: sessions.version, patientId: sessions.patientId })
+    .from(sessions)
+    .where(withTenant(sessions, user.organizationId, eq(sessions.id, id)))
+    .limit(1);
+
+  if (!existingSession) return c.json({ error: "Sessão não encontrada" }, 404);
+
+  // Business Rule: Finalized sessions cannot be edited to guarantee legal integrity
+  if (existingSession.status === "finalized") {
+    return c.json({ error: "Sessões finalizadas não podem ser editadas (Regra de Integridade)" }, 409);
+  }
+
+  // OCC (Optimistic Concurrency Control)
+  if (body.version !== undefined) {
+    const clientVersion = Number(body.version);
+    if (clientVersion < existingSession.version) {
+      return c.json({ 
+        error: "Conflito de versão (OCC). Os dados foram alterados em outro dispositivo.", 
+        currentVersion: existingSession.version 
+      }, 409);
+    }
+  }
+
   const updatePayload: any = {
     updatedAt: new Date(),
+    version: sql`${sessions.version} + 1`,
+    lastEditedBy: isValidUuid(user.uid) ? user.uid : null,
   };
 
   if ("observacao" in body) {
@@ -586,23 +613,6 @@ app.put("/:id", requireAuth, async (c) => {
     }
   }
 
-  // Check if finalized before update to set isEdited flag
-  const [existingSession] = await db
-    .select({ status: sessions.status })
-    .from(sessions)
-    .where(withTenant(sessions, user.organizationId, eq(sessions.id, id)))
-    .limit(1);
-
-  if (
-    existingSession?.status === "finalized" &&
-    !("status" in body && body.status === "finalized")
-  ) {
-    updatePayload.isEdited = true;
-    updatePayload.lastEditedBy = user.uid as any;
-  }
-  if (!("lastEditedBy" in updatePayload)) {
-    updatePayload.lastEditedBy = isValidUuid(user.uid) ? user.uid : null;
-  }
   const clientDeviceId =
     typeof body.client_device_id === "string" && body.client_device_id.trim().length > 0
       ? body.client_device_id.trim()

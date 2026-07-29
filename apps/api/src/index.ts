@@ -94,7 +94,7 @@ import { standardizedTestsRoutes } from "./routes/standardizedTests";
 import { commissionsRoutes } from "./routes/commissions";
 import { nfseRoutes } from "./routes/nfse";
 import { packagesRoutes } from "./routes/packages";
-import { groupsRoutes } from "./routes/groups";
+// import { groupsRoutes } from "./routes/groups";
 import { inventoryRoutes } from "./routes/inventory";
 import { staffSchedulesRoutes } from "./routes/staffSchedules";
 import { announcementsRoutes } from "./routes/announcements";
@@ -395,7 +395,7 @@ const apiRoutes = [
   ["/api/commissions", commissionsRoutes],
   ["/api/nfse", nfseRoutes],
   ["/api/packages", packagesRoutes],
-  ["/api/groups", groupsRoutes],
+  // ["/api/groups", groupsRoutes],
   ["/api/inventory", inventoryRoutes],
   ["/api/staff-schedules", staffSchedulesRoutes],
   ["/api/announcements", announcementsRoutes],
@@ -415,7 +415,7 @@ const apiRoutes = [
   ["/api/ai-insights", aiInsightsRoutes],
   ["/api/lgpd", lgpdRoutes],
   ["/api/clinic-metrics", clinicMetricsRoutes],
-  ["/api/groups", groupsRoutes],
+  // ["/api/groups", groupsRoutes],
   ["/api/enterprise", enterpriseRoutes],
   ["/api/wger", wgerRoutes],
   ["/api/evidence", evidenceRoutes],
