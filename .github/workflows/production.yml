@@ -107,6 +107,9 @@ jobs:
           VITE_POSTHOG_KEY: ${{ vars.VITE_POSTHOG_KEY || 'phc_PlsGl8lTtG4ipbfRBxXfyh5TWKGdSTNXu0LDm5aK9WT' }}
           VITE_POSTHOG_HOST: ${{ vars.VITE_POSTHOG_HOST || 'https://us.i.posthog.com' }}
           VITE_GOOGLE_AI_API_KEY: ${{ secrets.VITE_GOOGLE_AI_API_KEY || '' }}
+          # Sentry (monitoramento de erros do front). DSN é público — embutido no
+          # bundle por design; override via var VITE_SENTRY_DSN se rotacionar.
+          VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN || 'https://2f49e63633442d8b95e91ff87a308ba9@o4510069182955520.ingest.us.sentry.io/4511819806277632' }}
 
       - name: Deploy web (fisioflow-web)
         run: |
