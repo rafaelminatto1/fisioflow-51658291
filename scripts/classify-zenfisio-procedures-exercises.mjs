@@ -246,26 +246,37 @@ function classify(text, sessionId) {
 }
 
 if (SELF_TEST) {
-  const cases = [
+  const tensCases = [
     ['tensão em quadril', false],
     ['tensao em quadril', false],
     ['intensidade da dor', false],
     ['potencialmente melhor', false],
+    ['pretensamente melhor', false],
     ['TENS em quadril', true],
     ['Tens Acup em quadril', true],
     ['TENS convencional', true],
   ];
+  const noProcedureCases = [
+    'botar a meia depois',
+    'caloria basal calculada',
+    'ultrassonografia de ombro',
+    'ônibus terapêutico',
+  ];
   const failures = [];
-  for (const [text, shouldHaveTens] of cases) {
+  for (const [text, shouldHaveTens] of tensCases) {
     const result = classify(text, 'self-test');
     const hasTens = result.procedures.some(item => item.name === 'TENS');
     if (hasTens !== shouldHaveTens) failures.push({ text, shouldHaveTens, procedures: result.procedures });
+  }
+  for (const text of noProcedureCases) {
+    const result = classify(text, 'self-test');
+    if (result.procedures.length) failures.push({ text, shouldHaveNoProcedures: true, procedures: result.procedures });
   }
   if (failures.length) {
     console.error(JSON.stringify({ ok: false, failures }, null, 2));
     process.exit(1);
   }
-  console.log(JSON.stringify({ ok: true, cases: cases.length }, null, 2));
+  console.log(JSON.stringify({ ok: true, cases: tensCases.length + noProcedureCases.length }, null, 2));
   process.exit(0);
 }
 

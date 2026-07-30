@@ -80,6 +80,13 @@ function renderField(
 
     case "texto_longo":
     case "textarea":
+      if (readOnly) {
+        return (
+          <div className="min-h-[160px] rounded-2xl border border-slate-100 bg-slate-50/80 p-5 text-sm leading-relaxed text-slate-800 whitespace-pre-wrap shadow-inner">
+            {String(value || "Sem resposta registrada.")}
+          </div>
+        );
+      }
       return (
         <MagicTextarea
           id={field.id}

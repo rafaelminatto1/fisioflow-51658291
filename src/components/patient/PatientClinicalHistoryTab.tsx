@@ -106,6 +106,28 @@ function unique(values: string[]) {
   return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
 }
 
+function normalizeClinicalComparison(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function removeCompositeDuplicates(values: string[]) {
+  const normalized = values.map((value) => normalizeClinicalComparison(value));
+  return values.filter((value, index) => {
+    const current = normalized[index];
+    if (!current) return false;
+    const containedItems = normalized.filter((candidate, candidateIndex) => {
+      if (candidateIndex === index || !candidate || candidate.length >= current.length) return false;
+      return current.includes(candidate);
+    });
+    return containedItems.length < 2;
+  });
+}
+
 function latestZenFisioRecord(records: PatientMedicalRecord[]) {
   return records.find((record) => {
     const exam = record.physical_exam;
@@ -204,10 +226,10 @@ function ClinicalProfileSummary({
     ...asList(patient?.pathologiesActive ?? patient?.pathologies_active),
     ...pathologies.map((pathology) => pathology.name ?? ""),
   ]);
-  const medications = unique([
+  const medications = removeCompositeDuplicates(unique([
     ...asList(patient?.medicationsInUse ?? patient?.medications_in_use),
-    ...records.flatMap((record) => [record.current_medications, ...asList(record.medications)]).filter(Boolean) as string[],
-  ]).slice(0, 8);
+    ...records.flatMap((record) => [...asList(record.current_medications), ...asList(record.medications)]),
+  ])).slice(0, 8);
   const allergies = unique([
     ...asList(patient?.allergiesGeneral ?? patient?.allergies_general),
     ...asList(patient?.allergiesMedicines ?? patient?.allergies_medicines),

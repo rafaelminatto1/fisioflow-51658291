@@ -115,6 +115,82 @@ function normalizeEvaluationResponses(value: unknown): Record<string, unknown> {
     : {};
 }
 
+const HIDDEN_IMPORTED_RESPONSE_KEYS = new Set([
+  "appointment_id",
+  "btn_submit_appointment",
+  "diabetes-has",
+]);
+
+function cleanImportedLabel(label: string) {
+  const aliases: Record<string, string> = {
+    date: "Data",
+    start: "Início",
+    end: "Fim",
+  };
+  return aliases[label] ?? (label.replace(/\*+$/g, "").replace(/:+$/g, "").trim() || "Campo importado");
+}
+
+function isFilledImportedValue(value: unknown) {
+  if (value == null) return false;
+  if (typeof value === "string") {
+    const text = value.trim();
+    if (!text) return false;
+    if (/^selecione\b/i.test(text)) return false;
+    return true;
+  }
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "object") return Object.keys(value).length > 0;
+  return true;
+}
+
+function extractImportedFieldValues(value: unknown): Record<string, unknown> {
+  const responses = normalizeEvaluationResponses(value);
+  const nestedFields = normalizeEvaluationResponses(responses.fields);
+  const source = Object.keys(nestedFields).length > 0 ? nestedFields : responses;
+
+  return Object.fromEntries(
+    Object.entries(source).filter(
+      ([key, entry]) => !HIDDEN_IMPORTED_RESPONSE_KEYS.has(key) && isFilledImportedValue(entry),
+    ),
+  );
+}
+
+function buildImportedResponseFields(values: Record<string, unknown>): TemplateField[] {
+  const fieldPriority = (key: string) => {
+    const lowerKey = key.toLowerCase();
+    if (lowerKey.includes("avalia")) return 0;
+    if (lowerKey === "date") return 20;
+    if (lowerKey === "start") return 21;
+    if (lowerKey === "end") return 22;
+    if (lowerKey.includes("convênio") || lowerKey.includes("convenio")) return 23;
+    if (lowerKey.includes("observa")) return 30;
+    return 1;
+  };
+
+  return Object.entries(values).sort(([a], [b]) => fieldPriority(a) - fieldPriority(b)).map(([key, value], index) => {
+    const valueText = typeof value === "string" ? value : JSON.stringify(value, null, 2);
+    const lowerKey = key.toLowerCase();
+    const isLongText = valueText.length > 120 || valueText.includes("\n");
+    const section = lowerKey.includes("convênio") || lowerKey.includes("convenio") || ["date", "start", "end"].includes(lowerKey)
+        ? "Dados do agendamento"
+        : lowerKey.includes("observa")
+          ? "Campos importados"
+          : "Avaliação ZenFisio";
+
+    return {
+      id: key,
+      label: cleanImportedLabel(key),
+      tipo_campo: isLongText ? "texto_longo" : "texto_curto",
+      placeholder: null,
+      opcoes: null,
+      ordem: index + 1,
+      obrigatorio: false,
+      section,
+      description: "Campo importado do ZenFisio.",
+    };
+  });
+}
+
 function mapEvaluationField(field: Record<string, unknown>, index = 0): TemplateField {
   return {
     ...(field as TemplateField),
@@ -361,6 +437,8 @@ export default function NewEvaluationPage() {
     if (!evaluationResponse || hasHydratedEvaluation.current) return;
 
     const fields = normalizeEvaluationFields(evaluationResponse.fields);
+    const importedFieldValues = extractImportedFieldValues(evaluationResponse.responses);
+    const hydratedFields = fields.length > 0 ? fields : buildImportedResponseFields(importedFieldValues);
     const form = evaluationResponse.form ?? {};
 
     setSelectedTemplate({
@@ -376,10 +454,10 @@ export default function NewEvaluationPage() {
           ? form.referencias
           : (evaluationResponse.form_referencias ?? null),
       category: String(form.tipo ?? evaluationResponse.form_tipo ?? "geral"),
-      fields,
+      fields: hydratedFields,
       isBuiltin: false,
     });
-    setFieldValues(normalizeEvaluationResponses(evaluationResponse.responses));
+    setFieldValues(fields.length > 0 ? normalizeEvaluationResponses(evaluationResponse.responses) : importedFieldValues);
     setIsTemplateLoading(false);
     setActiveTab("anamnesis");
     hasHydratedEvaluation.current = true;
