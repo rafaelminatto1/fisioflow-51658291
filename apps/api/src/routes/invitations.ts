@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { createPool } from "../lib/db";
 import { requireAuth, requireRole, type AuthVariables } from "../lib/auth";
+import { sendInvitationEmail } from "../lib/email";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -26,6 +27,38 @@ function normalizeEmail(value: unknown): string | null {
     .trim()
     .toLowerCase();
   return EMAIL_RE.test(email) ? email : null;
+}
+
+interface InvitationRow {
+  email: string;
+  role: string;
+  token: string;
+  expires_at?: string;
+}
+
+// Entrega o link do convite por e-mail. Nunca lança: o convite vale por si só
+// (o link também pode ser copiado na tela de admin), então falha de e-mail é
+// reportada como email_sent=false em vez de derrubar a criação.
+async function deliverInvitationEmail(
+  env: Env,
+  invitation: InvitationRow,
+  invitedByEmail?: string,
+): Promise<boolean> {
+  const baseUrl = env.PAGES_URL ?? "https://moocafisio.com.br";
+  const inviteUrl = `${baseUrl}/auth?invite=${invitation.token}&mode=register`;
+
+  try {
+    await sendInvitationEmail(env, invitation.email, {
+      role: invitation.role,
+      inviteUrl,
+      expiresAt: invitation.expires_at,
+      invitedByEmail,
+    });
+    return true;
+  } catch (err: any) {
+    console.error("[Invitations] Falha ao enviar e-mail do convite:", err?.message);
+    return false;
+  }
 }
 
 app.get("/", requireAuth, requireAdmin, async (c) => {
@@ -74,7 +107,32 @@ app.post("/", requireAuth, requireAdmin, async (c) => {
      VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
     [user.organizationId, email, role, token, user.uid, expiresAt.toISOString()],
   );
-  return c.json({ data: result.rows[0] }, 201);
+
+  const invitation = result.rows[0];
+  const emailSent = await deliverInvitationEmail(c.env, invitation, user.email);
+
+  return c.json({ data: invitation, email_sent: emailSent }, 201);
+});
+
+app.post("/:id/resend", requireAuth, requireAdmin, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const db = await createPool(c.env);
+
+  const result = await db.query(
+    `SELECT * FROM user_invitations
+      WHERE id = $1 AND organization_id = $2 AND used_at IS NULL AND expires_at > NOW()`,
+    [id, user.organizationId],
+  );
+  if (!result.rowCount) {
+    return c.json({ error: "Convite não encontrado, já usado ou expirado" }, 404);
+  }
+
+  const invitation = result.rows[0];
+  const emailSent = await deliverInvitationEmail(c.env, invitation, user.email);
+  if (!emailSent) return c.json({ error: "Falha ao enviar o e-mail do convite" }, 502);
+
+  return c.json({ data: invitation, email_sent: true });
 });
 
 app.patch("/:id", requireAuth, requireAdmin, async (c) => {

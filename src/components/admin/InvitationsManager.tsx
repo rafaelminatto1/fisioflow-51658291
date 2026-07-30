@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useInvitations, AppRole, Invitation } from "@/hooks/useInvitations";
-import { Search, XCircle, Copy, Plus, Pencil, Loader2, Mail, Trash2 } from "lucide-react";
+import { Search, XCircle, Copy, Plus, Pencil, Loader2, Mail, Send, Trash2 } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
@@ -71,9 +71,11 @@ export function InvitationsManager() {
     createInvitation,
     updateInvitation,
     deleteInvitation,
+    resendInvitation,
     isCreating,
     isUpdating,
     isDeleting,
+    isResending,
   } = useInvitations();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -353,14 +355,29 @@ export function InvitationsManager() {
                         <TableCell className="text-right">
                           <div className="flex gap-2 justify-end">
                             {status === "pending" && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => copyInviteLink(invitation.token)}
-                                title="Copiar Link"
-                              >
-                                <Copy className="h-4 w-4" />
-                              </Button>
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => resendInvitation(invitation.id).catch(() => {})}
+                                  disabled={isResending}
+                                  title="Reenviar e-mail do convite"
+                                >
+                                  {isResending ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Send className="h-4 w-4" />
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => copyInviteLink(invitation.token)}
+                                  title="Copiar Link"
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </Button>
+                              </>
                             )}
                             {status !== "used" && (
                               <Button

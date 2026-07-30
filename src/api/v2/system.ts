@@ -253,14 +253,18 @@ export const organizationMembersApi = {
 export const invitationsApi = {
   list: () => request<{ data: any[] }>("/api/invitations"),
   create: (data: { email: string; role: string }) =>
-    request<{ data: any }>("/api/invitations", {
+    request<{ data: any; email_sent?: boolean }>("/api/invitations", {
       method: "POST",
       body: JSON.stringify(data),
     }),
   update: (id: string, data: { email?: string; role?: string; expires_at?: string }) =>
     request<{ data: any }>(`/api/invitations/${id}`, {
-      method: "PUT",
+      method: "PATCH",
       body: JSON.stringify(data),
+    }),
+  resend: (id: string) =>
+    request<{ data: any; email_sent: boolean }>(`/api/invitations/${id}/resend`, {
+      method: "POST",
     }),
   delete: (id: string) => request<{ ok: boolean }>(`/api/invitations/${id}`, { method: "DELETE" }),
   validate: (token: string) =>

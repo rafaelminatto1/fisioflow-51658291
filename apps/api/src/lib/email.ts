@@ -116,6 +116,69 @@ export async function sendNfseCancellationToAccounting(
   });
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Administrador",
+  fisioterapeuta: "Fisioterapeuta",
+  estagiario: "Estagiário",
+  paciente: "Paciente",
+  parceiro: "Parceiro",
+  recepcionista: "Recepcionista",
+};
+
+export async function sendInvitationEmail(
+  env: Env,
+  to: string,
+  data: { role: string; inviteUrl: string; expiresAt?: string; invitedByEmail?: string },
+) {
+  const resend = createResend(env);
+  if (!resend) throw new Error("RESEND_API_KEY não configurado");
+
+  const roleLabel = ROLE_LABELS[data.role] ?? data.role;
+  const expires = data.expiresAt ? new Date(data.expiresAt) : null;
+  const expiresLabel =
+    expires && !Number.isNaN(expires.getTime())
+      ? expires.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })
+      : null;
+
+  const { error } = await resend.emails.send({
+    from: FROM(env),
+    to,
+    subject: `Seu acesso ao FisioFlow (${roleLabel})`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 24px; border-radius: 10px;">
+        <h2 style="color: #333; margin-top: 0;">Você foi convidado para o FisioFlow</h2>
+        <p>Olá!</p>
+        <p>
+          Foi criado um convite de acesso ao <strong>FisioFlow</strong>, o sistema de gestão da clínica,
+          com o perfil de <strong>${roleLabel}</strong>.
+        </p>
+        <p>Para criar sua senha e entrar, clique no botão abaixo:</p>
+
+        <p style="text-align: center; margin: 32px 0;">
+          <a href="${data.inviteUrl}" style="background: #2563eb; color: #fff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+            Criar minha conta
+          </a>
+        </p>
+
+        <p style="font-size: 13px; color: #666;">
+          Se o botão não funcionar, copie e cole este endereço no navegador:<br>
+          <span style="word-break: break-all;">${data.inviteUrl}</span>
+        </p>
+
+        ${expiresLabel ? `<p style="font-size: 13px; color: #666;">Este convite é válido até <strong>${expiresLabel}</strong>.</p>` : ""}
+        ${data.invitedByEmail ? `<p style="font-size: 13px; color: #666;">Convite enviado por ${data.invitedByEmail}.</p>` : ""}
+
+        <p style="margin-top: 40px; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 20px;">
+          FisioFlow — Sistema de Gestão de Fisioterapia.
+          Se você não esperava este convite, ignore este e-mail.
+        </p>
+      </div>
+    `,
+  });
+
+  if (error) throw new Error(error.message ?? "Falha ao enviar e-mail via Resend");
+}
+
 export async function sendTestEmail(env: Env, to: string) {
   const resend = createResend(env);
   if (!resend) throw new Error("RESEND_API_KEY não configurado");

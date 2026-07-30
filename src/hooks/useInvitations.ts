@@ -63,11 +63,19 @@ export function useInvitations() {
   const createMutation = useMutation({
     mutationFn: async ({ email, role }: CreateInvitationInput) => {
       const result = await invitationsApi.create({ email, role });
-      return result.data as Invitation;
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["invitations"] });
-      toast({ title: "Convite criado com sucesso" });
+      toast(
+        result.email_sent === false
+          ? {
+              title: "Convite criado, mas o e-mail não saiu",
+              description: "Copie o link do convite e envie manualmente.",
+              variant: "destructive",
+            }
+          : { title: "Convite criado e e-mail enviado" },
+      );
     },
     onError: (error: Error) => {
       toast({
@@ -100,6 +108,22 @@ export function useInvitations() {
     },
   });
 
+  const resendMutation = useMutation({
+    mutationFn: async (invitationId: string) => {
+      await invitationsApi.resend(invitationId);
+    },
+    onSuccess: () => {
+      toast({ title: "E-mail do convite reenviado" });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao reenviar convite",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     invitations,
     isLoading,
@@ -107,8 +131,10 @@ export function useInvitations() {
     deleteInvitation: deleteMutation.mutateAsync,
     createInvitation: createMutation.mutateAsync,
     updateInvitation: updateMutation.mutateAsync,
+    resendInvitation: resendMutation.mutateAsync,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
+    isResending: resendMutation.isPending,
   };
 }
