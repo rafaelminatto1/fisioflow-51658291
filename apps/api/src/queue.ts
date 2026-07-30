@@ -27,6 +27,13 @@ export type WhatsAppQueuePayload = {
   patientId: string;
   messageText: string;
   appointmentId: string;
+  /**
+   * Mensagens INICIADAS pela clínica (lembrete, confirmação) devem ir por
+   * template primeiro. Fora da janela de 24h a Meta aceita o texto livre (HTTP
+   * 200) mas falha a entrega depois (erro 131047), então o texto-livre-primeiro
+   * nunca entregava a esses pacientes. Com o flag, manda o template primeiro.
+   */
+  preferTemplate?: boolean;
 };
 
 export type R2NotificationPayload = {
@@ -309,6 +316,44 @@ export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Pro
 
 // ===== WHATSAPP =====
 
+/**
+ * Ordena os corpos das requisições Meta para uma mensagem WhatsApp.
+ * - preferTemplate (mensagens iniciadas pela clínica): TEMPLATE primeiro, texto
+ *   como fallback. Fora da janela de 24h a Meta aceita o texto livre (200) mas
+ *   falha a entrega depois (131047), então template-primeiro é o único confiável.
+ * - default (respostas dentro da janela): texto livre primeiro (mantém o texto
+ *   exato com "sessão"), template como fallback.
+ */
+export function buildWhatsAppRequestBodies(
+  payload: WhatsAppQueuePayload,
+): Array<{ kind: "template" | "text"; body: Record<string, unknown> }> {
+  const cleanTo = payload.to.replace(/\D/g, "");
+  const text = {
+    kind: "text" as const,
+    body: {
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: cleanTo,
+      type: "text",
+      text: { preview_url: false, body: payload.messageText },
+    },
+  };
+  const template = {
+    kind: "template" as const,
+    body: {
+      messaging_product: "whatsapp",
+      to: cleanTo,
+      type: "template",
+      template: {
+        name: payload.templateName,
+        language: { code: payload.languageCode },
+        components: [{ type: "body", parameters: payload.bodyParameters }],
+      },
+    },
+  };
+  return payload.preferTemplate ? [template, text] : [text, template];
+}
+
 async function processWhatsAppMessage(payload: WhatsAppQueuePayload, env: Env): Promise<void> {
   if (!env.WHATSAPP_PHONE_NUMBER_ID || !env.WHATSAPP_ACCESS_TOKEN) {
     console.warn("[Queue/WhatsApp] Missing credentials, skipping.");
@@ -318,47 +363,19 @@ async function processWhatsAppMessage(payload: WhatsAppQueuePayload, env: Env): 
   const cleanTo = payload.to.replace(/\D/g, "");
   let metaMessageId: string | undefined;
 
-  // 1. Tenta enviar como mensagem de texto direta primeiro (usa o texto exato formatado com "sessão")
-  let metaRes = await fetch(
-    `https://graph.facebook.com/v25.0/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${env.WHATSAPP_ACCESS_TOKEN}`,
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        recipient_type: "individual",
-        to: cleanTo,
-        type: "text",
-        text: { preview_url: false, body: payload.messageText },
-      }),
-    },
-  );
+  const endpoint = `https://graph.facebook.com/v25.0/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
+  const authHeaders = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${env.WHATSAPP_ACCESS_TOKEN}`,
+  };
+  const requests = buildWhatsAppRequestBodies(payload);
+  const send = (i: number) =>
+    fetch(endpoint, { method: "POST", headers: authHeaders, body: JSON.stringify(requests[i].body) });
 
-  // 2. Se falhar (ex: fora da janela de 24h), tenta via template cadastrado na Meta
+  // Tenta o envio primário; se a Meta rejeitar (não-ok), cai no fallback.
+  let metaRes = await send(0);
   if (!metaRes.ok) {
-    metaRes = await fetch(
-      `https://graph.facebook.com/v25.0/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${env.WHATSAPP_ACCESS_TOKEN}`,
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: cleanTo,
-          type: "template",
-          template: {
-            name: payload.templateName,
-            language: { code: payload.languageCode },
-            components: [{ type: "body", parameters: payload.bodyParameters }],
-          },
-        }),
-      },
-    );
+    metaRes = await send(1);
   }
 
   if (metaRes.ok) {
@@ -1260,6 +1277,9 @@ async function handleAppointmentCreated(data: any, env: Env) {
       patientId,
       messageText,
       appointmentId,
+      // Confirmação é iniciada pela clínica → template primeiro (senão 131047
+      // fora da janela de 24h faz o texto livre "enviar" mas não entregar).
+      preferTemplate: true,
     },
     env,
   );

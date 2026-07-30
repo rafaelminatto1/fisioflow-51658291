@@ -1,5 +1,36 @@
 import { describe, expect, it } from "vitest";
-import { deriveQueueIdempotencyKey, summarizeQueueTask, type QueueTask } from "../queue";
+import {
+  deriveQueueIdempotencyKey,
+  summarizeQueueTask,
+  buildWhatsAppRequestBodies,
+  type QueueTask,
+} from "../queue";
+
+const waPayload = {
+  to: "+55 11 93433-5858",
+  templateName: "lembrete_consulta_botoes",
+  languageCode: "pt_BR",
+  bodyParameters: [{ type: "text" as const, text: "Maria" }],
+  organizationId: "org-1",
+  patientId: "pat-1",
+  messageText: "Lembrete: sua sessão é às 10:00.",
+  appointmentId: "appt-1",
+};
+
+describe("buildWhatsAppRequestBodies", () => {
+  it("preferTemplate → template primeiro, texto como fallback", () => {
+    const reqs = buildWhatsAppRequestBodies({ ...waPayload, preferTemplate: true });
+    expect(reqs.map((r) => r.kind)).toEqual(["template", "text"]);
+    expect((reqs[0].body as any).type).toBe("template");
+    expect((reqs[0].body as any).to).toBe("5511934335858"); // sanitizado
+    expect((reqs[0].body as any).template.name).toBe("lembrete_consulta_botoes");
+  });
+  it("default (sem flag) → texto primeiro, template como fallback", () => {
+    const reqs = buildWhatsAppRequestBodies(waPayload);
+    expect(reqs.map((r) => r.kind)).toEqual(["text", "template"]);
+    expect((reqs[0].body as any).type).toBe("text");
+  });
+});
 
 describe("queue operations helpers", () => {
   it("derives stable idempotency keys from business context", () => {

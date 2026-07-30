@@ -67,6 +67,7 @@ describe("buildReminderQueueMessage", () => {
       patientId: "pat-1",
       appointmentId: "appt-1",
       messageText: "Lembrete: sua sessão é às 10:00 com Dr. João.",
+      preferTemplate: true,
     });
     // primeiro nome apenas + horário + terapeuta (paridade cron.ts)
     expect(msg.payload.bodyParameters).toEqual([

@@ -69,6 +69,9 @@ export function buildReminderQueueMessage(payload: AppointmentReminderParams) {
       patientId: payload.patientId,
       messageText: `Lembrete: sua sessão é às ${timeStr} com ${therapistStr}.`,
       appointmentId: payload.appointmentId,
+      // Lembrete é iniciado pela clínica → template primeiro (janela de 24h
+      // costuma estar fechada; texto livre daria 131047 sem entregar).
+      preferTemplate: true,
     },
   };
 }
