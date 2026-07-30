@@ -83,6 +83,38 @@ export async function cancelReminder(env: Env, appointmentId: string): Promise<v
   }
 }
 
+/**
+ * Status (normalizados) em que o lembrete deve ser CANCELADO ao atualizar o
+ * agendamento (terminal / não faz sentido lembrar). `normalizeStatus` já mapeia
+ * aliases EN→PT (completed→atendido, no_show→faltou, cancelled→cancelado).
+ */
+export const REMINDER_CANCEL_STATUSES = new Set([
+  "cancelado",
+  "cancelled",
+  "faltou",
+  "faltou_com_aviso",
+  "faltou_sem_aviso",
+  "nao_atendido",
+  "no_show",
+  "concluido",
+  "completed",
+  "atendido",
+  "remarcado",
+  "rescheduled",
+]);
+
+/** Decide o efeito de um UPDATE de agendamento sobre o lembrete agendado. */
+export function reminderActionForUpdate(opts: {
+  dateChanged: boolean;
+  timeChanged: boolean;
+  newStatus?: string | null;
+}): "reschedule" | "cancel" | "none" {
+  const status = opts.newStatus ? String(opts.newStatus).toLowerCase() : null;
+  if (status && REMINDER_CANCEL_STATUSES.has(status)) return "cancel";
+  if (opts.dateChanged || opts.timeChanged) return "reschedule";
+  return "none";
+}
+
 /** Reagendamento = encerra o antigo + cria um novo com o novo horário. */
 export async function rescheduleReminder(
   env: Env,

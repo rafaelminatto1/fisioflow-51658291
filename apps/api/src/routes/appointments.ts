@@ -28,8 +28,59 @@ import { triggerInngestEvent } from "../lib/inngest-client";
 import { broadcastToOrg } from "../lib/realtime";
 import { sendPushToOrg } from "../lib/webpush";
 import { createPool } from "../lib/db";
+import {
+  scheduleReminder,
+  cancelReminder,
+  rescheduleReminder,
+  reminderActionForUpdate,
+  type ReminderApptInput,
+} from "../lib/reminderWorkflow";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables & CustomVariables }>();
+
+/**
+ * Carrega o contexto do lembrete (dados do paciente/terapeuta + config da org)
+ * por agendamento, em uma query — mesmos joins do poll `dispatchScheduledReminders`.
+ * Usa `createPool` (mesma conexão do cron, sem RLS por org) filtrando por org
+ * explicitamente. Retorna null se o agendamento não existe.
+ */
+async function loadReminderInput(
+  env: Env,
+  organizationId: string,
+  appointmentId: string,
+): Promise<{ input: ReminderApptInput; rcfg: unknown } | null> {
+  const pool = createPool(env);
+  const res = await pool.query(
+    `SELECT a.id, a.organization_id, a.patient_id,
+            to_char(a.date, 'YYYY-MM-DD') AS date_str,
+            substr(a.start_time::text, 1, 5) AS time_str,
+            p.full_name AS patient_name, p.phone AS patient_phone,
+            prof.full_name AS therapist_name,
+            o.settings->'crm_whatsapp'->'reminders' AS rcfg
+     FROM appointments a
+     JOIN patients p ON p.id = a.patient_id
+     LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::uuid
+     JOIN organizations o ON o.id = a.organization_id
+     WHERE a.id = $1::uuid AND a.organization_id = $2 AND a.deleted_at IS NULL
+     LIMIT 1`,
+    [appointmentId, organizationId],
+  );
+  const r = res.rows[0];
+  if (!r || !r.time_str) return null;
+  return {
+    input: {
+      id: String(r.id),
+      organizationId: String(r.organization_id),
+      patientId: r.patient_id ? String(r.patient_id) : null,
+      patientPhone: r.patient_phone ?? null,
+      patientName: r.patient_name ?? null,
+      therapistName: r.therapist_name ?? null,
+      dateStr: r.date_str,
+      timeStr: r.time_str,
+    },
+    rcfg: r.rcfg ?? null,
+  };
+}
 
 const NO_SHOW_STATUSES = new Set([
   "faltou",
@@ -333,6 +384,10 @@ app.post(
                 { id: user.uid },
                 { delaySeconds: 60 },
               ).catch((err) => console.error("[Appointments/Create] Inngest trigger failed:", err));
+
+              // 3. Agenda o lembrete por evento (Workflow sleepUntil). Best-effort.
+              const rem = await loadReminderInput(c.env, row.organization_id, row.id);
+              if (rem) await scheduleReminder(c.env, rem.input, rem.rcfg);
             } catch (err) {
               console.error("[Appointments/Create] Background task error:", err);
             }
@@ -624,6 +679,24 @@ const updateAppointmentHandler: MiddlewareHandler<{
             );
           }
 
+          // Lembrete por evento: reagenda no novo horário ou cancela se terminal.
+          const dateChanged = body.date !== undefined || body.appointment_date !== undefined;
+          const timeChanged =
+            body.startTime !== undefined ||
+            body.start_time !== undefined ||
+            body.appointment_time !== undefined;
+          const reminderAction = reminderActionForUpdate({
+            dateChanged,
+            timeChanged,
+            newStatus: row.status,
+          });
+          if (reminderAction === "cancel") {
+            await cancelReminder(c.env, row.id);
+          } else if (reminderAction === "reschedule") {
+            const rem = await loadReminderInput(c.env, organizationId, row.id);
+            if (rem) await rescheduleReminder(c.env, rem.input, rem.rcfg);
+          }
+
           // Audit Log placeholder (could be a DB insert or external service)
           console.log(`[Audit] Appointment ${row.id} updated by user ${user.uid}`);
         } catch (bgError: any) {
@@ -721,6 +794,9 @@ app.post("/:id/cancel", requireAuth, async (c) => {
           });
           console.log(`[Audit] Appointment ${id} cancelled by user ${user.uid}`);
 
+          // Cancela o lembrete por evento (best-effort).
+          await cancelReminder(c.env, id);
+
           // Check appointment_waitlist for matching slot
           const waitlistResult = await pool.query(
             `SELECT * FROM appointment_waitlist
@@ -817,6 +893,9 @@ app.delete("/:id", requireAuth, async (c) => {
             type: "APPOINTMENT_UPDATED",
             payload: { id, action: "deleted", timestamp: new Date().toISOString() },
           });
+
+          // Cancela o lembrete por evento (best-effort).
+          await cancelReminder(c.env, id);
 
           // Check appointment_waitlist for matching slot
           const waitlistResult = await pool.query(

@@ -8,6 +8,7 @@ import {
   scheduleReminder,
   cancelReminder,
   rescheduleReminder,
+  reminderActionForUpdate,
 } from "./reminderWorkflow";
 
 const appt = {
@@ -101,5 +102,21 @@ describe("scheduleReminder/cancelReminder/rescheduleReminder (best-effort)", () 
     await rescheduleReminder(env, appt, null);
     expect(terminate).toHaveBeenCalled();
     expect(create).toHaveBeenCalledWith(expect.objectContaining({ id: "reminder-appt-1" }));
+  });
+});
+
+describe("reminderActionForUpdate", () => {
+  it("cancel quando status vira terminal", () => {
+    expect(reminderActionForUpdate({ dateChanged: false, timeChanged: false, newStatus: "cancelado" })).toBe("cancel");
+    expect(reminderActionForUpdate({ dateChanged: true, timeChanged: false, newStatus: "faltou" })).toBe("cancel");
+    expect(reminderActionForUpdate({ dateChanged: false, timeChanged: false, newStatus: "atendido" })).toBe("cancel");
+  });
+  it("reschedule quando muda data ou horário (status ativo)", () => {
+    expect(reminderActionForUpdate({ dateChanged: true, timeChanged: false, newStatus: "agendado" })).toBe("reschedule");
+    expect(reminderActionForUpdate({ dateChanged: false, timeChanged: true, newStatus: null })).toBe("reschedule");
+  });
+  it("none quando nada relevante muda", () => {
+    expect(reminderActionForUpdate({ dateChanged: false, timeChanged: false, newStatus: "presenca_confirmada" })).toBe("none");
+    expect(reminderActionForUpdate({ dateChanged: false, timeChanged: false, newStatus: null })).toBe("none");
   });
 });
