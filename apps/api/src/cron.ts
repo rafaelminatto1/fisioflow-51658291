@@ -13,6 +13,7 @@ import { RTMAlertsService } from "./services/rtm-alerts";
 import { syncAutoRAGContent } from "./routes/aiSearch";
 import { sendHepDailyReminders } from "./jobs/hepDailyReminder";
 import { dispatchExerciseReminders } from "./lib/exerciseReminders";
+import { isWithinBusinessHours } from "./lib/businessHours";
 import {
   backfillInstagramProfilesForOrganization,
   persistInstagramProfileSyncState,
@@ -32,6 +33,19 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         await runHealthMonitor(env);
         break;
 
+      case "30 9 * * 1-6": {
+        // UTC 09:30 = BRT 06:30, Seg-Sáb — warm-up leve: acorda o Neon antes da
+        // abertura (7h) para o primeiro acesso do dia não pegar cold-start.
+        try {
+          const pool = createPool(env);
+          await pool.query("SELECT 1");
+          console.log("[Cron] warm-up 6:30 BRT — Neon aquecido");
+        } catch (err) {
+          console.warn("[Cron] warm-up failed:", err);
+        }
+        break;
+      }
+
       case "0 6 * * *": {
         // 03:00 BRT — Lead scoring batch
         try {
@@ -45,6 +59,15 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
       }
 
       case "*/15 * * * *": {
+        // Fora do expediente (Seg-Sex 7-21h, Sáb 7-13h, Dom fechado) pulamos todo
+        // o trabalho que toca o banco para o Neon dormir (scale-to-zero). Lembretes
+        // de sessão NÃO dependem mais deste tick — são agendados por evento
+        // (AppointmentReminderWorkflow, sleepUntil), que acorda o banco só no
+        // instante do envio. O */5 (health, DB-free) segue rodando sempre.
+        if (!isWithinBusinessHours(new Date())) {
+          console.log("[Cron] */15 fora do expediente — pulando (Neon dorme)");
+          break;
+        }
         // A cada 15 minutos — CRM automations scan (executa ações agendadas)
         try {
           const pool = createPool(env);
@@ -54,13 +77,6 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
           }
         } catch (err) {
           console.warn("[Cron] CRM scan failed:", err);
-        }
-        // Lembretes de sessão configuráveis (regra 5h + exceções por horário)
-        try {
-          const pool = createPool(env);
-          await dispatchScheduledReminders(pool, env);
-        } catch (err) {
-          console.warn("[Cron] Scheduled reminders failed:", err);
         }
         // SLA de leads + auto-reply do Concierge no Instagram (movidos do tick */5
         // para não acordar o Neon a cada 5 min — scale-to-zero).
@@ -308,6 +324,12 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         }
         if (result.error) console.error("[Cron] sloHealth error:", result.error);
 
+        // Campanhas só saem dentro do expediente (até 21h) — fora disso não
+        // acordamos o banco. O SLO check acima é DB-free e roda sempre.
+        if (!isWithinBusinessHours(new Date())) {
+          console.log("[Cron] 15 * * * * fora do expediente — pulando campanhas");
+          break;
+        }
         // Campanhas de WhatsApp agendadas cuja hora chegou.
         try {
           const pool = createPool(env);
@@ -861,9 +883,12 @@ async function dispatchLeadSlaEscalations(pool: any, env: Env) {
 }
 
 /**
- * Lembretes de sessão configuráveis por organização.
- * Roda a cada 15 min; calcula o instante de envio por agendamento
- * (regra das 5h + exceções por faixa de horário) e dispara quando a janela bate.
+ * [DESATIVADO — substituído por AppointmentReminderWorkflow (por evento)]
+ * Poll de lembretes que rodava no cron de 15 min. NÃO é mais chamado: os
+ * lembretes agora são agendados por evento (sleepUntil) no ciclo do agendamento,
+ * o que deixa o Neon dormir de madrugada. Mantido aqui APENAS para rollback
+ * rápido (basta rechamá-lo dentro do cron de 15 min); o workflow ainda grava o mesmo
+ * appointment_reminder_log (ON CONFLICT), então reativar o poll não duplica.
  * Dedup atômico via tabela appointment_reminder_log.
  */
 async function dispatchScheduledReminders(pool: any, env: Env) {

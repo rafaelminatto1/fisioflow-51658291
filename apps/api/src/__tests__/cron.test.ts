@@ -3,10 +3,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   createPool: vi.fn(),
   runHealthMonitor: vi.fn(),
+  isWithinBusinessHours: vi.fn(),
 }));
 
 vi.mock("../lib/db", () => ({
   createPool: mocks.createPool,
+}));
+
+vi.mock("../lib/businessHours", () => ({
+  isWithinBusinessHours: mocks.isWithinBusinessHours,
 }));
 
 vi.mock("../lib/monitor", () => ({
@@ -30,8 +35,9 @@ function makeScheduledEvent(cron: string): ScheduledEvent {
 describe("handleScheduled", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.createPool.mockReturnValue({ query: vi.fn() });
+    mocks.createPool.mockReturnValue({ query: vi.fn().mockResolvedValue({ rows: [] }) });
     mocks.runHealthMonitor.mockResolvedValue(undefined);
+    mocks.isWithinBusinessHours.mockReturnValue(true);
   });
 
   it("runs lightweight health monitor without creating a database pool", async () => {
@@ -65,5 +71,25 @@ describe("handleScheduled", () => {
 
     expect(create).not.toHaveBeenCalled();
     expect(mocks.createPool).not.toHaveBeenCalled();
+  });
+
+  it("*/15 fora do expediente não toca o banco (Neon dorme)", async () => {
+    mocks.isWithinBusinessHours.mockReturnValue(false);
+    await handleScheduled(makeScheduledEvent("*/15 * * * *"), {} as any, {} as ExecutionContext);
+    expect(mocks.createPool).not.toHaveBeenCalled();
+  });
+
+  it("*/15 dentro do expediente executa (cria pool)", async () => {
+    mocks.isWithinBusinessHours.mockReturnValue(true);
+    await handleScheduled(makeScheduledEvent("*/15 * * * *"), {} as any, {} as ExecutionContext);
+    expect(mocks.createPool).toHaveBeenCalled();
+  });
+
+  it("warm-up 6:30 (30 9 * * 1-6) acorda o banco com SELECT 1", async () => {
+    const query = vi.fn().mockResolvedValue({ rows: [] });
+    mocks.createPool.mockReturnValue({ query });
+    await handleScheduled(makeScheduledEvent("30 9 * * 1-6"), {} as any, {} as ExecutionContext);
+    expect(mocks.createPool).toHaveBeenCalledTimes(1);
+    expect(query).toHaveBeenCalledWith("SELECT 1");
   });
 });
