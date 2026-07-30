@@ -1,10 +1,11 @@
 import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from "cloudflare:workers";
 import type { Env } from "../types/env";
-import { apiRetries, throwIfMetaError } from "./retryPolicy";
+import { runWithOrg } from "../lib/db";
 
 export interface AppointmentReminderParams {
   appointmentId: string;
   organizationId: string;
+  patientId: string;
   patientPhone: string;
   patientName: string;
   therapistName: string;
@@ -43,6 +44,36 @@ export function shouldStillSend(
 }
 
 /**
+ * Monta a mensagem SEND_WHATSAPP com o MESMO formato do poll
+ * (`dispatchScheduledReminders` em cron.ts): texto-livre primeiro, fallback p/
+ * template, log no CRM + broadcast WS — tudo feito pelo consumidor da fila.
+ * Extraído como função pura para paridade testável.
+ */
+export function buildReminderQueueMessage(payload: AppointmentReminderParams) {
+  const timeStr = payload.apptTimeStr;
+  const therapistStr = payload.therapistName || "Fisioterapeuta";
+  const firstName = (payload.patientName || "paciente").split(" ")[0];
+
+  return {
+    type: "SEND_WHATSAPP" as const,
+    payload: {
+      to: payload.patientPhone,
+      languageCode: "pt_BR",
+      templateName: payload.templateName,
+      bodyParameters: [
+        { type: "text" as const, text: firstName },
+        { type: "text" as const, text: timeStr },
+        { type: "text" as const, text: therapistStr },
+      ],
+      organizationId: payload.organizationId,
+      patientId: payload.patientId,
+      messageText: `Lembrete: sua sessão é às ${timeStr} com ${therapistStr}.`,
+      appointmentId: payload.appointmentId,
+    },
+  };
+}
+
+/**
  * Workflow: Lembrete de Consulta (por evento)
  *
  * Cada instância é criada com id determinístico `reminder-<appointmentId>`
@@ -50,9 +81,10 @@ export function shouldStillSend(
  *
  * Fluxo:
  *  1. Dorme até `sendAtMs` (calculado por `computeReminderSendAt`).
- *  2. Rechecagem: relê o agendamento no banco — se cancelado, remarcado p/
- *     outro horário, ou inexistente, encerra sem enviar.
- *  3. Envia o template Meta aprovado (`lembrete_consulta_botoes`).
+ *  2. Rechecagem: relê o agendamento no banco (sob RLS via `runWithOrg`) — se
+ *     cancelado, remarcado p/ outro horário, ou inexistente, encerra sem enviar.
+ *  3. Enfileira o envio na BACKGROUND_QUEUE (mesma paridade do poll: texto-livre
+ *     primeiro + fallback template `lembrete_consulta_botoes` + log CRM/WS).
  */
 export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
   Env,
@@ -66,65 +98,33 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
     }
 
     const row = await step.do("recheck-status", async () => {
-      const { getRawSql } = await import("../lib/db");
-      const sql = getRawSql(this.env, "read");
-      const res = await sql`
-        SELECT status,
-               to_char(date, 'YYYY-MM-DD') AS date_str,
-               substr(start_time::text, 1, 5) AS time_str
-        FROM appointments
-        WHERE id = ${payload.appointmentId}::uuid AND deleted_at IS NULL
-      `;
-      return (
-        (res.rows[0] as { status?: string; date_str?: string; time_str?: string } | undefined) ??
-        null
-      );
+      // RLS: `app.org_id` precisa estar setado, senão a query volta 0 linhas
+      // (e o lembrete seria silenciosamente descartado). runWithOrg garante isso.
+      return runWithOrg(payload.organizationId, async () => {
+        const { getRawSql } = await import("../lib/db");
+        const sql = getRawSql(this.env, "read");
+        const res = await sql`
+          SELECT status,
+                 to_char(date, 'YYYY-MM-DD') AS date_str,
+                 substr(start_time::text, 1, 5) AS time_str
+          FROM appointments
+          WHERE id = ${payload.appointmentId}::uuid AND deleted_at IS NULL
+        `;
+        return (
+          (res.rows[0] as { status?: string; date_str?: string; time_str?: string } | undefined) ??
+          null
+        );
+      });
     });
 
     if (!shouldStillSend(row, payload)) return;
 
-    await step.do("send-reminder", { retries: apiRetries() }, () => this.sendReminder(payload));
+    await step.do("send-reminder", async () => {
+      if (!this.env.BACKGROUND_QUEUE) return;
+      await this.env.BACKGROUND_QUEUE.send(buildReminderQueueMessage(payload));
+    });
 
     this.logReminder(payload.appointmentId, payload.organizationId);
-  }
-
-  private async sendReminder(payload: AppointmentReminderParams) {
-    if (!this.env.WHATSAPP_PHONE_NUMBER_ID || !this.env.WHATSAPP_ACCESS_TOKEN) return;
-
-    const firstName = (payload.patientName || "paciente").split(" ")[0];
-    const recipientPhone = payload.patientPhone.replace(/\D/g, "");
-
-    const res = await fetch(
-      `https://graph.facebook.com/v25.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.env.WHATSAPP_ACCESS_TOKEN}`,
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          recipient_type: "individual",
-          to: recipientPhone,
-          type: "template",
-          template: {
-            name: payload.templateName,
-            language: { code: "pt_BR" },
-            components: [
-              {
-                type: "body",
-                parameters: [
-                  { type: "text", text: firstName },
-                  { type: "text", text: payload.apptTimeStr },
-                  { type: "text", text: payload.therapistName },
-                ],
-              },
-            ],
-          },
-        }),
-      },
-    );
-    await throwIfMetaError(res, "reminder-template");
   }
 
   private logReminder(appointmentId: string, organizationId: string) {
