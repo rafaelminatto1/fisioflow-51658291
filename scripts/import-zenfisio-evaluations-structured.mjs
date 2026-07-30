@@ -82,9 +82,6 @@ function fieldText(ev, matcher) {
     .filter(hasContent)
     .join('\n');
 }
-function allText(ev) {
-  return ev.fields.map(f => `${f.label}: ${f.value}`).join('\n');
-}
 function sectionText(text, labels) {
   const source = clean(text);
   const out = [];
@@ -132,20 +129,27 @@ function extractSurgery(text) {
   if (!hasContent(t)) return [];
   if (/^(n[aã]o|nao|nega|sem\s+cirurgias?|nenhuma?)\b/i.test(t)) return [];
   if (/\b(?:cirurgias?\s+pr[eé]vias?|hist[oó]rico\s+de\s+cirurgias?)\s*:\s*(?:n[aã]o|nao|nega|nenhuma?|sem)\b/i.test(t)) return [];
+  if (/\b(?:nunca|n[aã]o|nao)\s+(?:realizou|fez|teve)\s+cirurgia\b/i.test(t)) return [];
   if (!SURGERY_WORDS.test(t)) return [];
   return unique(t
     .split(/\n|;|,/)
     .map(x => x.trim().replace(/^[-•]\s*/, ''))
     .filter(x => x.length >= 3 && x.length <= 140)
     .filter(x => SURGERY_LINE_WORDS.test(x))
-    .filter(x => !/^(n[aã]o|nao|nega|sem|e\b|mas\b|assim\b|como\b|atualmente\b|tamb[eé]m\b|paciente\b|exames?\b|em\s+\w+\/\d+|sequela\b)/i.test(x))
-    .filter(x => !/\b(?:n[aã]o|nao|nega|sem|nenhuma?)\s+(?:realizou|fez|cirurgia|cirurgias?)\b/i.test(x)))
+    .filter(x => !/^(n[aã]o|nao|nega|sem|nunca|e\b|mas\b|assim\b|como\b|atualmente\b|tamb[eé]m\b|paciente\b|exames?\b|em\s+\w+\/\d+|sequela\b|antes\s+da\s+cirurgia\b|cirurgias?\s*:?$|sendo\s+ent[aã]o\s+indicada\s+cirurgia\b)/i.test(x))
+    .filter(x => !/\b(?:n[aã]o|nao|nega|sem|nenhuma?|nunca)\s+(?:realizou|fez|teve|cirurgia|cirurgias?)\b/i.test(x))
+    .filter(x => !/\bn[aã]o\s+pode\s+realizar\s+cirurgia\b/i.test(x))
+    .filter(x => !/\bj[aá]\s+realizou\s+cirurgias?\s+previamente\b/i.test(x))
+    .filter(x => !/\b(?:primeira|1[ªa])\s+cirurgia\b/i.test(x)))
     .map(x => x.slice(0, 140));
 }
 function looksLikeMedication(item) {
   if (!hasContent(item)) return false;
   const text = clean(item);
   if (/[?？]/.test(text)) return false;
+  if (/^(?:esta|est[aá]|estava|ficou|segue|continua)?\s*(?:tomando|fazendo\s+uso\s+de)?\s*(?:medicamento|rem[eé]dio)\s*$/i.test(text)) return false;
+  if (/\b(?:mas\s+)?(?:n[aã]o\s+)?lembra\s+o\s+nome\s+do\s+rem[eé]dio\b/i.test(text)) return false;
+  if (/^parou\s+de\s+tomar\b/i.test(text)) return false;
   if (/^(?:diabetes\/?hipertens[aã]o(?:\/colesterol alto)?|hipertens[oa]|colesterol alto|dor|dores?|n[aã]o sente dores?|repouso\s+ou\s+medica[cç][aã]o)\s*:?.*$/i.test(text)) return false;
   if (/\b(?:onde vc sente|piora com|o\s*que ajuda|oque ajuda|ja teve|já teve|sentia ou ainda sente|realizou alguma cirurgia)\b/i.test(text)) return false;
   return /\b(?:mg|mcg|ml|rem[eé]dio|medica[cç][aã]o|medicamento|puran|eutirox|gabapentina|pregabalina|losartana|lozartana|diur[eé]tico|doxazosina|novalgina|tadalafila|rosuvastatina|rusovastatina|sertralina|cetralina|sibutramina|simbotramina|r[yi]belsus|reposi[cç][aã]o hormonal|asma di[aá]ria)\b/i.test(text);
@@ -187,14 +191,19 @@ async function getForm(client, organizationId, therapistId) {
 
 const client = new Client({ connectionString: DATABASE_URL });
 await client.connect();
+let transactionStarted = false;
 try {
+  if (APPLY) {
+    await client.query('begin');
+    transactionStarted = true;
+  }
   const data = JSON.parse(await readFile(SOURCE_FILE, 'utf8'));
   const profile = await client.query(`select id, organization_id from profiles where lower(email)=lower($1) order by updated_at desc nulls last, created_at desc nulls last limit 1`, [IMPORT_USER_EMAIL]);
   if (!profile.rows.length) throw new Error('Perfil não encontrado');
   const therapistId = profile.rows[0].id;
   const organizationId = profile.rows[0].organization_id;
   const formId = await getForm(client, organizationId, therapistId);
-  const state = { apply: APPLY, evaluations: data.evaluations.length, patientsMatched: 0, patientsMissing: [], responsesWouldUpsert: 0, responsesUpserted: 0, recordsWouldUpsert: 0, recordsUpserted: 0, patientsWouldUpdate: 0, patientsUpdated: 0, surgeriesWouldCreate: 0, surgeriesCreated: 0, pathologiesWouldCreate: 0, pathologiesCreated: 0, medicationsExtracted: 0, allergiesExtracted: 0, extracted: [], failures: [] };
+  const state = { apply: APPLY, evaluations: data.evaluations.length, patientsMatched: 0, patientsMissing: [], responsesWouldUpsert: 0, responsesWouldInsert: 0, responsesWouldUpdate: 0, responsesUpserted: 0, recordsWouldUpsert: 0, recordsWouldInsert: 0, recordsWouldUpdate: 0, recordsUpserted: 0, patientsWouldUpdate: 0, patientsUpdated: 0, surgeriesWouldCreate: 0, surgeriesCreated: 0, pathologiesWouldCreate: 0, pathologiesCreated: 0, medicationsExtracted: 0, allergiesExtracted: 0, extracted: [], failures: [] };
   for (const ev of data.evaluations) {
     try {
       const name = normalizeName(ev.name);
@@ -224,6 +233,8 @@ try {
       const allergies = splitClinicalList(allergiesText);
       state.medicationsExtracted += medications.length;
       state.allergiesExtracted += allergies.length;
+      const existingRecord = await client.query(`select id from medical_records where organization_id=$1 and patient_id=$2 and physical_exam->>'zenfisio_evaluation_id'=$3 and deleted_at is null limit 1`, [organizationId, patientId, String(ev.evaluation_id)]);
+      const existingResponse = await client.query(`select id from patient_evaluation_responses where organization_id=$1 and patient_id=$2 and responses->>'zenfisio_evaluation_id'=$3 limit 1`, [organizationId, patientId, String(ev.evaluation_id)]);
       const currentSports = patient.rows[0].sports_practiced ?? [];
       const currentPaths = patient.rows[0].pathologies_active ?? [];
       const currentMeds = patient.rows[0].medications_in_use ?? [];
@@ -261,21 +272,23 @@ try {
         }
       }
       state.recordsWouldUpsert += 1;
+      if (existingRecord.rows.length) state.recordsWouldUpdate += 1;
+      else state.recordsWouldInsert += 1;
       if (APPLY) {
-        const existing = await client.query(`select id from medical_records where organization_id=$1 and patient_id=$2 and physical_exam->>'zenfisio_evaluation_id'=$3 and deleted_at is null limit 1`, [organizationId, patientId, String(ev.evaluation_id)]);
         const physicalExam = { source: 'zenfisio_evaluation_edit', zenfisio_evaluation_id: ev.evaluation_id, fields: rawResponses };
-        if (existing.rows.length) {
-          await client.query(`update medical_records set chief_complaint=$1, current_history=$2, past_history=$3, previous_surgeries=$4, physical_activity=$5, medical_history=$6, current_medications=$7, allergies=$8::jsonb, medications=$9::jsonb, physical_exam=$10::jsonb, updated_at=now() where id=$11`, [fieldText(ev, s => /queixa|main_complaint/i.test(s)) || null, diagnosisText || null, fieldText(ev, s => /previous_medical_history|hist[oó]ria/i.test(s)) || null, surgeryText || null, sportText || null, diagnosisText || null, medicationsText, JSON.stringify(allergies.map(allergen => ({ allergen }))), JSON.stringify(medications.map(medication => ({ name: medication }))), JSON.stringify(physicalExam), existing.rows[0].id]);
+        if (existingRecord.rows.length) {
+          await client.query(`update medical_records set chief_complaint=$1, current_history=$2, past_history=$3, previous_surgeries=$4, physical_activity=$5, medical_history=$6, current_medications=$7, allergies=$8::jsonb, medications=$9::jsonb, physical_exam=$10::jsonb, updated_at=now() where id=$11`, [fieldText(ev, s => /queixa|main_complaint/i.test(s)) || null, diagnosisText || null, fieldText(ev, s => /previous_medical_history|hist[oó]ria/i.test(s)) || null, surgeryText || null, sportText || null, diagnosisText || null, medicationsText, JSON.stringify(allergies.map(allergen => ({ allergen }))), JSON.stringify(medications.map(medication => ({ name: medication }))), JSON.stringify(physicalExam), existingRecord.rows[0].id]);
         } else {
           await client.query(`insert into medical_records (patient_id, organization_id, record_date, chief_complaint, current_history, past_history, previous_surgeries, physical_activity, medical_history, current_medications, allergies, medications, physical_exam, created_by, created_at, updated_at) values ($1,$2,$3::date,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12::jsonb,$13::jsonb,$14,now(),now())`, [patientId, organizationId, date, fieldText(ev, s => /queixa|main_complaint/i.test(s)) || null, diagnosisText || null, fieldText(ev, s => /previous_medical_history|hist[oó]ria/i.test(s)) || null, surgeryText || null, sportText || null, diagnosisText || null, medicationsText, JSON.stringify(allergies.map(allergen => ({ allergen }))), JSON.stringify(medications.map(medication => ({ name: medication }))), JSON.stringify(physicalExam), therapistId]);
         }
         state.recordsUpserted += 1;
       }
       state.responsesWouldUpsert += 1;
+      if (existingResponse.rows.length) state.responsesWouldUpdate += 1;
+      else state.responsesWouldInsert += 1;
       if (APPLY && formId) {
         const responses = { zenfisio_evaluation_id: ev.evaluation_id, zenfisio_url: ev.finalUrl, fields: rawResponses, extracted: { sports, surgeries, pathologies, medications, allergies } };
-        const existing = await client.query(`select id from patient_evaluation_responses where organization_id=$1 and patient_id=$2 and responses->>'zenfisio_evaluation_id'=$3 limit 1`, [organizationId, patientId, String(ev.evaluation_id)]);
-        if (existing.rows.length) await client.query(`update patient_evaluation_responses set responses=$1::jsonb,status='completed',appointment_id=coalesce(appointment_id,$2::uuid),updated_at=now() where id=$3`, [JSON.stringify(responses), appointmentId, existing.rows[0].id]);
+        if (existingResponse.rows.length) await client.query(`update patient_evaluation_responses set responses=$1::jsonb,status='completed',appointment_id=coalesce(appointment_id,$2::uuid),updated_at=now() where id=$3`, [JSON.stringify(responses), appointmentId, existingResponse.rows[0].id]);
         else await client.query(`insert into patient_evaluation_responses (organization_id, patient_id, form_id, appointment_id, responses, status, scheduled_for, started_at, completed_at, created_by, created_at, updated_at) values ($1,$2,$3,$4::uuid,$5::jsonb,'completed',$6::date,$6::date,$6::date,$7,now(),now())`, [organizationId, patientId, formId, appointmentId, JSON.stringify(responses), date, therapistId]);
         state.responsesUpserted += 1;
       }
@@ -284,9 +297,17 @@ try {
       state.failures.push({ evaluation_id: ev.evaluation_id, name: ev.name, error: error instanceof Error ? error.message : String(error) });
     }
   }
+  if (APPLY && state.failures.length) {
+    throw new Error(`Importação interrompida: ${state.failures.length} falha(s) durante o apply`);
+  }
+  if (transactionStarted) {
+    await client.query('commit');
+    transactionStarted = false;
+  }
   const out = path.join(path.dirname(SOURCE_FILE), APPLY ? 'structured_import_apply.json' : 'structured_import_dryrun.json');
   await writeFile(out, JSON.stringify(state, null, 2));
   console.log(JSON.stringify({ ...state, extracted: state.extracted.slice(0, 20) }, null, 2));
 } finally {
+  if (transactionStarted) await client.query('rollback').catch(() => {});
   await client.end();
 }

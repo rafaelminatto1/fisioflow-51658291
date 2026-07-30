@@ -7,7 +7,10 @@ const CALENDAR_FILE = process.env.CALENDAR_FILE || 'scripts/zenfisio-scraper/dat
 const OUT_DIR = process.env.OUT_DIR || 'scripts/zenfisio-scraper/data/zenfisio-evaluations-full';
 const LIMIT = Number(process.env.LIMIT || 0);
 const CONCURRENCY = Math.max(1, Number(process.env.CONCURRENCY || 6));
+const HISTORY_CONCURRENCY = Math.max(1, Number(process.env.HISTORY_CONCURRENCY || CONCURRENCY));
 const BASE = 'https://app.zenfisio.com';
+const HISTORY_START_DATE = process.env.HISTORY_START_DATE || '2010-01-01';
+const HISTORY_END_DATE = process.env.HISTORY_END_DATE || new Date().toISOString().slice(0, 10);
 
 function decodeHtml(value) {
   return String(value ?? '')
@@ -132,21 +135,24 @@ function parseFields(html) {
   let patients = uniqueBy(calendar.filter(e => e.contact_slug), e => e.contact_slug).map(e => ({ slug: e.contact_slug, contact_id: e.contact_id, name: e.name }));
   patients.sort((a, b) => a.slug.localeCompare(b.slug));
   if (LIMIT > 0) patients = patients.slice(0, LIMIT);
-  const editLinks = []; const historyFailures = [];
-  for (let i = 0; i < patients.length; i++) {
-    const p = patients[i];
+  const historyFailures = [];
+  const historyResults = await mapLimit(patients, HISTORY_CONCURRENCY, async (p, i) => {
     try {
-      const res = await fetchText(`/patients/history/${encodeURIComponent(p.slug)}`, cookieHeader);
+      const historyPath = `/patients/history/${encodeURIComponent(p.slug)}/history/${HISTORY_START_DATE}/${HISTORY_END_DATE}/desc`;
+      const res = await fetchText(historyPath, cookieHeader);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      for (const link of findEvaluationLinks(res.text)) editLinks.push({ ...p, ...link });
+      const links = findEvaluationLinks(res.text).map(link => ({ ...p, ...link }));
+      if ((i + 1) % 50 === 0 || i + 1 === patients.length) {
+        console.log(`[${new Date().toISOString()}] históricos ${i + 1}/${patients.length}; falhas=${historyFailures.length}`);
+      }
+      return links;
     } catch (error) { historyFailures.push({ ...p, error: error.message }); }
-    if ((i + 1) % 50 === 0 || i + 1 === patients.length) {
-      console.log(`[${new Date().toISOString()}] históricos ${i + 1}/${patients.length}; links=${editLinks.length}; falhas=${historyFailures.length}`);
-      await fs.writeFile(path.join(OUT_DIR, 'evaluation_links_partial.json'), JSON.stringify({ patientsProcessed: i + 1, editLinks, historyFailures }, null, 2));
-    }
-  }
+    return [];
+  });
+  const editLinks = historyResults.flat();
+  await fs.writeFile(path.join(OUT_DIR, 'evaluation_links_partial.json'), JSON.stringify({ patientsProcessed: patients.length, editLinks, historyFailures }, null, 2));
   const links = uniqueBy(editLinks, x => x.evaluation_id);
-  await fs.writeFile(path.join(OUT_DIR, 'evaluation_links.json'), JSON.stringify({ patients: patients.length, links, historyFailures }, null, 2));
+  await fs.writeFile(path.join(OUT_DIR, 'evaluation_links.json'), JSON.stringify({ patients: patients.length, historyStartDate: HISTORY_START_DATE, historyEndDate: HISTORY_END_DATE, links, historyFailures }, null, 2));
   console.log(`[${new Date().toISOString()}] links únicos de avaliação: ${links.length}`);
   const evaluationFailures = [];
   const evaluations = (await mapLimit(links, CONCURRENCY, async (link, i) => {
