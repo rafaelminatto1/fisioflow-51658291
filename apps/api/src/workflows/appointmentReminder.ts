@@ -1,186 +1,102 @@
 import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from "cloudflare:workers";
 import type { Env } from "../types/env";
-import { WORKERS_AI_MODELS } from "../lib/workersAi";
-import { runAi, readAiText } from "../lib/ai-native";
 import { apiRetries, throwIfMetaError } from "./retryPolicy";
 
-export type AppointmentReminderParams = {
+export interface AppointmentReminderParams {
   appointmentId: string;
+  organizationId: string;
   patientPhone: string;
   patientName: string;
   therapistName: string;
-  appointmentDate: string; // ISO string
-  organizationId: string;
-};
+  apptDateStr: string;
+  apptTimeStr: string;
+  sendAtMs: number;
+  templateName: string;
+}
+
+const NO_SEND_STATUSES = new Set([
+  "cancelado",
+  "cancelled",
+  "faltou",
+  "no_show",
+  "completed",
+  "concluido",
+  "remarcado",
+  "rescheduled",
+]);
 
 /**
- * Workflow: Lembrete de Consulta
+ * Verifica se, no instante do envio, o agendamento ainda justifica o lembrete:
+ * precisa existir, não estar em status terminal/cancelado, e continuar no
+ * mesmo dia/horário para o qual o lembrete foi originalmente agendado
+ * (evita lembrete "fantasma" após reagendamento).
+ */
+export function shouldStillSend(
+  row: { status?: string; date_str?: string; time_str?: string } | null,
+  payload: { apptDateStr: string; apptTimeStr: string },
+): boolean {
+  if (!row) return false;
+  if (row.status && NO_SEND_STATUSES.has(String(row.status))) return false;
+  if (row.date_str !== payload.apptDateStr) return false;
+  if ((row.time_str ?? "").slice(0, 5) !== payload.apptTimeStr) return false;
+  return true;
+}
+
+/**
+ * Workflow: Lembrete de Consulta (por evento)
+ *
+ * Cada instância é criada com id determinístico `reminder-<appointmentId>`
+ * no momento em que o agendamento é criado/remarcado (ver `reminderWorkflow.ts`).
  *
  * Fluxo:
- *  1. Aguarda até D-3 (3 dias antes) → envia lembrete WhatsApp
- *  2. Aguarda até D-1 (1 dia antes)  → envia lembrete WhatsApp
- *  3. Aguarda até D-0 (2h antes)     → envia lembrete final
- *
- * Suporta cancelamento via sendEvent('cancel').
+ *  1. Dorme até `sendAtMs` (calculado por `computeReminderSendAt`).
+ *  2. Rechecagem: relê o agendamento no banco — se cancelado, remarcado p/
+ *     outro horário, ou inexistente, encerra sem enviar.
+ *  3. Envia o template Meta aprovado (`lembrete_consulta_botoes`).
  */
 export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
   Env,
   AppointmentReminderParams
 > {
   async run(event: WorkflowEvent<AppointmentReminderParams>, step: WorkflowStep) {
-    const {
-      appointmentId,
-      patientPhone,
-      patientName,
-      therapistName,
-      appointmentDate,
-      organizationId,
-    } = event.payload;
+    const payload = event.payload;
 
-    // Passo 0: Analisar Risco de No-Show (IA)
-    const riskProfile = await step.do("analyze-no-show-risk", async () => {
+    if (payload.sendAtMs > Date.now()) {
+      await step.sleepUntil("wait-reminder", new Date(payload.sendAtMs));
+    }
+
+    const row = await step.do("recheck-status", async () => {
       const { getRawSql } = await import("../lib/db");
       const sql = getRawSql(this.env, "read");
       const res = await sql`
-        SELECT ai_risk_level, adherence_score 
-        FROM patient_longitudinal_summary 
-        WHERE patient_id = (SELECT patient_id FROM appointments WHERE id = ${appointmentId}::uuid)
+        SELECT status,
+               to_char(date, 'YYYY-MM-DD') AS date_str,
+               substr(start_time::text, 1, 5) AS time_str
+        FROM appointments
+        WHERE id = ${payload.appointmentId}::uuid AND deleted_at IS NULL
       `;
       return (
-        (res.rows[0] as { ai_risk_level: string; adherence_score: number }) || {
-          ai_risk_level: "low",
-          adherence_score: 100,
-        }
+        (res.rows[0] as { status?: string; date_str?: string; time_str?: string } | undefined) ??
+        null
       );
     });
 
-    const apptTime = new Date(appointmentDate).getTime();
-    const now = Date.now();
+    if (!shouldStillSend(row, payload)) return;
 
-    // --- D-3 ---
-    const d3 = apptTime - 3 * 24 * 60 * 60 * 1000;
-    if (d3 > now) {
-      await step.sleepUntil("wait-d3", new Date(d3));
-    }
+    await step.do("send-reminder", { retries: apiRetries() }, () => this.sendReminder(payload));
 
-    await step.do("send-d3-reminder", { retries: apiRetries() }, async () => {
-      await this.sendReminder(
-        appointmentId,
-        patientPhone,
-        patientName,
-        therapistName,
-        appointmentDate,
-        3,
-        riskProfile.ai_risk_level,
-      );
-      await this.logReminder(appointmentId, organizationId, "d3");
-    });
-
-    // --- D-1 ---
-    const d1 = apptTime - 1 * 24 * 60 * 60 * 1000;
-    if (d1 > Date.now()) {
-      await step.sleepUntil("wait-d1", new Date(d1));
-    }
-
-    await step.do("send-d1-reminder", { retries: apiRetries() }, async () => {
-      await this.sendReminder(
-        appointmentId,
-        patientPhone,
-        patientName,
-        therapistName,
-        appointmentDate,
-        1,
-        riskProfile.ai_risk_level,
-      );
-      await this.logReminder(appointmentId, organizationId, "d1");
-    });
-
-    // --- D-0 (2h antes) ---
-    const d0 = apptTime - 2 * 60 * 60 * 1000;
-    if (d0 > Date.now()) {
-      await step.sleepUntil("wait-d0", new Date(d0));
-    }
-
-    await step.do("send-d0-reminder", { retries: apiRetries() }, async () => {
-      await this.sendReminder(
-        appointmentId,
-        patientPhone,
-        patientName,
-        therapistName,
-        appointmentDate,
-        0,
-        riskProfile.ai_risk_level,
-      );
-      await this.logReminder(appointmentId, organizationId, "d0");
-    });
+    this.logReminder(payload.appointmentId, payload.organizationId);
   }
 
-  private async sendReminder(
-    appointmentId: string,
-    phone: string,
-    patientName: string,
-    therapistName: string,
-    appointmentDate: string,
-    daysAhead: number,
-    riskLevel: string = "low",
-  ) {
+  private async sendReminder(payload: AppointmentReminderParams) {
     if (!this.env.WHATSAPP_PHONE_NUMBER_ID || !this.env.WHATSAPP_ACCESS_TOKEN) return;
 
-    const dateStr = new Date(appointmentDate).toLocaleDateString("pt-BR", {
-      weekday: "long",
-      day: "2-digit",
-      month: "long",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    const firstName = (payload.patientName || "paciente").split(" ")[0];
+    const recipientPhone = payload.patientPhone.replace(/\D/g, "");
 
-    let msg =
-      daysAhead === 0
-        ? `Olá ${patientName}! Sua sessão é em 2 horas (${dateStr}). Te esperamos! 🏥`
-        : `Olá ${patientName}! Lembrete: sua sessão é ${daysAhead === 1 ? "amanhã" : "em 3 dias"} (${dateStr}). Confirme sua presença selecionando uma das opções abaixo:`;
-
-    // Se o risco for alto/médio, usamos IA para gerar um lembrete mais persuasivo
-    if (riskLevel === "high" || riskLevel === "medium") {
-      try {
-        const prompt = `Gere uma mensagem de lembrete de WhatsApp curta e motivadora para um paciente de fisioterapia que tem alta probabilidade de faltar. 
-        Nome: ${patientName}, Data: ${dateStr}, Profissional: ${therapistName}. 
-        O tom deve ser acolhedor mas reforçar a importância da continuidade para a recuperação. Máximo 200 caracteres.`;
-
-        const aiResponse = await runAi(
-          this.env,
-          WORKERS_AI_MODELS.llama_3_1_8b,
-          {
-            messages: [{ role: "user", content: prompt }],
-          },
-          { cache: false },
-        );
-        msg = readAiText(aiResponse).trim() || msg;
-      } catch (e) {
-        console.warn("[Reminder/AI] Failed to generate AI message, using default", e);
-      }
-    }
-
-    const recipientPhone = phone.replace(/\D/g, "");
-
-    if (daysAhead === 0) {
-      // Mensagem informativa em texto simples 2h antes
-      const res = await fetch(`https://graph.facebook.com/v25.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.env.WHATSAPP_ACCESS_TOKEN}`,
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: recipientPhone,
-          type: "text",
-          text: { body: msg },
-        }),
-      });
-      await throwIfMetaError(res, "reminder-text");
-    } else {
-      // Mensagem interativa com botões de confirmar/remarcar
-      const res = await fetch(`https://graph.facebook.com/v25.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
+    const res = await fetch(
+      `https://graph.facebook.com/v25.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -190,44 +106,41 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
           messaging_product: "whatsapp",
           recipient_type: "individual",
           to: recipientPhone,
-          type: "interactive",
-          interactive: {
-            type: "button",
-            body: { text: msg },
-            action: {
-              buttons: [
-                {
-                  type: "reply",
-                  reply: {
-                    id: `confirm_appt_${appointmentId}`,
-                    title: "Confirmar",
-                  },
-                },
-                {
-                  type: "reply",
-                  reply: {
-                    id: `reschedule_appt_${appointmentId}`,
-                    title: "Reagendar Sessão",
-                  },
-                },
-              ],
-            },
+          type: "template",
+          template: {
+            name: payload.templateName,
+            language: { code: "pt_BR" },
+            components: [
+              {
+                type: "body",
+                parameters: [
+                  { type: "text", text: firstName },
+                  { type: "text", text: payload.apptTimeStr },
+                  { type: "text", text: payload.therapistName },
+                ],
+              },
+            ],
           },
         }),
-      });
-      await throwIfMetaError(res, "reminder-interactive");
-    }
+      },
+    );
+    await throwIfMetaError(res, "reminder-template");
   }
 
-  private async logReminder(appointmentId: string, organizationId: string, stage: string) {
+  private logReminder(appointmentId: string, organizationId: string) {
     if (!this.env.ANALYTICS) return;
     try {
       this.env.ANALYTICS.writeDataPoint({
-        blobs: ["/workflow/appointment-reminder", "WORKFLOW", organizationId, `reminder_${stage}`],
+        blobs: [
+          "/workflow/appointment-reminder",
+          "WORKFLOW",
+          organizationId,
+          "reminder_sent",
+          appointmentId,
+        ],
         doubles: [0, 200, 0],
         indexes: [organizationId],
       });
     } catch {}
   }
 }
-
