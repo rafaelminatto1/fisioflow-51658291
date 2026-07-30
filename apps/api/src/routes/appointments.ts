@@ -4,7 +4,7 @@
 import { Hono } from "hono";
 import type { MiddlewareHandler } from "hono";
 import type { Env } from "../types/env";
-import { requireAuth, type AuthVariables } from "../lib/auth";
+import { requireAuth, requireRole, type AuthVariables } from "../lib/auth";
 import { rateLimit } from "../middleware/rateLimit";
 import type { CustomVariables } from "../middleware/requestId";
 import { eq, and, sql, desc, lte, gte, isNull } from "drizzle-orm";
@@ -33,6 +33,7 @@ import {
   cancelReminder,
   rescheduleReminder,
   reminderActionForUpdate,
+  buildReminderParams,
   type ReminderApptInput,
 } from "../lib/reminderWorkflow";
 
@@ -415,6 +416,64 @@ app.post(
     }
   },
 );
+
+/**
+ * POST /appointments/reminders/backfill — (admin) cria os workflows de lembrete
+ * para todos os agendamentos FUTUROS ativos da org. Idempotente pelo id
+ * determinístico `reminder-<id>` (não duplica). Acionar UMA vez no rollout.
+ */
+app.post("/reminders/backfill", requireAuth, requireRole(["admin"]), async (c) => {
+  const user = c.get("user");
+  const organizationId = user.organizationId;
+  try {
+    const pool = createPool(c.env);
+    const res = await pool.query(
+      `SELECT a.id, a.organization_id, a.patient_id,
+              to_char(a.date, 'YYYY-MM-DD') AS date_str,
+              substr(a.start_time::text, 1, 5) AS time_str,
+              p.full_name AS patient_name, p.phone AS patient_phone,
+              prof.full_name AS therapist_name,
+              o.settings->'crm_whatsapp'->'reminders' AS rcfg
+       FROM appointments a
+       JOIN patients p ON p.id = a.patient_id
+       LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::uuid
+       JOIN organizations o ON o.id = a.organization_id
+       WHERE a.organization_id = $1
+         AND a.deleted_at IS NULL
+         AND a.date >= CURRENT_DATE
+         AND a.status NOT IN ('cancelado','faltou','cancelled','no_show','completed','concluido','atendido')
+         AND p.phone IS NOT NULL
+       ORDER BY a.date ASC
+       LIMIT 1000`,
+      [organizationId],
+    );
+
+    let scheduled = 0;
+    for (const r of res.rows) {
+      if (!r.time_str) continue;
+      const input: ReminderApptInput = {
+        id: String(r.id),
+        organizationId: String(r.organization_id),
+        patientId: r.patient_id ? String(r.patient_id) : null,
+        patientPhone: r.patient_phone ?? null,
+        patientName: r.patient_name ?? null,
+        therapistName: r.therapist_name ?? null,
+        dateStr: r.date_str,
+        timeStr: r.time_str,
+      };
+      // Só conta e agenda quem é elegível (config habilitada + telefone +
+      // sendAt ainda no futuro). Idempotente pelo id determinístico.
+      if (!buildReminderParams(input, r.rcfg ?? null)) continue;
+      await scheduleReminder(c.env, input, r.rcfg ?? null);
+      scheduled++;
+    }
+
+    return c.json({ data: { candidates: res.rows.length, scheduled } });
+  } catch (error: any) {
+    console.error("[Appointments/Backfill] Error:", error?.message ?? error);
+    return c.json({ error: "Erro no backfill de lembretes", details: error?.message }, 500);
+  }
+});
 
 app.get("/last-updated", requireAuth, async (c) => {
   const user = c.get("user");
