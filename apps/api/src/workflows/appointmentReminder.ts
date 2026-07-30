@@ -119,6 +119,24 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
 
     if (!shouldStillSend(row, payload)) return;
 
+    // FASE 1 (transição): o poll `dispatchScheduledReminders` ainda roda em
+    // paralelo. Reclamamos o mesmo dedup-log (ON CONFLICT DO NOTHING) para não
+    // enviar em dobro — quem gravar primeiro (poll ou workflow) envia. Como
+    // step.do memoiza o resultado, a reclamação roda uma única vez mesmo que o
+    // envio abaixo faça retry. REMOVER na Fase 3 (Task 6), junto com o poll.
+    const claimed = await step.do("dedup-claim", async () => {
+      const { getRawSql } = await import("../lib/db");
+      const sql = getRawSql(this.env, "write");
+      const res = await sql`
+        INSERT INTO appointment_reminder_log (appointment_id, kind)
+        VALUES (${payload.appointmentId}::uuid, 'session')
+        ON CONFLICT (appointment_id, kind) DO NOTHING
+        RETURNING 1 AS ok
+      `;
+      return res.rows.length > 0;
+    });
+    if (!claimed) return; // poll já enviou este lembrete
+
     await step.do("send-reminder", async () => {
       if (!this.env.BACKGROUND_QUEUE) return;
       await this.env.BACKGROUND_QUEUE.send(buildReminderQueueMessage(payload));
