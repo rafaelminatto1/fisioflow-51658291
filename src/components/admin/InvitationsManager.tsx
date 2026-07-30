@@ -57,11 +57,37 @@ interface EditInvitationFormState {
   expiresAt: string;
 }
 
-const ROLES: { value: AppRole; label: string }[] = [
-  { value: "admin", label: "Admin" },
-  { value: "fisioterapeuta", label: "Fisioterapeuta" },
-  { value: "estagiario", label: "Estagiário" },
-  { value: "paciente", label: "Paciente" },
+const ROLES: { value: AppRole; label: string; description: string }[] = [
+  {
+    value: "admin",
+    label: "Admin",
+    description: "Acesso total, incluindo financeiro, CRM e configurações",
+  },
+  {
+    value: "fisioterapeuta",
+    label: "Fisioterapeuta",
+    description: "Agenda, pacientes e evoluções clínicas",
+  },
+  {
+    value: "estagiario",
+    label: "Estagiário",
+    description: "Acesso clínico supervisionado",
+  },
+  {
+    value: "recepcionista",
+    label: "Recepcionista",
+    description: "Agenda, cadastro de pacientes e atendimento",
+  },
+  {
+    value: "parceiro",
+    label: "Parceiro",
+    description: "Acesso restrito a encaminhamentos",
+  },
+  {
+    value: "paciente",
+    label: "Paciente",
+    description: "Portal do paciente, sem acesso à gestão",
+  },
 ];
 
 export function InvitationsManager() {
@@ -239,7 +265,7 @@ export function InvitationsManager() {
   );
 
   const copyInviteLink = async (token: string) => {
-    const inviteUrl = `${window.location.origin}/auth?invite=${token}`;
+    const inviteUrl = `${window.location.origin}/auth?invite=${token}&mode=register`;
     try {
       await navigator.clipboard.writeText(inviteUrl);
       toast({ title: "Link de convite copiado" });
@@ -295,7 +321,7 @@ export function InvitationsManager() {
           </Select>
           <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
-            Novo Convite
+            Convidar Usuário
           </Button>
         </div>
       </div>
@@ -309,9 +335,9 @@ export function InvitationsManager() {
             <EmptyState
               icon={Mail}
               title="Nenhum convite encontrado"
-              description="Crie um novo convite ou ajuste os filtros para visualizar resultados."
+              description="Convide um usuário por e-mail ou ajuste os filtros para visualizar resultados."
               action={{
-                label: "Criar convite",
+                label: "Convidar usuário",
                 onClick: () => setCreateDialogOpen(true),
               }}
             />
@@ -423,9 +449,10 @@ export function InvitationsManager() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Novo Convite</DialogTitle>
+            <DialogTitle>Enviar Convite</DialogTitle>
             <DialogDescription>
-              Crie um convite para adicionar um usuário ao sistema.
+              Enviamos um e-mail com o link de acesso. Ao criar a conta pelo link, a pessoa já entra
+              com o papel escolhido, sem precisar de aprovação.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreateInvitation} className="space-y-4">
@@ -447,7 +474,7 @@ export function InvitationsManager() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="new-invite-role">Função</Label>
+              <Label htmlFor="new-invite-role">Papel no sistema</Label>
               <Select
                 value={createForm.role}
                 onValueChange={(value) =>
@@ -455,16 +482,24 @@ export function InvitationsManager() {
                 }
               >
                 <SelectTrigger id="new-invite-role">
-                  <SelectValue placeholder="Selecione a função" />
+                  <SelectValue placeholder="Selecione o papel" />
                 </SelectTrigger>
                 <SelectContent>
                   {ROLES.map((role) => (
                     <SelectItem key={role.value} value={role.value}>
-                      {role.label}
+                      <span className="flex flex-col text-left">
+                        <span>{role.label}</span>
+                        <span className="text-xs text-muted-foreground">{role.description}</span>
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {createForm.role === "admin" && (
+                <p className="text-xs text-amber-700 dark:text-amber-500">
+                  Admin tem acesso total, inclusive financeiro e dados de todos os pacientes.
+                </p>
+              )}
             </div>
 
             <DialogFooter>
@@ -480,8 +515,12 @@ export function InvitationsManager() {
                 Cancelar
               </Button>
               <Button type="submit" disabled={isCreating}>
-                {isCreating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Criar Convite
+                {isCreating ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4 mr-2" />
+                )}
+                Enviar Convite
               </Button>
             </DialogFooter>
           </form>

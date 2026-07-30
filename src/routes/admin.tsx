@@ -84,7 +84,10 @@ export const adminRoutes = (
         </ProtectedRoute>
       }
     />
-    <Route path="/admin/invitations" element={<Navigate to="/admin/users" replace />} />
+    <Route
+      path="/admin/invitations"
+      element={<Navigate to="/admin/users?tab=invitations" replace />}
+    />
     <Route
       path="/admin/security"
       element={

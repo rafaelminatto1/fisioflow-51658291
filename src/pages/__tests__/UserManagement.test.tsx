@@ -1,7 +1,16 @@
 import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import UserManagement from "@/pages/UserManagement";
+
+function renderPage(initialPath = "/admin/users") {
+  return render(
+    <MemoryRouter initialEntries={[initialPath]}>
+      <UserManagement />
+    </MemoryRouter>,
+  );
+}
 
 const mockUseUsers = vi.fn();
 
@@ -31,7 +40,7 @@ vi.mock("@/components/admin/MembersManager", () => ({
 }));
 
 vi.mock("@/components/admin/InvitationsManager", () => ({
-  InvitationsManager: () => <div>Convites Pendentes</div>,
+  InvitationsManager: () => <div>Lista de convites</div>,
 }));
 
 describe("UserManagement", () => {
@@ -55,10 +64,22 @@ describe("UserManagement", () => {
   });
 
   it("renders invalid membership dates without crashing", () => {
-    render(<UserManagement />);
+    renderPage();
 
     expect(screen.getByText("Gerenciamento de Usuários")).toBeInTheDocument();
     expect(screen.getAllByText(process.env.E2E_EMAIL || "")[0]).toBeInTheDocument();
     expect(screen.getByText("Data inválida")).toBeInTheDocument();
+  });
+
+  it("abre na aba de convites quando ?tab=invitations", () => {
+    renderPage("/admin/users?tab=invitations");
+
+    expect(screen.getByText("Lista de convites")).toBeInTheDocument();
+  });
+
+  it("abre na aba de membros por padrão", () => {
+    renderPage();
+
+    expect(screen.queryByText("Lista de convites")).not.toBeInTheDocument();
   });
 });

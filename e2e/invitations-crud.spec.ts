@@ -150,7 +150,7 @@ async function setupInvitationsMocks(page: Page) {
       await route.fulfill({
         status: 201,
         contentType: "application/json",
-        body: JSON.stringify({ data: created }),
+        body: JSON.stringify({ data: created, email_sent: true }),
       });
       return;
     }
@@ -238,17 +238,17 @@ test.describe("Admin Invitations CRUD", () => {
       return;
     }
 
-    await expect(page.getByRole("heading", { name: "Gerenciamento de Convites" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Gerenciamento de Usuários" })).toBeVisible();
 
-    await page.getByRole("button", { name: "Novo Convite" }).click();
-    const createDialog = page.getByRole("dialog", { name: "Novo Convite" });
+    await page.getByRole("button", { name: "Convidar Usuário" }).click();
+    const createDialog = page.getByRole("dialog", { name: "Enviar Convite" });
     await expect(createDialog).toBeVisible();
     await createDialog.locator("#new-invite-email").fill(invitationEmail);
     await createDialog.locator("#new-invite-role").click();
-    await page.getByRole("option", { name: "Estagiário" }).click();
+    await page.getByRole("option", { name: /^Estagiário/ }).click();
     await Promise.all([
       expect(createDialog).not.toBeVisible(),
-      createDialog.getByRole("button", { name: "Criar Convite" }).click(),
+      createDialog.getByRole("button", { name: "Enviar Convite" }).click(),
     ]);
 
     const row = page.locator("tbody tr", { hasText: invitationEmail });

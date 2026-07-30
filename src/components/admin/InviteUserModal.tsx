@@ -29,7 +29,7 @@ interface InviteUserModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type AppRole = "fisioterapeuta" | "estagiario" | "admin";
+type AppRole = "fisioterapeuta" | "estagiario" | "recepcionista" | "admin";
 
 export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
   const isMobile = useIsMobile();
@@ -39,6 +39,7 @@ export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
   const [role, setRole] = useState<AppRole>("fisioterapeuta");
   const [error, setError] = useState("");
   const [inviteLink, setInviteLink] = useState("");
+  const [emailSent, setEmailSent] = useState(true);
   const [copied, setCopied] = useState(false);
 
   const handleCreateInvite = async (e?: React.FormEvent) => {
@@ -55,7 +56,7 @@ export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
         return;
       }
 
-      const { data } = await invitationsApi.create({
+      const { data, email_sent } = await invitationsApi.create({
         email,
         role,
       });
@@ -66,13 +67,22 @@ export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
 
       // Gerar link de convite
       const inviteData = data as { token: string; expires_at: string };
-      const link = `${window.location.origin}/auth?invite=${inviteData.token}`;
+      const link = `${window.location.origin}/auth?invite=${inviteData.token}&mode=register`;
       setInviteLink(link);
+      setEmailSent(email_sent !== false);
 
-      toast({
-        title: "Convite criado com sucesso!",
-        description: `Convite enviado para ${email}`,
-      });
+      toast(
+        email_sent === false
+          ? {
+              title: "Convite criado, mas o e-mail não saiu",
+              description: "Copie o link abaixo e envie manualmente.",
+              variant: "destructive",
+            }
+          : {
+              title: "Convite enviado!",
+              description: `E-mail com o link de acesso enviado para ${email}`,
+            },
+      );
     } catch (err: unknown) {
       logger.error("Error creating invitation", err, "InviteUserModal");
       const errorMessage =
@@ -98,6 +108,7 @@ export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
     setRole("fisioterapeuta");
     setError("");
     setInviteLink("");
+    setEmailSent(true);
     setCopied(false);
   };
 
@@ -125,8 +136,8 @@ export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
           {!inviteLink ? (
             <>
               <p className="text-sm text-muted-foreground">
-                Envie um convite para adicionar um novo membro à sua organização. O usuário receberá
-                as permissões baseadas na função escolhida.
+                Enviamos um e-mail com o link de acesso. Ao criar a conta pelo link, o usuário já
+                entra com as permissões do papel escolhido, sem precisar de aprovação.
               </p>
 
               <form id="invite-form" onSubmit={handleCreateInvite} className="space-y-4">
@@ -175,6 +186,12 @@ export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
                           Estagiário
                         </div>
                       </SelectItem>
+                      <SelectItem value="recepcionista">
+                        <div className="flex items-center gap-2">
+                          <UserPlus className="h-4 w-4 text-emerald-500" />
+                          Recepcionista
+                        </div>
+                      </SelectItem>
                       <SelectItem value="admin">
                         <div className="flex items-center gap-2">
                           <Shield className="h-4 w-4 text-rose-500" />
@@ -197,13 +214,22 @@ export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
             </>
           ) : (
             <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
-              <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex items-start gap-3 text-emerald-800">
+              <div
+                className={
+                  emailSent
+                    ? "bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex items-start gap-3 text-emerald-800"
+                    : "bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-start gap-3 text-amber-900"
+                }
+              >
                 <Check className="h-5 w-5 shrink-0 mt-0.5" />
                 <div className="text-xs leading-relaxed">
-                  <p className="font-bold mb-1">Convite criado com sucesso!</p>
+                  <p className="font-bold mb-1">
+                    {emailSent ? "Convite enviado por e-mail!" : "Convite criado, e-mail não saiu"}
+                  </p>
                   <p>
-                    Compartilhe o link abaixo com o usuário para que ele possa completar o cadastro.
-                    Este link expira em 7 dias.
+                    {emailSent
+                      ? "O usuário já recebeu o link de acesso por e-mail. Se preferir, use também o link abaixo. Ele expira em 7 dias."
+                      : "Não conseguimos enviar o e-mail. Compartilhe o link abaixo com o usuário. Ele expira em 7 dias."}
                   </p>
                 </div>
               </div>
@@ -258,7 +284,7 @@ export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
             ) : (
               <UserPlus className="h-4 w-4" />
             )}
-            Gerar Link de Convite
+            Enviar Convite
           </Button>
         )}
       </CustomModalFooter>

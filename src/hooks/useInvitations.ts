@@ -6,7 +6,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { invitationsApi } from "@/api/v2";
 
-export type AppRole = "admin" | "fisioterapeuta" | "estagiario" | "paciente";
+export type AppRole =
+  | "admin"
+  | "fisioterapeuta"
+  | "estagiario"
+  | "recepcionista"
+  | "parceiro"
+  | "paciente";
 
 export interface Invitation {
   id: string;

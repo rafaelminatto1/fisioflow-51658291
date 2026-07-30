@@ -1,12 +1,27 @@
-import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Mail } from "lucide-react";
 import { MembersManager } from "@/components/admin/MembersManager";
 import { InvitationsManager } from "@/components/admin/InvitationsManager";
 
+const TABS = ["members", "invitations"] as const;
+
 export default function UserManagement() {
-  const [activeTab, setActiveTab] = useState("members");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const activeTab = TABS.includes(tabParam as (typeof TABS)[number]) ? tabParam! : "members";
+
+  const setActiveTab = (tab: string) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("tab", tab);
+        return next;
+      },
+      { replace: true },
+    );
+  };
 
   return (
     <PageLayout>
@@ -24,7 +39,7 @@ export default function UserManagement() {
               </TabsTrigger>
               <TabsTrigger value="invitations" className="flex items-center gap-2 px-6">
                 <Mail className="h-4 w-4" />
-                Convites Pendentes
+                Convites
               </TabsTrigger>
             </TabsList>
 
