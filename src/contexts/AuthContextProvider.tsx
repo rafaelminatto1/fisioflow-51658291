@@ -9,6 +9,7 @@ import { AuthContextType, AuthContext, AuthError, AuthUser } from "./AuthContext
 import { Profile, RegisterFormData, UserRole } from "@/types/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { setupUserTracking, clearUserTracking } from "@/lib/services/initialization";
+import { clearNotesOfflinePersistence } from "@/lib/offline/notesPersistence";
 
 /** ID da Organização Padrão (Clínica Única) */
 export const DEFAULT_ORG_ID = "00000000-0000-0000-0000-000000000001";
@@ -331,6 +332,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
     }
     invalidateNeonTokenCache();
+    await clearNotesOfflinePersistence().catch((error) => logger.warn("Limpeza do cache offline de notas falhou", error, "AuthContextProvider"));
     clearUserTracking();
     queryClient.clear();
     await loadUserAndProfile(null);

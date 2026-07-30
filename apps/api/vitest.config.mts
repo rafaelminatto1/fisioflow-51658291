@@ -5,6 +5,8 @@ const workersTest = [
   "src/agents/__tests__/EvolutionCollaboration.sync.test.ts",
   "src/agents/__tests__/EvolutionCollaboration.auth.test.ts",
   "src/agents/__tests__/EvolutionCollaboration.persist.test.ts",
+  "src/agents/__tests__/NotesCollaboration.auth.test.ts",
+  "src/agents/__tests__/NotesCollaboration.persist.test.ts",
 ];
 
 // 15s em vez dos 5s default: sob a suíte completa o primeiro teste de cada

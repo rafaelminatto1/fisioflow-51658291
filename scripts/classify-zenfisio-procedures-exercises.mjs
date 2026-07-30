@@ -6,15 +6,23 @@ import { Client } from 'pg';
 const SOURCE_DIR = path.resolve(process.env.SOURCE_DIR ?? 'scripts/zenfisio-scraper/data/zenfisio-export-20260707-incremental-fast');
 const DATABASE_URL = process.env.DATABASE_URL;
 const APPLY = process.argv.includes('--apply') || process.env.APPLY_IMPORT === '1';
+const SELF_TEST = process.argv.includes('--self-test');
 const ORG_ID = '00000000-0000-0000-0000-000000000001';
 const REPORT_PATH = path.join(SOURCE_DIR, APPLY ? 'classificacao_procedimentos_exercicios_apply.json' : 'classificacao_procedimentos_exercicios_dryrun.json');
 const SUMMARY_MD = path.join(SOURCE_DIR, 'procedimentos_exercicios_relatorio.md');
 
-if (!DATABASE_URL) throw new Error('DATABASE_URL não informado');
+if (!DATABASE_URL && !SELF_TEST) throw new Error('DATABASE_URL não informado');
 
 function cleanText(text) {
   return String(text ?? '')
+    .replace(/<br\s*\/?\s*>/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6]|tr|section|article)>/gi, '\n')
+    .replace(/<(p|div|li|h[1-6]|tr|section|article)\b[^>]*>/gi, '\n')
+    .replace(/<[^>]*>/g, ' ')
     .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&times;/gi, '')
+    .replace(/×/g, '')
     .replace(/\u00a0/g, ' ')
     .replace(/[ \t]+/g, ' ')
     .replace(/\n\s*\n+/g, '\n')
@@ -57,7 +65,7 @@ function parseBrDateTime(raw) {
 const PROCEDURE_RULES = [
   { name: 'Liberação miofascial manual', category: 'terapia_manual', anchor: /\b(?:lib\.?\s*mio|libera[cç][aã]o\s+miofascial)\b/giu },
   { name: 'Terapia combinada', category: 'eletrotermofototerapia', anchor: /\bcombinada\b/giu },
-  { name: 'TENS', category: 'eletroterapia', anchor: /\btens\b/giu },
+  { name: 'TENS', category: 'eletroterapia', anchor: /(?<![\p{L}\p{N}_])tens(?![\p{L}\p{N}_])/giu },
   { name: 'EENM / NMES', category: 'eletroterapia', anchor: /\b(?:eenm|eenn|nmes|estimula[cç][aã]o\s+el[eé]trica\s+neuromuscular)\b/giu },
   { name: 'Laserterapia', category: 'eletrotermofototerapia', anchor: /\b(?:laser|laserterapia)\b/giu },
   { name: 'Ultrassom terapêutico', category: 'eletrotermofototerapia', anchor: /\b(?:ultrassom|ultra\s*som|us\s+terap[eê]utico)\b/giu },
@@ -235,6 +243,30 @@ function classify(text, sessionId) {
     exercises: Array.from(exerciseMap.values()).map((item, index) => ({ ...item, sequenceOrder: index + 1 })),
     homeExercises: Array.from(homeMap.values()),
   };
+}
+
+if (SELF_TEST) {
+  const cases = [
+    ['tensão em quadril', false],
+    ['tensao em quadril', false],
+    ['intensidade da dor', false],
+    ['potencialmente melhor', false],
+    ['TENS em quadril', true],
+    ['Tens Acup em quadril', true],
+    ['TENS convencional', true],
+  ];
+  const failures = [];
+  for (const [text, shouldHaveTens] of cases) {
+    const result = classify(text, 'self-test');
+    const hasTens = result.procedures.some(item => item.name === 'TENS');
+    if (hasTens !== shouldHaveTens) failures.push({ text, shouldHaveTens, procedures: result.procedures });
+  }
+  if (failures.length) {
+    console.error(JSON.stringify({ ok: false, failures }, null, 2));
+    process.exit(1);
+  }
+  console.log(JSON.stringify({ ok: true, cases: cases.length }, null, 2));
+  process.exit(0);
 }
 
 async function loadFiles() {

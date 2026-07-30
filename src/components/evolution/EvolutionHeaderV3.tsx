@@ -14,6 +14,7 @@ import {
   Check,
   Sparkles,
   Mic,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,6 +59,7 @@ interface EvolutionHeaderV3Props {
   sessionNumber?: number;
   onOpenHistoryDrawer?: () => void;
   onShowAISummary?: () => void;
+  onCreatePreparationNote?: () => void;
 }
 
 function getPatientInitials(patient: Patient): string {
@@ -84,6 +86,7 @@ export const EvolutionHeaderV3 = memo(
     onShowAIScribe,
     sessionNumber = 1,
     onShowAISummary,
+    onCreatePreparationNote,
   }: EvolutionHeaderV3Props) => {
     const navigate = useNavigate();
 
@@ -185,6 +188,12 @@ export const EvolutionHeaderV3 = memo(
                 <DropdownMenuItem onClick={onShowAISummary}>
                   <Sparkles className="h-4 w-4 mr-2" />
                   Gerar resumo com IA
+                </DropdownMenuItem>
+              ) : null}
+              {onCreatePreparationNote ? (
+                <DropdownMenuItem onClick={onCreatePreparationNote}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Criar nota preparatória
                 </DropdownMenuItem>
               ) : null}
               <DropdownMenuSeparator />

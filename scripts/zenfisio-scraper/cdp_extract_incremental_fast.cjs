@@ -3,14 +3,33 @@ const fs = require('fs/promises');
 const path = require('path');
 
 const PORT = 9222;
-const OUT_DIR = '/home/rafael/Documents/fisioflow/fisioflow-51658291/scripts/zenfisio-scraper/data/zenfisio-export-20260707-incremental-fast';
-const START_DATE_ISO = '2026-07-06';
-const END_DATE_ISO = '2026-07-07';
-const START_DATE_BR = '06/07/2026';
-const END_DATE_BR = '07/07/2026';
-const BATCH_SIZE = 20;
+const OUT_DIR = process.env.OUT_DIR || '/home/rafael/Documents/fisioflow/fisioflow-51658291/scripts/zenfisio-scraper/data/zenfisio-export-20260707-incremental-fast';
+const START_DATE_ISO = process.env.START_DATE_ISO || '2026-07-06';
+const END_DATE_ISO = process.env.END_DATE_ISO || '2026-07-07';
+function isoToBr(iso) {
+  const [yyyy, mm, dd] = String(iso).split('-');
+  return `${dd}/${mm}/${yyyy}`;
+}
+const START_DATE_BR = process.env.START_DATE_BR || isoToBr(START_DATE_ISO);
+const END_DATE_BR = process.env.END_DATE_BR || isoToBr(END_DATE_ISO);
+const BATCH_SIZE = Number(process.env.BATCH_SIZE || 20);
 
-function stripHtml(html) { return String(html ?? '').replace(/<br\s*\/?\s*>/gi, '\n').replace(/<[^>]*>/g, ' ').replace(/\u00a0/g, ' ').replace(/[ \t]+/g, ' ').trim(); }
+function stripHtml(html) {
+  return String(html ?? '')
+    .replace(/<br\s*\/?\s*>/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6]|tr|section|article)>/gi, '\n')
+    .replace(/<(p|div|li|h[1-6]|tr|section|article)\b[^>]*>/gi, '\n')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&times;/gi, '')
+    .replace(/×/g, '')
+    .replace(/\u00a0/g, ' ')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n\s*\n+/g, '\n')
+    .replace(/\s+$/g, '')
+    .trim();
+}
 function slugFromHtml(s) {
   const m = String(s ?? '').match(/\/patients\/history\/([^/]+)\/history/i) || String(s ?? '').match(/\/contacts\/patients\/edit\/([^/]+)\/patients/i);
   return m ? m[1] : null;
@@ -70,15 +89,15 @@ async function processBatch(client, patients) {
       const patients = ${JSON.stringify(patients)};
       const startIso = ${JSON.stringify(START_DATE_ISO)};
       const endIso = ${JSON.stringify(END_DATE_ISO)};
-      function clean(s){ return String(s||'').replace(/\\u00a0/g,' ').replace(/[ \\t]+/g,' ').trim(); }
-      function strip(html){ return clean(String(html||'').replace(/<br\\s*\\/?\\s*>/gi, '\\n').replace(/<[^>]*>/g, ' ')); }
+      function clean(s){ return String(s||'').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/&times;/gi,'').replace(/×/g,'').replace(/\\u00a0/g,' ').replace(/[ \\t]+/g,' ').replace(/\\n\\s*\\n+/g,'\\n').replace(/\\s+$/g,'').trim(); }
+      function strip(html){ return clean(String(html||'').replace(/<br\\s*\\/?\\s*>/gi, '\\n').replace(/<\\/(p|div|li|h[1-6]|tr|section|article)>/gi, '\\n').replace(/<(p|div|li|h[1-6]|tr|section|article)\\b[^>]*>/gi, '\\n').replace(/<[^>]*>/g, ' ')); }
       function extractClinical(html, tipo) {
         const labels = /avalia/i.test(tipo) ? ['Avaliação:', 'Avaliação clínica:', 'Avaliação Clínica:'] : ['Evolução:', 'Evolução clínica:', 'Evolução Clínica:'];
         for (const label of labels) {
           const idx = html.toLowerCase().indexOf(label.toLowerCase());
           if (idx >= 0) {
             const after = html.slice(idx + label.length);
-            const stop = after.search(/(Data do atendimento|Fisioterapeuta|Profissional|Histórico|Imprimir|Voltar|Convênio|Paciente:|Anexos|Sobre o paciente)/i);
+            const stop = after.search(/(Data do atendimento|Fisioterapeuta|Profissional|Histórico|Imprimir|Voltar|Convênio|Paciente:|Anexos|Sobre o paciente|Boleto gerado com sucesso|Valor a pagar|Use este código de barras|Informações importantes:|Navegação principal|Agenda\s+Pacientes\s+Atendimentos|Profissionais\s+Cidades|Configuração geral|Central de ajuda|Indique o ZenFisio|Envie indicações|\$\.widget\.bridge|showCompleteRegistration|updateNotifications)/i);
             const frag = stop >= 0 ? after.slice(0, stop) : after.slice(0, 6000);
             const text = strip(frag);
             if (text.length > 2) return text;
@@ -90,7 +109,7 @@ async function processBatch(client, patients) {
         for (const t of nodes) {
           if (/^(Evolução|Avaliação):?/i.test(t)) { capture = true; continue; }
           if (capture) {
-            if (/^(Histórico|Imprimir|Voltar|Profissional:|Fisioterapeuta:|Data do atendimento:|Convênio:|Endereço:|Sexo:|Data de nascimento:|Sobre o paciente)/i.test(t)) break;
+            if (/^(Histórico|Imprimir|Voltar|Profissional:|Fisioterapeuta:|Data do atendimento:|Convênio:|Endereço:|Sexo:|Data de nascimento:|Sobre o paciente|Boleto gerado com sucesso|Valor a pagar|Use este código de barras|Informações importantes:|Navegação principal|Agenda|Pacientes|Atendimentos|Profissionais|Cidades|Configuração geral|Central de ajuda|Indique o ZenFisio|Envie indicações)/i.test(t)) break;
             if (!out.includes(t)) out.push(t);
           }
         }

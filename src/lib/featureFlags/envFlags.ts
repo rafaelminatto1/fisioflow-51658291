@@ -8,6 +8,10 @@
 
 // Tipos para as features
 export interface FeatureFlags {
+  notes_v1: boolean;
+  notes_clinical_ai: boolean;
+  notes_offline: boolean;
+  notes_public_links: boolean;
   new_dashboard: boolean;
   ai_transcription: boolean;
   ai_chatbot: boolean;
@@ -41,6 +45,12 @@ const getEnv = (key: string) => {
  */
 export function getFeatureFlagsFromEnv(): Partial<FeatureFlags> {
   return {
+    // Central de Notas — ativo por padrão; staging/pilotos podem desligar no build.
+    notes_v1: getEnv("VITE_FEATURE_NOTES_V1") !== "false",
+    // Recursos condicionados por privacidade: desligados por padrão.
+    notes_clinical_ai: getEnv("VITE_FEATURE_NOTES_CLINICAL_AI") === "true",
+    notes_offline: getEnv("VITE_FEATURE_NOTES_OFFLINE") === "true",
+    notes_public_links: getEnv("VITE_FEATURE_NOTES_PUBLIC_LINKS") === "true",
     // Dashboard
     new_dashboard: getEnv("VITE_FEATURE_NEW_DASHBOARD") === "true",
 

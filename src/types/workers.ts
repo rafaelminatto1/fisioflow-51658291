@@ -463,6 +463,15 @@ export interface PatientRow {
   sportsPracticed?: string[] | null;
   therapy_focuses?: string[] | null;
   therapyFocuses?: string[] | null;
+  allergies_general?: string[] | null;
+  allergiesGeneral?: string[] | null;
+  allergies_medicines?: string[] | null;
+  allergiesMedicines?: string[] | null;
+  medications_in_use?: string[] | null;
+  medicationsInUse?: string[] | null;
+  pathologies_active?: string[] | null;
+  pathologiesActive?: string[] | null;
+  alerts?: string[] | null;
   payer_model?: string | null;
   payerModel?: string | null;
   partner_company_name?: string | null;
@@ -521,8 +530,24 @@ export interface PatientStats {
 export interface PatientMedicalRecord {
   id: string;
   patient_id: string;
-  date: string;
-  content: string;
+  organization_id?: string | null;
+  record_date?: string | null;
+  chief_complaint?: string | null;
+  medical_history?: string | null;
+  current_history?: string | null;
+  past_history?: string | null;
+  current_medications?: string | null;
+  medications?: Array<Record<string, unknown>> | string[] | null;
+  allergies?: Array<Record<string, unknown>> | string[] | null;
+  previous_surgeries?: string | null;
+  family_history?: string | null;
+  lifestyle_habits?: string | null;
+  physical_activity?: string | null;
+  physical_exam?: Record<string, unknown> | null;
+  diagnosis?: string | null;
+  created_by?: string | null;
+  date?: string;
+  content?: string;
   created_at: string;
   updated_at: string;
 }

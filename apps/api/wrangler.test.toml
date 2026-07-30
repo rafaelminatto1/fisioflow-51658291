@@ -3,10 +3,22 @@ main = "src/agents/__tests__/collab-test-worker.ts"
 compatibility_date = "2026-06-06"
 compatibility_flags = ["nodejs_compat"]
 
+[[kv_namespaces]]
+binding = "FISIOFLOW_CONFIG"
+id = "test-notes-collaboration-config"
+
 [[durable_objects.bindings]]
 name = "EVOLUTION_COLLABORATION"
 class_name = "EvolutionCollaborationSql"
 
+[[durable_objects.bindings]]
+name = "NOTES_COLLABORATION"
+class_name = "NotesCollaboration"
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["EvolutionCollaborationSql"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["NotesCollaboration"]

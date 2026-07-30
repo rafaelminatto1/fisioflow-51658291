@@ -37,6 +37,7 @@ import { useAutoSaveSoapRecord } from '@/hooks/useSoapRecords';
 import { useEvolutionDraft } from '@/hooks/useEvolutionDraft';
 import { useOfflineSync, ACTION_TYPES, enqueueAction } from '@/services/offlineSync';
 import { stripHtml } from '@/lib/utils/stripHtml';
+import { notesApi } from '@/api/v2/notes';
 import { getOrCreateEvolutionDeviceId } from '@/lib/evolution/evolutionDeviceId';
 import { shouldOpenEvolutionConflictModal } from './patientEvolutionConflict';
 
@@ -767,6 +768,19 @@ const PatientEvolution = () => {
     },
     {}
   );
+  const openPreparationNote = async () => {
+    if (!state.currentSoapRecordId) {
+      toast.error('Salve a evolução ao menos uma vez antes de criar a nota preparatória.');
+      return;
+    }
+    try {
+      const result = await notesApi.openForSession(state.currentSoapRecordId);
+      navigate(`/notes/${result.data.id}`);
+      toast.success(result.created ? 'Nota preparatória criada' : 'Abrindo nota preparatória');
+    } catch (error) {
+      toast.error(`Não foi possível criar a nota preparatória: ${(error as Error).message}`);
+    }
+  };
 
   return (
     <PageLayout compactHeader fullWidth noPadding className="h-screen overflow-hidden">
@@ -794,6 +808,7 @@ const PatientEvolution = () => {
             onShowKeyboardHelp={() => state.setShowKeyboardHelp(true)}
             onShowAIScribe={() => state.setShowAIScribe(true)}
             onShowAISummary={() => setSoapSummaryOpen(true)}
+            onCreatePreparationNote={() => void openPreparationNote()}
           />
 
           <EvolutionTabsBar

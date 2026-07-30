@@ -146,6 +146,10 @@ export interface Env {
   LEAD_SCORING_AI?: string;
   /** Base URL pública para links de NPS (ex: https://app.moocafisio.com.br). */
   NPS_PUBLIC_BASE_URL?: string;
+  /** Recursos de notas sensíveis; desligados por padrão e sujeitos a opt-in. */
+  NOTES_CLINICAL_AI_ENABLED?: string;
+  NOTES_OFFLINE_ENABLED?: string;
+  NOTES_PUBLIC_LINKS_ENABLED?: string;
 
   // Cloudflare Images API (transform, resize, WebP/AVIF, watermark)
   IMAGES?: {

@@ -143,6 +143,7 @@ const PatientProfileContent = () => {
     "financial",
     "gamification",
     "documents",
+    "notes",
     "tasks",
     "evidence",
   ] as const;
@@ -476,6 +477,13 @@ const PatientProfileContent = () => {
                     Arquivos
                   </TabsTrigger>
                   <TabsTrigger
+                    value="notes"
+                    className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
+                  >
+                    <ClipboardList className="h-4 w-4" />
+                    Notas
+                  </TabsTrigger>
+                  <TabsTrigger
                     value="tasks"
                     className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
                   >
@@ -563,7 +571,7 @@ const PatientProfileContent = () => {
                     value="clinical"
                     className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
                   >
-                    <PatientClinicalHistoryTab patientId={id || ""} />
+                    <PatientClinicalHistoryTab patientId={id || ""} patient={patient as any} />
                   </TabsContent>
 
                   <TabsContent
@@ -598,6 +606,20 @@ const PatientProfileContent = () => {
                       documents={documents as any}
                       isLoading={isLoadingDocuments}
                     />
+                  </TabsContent>
+
+                  <TabsContent
+                    value="notes"
+                    className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
+                  >
+                    <div className="rounded-3xl border border-blue-100 bg-white p-8 shadow-premium-sm">
+                      <h3 className="flex items-center gap-2 text-lg font-black uppercase tracking-tight">
+                        <ClipboardList className="h-5 w-5 text-blue-600" />
+                        Notas de contexto
+                      </h3>
+                      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Anotações vinculadas a este paciente ficam na Central de Notas, com permissões e histórico próprios. A evolução clínica oficial continua separada.</p>
+                      <Button className="mt-5" onClick={() => navigate(`/notes?patientId=${encodeURIComponent(id || "")}`)}>Abrir notas do paciente</Button>
+                    </div>
                   </TabsContent>
 
                   <TabsContent

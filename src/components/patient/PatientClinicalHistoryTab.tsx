@@ -1,14 +1,32 @@
-import { Suspense, lazy, useMemo, useState } from "react";
+import { Suspense, lazy, useMemo, useState, type ComponentType } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { useSoapRecordsV2 } from "@/hooks/useSoapRecordsV2";
 import { useCreateSoapRecord } from "@/hooks/useSoapRecords";
+import { useMedicalRecords } from "@/hooks/useMedicalRecords";
 import { usePatientEvaluationResponses } from "@/hooks/useEvaluationForms";
+import { patientsApi } from "@/api/v2/patients";
+import type { PatientMedicalRecord, PatientRow } from "@/types/workers";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CalendarClock, CheckCircle2, Clock3, FileText, PlayCircle, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  CalendarClock,
+  CheckCircle2,
+  ClipboardList,
+  Clock3,
+  Dumbbell,
+  FileText,
+  Goal,
+  Pill,
+  PlayCircle,
+  ShieldAlert,
+  Stethoscope,
+  XCircle,
+} from "lucide-react";
 import { formatAnyDate } from "@/lib/date-utils";
 
 const LazySessionHistoryPanel = lazy(() =>
@@ -19,6 +37,7 @@ const LazySessionHistoryPanel = lazy(() =>
 
 interface PatientClinicalHistoryTabProps {
   patientId: string;
+  patient?: Partial<PatientRow> | null;
 }
 
 const statusConfig = {
@@ -53,11 +72,231 @@ function formatEvaluationDate(value?: string | null) {
   return formatAnyDate(value, "dd/MM/yyyy HH:mm", "Data inválida");
 }
 
-export function PatientClinicalHistoryTab({ patientId }: PatientClinicalHistoryTabProps) {
+function asList(value: unknown): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => {
+        if (typeof item === "string") return item;
+        if (item && typeof item === "object") {
+          const record = item as Record<string, unknown>;
+          return String(record.name ?? record.allergen ?? record.text ?? record.value ?? "");
+        }
+        return String(item ?? "");
+      })
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    try {
+      return asList(JSON.parse(trimmed));
+    } catch {
+      return trimmed
+        .split(/\n|;/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+  }
+  return [];
+}
+
+function unique(values: string[]) {
+  return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
+}
+
+function latestZenFisioRecord(records: PatientMedicalRecord[]) {
+  return records.find((record) => {
+    const exam = record.physical_exam;
+    return exam && typeof exam === "object" && exam.source === "zenfisio_evaluation_edit";
+  });
+}
+
+function rawTextFromRecord(record?: PatientMedicalRecord) {
+  const fields = record?.physical_exam?.fields;
+  if (!fields || typeof fields !== "object" || Array.isArray(fields)) return "";
+  return Object.entries(fields as Record<string, unknown>)
+    .map(([label, value]) => `${label}: ${String(value ?? "")}`)
+    .join("\n");
+}
+
+function extractGoals(records: PatientMedicalRecord[], evaluations: Array<{ responses?: Record<string, unknown> | null }>) {
+  const texts = [
+    ...records.flatMap((record) => [record.medical_history, record.current_history, record.diagnosis]),
+    ...evaluations.map((evaluation) => JSON.stringify(evaluation.responses ?? {})),
+  ].filter((item): item is string => Boolean(item));
+
+  const goals = new Set<string>();
+  for (const text of texts) {
+    if (/retorno\s+ao\s+esporte|gesto\s+esportivo|corrida|performance/i.test(text)) {
+      goals.add("Retorno ao esporte/performance");
+    }
+    if (/redu[cç][aã]o\s+de\s+dor|analgesia|dor/i.test(text)) {
+      goals.add("Redução de dor");
+    }
+    if (/for[cç]a|fortalecimento/i.test(text)) {
+      goals.add("Ganho de força");
+    }
+    if (/mobilidade|ADM|amplitude/i.test(text)) {
+      goals.add("Mobilidade/ADM");
+    }
+  }
+  return Array.from(goals).slice(0, 6);
+}
+
+interface SummaryCardProps {
+  icon: ComponentType<{ className?: string }>;
+  title: string;
+  items: string[];
+  empty: string;
+  tone?: "red" | "amber" | "blue" | "emerald" | "slate";
+}
+
+function SummaryCard({ icon: Icon, title, items, empty, tone = "blue" }: SummaryCardProps) {
+  const toneClass = {
+    red: "text-red-700 bg-red-50 border-red-100",
+    amber: "text-amber-700 bg-amber-50 border-amber-100",
+    blue: "text-blue-700 bg-blue-50 border-blue-100",
+    emerald: "text-emerald-700 bg-emerald-50 border-emerald-100",
+    slate: "text-slate-700 bg-slate-50 border-slate-100",
+  }[tone];
+
+  return (
+    <div className="rounded-2xl border border-border/70 bg-white p-4 shadow-sm">
+      <div className="mb-3 flex items-center gap-2">
+        <span className={`rounded-xl border p-2 ${toneClass}`}>
+          <Icon className="h-4 w-4" />
+        </span>
+        <h4 className="text-sm font-black uppercase tracking-tight">{title}</h4>
+      </div>
+      {items.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {items.map((item) => (
+            <Badge key={item} variant="outline" className="rounded-lg bg-slate-50 px-2.5 py-1 text-xs">
+              {item}
+            </Badge>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">{empty}</p>
+      )}
+    </div>
+  );
+}
+
+function ClinicalProfileSummary({
+  patient,
+  records,
+  evaluations,
+  pathologies,
+  surgeries,
+}: {
+  patient?: Partial<PatientRow> | null;
+  records: PatientMedicalRecord[];
+  evaluations: Array<{ responses?: Record<string, unknown> | null }>;
+  pathologies: Array<{ name?: string; status?: string; notes?: string }>;
+  surgeries: Array<{ surgery_name?: string; surgery_date?: string | null; notes?: string | null }>;
+}) {
+  const latestImportedRecord = latestZenFisioRecord(records);
+  const sports = unique(asList(patient?.sportsPracticed ?? patient?.sports_practiced));
+  const activePathologies = unique([
+    ...asList(patient?.pathologiesActive ?? patient?.pathologies_active),
+    ...pathologies.map((pathology) => pathology.name ?? ""),
+  ]);
+  const medications = unique([
+    ...asList(patient?.medicationsInUse ?? patient?.medications_in_use),
+    ...records.flatMap((record) => [record.current_medications, ...asList(record.medications)]).filter(Boolean) as string[],
+  ]).slice(0, 8);
+  const allergies = unique([
+    ...asList(patient?.allergiesGeneral ?? patient?.allergies_general),
+    ...asList(patient?.allergiesMedicines ?? patient?.allergies_medicines),
+    ...records.flatMap((record) => asList(record.allergies)),
+  ]).slice(0, 8);
+  const alerts = unique([
+    ...asList(patient?.alerts),
+    ...allergies.map((allergy) => `Alergia: ${allergy}`),
+  ]).slice(0, 8);
+  const surgeryItems = unique(
+    surgeries.map((surgery) =>
+      [surgery.surgery_name, surgery.surgery_date ? formatAnyDate(surgery.surgery_date, "dd/MM/yyyy") : null]
+        .filter(Boolean)
+        .join(" — "),
+    ),
+  );
+  const goals = extractGoals(records, evaluations);
+  const rawPreview = rawTextFromRecord(latestImportedRecord);
+
+  return (
+    <Card className="border-blue-100 bg-white p-6 shadow-premium-sm">
+      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h3 className="flex items-center gap-2 text-lg font-black uppercase tracking-tight">
+            <Stethoscope className="h-5 w-5 text-blue-600" />
+            Perfil clínico estruturado
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Resumo conservador de anamnese, avaliações ZenFisio e campos clínicos editáveis do paciente.
+          </p>
+        </div>
+        {latestImportedRecord ? (
+          <Badge variant="outline" className="w-fit rounded-xl border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700">
+            Fonte ZenFisio preservada
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="w-fit rounded-xl px-3 py-1">
+            Sem avaliação ZenFisio importada
+          </Badge>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <SummaryCard icon={Dumbbell} title="Esportes" items={sports} empty="Nenhum esporte estruturado." />
+        <SummaryCard icon={ClipboardList} title="Patologias/diagnósticos" items={activePathologies} empty="Nenhum diagnóstico estruturado." tone="emerald" />
+        <SummaryCard icon={ShieldAlert} title="Cirurgias" items={surgeryItems} empty="Nenhuma cirurgia estruturada." tone="amber" />
+        <SummaryCard icon={Pill} title="Medicações" items={medications} empty="Nenhuma medicação contínua estruturada." tone="slate" />
+        <SummaryCard icon={AlertTriangle} title="Alertas/alergias" items={alerts} empty="Nenhum alerta ou alergia estruturado." tone={alerts.length ? "red" : "slate"} />
+        <SummaryCard icon={Goal} title="Objetivos prováveis" items={goals} empty="Sem objetivos extraídos com confiança." tone="blue" />
+      </div>
+
+      {latestImportedRecord && rawPreview ? (
+        <details className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <summary className="cursor-pointer text-sm font-bold text-slate-700">
+            Ver dados brutos preservados da avaliação ZenFisio
+          </summary>
+          <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap rounded-xl bg-white p-3 text-xs leading-relaxed text-slate-700">
+            {rawPreview}
+          </pre>
+        </details>
+      ) : null}
+    </Card>
+  );
+}
+
+export function PatientClinicalHistoryTab({ patientId, patient }: PatientClinicalHistoryTabProps) {
   const navigate = useNavigate();
   const { data: records = [] } = useSoapRecordsV2(patientId);
+  const { data: medicalRecords = [] } = useMedicalRecords(patientId);
   const { data: evaluations = [], isLoading: isLoadingEvaluations } =
     usePatientEvaluationResponses(patientId);
+  const { data: pathologies = [] } = useQuery({
+    queryKey: ["patient-pathologies", patientId],
+    queryFn: async () => {
+      if (!patientId) return [];
+      const response = await patientsApi.pathologies(patientId);
+      return response.data ?? [];
+    },
+    enabled: !!patientId,
+  });
+  const { data: surgeries = [] } = useQuery({
+    queryKey: ["patient-surgeries", patientId],
+    queryFn: async () => {
+      if (!patientId) return [];
+      const response = await patientsApi.surgeries(patientId);
+      return response.data ?? [];
+    },
+    enabled: !!patientId,
+  });
   const createSoapRecord = useCreateSoapRecord();
   const [replicatingId, setReplicatingId] = useState<string | null>(null);
 
@@ -109,6 +348,14 @@ export function PatientClinicalHistoryTab({ patientId }: PatientClinicalHistoryT
 
   return (
     <div className="space-y-6">
+      <ClinicalProfileSummary
+        patient={patient}
+        records={medicalRecords}
+        evaluations={evaluations}
+        pathologies={pathologies}
+        surgeries={surgeries}
+      />
+
       <Card className="border-blue-100 p-6 shadow-premium-sm">
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>

@@ -567,3 +567,202 @@ head_sampling_rate = 0.1
 [env.production.observability.traces]
 enabled = true
 head_sampling_rate = 0.05
+
+# ===== AMBIENTE DE STAGING =====
+# Bindings não são herdados pelo Wrangler. Esta seção é deliberadamente explícita
+# para impedir que testes de notas, anexos ou colaboração toquem recursos de produção.
+[env.staging]
+name = "fisioflow-api-staging"
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+MONITOR_HEALTH_URL = "https://fisioflow-api-staging.rafalegollas.workers.dev/api/health"
+MONITOR_NTFY_TOPIC = "fisioflow-mon-rafael-staging"
+MONITOR_AI_GATEWAY_URL = "https://fisioflow-ai-gateway.rafalegollas.workers.dev/health"
+IMAGE_TRANSFORMATIONS = "enabled"
+GOOGLE_AI_PREMIUM_ENABLED = "false"
+R2_PUBLIC_URL = "https://pub-7d7f6b6af4684fb3a18be682c4b610d9.r2.dev"
+ALLOWED_ORIGINS = "https://fisioflow-web-staging.rafalegollas.workers.dev,http://localhost:5173"
+GOOGLE_MAPS_API_KEY = ""
+NEON_AUTH_URL = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech/neondb/auth"
+NEON_AUTH_JWKS_URL = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
+NEON_AUTH_ISSUER = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech"
+NEON_AUTH_AUDIENCE = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech"
+PAGES_URL = "https://fisioflow-web-staging.rafalegollas.workers.dev"
+FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway-staging"
+TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
+AXIOM_ORG_ID = "activity-dbyc"
+AXIOM_DATASET = "fisioflow-logs-staging"
+
+[[env.staging.kv_namespaces]]
+binding = "FISIOFLOW_CONFIG"
+id = "774bb5738e634d7ea9dc53d410a13218"
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "fisioflow-db-staging"
+database_id = "39b12788-3de4-4421-b5c3-1cc594abe207"
+
+[[env.staging.d1_databases]]
+binding = "EDGE_CACHE"
+database_name = "fisioflow-edge-cache-staging"
+database_id = "adb59c9c-f22b-467d-a04e-e8e54cf987ed"
+
+[[env.staging.analytics_engine_datasets]]
+binding = "ANALYTICS"
+dataset = "fisioflow_events_staging"
+
+[[env.staging.ai_search]]
+binding = "AI_SEARCH"
+instance_name = "fisioflow-rag-staging"
+
+[[env.staging.pipelines]]
+binding = "EVENTS_PIPELINE"
+stream = "cbf62503169e4dadacbcb72b0534100f"
+
+[[env.staging.workflows]]
+name = "appointment-reminder"
+binding = "WORKFLOW_APPOINTMENT_REMINDER"
+class_name = "AppointmentReminderWorkflow"
+
+[[env.staging.workflows]]
+name = "patient-onboarding"
+binding = "WORKFLOW_PATIENT_ONBOARDING"
+class_name = "PatientOnboardingWorkflow"
+
+[[env.staging.workflows]]
+name = "nfse-emission"
+binding = "WORKFLOW_NFSE"
+class_name = "NFSeWorkflow"
+
+[[env.staging.workflows]]
+name = "hep-compliance"
+binding = "WORKFLOW_HEP_COMPLIANCE"
+class_name = "HEPComplianceWorkflow"
+
+[[env.staging.workflows]]
+name = "patient-discharge"
+binding = "WORKFLOW_DISCHARGE"
+class_name = "PatientDischargeWorkflow"
+
+[[env.staging.workflows]]
+name = "patient-reengagement"
+binding = "WORKFLOW_REENGAGEMENT"
+class_name = "PatientReengagementWorkflow"
+
+[[env.staging.workflows]]
+name = "patient-digital-twin"
+binding = "WORKFLOW_DIGITAL_TWIN"
+class_name = "PatientDigitalTwinWorkflow"
+
+[[env.staging.workflows]]
+name = "wiki-sync"
+binding = "WORKFLOW_WIKI_SYNC"
+class_name = "WikiSyncWorkflow"
+schedules = ["0 9 * * *"]
+
+[[env.staging.workflows]]
+name = "knowledge-sync"
+binding = "WORKFLOW_KNOWLEDGE_SYNC"
+class_name = "KnowledgeSyncWorkflow"
+schedules = ["10 10 * * 1"]
+
+[[env.staging.workflows]]
+name = "session-summary"
+binding = "WORKFLOW_SESSION_SUMMARY"
+class_name = "SessionSummaryWorkflow"
+
+[[env.staging.workflows]]
+name = "biomechanics-analysis"
+binding = "WORKFLOW_BIOMECHANICS_ANALYSIS"
+class_name = "BiomechanicsAnalysisWorkflow"
+
+[[env.staging.workflows]]
+name = "automation-executor"
+binding = "WORKFLOW_AUTOMATION"
+class_name = "AutomationExecutor"
+
+[[env.staging.hyperdrive]]
+binding = "HYPERDRIVE"
+id = "37189eb42d314a0a8fd0e169a2b27ad1"
+
+[[env.staging.r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "fisioflow-media-staging"
+
+[[env.staging.r2_buckets]]
+binding = "EXAMS_BUCKET"
+bucket_name = "fisioflow-exams-staging"
+
+[[env.staging.r2_buckets]]
+binding = "CLINICAL_DOCS_BUCKET"
+bucket_name = "fisioflow-clinical-docs-staging"
+
+[env.staging.stream]
+binding = "STREAM"
+
+[env.staging.durable_objects]
+bindings = [
+  { name = "ORGANIZATION_STATE", class_name = "OrganizationState" },
+  { name = "PATIENT_AGENT", class_name = "PatientAgentSql" },
+  { name = "ASSESSMENT_LIVE_SESSION", class_name = "AssessmentLiveSession" },
+  { name = "CLINIC_AGENT", class_name = "ClinicAgentSql" },
+  { name = "VOICE_SCRIBE_AGENT", class_name = "VoiceScribeAgent" },
+  { name = "EVOLUTION_COLLABORATION", class_name = "EvolutionCollaborationSql" },
+  { name = "NOTES_COLLABORATION", class_name = "NotesCollaboration" },
+]
+
+[[env.staging.migrations]]
+tag = "v9"
+new_sqlite_classes = ["VoiceScribeAgent"]
+
+[[env.staging.migrations]]
+tag = "v10"
+new_classes = ["EvolutionCollaboration"]
+
+[[env.staging.migrations]]
+tag = "v11"
+new_sqlite_classes = ["PatientAgentSql", "ClinicAgentSql"]
+
+[[env.staging.migrations]]
+tag = "v12"
+deleted_classes = ["PatientAgent", "ClinicAgent"]
+
+[[env.staging.migrations]]
+tag = "v13"
+new_sqlite_classes = ["EvolutionCollaborationSql"]
+
+[[env.staging.migrations]]
+tag = "v14"
+deleted_classes = ["EvolutionCollaboration"]
+
+[[env.staging.migrations]]
+tag = "v15"
+new_sqlite_classes = ["NotesCollaboration"]
+
+[env.staging.ai]
+binding = "AI"
+
+[env.staging.browser]
+binding = "BROWSER"
+
+[[env.staging.queues.producers]]
+queue = "fisioflow-background-tasks-staging"
+binding = "BACKGROUND_QUEUE"
+
+[[env.staging.queues.consumers]]
+queue = "fisioflow-background-tasks-staging"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "fisioflow-tasks-dlq-staging"
+
+[env.staging.observability]
+enabled = true
+
+[env.staging.observability.logs]
+head_sampling_rate = 0.1
+
+[env.staging.observability.traces]
+enabled = true
+head_sampling_rate = 0.05

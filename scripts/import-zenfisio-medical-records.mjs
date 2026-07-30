@@ -23,7 +23,19 @@ function parseBrDate(raw) {
   return `${yyyy}-${mm}-${dd}`;
 }
 function clean(text) {
-  return String(text ?? '').replace(/&nbsp;/gi, ' ').replace(/\u00a0/g, ' ').replace(/[ \t]+/g, ' ').replace(/\n\s*\n+/g, '\n').trim();
+  return String(text ?? '')
+    .replace(/<br\s*\/?\s*>/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6]|tr|section|article)>/gi, '\n')
+    .replace(/<(p|div|li|h[1-6]|tr|section|article)\b[^>]*>/gi, '\n')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&times;/gi, '')
+    .replace(/×/g, '')
+    .replace(/\u00a0/g, ' ')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n\s*\n+/g, '\n')
+    .trim();
 }
 function extractSection(text, startLabels, endLabels) {
   const raw = clean(text);

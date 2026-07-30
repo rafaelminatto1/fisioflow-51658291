@@ -176,6 +176,7 @@ const clinicaGestaoSubmenu = [
   { icon: MessageSquare, label: "Comunicação", href: "/communications" },
   { icon: Package, label: "Estoque", href: "/inventory" },
   { icon: BookOpen, label: "Wiki Clínica", href: "/wiki" },
+  { icon: FileText, label: "Notas", href: "/notes" },
   { icon: FileText, label: "Cadastros", href: "/cadastros" },
 ];
 
@@ -292,6 +293,7 @@ export function Sidebar() {
     location.pathname === "/communications" ||
     location.pathname === "/inventory" ||
     location.pathname === "/wiki" ||
+    location.pathname.startsWith("/notes") ||
     location.pathname === "/cadastros";
 
   const handleLogout = async () => {

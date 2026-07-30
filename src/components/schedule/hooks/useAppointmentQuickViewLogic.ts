@@ -8,6 +8,7 @@ import { useUpdateAppointment } from "@/hooks/useAppointments";
 import { APP_ROUTES, patientRoutes } from "@/lib/routing/appRoutes";
 import { prefetchRoute, RouteKeys } from "@/lib/routing/routePrefetch";
 import { appointmentsApi } from "@/api/v2";
+import { notesApi } from "@/api/v2/notes";
 import { normalizeStatus } from "../shared/appointment-status";
 import { type Appointment, type AppointmentStatus } from "@/types/appointment";
 
@@ -131,6 +132,17 @@ export const useAppointmentQuickViewLogic = ({
     navigate(`${APP_ROUTES.EXERCISES}?patientId=${appointment.patientId}`);
     onOpenChange?.(false);
   }, [appointment.patientId, navigate, onOpenChange]);
+
+  const handleOpenAppointmentNote = useCallback(async () => {
+    try {
+      const result = await notesApi.openForAppointment(appointment.id);
+      navigate(`/notes/${result.data.id}`);
+      onOpenChange?.(false);
+      toast.success(result.created ? "Nota de preparação criada" : "Abrindo nota de preparação");
+    } catch (error) {
+      toast.error(`Não foi possível abrir a nota do agendamento: ${(error as Error).message}`);
+    }
+  }, [appointment.id, navigate, onOpenChange]);
 
   const handleStartAttendance = useCallback(() => {
     if (localStatus === "avaliacao") {
@@ -256,6 +268,7 @@ export const useAppointmentQuickViewLogic = ({
     handleOpenEvolution,
     handleOpenEvaluation,
     handleOpenPrescription,
+    handleOpenAppointmentNote,
     handleStatusChange,
     handleNoShowConfirm,
     handleNoShowReschedule,

@@ -120,6 +120,7 @@ describe("RichTextEditor — colaboração via y-partyserver", () => {
         value=""
         onValueChange={() => {}}
         collaborationId="sess-1"
+        offlinePersistence
       />,
     );
 
@@ -129,6 +130,12 @@ describe("RichTextEditor — colaboração via y-partyserver", () => {
 
     const [name] = idbPersistenceCtor.mock.calls[0];
     expect(name).toBe("sess-1");
+  });
+
+  it("não cria persistência offline sem opt-in explícito", async () => {
+    render(<RichTextEditor value="" onValueChange={() => {}} collaborationId="sess-no-offline" />);
+    await waitFor(() => expect(yProviderCtor).toHaveBeenCalledTimes(1));
+    expect(idbPersistenceCtor).not.toHaveBeenCalled();
   });
 
   // ── Teste de binding real (evita a regressão do Gate 1) ──────────────────
@@ -146,6 +153,7 @@ describe("RichTextEditor — colaboração via y-partyserver", () => {
         value=""
         onValueChange={() => {}}
         collaborationId="sess-bind-1"
+        offlinePersistence
       />,
     );
 
@@ -178,6 +186,7 @@ describe("RichTextEditor — colaboração via y-partyserver", () => {
         value=""
         onValueChange={() => {}}
         collaborationId="sess-bind-2"
+        offlinePersistence
       />,
     );
 

@@ -6,12 +6,20 @@ import { createPool } from "../lib/db";
 import { SignJWT } from "jose";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { extractRequestContext, writeAuditLog } from "../lib/auditLog";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables & { patient?: PatientUser } }>();
 
 type DbPool = ReturnType<typeof createPool>;
 type DbRow = Record<string, unknown>;
 type PortalPayload = Record<string, unknown>;
+
+async function auditPortalNoteRead(c: any, publicationId: string, noteId: string, patient: PatientUser): Promise<void> {
+  const request = extractRequestContext(c);
+  const pool = await createPool(c.env, 15_000, "write");
+  await pool.query(`INSERT INTO note_audit_logs (organization_id, note_id, patient_id, actor_id, action, outcome, request_id, ip_address, user_agent, channel, metadata) VALUES ($1,$2,$3,$4,'note.portal_view','allowed',$5,$6,$7,'patient_portal',$8::jsonb)`, [patient.organizationId, noteId, patient.patientId, patient.id, c.req.header("X-Request-ID") ?? null, request.ipAddress ?? null, request.userAgent ?? null, JSON.stringify({ publicationId })]).catch((error) => console.warn("[patient-portal] note read audit failed", error));
+  writeAuditLog(c.env, { action: "note.portal_view", entityId: noteId, entityType: "note", userId: patient.id, organizationId: patient.organizationId, ...request, metadata: { publicationId, channel: "patient_portal" } }, c.executionCtx);
+}
 
 const tableColumnsCache = new Map<string, Promise<Set<string>>>();
 const PROFESSIONAL_ROLES = ["admin", "fisioterapeuta", "professional"];
@@ -581,6 +589,27 @@ app.use("/*", (c, next) => {
   }
   // Caso contrário, exige autenticação de paciente
   return requirePatientAuth(c as any, next);
+});
+
+// Projeção explícita de notas: o paciente nunca lê a tabela `notes` diretamente.
+app.get("/notes", async (c) => {
+  const patient = c.get("patient");
+  if (!patient) return c.json({ error: "Portal: Acesso não autorizado" }, 401);
+  const pool = await createPool(c.env);
+  const result = await pool.query(`SELECT id, note_id AS "noteId", title, content_html AS "contentHtml", content_text AS "contentText", expires_at AS "expiresAt", created_at AS "createdAt" FROM note_portal_publications WHERE organization_id = $1 AND patient_id = $2 AND revoked_at IS NULL AND expires_at > NOW() ORDER BY created_at DESC`, [patient.organizationId, patient.patientId]).catch(() => ({ rows: [] }));
+  await Promise.all(result.rows.map((row) => auditPortalNoteRead(c, String(row.id), String(row.noteId), patient)));
+  return c.json({ data: result.rows });
+});
+
+app.get("/notes/:publicationId", async (c) => {
+  const patient = c.get("patient");
+  if (!patient) return c.json({ error: "Portal: Acesso não autorizado" }, 401);
+  const publicationId = c.req.param("publicationId");
+  const pool = await createPool(c.env);
+  const result = await pool.query(`SELECT id, note_id AS "noteId", title, content_html AS "contentHtml", content_text AS "contentText", expires_at AS "expiresAt", created_at AS "createdAt" FROM note_portal_publications WHERE id = $1 AND organization_id = $2 AND patient_id = $3 AND revoked_at IS NULL AND expires_at > NOW() LIMIT 1`, [publicationId, patient.organizationId, patient.patientId]);
+  if (!result.rows.length) return c.json({ error: "Nota não disponível" }, 404);
+  await auditPortalNoteRead(c, String(result.rows[0].id), String(result.rows[0].noteId), patient);
+  return c.json({ data: result.rows[0] });
 });
 
 app.post("/bootstrap", async (c) => {

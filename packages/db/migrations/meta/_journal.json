@@ -15,6 +15,62 @@
       "when": 1783449075726,
       "tag": "0001_cooing_jigsaw",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785349175547,
+      "tag": "0002_wealthy_silverclaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1785350012166,
+      "tag": "0003_left_mac_gargan",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1785359184000,
+      "tag": "0004_notes_yjs_permissions_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1785410400000,
+      "tag": "0005_notes_appointment_idempotency",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1785414000000,
+      "tag": "0006_notes_session_idempotency",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1785420000000,
+      "tag": "0007_notes_favorites",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1785423600000,
+      "tag": "0008_notes_portal_publications",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1785427200000,
+      "tag": "0009_notes_force_rls",
+      "breakpoints": true
     }
   ]
 }

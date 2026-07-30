@@ -35,6 +35,9 @@ export * from "./evaluation_templates";
 // Premium Task Management & Accountability
 export * from "./tasks";
 
+// Connected Notes Workspace
+export * from "./notes";
+
 // Financial & Billing
 export * from "./financial";
 

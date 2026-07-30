@@ -108,6 +108,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
     handleOpenProfile,
     handleOpenEvolution,
     handleOpenEvaluation,
+    handleOpenAppointmentNote,
     handleOpenPrescription,
     handleStatusChange,
     handleNoShowConfirm,
@@ -233,6 +234,16 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
               <ClipboardList className="h-3.5 w-3.5" />
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider">Tarefa</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleOpenAppointmentNote()}
+            className="flex-1 flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-xl border border-border bg-muted/20 hover:bg-muted/50 hover:border-primary/30 hover:text-primary text-slate-500 transition-all duration-150 active:scale-95 group"
+          >
+            <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-primary/10 transition-colors">
+              <NotepadText className="h-3.5 w-3.5" />
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider">Notas</span>
           </button>
           <button
             type="button"

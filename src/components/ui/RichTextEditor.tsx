@@ -133,6 +133,17 @@ interface RichTextEditorProps {
   showToolbar?: boolean;
   /** ID para colaboração real-time (ex: soap_record_id) */
   collaborationId?: string;
+  /** Rota WebSocket que encaminha para a sala do Durable Object. */
+  collaborationPath?: string;
+  /** Rota autenticada que emite ticket efêmero para a conexão WebSocket. */
+  collaborationTicketPath?: string;
+  /**
+   * Mantém o documento colaborativo em IndexedDB. Para conteúdo clínico e
+   * sensível deve ficar desativado até existir um fluxo de dispositivo confiável.
+   */
+  offlinePersistence?: boolean;
+  /** Namespace isolado por organização/usuário para o cache local opt-in. */
+  offlinePersistenceKey?: string;
   /** Nome do usuário para o cursor de colaboração */
   userName?: string;
   /** Cor do cursor de colaboração */
@@ -168,6 +179,10 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
   accentColor = "emerald",
   showToolbar = false,
   collaborationId,
+  collaborationPath,
+  collaborationTicketPath,
+  offlinePersistence = false,
+  offlinePersistenceKey,
   userName = "Profissional",
   userColor = "#10b981",
   externalValueRevision,
@@ -248,9 +263,9 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
       return;
     }
 
-    // Persistência offline: mantém as edições localmente (IndexedDB) mesmo
-    // sem conexão com o Durable Object, sincronizando ao reconectar.
-    const idb = new IndexeddbPersistence(collaborationId, ydoc);
+    // Persistência offline é opt-in para superfícies sensíveis: nunca gravamos
+    // notas clínicas no dispositivo sem um fluxo explícito de dispositivo confiável.
+    const idb = offlinePersistence ? new IndexeddbPersistence(offlinePersistenceKey ?? collaborationId, ydoc) : null;
 
     const host = new URL(getWorkersApiUrl()).host;
     // O worker (apps/api) roteia manualmente `/api/sessions/:id/collaboration`
@@ -258,8 +273,20 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
     // "/parties/:party" do y-partyserver — por isso o `prefix` aponta
     // diretamente para a rota real, e o room não é reapendado à URL.
     const p = new YProvider(host, collaborationId, ydoc, {
-      prefix: `/api/sessions/${collaborationId}/collaboration`,
-      params: async () => ({ token: (await getNeonAccessToken()) ?? "" }),
+      prefix: collaborationPath ?? `/api/sessions/${collaborationId}/collaboration`,
+      params: async () => {
+        const token = (await getNeonAccessToken()) ?? "";
+        if (!collaborationTicketPath) return { token };
+        const response = await fetch(`${getWorkersApiUrl()}${collaborationTicketPath}`, {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          credentials: "include",
+        });
+        if (!response.ok) throw new Error("Não foi possível iniciar a colaboração");
+        const payload = await response.json() as { data?: { ticket?: string } };
+        if (!payload.data?.ticket) throw new Error("Ticket de colaboração ausente");
+        return { ticket: payload.data.ticket };
+      },
     });
     setProvider(p);
     onCollabProviderChangeRef.current?.(p);
@@ -278,10 +305,10 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
       p.off("status", handleStatus);
       p.off("synced", handleSynced);
       p.destroy();
-      idb.destroy();
+      idb?.destroy();
       onCollabProviderChangeRef.current?.(null);
     };
-  }, [collaborationId, ydoc]);
+  }, [collaborationId, collaborationPath, collaborationTicketPath, offlinePersistence, offlinePersistenceKey, ydoc]);
 
   // Limpeza dos timers no unmount para evitar leaks
   useEffect(() => {

@@ -240,6 +240,11 @@ function normalizePatientRow(row: DbRow) {
   const careProfiles = normalizeTextArray(row.careProfiles ?? row.care_profiles);
   const sportsPracticed = normalizeTextArray(row.sportsPracticed ?? row.sports_practiced);
   const therapyFocuses = normalizeTextArray(row.therapyFocuses ?? row.therapy_focuses);
+  const allergiesGeneral = normalizeTextArray(row.allergiesGeneral ?? row.allergies_general);
+  const allergiesMedicines = normalizeTextArray(row.allergiesMedicines ?? row.allergies_medicines);
+  const medicationsInUse = normalizeTextArray(row.medicationsInUse ?? row.medications_in_use);
+  const pathologiesActive = normalizeTextArray(row.pathologiesActive ?? row.pathologies_active);
+  const alerts = normalizeTextArray(row.alerts);
   const birthDate = row.birthDate ?? row.birth_date ?? row.legacyDateOfBirth ?? row.date_of_birth;
   const createdAt = row.createdAt ?? row.created_at;
   const updatedAt = row.updatedAt ?? row.updated_at;
@@ -299,6 +304,15 @@ function normalizePatientRow(row: DbRow) {
     sportsPracticed,
     therapy_focuses: therapyFocuses,
     therapyFocuses,
+    allergies_general: allergiesGeneral,
+    allergiesGeneral,
+    allergies_medicines: allergiesMedicines,
+    allergiesMedicines,
+    medications_in_use: medicationsInUse,
+    medicationsInUse,
+    pathologies_active: pathologiesActive,
+    pathologiesActive,
+    alerts,
     payer_model: trimmedString((row.payer_model ?? row.payerModel) as string) ?? null,
     payerModel: trimmedString((row.payer_model ?? row.payerModel) as string) ?? null,
     partner_company_name:

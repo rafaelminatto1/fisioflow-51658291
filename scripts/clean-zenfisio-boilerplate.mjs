@@ -18,10 +18,24 @@ const STOP_MARKERS = [
   'Solicitação de Demonstração ZenFisio',
   'Use este código de barras',
   'Informações importantes:',
+  'Navegação principal',
+  'Agenda\nPacientes\nAtendimentos',
+  'Profissionais\nCidades',
+  'Configuração geral',
+  'Central de ajuda',
+  'Indique o ZenFisio',
 ];
 
 function cleanText(text) {
-  let out = String(text ?? '').replace(/&nbsp;/gi, ' ').replace(/\u00a0/g, ' ');
+  let out = String(text ?? '')
+    .replace(/<br\s*\/?\s*>/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6]|tr|section|article)>/gi, '\n')
+    .replace(/<(p|div|li|h[1-6]|tr|section|article)\b[^>]*>/gi, '\n')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&times;/gi, '')
+    .replace(/\u00a0/g, ' ');
   let cut = -1;
   for (const marker of STOP_MARKERS) {
     const idx = out.indexOf(marker);
@@ -29,8 +43,10 @@ function cleanText(text) {
   }
   if (cut >= 0) out = out.slice(0, cut);
   return out
+    .replace(/×/g, '')
     .replace(/[ \t]+/g, ' ')
     .replace(/\n\s*\n+/g, '\n')
+    .replace(/\s*(?:&times;|×)\s*$/gi, '')
     .replace(/\s+$/g, '')
     .trim();
 }

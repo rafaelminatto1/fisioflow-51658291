@@ -19,7 +19,31 @@ type AuditAction =
   | "lgpd.data_delete"
   | "lgpd.consent_update"
   | "financial.view"
-  | "financial.create";
+  | "financial.create"
+  | "note.create"
+  | "note.create_from_appointment"
+  | "note.create_from_session"
+  | "note.view"
+  | "note.update"
+  | "note.archive"
+  | "note.permission_change"
+  | "note.revision_create"
+  | "note.revision_view"
+  | "note.mention_create"
+  | "note.task_link"
+  | "note.task_create"
+  | "note.comment_create"
+  | "note.comment_status_change"
+  | "note.permission_revoke"
+  | "note.attachment_upload"
+  | "note.attachment_download"
+  | "note.attachment_delete"
+  | "note.ai.request"
+  | "note.revision_restore"
+  | "note.portal_publish"
+  | "note.portal_revoke"
+  | "note.export"
+  | "note.portal_view";
 
 type AuditEntry = {
   action: AuditAction;

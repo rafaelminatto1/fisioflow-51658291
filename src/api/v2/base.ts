@@ -80,13 +80,14 @@ export async function request<T>(
     ? path
     : `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
   const method = options.method || "GET";
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
 
   try {
     const res = await fetch(url, {
       ...options,
       keepalive: options.keepalive,
       headers: {
-        "Content-Type": "application/json",
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
         ...authHeaders,
         ...options.headers,
       },
@@ -99,7 +100,7 @@ export async function request<T>(
       const retry = await fetch(url, {
         ...options,
         headers: {
-          "Content-Type": "application/json",
+          ...(isFormData ? {} : { "Content-Type": "application/json" }),
           Authorization: `Bearer ${refreshedToken}`,
           ...options.headers,
         },
@@ -172,6 +173,40 @@ export async function request<T>(
     }
     throw error;
   }
+}
+
+/**
+ * Faz download autenticado de conteúdo binário sem expor URLs públicas do R2.
+ * O chamador é responsável por criar e revogar a URL local do Blob.
+ */
+export async function requestBlob(path: string, options: RequestInit = {}): Promise<Blob> {
+  const baseUrl = getWorkersApiUrl();
+  const url = path.startsWith("http://") || path.startsWith("https://")
+    ? path
+    : `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
+
+  const fetchBlob = async (forceSessionReload = false) => {
+    const token = await getNeonAccessToken({ forceSessionReload });
+    return fetch(url, {
+      ...options,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...options.headers,
+      },
+    });
+  };
+
+  let response = await fetchBlob();
+  if (response.status === 401) response = await fetchBlob(true);
+  if (!response.ok) {
+    let body: unknown;
+    try { body = await response.json(); } catch { body = undefined; }
+    const error = new Error(getErrorMessage(body, `HTTP ${response.status}`)) as RequestError;
+    error.status = response.status;
+    error.payload = body;
+    throw error;
+  }
+  return response.blob();
 }
 
 export async function requestPublic<T>(path: string, options: RequestInit = {}): Promise<T> {

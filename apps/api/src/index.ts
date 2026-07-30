@@ -8,6 +8,7 @@ import { requestIdMiddleware } from "./middleware/requestId";
 import { exercisesRoutes } from "./routes/exercises";
 import { protocolsRoutes } from "./routes/protocols";
 import { wikiRoutes } from "./routes/wiki";
+import { notesRoutes } from "./routes/notes";
 import { knowledgeRoutes } from "./routes/knowledge";
 import { templatesRoutes } from "./routes/templates";
 import { sessionsRoutes } from "./routes/sessions";
@@ -303,6 +304,7 @@ const apiRoutes = [
   ["/api/exercises", exercisesRoutes],
   ["/api/protocols", protocolsRoutes],
   ["/api/wiki", wikiRoutes],
+  ["/api/notes", notesRoutes],
   ["/api/knowledge", knowledgeRoutes],
   ["/api/templates", templatesRoutes],
   ["/api/sessions", sessionsRoutes],
@@ -587,6 +589,9 @@ export default {
       if (pathname.startsWith("/api/sessions/") && pathname.endsWith("/collaboration")) {
         return handleCollaborationWS(request, env);
       }
+      if (pathname.startsWith("/api/notes/") && pathname.endsWith("/collaboration")) {
+        return handleNotesCollaborationWS(request, env);
+      }
     }
     return app.fetch(request, env, ctx);
   },
@@ -614,4 +619,11 @@ async function handleCollaborationWS(request: Request, env: Env): Promise<Respon
 
   const stub = await getServerByName(env.EVOLUTION_COLLABORATION, sessionId);
   return stub.fetch(request);
+}
+
+async function handleNotesCollaborationWS(request: Request, env: Env): Promise<Response> {
+  const noteId = new URL(request.url).pathname.split("/").at(-2);
+  if (!noteId || !env.NOTES_COLLABORATION) return new Response("Notes collaboration unavailable", { status: 503 });
+  const id = env.NOTES_COLLABORATION.idFromName(noteId);
+  return env.NOTES_COLLABORATION.get(id).fetch(request);
 }

@@ -87,17 +87,27 @@ export function parseJsonArray(value: unknown): unknown[] {
 }
 
 export function normalizeMedicalRecordRow(row: DbRow) {
+  const medications = parseJsonArray(row.medications);
+  const allergies = parseJsonArray(row.allergies);
+  const physicalExam = parseJsonObject(row.physical_exam);
+
   return {
     ...row,
     id: String(row.id),
     patient_id: String(row.patient_id),
     chief_complaint: trimmedString(row.chief_complaint) ?? null,
     medical_history: trimmedString(row.medical_history) ?? null,
+    current_history: trimmedString(row.current_history) ?? null,
+    past_history: trimmedString(row.past_history) ?? null,
     current_medications: trimmedString(row.current_medications) ?? null,
-    allergies: trimmedString(row.allergies) ?? null,
+    medications,
+    allergies,
     previous_surgeries: trimmedString(row.previous_surgeries) ?? null,
     family_history: trimmedString(row.family_history) ?? null,
     lifestyle_habits: trimmedString(row.lifestyle_habits) ?? null,
+    physical_activity: trimmedString(row.physical_activity) ?? null,
+    physical_exam: physicalExam,
+    diagnosis: trimmedString(row.diagnosis) ?? null,
     record_date: row.record_date ? String(row.record_date) : new Date().toISOString().slice(0, 10),
     created_by: trimmedString(row.created_by) ?? null,
     created_at: row.created_at ? String(row.created_at) : null,

@@ -2,7 +2,6 @@ import type { Connection, ConnectionContext, WSMessage } from "partyserver";
 import { YServer } from "y-partyserver";
 import * as Y from "yjs";
 import { seedYDocFromHtml, yDocToHtml } from "@fisioflow/evolution-editor-schema";
-import { resolveJwtCandidate } from "../lib/auth";
 import { getRawSql } from "../lib/db";
 import type { Env } from "../types/env";
 
@@ -72,9 +71,38 @@ async function loadEditableNote(
 export class NotesCollaboration extends YServer<Env> {
   static callbackOptions = { debounceWait: 1500, debounceMaxWait: 8000 };
 
+  private async loadDocumentState(): Promise<void> {
+    const sql = getRawSql(this.env, "read");
+    const result = await sql(
+      `SELECT yjs_state, content_html, content_text FROM notes WHERE id = $1 AND deleted_at IS NULL LIMIT 1`,
+      [this.name],
+    );
+    const row = result.rows?.[0] as { yjs_state?: Uint8Array | null; content_html?: string | null; content_text?: string | null } | undefined;
+    const fragment = this.document.getXmlFragment("default");
+    if (fragment.length) fragment.delete(0, fragment.length);
+    if (row?.yjs_state?.byteLength) {
+      Y.applyUpdate(this.document, row.yjs_state);
+      return;
+    }
+    const seed = row?.content_html?.trim() || (row?.content_text?.trim() ? `<p>${row.content_text}</p>` : "");
+    if (seed) seedYDocFromHtml(this.document, seed);
+  }
+
   async onConnect(connection: Connection, ctx: ConnectionContext): Promise<void> {
-    const token = new URL(ctx.request.url).searchParams.get("token");
-    const user = token ? await resolveJwtCandidate(this.env, token).catch(() => null) : null;
+    const ticket = new URL(ctx.request.url).searchParams.get("ticket");
+    const ticketKey = ticket ? `notes:collaboration-ticket:${ticket}` : "";
+    const rawTicket = ticketKey && this.env.FISIOFLOW_CONFIG
+      ? await this.env.FISIOFLOW_CONFIG.get(ticketKey, "text")
+      : null;
+    if (ticketKey) await this.env.FISIOFLOW_CONFIG?.delete(ticketKey);
+    const user = rawTicket ? (() => {
+      try {
+        const payload = JSON.parse(rawTicket) as { noteId?: string; userId?: string; organizationId?: string; roles?: string[] };
+        return payload.noteId === this.name && payload.userId && payload.organizationId
+          ? { uid: payload.userId, organizationId: payload.organizationId, roles: payload.roles ?? [] }
+          : null;
+      } catch { return null; }
+    })() : null;
     if (!user) {
       connection.close(4401, "unauthorized");
       return;
@@ -93,7 +121,7 @@ export class NotesCollaboration extends YServer<Env> {
       userId: user.uid,
       organizationId: user.organizationId,
       aclVersion: note.acl_version,
-      roles: [...new Set([user.role, ...(user.roles ?? [])].filter((role): role is string => Boolean(role)))],
+      roles: [...new Set(user.roles ?? [])],
     } satisfies NotesConnectionState);
     await super.onConnect(connection, ctx);
   }
@@ -115,34 +143,20 @@ export class NotesCollaboration extends YServer<Env> {
       return;
     }
     if (note.acl_version !== state.aclVersion) {
+      // Uma restauração invalida o snapshot em memória. Recarregar antes do
+      // próximo update impede que um socket antigo sobrescreva a versão restaurada.
+      await this.loadDocumentState().catch(() => undefined);
       connection.setState({ ...state, aclVersion: note.acl_version });
     }
     await super.onMessage(connection, message);
   }
 
   async onLoad(): Promise<void> {
-    const sql = getRawSql(this.env, "read");
-    const result = await sql(
-      `SELECT yjs_state, content_html, content_text
-       FROM notes WHERE id = $1 AND deleted_at IS NULL LIMIT 1`,
-      [this.name],
-    );
-    const row = result.rows?.[0] as
-      | { yjs_state?: Uint8Array | null; content_html?: string | null; content_text?: string | null }
-      | undefined;
-    const snapshot = row?.yjs_state;
-    if (snapshot?.byteLength) Y.applyUpdate(this.document, snapshot);
-
-    if (this.document.getXmlFragment("default").length === 0) {
-      const seed = row?.content_html?.trim() || (row?.content_text?.trim() ? `<p>${row.content_text}</p>` : "");
-      if (seed) {
-        try {
-          seedYDocFromHtml(this.document, seed);
-        } catch (error) {
-          console.error("[NotesCollaboration] unable to seed Y.Doc", error);
-          this.env.ANALYTICS?.writeDataPoint?.({ blobs: ["notes_collab_seed_error", this.name], doubles: [1] });
-        }
-      }
+    try {
+      await this.loadDocumentState();
+    } catch (error) {
+      console.error("[NotesCollaboration] unable to seed Y.Doc", error);
+      this.env.ANALYTICS?.writeDataPoint?.({ blobs: ["notes_collab_seed_error", this.name], doubles: [1] });
     }
   }
 

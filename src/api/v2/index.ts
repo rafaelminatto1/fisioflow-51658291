@@ -20,6 +20,7 @@ export * from "./iaStudio";
 export * from "./imaging";
 export * from "./insights";
 export * from "./knowledge";
+export * from "./notes";
 export * from "./marketing";
 export * from "./operations";
 export * from "./patients";

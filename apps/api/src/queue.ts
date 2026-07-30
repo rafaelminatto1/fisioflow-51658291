@@ -16,6 +16,7 @@ import { backoffDelay } from "./lib/queueBackoff";
 import { resolveOrCreateContact } from "./lib/whatsapp-identity";
 import { findOrCreateConversation, addMessage } from "./lib/whatsapp-conversations";
 import { broadcastToOrg } from "./lib/realtime";
+import { syncNoteToSemanticIndex } from "./lib/notesIndexing";
 
 export type WhatsAppQueuePayload = {
   to: string;
@@ -112,7 +113,8 @@ export type QueueTask =
         vars: string[];
       };
     }
-  | { type: "REINDEX_KB_ITEM"; payload: ReindexKbItemPayload };
+  | { type: "REINDEX_KB_ITEM"; payload: ReindexKbItemPayload }
+  | { type: "INDEX_NOTE_SEMANTIC"; payload: { noteId: string; organizationId: string } };
 
 export type QueueTaskSummary = {
   taskType: QueueTask["type"];
@@ -134,6 +136,7 @@ export function deriveQueueIdempotencyKey(task: QueueTask): string {
       payload.examId ??
       payload.jobId ??
       payload.assessmentId ??
+      payload.noteId ??
       payload.patientId ??
       payload.r2Key ??
       payload.workflowType ??
@@ -153,6 +156,7 @@ export function summarizeQueueTask(task: QueueTask): QueueTaskSummary {
     "examId",
     "jobId",
     "assessmentId",
+    "noteId",
     "r2Key",
     "workflowType",
   ]) {
@@ -219,6 +223,10 @@ export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Pro
 
         case "REINDEX_KB_ITEM":
           await reindexKbItem(task.payload, env);
+          break;
+
+        case "INDEX_NOTE_SEMANTIC":
+          await syncNoteToSemanticIndex(env, task.payload);
           break;
 
         // Event-driven triggers (from triggerInngestEvent)

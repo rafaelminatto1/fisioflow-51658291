@@ -16,6 +16,22 @@ if (!IMPORT_USER_EMAIL) throw new Error('IMPORT_USER_EMAIL não informado');
 function normalizeName(value) {
   return String(value ?? '').trim().replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
 }
+function cleanClinicalText(value) {
+  return String(value ?? '')
+    .replace(/<br\s*\/?\s*>/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6]|tr|section|article)>/gi, '\n')
+    .replace(/<(p|div|li|h[1-6]|tr|section|article)\b[^>]*>/gi, '\n')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&times;/gi, '')
+    .replace(/×/g, '')
+    .replace(/\u00a0/g, ' ')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n\s*\n+/g, '\n')
+    .replace(/\s+$/g, '')
+    .trim();
+}
 function parseBrDateTime(raw) {
   const text = String(raw ?? '').trim();
   const match = text.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?$/);
@@ -87,14 +103,28 @@ async function main() {
       try {
         const patientJson = JSON.parse(await readFile(file, 'utf8'));
         const patientName = normalizeName(patientJson.paciente_nome ?? patientJson.nome);
+        const seenEvents = new Set();
         const events = (Array.isArray(patientJson.historico) ? patientJson.historico : [])
           .filter(isImportableEvent)
           .map((event) => ({
             event,
             date: parseBrDateTime(event.data_completa ?? event.data),
-            observacao: String(event.conteudo_texto ?? '').trim(),
+            observacao: cleanClinicalText(event.conteudo_texto),
           }))
-          .filter(item => item.date);
+          .filter(item => {
+            if (!item.date) return false;
+            if (!item.observacao) {
+              state.eventsSkipped.push({ patientName, date: item.event.data_completa ?? item.event.data, type: item.event.tipo, reason: 'empty_clinical_text' });
+              return false;
+            }
+            const key = `${item.date}|${String(item.event.tipo ?? '').toLowerCase()}|${item.event.appointment_id ?? ''}|${item.observacao.length}`;
+            if (seenEvents.has(key)) {
+              state.eventsSkipped.push({ patientName, date: item.event.data_completa ?? item.event.data, type: item.event.tipo, reason: 'duplicate_source_event' });
+              return false;
+            }
+            seenEvents.add(key);
+            return true;
+          });
         state.clinicalEventsFound += events.length;
         if (!events.length) continue;
 

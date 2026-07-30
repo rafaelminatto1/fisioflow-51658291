@@ -7,6 +7,7 @@ import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { showFeature } from "@/lib/featureFlags/envFlags";
 
 // Lazy + import direto do arquivo (não do barrel @/features/wiki, que arrastava
 // StudyMode/ArticleUploadDialog/WikiDashboard etc. ~60 KB para o bundle inicial).
@@ -24,6 +25,11 @@ const Integrations = lazy(
   () => import(/* webpackChunkName: "integrations" */ "@/pages/Integrations"),
 );
 const WikiWorkspacePage = lazy(() => import(/* webpackChunkName: "wiki" */ "@/pages/Wiki"));
+const NotesPage = lazy(() => import(/* webpackChunkName: "notes" */ "@/pages/Notes"));
+
+function NotesFeatureGate() {
+  return showFeature("notes_v1") ? <NotesPage /> : <Navigate to="/dashboard" replace />;
+}
 const KnowledgeArticleDetailPage = lazy(
   () => import(/* webpackChunkName: "knowledge-article-detail" */ "@/pages/KnowledgeArticleDetail"),
 );
@@ -193,6 +199,14 @@ export const enterpriseRoutes = (
     />
 
     {/* Wiki */}
+    <Route
+      path="/notes/:noteId?"
+      element={
+        <ProtectedRoute>
+          <NotesFeatureGate />
+        </ProtectedRoute>
+      }
+    />
     <Route
       path="/wiki/template-analytics"
       element={
