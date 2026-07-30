@@ -17,7 +17,7 @@ app.get("/", requireAuth, async (c) => {
     pool.query(
       `SELECT ss.*, pr.full_name AS therapist_name, pr.avatar_url
        FROM staff_schedules ss
-       LEFT JOIN profiles pr ON pr.user_id = ss.therapist_id::uuid
+       LEFT JOIN profiles pr ON pr.user_id = ss.therapist_id::text
        WHERE ss.organization_id = $1 AND ss.is_active = true
        ORDER BY ss.therapist_id, ss.weekday, ss.start_time`,
       [user.organizationId],
@@ -32,7 +32,7 @@ app.get("/", requireAuth, async (c) => {
     pool.query(
       `SELECT sb.*, pr.full_name AS therapist_name
        FROM staff_blocks sb
-       LEFT JOIN profiles pr ON pr.user_id = sb.therapist_id::uuid
+       LEFT JOIN profiles pr ON pr.user_id = sb.therapist_id::text
        WHERE sb.organization_id = $1
          AND sb.block_date >= CURRENT_DATE
          AND sb.block_date <= CURRENT_DATE + INTERVAL '60 days'

@@ -60,7 +60,7 @@ async function loadReminderInput(
             o.settings->'crm_whatsapp'->'reminders' AS rcfg
      FROM appointments a
      JOIN patients p ON p.id = a.patient_id
-     LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::uuid
+     LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::text
      JOIN organizations o ON o.id = a.organization_id
      WHERE a.id = $1::uuid AND a.organization_id = $2 AND a.deleted_at IS NULL
      LIMIT 1`,
@@ -436,7 +436,7 @@ app.post("/reminders/backfill", requireAuth, requireRole(["admin"]), async (c) =
               o.settings->'crm_whatsapp'->'reminders' AS rcfg
        FROM appointments a
        JOIN patients p ON p.id = a.patient_id
-       LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::uuid
+       LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::text
        JOIN organizations o ON o.id = a.organization_id
        WHERE a.organization_id = $1
          AND a.deleted_at IS NULL

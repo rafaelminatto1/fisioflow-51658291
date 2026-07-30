@@ -879,7 +879,7 @@ async function dispatchScheduledReminders(pool: any, env: Env) {
            o.settings->'crm_whatsapp'->'reminders' AS rcfg
     FROM appointments a
     JOIN patients p ON p.id = a.patient_id
-    LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::uuid
+    LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::text
     JOIN organizations o ON o.id = a.organization_id
     WHERE a.date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '1 day'
       AND a.status NOT IN ('cancelado', 'faltou', 'cancelled', 'no_show', 'completed', 'concluido')
@@ -980,7 +980,7 @@ async function sendAppointmentReminders(pool: any, env: Env, _ctx: ExecutionCont
       prof.full_name AS therapist_name
     FROM appointments a
     JOIN patients p ON p.id = a.patient_id
-    LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::uuid
+    LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::text
     WHERE a.date = CURRENT_DATE + INTERVAL '1 day'
       AND a.status NOT IN ('cancelado', 'faltou')
   `);
@@ -1618,7 +1618,7 @@ async function send48hConfirmationRequests(pool: any, env: Env) {
         prof.full_name AS therapist_name
       FROM appointments a
       JOIN patients p ON p.id = a.patient_id
-      LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::uuid
+      LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::text
       WHERE a.date = CURRENT_DATE + INTERVAL '2 days'
         AND a.status::text IN ('agendado', 'scheduled')
         AND a.confirmed_at IS NULL
@@ -1698,7 +1698,7 @@ async function sendSameDayUnconfirmedReminders(pool: any, env: Env) {
         prof.full_name AS therapist_name
       FROM appointments a
       JOIN patients p ON p.id = a.patient_id
-      LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::uuid
+      LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::text
       WHERE a.date = CURRENT_DATE
         AND a.status::text IN ('agendado', 'scheduled')
         AND a.confirmed_at IS NULL
@@ -1780,7 +1780,7 @@ async function send24hUrgentConfirmationRequests(pool: any, env: Env) {
         prof.full_name AS therapist_name
       FROM appointments a
       JOIN patients p ON p.id = a.patient_id
-      LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::uuid
+      LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::text
       WHERE a.date = CURRENT_DATE + INTERVAL '1 day'
         AND a.status::text IN ('agendado', 'scheduled')
         AND a.reminder_sent_at IS NOT NULL
