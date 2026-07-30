@@ -18,7 +18,6 @@ import {
   ListTree,
   LockKeyhole,
   MessageCircle,
-  MoreHorizontal,
   Paperclip,
   Plus,
   Quote,
@@ -83,7 +82,7 @@ export function NoteEditor({
       className="min-h-full overflow-hidden bg-background text-foreground"
       aria-label="Editor de nota"
     >
-      <header className="flex min-h-16 items-center justify-between gap-3 border-b border-border bg-card px-4 sm:px-6">
+      <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b border-border bg-card/95 px-4 backdrop-blur sm:px-6">
         <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
           <FileText className="size-4 shrink-0 text-primary" />
           <span className="hidden sm:inline">Notas</span>
@@ -225,7 +224,7 @@ export function NoteEditor({
       <button
         type="button"
         onClick={() => setIsContextOpen((open) => !open)}
-        className="fixed right-4 bottom-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-bold shadow-lg transition hover:bg-muted 2xl:hidden"
+        className="fixed right-4 bottom-4 left-4 z-30 mx-auto inline-flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-full border border-border bg-card/95 px-4 py-2 text-sm font-bold shadow-lg backdrop-blur transition hover:bg-muted 2xl:hidden"
         aria-expanded={isContextOpen}
       >
         <UsersRound className="size-4 text-primary" />

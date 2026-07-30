@@ -45,6 +45,30 @@ const normalizeIsoDateTime = (value: unknown): string => {
   return parsed.toISOString();
 };
 
+
+const normalizeStringArray = (value: unknown): string[] => {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => (typeof item === "string" ? item : String(item ?? "")))
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    try {
+      return normalizeStringArray(JSON.parse(trimmed));
+    } catch {
+      return trimmed
+        .split(/\n|;/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+  }
+  return [];
+};
+
 const normalizeGender = (value: unknown): "masculino" | "feminino" | "outro" => {
   const raw = normalizeString(value)?.toLowerCase();
   if (!raw) return "outro";
@@ -117,6 +141,21 @@ export const PatientService = {
       observations: dbPatient.notes || dbPatient.observations || null,
       status: normalizeStatus(dbPatient.status),
       progress: typeof dbPatient.progress === "number" ? dbPatient.progress : 0,
+      care_profiles: normalizeStringArray(dbPatient.care_profiles ?? dbPatient.careProfiles),
+      careProfiles: normalizeStringArray(dbPatient.care_profiles ?? dbPatient.careProfiles),
+      sports_practiced: normalizeStringArray(dbPatient.sports_practiced ?? dbPatient.sportsPracticed),
+      sportsPracticed: normalizeStringArray(dbPatient.sports_practiced ?? dbPatient.sportsPracticed),
+      therapy_focuses: normalizeStringArray(dbPatient.therapy_focuses ?? dbPatient.therapyFocuses),
+      therapyFocuses: normalizeStringArray(dbPatient.therapy_focuses ?? dbPatient.therapyFocuses),
+      allergies_general: normalizeStringArray(dbPatient.allergies_general ?? dbPatient.allergiesGeneral),
+      allergiesGeneral: normalizeStringArray(dbPatient.allergies_general ?? dbPatient.allergiesGeneral),
+      allergies_medicines: normalizeStringArray(dbPatient.allergies_medicines ?? dbPatient.allergiesMedicines),
+      allergiesMedicines: normalizeStringArray(dbPatient.allergies_medicines ?? dbPatient.allergiesMedicines),
+      medications_in_use: normalizeStringArray(dbPatient.medications_in_use ?? dbPatient.medicationsInUse),
+      medicationsInUse: normalizeStringArray(dbPatient.medications_in_use ?? dbPatient.medicationsInUse),
+      pathologies_active: normalizeStringArray(dbPatient.pathologies_active ?? dbPatient.pathologiesActive),
+      pathologiesActive: normalizeStringArray(dbPatient.pathologies_active ?? dbPatient.pathologiesActive),
+      alerts: normalizeStringArray(dbPatient.alerts),
       incomplete_registration: Boolean(dbPatient.incomplete_registration),
       createdAt,
       created_at: createdAt,

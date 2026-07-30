@@ -83,7 +83,7 @@ export interface NotesHomeViewModel {
   spaces: NotesSpace[];
   notes: NoteListItem[];
   activeSpaceId?: string;
-  activeFilter?: 'all' | 'recent' | 'shared' | 'favorites' | 'patient' | 'templates';
+  activeFilter?: 'all' | 'recent' | 'shared' | 'favorites' | 'patient' | 'templates' | 'archived';
   currentUser?: NotePerson;
 }
 

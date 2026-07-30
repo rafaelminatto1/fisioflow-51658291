@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { AtSign, BookOpen, CheckCircle2, Download, FileText, LayoutTemplate, LockKeyhole, MessageSquarePlus, Paperclip, RotateCcw, ShieldCheck, Sparkles, Trash2, UsersRound } from "lucide-react";
@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NotesRichTextEditor, type NotesCollaborationStatus } from "@/components/notes/NotesRichTextEditor";
 import { showFeature } from "@/lib/featureFlags/envFlags";
+import type { MentionSuggestionItem } from "@/components/ui/mention-suggestion";
 
 const kindByType: Record<NoteRecord["type"], NoteKind> = {
   personal: "private",
@@ -171,6 +172,15 @@ export default function Notes() {
   const [portalText, setPortalText] = useState("");
   const [portalLoading, setPortalLoading] = useState(false);
   const mentionMatches = useQuery({ queryKey: ["notes", "mentionables", mentionType, patientSearch], queryFn: ({ signal }) => notesApi.mentionables(patientSearch, [mentionType], { signal }), enabled: mentionOpen && patientSearch.trim().length >= 2 });
+  const mentionItems = useCallback(async (query: string, signal: AbortSignal): Promise<MentionSuggestionItem[]> => {
+    if (query.trim().length < 1) return [];
+    const result = await notesApi.mentionables(query.trim(), MENTIONABLE_TYPES.map((item) => item.value), { signal });
+    return result.data.map((item) => ({ id: item.id, label: item.label, type: item.type, subtitle: item.subtitle }));
+  }, []);
+  const onInlineMentionSelected = useCallback((item: MentionSuggestionItem) => {
+    if (!detail.data) return;
+    createMention.mutate({ noteId: detail.data.id, mentionType: item.type as NoteMentionRecord["mentionType"], targetId: item.id, displayLabel: item.label });
+  }, [createMention, detail.data]);
   const semanticSearch = useQuery({
     queryKey: ["notes", "semantic-search", semanticQuery],
     queryFn: ({ signal }) => notesApi.semanticSearch(semanticQuery.trim(), { signal }),
@@ -220,6 +230,7 @@ export default function Notes() {
     if (homeFilter === "favorites") return homeNotes.filter((note) => favoriteIds.has(note.id));
     if (homeFilter === "patient") return homeNotes.filter((note) => Boolean(note.patientId));
     if (homeFilter === "templates") return homeNotes.filter((note) => note.type === "template");
+    if (homeFilter === "archived") return homeNotes.filter((note) => note.status === "archived");
     if (homeFilter === "shared") return homeNotes.filter((note) => Boolean(note.ownerId && user?.uid && note.ownerId !== user.uid));
     if (homeFilter === "recent") {
       const cutoff = Date.now() - 1000 * 60 * 60 * 24 * 30;
@@ -381,6 +392,8 @@ export default function Notes() {
             collaborationStatus={collaborationStatus}
             saveStatus={collaborationStatus === "connected" ? "saved" : collaborationStatus === "disconnected" ? "unsaved" : "saving"}
             onCollaborationStatusChange={(status) => setCollaborationStatus(status)}
+            mentionItems={mentionItems}
+            onMentionSelected={onInlineMentionSelected}
           />,
         }}
         onTitleChange={setTitle}

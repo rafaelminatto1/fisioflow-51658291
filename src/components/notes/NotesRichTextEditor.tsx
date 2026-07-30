@@ -5,6 +5,7 @@ import {
   type RichTextEditorHandle,
 } from "@/components/ui/RichTextEditor";
 import { cn } from "@/lib/utils";
+import type { MentionSuggestionItem } from "@/components/ui/mention-suggestion";
 
 export type NotesCollaborationStatus =
   | "idle"
@@ -36,6 +37,8 @@ export interface NotesRichTextEditorProps {
   externalValueRevision?: number;
   onCollaborationStatusChange?: (status: "connecting" | "connected" | "disconnected") => void;
   onCollaborationProviderChange?: (provider: YProvider | null) => void;
+  mentionItems?: (query: string, signal: AbortSignal) => Promise<MentionSuggestionItem[]>;
+  onMentionSelected?: (item: MentionSuggestionItem) => void;
   onFocus?: () => void;
   onBlur?: () => void;
 }
@@ -77,6 +80,8 @@ export const NotesRichTextEditor = forwardRef<RichTextEditorHandle, NotesRichTex
   externalValueRevision,
   onCollaborationStatusChange,
   onCollaborationProviderChange,
+  mentionItems,
+  onMentionSelected,
   onFocus,
   onBlur,
 }, ref) => {
@@ -127,6 +132,8 @@ export const NotesRichTextEditor = forwardRef<RichTextEditorHandle, NotesRichTex
         externalValueRevision={externalValueRevision}
         onCollabStatusChange={onCollaborationStatusChange}
         onCollabProviderChange={onCollaborationProviderChange}
+        mentionItems={mentionItems}
+        onMentionSelected={onMentionSelected}
         onFocus={onFocus}
         onBlur={onBlur}
         className="min-h-[22rem] border-0 shadow-none"

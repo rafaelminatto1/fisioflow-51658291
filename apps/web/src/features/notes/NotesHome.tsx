@@ -9,7 +9,6 @@ import {
   FolderHeart,
   LayoutTemplate,
   LockKeyhole,
-  MoreHorizontal,
   Search,
   Share2,
   Star,
@@ -29,6 +28,7 @@ const filterItems: Array<{
   { id: 'favorites', label: 'Favoritas', icon: Star },
   { id: 'patient', label: 'Notas de pacientes', icon: FolderHeart },
   { id: 'templates', label: 'Templates', icon: LayoutTemplate },
+  { id: 'archived', label: 'Arquivadas', icon: Archive },
 ];
 
 const noteKindLabel: Record<NoteKind, string> = {
@@ -116,7 +116,7 @@ export function NotesHome({
               <span className={`mt-1 size-2 shrink-0 rounded-full ${note.kind === 'clinical-context' ? 'bg-blue-500' : note.kind === 'team' ? 'bg-emerald-500' : note.kind === 'knowledge' ? 'bg-amber-500' : 'bg-muted-foreground/40'}`} aria-hidden="true" />
               <span className="min-w-0 flex-1"><span className="flex items-center gap-1.5"><span className="truncate text-sm font-semibold">{note.title || 'Sem título'}</span>{note.isFavorite ? <Star className="size-3 shrink-0 fill-amber-400 text-amber-400" /> : null}</span><span className="mt-0.5 block line-clamp-1 text-xs text-muted-foreground">{note.preview || 'Nota sem conteúdo ainda.'}</span><span className="mt-1 block text-[10px] text-muted-foreground">{note.updatedLabel}{note.patientName ? ` · ${note.patientName}` : ''}</span></span>
             </button>)}
-            {!visibleNotes.length ? <p className="px-2 py-8 text-center text-xs text-muted-foreground">Nenhuma nota encontrada.</p> : null}
+            {!visibleNotes.length ? <div className="px-2 py-8 text-center"><p className="text-xs text-muted-foreground">Nenhuma nota encontrada.</p><button type="button" onClick={onCreateNote} className="mt-3 rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground transition hover:bg-primary/90">Criar nota</button></div> : null}
           </div>
         </div>
       </section>
@@ -178,13 +178,7 @@ export function NotesHome({
               <p className="text-xs font-bold tracking-[0.12em] text-muted-foreground uppercase">
                 Espaços
               </p>
-              <button
-                type="button"
-                className="rounded-sm p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                aria-label="Adicionar espaço"
-              >
-                <FilePlus2 className="size-4" />
-              </button>
+              <span className="text-[10px] text-muted-foreground">{viewModel.spaces.length}</span>
             </div>
             <div className="space-y-1">
               {viewModel.spaces.map((space) => {
@@ -264,11 +258,7 @@ export function NotesHome({
                 {visibleNotes.length} notas no seu contexto atual
               </p>
             </div>
-            <button
-              type="button"
-              className="hidden items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-muted sm:flex"
-            >
-              <Archive className="size-4" />
+            <button type="button" onClick={() => onChangeFilter?.('archived')} className="hidden items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground sm:flex">
               Arquivadas
             </button>
           </div>
@@ -291,6 +281,7 @@ export function NotesHome({
               <p className="mt-1 text-sm text-muted-foreground">
                 Tente outro termo ou crie uma nova nota.
               </p>
+              <button type="button" onClick={onCreateNote} className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition hover:bg-primary/90">Nova nota</button>
             </div>
           ) : null}
         </main>
@@ -334,13 +325,6 @@ export function NotePreviewCard({
             aria-label={note.isFavorite ? 'Remover das favoritas' : 'Adicionar às favoritas'}
           >
             <Star className={`size-4 ${note.isFavorite ? 'fill-current' : ''}`} />
-          </button>
-          <button
-            type="button"
-            className="rounded-sm p-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
-            aria-label={`Mais ações para ${note.title}`}
-          >
-            <MoreHorizontal className="size-4" />
           </button>
         </div>
       </div>

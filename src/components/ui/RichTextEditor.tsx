@@ -14,6 +14,7 @@ import { useEditor, EditorContent, useEditorState } from "@tiptap/react";
 import { Extension } from "@tiptap/core";
 import { StarterKit } from "@tiptap/starter-kit";
 import { Placeholder } from "@tiptap/extension-placeholder";
+import Mention from "@tiptap/extension-mention";
 import { CustomTaskItem } from "./CustomTaskItem";
 import { evolutionEditorExtensions } from "@fisioflow/evolution-editor-schema";
 import {
@@ -76,6 +77,7 @@ import { uploadFile, STORAGE_FOLDERS } from "@/lib/storage/upload";
 import { toast } from "sonner";
 import { ImageEditDialog } from "@/components/ui/rich-text/ImageEditDialog";
 import { ResizableImage } from "@/components/ui/rich-text/ResizableImageExtension";
+import { mentionSuggestionConfig, type MentionSuggestionItem } from "@/components/ui/mention-suggestion";
 import * as Y from "yjs";
 import YProvider from "y-partyserver/provider";
 import { IndexeddbPersistence } from "y-indexeddb";
@@ -157,6 +159,10 @@ interface RichTextEditorProps {
   onCollabStatusChange?: (status: "connecting" | "connected" | "disconnected") => void;
   /** Notifica o pai sobre a instância do provider (para presença via awareness). */
   onCollabProviderChange?: (provider: YProvider | null) => void;
+  /** Busca entidades autorizadas para a menção inline iniciada com @. */
+  mentionItems?: (query: string, signal: AbortSignal) => Promise<MentionSuggestionItem[]>;
+  /** Persiste a relação semântica depois que o nó de menção entra no documento. */
+  onMentionSelected?: (item: MentionSuggestionItem) => void;
 }
 
 /** Handle imperativo: permite ao pai forçar o flush do debounce pendente
@@ -188,6 +194,8 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
   externalValueRevision,
   onCollabStatusChange,
   onCollabProviderChange,
+  mentionItems,
+  onMentionSelected,
 }, ref) => {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingValue = useRef<string | null>(null);
@@ -440,6 +448,16 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
       }),
     ];
 
+    if (mentionItems) {
+      base.push(
+        Mention.configure({
+          HTMLAttributes: { class: "inline-mention" },
+          renderText: ({ node }) => `@${node.attrs.label ?? node.attrs.id}`,
+          suggestion: mentionSuggestionConfig(mentionItems, onMentionSelected),
+        }),
+      );
+    }
+
     if (ydoc && collaborationId) {
       base.push(
         Collaboration.configure({
@@ -469,6 +487,8 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
     provider,
     userName,
     userColor,
+    mentionItems,
+    onMentionSelected,
   ]);
 
   const editor = useEditor({

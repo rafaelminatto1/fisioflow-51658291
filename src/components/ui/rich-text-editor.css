@@ -146,6 +146,17 @@
   margin: 0.15em 0;
 }
 
+/* Menções semânticas inseridas pelo workspace de Notas. */
+.rich-text-editor .ProseMirror .inline-mention {
+  display: inline-block;
+  border-radius: 0.35rem;
+  background: hsl(213 94% 68% / 0.14);
+  color: hsl(213 76% 38%);
+  padding: 0 0.3rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 /* Task List Style */
 .rich-text-editor .ProseMirror ul[data-type="taskList"] {
   list-style: none;
