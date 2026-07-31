@@ -165,4 +165,32 @@ app.get("/patients/:id/similar", requireAuth, async (c) => {
   }
 });
 
+/**
+ * GET /api/ai-clinical-search/status
+ * Informa se o índice semântico da organização tem conteúdo.
+ *
+ * Why: `clinical_embeddings` esteve vazia por meses (dimensão errada da coluna).
+ * As telas que dependem de busca vetorial disparavam requisições garantidamente
+ * vazias a cada abertura de perfil. Este endpoint deixa o front decidir antes de
+ * perguntar, e torna visível para a equipe que o índice ainda não foi construído.
+ */
+app.get("/status", requireAuth, async (c) => {
+  const user = c.get("user");
+  try {
+    const sql = getRawSql(c.env, "read");
+    const result = await sql`
+      SELECT count(*)::int AS indexed
+      FROM clinical_embeddings
+      WHERE organization_id = ${user.organizationId}::uuid
+    `;
+    const indexed = Number(result.rows?.[0]?.indexed ?? 0);
+    return c.json({ data: { indexed, available: indexed > 0 } });
+  } catch (error) {
+    console.error("[AI/Search] status error:", error);
+    // Indisponível é o padrão seguro: melhor esconder a busca semântica do que
+    // apresentá-la como se funcionasse.
+    return c.json({ data: { indexed: 0, available: false } });
+  }
+});
+
 export { app as aiClinicalSearchRoutes };

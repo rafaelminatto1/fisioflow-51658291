@@ -269,8 +269,14 @@ export const EvolutionNoScrollPanel = memo(
     }
 
     const arrival = data.painLevelArrival;
-    const discharge = data.painLevelDischarge ?? data.painLevel ?? 0;
+    const rawDischarge = data.painLevelDischarge ?? data.painLevel;
+    const discharge = rawDischarge ?? 0;
     const delta = arrival != null ? discharge - arrival : null;
+    // "Não registrado" não é o mesmo que "dor zero": os sliders caem para 0 quando
+    // ninguém toca no EVA, e isso fazia a sessão parecer avaliada como "Sem dor".
+    // Só 12,9% das evoluções criadas no app trazem EVA — sinalizar a ausência é o
+    // que permite ao fisioterapeuta perceber que falta preencher.
+    const painUnrecorded = arrival == null && rawDischarge == null;
     const quality = data.painQuality ?? [];
 
     type PainData = Pick<
@@ -641,6 +647,16 @@ export const EvolutionNoScrollPanel = memo(
                   Escala Visual Analógica · 0 a 10
                 </div>
               </div>
+              <div className="min-w-0">
+                {painUnrecorded && (
+                  <span
+                    data-testid="pain-unrecorded"
+                    className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-extrabold text-amber-700"
+                  >
+                    Não registrado
+                  </span>
+                )}
+              </div>
               <div className="ml-auto flex items-center gap-1.5">
                 <div className="flex items-center gap-1 mr-1">
                   <button
@@ -698,8 +714,15 @@ export const EvolutionNoScrollPanel = memo(
                   <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
                     Chegada
                   </label>
-                  <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-extrabold text-violet-700">
-                    {(arrival ?? 0)}/10
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[10px] font-extrabold",
+                      arrival == null
+                        ? "bg-slate-100 text-slate-500"
+                        : "bg-violet-100 text-violet-700",
+                    )}
+                  >
+                    {arrival == null ? "—" : `${arrival}/10`}
                   </span>
                 </div>
                 <Slider
@@ -724,8 +747,15 @@ export const EvolutionNoScrollPanel = memo(
                   <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
                     Saída
                   </label>
-                  <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-extrabold text-violet-700">
-                    {discharge}/10
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[10px] font-extrabold",
+                      rawDischarge == null
+                        ? "bg-slate-100 text-slate-500"
+                        : "bg-violet-100 text-violet-700",
+                    )}
+                  >
+                    {rawDischarge == null ? "—" : `${rawDischarge}/10`}
                   </span>
                 </div>
                 <Slider

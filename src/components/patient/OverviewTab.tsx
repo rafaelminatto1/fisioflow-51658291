@@ -8,7 +8,6 @@ import { ProfileTab } from "@/hooks/usePatientProfileOptimized";
 import { usePatientEvolutionReport } from "@/hooks/usePatientEvolutionReport";
 import { FisioPredictIndicator } from "@/features/ia-studio/components/FisioPredictIndicator";
 import { PatientGamificationSummary } from "@/components/patients/PatientGamificationSummary";
-import { SemanticRecommenderWidget } from "./SemanticRecommenderWidget";
 import { SimilarPatientsWidget } from "./SimilarPatientsWidget";
 import { RecoveryTrajectoryWidget } from "./RecoveryTrajectoryWidget";
 import { ClinicalAISnapshot } from "./ClinicalAISnapshot";
@@ -82,7 +81,14 @@ export const OverviewTab = ({ patient, upcomingAppointments, invalidateTab }: Ov
           <SimilarPatientsWidget patientId={patient.id} />
           <RecoveryTrajectoryWidget patientId={patient.id} />
         </div>
-        <SemanticRecommenderWidget condition={(patient as any).main_condition || "Não informada"} />
+        {/*
+          SemanticRecommenderWidget foi removido daqui em 31/07/2026.
+          Ele recebia `patient.main_condition`, coluna que está vazia nos 1.022
+          pacientes e nem consta no tipo Patient — o widget se auto-ocultava em
+          100% dos casos, custando uma requisição por abertura de perfil.
+          Remontar quando a hipótese diagnóstica (HD) for extraída das avaliações
+          ZenFisio, que é a fonte real dessa informação.
+        */}
       </div>
 
       {/* Evolution Management Cards */}

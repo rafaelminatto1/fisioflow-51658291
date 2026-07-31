@@ -1,6 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2/base";
+import { useClinicalIndexStatus } from "@/hooks/useClinicalIndexStatus";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Users, ArrowRight, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -23,6 +24,8 @@ interface SimilarPatientsWidgetProps {
 
 export const SimilarPatientsWidget: React.FC<SimilarPatientsWidgetProps> = ({ patientId }) => {
   const navigate = useNavigate();
+  // Sem índice semântico a busca sempre volta vazia — não vale a requisição.
+  const { data: indexStatus } = useClinicalIndexStatus();
   const { data: similarPatients = [], isLoading } = useQuery({
     queryKey: ["similar-patients", patientId],
     queryFn: async () => {
@@ -31,7 +34,7 @@ export const SimilarPatientsWidget: React.FC<SimilarPatientsWidgetProps> = ({ pa
       );
       return res.data;
     },
-    enabled: !!patientId,
+    enabled: !!patientId && indexStatus?.available === true,
     staleTime: 1000 * 60 * 60, // 1h
   });
 
