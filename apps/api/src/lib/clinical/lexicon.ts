@@ -16,7 +16,7 @@
  * extração para que a camada derivada seja reconstruível e auditável.
  */
 
-export const LEXICON_VERSION = "2026-07-31.2";
+export const LEXICON_VERSION = "2026-07-31.3";
 
 export interface LexEntry {
   /** Identificador estável, usado em índices e agregações. */
