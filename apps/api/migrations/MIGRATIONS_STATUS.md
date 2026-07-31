@@ -149,6 +149,7 @@ psql "$NEON_PROD_URL" -f apps/api/migrations/0054_patient_directory_filters.sql
 | `0152_clinical_extractions_alta_linha_base.sql` | Categorias `linha_base` e `alta` | ✅ 31/07/2026 | ✅ | `LB:` é convenção criada pela própria clínica (510 evoluções). Menções de alta são indício para revisão, não registro. |
 | `0153_discharge_events.sql` | Alta como evento datado, com taxonomia e proveniência | ✅ 31/07/2026 | ✅ | `abandono` NÃO existe na taxonomia: é sempre inferido por inatividade. Down descarta dados não reconstruíveis — exportar antes. |
 | `0154_patient_goals_icf_class.sql` | Classe CIF no objetivo terapêutico | ✅ 31/07/2026 | ✅ | Classe do objetivo prediz desfecho (OR 1,80 p/ atividade/participação; vago prediz pior) — FYSIOPRIM N=2.591. |
+| `0155_clinical_extractions_avaliacao.sql` | Categorias de avaliação (hipótese diagnóstica, anamnese, antecedente, exame físico, plano terapêutico) | ✅ 31/07/2026 | ✅ | As 531 avaliações ZenFisio vêm em DUAS formas: blob único (269) e campos JSON separados (262). O parser normaliza as duas. |
 | `0156_sessions_fulltext_pt.sql` | `sessions.observacao_tsv` (coluna gerada) + índice GIN | ✅ 31/07/2026 | ✅ | Coluna GERADA, não trigger: não há como esquecer de atualizar. Compõe a busca híbrida — o léxico acerta o jargão local (TFS, IQT, QDP) onde o embedding erra. |
 
 ---

@@ -9,6 +9,7 @@
 import type { Env } from "../../types/env";
 import { getRawSql } from "../db";
 import { parseEvolution, type ParsedEvolution } from "./evolutionParser";
+import { parseEvaluation, type ParsedEvaluation } from "./evaluationParser";
 
 export interface ExtractionRow {
   category:
@@ -22,7 +23,12 @@ export interface ExtractionRow {
     | "carga"
     | "eva"
     | "linha_base"
-    | "alta";
+    | "alta"
+    | "hipotese_diagnostica"
+    | "anamnese"
+    | "antecedente"
+    | "exame_fisico"
+    | "plano_terapeutico";
   code: string;
   valueNumeric?: number;
   valueUnit?: string;
@@ -157,6 +163,25 @@ export async function extractAndStore(
 ): Promise<ExtractResult> {
   const parsed = parseEvolution(params.text);
   const rows = toRows(parsed);
+  await replaceRows(env, params.organizationId, params.patientId, params.sourceTable, params.sourceId, rows, parsed.lexiconVersion);
+  return { sourceId: params.sourceId, rowsWritten: rows.length, hasAnyMatch: parsed.hasAnyMatch };
+}
+
+/**
+ * Apaga o que o parser gerou para uma origem e regrava. Compartilhado entre
+ * evoluções e avaliações: as duas camadas derivadas obedecem à mesma regra de
+ * idempotência e à mesma proteção da curadoria humana.
+ */
+async function replaceRows(
+  env: Env,
+  organizationId: string,
+  patientId: string,
+  sourceTable: string,
+  sourceId: string,
+  rows: ExtractionRow[],
+  lexiconVersion: string,
+): Promise<void> {
+  const params = { organizationId, patientId, sourceTable, sourceId };
   const sql = getRawSql(env, "write");
 
   await sql`
@@ -167,9 +192,7 @@ export async function extractAndStore(
       AND reviewed_by IS NULL
   `;
 
-  if (rows.length === 0) {
-    return { sourceId: params.sourceId, rowsWritten: 0, hasAnyMatch: parsed.hasAnyMatch };
-  }
+  if (rows.length === 0) return;
 
   // Um INSERT com arrays desempacotados: 11 mil evoluções × ~20 extrações não
   // sobrevivem a uma query por linha.
@@ -185,7 +208,7 @@ export async function extractAndStore(
       ${params.sourceTable}, ${params.sourceId}::uuid,
       c.category, c.code, c.value_numeric, c.value_unit,
       c.source_text, c.source_start, c.source_end,
-      'parser', ${parsed.lexiconVersion}
+      'parser', ${lexiconVersion}
     FROM unnest(
       ${rows.map((r) => r.category)}::text[],
       ${rows.map((r) => r.code)}::text[],
@@ -197,6 +220,97 @@ export async function extractAndStore(
     ) AS c(category, code, value_numeric, value_unit, source_text, source_start, source_end)
     ON CONFLICT DO NOTHING
   `;
-
-  return { sourceId: params.sourceId, rowsWritten: rows.length, hasAnyMatch: parsed.hasAnyMatch };
 }
+
+// ===========================================================================
+// AVALIAÇÕES (patient_evaluation_responses)
+// ===========================================================================
+
+/**
+ * Converte a saída do parser de avaliação em linhas.
+ *
+ * Duas famílias de linha convivem aqui:
+ *  - as SEÇÕES (`hipotese_diagnostica`, `exame_fisico`, ...), cujo `source_text`
+ *    é o corpo literal escrito pelo profissional. É texto, não código: o valor
+ *    está em poder responder "o que o exame físico dizia" com a frase original
+ *    à mão, sem nenhuma interpretação no meio.
+ *  - os achados do LÉXICO sobre o mesmo texto (região, conduta, exercício,
+ *    carga, EVA escrita), reaproveitados do parser de evoluções. É o que permite
+ *    cruzar "o que a avaliação apontou" com "o que as sessões fizeram".
+ *
+ * `alta` fica de fora de propósito: uma avaliação inicial não encerra
+ * tratamento, e menção a alta ali é expectativa — indício falso.
+ */
+export function toEvaluationRows(parsed: ParsedEvaluation): ExtractionRow[] {
+  const rows: ExtractionRow[] = [];
+
+  for (const s of parsed.sections) {
+    rows.push({
+      category: s.category,
+      code: s.code,
+      sourceText: s.body,
+      sourceStart: s.sourceStart,
+      sourceEnd: s.sourceEnd,
+    });
+  }
+
+  for (const r of toRows(parsed.lexicon)) {
+    if (r.category === "alta") continue;
+    rows.push(r);
+  }
+
+  const seen = new Set<string>();
+  return rows.filter((r) => {
+    const key = `${r.category}|${r.code}|${r.sourceStart ?? -1}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+export interface ExtractEvaluationParams {
+  organizationId: string;
+  patientId: string;
+  sourceId: string;
+  /** O `responses` bruto da linha — nunca é alterado, só lido. */
+  responses: { fields?: Record<string, unknown> | null } | null | undefined;
+}
+
+export interface ExtractEvaluationResult extends ExtractResult {
+  /** Chaves do formulário que o parser não reconheceu — revisão humana. */
+  unknownFields: string[];
+}
+
+/**
+ * Extrai e grava as extrações de uma avaliação.
+ *
+ * Mesma idempotência do lado das evoluções: apaga o que o parser havia gerado
+ * para aquela origem e reinsere, sem tocar em `method='ai'` nem em linha
+ * revisada por humano.
+ */
+export async function extractAndStoreEvaluation(
+  env: Env,
+  params: ExtractEvaluationParams,
+): Promise<ExtractEvaluationResult> {
+  const parsed = parseEvaluation(params.responses);
+  const rows = toEvaluationRows(parsed);
+
+  await replaceRows(
+    env,
+    params.organizationId,
+    params.patientId,
+    EVALUATION_SOURCE_TABLE,
+    params.sourceId,
+    rows,
+    parsed.lexiconVersion,
+  );
+
+  return {
+    sourceId: params.sourceId,
+    rowsWritten: rows.length,
+    hasAnyMatch: parsed.hasAnyMatch,
+    unknownFields: parsed.unknownFields,
+  };
+}
+
+export const EVALUATION_SOURCE_TABLE = "patient_evaluation_responses";

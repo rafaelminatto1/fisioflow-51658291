@@ -16,7 +16,13 @@
  * extração para que a camada derivada seja reconstruível e auditável.
  */
 
-export const LEXICON_VERSION = "2026-07-31.3";
+/**
+ * `.4` (31/07/2026): entrou o vocabulário de seções das avaliações iniciais
+ * importadas do ZenFisio (`evaluationParser.ts`). O léxico de termos não mudou,
+ * mas a versão é a chave que o backfill usa para saber o que está defasado — e
+ * as 531 avaliações ainda não tinham camada derivada nenhuma.
+ */
+export const LEXICON_VERSION = "2026-07-31.4";
 
 export interface LexEntry {
   /** Identificador estável, usado em índices e agregações. */
