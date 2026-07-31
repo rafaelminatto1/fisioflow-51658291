@@ -4,6 +4,7 @@ import { zValidator } from "@hono/zod-validator";
 import type { Env } from "../../types/env";
 import type { AuthVariables } from "../../lib/auth";
 import { requireAuth } from "../../lib/auth";
+import { listDischargeCandidates } from "../../lib/clinical/dischargeCandidates";
 import {
   DISCHARGE_REASONS,
   DISCHARGE_REASON_LABELS,
@@ -101,6 +102,81 @@ app.post("/discharge", requireAuth, zValidator("json", dischargeSchema), async (
     return c.json({ error: "Falha ao registrar alta", details: error.message }, 500);
   }
 });
+
+/**
+ * GET /api/clinical/discharge/candidates
+ *
+ * Fila para a recepção confirmar por telefone quem recebeu alta e quem abandonou.
+ * NÃO é inferência: nenhum candidato vira alta sem alguém confirmar. Inferir
+ * desfecho por inatividade reproduziria o viés de seleção já descartado na
+ * atribuição de autoria.
+ */
+app.get("/discharge/candidates", requireAuth, async (c) => {
+  const user = c.get("user");
+  const minInactiveDays = Number(c.req.query("minInactiveDays") || 90);
+  const limit = Number(c.req.query("limit") || 50);
+  const offset = Number(c.req.query("offset") || 0);
+
+  try {
+    const result = await listDischargeCandidates(c.env, {
+      organizationId: user.organizationId,
+      minInactiveDays: Number.isFinite(minInactiveDays) ? minInactiveDays : 90,
+      limit: Number.isFinite(limit) ? limit : 50,
+      offset: Number.isFinite(offset) ? offset : 0,
+    });
+
+    return c.json({
+      data: result.candidates,
+      meta: {
+        total: result.total,
+        semTelefone: result.semTelefone,
+        aviso:
+          "Lista de trabalho para confirmação por telefone. Nenhum paciente aqui recebeu alta — só é alta depois que alguém confirmar com ele.",
+      },
+    });
+  } catch (error: any) {
+    console.error("[Clinical/Discharge] candidates:", error);
+    return c.json({ error: "Falha ao listar candidatos", details: error.message }, 500);
+  }
+});
+
+/**
+ * POST /api/clinical/discharge/candidates/:patientId/confirm
+ * A recepção confirmou com o paciente. Só aqui o candidato vira alta.
+ */
+app.post(
+  "/discharge/candidates/:patientId/confirm",
+  requireAuth,
+  zValidator(
+    "json",
+    z.object({
+      reason: z.enum(DISCHARGE_REASONS),
+      dischargedAt: z.string().date().nullish(),
+      notes: z.string().max(2000).nullish(),
+    }),
+  ),
+  async (c) => {
+    const user = c.get("user");
+    const patientId = c.req.param("patientId");
+    const body = c.req.valid("json");
+
+    try {
+      const row = await recordDischarge(c.env, {
+        organizationId: user.organizationId,
+        patientId,
+        reason: body.reason,
+        dischargedAt: body.dischargedAt ?? null,
+        notes: body.notes ?? null,
+        origin: "retroativo",
+        createdBy: user.profileId ?? null,
+      });
+      return c.json({ data: row }, 201);
+    } catch (error: any) {
+      console.error("[Clinical/Discharge] confirm:", error);
+      return c.json({ error: "Falha ao confirmar alta", details: error.message }, 500);
+    }
+  },
+);
 
 /**
  * GET /api/clinical/discharge/outcomes
