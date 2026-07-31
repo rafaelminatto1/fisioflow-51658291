@@ -9,11 +9,11 @@ Permitir que a equipe filtre rapidamente as conversas do CRM por plataforma, sem
 Na coluna de conversas do CRM, abaixo dos filtros de estágio do funil, será exibida uma linha compacta de chips:
 
 - `Todas`
-- `WhatsApp`
-- `Instagram`
-- `Site`
+- `WhatsApp` (`whatsapp`)
+- `Instagram` (`instagram`)
+- `Site` (`webchat`)
 
-`Todas` será o estado inicial. Cada chip de plataforma mostrará a contagem das conversas daquele canal dentro do estágio de funil selecionado. A seleção troca imediatamente a lista exibida e preserva a seleção de estágio, busca e filtros avançados.
+`Todas` será o estado inicial. Cada chip de plataforma mostrará a contagem das conversas daquele canal dentro do estágio de funil selecionado. A seleção troca imediatamente a lista exibida e preserva a seleção de estágio, busca e filtros avançados. A conversa que estiver aberta permanece aberta, mesmo que deixe de constar na lista filtrada.
 
 O filtro avançado existente no ícone de funil permanece disponível. Seu filtro de canal continuará sendo aplicado em conjunto com o chip de plataforma, sem mudar os contratos de API nem os dados armazenados.
 

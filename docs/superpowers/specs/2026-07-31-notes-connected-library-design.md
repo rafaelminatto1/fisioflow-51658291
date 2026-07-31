@@ -27,7 +27,7 @@ Transformar a página inicial de Notas em uma biblioteca conectada, inspirada no
 ### Conteúdo principal
 
 - Cabeçalho com ação de retorno, título da central e criação de nota.
-- Busca ampla para notas, pacientes e tarefas; a filtragem local permanece imediata e a pesquisa semântica existente permanece complementar.
+- Busca de notas: filtra imediatamente título, prévia, paciente já vinculado e autor presentes na coleção carregada. Com três ou mais caracteres, também reutiliza a pesquisa semântica de **notas** já existente. Esta entrega não cria busca global de pacientes ou tarefas, nem adiciona uma API nova.
 - Bloco “Em movimento” para notas atualizadas recentemente, em cartões que mostram título, prévia, atualização, visibilidade e indicadores úteis existentes.
 - Ações secundárias para templates e arquivadas, sem competir com a criação de nota.
 - Estados explícitos de carregamento, busca sem resultado e coleção vazia, sempre com uma ação para criar nota.
@@ -40,6 +40,8 @@ Transformar a página inicial de Notas em uma biblioteca conectada, inspirada no
 ## Arquitetura e fluxo
 
 - A página `src/pages/Notes.tsx` continuará compondo os dados e mutações já existentes.
+- Os espaços são escopos derivados da lista de notas já carregada: **Minhas notas** (`classification === private`), **Equipe** (`classification === team`) e **Contexto clínico** (`patientId` presente). As contagens usam esses mesmos critérios antes de filtros ou busca.
+- Ao selecionar um espaço, a listagem é restringida ao seu escopo; o filtro ativo (recentes, favoritas, arquivadas etc.) continua sendo aplicado dentro desse resultado. Selecionar “Todas as notas” remove o escopo de espaço e volta à coleção permitida inteira.
 - `NotesHome` recebe uma callback de retorno, sem acoplar o componente visual ao roteador.
 - `NoteEditor` recebe a mesma callback e a posiciona no cabeçalho.
 - O componente de página resolve o destino: prioriza uma origem interna válida do histórico de navegação e, caso não exista, usa `/`.
