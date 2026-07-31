@@ -34,6 +34,7 @@ import { npsRoutes, npsPublicRoutes } from "./routes/nps";
 import { referralsRoutes } from "./routes/referrals";
 import { clinicalRoutes } from "./routes/clinical";
 import clinicalPlateauRoutes from "./routes/clinical/plateau";
+import clinicalDischargeRoutes from "./routes/clinical/discharge";
 import { notificationsRoutes } from "./routes/notifications";
 import { eventosRoutes } from "./routes/eventos";
 import { auditRoutes } from "./routes/auditRoutes";
@@ -336,6 +337,7 @@ const apiRoutes = [
   ["/api/referrals", referralsRoutes],
   ["/api/clinical", clinicalRoutes],
   ["/api/clinical", clinicalPlateauRoutes],
+  ["/api/clinical", clinicalDischargeRoutes],
   ["/api/notifications", notificationsRoutes],
   ["/api/communications", communicationsRoutes],
   ["/api/organizations", organizationsRoutes],

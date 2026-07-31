@@ -145,6 +145,9 @@ psql "$NEON_PROD_URL" -f apps/api/migrations/0054_patient_directory_filters.sql
 | --- | --- | --- | --- | --- |
 | `0149_fix_clinical_embeddings_dim.sql` | `clinical_embeddings.embedding` de `vector(1536)` para `vector(1024)` + HNSW recriado | ✅ 31/07/2026 | ✅ | Coluna estava incompatível com `@cf/baai/bge-m3` (1024d): todo INSERT falhava e era engolido por `catch`. Tabela estava vazia (0 linhas), sem perda. A migration aborta sozinha se houver linhas. |
 | `0150_clinical_extractions.sql` | Camada derivada das evoluções em texto (conduta/região/dosagem/carga/EVA) com trilha de origem e RLS | ✅ 31/07/2026 | ✅ | Reconstruível: pode ser truncada e regerada pelo parser. `sessions.observacao` nunca é alterado. Índice único por (origem, categoria, código, offset) garante backfill idempotente. |
+| `0151_clinical_extractions_exercicio.sql` | Categorias `exercicio` e `plano` | ✅ 31/07/2026 | ✅ | `PQD` (paraquedista) é exercício, não músculo — não cabia em nenhuma categoria existente. |
+| `0152_clinical_extractions_alta_linha_base.sql` | Categorias `linha_base` e `alta` | ✅ 31/07/2026 | ✅ | `LB:` é convenção criada pela própria clínica (510 evoluções). Menções de alta são indício para revisão, não registro. |
+| `0153_discharge_events.sql` | Alta como evento datado, com taxonomia e proveniência | ✅ 31/07/2026 | ✅ | `abandono` NÃO existe na taxonomia: é sempre inferido por inatividade. Down descarta dados não reconstruíveis — exportar antes. |
 
 ---
 
