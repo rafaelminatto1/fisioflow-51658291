@@ -148,6 +148,7 @@ psql "$NEON_PROD_URL" -f apps/api/migrations/0054_patient_directory_filters.sql
 | `0151_clinical_extractions_exercicio.sql` | Categorias `exercicio` e `plano` | ✅ 31/07/2026 | ✅ | `PQD` (paraquedista) é exercício, não músculo — não cabia em nenhuma categoria existente. |
 | `0152_clinical_extractions_alta_linha_base.sql` | Categorias `linha_base` e `alta` | ✅ 31/07/2026 | ✅ | `LB:` é convenção criada pela própria clínica (510 evoluções). Menções de alta são indício para revisão, não registro. |
 | `0153_discharge_events.sql` | Alta como evento datado, com taxonomia e proveniência | ✅ 31/07/2026 | ✅ | `abandono` NÃO existe na taxonomia: é sempre inferido por inatividade. Down descarta dados não reconstruíveis — exportar antes. |
+| `0154_patient_goals_icf_class.sql` | Classe CIF no objetivo terapêutico | ✅ 31/07/2026 | ✅ | Classe do objetivo prediz desfecho (OR 1,80 p/ atividade/participação; vago prediz pior) — FYSIOPRIM N=2.591. |
 
 ---
 
