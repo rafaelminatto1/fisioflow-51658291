@@ -143,7 +143,6 @@ export const DraggableAptCard = ({
   const maxTop = (endHour - startHour) * hourHeight - apt.height;
   const cardColors = getCardColors(apt, colors.primary);
   const _displayTime = formatAppointmentTime(apt.time, apt.date);
-  const titleLines = isTiny ? 1 : 2;
 
   const currentColumnIndex = allDays.findIndex((d) => isSameDay(d, targetDay));
 
@@ -307,7 +306,8 @@ export const DraggableAptCard = ({
                 isCompact && styles.aptTitleCompact,
                 isTiny && styles.aptTitleTiny,
               ]}
-              numberOfLines={titleLines}
+              numberOfLines={3}
+              ellipsizeMode="tail"
             >
               {apt.isGroup ? "Sessão em grupo" : apt.patientName || "Paciente"}
             </Text>
