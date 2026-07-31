@@ -42,26 +42,26 @@ export interface DischargeSuggestion {
  */
 export interface DischargeEvent {
   id: string;
-  discharged_at: string | null;
+  dischargedAt: string | null;
   reason: DischargeReason;
   scope: string | null;
-  baseline_summary: string | null;
-  final_summary: string | null;
-  pain_initial: number | null;
-  pain_final: number | null;
-  maintenance_plan: string | null;
-  return_criteria: string | null;
-  review_date: string | null;
+  baselineSummary: string | null;
+  finalSummary: string | null;
+  painInitial: number | null;
+  painFinal: number | null;
+  maintenancePlan: string | null;
+  returnCriteria: string | null;
+  reviewDate: string | null;
   origin: DischargeOrigin;
-  confirmed_by: string | null;
+  confirmedBy: string | null;
   notes: string | null;
 }
 
 /** Resposta do POST: apenas as colunas do `RETURNING`. */
 export interface DischargeRecorded {
   id: string;
-  patient_id: string;
-  discharged_at: string | null;
+  patientId: string;
+  dischargedAt: string | null;
   reason: DischargeReason;
   scope: string | null;
   origin: DischargeOrigin;

@@ -151,7 +151,10 @@ export async function recordDischarge(env: Env, input: DischargeInput) {
       return_criteria = EXCLUDED.return_criteria,
       review_date = EXCLUDED.review_date,
       updated_at = now()
-    RETURNING id, patient_id, discharged_at, reason, scope, origin
+    RETURNING id,
+              patient_id    AS "patientId",
+              discharged_at AS "dischargedAt",
+              reason, scope, origin
   `;
 
   return result.rows?.[0] ?? null;
@@ -163,9 +166,20 @@ export async function listPatientDischarges(
 ) {
   const sql = getRawSql(env, "read");
   const result = await sql`
-    SELECT id, discharged_at, reason, scope, baseline_summary, final_summary,
-           pain_initial, pain_final, maintenance_plan, return_criteria,
-           review_date, origin, confirmed_by, notes
+    SELECT id,
+           discharged_at    AS "dischargedAt",
+           reason,
+           scope,
+           baseline_summary AS "baselineSummary",
+           final_summary    AS "finalSummary",
+           pain_initial     AS "painInitial",
+           pain_final       AS "painFinal",
+           maintenance_plan AS "maintenancePlan",
+           return_criteria  AS "returnCriteria",
+           review_date      AS "reviewDate",
+           origin,
+           confirmed_by     AS "confirmedBy",
+           notes
     FROM discharge_events
     WHERE organization_id = ${params.organizationId}::uuid
       AND patient_id = ${params.patientId}::uuid
