@@ -45,6 +45,7 @@ import { auditRoutes } from "./routes/auditRoutes";
 import { analyticsRoutes } from "./routes/analytics";
 import analyticsOperationalRoutes from "./routes/analytics/operational";
 import analyticsRecordQualityRoutes from "./routes/analytics/recordQuality";
+import analyticsClinicalPatternsRoutes from "./routes/analytics/clinicalPatterns";
 import eventsLakeRoutes from "./routes/eventsLake";
 import { evolutionRoutes } from "./routes/evolution";
 import { evaluationFormsRoutes } from "./routes/evaluationForms";
@@ -392,6 +393,7 @@ const apiRoutes = [
   ["/api/analytics", analyticsRoutes],
   ["/api/analytics", analyticsOperationalRoutes],
   ["/api/analytics", analyticsRecordQualityRoutes],
+  ["/api/analytics", analyticsClinicalPatternsRoutes],
   ["/api/events-lake", eventsLakeRoutes],
   ["/api/insights", analyticsRoutes],
   ["/api", eventosRoutes],
