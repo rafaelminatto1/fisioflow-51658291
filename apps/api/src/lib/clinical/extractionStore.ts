@@ -20,7 +20,9 @@ export interface ExtractionRow {
     | "plano"
     | "dosagem"
     | "carga"
-    | "eva";
+    | "eva"
+    | "linha_base"
+    | "alta";
   code: string;
   valueNumeric?: number;
   valueUnit?: string;
@@ -91,6 +93,29 @@ export function toRows(parsed: ParsedEvolution): ExtractionRow[] {
       sourceText: p.sourceText,
       sourceStart: p.sourceStart,
       sourceEnd: p.sourceStart + p.sourceText.length,
+    });
+  }
+
+  for (const b of parsed.baselines) {
+    rows.push({
+      category: "linha_base",
+      code: b.value != null ? "lb_angulo" : "lb_descritor",
+      valueNumeric: b.value,
+      valueUnit: b.unit,
+      // Guarda o descritor, não só o marcador: é ele que dá sentido ao valor.
+      sourceText: b.sourceText,
+      sourceStart: b.sourceStart,
+      sourceEnd: b.sourceStart + b.sourceText.length,
+    });
+  }
+
+  for (const d of parsed.dischargeMentions) {
+    rows.push({
+      category: "alta",
+      code: d.kind,
+      sourceText: d.sourceText,
+      sourceStart: d.sourceStart,
+      sourceEnd: d.sourceStart + d.sourceText.length,
     });
   }
 

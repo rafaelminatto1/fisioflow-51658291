@@ -190,6 +190,77 @@ describe("exercícios", () => {
   });
 });
 
+describe("linha de base (LB:)", () => {
+  it("extrai o descritor e o ângulo quando há medida", () => {
+    const p = parseEvolution("LB: Abd GUD - 100°\nLib mio manual em TFS");
+    expect(p.baselines).toHaveLength(1);
+    expect(p.baselines[0]).toMatchObject({ descriptor: "Abd GUD - 100°", value: 100, unit: "graus" });
+  });
+
+  it("aceita linha de base qualitativa sem inventar número", () => {
+    // "Dor ao subir escada" é linha de base legítima; convertê-la num valor
+    // seria fabricar medida.
+    const p = parseEvolution("LB: Dor ao subir escada / Dor ao caminhar");
+    expect(p.baselines[0].descriptor).toContain("Dor ao subir escada");
+    expect(p.baselines[0].value).toBeUndefined();
+  });
+
+  it("ignora LB: sem descritor", () => {
+    expect(parseEvolution("LB:\nLib mio").baselines).toHaveLength(0);
+  });
+
+  it("aceita as variações de grafia de grau vistas no corpus", () => {
+    for (const t of ["LB: Flx 45°", "LB: flexão a 45º", "LB: abd 45 graus"]) {
+      expect(parseEvolution(t).baselines[0]?.value).toBe(45);
+    }
+  });
+});
+
+describe("menções de alta", () => {
+  it("reconhece alta declarada", () => {
+    const p = parseEvolution("Paciente relatou estar bem, sem dores ao repouso, esta de ALTA!!!!!!");
+    expect(p.dischargeMentions[0].kind).toBe("alta_declarada");
+  });
+
+  it("reconhece alta médica", () => {
+    const p = parseEvolution("Teve alta médica para fazer fisio com 8 semanas.");
+    expect(p.dischargeMentions[0].kind).toBe("alta_medica");
+  });
+
+  it("reconhece alta parcial (por região, tratamento continua)", () => {
+    // Trecho real: alta de uma região sem encerrar o tratamento. Tratar como
+    // alta do paciente encerraria um caso que segue ativo.
+    const p = parseEvolution(
+      "Paciente está de alta do ombro. Próximas sessões serão para fortalecimento de MMSS e tto de lombar.",
+    );
+    expect(p.dischargeMentions[0].kind).toBe("alta_parcial");
+  });
+
+  it("NÃO confunde 'alta' adjetivo com encerramento", () => {
+    // No corpus, "alta" é quase sempre adjetivo. Este é o falso positivo que
+    // inflou minha primeira contagem de 21 para 1.458.
+    for (const t of [
+      "Prancha alta com remada serrote 3x10rep",
+      "Combinada em TFS e torácica alta",
+      "não foi um treino de alta intensidade",
+      "Laser em lombar alta",
+      "Remada alta na diagonal escapular",
+    ]) {
+      expect(parseEvolution(t).dischargeMentions).toHaveLength(0);
+    }
+  });
+
+  it("NÃO trata 'última sessão' como alta — no corpus significa sessão anterior", () => {
+    const p = parseEvolution("Paciente relata melhora dos sintomas após a última sessão.");
+    expect(p.dischargeMentions).toHaveLength(0);
+  });
+
+  it("não duplica a mesma menção em dois tipos", () => {
+    const p = parseEvolution("Paciente está de alta do joelho D.");
+    expect(p.dischargeMentions).toHaveLength(1);
+  });
+});
+
 describe("léxico", () => {
   it("não tem códigos duplicados dentro da mesma categoria", () => {
     for (const list of [CONDUTAS, REGIOES]) {

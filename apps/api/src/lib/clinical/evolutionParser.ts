@@ -48,6 +48,34 @@ export interface LoadItem {
   sourceStart: number;
 }
 
+/**
+ * Linha de base — convenção `LB:` criada pela própria clínica, presente em 510
+ * evoluções. É o "achado objetivo" que a literatura descreve como fundação para
+ * detectar platô e mostrar progresso ao paciente na alta.
+ *
+ * Mistura quantitativo (`LB: Abd GUD - 90°`) e qualitativo (`LB: Dor ao subir
+ * escada`). Guardamos o descritor sempre e o valor quando existir — não
+ * convertemos qualitativo em número.
+ */
+export interface BaselineItem {
+  descriptor: string;
+  value?: number;
+  unit?: "graus";
+  sourceText: string;
+  sourceStart: number;
+}
+
+/**
+ * Menção de alta no texto. NÃO é o registro de alta — é um indício, para revisão
+ * humana. Inferir alta por inatividade é proibido (mesmo viés de seleção já
+ * descartado na atribuição de autoria).
+ */
+export interface DischargeMention {
+  kind: "alta_medica" | "alta_declarada" | "alta_parcial";
+  sourceText: string;
+  sourceStart: number;
+}
+
 export interface PainReading {
   value: number;
   /** Escala máxima quando explícita ("EVA 6/10"); indefinido quando só "EVA 6". */
@@ -62,6 +90,8 @@ export interface ParsedEvolution {
   dosages: DosageItem[];
   loads: LoadItem[];
   painReadings: PainReading[];
+  baselines: BaselineItem[];
+  dischargeMentions: DischargeMention[];
   /** Assinatura `(Nome CREFITO 3/XXXXXX-F)`, quando presente. */
   signature?: { name?: string; crefito: string; sourceText: string };
   /** Falso quando nenhum termo do léxico foi encontrado — sinaliza texto atípico. */
@@ -103,6 +133,35 @@ const LOAD_RE = /(?<![\d,.])(\d{1,3}(?:[,.]\d{1,2})?)\s*kg\b/gi;
  */
 const PAIN_RE = /\bEVA\b\s*:?\s*(10|0?\d)(?!\d)(?:\s*\/\s*(10|\d{1,3}))?/gi;
 
+/**
+ * `LB:` seguido do descritor até a quebra de linha.
+ *
+ * `[ \t]*` em vez de `\s*` de propósito: `\s` casa `\n`, e 42 evoluções têm
+ * `LB:` isolado numa linha. Com `\s*` o parser puxaria a linha seguinte — que é
+ * a conduta — como se fosse a linha de base.
+ */
+const BASELINE_RE = /\bLB[ \t]*:[ \t]*([^\n]{2,120})/gi;
+
+/** Ângulo dentro do descritor de linha de base: "90°", "a 100 graus", "- 45º". */
+const BASELINE_VALUE_RE = /(\d{1,3})\s*(?:°|º|graus)/i;
+
+/**
+ * Linguagem real de alta. Exclui deliberadamente "alta intensidade" e afins:
+ * no corpus, "alta" é quase sempre adjetivo (prancha alta, torácica alta), e
+ * "última sessão" significa a sessão ANTERIOR, não a final.
+ */
+const DISCHARGE_PATTERNS: Array<{ kind: DischargeMention["kind"]; re: RegExp }> = [
+  { kind: "alta_medica", re: /alta\s+m[ée]dica/gi },
+  { kind: "alta_parcial", re: /(?:est[áa]|esta)\s+de\s+alta\s+d[oa]\s+\w+/gi },
+  {
+    kind: "alta_declarada",
+    re: /(?:(?:est[áa]|esta)\s+de\s+alta|recebeu\s+alta|receber\s+alta|dar\s+alta|ter[áa]\s+alta|alta\s+fisioterap\w*|quase\s+de\s+alta)/gi,
+  },
+];
+
+/** "alta" como adjetivo — nunca é encerramento de tratamento. */
+const DISCHARGE_FALSE_POSITIVE = /(?:alta|baixa)\s+intensidade|intensidade\s+alta|alta\s+performance|prancha\s+alta|remada\s+alta|tor[áa]cica\s+alta|lombar\s+alta|puxada\s+alta/i;
+
 const SIGNATURE_RE =
   /([A-ZÀ-Ú][\p{L}]+(?:\s+[A-ZÀ-Ú][\p{L}]+){0,3})?\s*\(?\s*CREFITO[^0-9]{0,4}(?:3[/\s\-–.]+)?(\d{4,7})/iu;
 
@@ -131,6 +190,8 @@ export function parseEvolution(text: string | null | undefined): ParsedEvolution
     dosages: [],
     loads: [],
     painReadings: [],
+    baselines: [],
+    dischargeMentions: [],
     hasAnyMatch: false,
   };
   if (!text || text.trim().length === 0) return empty;
@@ -186,6 +247,37 @@ export function parseEvolution(text: string | null | undefined): ParsedEvolution
     }
   }
 
+  const baselines: BaselineItem[] = [];
+  for (const m of text.matchAll(BASELINE_RE)) {
+    const descriptor = m[1].trim();
+    if (descriptor.length < 2) continue;
+    const v = BASELINE_VALUE_RE.exec(descriptor);
+    baselines.push({
+      descriptor,
+      value: v ? Number(v[1]) : undefined,
+      unit: v ? "graus" : undefined,
+      sourceText: m[0],
+      sourceStart: m.index ?? 0,
+    });
+  }
+
+  const dischargeMentions: DischargeMention[] = [];
+  const dischargeSeen = new Set<number>();
+  for (const { kind, re } of DISCHARGE_PATTERNS) {
+    re.lastIndex = 0;
+    for (const m of text.matchAll(re)) {
+      const start = m.index ?? 0;
+      // Janela de contexto para descartar "alta" adjetivo.
+      const around = text.slice(Math.max(0, start - 30), start + m[0].length + 30);
+      if (DISCHARGE_FALSE_POSITIVE.test(around)) continue;
+      // `alta_parcial` é mais específica que `alta_declarada` e casa no mesmo
+      // trecho — a primeira a registrar o offset vence.
+      if (dischargeSeen.has(start)) continue;
+      dischargeSeen.add(start);
+      dischargeMentions.push({ kind, sourceText: m[0].trim(), sourceStart: start });
+    }
+  }
+
   const sig = SIGNATURE_RE.exec(text);
   const signature = sig
     ? { name: sig[1]?.replace(/\s+/g, " ").trim() || undefined, crefito: sig[2], sourceText: sig[0].trim() }
@@ -197,6 +289,8 @@ export function parseEvolution(text: string | null | undefined): ParsedEvolution
     dosages,
     loads,
     painReadings,
+    baselines,
+    dischargeMentions,
     signature,
     hasAnyMatch: extractions.length > 0,
   };
