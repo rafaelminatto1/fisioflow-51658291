@@ -38,6 +38,7 @@ import clinicalDischargeRoutes from "./routes/clinical/discharge";
 import clinicalGoalsRoutes from "./routes/clinical/goals";
 import clinicalSearchRoutes from "./routes/clinical/search";
 import backfillEmbeddingsRoutes from "./routes/admin/backfill-embeddings";
+import backfillEvaluationsRoutes from "./routes/admin/backfill-evaluations";
 import { notificationsRoutes } from "./routes/notifications";
 import { eventosRoutes } from "./routes/eventos";
 import { auditRoutes } from "./routes/auditRoutes";
@@ -346,6 +347,7 @@ const apiRoutes = [
   ["/api/clinical", clinicalGoalsRoutes],
   ["/api/clinical", clinicalSearchRoutes],
   ["/api/admin/backfill-embeddings", backfillEmbeddingsRoutes],
+  ["/api/admin/backfill-evaluations", backfillEvaluationsRoutes],
   ["/api/notifications", notificationsRoutes],
   ["/api/communications", communicationsRoutes],
   ["/api/organizations", organizationsRoutes],
