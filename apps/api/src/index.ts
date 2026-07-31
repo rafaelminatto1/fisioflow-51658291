@@ -36,10 +36,14 @@ import { clinicalRoutes } from "./routes/clinical";
 import clinicalPlateauRoutes from "./routes/clinical/plateau";
 import clinicalDischargeRoutes from "./routes/clinical/discharge";
 import clinicalGoalsRoutes from "./routes/clinical/goals";
+import clinicalSearchRoutes from "./routes/clinical/search";
+import backfillEmbeddingsRoutes from "./routes/admin/backfill-embeddings";
 import { notificationsRoutes } from "./routes/notifications";
 import { eventosRoutes } from "./routes/eventos";
 import { auditRoutes } from "./routes/auditRoutes";
 import { analyticsRoutes } from "./routes/analytics";
+import analyticsOperationalRoutes from "./routes/analytics/operational";
+import analyticsRecordQualityRoutes from "./routes/analytics/recordQuality";
 import eventsLakeRoutes from "./routes/eventsLake";
 import { evolutionRoutes } from "./routes/evolution";
 import { evaluationFormsRoutes } from "./routes/evaluationForms";
@@ -340,6 +344,8 @@ const apiRoutes = [
   ["/api/clinical", clinicalPlateauRoutes],
   ["/api/clinical", clinicalDischargeRoutes],
   ["/api/clinical", clinicalGoalsRoutes],
+  ["/api/clinical", clinicalSearchRoutes],
+  ["/api/admin/backfill-embeddings", backfillEmbeddingsRoutes],
   ["/api/notifications", notificationsRoutes],
   ["/api/communications", communicationsRoutes],
   ["/api/organizations", organizationsRoutes],
@@ -382,6 +388,8 @@ const apiRoutes = [
   ["/api/clinical-docs", clinicalDocsRoutes],
   ["/api/audit-logs", auditRoutes],
   ["/api/analytics", analyticsRoutes],
+  ["/api/analytics", analyticsOperationalRoutes],
+  ["/api/analytics", analyticsRecordQualityRoutes],
   ["/api/events-lake", eventsLakeRoutes],
   ["/api/insights", analyticsRoutes],
   ["/api", eventosRoutes],
