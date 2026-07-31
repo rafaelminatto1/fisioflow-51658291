@@ -5,6 +5,7 @@ import { requireAuth } from "../../lib/auth";
 import {
   detectPlateaus,
   PLATEAU_MIN_SESSIONS,
+  PLATEAU_MIN_AXES,
   PAIN_MCID_POINTS,
 } from "../../lib/clinical/plateauDetection";
 
@@ -24,18 +25,26 @@ app.get("/plateau", requireAuth, async (c) => {
   const user = c.get("user");
   const minSessions = Number(c.req.query("minSessions") || PLATEAU_MIN_SESSIONS);
   const limit = Number(c.req.query("limit") || 50);
+  // `minAxes=1` mostra também os casos em que o paciente está progredindo ou em
+  // que falta medida — útil para auditar o próprio alerta, não para o dia a dia.
+  const minAxes = Number(c.req.query("minAxes") || PLATEAU_MIN_AXES);
 
   try {
-    const signals = await detectPlateaus(c.env, {
+    const report = await detectPlateaus(c.env, {
       organizationId: user.organizationId,
       minSessions: Number.isFinite(minSessions) ? minSessions : PLATEAU_MIN_SESSIONS,
       limit: Number.isFinite(limit) ? limit : 50,
+      minAxes: Number.isFinite(minAxes) ? minAxes : PLATEAU_MIN_AXES,
     });
 
     return c.json({
-      data: signals,
+      data: report.signals,
       meta: {
+        // `counts` mostra o que foi filtrado: alerta que esconde o próprio
+        // denominador não é auditável.
+        counts: report.counts,
         minSessions: PLATEAU_MIN_SESSIONS,
+        minAxes: PLATEAU_MIN_AXES,
         painMcidPoints: PAIN_MCID_POINTS,
         // A UI precisa dizer ao profissional de onde vêm os limiares, senão o
         // alerta parece arbitrário e é ignorado.
@@ -43,6 +52,7 @@ app.get("/plateau", requireAuth, async (c) => {
           conduta: `${PLATEAU_MIN_SESSIONS} sessões consecutivas com a mesma conduta e região (acima do p95 do histórico da clínica)`,
           dor: `variação de dor menor que ${PAIN_MCID_POINTS} ponto na EVA (MCID, Salaffi et al. 2004)`,
           carga: "nenhuma variação de carga em kg no período",
+          eixos: `exige ${PLATEAU_MIN_AXES} eixos: só repetição de conduta gerou 51% de falso positivo em produção (o paciente estava progredindo carga)`,
         },
       },
     });

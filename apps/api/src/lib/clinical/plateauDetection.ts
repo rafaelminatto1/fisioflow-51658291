@@ -42,6 +42,28 @@ export const PLATEAU_MIN_SESSIONS = 4;
  */
 export const PAIN_MCID_POINTS = 1;
 
+/**
+ * Eixos independentes exigidos para considerar platô.
+ *
+ * Medido em produção: repetição de conduta sozinha gera 175 sinais em 127
+ * pacientes — mas em 89 deles (51%) a CARGA PROGREDIU no período. Ou seja, o
+ * fisioterapeuta estava evoluindo o paciente dentro da mesma conduta, que é o
+ * comportamento correto, não platô. Alertar nesses casos treinaria a equipe a
+ * ignorar o alerta.
+ *
+ * Com 2 eixos, sobram ~32 sinais — volume acionável para uma clínica com ~92
+ * pacientes ativos por mês.
+ */
+export const PLATEAU_MIN_AXES = 2;
+
+export type PlateauStatus =
+  /** Repetição de conduta confirmada por carga e/ou dor estagnadas. */
+  | "confirmado"
+  /** Conduta repetida, mas a carga progrediu — o paciente está evoluindo. */
+  | "progredindo"
+  /** Conduta repetida e sem carga nem dor registradas: não dá para afirmar. */
+  | "sem_dados";
+
 export interface PlateauSignal {
   patientId: string;
   patientName: string;
@@ -56,6 +78,12 @@ export interface PlateauSignal {
   painStalled: boolean | null;
   /** Quantos eixos independentes confirmam o platô (1 a 3). */
   confirmingAxes: number;
+  status: PlateauStatus;
+}
+
+export interface PlateauReport {
+  signals: PlateauSignal[];
+  counts: Record<PlateauStatus, number>;
 }
 
 /**
@@ -67,8 +95,14 @@ export interface PlateauSignal {
  */
 export async function detectPlateaus(
   env: Env,
-  params: { organizationId: string; minSessions?: number; limit?: number },
-): Promise<PlateauSignal[]> {
+  params: {
+    organizationId: string;
+    minSessions?: number;
+    limit?: number;
+    /** Padrão: só confirmados. `sem_dados` e `progredindo` ficam de fora. */
+    minAxes?: number;
+  },
+): Promise<PlateauReport> {
   const minSessions = Math.max(params.minSessions ?? PLATEAU_MIN_SESSIONS, 2);
   const limit = Math.min(params.limit ?? 50, 200);
   const sql = getRawSql(env, "read");
@@ -135,9 +169,22 @@ export async function detectPlateaus(
     LIMIT ${limit}
   `;
 
-  return (result.rows ?? []).map((r: any) => {
+  const minAxes = Math.max(params.minAxes ?? PLATEAU_MIN_AXES, 1);
+
+  const all: PlateauSignal[] = (result.rows ?? []).map((r: any) => {
     const loadStalled = r.loadStalled ?? null;
     const painStalled = r.painStalled ?? null;
+    const confirmingAxes = 1 + (loadStalled === true ? 1 : 0) + (painStalled === true ? 1 : 0);
+
+    // "Progredindo" tem precedência sobre "sem dados": se a carga subiu, sabemos
+    // que não é platô, mesmo sem medida de dor.
+    const status: PlateauStatus =
+      confirmingAxes >= 2
+        ? "confirmado"
+        : loadStalled === false || painStalled === false
+          ? "progredindo"
+          : "sem_dados";
+
     return {
       patientId: r.patientId,
       patientName: r.patientName,
@@ -147,7 +194,13 @@ export async function detectPlateaus(
       lastDate: r.ate,
       loadStalled,
       painStalled,
-      confirmingAxes: 1 + (loadStalled === true ? 1 : 0) + (painStalled === true ? 1 : 0),
+      confirmingAxes,
+      status,
     };
   });
+
+  const counts = { confirmado: 0, progredindo: 0, sem_dados: 0 } as Record<PlateauStatus, number>;
+  for (const s of all) counts[s.status]++;
+
+  return { signals: all.filter((s) => s.confirmingAxes >= minAxes), counts };
 }
