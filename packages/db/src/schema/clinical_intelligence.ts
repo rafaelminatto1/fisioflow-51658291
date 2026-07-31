@@ -13,10 +13,17 @@ import { patients } from "./patients";
 import { sessions } from "./sessions";
 import { withOrganizationPolicy } from "./rls_helper";
 
-// Definição do tipo Vector para pgvector
+/**
+ * Tipo pgvector do índice clínico.
+ *
+ * 1024 = dimensão do @cf/baai/bge-m3, o modelo usado por
+ * `apps/api/src/lib/ai/embeddings.ts` (ver CLINICAL_EMBEDDING_DIM em
+ * `apps/api/src/lib/workersAi.ts`). Já esteve como 1536 por engano, o que fazia
+ * todo INSERT falhar silenciosamente — não alterar sem trocar o modelo junto.
+ */
 const vector = customType<{ data: number[] }>({
   dataType() {
-    return "vector(1536)"; // Dimensão compatível com OpenAI/Gemini
+    return "vector(1024)";
   },
 });
 

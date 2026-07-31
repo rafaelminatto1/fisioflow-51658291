@@ -39,6 +39,25 @@ export const WORKERS_AI_MODELS = {
   translate: "@cf/meta/m2m100-1.2b",
 } as const;
 
+/**
+ * Dimensão do vetor produzido por cada modelo de embedding.
+ *
+ * Why: `clinical_embeddings.embedding` foi criada como `vector(1536)` (comentário
+ * do schema dizia "compatível com OpenAI/Gemini") enquanto o writer usava bge-m3,
+ * que devolve 1024. Todo INSERT falhava com erro de dimensão e era engolido por um
+ * `catch` que só logava — a tabela ficou vazia por meses sem nenhum alerta.
+ *
+ * Sempre derive a dimensão da coluna daqui, nunca de um literal.
+ */
+export const EMBEDDING_DIMENSIONS = {
+  embeddings_bge_m3: 1024,
+  embeddings_bge_base: 768,
+} as const satisfies Partial<Record<keyof typeof WORKERS_AI_MODELS, number>>;
+
+/** Modelo e dimensão do índice clínico (`clinical_embeddings`). */
+export const CLINICAL_EMBEDDING_MODEL = WORKERS_AI_MODELS.embeddings_bge_m3;
+export const CLINICAL_EMBEDDING_DIM = EMBEDDING_DIMENSIONS.embeddings_bge_m3;
+
 /** Lista dos modelos deprecados em 2026-05-30 (para o teste de regressão). */
 export const DEPRECATED_MODELS_2026_05_30 = [
   "@cf/moonshotai/kimi-k2.5",

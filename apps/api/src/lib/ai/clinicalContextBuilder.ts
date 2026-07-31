@@ -1,4 +1,12 @@
-import { RetrievedContext } from "./ragClinicalContext";
+/**
+ * Trecho do histórico clínico recuperado por busca semântica.
+ * A recuperação real (pgvector) vive em `routes/ai-clinical-search.ts`.
+ */
+export interface RetrievedContext {
+  evolutionId: string;
+  contentSummary: string;
+  similarity: number;
+}
 
 export function buildClinicalContextPrompt(query: string, contexts: RetrievedContext[], maxTokens: number = 3000): string {
   if (contexts.length === 0) {
