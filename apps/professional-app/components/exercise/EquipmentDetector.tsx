@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   },
   itemHeader: {
     flexDirection: "row",
-    justifyContent: "between",
+    justifyContent: "space-between",
     alignItems: "center",
   },
   itemName: {

@@ -90,7 +90,7 @@ export const PostureCaptureGuide: React.FC<PostureCaptureGuideProps> = ({
 const styles = StyleSheet.create({
   overlayContainer: {
     ...StyleSheet.absoluteFillObject,
-    justify: "space-between",
+    justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 40,
   },
