@@ -101,6 +101,7 @@ import { staffSchedulesRoutes } from "./routes/staffSchedules";
 import { announcementsRoutes } from "./routes/announcements";
 import { adminSeedTemplatesRoutes } from "./routes/admin/seed-templates";
 import { triggerDigitalTwinRoutes } from "./routes/admin/trigger-digital-twin";
+import backfillExtractionsRoutes from "./routes/admin/backfill-extractions";
 import { triggerSessionArchiveRoutes } from "./routes/admin/trigger-session-archive";
 import { sloMetricsRoutes } from "./routes/admin/slo-metrics";
 import { dlqReplayRoutes } from "./routes/admin/dlq-replay";
@@ -297,6 +298,7 @@ app.get("/api/health/db", async (c) => {
 // ===== ROTAS =====
 const apiRoutes = [
   ["/api/ai-trigger-dt", triggerDigitalTwinRoutes],
+  ["/api/admin/backfill-extractions", backfillExtractionsRoutes],
   ["/api/admin/trigger-session-archive", triggerSessionArchiveRoutes],
   ["/api/admin/slo-metrics", sloMetricsRoutes],
   ["/api/admin/cloudflare-control", cloudflareControlRoutes],

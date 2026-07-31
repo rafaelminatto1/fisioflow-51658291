@@ -139,6 +139,15 @@ psql "$NEON_PROD_URL" -f apps/api/migrations/0054_patient_directory_filters.sql
 
 ---
 
+## Aplicadas fora da tabela do histórico
+
+| Arquivo | Descrição | Prod | Down | Observações |
+| --- | --- | --- | --- | --- |
+| `0149_fix_clinical_embeddings_dim.sql` | `clinical_embeddings.embedding` de `vector(1536)` para `vector(1024)` + HNSW recriado | ✅ 31/07/2026 | ✅ | Coluna estava incompatível com `@cf/baai/bge-m3` (1024d): todo INSERT falhava e era engolido por `catch`. Tabela estava vazia (0 linhas), sem perda. A migration aborta sozinha se houver linhas. |
+| `0150_clinical_extractions.sql` | Camada derivada das evoluções em texto (conduta/região/dosagem/carga/EVA) com trilha de origem e RLS | ✅ 31/07/2026 | ✅ | Reconstruível: pode ser truncada e regerada pelo parser. `sessions.observacao` nunca é alterado. Índice único por (origem, categoria, código, offset) garante backfill idempotente. |
+
+---
+
 ## Sistema de Duas Faixas de Migrations
 
 | Sistema         | Path                   | Gerenciamento                       | Quando usar                                                                    |

@@ -9,6 +9,7 @@ import { stripHtml } from "../lib/stripHtml";
 import { parseBlocks } from "../lib/evolution/blocks";
 import { invalidatePatientCache } from "../lib/ai-context-cache";
 import { processClinicalEmbedding } from "../lib/ai/embeddings";
+import { extractAndStore } from "../lib/clinical/extractionStore";
 import { triggerFiscalCycleNotification } from "../lib/fiscal/notificationTrigger";
 import { logClinicalAccess, extractClientIp } from "../lib/clinicalAccessLog";
 
@@ -414,7 +415,21 @@ app.post("/:id/finalize", requireAuth, async (c) => {
           row.id,
           extractEvolutionText(row),
         ),
-      ]).catch(() => {}),
+        // Camada derivada determinística. Roda junto do embedding para que a
+        // evolução fique consultável (conduta, região, dosagem, EVA) assim que
+        // é finalizada — sem depender do backfill.
+        extractAndStore(c.env, {
+          organizationId: user.organizationId,
+          patientId: row.patientId,
+          sourceTable: "sessions",
+          sourceId: row.id,
+          text: row.observacao,
+        }),
+      ]).catch((error) => {
+        // waitUntil não propaga: sem log aqui, a falha some. Foi exatamente esse
+        // padrão que escondeu ~11 mil falhas de embedding por meses.
+        console.error("[Sessions] pós-finalização falhou:", error);
+      }),
     );
 
     // Trigger SessionSummaryWorkflow to generate SOAP summary and send WhatsApp
