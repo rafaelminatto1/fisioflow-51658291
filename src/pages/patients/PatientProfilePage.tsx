@@ -20,6 +20,12 @@ import { PatientDocumentsTab } from "@/components/patient/PatientDocumentsTab";
 import { PatientFinancialTab } from "@/components/patient/PatientFinancialTab";
 import { PatientGamificationTab } from "@/components/patient/PatientGamificationTab";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +38,13 @@ import {
   ClipboardList,
   CheckSquare,
   TrendingUp,
+  ChevronDown,
+  User,
+  Stethoscope,
+  Wallet,
+  FileText,
+  Trophy,
+  BookOpen,
 } from "lucide-react";
 import { PatientTasksPanel } from "@/components/patient/PatientTasksPanel";
 import EditPatientModal from "@/components/modals/EditPatientModal";
@@ -148,6 +161,48 @@ const PatientProfileContent = () => {
     "evidence",
   ] as const;
   type TabValue = (typeof validTabs)[number];
+
+  /**
+   * Abas primárias — as que têm dado e uso real na clínica.
+   *
+   * A ordem segue o fluxo do fisioterapeuta: chega no paciente, vê o resumo,
+   * abre a evolução, consulta o histórico clínico. Cadastro e financeiro vêm
+   * depois porque são consulta pontual, não trabalho de sessão.
+   */
+  const TABS_PRIMARIAS = [
+    { value: "overview" as const, label: "Visão geral", Icone: Sparkles },
+    { value: "evolution" as const, label: "Evolução", Icone: TrendingUp },
+    { value: "clinical" as const, label: "Clínico", Icone: Stethoscope },
+    { value: "timeline" as const, label: "Histórico", Icone: History },
+    { value: "personal" as const, label: "Cadastro", Icone: User },
+  ];
+
+  /**
+   * Abas secundárias, atrás do menu "Mais".
+   *
+   * Medido no banco em 31/07/2026: `activity_lab_sessions`, `patient_documents`
+   * e `clinical_reasoning_logs` (evidence) têm ZERO linhas; `notes` tem 1 e
+   * `patient_gamification` 34. Continuam acessíveis — o que muda é que param de
+   * competir por atenção com as abas que a equipe usa todo dia.
+   */
+  const TABS_SECUNDARIAS = [
+    { value: "analytics" as const, label: "Analytics", Icone: Brain },
+    { value: "financial" as const, label: "Financeiro", Icone: Wallet },
+    { value: "tasks" as const, label: "Tarefas", Icone: CheckSquare },
+    { value: "notes" as const, label: "Notas", Icone: FileText },
+    { value: "documents" as const, label: "Documentos", Icone: ClipboardList },
+    { value: "activity-lab" as const, label: "Lab. de atividade", Icone: Activity },
+    { value: "evidence" as const, label: "Evidência", Icone: BookOpen },
+    { value: "gamification" as const, label: "Gamificação", Icone: Trophy },
+  ];
+
+  /** Troca de aba mantendo o `?tab=` da URL — deep links continuam válidos. */
+  const handleTabChange = (value: TabValue) => {
+    setActiveTab(value);
+    const params = new URLSearchParams(searchParams);
+    params.set("tab", value);
+    navigate(`?${params.toString()}`, { replace: true });
+  };
 
   const [activeTab, setActiveTab] = useState<TabValue>(() => {
     const tabFromUrl = searchParams.get("tab");
@@ -399,104 +454,63 @@ const PatientProfileContent = () => {
             }))}
           />
 
-          <Tabs
-            value={activeTab}
-            onValueChange={(value) => {
-              setActiveTab(value as TabValue);
-              const params = new URLSearchParams(searchParams);
-              params.set("tab", value as string);
-              navigate(`?${params.toString()}`, { replace: true });
-            }}
-            className="w-full"
-          >
+          <Tabs value={activeTab} onValueChange={(value) => handleTabChange(value as TabValue)} className="w-full">
             <div className="sticky top-0 z-20 bg-card pb-1 pt-2 -mx-4 px-4 border-b border-blue-50/50 shadow-sm shadow-blue-500/5">
               <div className="relative">
-                <TabsList className="w-full justify-start h-auto p-0 bg-transparent overflow-x-auto flex-nowrap scrollbar-hide gap-6 pr-12">
-                  <TabsTrigger
-                    value="overview"
-                    className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
-                  >
-                    Visão Geral
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="evolution"
-                    className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
-                  >
-                    <TrendingUp className="h-4 w-4" />
-                    Evolução
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="timeline"
-                    className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
-                  >
-                    <History className="h-4 w-4" />
-                    Linha do Tempo
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="analytics"
-                    className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
-                  >
-                    <Brain className="h-4 w-4" />
-                    Analytics & IA
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="personal"
-                    className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
-                  >
-                    Dados Pessoais
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="clinical"
-                    className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
-                  >
-                    Histórico Clínico
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="activity-lab"
-                    className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all gap-2"
-                  >
-                    <Activity className="h-4 w-4" />
-                    Biomecânica
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="financial"
-                    className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
-                  >
-                    Financeiro
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="gamification"
-                    className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
-                  >
-                    Gamificação
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="documents"
-                    className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
-                  >
-                    Arquivos
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="notes"
-                    className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
-                  >
-                    <ClipboardList className="h-4 w-4" />
-                    Notas
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="tasks"
-                    className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
-                  >
-                    <CheckSquare className="h-4 w-4" />
-                    Tarefas
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="evidence"
-                    className="data-[state=active]:border-emerald-600 data-[state=active]:text-emerald-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
-                  >
-                    <Brain className="h-4 w-4" />
-                    Evidência
-                  </TabsTrigger>
+                {/*
+                  5 abas primárias + menu "Mais".
+
+                  Eram 13 abas visíveis, e 6 delas não têm um único registro no
+                  banco (activity-lab, evidence, documents, além de notes com 1
+                  e gamification com 34). Isso não é riqueza, é dispersão: o
+                  fisioterapeuta não sabe onde procurar.
+
+                  Nenhuma aba foi removida e os valores de `tab` na URL
+                  continuam os mesmos — deep links salvos seguem funcionando.
+                  O que mudou é só o que compete por atenção na primeira olhada.
+                */}
+                <TabsList className="w-full justify-start h-auto p-0 bg-transparent gap-6">
+                  {TABS_PRIMARIAS.map(({ value, label, Icone }) => (
+                    <TabsTrigger
+                      key={value}
+                      value={value}
+                      className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
+                    >
+                      {Icone ? <Icone className="h-4 w-4" /> : null}
+                      {label}
+                    </TabsTrigger>
+                  ))}
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className={`ml-auto flex items-center gap-1 border-b-2 px-0 py-2 text-sm font-semibold transition-all ${
+                          TABS_SECUNDARIAS.some((t) => t.value === activeTab)
+                            ? "border-blue-600 text-blue-600"
+                            : "border-transparent text-muted-foreground"
+                        }`}
+                      >
+                        {/* Quando uma aba do menu está ativa, o rótulo mostra
+                            qual é — senão o usuário perde a referência de onde
+                            está. */}
+                        {TABS_SECUNDARIAS.find((t) => t.value === activeTab)?.label ?? "Mais"}
+                        <ChevronDown className="h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      {TABS_SECUNDARIAS.map(({ value, label, Icone }) => (
+                        <DropdownMenuItem
+                          key={value}
+                          onSelect={() => handleTabChange(value)}
+                          className="gap-2"
+                        >
+                          {Icone ? <Icone className="h-4 w-4" /> : null}
+                          {label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TabsList>
                 {/* Visual indicator for horizontal scroll */}
                 <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden" />

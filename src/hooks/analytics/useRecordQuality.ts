@@ -49,7 +49,32 @@ export interface RecordQualityIndicators {
     recentes: number;
     lista?: AgendamentoSemSessaoRow[];
   };
-  pacientesSemAvaliacao: { valor: number; lista?: PacienteSemAvaliacaoRow[] };
+  pacientesComSessao: { valor: number };
+  /**
+   * ÚNICO indicador acionável do bloco de avaliação: paciente em programa de
+   * reabilitação e sem nenhuma avaliação com conteúdo.
+   *
+   * Não existe mais um campo `pacientesSemAvaliacao` agregado — ele misturava
+   * este caso com quem vem só para liberação miofascial ou recovery, que não
+   * tem avaliação a fazer, e produzia uma lista de centenas de pendências
+   * falsas.
+   */
+  semAvaliacaoEmReabilitacao: { valor: number; lista?: PacienteSemAvaliacaoRow[] };
+  /** Informativo, NÃO é pendência: o modelo de atendimento explica a ausência. */
+  terapiaManualAvulsa: {
+    valor: number;
+    semAvaliacao: number;
+    lista?: PacienteSemAvaliacaoRow[];
+  };
+  /** Tem registro, mas vazio — a tela mostra "avaliado" e esconde a lacuna. */
+  avaliacoesComRegistroVazio: {
+    valor: number;
+    registros: number;
+    registrosTotais: number;
+    lista?: PacienteSemAvaliacaoRow[];
+  };
+  pacientesSemNenhumRegistroAvaliacao: { valor: number };
+  pacientesSemAvaliacaoComConteudo: { valor: number };
   pacientesSemTelefone: { valor: number; lista?: PacienteSemTelefoneRow[] };
   sessoesObservacaoCurta: { valor: number; lista?: SessaoObservacaoCurtaRow[] };
 }
@@ -67,7 +92,9 @@ export interface RecordQualityResponse {
 
 export type RecordQualityIndicatorKey =
   | "agendamentosSemSessao"
-  | "pacientesSemAvaliacao"
+  | "semAvaliacaoEmReabilitacao"
+  | "terapiaManualAvulsa"
+  | "avaliacoesComRegistroVazio"
   | "pacientesSemTelefone"
   | "sessoesObservacaoCurta";
 

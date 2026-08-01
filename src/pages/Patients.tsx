@@ -43,6 +43,7 @@ import { cn } from '@/lib/utils';
 import { AniversariantesContent } from './relatorios/AniversariantesPage';
 import { usePatientsExport } from './patients/usePatientsExport';
 import { usePatientsUrlState } from './patients/usePatientsUrlState';
+import { ClinicPendingPanel } from "@/components/analytics/ClinicPendingPanel";
 
 const Patients = () => {
   const navigate = useNavigate();
@@ -340,6 +341,15 @@ const Patients = () => {
               </PopoverContent>
             </Popover>
           </PatientsPageHeader>
+
+          {/*
+            Pendências da clínica, com caminho para os nomes.
+
+            Fica na listagem porque é onde a recepção já está quando vai agir:
+            "146 ativos sem próxima sessão" só vira trabalho se der para abrir
+            a lista e começar a ligar.
+          */}
+          <ClinicPendingPanel />
 
           <Tabs
             value={activeTab}
