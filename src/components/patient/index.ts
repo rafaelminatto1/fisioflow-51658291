@@ -22,4 +22,8 @@ export { countActiveFilters, matchesFilters, type PatientFilters } from "./patie
 // Types
 export type { PatientAdvancedFiltersProps } from "./PatientAdvancedFilters";
 export type { StatsCardProps } from "./PatientStatsCard";
-export type { PatientsPageHeaderProps, PatientsPageHeaderStats } from "./PatientsPageHeader";
+export type {
+  PatientsPageHeaderProps,
+  PatientsPageHeaderStats,
+  HeaderFilterChip,
+} from "./PatientsPageHeader";
