@@ -140,7 +140,7 @@ export const notesApi = {
   update: (id: string, data: Partial<Pick<NoteRecord, "title" | "contentJson" | "contentText" | "tags" | "status">>, version?: number) =>
     request<{ data: NoteRecord }>(`/api/notes/${encodeURIComponent(id)}`, {
       method: "PATCH",
-      headers: version ? { "If-Match": `\"${version}\"` } : undefined,
+      headers: version ? { "If-Match": `"${version}"` } : undefined,
       body: JSON.stringify(data),
     }),
   createTask: (id: string, data: { title: string; description?: string; priority?: "BAIXA" | "MEDIA" | "ALTA" | "URGENTE"; assigneeId?: string }) =>

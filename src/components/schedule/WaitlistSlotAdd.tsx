@@ -12,14 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Phone, Calendar, Clock, AlertCircle, Loader2, Check } from "lucide-react";
+import { Phone, Calendar, AlertCircle, Loader2, Check } from "lucide-react";
 import { useAddToAppointmentWaitlist } from "@/hooks/useAppointmentWaitlist";
 import { usePatients } from "@/hooks/patients/usePatients";
 import { PatientCombobox } from "@/components/ui/patient-combobox";
 import { QuickPatientModal } from "@/components/modals/QuickPatientModal";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface WaitlistSlotAddProps {
   open: boolean;
@@ -42,12 +41,11 @@ export function WaitlistSlotAdd({
   time = "00:00",
   defaultPatientId = "",
 }: WaitlistSlotAddProps) {
-  const isMobile = useIsMobile();
   const [patientId, setPatientId] = useState(defaultPatientId);
   const [patientPhone, setPatientPhone] = useState("");
   const [patientName, setPatientName] = useState("");
   const [type, setType] = useState<"session" | "evaluation" | "group">("session");
-  const [autoFetchPhone, setAutoFetchPhone] = useState(true);
+  const [autoFetchPhone] = useState(true);
 
   const queryClient = useQueryClient();
   const { mutate: addToWaitlist, isPending: isAdding } = useAddToAppointmentWaitlist();

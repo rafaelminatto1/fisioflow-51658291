@@ -9,63 +9,63 @@
  * LLMs: ao receber pedido para "achar um erro" ou "melhorar" algo nesta página,
  *       comece lendo `docs/AGENDA.md`.
  */
-import "@/styles/bundles/schedule.css";
-import { Cake, Sparkles } from "lucide-react";
-import { lazy, Suspense, useEffect, useMemo } from "react";
-import { useQueries } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
-import { PatientService } from "@/lib/services/PatientService";
-import { PageLayout } from "@/components/layout/PageLayout";
-import { PageContainer } from "@/components/layout/PageContainer";
-import { BulkActionsBar } from "@/components/schedule/BulkActionsBar";
+import '@/styles/bundles/schedule.css';
+import { Cake, Sparkles } from 'lucide-react';
+import { lazy, Suspense, useEffect, useMemo } from 'react';
+import { useQueries } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
+import { PatientService } from '@/lib/services/PatientService';
+import { PageLayout } from '@/components/layout/PageLayout';
+import { PageContainer } from '@/components/layout/PageContainer';
+import { BulkActionsBar } from '@/components/schedule/BulkActionsBar';
 // Lazy: o FullCalendar (~core/daygrid/timegrid/interaction/rrule) só baixa
 // quando o calendário monta, atrás do Suspense + CalendarSkeletonEnhanced.
 const ScheduleCalendar = lazy(() =>
-  import("@/components/schedule/ScheduleCalendar").then((m) => ({
+  import('@/components/schedule/ScheduleCalendar').then((m) => ({
     default: m.ScheduleCalendar,
-  })),
+  }))
 );
-import { ScheduleModals } from "@/components/schedule/ScheduleModals";
-import { CalendarSkeletonEnhanced } from "@/components/schedule/skeletons/CalendarSkeletonEnhanced";
-import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useBirthdayNotification } from "@/hooks/useBirthdayNotification";
-import { useBulkActions } from "@/hooks/useBulkActions";
-import { useScheduleHandlers } from "@/hooks/useScheduleHandlers";
-import { useSchedulePageData, type ViewType } from "@/hooks/useSchedulePage";
-import type { ViewType as CalendarViewType } from "@/hooks/useScheduleState";
-import { KEYBOARD_SHORTCUTS } from "@/lib/calendar/constants";
-import { updateScheduleViewSearchParams, type ScheduleViewType } from "@/lib/schedule/viewParams";
-import { rescheduleParamsFromDrag } from "@/lib/scheduleReschedule";
+import { ScheduleModals } from '@/components/schedule/ScheduleModals';
+import { CalendarSkeletonEnhanced } from '@/components/schedule/skeletons/CalendarSkeletonEnhanced';
+import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useBirthdayNotification } from '@/hooks/useBirthdayNotification';
+import { useBulkActions } from '@/hooks/useBulkActions';
+import { useScheduleHandlers } from '@/hooks/useScheduleHandlers';
+import { useSchedulePageData, type ViewType } from '@/hooks/useSchedulePage';
+import type { ViewType as CalendarViewType } from '@/hooks/useScheduleState';
+import { KEYBOARD_SHORTCUTS } from '@/lib/calendar/constants';
+import { updateScheduleViewSearchParams, type ScheduleViewType } from '@/lib/schedule/viewParams';
+import { rescheduleParamsFromDrag } from '@/lib/scheduleReschedule';
 import {
   parseLocalDate,
   getAdjustedToday,
   getAdjustedTodayYMD,
   toLocalYMD,
-} from "@/lib/date-utils";
+} from '@/lib/date-utils';
 
-import "@/styles/schedule.css";
+import '@/styles/schedule.css';
 
 export default function Schedule() {
   const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
 
-  const dateParamRaw = searchParams.get("date");
+  const dateParamRaw = searchParams.get('date');
   const dateParam =
     dateParamRaw && /^\d{4}-\d{2}-\d{2}$/.test(dateParamRaw) ? dateParamRaw : getAdjustedTodayYMD();
 
-  const rawViewParam = searchParams.get("view");
+  const rawViewParam = searchParams.get('view');
   const viewParam =
-    rawViewParam === "day" || rawViewParam === "week" || rawViewParam === "month"
+    rawViewParam === 'day' || rawViewParam === 'week' || rawViewParam === 'month'
       ? (rawViewParam as ViewType)
       : isMobile
-        ? "day"
-        : "week";
+        ? 'day'
+        : 'week';
 
-  const statusParam = searchParams.get("status")?.split(",").filter(Boolean) || [];
-  const typesParam = searchParams.get("types")?.split(",").filter(Boolean) || [];
-  const therapistsParam = searchParams.get("therapists")?.split(",").filter(Boolean) || [];
-  const patientParam = searchParams.get("patient") || undefined;
+  const statusParam = searchParams.get('status')?.split(',').filter(Boolean) || [];
+  const typesParam = searchParams.get('types')?.split(',').filter(Boolean) || [];
+  const therapistsParam = searchParams.get('therapists')?.split(',').filter(Boolean) || [];
+  const patientParam = searchParams.get('patient') || undefined;
 
   const { data, isLoading, refetch } = useSchedulePageData(dateParam, viewParam, {
     status: statusParam,
@@ -80,7 +80,7 @@ export default function Schedule() {
   const enrichedAppointments = useMemo(() => appointments, [appointments]);
 
   const viewType = viewParam;
-  const patientFilter = patientParam || "";
+  const patientFilter = patientParam || '';
   const filters = {
     status: statusParam,
     types: typesParam,
@@ -110,7 +110,7 @@ export default function Schedule() {
 
   const handleDateChange = (date: Date) => {
     const newParams = new URLSearchParams(searchParams);
-    newParams.set("date", toLocalYMD(date));
+    newParams.set('date', toLocalYMD(date));
     setSearchParams(newParams, { replace: true });
   };
 
@@ -121,36 +121,36 @@ export default function Schedule() {
 
   const handleFiltersChange = (newFilters: any) => {
     const newParams = new URLSearchParams(searchParams);
-    if (newFilters.status?.length > 0) newParams.set("status", newFilters.status.join(","));
-    else newParams.delete("status");
-    if (newFilters.types?.length > 0) newParams.set("types", newFilters.types.join(","));
-    else newParams.delete("types");
+    if (newFilters.status?.length > 0) newParams.set('status', newFilters.status.join(','));
+    else newParams.delete('status');
+    if (newFilters.types?.length > 0) newParams.set('types', newFilters.types.join(','));
+    else newParams.delete('types');
     if (newFilters.therapists?.length > 0)
-      newParams.set("therapists", newFilters.therapists.join(","));
-    else newParams.delete("therapists");
+      newParams.set('therapists', newFilters.therapists.join(','));
+    else newParams.delete('therapists');
     setSearchParams(newParams, { replace: true });
   };
 
   const handlePatientFilterChange = (val: string) => {
     const newParams = new URLSearchParams(searchParams);
-    if (val) newParams.set("patient", val);
-    else newParams.delete("patient");
+    if (val) newParams.set('patient', val);
+    else newParams.delete('patient');
     setSearchParams(newParams, { replace: true });
   };
 
   const clearFilters = () => {
     const newParams = new URLSearchParams(searchParams);
-    ["status", "types", "therapists", "patient"].forEach((p) => newParams.delete(p));
+    ['status', 'types', 'therapists', 'patient'].forEach((p) => newParams.delete(p));
     setSearchParams(newParams, { replace: true });
   };
 
   const handleTimeSlotClick = (dateTime: any) => {
-    const dtString = typeof dateTime === "string" ? dateTime : dateTime?.toString() || "";
+    const dtString = typeof dateTime === 'string' ? dateTime : dateTime?.toString() || '';
     if (!dtString) return;
     const match = dtString.match(/^(\d{4}-\d{2}-\d{2})(?:[T\s](\d{2}:\d{2}))?/);
     if (match) {
       const date = parseLocalDate(match[1]);
-      actions.handleTimeSlotClick(date, match[2] || "");
+      actions.handleTimeSlotClick(date, match[2] || '');
     }
   };
 
@@ -164,10 +164,10 @@ export default function Schedule() {
         return;
       const isModalActive =
         modals.isModalOpen || modals.showKeyboardShortcuts || modals.quickEditAppointment;
-      if (isModalActive && e.key !== "Escape") return;
+      if (isModalActive && e.key !== 'Escape') return;
       const key = e.key.toLowerCase();
       switch (key) {
-        case "a":
+        case 'a':
           e.preventDefault();
           toggleSelectionMode();
           break;
@@ -180,13 +180,13 @@ export default function Schedule() {
           document.querySelector<HTMLInputElement>('input[aria-label*="paciente"]')?.focus();
           break;
         case KEYBOARD_SHORTCUTS.DAY_VIEW:
-          handleViewTypeChange("day");
+          handleViewTypeChange('day');
           break;
         case KEYBOARD_SHORTCUTS.WEEK_VIEW:
-          handleViewTypeChange("week");
+          handleViewTypeChange('week');
           break;
         case KEYBOARD_SHORTCUTS.MONTH_VIEW:
-          handleViewTypeChange("month");
+          handleViewTypeChange('month');
           break;
         case KEYBOARD_SHORTCUTS.TODAY:
           handleDateChange(getAdjustedToday());
@@ -196,13 +196,13 @@ export default function Schedule() {
           e.preventDefault();
           modals.setShowKeyboardShortcuts(true);
           break;
-        case "escape":
+        case 'escape':
           if (modals.showKeyboardShortcuts) modals.setShowKeyboardShortcuts(false);
           break;
       }
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [modals, actions, toggleSelectionMode, handleDateChange, handleViewTypeChange]);
 
   return (
@@ -212,22 +212,22 @@ export default function Schedule() {
         noPadding
         disableAnimation
         className="flex min-h-0 flex-1 flex-col"
-        style={{ height: "calc(100vh - 64px)" }}
+        style={{ height: 'calc(100vh - 64px)' }}
       >
         <div className="flex-1 flex flex-col min-h-0 relative">
           {/* Action Banner: Birthdays */}
           {(birthdaysToday.length > 0 || staffBirthdaysToday.length > 0) && (
             <div className="absolute top-0 left-1/2 -translate-x-1/2 z-[45] w-full max-w-4xl px-4 pointer-events-none">
-              <div className="bg-card rounded-2xl p-3 flex items-center justify-between border border-border pointer-events-auto shadow-lg">
+              <div className="pointer-events-auto flex items-center justify-between rounded-2xl border border-border bg-card p-3 shadow-popover">
                 <div className="flex items-center gap-6">
                   {(birthdaysToday.length > 0 || staffBirthdaysToday.length > 0) && (
                     <div className="flex items-center gap-2">
                       <Cake className="h-4 w-4 text-primary" />
                       <p className="text-[11px] font-bold text-foreground">
-                        <span className="text-primary uppercase tracking-wider">Aniversários:</span>{" "}
+                        <span className="text-primary uppercase tracking-wider">Aniversários:</span>{' '}
                         {[...birthdaysToday, ...staffBirthdaysToday]
                           .map((p) => p.full_name)
-                          .join(", ")}
+                          .join(', ')}
                       </p>
                     </div>
                   )}
@@ -236,9 +236,9 @@ export default function Schedule() {
                   {birthdaysToday.length > 0 && (
                     <Button
                       size="sm"
-                      className="h-8 text-[10px] font-black uppercase bg-primary text-primary-foreground rounded-lg"
+                      className="h-8 rounded-lg bg-primary text-[10px] font-bold uppercase text-primary-foreground hover:bg-primary/90"
                       onClick={() =>
-                        birthdaysToday.forEach((p) => sendBirthdayMessage(p.id, p.phone || ""))
+                        birthdaysToday.forEach((p) => sendBirthdayMessage(p.id, p.phone || ''))
                       }
                       disabled={isSending}
                     >
@@ -277,7 +277,7 @@ export default function Schedule() {
                         parseLocalDate(params.date),
                         params.time,
                         undefined,
-                        params.durationMinutes,
+                        params.durationMinutes
                       );
                   }}
                   onEditAppointment={(id) => {
@@ -292,11 +292,7 @@ export default function Schedule() {
                     const appointment = appointments.find((a) => a.id === id);
                     if (!appointment) return;
                     const today = new Date();
-                    actions.handleAppointmentReschedule(
-                      appointment,
-                      today,
-                      appointment.time,
-                    );
+                    actions.handleAppointmentReschedule(appointment, today, appointment.time);
                   }}
                   onStatusChange={actions.handleUpdateStatus}
                   isSelectionMode={isSelectionMode}

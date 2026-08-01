@@ -29,7 +29,7 @@ export class HEPComplianceWorkflow extends WorkflowEntrypoint<Env, HEPCompliance
       patientPhone,
       exercisePlanId,
       organizationId,
-      therapistName,
+      therapistName: _therapistName,
       durationWeeks,
     } = event.payload;
 

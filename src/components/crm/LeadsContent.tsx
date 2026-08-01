@@ -11,7 +11,6 @@ import {
   Kanban,
   BarChart3,
   Download,
-  Filter,
   DollarSign,
   TrendingUp,
   Sparkles,
@@ -53,7 +52,7 @@ export function LeadsContent() {
   const [filtroTemperatura, setFiltroTemperatura] = useState<string>("");
   const [ordenacao, setOrdenacao] = useState<"recentes" | "valor" | "score">("recentes");
   const [activeTab, setActiveTab] = useState("kanban");
-  const [defaultStageForNewLead, setDefaultStageForNewLead] = useState<string>("aguardando");
+  const [_defaultStageForNewLead, _setDefaultStageForNewLead] = useState<string>("aguardando");
 
   const { data: leads = [] } = useLeads();
   const { data: metrics } = useLeadMetrics();

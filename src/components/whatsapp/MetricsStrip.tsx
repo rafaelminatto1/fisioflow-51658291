@@ -1,4 +1,4 @@
-import { BarChart3, Clock, MessageCircle, AlertTriangle, TrendingUp, Instagram, Zap } from "lucide-react";
+import { Clock, MessageCircle, AlertTriangle, TrendingUp, Instagram, Zap } from "lucide-react";
 import type { Metrics } from "@/services/whatsapp-api";
 
 interface MetricsStripProps {

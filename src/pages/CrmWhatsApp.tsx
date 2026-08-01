@@ -1,4 +1,12 @@
-import { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Fragment,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { CSSProperties } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -40,8 +48,20 @@ import { toast } from "sonner";
 import { PageLayout, PageContainer } from "@/components/layout/PageLayout";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { TaskQuickCreateModal } from "@/components/tarefas/v2/TaskQuickCreateModal";
@@ -89,10 +109,19 @@ import {
 } from "@/features/whatsapp/inboxFilters";
 import { InboxFiltersPopover } from "@/components/whatsapp/InboxFiltersPopover";
 import { InboxNotificationsPopover } from "@/components/whatsapp/InboxNotificationsPopover";
-import { resolveMessageDisplayText, renderFormattedMessageText, parseInstagramAttachment, type InstagramAttachmentData } from "@/features/whatsapp/messageDisplay";
+import {
+  resolveMessageDisplayText,
+  renderFormattedMessageText,
+  parseInstagramAttachment,
+  type InstagramAttachmentData,
+} from "@/features/whatsapp/messageDisplay";
 import { InstagramCollabCard } from "@/components/whatsapp/InstagramCollabCard";
 import { InstagramCollabModal } from "@/components/whatsapp/InstagramCollabModal";
-import { summarizeConversation, suggestReply, suggestNextAction } from "@/services/whatsapp-api";
+import {
+  summarizeConversation,
+  suggestReply,
+  suggestNextAction,
+} from "@/services/whatsapp-api";
 import { cn } from "@/lib/utils";
 import {
   isWhatsAppWindowOpen,
@@ -100,9 +129,15 @@ import {
   REENGAGEMENT_TEMPLATE_LANGUAGE,
   REENGAGEMENT_TEMPLATE_TEXT,
 } from "@/lib/whatsappWindow";
-import { onlyDigits, looksLikePhone, canonicalBrazilPhone, formatBrazilPhone } from "@/lib/phone";
+import {
+  onlyDigits,
+  looksLikePhone,
+  canonicalBrazilPhone,
+  formatBrazilPhone,
+} from "@/lib/phone";
 
 type PipelineFilter = "all" | "lead" | "contact" | "evaluation" | "treatment";
+type PlatformFilter = "all" | "whatsapp" | "instagram" | "webchat";
 
 const PIPELINE_DEFAULT_LABELS: Record<PipelineFilter, string> = {
   all: "Todos",
@@ -112,8 +147,27 @@ const PIPELINE_DEFAULT_LABELS: Record<PipelineFilter, string> = {
   treatment: "Em tratamento",
 };
 
-const PROGRESS_DEFAULT_LABELS = ["Lead", "Contato", "Avaliação", "Tratamento", "Alta"];
-const PROGRESS_STAGE_KEYS = ["lead", "contact", "evaluation", "treatment", "alta"] as const;
+const PLATFORM_FILTERS: Array<{ key: PlatformFilter; label: string }> = [
+  { key: "all", label: "Todas" },
+  { key: "whatsapp", label: "WhatsApp" },
+  { key: "instagram", label: "Instagram" },
+  { key: "webchat", label: "Site" },
+];
+
+const PROGRESS_DEFAULT_LABELS = [
+  "Lead",
+  "Contato",
+  "Avaliação",
+  "Tratamento",
+  "Alta",
+];
+const PROGRESS_STAGE_KEYS = [
+  "lead",
+  "contact",
+  "evaluation",
+  "treatment",
+  "alta",
+] as const;
 
 // Resolve rótulo + estilo de um estágio a partir da config do funil (organizations.settings.crm_whatsapp.funnel).
 // Sem override → usa as classes Tailwind padrão do STAGE_META.
@@ -125,16 +179,26 @@ type StageView = {
   dotStyle?: CSSProperties;
 };
 
-function resolveStageView(meta: CrmStageMeta, funnelMap: Map<string, FunnelStage>): StageView {
+function resolveStageView(
+  meta: CrmStageMeta,
+  funnelMap: Map<string, FunnelStage>,
+): StageView {
   const override = funnelMap.get(meta.key);
   if (override?.color) {
     return {
       label: override.label || meta.label,
-      chipStyle: { backgroundColor: `hsl(${override.color} / 0.16)`, color: `hsl(${override.color})` },
+      chipStyle: {
+        backgroundColor: `hsl(${override.color} / 0.16)`,
+        color: `hsl(${override.color})`,
+      },
       dotStyle: { backgroundColor: `hsl(${override.color})` },
     };
   }
-  return { label: override?.label || meta.label, chipClassName: meta.chipClassName, dotClassName: meta.dotClassName };
+  return {
+    label: override?.label || meta.label,
+    chipClassName: meta.chipClassName,
+    dotClassName: meta.dotClassName,
+  };
 }
 
 function StageChip({
@@ -148,10 +212,17 @@ function StageChip({
 }) {
   return (
     <span
-      className={cn("inline-flex items-center gap-1 rounded-full", view.chipClassName, className)}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full",
+        view.chipClassName,
+        className,
+      )}
       style={view.chipStyle}
     >
-      <span className={cn("h-1.5 w-1.5 rounded-full", view.dotClassName)} style={view.dotStyle} />
+      <span
+        className={cn("h-1.5 w-1.5 rounded-full", view.dotClassName)}
+        style={view.dotStyle}
+      />
       {uppercase ? view.label.toUpperCase() : view.label}
     </span>
   );
@@ -160,19 +231,23 @@ function StageChip({
 const QUICK_REPLY_FALLBACKS: Array<{ label: string; content: string }> = [
   {
     label: "Horários disponíveis",
-    content: "Tenho horários disponíveis esta semana pela manhã e à tarde. Prefere qual período?",
+    content:
+      "Tenho horários disponíveis esta semana pela manhã e à tarde. Prefere qual período?",
   },
   {
     label: "Endereço",
-    content: "Estamos na Mooca. Se quiser, eu já te envio o endereço completo e a localização.",
+    content:
+      "Estamos na Mooca. Se quiser, eu já te envio o endereço completo e a localização.",
   },
   {
     label: "Tabela de valores",
-    content: "Posso te passar os valores e as opções de atendimento conforme o seu convênio ou particular.",
+    content:
+      "Posso te passar os valores e as opções de atendimento conforme o seu convênio ou particular.",
   },
   {
     label: "Agendar avaliação",
-    content: "Posso deixar sua avaliação reservada. Me diga se prefere manhã ou tarde.",
+    content:
+      "Posso deixar sua avaliação reservada. Me diga se prefere manhã ou tarde.",
   },
 ];
 
@@ -184,7 +259,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function playNewMessageSound() {
   try {
     const AudioCtx =
-      window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
     if (!AudioCtx) return;
     const ctx = new AudioCtx();
     const oscillator = ctx.createOscillator();
@@ -213,13 +290,20 @@ function getMessageText(content: unknown): string {
 }
 
 function getMessageMediaUrl(message: Message): string | null {
-  if (typeof message.mediaUrl === "string" && message.mediaUrl.trim()) return message.mediaUrl;
-  if (isRecord(message.metadata) && typeof message.metadata.mediaUrl === "string" && message.metadata.mediaUrl.trim()) {
+  if (typeof message.mediaUrl === "string" && message.mediaUrl.trim())
+    return message.mediaUrl;
+  if (
+    isRecord(message.metadata) &&
+    typeof message.metadata.mediaUrl === "string" &&
+    message.metadata.mediaUrl.trim()
+  ) {
     return message.metadata.mediaUrl;
   }
   if (isRecord(message.content)) {
-    if (typeof message.content.url === "string" && message.content.url.trim()) return message.content.url;
-    if (typeof message.content.link === "string" && message.content.link.trim()) return message.content.link;
+    if (typeof message.content.url === "string" && message.content.url.trim())
+      return message.content.url;
+    if (typeof message.content.link === "string" && message.content.link.trim())
+      return message.content.link;
   }
   return null;
 }
@@ -228,7 +312,10 @@ function getMessageTimeLabel(timestamp?: string) {
   if (!timestamp) return "";
   const date = new Date(timestamp);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return date.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function getDayKey(date: Date) {
@@ -241,7 +328,9 @@ function getMessageDateLabel(timestamp?: string) {
   if (Number.isNaN(date.getTime())) return "";
   const now = new Date();
   const today = getDayKey(now);
-  const yesterday = getDayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
+  const yesterday = getDayKey(
+    new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1),
+  );
   const key = getDayKey(date);
   if (key === today) return "Hoje";
   if (key === yesterday) return "Ontem";
@@ -256,7 +345,10 @@ function getMessageDateLabel(timestamp?: string) {
 function buildQuotedMessageText(message: Message) {
   const text = getMessageText(message.content).trim();
   const time = getMessageTimeLabel(message.timestamp);
-  return [time ? `Mensagem ${time}:` : "Mensagem:", text ? `"${text}"` : "[mensagem sem texto]"].join("\n");
+  return [
+    time ? `Mensagem ${time}:` : "Mensagem:",
+    text ? `"${text}"` : "[mensagem sem texto]",
+  ].join("\n");
 }
 
 const ContactAvatar = memo(function ContactAvatar({
@@ -276,7 +368,9 @@ const ContactAvatar = memo(function ContactAvatar({
 }) {
   return (
     <Avatar className={className}>
-      {avatarUrl ? <AvatarImage src={avatarUrl} alt={name} className="object-cover" /> : null}
+      {avatarUrl ? (
+        <AvatarImage src={avatarUrl} alt={name} className="object-cover" />
+      ) : null}
       <AvatarFallback
         className={cn("text-white", fallbackClassName)}
         style={{ backgroundImage: avatarGradient }}
@@ -287,11 +381,15 @@ const ContactAvatar = memo(function ContactAvatar({
   );
 });
 
-function buildQuickReplies(allQuickReplies: QuickReply[]): CrmQuickReplyViewModel[] {
+function buildQuickReplies(
+  allQuickReplies: QuickReply[],
+): CrmQuickReplyViewModel[] {
   const mapped = toCrmQuickReplies(allQuickReplies);
   if (mapped.length === 4) return mapped;
 
-  const existingLabels = new Set(mapped.map((item) => item.label.toLowerCase()));
+  const existingLabels = new Set(
+    mapped.map((item) => item.label.toLowerCase()),
+  );
   const fallbacks = QUICK_REPLY_FALLBACKS.filter(
     (item) => !existingLabels.has(item.label.toLowerCase()),
   ).map((item, index) => ({
@@ -308,13 +406,21 @@ const CHANNEL_META: Record<
   "whatsapp" | "instagram" | "webchat",
   { icon: typeof MessageCircle; className: string; label: string }
 > = {
-  whatsapp: { icon: MessageCircle, className: "bg-[hsl(142_70%_42%)]", label: "WhatsApp" },
+  whatsapp: {
+    icon: MessageCircle,
+    className: "bg-[hsl(142_70%_42%)]",
+    label: "WhatsApp",
+  },
   instagram: {
     icon: Camera,
     className: "bg-gradient-to-br from-[hsl(330_75%_55%)] to-[hsl(28_85%_55%)]",
     label: "Instagram",
   },
-  webchat: { icon: Globe, className: "bg-[hsl(211_100%_50%)]", label: "Chat do site" },
+  webchat: {
+    icon: Globe,
+    className: "bg-[hsl(211_100%_50%)]",
+    label: "Chat do site",
+  },
 };
 
 const ChannelBadge = memo(function ChannelBadge({
@@ -343,7 +449,10 @@ type CrmConversationViewModel = ReturnType<typeof toCrmConversationViewModel>;
 /** "Hoje 15:30" / "Amanhã 09:00" / "24/07 09:00" para o chip de lembrete. */
 function formatSnoozeLabel(value: string) {
   const date = new Date(value);
-  const time = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(date);
+  const time = new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
@@ -373,7 +482,8 @@ const ConversationCard = memo(function ConversationCard({
   registerRef?: (id: string, node: HTMLButtonElement | null) => void;
 }) {
   const isPinned = isRecord(item.metadata) && item.metadata.pinned === true;
-  const isMuted = isRecord(item.metadata) && typeof item.metadata.mutedUntil === "string";
+  const isMuted =
+    isRecord(item.metadata) && typeof item.metadata.mutedUntil === "string";
 
   return (
     <button
@@ -407,10 +517,23 @@ const ConversationCard = memo(function ConversationCard({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <span className="truncate text-[13px] font-bold">{item.name}</span>
-          {isPinned && <Pin className="h-3 w-3 shrink-0 text-muted-foreground" aria-label="Fixada" />}
-          {isMuted && <BellOff className="h-3 w-3 shrink-0 text-muted-foreground" aria-label="Silenciada" />}
+          {isPinned && (
+            <Pin
+              className="h-3 w-3 shrink-0 text-muted-foreground"
+              aria-label="Fixada"
+            />
+          )}
+          {isMuted && (
+            <BellOff
+              className="h-3 w-3 shrink-0 text-muted-foreground"
+              aria-label="Silenciada"
+            />
+          )}
           {item.temperature === "quente" && (
-            <Flame className="h-3 w-3 shrink-0 text-orange-500" aria-label="Lead quente" />
+            <Flame
+              className="h-3 w-3 shrink-0 text-orange-500"
+              aria-label="Lead quente"
+            />
           )}
           <span className="ml-auto shrink-0 text-[10px] font-semibold text-muted-foreground">
             {item.displayTime}
@@ -449,7 +572,9 @@ const ConversationCard = memo(function ConversationCard({
               title={`Lembrete: ${new Date(item.snoozedUntil).toLocaleString("pt-BR")}`}
             >
               <Clock3 className="h-2.5 w-2.5" />
-              {item.isSnoozeDue ? "LEMBRETE VENCIDO" : formatSnoozeLabel(item.snoozedUntil)}
+              {item.isSnoozeDue
+                ? "LEMBRETE VENCIDO"
+                : formatSnoozeLabel(item.snoozedUntil)}
             </span>
           )}
           {item.tags.slice(0, 2).map((tag) => (
@@ -484,19 +609,37 @@ const ConversationCard = memo(function ConversationCard({
 function DeliveryReceipt({ status }: { status?: Message["status"] }) {
   if (status === "failed") {
     return (
-      <span className="text-[9px] font-bold text-destructive" title="Falha no envio">
+      <span
+        className="text-[9px] font-bold text-destructive"
+        title="Falha no envio"
+      >
         ⚠ falhou
       </span>
     );
   }
   if (status === "read") {
-    return <CheckCheck className="h-[13px] w-[13px] text-sky-500" aria-label="Lida" />;
+    return (
+      <CheckCheck
+        className="h-[13px] w-[13px] text-sky-500"
+        aria-label="Lida"
+      />
+    );
   }
   if (status === "delivered") {
-    return <CheckCheck className="h-[13px] w-[13px] text-muted-foreground" aria-label="Entregue" />;
+    return (
+      <CheckCheck
+        className="h-[13px] w-[13px] text-muted-foreground"
+        aria-label="Entregue"
+      />
+    );
   }
   if (status === "deleted") return null;
-  return <Check className="h-[13px] w-[13px] text-muted-foreground" aria-label="Enviada" />;
+  return (
+    <Check
+      className="h-[13px] w-[13px] text-muted-foreground"
+      aria-label="Enviada"
+    />
+  );
 }
 
 function MessageBubble({
@@ -550,7 +693,7 @@ function MessageBubble({
 
   const igAttachment = useMemo(
     () => parseInstagramAttachment(message, channel, contactName),
-    [message, channel, contactName]
+    [message, channel, contactName],
   );
 
   if (igAttachment) {
@@ -564,7 +707,7 @@ function MessageBubble({
         className={cn(
           "relative my-1 max-w-[85%] sm:max-w-[360px]",
           isOutbound ? "ml-auto" : "mr-auto",
-          isReplying && "ring-2 ring-primary/35 rounded-xl"
+          isReplying && "ring-2 ring-primary/35 rounded-xl",
         )}
       >
         <InstagramCollabCard
@@ -578,7 +721,7 @@ function MessageBubble({
         <div
           className={cn(
             "mt-1 flex items-center justify-end gap-1 text-[9px] text-muted-foreground",
-            isOutbound && "text-[hsl(142_40%_38%)]"
+            isOutbound && "text-[hsl(142_40%_38%)]",
           )}
         >
           {timeLabel}
@@ -619,7 +762,9 @@ function MessageBubble({
         </div>
       )}
       {message.editedAt && (
-        <div className="mb-1 text-[9px] font-semibold text-muted-foreground/70">editada</div>
+        <div className="mb-1 text-[9px] font-semibold text-muted-foreground/70">
+          editada
+        </div>
       )}
       {isImage && mediaUrl ? (
         <div className="space-y-2">
@@ -640,12 +785,22 @@ function MessageBubble({
         </div>
       ) : isVideo && mediaUrl ? (
         <div className="space-y-2">
-          <video src={mediaUrl} controls preload="metadata" className="max-h-[280px] w-full rounded-lg" />
+          <video
+            src={mediaUrl}
+            controls
+            preload="metadata"
+            className="max-h-[280px] w-full rounded-lg"
+          />
           {text ? <div>{renderFormattedMessageText(text)}</div> : null}
         </div>
       ) : isAudio && mediaUrl ? (
         <div className="space-y-2">
-          <audio src={mediaUrl} controls preload="metadata" className="w-full" />
+          <audio
+            src={mediaUrl}
+            controls
+            preload="metadata"
+            className="w-full"
+          />
           {text ? <div>{renderFormattedMessageText(text)}</div> : null}
         </div>
       ) : isFile && mediaUrl ? (
@@ -659,7 +814,11 @@ function MessageBubble({
           {text || "Abrir arquivo"}
         </a>
       ) : (
-        <div>{renderFormattedMessageText(resolveMessageDisplayText(message.type, text))}</div>
+        <div>
+          {renderFormattedMessageText(
+            resolveMessageDisplayText(message.type, text),
+          )}
+        </div>
       )}
       <div
         className={cn(
@@ -680,6 +839,7 @@ export default function CrmWhatsApp() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [pipelineFilter, setPipelineFilter] = useState<PipelineFilter>("all");
+  const [platformFilter, setPlatformFilter] = useState<PlatformFilter>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // Deep-link: /crm-whatsapp?conversation=<id> (link de volta das tarefas)
   const [searchParams, setSearchParams] = useSearchParams();
@@ -699,14 +859,19 @@ export default function CrmWhatsApp() {
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
   const [sending, setSending] = useState(false);
-  const [aiBusy, setAiBusy] = useState<null | "summary" | "suggest" | "nextaction">(null);
+  const [aiBusy, setAiBusy] = useState<
+    null | "summary" | "suggest" | "nextaction"
+  >(null);
   const [aiNextAction, setAiNextAction] = useState<string | null>(null);
   const [savingStage, setSavingStage] = useState(false);
   const [replyMessage, setReplyMessage] = useState<Message | null>(null);
   const [igModalOpen, setIgModalOpen] = useState(false);
-  const [igModalData, setIgModalData] = useState<InstagramAttachmentData | null>(null);
+  const [igModalData, setIgModalData] =
+    useState<InstagramAttachmentData | null>(null);
   const [showQuickBooking, setShowQuickBooking] = useState(false);
-  const [dismissedCoolingBanners, setDismissedCoolingBanners] = useState<Set<string>>(new Set());
+  const [dismissedCoolingBanners, setDismissedCoolingBanners] = useState<
+    Set<string>
+  >(new Set());
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [taskInitialData, setTaskInitialData] = useState<{
     titulo: string;
@@ -724,7 +889,8 @@ export default function CrmWhatsApp() {
     x: number;
     y: number;
   } | null>(null);
-  const [inboxFilters, setInboxFilters] = useState<InboxFilters>(EMPTY_INBOX_FILTERS);
+  const [inboxFilters, setInboxFilters] =
+    useState<InboxFilters>(EMPTY_INBOX_FILTERS);
   const [soundEnabled, setSoundEnabled] = useState(
     () => localStorage.getItem("crm:newMessageSound") !== "off",
   );
@@ -744,10 +910,11 @@ export default function CrmWhatsApp() {
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const lastTypingSentAt = useRef(0);
 
-  const { conversations, loading, refetch, newMessageIds, clearUnreadBadge } = useWhatsAppInbox({
-    search: search || undefined,
-    limit: 100,
-  });
+  const { conversations, loading, refetch, newMessageIds, clearUnreadBadge } =
+    useWhatsAppInbox({
+      search: search || undefined,
+      limit: 100,
+    });
   const {
     conversation,
     messages,
@@ -767,8 +934,12 @@ export default function CrmWhatsApp() {
   }, [selectedId, loadingConversation, messages.length]);
 
   useEffect(() => {
-    fetchTags().then(setAvailableTags).catch(() => {});
-    fetchQuickReplies().then(setQuickReplies).catch(() => {});
+    fetchTags()
+      .then(setAvailableTags)
+      .catch(() => {});
+    fetchQuickReplies()
+      .then(setQuickReplies)
+      .catch(() => {});
     fetchCrmSettings()
       .then((cfg) => {
         setFunnel(cfg.funnel);
@@ -776,21 +947,32 @@ export default function CrmWhatsApp() {
       .catch(() => {});
   }, []);
 
-  const funnelMap = useMemo(() => new Map(funnel.map((stage) => [stage.key, stage])), [funnel]);
+  const funnelMap = useMemo(
+    () => new Map(funnel.map((stage) => [stage.key, stage])),
+    [funnel],
+  );
 
   const pipelineLabels = useMemo<Record<PipelineFilter, string>>(
     () => ({
       all: PIPELINE_DEFAULT_LABELS.all,
       lead: funnelMap.get("lead")?.label || PIPELINE_DEFAULT_LABELS.lead,
-      contact: funnelMap.get("contact")?.label || PIPELINE_DEFAULT_LABELS.contact,
-      evaluation: funnelMap.get("evaluation")?.label || PIPELINE_DEFAULT_LABELS.evaluation,
-      treatment: funnelMap.get("treatment")?.label || PIPELINE_DEFAULT_LABELS.treatment,
+      contact:
+        funnelMap.get("contact")?.label || PIPELINE_DEFAULT_LABELS.contact,
+      evaluation:
+        funnelMap.get("evaluation")?.label ||
+        PIPELINE_DEFAULT_LABELS.evaluation,
+      treatment:
+        funnelMap.get("treatment")?.label || PIPELINE_DEFAULT_LABELS.treatment,
     }),
     [funnelMap],
   );
 
   const progressLabels = useMemo(
-    () => PROGRESS_STAGE_KEYS.map((key, index) => funnelMap.get(key)?.label || PROGRESS_DEFAULT_LABELS[index]),
+    () =>
+      PROGRESS_STAGE_KEYS.map(
+        (key, index) =>
+          funnelMap.get(key)?.label || PROGRESS_DEFAULT_LABELS[index],
+      ),
     [funnelMap],
   );
 
@@ -803,7 +985,9 @@ export default function CrmWhatsApp() {
   // ou número (canônico BR, tolera 55 e o 9º dígito) para evitar duplicar conversa.
   const newConvQueryDigits = onlyDigits(newConversationQuery);
   const newConvIsPhone = looksLikePhone(newConversationQuery);
-  const newConvCanon = newConvIsPhone ? canonicalBrazilPhone(newConversationQuery) : "";
+  const newConvCanon = newConvIsPhone
+    ? canonicalBrazilPhone(newConversationQuery)
+    : "";
   const newConversationMatches = useMemo(() => {
     const term = newConversationQuery.trim().toLowerCase();
     if (!term) return conversationCards;
@@ -813,21 +997,34 @@ export default function CrmWhatsApp() {
       const phoneMatch =
         phoneDigits.length > 0 &&
         (newConvIsPhone
-          ? canonicalBrazilPhone(phoneDigits) === newConvCanon || phoneDigits.includes(newConvQueryDigits)
+          ? canonicalBrazilPhone(phoneDigits) === newConvCanon ||
+            phoneDigits.includes(newConvQueryDigits)
           : false);
       return nameMatch || phoneMatch;
     });
-  }, [conversationCards, newConversationQuery, newConvIsPhone, newConvCanon, newConvQueryDigits]);
+  }, [
+    conversationCards,
+    newConversationQuery,
+    newConvIsPhone,
+    newConvCanon,
+    newConvQueryDigits,
+  ]);
   const newConvHasExactMatch =
     newConvIsPhone &&
     newConversationMatches.some(
-      (card) => canonicalBrazilPhone(onlyDigits(card.phone || "")) === newConvCanon,
+      (card) =>
+        canonicalBrazilPhone(onlyDigits(card.phone || "")) === newConvCanon,
     );
 
   const filteredConversations = useMemo(() => {
-    let list = pipelineFilter === "all"
-      ? conversationCards
-      : conversationCards.filter((item) => item.stage.key === pipelineFilter);
+    let list =
+      pipelineFilter === "all"
+        ? conversationCards
+        : conversationCards.filter((item) => item.stage.key === pipelineFilter);
+
+    if (platformFilter !== "all") {
+      list = list.filter((item) => item.channel === platformFilter);
+    }
 
     if (search.trim()) {
       const term = search.trim().toLowerCase();
@@ -841,7 +1038,7 @@ export default function CrmWhatsApp() {
     }
 
     return sortInboxCards(applyInboxFilters(list, inboxFilters));
-  }, [conversationCards, pipelineFilter, search, inboxFilters]);
+  }, [conversationCards, pipelineFilter, platformFilter, search, inboxFilters]);
 
   // Opções dos filtros derivadas das conversas carregadas.
   const assigneeOptions = useMemo(() => {
@@ -859,7 +1056,10 @@ export default function CrmWhatsApp() {
     [conversationCards],
   );
   const selectedCard = useMemo(
-    () => filteredConversations.find((item) => item.id === selectedId) ?? conversationCards.find((item) => item.id === selectedId) ?? null,
+    () =>
+      filteredConversations.find((item) => item.id === selectedId) ??
+      conversationCards.find((item) => item.id === selectedId) ??
+      null,
     [conversationCards, filteredConversations, selectedId],
   );
 
@@ -879,12 +1079,38 @@ export default function CrmWhatsApp() {
   const pipelineCounts = useMemo(() => {
     return {
       all: conversationCards.length,
-      lead: conversationCards.filter((item) => item.stage.key === "lead").length,
-      contact: conversationCards.filter((item) => item.stage.key === "contact").length,
-      evaluation: conversationCards.filter((item) => item.stage.key === "evaluation").length,
-      treatment: conversationCards.filter((item) => item.stage.key === "treatment").length,
+      lead: conversationCards.filter((item) => item.stage.key === "lead")
+        .length,
+      contact: conversationCards.filter((item) => item.stage.key === "contact")
+        .length,
+      evaluation: conversationCards.filter(
+        (item) => item.stage.key === "evaluation",
+      ).length,
+      treatment: conversationCards.filter(
+        (item) => item.stage.key === "treatment",
+      ).length,
     } satisfies Record<PipelineFilter, number>;
   }, [conversationCards]);
+
+  const platformCounts = useMemo(() => {
+    const cardsInSelectedPipeline =
+      pipelineFilter === "all"
+        ? conversationCards
+        : conversationCards.filter((item) => item.stage.key === pipelineFilter);
+
+    return {
+      all: cardsInSelectedPipeline.length,
+      whatsapp: cardsInSelectedPipeline.filter(
+        (item) => item.channel === "whatsapp",
+      ).length,
+      instagram: cardsInSelectedPipeline.filter(
+        (item) => item.channel === "instagram",
+      ).length,
+      webchat: cardsInSelectedPipeline.filter(
+        (item) => item.channel === "webchat",
+      ).length,
+    } satisfies Record<PlatformFilter, number>;
+  }, [conversationCards, pipelineFilter]);
 
   const handleDirectSend = async (textToSend: string) => {
     if (!textToSend.trim() || sending) return;
@@ -927,7 +1153,9 @@ export default function CrmWhatsApp() {
       } catch (error) {
         toast.error("Não foi possível enviar o modelo de reengajamento.", {
           description:
-            error instanceof Error ? error.message : "Verifique se o template está aprovado na Meta.",
+            error instanceof Error
+              ? error.message
+              : "Verifique se o template está aprovado na Meta.",
         });
       } finally {
         setSending(false);
@@ -943,7 +1171,10 @@ export default function CrmWhatsApp() {
       await Promise.all([refetch(), refetchConversation()]);
     } catch (error) {
       toast.error("Não foi possível enviar a mensagem.", {
-        description: error instanceof Error ? error.message : "Tente novamente em alguns instantes.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Tente novamente em alguns instantes.",
       });
     } finally {
       setSending(false);
@@ -955,7 +1186,9 @@ export default function CrmWhatsApp() {
     fileInputRef.current?.click();
   };
 
-  const handleFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelected = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     event.target.value = ""; // permite re-selecionar o mesmo arquivo
     if (!file || !selectedId || sending) return;
@@ -963,7 +1196,8 @@ export default function CrmWhatsApp() {
     const channel = selectedConversationVm?.channel ?? "whatsapp";
     if (channel === "whatsapp" && !isWhatsAppWindowOpen(messages)) {
       toast.error("Janela de 24h fechada", {
-        description: "Não é possível enviar mídia por texto livre. Aguarde o cliente responder ou use um template.",
+        description:
+          "Não é possível enviar mídia por texto livre. Aguarde o cliente responder ou use um template.",
       });
       return;
     }
@@ -980,7 +1214,8 @@ export default function CrmWhatsApp() {
       await Promise.all([refetch(), refetchConversation()]);
     } catch (error) {
       toast.error("Não foi possível enviar a mídia.", {
-        description: error instanceof Error ? error.message : "Tente novamente.",
+        description:
+          error instanceof Error ? error.message : "Tente novamente.",
       });
     } finally {
       setSending(false);
@@ -1041,7 +1276,9 @@ export default function CrmWhatsApp() {
     }
   };
 
-  const handleStatusAction = async (status: "pending" | "resolved" | "closed") => {
+  const handleStatusAction = async (
+    status: "pending" | "resolved" | "closed",
+  ) => {
     await updateStatus(status);
     await Promise.all([refetch(), refetchConversation()]);
   };
@@ -1050,7 +1287,10 @@ export default function CrmWhatsApp() {
     await markConversationRead(conversationId);
     toast.success("Conversa arquivada.");
     setConversationMenu(null);
-    await Promise.all([refetch(), selectedId === conversationId ? refetchConversation() : Promise.resolve()]);
+    await Promise.all([
+      refetch(),
+      selectedId === conversationId ? refetchConversation() : Promise.resolve(),
+    ]);
   };
 
   const handleQuickReply = (quickReply: CrmQuickReplyViewModel) => {
@@ -1154,7 +1394,8 @@ export default function CrmWhatsApp() {
     const contactName = selectedConversationVm?.name || "contato";
     setTaskInitialData({
       titulo: `Retornar ${contactName}`,
-      descricao: buildQuotedMessageText(message) + (text ? "\n\nPróximo passo:\n" : ""),
+      descricao:
+        buildQuotedMessageText(message) + (text ? "\n\nPróximo passo:\n" : ""),
       linked_entity_type: selectedId ? "conversation" : undefined,
       linked_entity_id: selectedId ?? undefined,
     });
@@ -1196,8 +1437,10 @@ export default function CrmWhatsApp() {
 
   const handleMuteConversation = async (conversationId: string) => {
     const conv = conversationCards.find((c) => c.id === conversationId);
-    const mutedUntil = isRecord(conv?.metadata) && typeof conv!.metadata.mutedUntil === "string"
-      ? conv!.metadata.mutedUntil : null;
+    const mutedUntil =
+      isRecord(conv?.metadata) && typeof conv!.metadata.mutedUntil === "string"
+        ? conv!.metadata.mutedUntil
+        : null;
     if (mutedUntil) {
       await muteConversation(conversationId, null);
       toast.success("Notificações reativadas");
@@ -1222,7 +1465,9 @@ export default function CrmWhatsApp() {
     const term = messageSearch.trim().toLowerCase();
     if (!term) return [] as string[];
     return messages
-      .filter((message) => getMessageText(message.content).toLowerCase().includes(term))
+      .filter((message) =>
+        getMessageText(message.content).toLowerCase().includes(term),
+      )
       .map((message) => message.id);
   }, [messages, messageSearch]);
 
@@ -1230,7 +1475,8 @@ export default function CrmWhatsApp() {
     (delta: number) => {
       if (messageMatches.length === 0) return;
       const nextIndex =
-        (messageMatchIndex + delta + messageMatches.length) % messageMatches.length;
+        (messageMatchIndex + delta + messageMatches.length) %
+        messageMatches.length;
       setMessageMatchIndex(nextIndex);
       messageRefs.current[messageMatches[nextIndex]]?.scrollIntoView({
         block: "center",
@@ -1249,7 +1495,10 @@ export default function CrmWhatsApp() {
   // Ao digitar, salta para a primeira ocorrência.
   useEffect(() => {
     if (messageMatches.length === 0) return;
-    messageRefs.current[messageMatches[0]]?.scrollIntoView({ block: "center", behavior: "smooth" });
+    messageRefs.current[messageMatches[0]]?.scrollIntoView({
+      block: "center",
+      behavior: "smooth",
+    });
     // Só quando o conjunto de matches muda (novo termo), não a cada navegação.
   }, [messageMatches]);
 
@@ -1260,9 +1509,12 @@ export default function CrmWhatsApp() {
 
   // Identidade estável: o ConversationCard é memo, um inline callback o
   // re-renderizaria a cada digitação na busca.
-  const registerConversationRef = useCallback((id: string, node: HTMLButtonElement | null) => {
-    conversationRefs.current[id] = node;
-  }, []);
+  const registerConversationRef = useCallback(
+    (id: string, node: HTMLButtonElement | null) => {
+      conversationRefs.current[id] = node;
+    },
+    [],
+  );
 
   const handleToggleSound = (enabled: boolean) => {
     setSoundEnabled(enabled);
@@ -1272,7 +1524,10 @@ export default function CrmWhatsApp() {
 
   // Lembrete de follow-up: guarda o instante no metadata da conversa. O card
   // volta ao topo da lista quando o horário vence (sortInboxCards).
-  const handleSnoozeConversation = async (conversationId: string, option: SnoozeOption) => {
+  const handleSnoozeConversation = async (
+    conversationId: string,
+    option: SnoozeOption,
+  ) => {
     const conv = conversationCards.find((c) => c.id === conversationId);
     const target = resolveSnoozeTarget(option);
     setConversationMenu(null);
@@ -1307,7 +1562,9 @@ export default function CrmWhatsApp() {
     if (!phone) return;
     window.open(`tel:+${phone}`, "_self");
     try {
-      await addNote(`📞 Ligação iniciada para ${selectedConversationVm?.phoneLabel ?? phone}`);
+      await addNote(
+        `📞 Ligação iniciada para ${selectedConversationVm?.phoneLabel ?? phone}`,
+      );
       await refetchConversation();
     } catch {
       // A ligação é o que importa; falha ao registrar a nota não bloqueia.
@@ -1334,7 +1591,6 @@ export default function CrmWhatsApp() {
     }
     setConversationMenu(null);
   };
-
 
   // ─── Message edit/delete handlers ───
   const handleEditMessage = (message: Message) => {
@@ -1372,8 +1628,13 @@ export default function CrmWhatsApp() {
     await Promise.all([refetch(), refetchConversation()]);
   };
 
-  const quickReplyItems = useMemo(() => buildQuickReplies(quickReplies), [quickReplies]);
-  const selectedConversationVm = selectedCard ?? (conversation ? toCrmConversationViewModel(conversation) : null);
+  const quickReplyItems = useMemo(
+    () => buildQuickReplies(quickReplies),
+    [quickReplies],
+  );
+  const selectedConversationVm =
+    selectedCard ??
+    (conversation ? toCrmConversationViewModel(conversation) : null);
 
   // "Digitando…" no WhatsApp do contato. A Meta mantém o indicador por ~25s,
   // então basta reavisar a cada 10s enquanto o atendente escreve.
@@ -1387,7 +1648,9 @@ export default function CrmWhatsApp() {
   }, [selectedId, selectedConversationVm?.channel]);
 
   const availableTagOptions = useMemo(() => {
-    const currentTagIds = new Set(conversation?.tags.map((tag) => tag.id) ?? []);
+    const currentTagIds = new Set(
+      conversation?.tags.map((tag) => tag.id) ?? [],
+    );
     return availableTags.filter((tag) => !currentTagIds.has(tag.id));
   }, [availableTags, conversation?.tags]);
 
@@ -1426,25 +1689,25 @@ export default function CrmWhatsApp() {
     const handler = (e: KeyboardEvent) => {
       if (!selectedId) return;
       // Ctrl+E – archive (mark as read)
-      if (e.ctrlKey && e.key.toLowerCase() === 'e') {
+      if (e.ctrlKey && e.key.toLowerCase() === "e") {
         e.preventDefault();
         void handleArchiveConversation(selectedId);
       }
       // Ctrl+Shift+M – mute/unmute for 8h
-      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'm') {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "m") {
         e.preventDefault();
         void handleMuteConversation(selectedId);
       }
       // Ctrl+Backspace – delete conversation
-      if (e.ctrlKey && e.key === 'Backspace') {
+      if (e.ctrlKey && e.key === "Backspace") {
         e.preventDefault();
-        if (window.confirm('Excluir conversa?')) {
+        if (window.confirm("Excluir conversa?")) {
           void handleDeleteConversation(selectedId);
         }
       }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, [selectedId]);
 
   // Navegação da lista pelo teclado (↑/↓ percorre, Enter foca o compositor).
@@ -1452,11 +1715,19 @@ export default function CrmWhatsApp() {
     const isTypingTarget = (target: EventTarget | null) => {
       const el = target as HTMLElement | null;
       if (!el) return false;
-      return el.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName);
+      return (
+        el.isContentEditable ||
+        ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName)
+      );
     };
 
     const handler = (event: KeyboardEvent) => {
-      if (event.key !== "ArrowDown" && event.key !== "ArrowUp" && event.key !== "Enter") return;
+      if (
+        event.key !== "ArrowDown" &&
+        event.key !== "ArrowUp" &&
+        event.key !== "Enter"
+      )
+        return;
       if (isTypingTarget(event.target)) return;
       if (filteredConversations.length === 0) return;
 
@@ -1467,12 +1738,17 @@ export default function CrmWhatsApp() {
       }
 
       event.preventDefault();
-      const currentIndex = filteredConversations.findIndex((item) => item.id === selectedId);
+      const currentIndex = filteredConversations.findIndex(
+        (item) => item.id === selectedId,
+      );
       const delta = event.key === "ArrowDown" ? 1 : -1;
       const nextIndex =
         currentIndex === -1
           ? 0
-          : Math.min(filteredConversations.length - 1, Math.max(0, currentIndex + delta));
+          : Math.min(
+              filteredConversations.length - 1,
+              Math.max(0, currentIndex + delta),
+            );
       setSelectedId(filteredConversations[nextIndex].id);
     };
 
@@ -1500,73 +1776,116 @@ export default function CrmWhatsApp() {
   }, [selectedId]);
 
   return (
-    <PageLayout fullWidth noPadding compactHeader hideDefaultHeader showBreadcrumbs={false} fillViewport>
+    <PageLayout
+      fullWidth
+      noPadding
+      compactHeader
+      hideDefaultHeader
+      showBreadcrumbs={false}
+      fillViewport
+    >
       <PageContainer maxWidth="full" noPadding className="h-full">
         <div className="flex h-full min-h-0 flex-col bg-background">
-          <div className="flex items-center gap-4 border-b border-border/50 bg-background/95 px-6 py-4 shadow-sm z-10">
-            <h1 className="flex items-center gap-3 text-xl font-extrabold tracking-tight">
-              CRM
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100/80 dark:bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold tracking-wide text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                WhatsApp conectado
+          <div className="z-10 border-b border-border bg-background">
+            <div className="flex items-center gap-4 px-6 py-4">
+              <h1 className="flex items-center gap-3 text-xl font-extrabold tracking-tight">
+                CRM
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100/80 dark:bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold tracking-wide text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  WhatsApp conectado
+                </span>
+              </h1>
+              <div className="ml-4 flex flex-1 flex-wrap gap-1.5">
+                {(Object.keys(pipelineLabels) as PipelineFilter[]).map(
+                  (key) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setPipelineFilter(key)}
+                      className={cn(
+                        "inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-all duration-200",
+                        pipelineFilter === key
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
+                      )}
+                    >
+                      {pipelineLabels[key]}
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums transition-colors",
+                          pipelineFilter === key
+                            ? "bg-primary-foreground/20 text-primary-foreground"
+                            : "bg-muted-foreground/10 text-muted-foreground",
+                        )}
+                      >
+                        {pipelineCounts[key]}
+                      </span>
+                    </button>
+                  ),
+                )}
+              </div>
+              <div className="flex items-center gap-2.5">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setNewConversationOpen(true)}
+                  className="h-9 rounded-xl bg-primary px-4 text-xs font-bold text-primary-foreground hover:bg-primary/90"
+                >
+                  <MessageSquarePlus className="mr-2 h-4 w-4" />
+                  Nova conversa
+                </Button>
+                <div className="h-4 w-px bg-border/50 mx-1"></div>
+                <InboxFiltersPopover
+                  filters={inboxFilters}
+                  onChange={setInboxFilters}
+                  assignees={assigneeOptions}
+                  tags={availableTags}
+                />
+                <InboxNotificationsPopover
+                  unread={unreadCards}
+                  soundEnabled={soundEnabled}
+                  onToggleSound={handleToggleSound}
+                  onSelectConversation={setSelectedId}
+                />
+                <button
+                  type="button"
+                  onClick={() => navigate("/crm-whatsapp/configuracoes")}
+                  aria-label="Configurações do CRM·WhatsApp"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  <Settings className="h-[18px] w-[18px]" />
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 overflow-x-auto border-t border-border/60 px-6 py-2.5">
+              <span className="shrink-0 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                Plataforma
               </span>
-            </h1>
-            <div className="ml-4 flex flex-1 flex-wrap gap-1.5">
-              {(Object.keys(pipelineLabels) as PipelineFilter[]).map((key) => (
+              {PLATFORM_FILTERS.map(({ key, label }) => (
                 <button
                   key={key}
                   type="button"
-                  onClick={() => setPipelineFilter(key)}
+                  onClick={() => setPlatformFilter(key)}
                   className={cn(
-                    "inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-all duration-200",
-                    pipelineFilter === key
-                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-105"
-                      : "bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
+                    "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
+                    platformFilter === key
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground",
                   )}
                 >
-                  {pipelineLabels[key]}
+                  {label}
                   <span
                     className={cn(
-                      "rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums transition-colors",
-                      pipelineFilter === key ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted-foreground/10 text-muted-foreground",
+                      "rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums",
+                      platformFilter === key
+                        ? "bg-primary-foreground/20 text-primary-foreground"
+                        : "bg-muted text-muted-foreground",
                     )}
                   >
-                    {pipelineCounts[key]}
+                    {platformCounts[key]}
                   </span>
                 </button>
               ))}
-            </div>
-            <div className="flex items-center gap-2.5">
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => setNewConversationOpen(true)}
-                className="h-9 rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition-all hover:shadow-md hover:-translate-y-0.5"
-              >
-                <MessageSquarePlus className="mr-2 h-4 w-4" />
-                Nova conversa
-              </Button>
-              <div className="h-4 w-px bg-border/50 mx-1"></div>
-              <InboxFiltersPopover
-                filters={inboxFilters}
-                onChange={setInboxFilters}
-                assignees={assigneeOptions}
-                tags={availableTags}
-              />
-              <InboxNotificationsPopover
-                unread={unreadCards}
-                soundEnabled={soundEnabled}
-                onToggleSound={handleToggleSound}
-                onSelectConversation={setSelectedId}
-              />
-              <button
-                type="button"
-                onClick={() => navigate("/crm-whatsapp/configuracoes")}
-                aria-label="Configurações do CRM·WhatsApp"
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                <Settings className="h-[18px] w-[18px]" />
-              </button>
             </div>
           </div>
           <div className="flex min-h-0 flex-1 overflow-hidden bg-muted/20">
@@ -1614,26 +1933,37 @@ export default function CrmWhatsApp() {
               </div>
             </aside>
 
-            <section className="flex min-h-0 flex-1 flex-col bg-[hsl(40_30%_96%)] min-w-0">
+            <section className="flex min-h-0 min-w-0 flex-1 flex-col bg-background">
               {selectedConversationVm ? (
                 <>
                   <div className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
                     <ContactAvatar
                       name={selectedConversationVm.name}
-                      avatarUrl={selectedConversationVm.channel !== "webchat" ? selectedConversationVm.avatarUrl : null}
+                      avatarUrl={
+                        selectedConversationVm.channel !== "webchat"
+                          ? selectedConversationVm.avatarUrl
+                          : null
+                      }
                       avatarGradient={selectedConversationVm.avatarGradient}
                       initials={selectedConversationVm.initials}
                       className="h-10 w-10"
                       fallbackClassName="text-sm font-extrabold"
                     />
                     <div className="min-w-0">
-                      <div className="text-sm font-extrabold">{selectedConversationVm.name}</div>
+                      <div className="text-sm font-extrabold">
+                        {selectedConversationVm.name}
+                      </div>
                       <div className="flex items-center gap-1.5 truncate text-[11px] font-semibold text-muted-foreground">
-                        {selectedConversationVm.phoneLabel ? <span>{selectedConversationVm.phoneLabel}</span> : null}
-                        {selectedConversationVm.phoneLabel ? <span aria-hidden>·</span> : null}
+                        {selectedConversationVm.phoneLabel ? (
+                          <span>{selectedConversationVm.phoneLabel}</span>
+                        ) : null}
+                        {selectedConversationVm.phoneLabel ? (
+                          <span aria-hidden>·</span>
+                        ) : null}
                         <span
                           className={cn(
-                            selectedConversationVm.presenceLabel === "Ativo agora" &&
+                            selectedConversationVm.presenceLabel ===
+                              "Ativo agora" &&
                               "font-bold text-[hsl(142_60%_38%)]",
                           )}
                         >
@@ -1649,7 +1979,7 @@ export default function CrmWhatsApp() {
                         className="h-8 text-xs font-semibold gap-1 px-2.5 shadow-2xs"
                       >
                         <Calendar className="h-3.5 w-3.5" />
-                        <span>📌 Horários</span>
+                        <span>Horários</span>
                       </Button>
 
                       <button
@@ -1681,7 +2011,9 @@ export default function CrmWhatsApp() {
                         type="button"
                         onClick={() =>
                           selectedConversationVm.patientId
-                            ? navigate(`/schedule?patientId=${selectedConversationVm.patientId}`)
+                            ? navigate(
+                                `/schedule?patientId=${selectedConversationVm.patientId}`,
+                              )
                             : undefined
                         }
                         disabled={!selectedConversationVm.patientId}
@@ -1691,56 +2023,85 @@ export default function CrmWhatsApp() {
                       </button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button type="button" className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary">
+                          <button
+                            type="button"
+                            className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary"
+                          >
                             <MoreVertical className="h-[18px] w-[18px]" />
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={handleOpenTaskFromConversation}>Criar tarefa</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleStatusAction("pending")}>Marcar como pendente</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleStatusAction("resolved")}>Marcar como resolvida</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleStatusAction("closed")}>Fechar conversa</DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={handleOpenTaskFromConversation}
+                          >
+                            Criar tarefa
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleStatusAction("pending")}
+                          >
+                            Marcar como pendente
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleStatusAction("resolved")}
+                          >
+                            Marcar como resolvida
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleStatusAction("closed")}
+                          >
+                            Fechar conversa
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
                   </div>
 
-                  {selectedConversationVm.isCoolingDown && !dismissedCoolingBanners.has(selectedConversationVm.id) && (
-                    <div className="flex items-center justify-between border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs text-amber-800 dark:text-amber-300">
-                      <div className="flex items-center gap-2 font-medium">
-                        <Clock3 className="h-4 w-4 text-amber-600 shrink-0" />
-                        <span>
-                          ⚡ <strong>Lead esfriando:</strong> sem resposta há {selectedConversationVm.hoursSinceLastMessage}h.
-                        </span>
+                  {selectedConversationVm.isCoolingDown &&
+                    !dismissedCoolingBanners.has(selectedConversationVm.id) && (
+                      <div className="flex items-center justify-between border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs text-amber-800 dark:text-amber-300">
+                        <div className="flex items-center gap-2 font-medium">
+                          <Clock3 className="h-4 w-4 text-amber-600 shrink-0" />
+                          <span>
+                            <strong>Lead esfriando:</strong> sem resposta há{" "}
+                            {selectedConversationVm.hoursSinceLastMessage}h.
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              handleDirectSend(
+                                "Olá! Passando para saber se ficou com alguma dúvida sobre nosso atendimento ou horários de avaliação na clínica?",
+                              );
+                              toast.success(
+                                "Mensagem de reengajamento enviada!",
+                              );
+                            }}
+                            className="h-7 text-[11px] font-semibold bg-amber-600 hover:bg-amber-700 text-white shadow-xs"
+                          >
+                            Reengajar no Direct
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setShowQuickBooking((prev) => !prev)}
+                            className="h-7 text-[11px] text-amber-800 dark:text-amber-300"
+                          >
+                            Horários
+                          </Button>
+                          <button
+                            onClick={() =>
+                              setDismissedCoolingBanners((prev) =>
+                                new Set(prev).add(selectedConversationVm.id),
+                              )
+                            }
+                            className="ml-1 text-amber-600/70 hover:text-amber-800 p-1"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            handleDirectSend("Olá! Passando para saber se ficou com alguma dúvida sobre nosso atendimento ou horários de avaliação na clínica?");
-                            toast.success("Mensagem de reengajamento enviada!");
-                          }}
-                          className="h-7 text-[11px] font-semibold bg-amber-600 hover:bg-amber-700 text-white shadow-xs"
-                        >
-                          Reengajar no Direct
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setShowQuickBooking((prev) => !prev)}
-                          className="h-7 text-[11px] text-amber-800 dark:text-amber-300"
-                        >
-                          📌 Horários
-                        </Button>
-                        <button
-                          onClick={() => setDismissedCoolingBanners((prev) => new Set(prev).add(selectedConversationVm.id))}
-                          className="ml-1 text-amber-600/70 hover:text-amber-800 p-1"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                    )}
 
                   {messageSearchOpen && (
                     <div className="flex items-center gap-2 border-b border-border bg-card px-4 py-2">
@@ -1798,8 +2159,11 @@ export default function CrmWhatsApp() {
                     </div>
                   )}
 
-                  <div className="flex min-h-0 flex-1 flex-col bg-[radial-gradient(hsl(40_20%_88%)_1px,transparent_1px)] bg-[length:22px_22px] px-5 py-4">
-                    <div ref={messagesScrollRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+                  <div className="flex min-h-0 flex-1 flex-col bg-muted/20 px-5 py-4">
+                    <div
+                      ref={messagesScrollRef}
+                      className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1"
+                    >
                       {loadingConversation ? (
                         <div className="py-10 text-center text-sm text-muted-foreground">
                           Carregando conversa...
@@ -1810,37 +2174,48 @@ export default function CrmWhatsApp() {
                           const isSystem = message.type === "note";
                           const isTemplate = message.type === "template";
                           const isOutbound = message.direction === "outbound";
-                          const isImage = message.type === "image" || message.mediaType === "image";
+                          const isImage =
+                            message.type === "image" ||
+                            message.mediaType === "image";
                           const mediaUrl = getMessageMediaUrl(message);
 
-                          const dayLabel = getMessageDateLabel(message.timestamp);
-                          const prevDayLabel = index > 0 ? getMessageDateLabel(messages[index - 1].timestamp) : "";
-                          const showDaySeparator = dayLabel !== "" && dayLabel !== prevDayLabel;
+                          const dayLabel = getMessageDateLabel(
+                            message.timestamp,
+                          );
+                          const prevDayLabel =
+                            index > 0
+                              ? getMessageDateLabel(
+                                  messages[index - 1].timestamp,
+                                )
+                              : "";
+                          const showDaySeparator =
+                            dayLabel !== "" && dayLabel !== prevDayLabel;
                           const daySeparator = showDaySeparator ? (
                             <div className="mx-auto my-3 w-fit rounded-full bg-[hsl(40_25%_90%)] px-3 py-1 text-[10px] font-bold text-[hsl(40_15%_40%)]">
                               {dayLabel}
                             </div>
                           ) : null;
-                          const leadBanner = index === 0 ? (
-                            <div className="mb-3 self-center rounded-[10px] bg-[hsl(211_100%_95%)] px-3 py-2 text-center text-[11px] font-semibold text-[hsl(211_100%_32%)]">
-                              <span className="inline-flex items-center gap-1">
-                                <UserPlus className="h-[13px] w-[13px]" />
-                                Lead capturado via {selectedConversationVm.sourceLabel}
-                                {selectedConversationVm.campaignLabel !== "Não informado"
-                                  ? ` · ${selectedConversationVm.campaignLabel}`
-                                  : ""}
-                              </span>
-                            </div>
-                          ) : null;
+                          const leadBanner =
+                            index === 0 ? (
+                              <div className="mb-3 self-center rounded-[10px] bg-[hsl(211_100%_95%)] px-3 py-2 text-center text-[11px] font-semibold text-[hsl(211_100%_32%)]">
+                                <span className="inline-flex items-center gap-1">
+                                  <UserPlus className="h-[13px] w-[13px]" />
+                                  Lead capturado via{" "}
+                                  {selectedConversationVm.sourceLabel}
+                                  {selectedConversationVm.campaignLabel !==
+                                  "Não informado"
+                                    ? ` · ${selectedConversationVm.campaignLabel}`
+                                    : ""}
+                                </span>
+                              </div>
+                            ) : null;
 
                           if (isSystem) {
                             return (
                               <Fragment key={message.id}>
                                 {daySeparator}
                                 {leadBanner}
-                                <div
-                                  className="mx-auto max-w-[80%] rounded-[10px] bg-[hsl(211_100%_95%)] px-3 py-2 text-center text-[11px] font-semibold text-[hsl(211_100%_32%)]"
-                                >
+                                <div className="mx-auto max-w-[80%] rounded-[10px] bg-[hsl(211_100%_95%)] px-3 py-2 text-center text-[11px] font-semibold text-[hsl(211_100%_32%)]">
                                   <span className="inline-flex items-center gap-1">
                                     <StickyNote className="h-[13px] w-[13px]" />
                                     {text || "Nota interna adicionada"}
@@ -1850,58 +2225,86 @@ export default function CrmWhatsApp() {
                             );
                           }
 
-                          const isSearchHit = messageMatches.includes(message.id);
+                          const isSearchHit = messageMatches.includes(
+                            message.id,
+                          );
                           const isCurrentSearchHit =
-                            isSearchHit && messageMatches[messageMatchIndex] === message.id;
+                            isSearchHit &&
+                            messageMatches[messageMatchIndex] === message.id;
 
                           return (
                             <Fragment key={message.id}>
-                            {daySeparator}
-                            {leadBanner}
-                            <div ref={(node) => { messageRefs.current[message.id] = node; }}>
-                            <MemoMessageBubble
-                              message={message}
-                              searchHit={isSearchHit}
-                              currentSearchHit={isCurrentSearchHit}
-                              isOutbound={isOutbound}
-                              isTemplate={isTemplate}
-                              isImage={isImage}
-                              mediaUrl={mediaUrl}
-                              text={text}
-                              timeLabel={getMessageTimeLabel(message.timestamp)}
-                              isReplying={replyMessage?.id === message.id}
-                              channel={selectedConversationVm?.channel}
-                              contactName={selectedConversationVm?.name}
-                              onAcceptCollab={() => {
-                                handleDirectSend("Olá! Aceitamos a proposta de colaboração no post do Instagram. Vamos seguir com a parceria!");
-                                toast.success("Confirmação enviada no Direct!");
-                              }}
-                              onDeclineCollab={() => {
-                                handleDirectSend("Olá! Agradecemos a proposta de colaboração, mas no momento não conseguiremos aceitar este post. Um abraço!");
-                                toast.info("Recusa enviada no Direct!");
-                              }}
-                              onReplyCollab={(draft) => setComposer(draft)}
-                              onOpenCollabModal={(data) => {
-                                setIgModalData(data);
-                                setIgModalOpen(true);
-                              }}
-                              onContextMenu={(event) => {
-                                event.preventDefault();
-                                openMessageMenu(message, event.clientX, event.clientY);
-                              }}
-                              onPointerDown={(event) => {
-                                if (event.pointerType === "mouse") return;
-                                clearLongPress();
-                                longPressTimerRef.current = setTimeout(() => {
-                                  const target = event.currentTarget.getBoundingClientRect();
-                                  openMessageMenu(message, target.left + target.width / 2, target.top + Math.min(target.height, 56));
-                                }, 450);
-                              }}
-                              onPointerUp={() => clearLongPress()}
-                              onPointerCancel={() => clearLongPress()}
-                              onPointerLeave={() => clearLongPress()}
-                            />
-                            </div>
+                              {daySeparator}
+                              {leadBanner}
+                              <div
+                                ref={(node) => {
+                                  messageRefs.current[message.id] = node;
+                                }}
+                              >
+                                <MemoMessageBubble
+                                  message={message}
+                                  searchHit={isSearchHit}
+                                  currentSearchHit={isCurrentSearchHit}
+                                  isOutbound={isOutbound}
+                                  isTemplate={isTemplate}
+                                  isImage={isImage}
+                                  mediaUrl={mediaUrl}
+                                  text={text}
+                                  timeLabel={getMessageTimeLabel(
+                                    message.timestamp,
+                                  )}
+                                  isReplying={replyMessage?.id === message.id}
+                                  channel={selectedConversationVm?.channel}
+                                  contactName={selectedConversationVm?.name}
+                                  onAcceptCollab={() => {
+                                    handleDirectSend(
+                                      "Olá! Aceitamos a proposta de colaboração no post do Instagram. Vamos seguir com a parceria!",
+                                    );
+                                    toast.success(
+                                      "Confirmação enviada no Direct!",
+                                    );
+                                  }}
+                                  onDeclineCollab={() => {
+                                    handleDirectSend(
+                                      "Olá! Agradecemos a proposta de colaboração, mas no momento não conseguiremos aceitar este post. Um abraço!",
+                                    );
+                                    toast.info("Recusa enviada no Direct!");
+                                  }}
+                                  onReplyCollab={(draft) => setComposer(draft)}
+                                  onOpenCollabModal={(data) => {
+                                    setIgModalData(data);
+                                    setIgModalOpen(true);
+                                  }}
+                                  onContextMenu={(event) => {
+                                    event.preventDefault();
+                                    openMessageMenu(
+                                      message,
+                                      event.clientX,
+                                      event.clientY,
+                                    );
+                                  }}
+                                  onPointerDown={(event) => {
+                                    if (event.pointerType === "mouse") return;
+                                    clearLongPress();
+                                    longPressTimerRef.current = setTimeout(
+                                      () => {
+                                        const target =
+                                          event.currentTarget.getBoundingClientRect();
+                                        openMessageMenu(
+                                          message,
+                                          target.left + target.width / 2,
+                                          target.top +
+                                            Math.min(target.height, 56),
+                                        );
+                                      },
+                                      450,
+                                    );
+                                  }}
+                                  onPointerUp={() => clearLongPress()}
+                                  onPointerCancel={() => clearLongPress()}
+                                  onPointerLeave={() => clearLongPress()}
+                                />
+                              </div>
                             </Fragment>
                           );
                         })
@@ -1909,9 +2312,20 @@ export default function CrmWhatsApp() {
                     </div>
 
                     {editingMessage && (
-                      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => { setEditingMessage(null); setEditDraft(""); }}>
-                        <div className="w-full max-w-md rounded-2xl bg-card p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                          <div className="mb-2 text-sm font-bold">Editar mensagem</div>
+                      <div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+                        onClick={() => {
+                          setEditingMessage(null);
+                          setEditDraft("");
+                        }}
+                      >
+                        <div
+                          className="w-full max-w-md rounded-2xl bg-card p-4 shadow-2xl"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="mb-2 text-sm font-bold">
+                            Editar mensagem
+                          </div>
                           <Textarea
                             value={editDraft}
                             onChange={(e) => setEditDraft(e.target.value)}
@@ -1920,10 +2334,21 @@ export default function CrmWhatsApp() {
                             className="mb-3"
                           />
                           <div className="flex justify-end gap-2">
-                            <Button variant="outline" size="sm" onClick={() => { setEditingMessage(null); setEditDraft(""); }}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingMessage(null);
+                                setEditDraft("");
+                              }}
+                            >
                               Cancelar
                             </Button>
-                            <Button size="sm" onClick={() => void handleSaveEdit()} disabled={!editDraft.trim()}>
+                            <Button
+                              size="sm"
+                              onClick={() => void handleSaveEdit()}
+                              disabled={!editDraft.trim()}
+                            >
                               Salvar
                             </Button>
                           </div>
@@ -1935,14 +2360,20 @@ export default function CrmWhatsApp() {
                       <div className="border-t border-border bg-card p-3 flex justify-center">
                         <QuickBookingCard
                           onSelectSlot={(slot) => {
-                            handleDirectSend(`Olá! Confirmando o interesse no horário de ${slot.fullLabel}. Podemos agendar?`);
+                            handleDirectSend(
+                              `Olá! Confirmando o interesse no horário de ${slot.fullLabel}. Podemos agendar?`,
+                            );
                             setShowQuickBooking(false);
-                            toast.success("Horário selecionado e enviado ao paciente!");
+                            toast.success(
+                              "Horário selecionado e enviado ao paciente!",
+                            );
                           }}
                           onSendSlotsMessage={(msg) => {
                             handleDirectSend(msg);
                             setShowQuickBooking(false);
-                            toast.success("Opções de horários enviadas no chat!");
+                            toast.success(
+                              "Opções de horários enviadas no chat!",
+                            );
                           }}
                         />
                       </div>
@@ -1961,7 +2392,9 @@ export default function CrmWhatsApp() {
                               : "border-border bg-background text-muted-foreground hover:border-[hsl(142_50%_55%)] hover:text-[hsl(142_55%_30%)]",
                           )}
                         >
-                          {item.prominent ? <Zap className="mr-1 h-3 w-3" /> : null}
+                          {item.prominent ? (
+                            <Zap className="mr-1 h-3 w-3" />
+                          ) : null}
                           {item.label}
                         </button>
                       ))}
@@ -1975,7 +2408,9 @@ export default function CrmWhatsApp() {
                         className="inline-flex items-center gap-1.5 rounded-full border border-[hsl(211_90%_85%)] bg-[hsl(211_100%_97%)] px-3 py-1.5 text-[11px] font-bold text-[hsl(211_80%_40%)] transition-colors hover:bg-[hsl(211_100%_94%)] disabled:opacity-60"
                       >
                         <Sparkles className="h-3 w-3" />
-                        {aiBusy === "summary" ? "Resumindo…" : "Resumir conversa"}
+                        {aiBusy === "summary"
+                          ? "Resumindo…"
+                          : "Resumir conversa"}
                       </button>
                       <button
                         type="button"
@@ -2013,7 +2448,8 @@ export default function CrmWhatsApp() {
                                 Respondendo mensagem
                               </div>
                               <div className="truncate text-xs text-muted-foreground">
-                                {getMessageText(replyMessage.content) || "[mensagem sem texto]"}
+                                {getMessageText(replyMessage.content) ||
+                                  "[mensagem sem texto]"}
                               </div>
                             </div>
                             <button
@@ -2045,14 +2481,17 @@ export default function CrmWhatsApp() {
                           />
                         </div>
                       </div>
-                      <button type="button" className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary">
+                      <button
+                        type="button"
+                        className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-secondary"
+                      >
                         <Mic className="h-5 w-5" />
                       </button>
                       <button
                         type="button"
                         onClick={() => void handleSend()}
                         disabled={!composer.trim() || sending}
-                        className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-[hsl(142_70%_42%)] text-white disabled:cursor-not-allowed disabled:opacity-60"
+                        className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <Send className="h-[18px] w-[18px]" />
                       </button>
@@ -2072,13 +2511,19 @@ export default function CrmWhatsApp() {
                   <div className="border-b border-border bg-card px-4 pb-4 pt-5 text-center">
                     <ContactAvatar
                       name={selectedConversationVm.name}
-                      avatarUrl={selectedConversationVm.channel !== "webchat" ? selectedConversationVm.avatarUrl : null}
+                      avatarUrl={
+                        selectedConversationVm.channel !== "webchat"
+                          ? selectedConversationVm.avatarUrl
+                          : null
+                      }
                       avatarGradient={selectedConversationVm.avatarGradient}
                       initials={selectedConversationVm.initials}
                       className="mx-auto mb-3 h-16 w-16"
                       fallbackClassName="text-[22px] font-extrabold"
                     />
-                    <div className="text-base font-extrabold">{selectedConversationVm.name}</div>
+                    <div className="text-base font-extrabold">
+                      {selectedConversationVm.name}
+                    </div>
                     <div className="mt-0.5 text-xs font-semibold text-muted-foreground">
                       {selectedConversationVm.phoneLabel}
                     </div>
@@ -2096,7 +2541,9 @@ export default function CrmWhatsApp() {
                         className="h-auto flex-col gap-1 rounded-xl px-3 py-2 text-[10px] font-bold"
                       >
                         <UserPlus className="h-[18px] w-[18px]" />
-                        {selectedConversationVm.patientId ? "Ver paciente" : "Criar paciente"}
+                        {selectedConversationVm.patientId
+                          ? "Ver paciente"
+                          : "Criar paciente"}
                       </Button>
                       <Button
                         variant="secondary"
@@ -2108,7 +2555,9 @@ export default function CrmWhatsApp() {
                         }
                         onClick={() =>
                           selectedConversationVm.patientId
-                            ? navigate(`/schedule?patientId=${selectedConversationVm.patientId}`)
+                            ? navigate(
+                                `/schedule?patientId=${selectedConversationVm.patientId}`,
+                              )
                             : navigate(
                                 `/patients/new?name=${encodeURIComponent(selectedConversationVm.name)}&phone=${encodeURIComponent(selectedConversationVm.phoneDigits)}&next=schedule`,
                               )
@@ -2146,7 +2595,10 @@ export default function CrmWhatsApp() {
                           >
                             <span className="flex items-center gap-2">
                               <StageChip
-                                view={resolveStageView(selectedConversationVm.stage, funnelMap)}
+                                view={resolveStageView(
+                                  selectedConversationVm.stage,
+                                  funnelMap,
+                                )}
                                 className="px-2.5 py-1 text-[11px] font-extrabold"
                               />
                             </span>
@@ -2157,7 +2609,10 @@ export default function CrmWhatsApp() {
                           {CRM_PIPELINE_ORDER.map((stage) => {
                             const meta = getStageMeta(stage);
                             return (
-                              <DropdownMenuItem key={stage} onClick={() => void handleStageChange(stage)}>
+                              <DropdownMenuItem
+                                key={stage}
+                                onClick={() => void handleStageChange(stage)}
+                              >
                                 <StageChip
                                   view={resolveStageView(meta, funnelMap)}
                                   className="gap-2 px-2 py-1 text-[11px] font-bold"
@@ -2173,7 +2628,9 @@ export default function CrmWhatsApp() {
                             key={`${label}-${index}`}
                             className={cn(
                               "h-[5px] flex-1 rounded-full bg-secondary",
-                              index <= selectedConversationVm.stage.progressIndex && "bg-primary",
+                              index <=
+                                selectedConversationVm.stage.progressIndex &&
+                                "bg-primary",
                             )}
                           />
                         ))}
@@ -2182,14 +2639,20 @@ export default function CrmWhatsApp() {
                         {progressLabels.map((label, index) => (
                           <span
                             key={`${label}-${index}`}
-                            className={cn(index === selectedConversationVm.stage.progressIndex && "text-primary")}
+                            className={cn(
+                              index ===
+                                selectedConversationVm.stage.progressIndex &&
+                                "text-primary",
+                            )}
                           >
                             {label}
                           </span>
                         ))}
                       </div>
                       {savingStage ? (
-                        <div className="mt-2 text-[11px] text-muted-foreground">Salvando estágio...</div>
+                        <div className="mt-2 text-[11px] text-muted-foreground">
+                          Salvando estágio...
+                        </div>
                       ) : null}
                     </section>
 
@@ -2210,12 +2673,21 @@ export default function CrmWhatsApp() {
                           </div>
                           <div className="text-xs space-y-1.5">
                             <div className="flex items-center justify-between font-medium border-b border-border/40 pb-1">
-                              <span className="text-muted-foreground">Handle IG:</span>
-                              <span className="font-bold text-foreground">{selectedConversationVm.instagramHandle || "@instagram_user"}</span>
+                              <span className="text-muted-foreground">
+                                Handle IG:
+                              </span>
+                              <span className="font-bold text-foreground">
+                                {selectedConversationVm.instagramHandle ||
+                                  "@instagram_user"}
+                              </span>
                             </div>
                             <div className="flex items-center justify-between font-medium border-b border-border/40 pb-1">
-                              <span className="text-muted-foreground">Interações:</span>
-                              <span className="font-semibold text-emerald-600 dark:text-emerald-400">1 Collab · 2 Stories</span>
+                              <span className="text-muted-foreground">
+                                Interações:
+                              </span>
+                              <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                1 Collab · 2 Stories
+                              </span>
                             </div>
                             <a
                               href={`https://instagram.com/${(selectedConversationVm.instagramHandle || "").replace(/^@/, "")}`}
@@ -2230,9 +2702,12 @@ export default function CrmWhatsApp() {
                         </div>
                       )}
                       <div className="space-y-2 text-xs">
-                        {typeof selectedConversationVm.leadScore === "number" ? (
+                        {typeof selectedConversationVm.leadScore ===
+                        "number" ? (
                           <div className="flex items-center justify-between border-b border-border/50 py-1.5">
-                            <span className="font-semibold text-muted-foreground">Lead score</span>
+                            <span className="font-semibold text-muted-foreground">
+                              Lead score
+                            </span>
                             <span
                               className={cn(
                                 "inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-extrabold",
@@ -2249,31 +2724,53 @@ export default function CrmWhatsApp() {
                           </div>
                         ) : null}
                         <div className="flex items-center justify-between border-b border-border/50 py-1.5">
-                          <span className="font-semibold text-muted-foreground">Origem</span>
+                          <span className="font-semibold text-muted-foreground">
+                            Origem
+                          </span>
                           <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(142_60%_92%)] px-2 py-0.5 font-bold text-[hsl(142_55%_28%)]">
                             <Camera className="h-[11px] w-[11px]" />
                             {selectedConversationVm.sourceLabel}
                           </span>
                         </div>
                         <div className="flex items-center justify-between border-b border-border/50 py-1.5">
-                          <span className="font-semibold text-muted-foreground">Campanha</span>
-                          <span className="font-bold">{selectedConversationVm.campaignLabel}</span>
+                          <span className="font-semibold text-muted-foreground">
+                            Campanha
+                          </span>
+                          <span className="font-bold">
+                            {selectedConversationVm.campaignLabel}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between border-b border-border/50 py-1.5">
-                          <span className="font-semibold text-muted-foreground">Convênio</span>
-                          <span className="font-bold">{selectedConversationVm.insuranceLabel}</span>
+                          <span className="font-semibold text-muted-foreground">
+                            Convênio
+                          </span>
+                          <span className="font-bold">
+                            {selectedConversationVm.insuranceLabel}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between border-b border-border/50 py-1.5">
-                          <span className="font-semibold text-muted-foreground">Interesse</span>
-                          <span className="font-bold">{selectedConversationVm.interestLabel}</span>
+                          <span className="font-semibold text-muted-foreground">
+                            Interesse
+                          </span>
+                          <span className="font-bold">
+                            {selectedConversationVm.interestLabel}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between border-b border-border/50 py-1.5">
-                          <span className="font-semibold text-muted-foreground">Primeiro contato</span>
-                          <span className="font-bold">{selectedConversationVm.firstContactLabel}</span>
+                          <span className="font-semibold text-muted-foreground">
+                            Primeiro contato
+                          </span>
+                          <span className="font-bold">
+                            {selectedConversationVm.firstContactLabel}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between py-1.5">
-                          <span className="font-semibold text-muted-foreground">Responsável</span>
-                          <span className="font-bold">{selectedConversationVm.ownerLabel}</span>
+                          <span className="font-semibold text-muted-foreground">
+                            Responsável
+                          </span>
+                          <span className="font-bold">
+                            {selectedConversationVm.ownerLabel}
+                          </span>
                         </div>
                       </div>
                     </section>
@@ -2290,16 +2787,21 @@ export default function CrmWhatsApp() {
                           className="inline-flex items-center gap-1 rounded-full border border-[hsl(211_90%_85%)] bg-[hsl(211_100%_97%)] px-2 py-0.5 text-[10px] font-bold text-[hsl(211_80%_40%)] hover:bg-[hsl(211_100%_94%)] disabled:opacity-60"
                         >
                           <Sparkles className="h-3 w-3" />
-                          {aiBusy === "nextaction" ? "Gerando…" : "Sugerir (IA)"}
+                          {aiBusy === "nextaction"
+                            ? "Gerando…"
+                            : "Sugerir (IA)"}
                         </button>
                       </div>
                       <div className="rounded-[10px] border border-[hsl(28_80%_85%)] bg-[hsl(28_92%_95%)] px-3 py-3">
                         <div className="flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-[0.05em] text-[hsl(25_70%_38%)]">
                           <Clock3 className="h-3 w-3" />
-                          {aiNextAction ? "Próxima ação (IA)" : selectedConversationVm.nextActionTitle}
+                          {aiNextAction
+                            ? "Próxima ação (IA)"
+                            : selectedConversationVm.nextActionTitle}
                         </div>
                         <div className="mt-1 text-xs font-bold text-[hsl(25_60%_25%)]">
-                          {aiNextAction ?? selectedConversationVm.nextActionBody}
+                          {aiNextAction ??
+                            selectedConversationVm.nextActionBody}
                         </div>
                       </div>
                     </section>
@@ -2331,7 +2833,10 @@ export default function CrmWhatsApp() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start">
                               {availableTagOptions.map((tag) => (
-                                <DropdownMenuItem key={tag.id} onClick={() => void handleAddTag(tag.id)}>
+                                <DropdownMenuItem
+                                  key={tag.id}
+                                  onClick={() => void handleAddTag(tag.id)}
+                                >
                                   {tag.name}
                                 </DropdownMenuItem>
                               ))}
@@ -2404,36 +2909,42 @@ export default function CrmWhatsApp() {
               <ListTodo className="h-4 w-4 text-muted-foreground" />
               Criar tarefa
             </button>
-            {messageMenu.message.direction === "outbound" && (() => {
-              const msgTime = new Date(messageMenu.message.timestamp).getTime();
-              const canEdit = Date.now() - msgTime < 15 * 60 * 1000;
-              const canDelete = messageMenu.message.canDeleteForEveryone !== false;
-              return (
-                <>
-                  <div className="my-1 border-t border-border/60" />
-                  {canEdit && (
-                    <button
-                      type="button"
-                      onClick={() => handleEditMessage(messageMenu.message)}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left transition-colors hover:bg-secondary"
-                    >
-                      <Edit3 className="h-4 w-4 text-muted-foreground" />
-                      Editar
-                    </button>
-                  )}
-                  {canDelete && (
-                    <button
-                      type="button"
-                      onClick={() => void handleDeleteMessage(messageMenu.message)}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left text-destructive transition-colors hover:bg-destructive/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Excluir
-                    </button>
-                  )}
-                </>
-              );
-            })()}
+            {messageMenu.message.direction === "outbound" &&
+              (() => {
+                const msgTime = new Date(
+                  messageMenu.message.timestamp,
+                ).getTime();
+                const canEdit = Date.now() - msgTime < 15 * 60 * 1000;
+                const canDelete =
+                  messageMenu.message.canDeleteForEveryone !== false;
+                return (
+                  <>
+                    <div className="my-1 border-t border-border/60" />
+                    {canEdit && (
+                      <button
+                        type="button"
+                        onClick={() => handleEditMessage(messageMenu.message)}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left transition-colors hover:bg-secondary"
+                      >
+                        <Edit3 className="h-4 w-4 text-muted-foreground" />
+                        Editar
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void handleDeleteMessage(messageMenu.message)
+                        }
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left text-destructive transition-colors hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Excluir
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
           </div>
         ) : null}
 
@@ -2457,28 +2968,45 @@ export default function CrmWhatsApp() {
           >
             <button
               type="button"
-              onClick={() => void handlePinConversation(conversationMenu.conversationId)}
+              onClick={() =>
+                void handlePinConversation(conversationMenu.conversationId)
+              }
               className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left transition-colors hover:bg-secondary"
             >
               <Pin className="h-4 w-4 text-muted-foreground" />
               {(() => {
-                const conv = conversationCards.find((c) => c.id === conversationMenu.conversationId);
-                const isPinned = isRecord(conv?.metadata) && conv!.metadata.pinned === true;
+                const conv = conversationCards.find(
+                  (c) => c.id === conversationMenu.conversationId,
+                );
+                const isPinned =
+                  isRecord(conv?.metadata) && conv!.metadata.pinned === true;
                 return isPinned ? "Desafixar" : "Fixar conversa";
               })()}
             </button>
             <button
               type="button"
-              onClick={() => void handleMuteConversation(conversationMenu.conversationId)}
+              onClick={() =>
+                void handleMuteConversation(conversationMenu.conversationId)
+              }
               className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left transition-colors hover:bg-secondary"
             >
               {(() => {
-                const conv = conversationCards.find((c) => c.id === conversationMenu.conversationId);
-                const isMuted = isRecord(conv?.metadata) && typeof conv!.metadata.mutedUntil === "string";
+                const conv = conversationCards.find(
+                  (c) => c.id === conversationMenu.conversationId,
+                );
+                const isMuted =
+                  isRecord(conv?.metadata) &&
+                  typeof conv!.metadata.mutedUntil === "string";
                 return isMuted ? (
-                  <><Bell className="h-4 w-4 text-muted-foreground" /> Reativar notificações</>
+                  <>
+                    <Bell className="h-4 w-4 text-muted-foreground" /> Reativar
+                    notificações
+                  </>
                 ) : (
-                  <><BellOff className="h-4 w-4 text-muted-foreground" /> Silenciar 8h</>
+                  <>
+                    <BellOff className="h-4 w-4 text-muted-foreground" />{" "}
+                    Silenciar 8h
+                  </>
                 );
               })()}
             </button>
@@ -2487,15 +3015,20 @@ export default function CrmWhatsApp() {
               Lembrar depois
             </div>
             <div className="flex gap-1 px-1.5 pb-1">
-              {([
+              {[
                 { option: "1h" as SnoozeOption, label: "1h" },
                 { option: "3h" as SnoozeOption, label: "3h" },
                 { option: "tomorrow" as SnoozeOption, label: "Amanhã 9h" },
-              ]).map(({ option, label }) => (
+              ].map(({ option, label }) => (
                 <button
                   key={option}
                   type="button"
-                  onClick={() => void handleSnoozeConversation(conversationMenu.conversationId, option)}
+                  onClick={() =>
+                    void handleSnoozeConversation(
+                      conversationMenu.conversationId,
+                      option,
+                    )
+                  }
                   className="flex-1 rounded-lg border border-border px-2 py-1.5 text-[11px] font-bold transition-colors hover:bg-secondary"
                 >
                   {label}
@@ -2503,12 +3036,19 @@ export default function CrmWhatsApp() {
               ))}
             </div>
             {(() => {
-              const conv = conversationCards.find((c) => c.id === conversationMenu.conversationId);
+              const conv = conversationCards.find(
+                (c) => c.id === conversationMenu.conversationId,
+              );
               if (!conv?.snoozedUntil) return null;
               return (
                 <button
                   type="button"
-                  onClick={() => void handleSnoozeConversation(conversationMenu.conversationId, "clear")}
+                  onClick={() =>
+                    void handleSnoozeConversation(
+                      conversationMenu.conversationId,
+                      "clear",
+                    )
+                  }
                   className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left transition-colors hover:bg-secondary"
                 >
                   <Clock3 className="h-4 w-4 text-muted-foreground" />
@@ -2519,7 +3059,9 @@ export default function CrmWhatsApp() {
             <div className="my-1 border-t border-border/60" />
             <button
               type="button"
-              onClick={() => void handleMarkUnread(conversationMenu.conversationId)}
+              onClick={() =>
+                void handleMarkUnread(conversationMenu.conversationId)
+              }
               className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left transition-colors hover:bg-secondary"
             >
               <MessageCircle className="h-4 w-4 text-muted-foreground" />
@@ -2527,7 +3069,9 @@ export default function CrmWhatsApp() {
             </button>
             <button
               type="button"
-              onClick={() => void handleCopyContactInfo(conversationMenu.conversationId)}
+              onClick={() =>
+                void handleCopyContactInfo(conversationMenu.conversationId)
+              }
               className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left transition-colors hover:bg-secondary"
             >
               <Copy className="h-4 w-4 text-muted-foreground" />
@@ -2536,12 +3080,14 @@ export default function CrmWhatsApp() {
             <button
               type="button"
               onClick={() => {
-                const conv = conversationCards.find((c) => c.id === conversationMenu.conversationId);
+                const conv = conversationCards.find(
+                  (c) => c.id === conversationMenu.conversationId,
+                );
                 if (conv?.patientId) {
                   void navigate(`/patients/${conv.patientId}`);
                 } else {
                   // Redirect to new patient page with contact prefill (if supported)
-                  void navigate(`/patients/new?contactId=${conv?.id ?? ''}`);
+                  void navigate(`/patients/new?contactId=${conv?.id ?? ""}`);
                 }
                 setConversationMenu(null);
               }}
@@ -2553,7 +3099,9 @@ export default function CrmWhatsApp() {
             <div className="my-1 border-t border-border/60" />
             <button
               type="button"
-              onClick={() => void handleDeleteConversation(conversationMenu.conversationId)}
+              onClick={() =>
+                void handleDeleteConversation(conversationMenu.conversationId)
+              }
               className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-left text-destructive transition-colors hover:bg-destructive/10"
             >
               <Trash2 className="h-4 w-4" />
@@ -2582,9 +3130,15 @@ export default function CrmWhatsApp() {
                 name="newConversationSearch"
                 placeholder="Pesquisar nome ou número"
                 value={newConversationQuery}
-                onChange={(event) => setNewConversationQuery(event.target.value)}
+                onChange={(event) =>
+                  setNewConversationQuery(event.target.value)
+                }
                 onKeyDown={(event) => {
-                  if (event.key === "Enter" && newConvIsPhone && !newConvHasExactMatch) {
+                  if (
+                    event.key === "Enter" &&
+                    newConvIsPhone &&
+                    !newConvHasExactMatch
+                  ) {
                     event.preventDefault();
                     void handleStartNewConversation(newConvQueryDigits);
                   }
@@ -2599,7 +3153,9 @@ export default function CrmWhatsApp() {
                       <li key={card.id}>
                         <button
                           type="button"
-                          onClick={() => handleOpenExistingConversation(card.id)}
+                          onClick={() =>
+                            handleOpenExistingConversation(card.id)
+                          }
                           className="flex w-full items-center gap-3 py-2.5 text-left hover:bg-muted/60 rounded-md px-2"
                         >
                           <span
@@ -2609,7 +3165,9 @@ export default function CrmWhatsApp() {
                             {card.initials}
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-sm font-semibold">{card.name}</span>
+                            <span className="block truncate text-sm font-semibold">
+                              {card.name}
+                            </span>
                             <span className="block truncate text-xs text-muted-foreground">
                               {card.phoneLabel || card.lastMessage}
                             </span>
@@ -2628,7 +3186,9 @@ export default function CrmWhatsApp() {
                     </p>
                     <button
                       type="button"
-                      onClick={() => void handleStartNewConversation(newConvQueryDigits)}
+                      onClick={() =>
+                        void handleStartNewConversation(newConvQueryDigits)
+                      }
                       disabled={startingConversation}
                       className="flex w-full items-center gap-3 py-2.5 text-left hover:bg-muted/60 rounded-md px-2 disabled:opacity-60"
                     >
@@ -2640,7 +3200,9 @@ export default function CrmWhatsApp() {
                           {formatBrazilPhone(newConvQueryDigits)}
                         </span>
                         <span className="block truncate text-xs text-muted-foreground">
-                          {startingConversation ? "Iniciando..." : "Iniciar nova conversa no WhatsApp"}
+                          {startingConversation
+                            ? "Iniciando..."
+                            : "Iniciar nova conversa no WhatsApp"}
                         </span>
                       </span>
                     </button>
@@ -2651,7 +3213,8 @@ export default function CrmWhatsApp() {
                   !newConvIsPhone &&
                   newConversationMatches.length === 0 && (
                     <p className="px-2 py-6 text-center text-sm text-muted-foreground">
-                      Nenhum contato encontrado. Digite um número de WhatsApp para iniciar.
+                      Nenhum contato encontrado. Digite um número de WhatsApp
+                      para iniciar.
                     </p>
                   )}
               </div>
@@ -2677,7 +3240,10 @@ export default function CrmWhatsApp() {
               <Button variant="outline" onClick={() => setNoteOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={() => void handleAddNote()} disabled={!noteDraft.trim()}>
+              <Button
+                onClick={() => void handleAddNote()}
+                disabled={!noteDraft.trim()}
+              >
                 Salvar nota
               </Button>
             </DialogFooter>
@@ -2705,11 +3271,15 @@ export default function CrmWhatsApp() {
           data={igModalData}
           onSendReply={handleDirectSend}
           onAccept={() => {
-            handleDirectSend("Olá! Aceitamos a proposta de colaboração no post do Instagram. Vamos seguir com a parceria!");
+            handleDirectSend(
+              "Olá! Aceitamos a proposta de colaboração no post do Instagram. Vamos seguir com a parceria!",
+            );
             toast.success("Resposta enviada no Direct!");
           }}
           onDecline={() => {
-            handleDirectSend("Olá! Agradecemos a proposta de colaboração, mas no momento não conseguiremos aceitar este post. Um abraço!");
+            handleDirectSend(
+              "Olá! Agradecemos a proposta de colaboração, mas no momento não conseguiremos aceitar este post. Um abraço!",
+            );
             toast.info("Recusa enviada no Direct!");
           }}
         />

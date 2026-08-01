@@ -92,6 +92,7 @@ export interface NotesHomeProps {
   compact?: boolean;
   selectedNoteId?: string;
   onCreateNote?: () => void;
+  onReturnToSystem?: () => void;
   onSelectNote?: (noteId: string) => void;
   onSelectSpace?: (spaceId: string) => void;
   onChangeFilter?: (filter: NonNullable<NotesHomeViewModel['activeFilter']>) => void;
@@ -128,6 +129,7 @@ export interface NoteEditorViewModel {
 export interface NoteEditorProps {
   viewModel: NoteEditorViewModel;
   onTitleChange?: (title: string) => void;
+  onReturnToSystem?: () => void;
   onShare?: () => void;
   onOpenPatient?: (patientId: string) => void;
   onOpenTask?: (taskId: string) => void;

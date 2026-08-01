@@ -29,7 +29,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import type { PainMapPoint, PainIntensity, BodyRegion, PainType } from "@/types/painMap";
 import type { PainPoint } from "@/components/pain-map/BodyMap";
-import { TrendingDown, TrendingUp, Minus, CheckCircle2, Loader2, X, MapPin, Sparkles } from "lucide-react";
+import { TrendingDown, TrendingUp, Minus, CheckCircle2, Loader2, X, MapPin } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { fisioLogger as logger } from "@/lib/errors/logger";
@@ -560,4 +560,3 @@ export function PainMapManager({
     </div>
   );
 }
-

@@ -122,6 +122,11 @@ export const useAppointmentQuickViewLogic = ({
     onOpenChange?.(false);
   }, [appointment, navigate, onOpenChange, prefetchEvolution]);
 
+  const handleOpenEvolutionInNewTab = useCallback(() => {
+    prefetchEvolution();
+    window.open(`/patient-evolution/${appointment.id}`, "_blank", "noopener,noreferrer");
+  }, [appointment.id, prefetchEvolution]);
+
   const handleOpenEvaluation = useCallback(() => {
     prefetchRoute(() => import("../../../pages/patients/NewEvaluationPage"), "evaluation-new");
     navigate(`/patients/${appointment.patientId}/evaluations/new?appointmentId=${appointment.id}`);
@@ -266,6 +271,7 @@ export const useAppointmentQuickViewLogic = ({
     handleStartAttendance,
     handleOpenProfile,
     handleOpenEvolution,
+    handleOpenEvolutionInNewTab,
     handleOpenEvaluation,
     handleOpenPrescription,
     handleOpenAppointmentNote,

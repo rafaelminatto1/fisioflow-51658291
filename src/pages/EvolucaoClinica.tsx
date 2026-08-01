@@ -5,7 +5,7 @@
  * @module pages/EvolucaoClinica
  */
 
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
 import {
   Activity,
   CheckCircle2,
@@ -23,16 +23,16 @@ import {
   TrendingDown,
   TrendingUp,
   Video,
-} from "lucide-react";
-import { MainLayout } from "@/components/layout/MainLayout";
+} from 'lucide-react';
+import { MainLayout } from '@/components/layout/MainLayout';
 
-type EntryKind = "sess" | "tele" | "eval";
-type NodeTone = "primary" | "green" | "amber" | "gray";
+type EntryKind = 'sess' | 'tele' | 'eval';
+type NodeTone = 'primary' | 'green' | 'amber' | 'gray';
 
 interface Metric {
   label: string;
   value: string;
-  pain?: "high" | "low";
+  pain?: 'high' | 'low';
 }
 
 interface Attachment {
@@ -56,55 +56,55 @@ interface TimelineEntry {
 const ic = (Icon: typeof Activity, size = 13) => <Icon style={{ width: size, height: size }} />;
 
 const BADGE_STYLES: Record<EntryKind, string> = {
-  sess: "bg-[hsl(211_100%_95%)] text-[hsl(211_100%_35%)]",
-  tele: "bg-[hsl(158_64%_92%)] text-[hsl(158_64%_28%)]",
-  eval: "bg-[hsl(264_60%_94%)] text-[hsl(264_50%_40%)]",
+  sess: 'bg-[hsl(211_100%_95%)] text-[hsl(211_100%_35%)]',
+  tele: 'bg-[hsl(158_64%_92%)] text-[hsl(158_64%_28%)]',
+  eval: 'bg-[hsl(264_60%_94%)] text-[hsl(264_50%_40%)]',
 };
 
 const NODE_STYLES: Record<NodeTone, string> = {
-  primary: "border-primary text-primary",
-  green: "border-[hsl(158_64%_42%)] text-[hsl(158_64%_42%)]",
-  amber: "border-[hsl(35_92%_50%)] text-[hsl(35_92%_45%)]",
-  gray: "border-[hsl(220_9%_60%)] text-[hsl(220_9%_55%)]",
+  primary: 'border-primary text-primary',
+  green: 'border-[hsl(158_64%_42%)] text-[hsl(158_64%_42%)]',
+  amber: 'border-[hsl(35_92%_50%)] text-[hsl(35_92%_45%)]',
+  gray: 'border-[hsl(220_9%_60%)] text-[hsl(220_9%_55%)]',
 };
 
 const TIMELINE: TimelineEntry[] = [
   {
-    day: "Hoje · 12 mai 2026",
-    node: "primary",
+    day: 'Hoje · 12 mai 2026',
+    node: 'primary',
     nodeIcon: ic(Stethoscope, 11),
-    badge: { kind: "sess", text: "SESSÃO 12" },
-    title: "Cinesioterapia + reavaliação biomecânica",
-    time: "14:30 · 50 min",
+    badge: { kind: 'sess', text: 'SESSÃO 12' },
+    title: 'Cinesioterapia + reavaliação biomecânica',
+    time: '14:30 · 50 min',
     body: (
       <>
-        Paciente refere melhora progressiva da dor anterior no joelho direito.{" "}
+        Paciente refere melhora progressiva da dor anterior no joelho direito.{' '}
         <strong className="font-bold">
           Agachamento até 90° sem pinçada patelar até a 8ª repetição.
-        </strong>{" "}
+        </strong>{' '}
         Reavaliação biomecânica do agachamento mostra ganho de ROM (78°→118° em 8 semanas) e redução
         da inclinação de tronco. Persiste valgo dinâmico moderado à direita (+14°) — mantida ênfase
         em fortalecimento de glúteo médio e controle excêntrico.
       </>
     ),
     metrics: [
-      { label: "Dor pico", value: "3/10", pain: "low" },
-      { label: "ROM joelho", value: "118°" },
-      { label: "Simetria", value: "84%" },
-      { label: "Carga", value: "12kg" },
+      { label: 'Dor pico', value: '3/10', pain: 'low' },
+      { label: 'ROM joelho', value: '118°' },
+      { label: 'Simetria', value: '84%' },
+      { label: 'Carga', value: '12kg' },
     ],
     attachments: [
-      { label: "Análise biomecânica", icon: ic(Video), bio: true },
-      { label: "Comparar S03 ↔ S12", icon: ic(GitCompare) },
+      { label: 'Análise biomecânica', icon: ic(Video), bio: true },
+      { label: 'Comparar S03 ↔ S12', icon: ic(GitCompare) },
     ],
   },
   {
-    day: "8 mai 2026",
-    node: "green",
+    day: '8 mai 2026',
+    node: 'green',
     nodeIcon: ic(Dumbbell, 11),
-    badge: { kind: "sess", text: "SESSÃO 11" },
-    title: "Fortalecimento progressivo",
-    time: "15:00 · 50 min",
+    badge: { kind: 'sess', text: 'SESSÃO 11' },
+    title: 'Fortalecimento progressivo',
+    time: '15:00 · 50 min',
     body: (
       <>
         Progredida carga do leg press (10→12kg) e agachamento isométrico (30s→45s). Boa ativação de
@@ -113,19 +113,19 @@ const TIMELINE: TimelineEntry[] = [
       </>
     ),
     metrics: [
-      { label: "Dor pico", value: "3/10", pain: "low" },
-      { label: "ROM joelho", value: "114°" },
-      { label: "Adesão sem.", value: "100%" },
+      { label: 'Dor pico', value: '3/10', pain: 'low' },
+      { label: 'ROM joelho', value: '114°' },
+      { label: 'Adesão sem.', value: '100%' },
     ],
-    attachments: [{ label: "Plano de exercícios.pdf", icon: ic(Paperclip) }],
+    attachments: [{ label: 'Plano de exercícios.pdf', icon: ic(Paperclip) }],
   },
   {
-    day: "30 abr 2026",
-    node: "amber",
+    day: '30 abr 2026',
+    node: 'amber',
     nodeIcon: ic(MessageSquare, 11),
-    badge: { kind: "tele", text: "TELE-RETORNO" },
-    title: "Acompanhamento remoto",
-    time: "18:20 · 15 min",
+    badge: { kind: 'tele', text: 'TELE-RETORNO' },
+    title: 'Acompanhamento remoto',
+    time: '18:20 · 15 min',
     body: (
       <>
         Contato por vídeo. Paciente relatou pico de dor (5/10) após caminhada longa no fim de
@@ -134,17 +134,17 @@ const TIMELINE: TimelineEntry[] = [
       </>
     ),
     metrics: [
-      { label: "Dor relatada", value: "5/10", pain: "high" },
-      { label: "Adesão sem.", value: "75%" },
+      { label: 'Dor relatada', value: '5/10', pain: 'high' },
+      { label: 'Adesão sem.', value: '75%' },
     ],
   },
   {
-    day: "17 mar 2026",
-    node: "gray",
+    day: '17 mar 2026',
+    node: 'gray',
     nodeIcon: ic(ClipboardList, 11),
-    badge: { kind: "eval", text: "AVALIAÇÃO INICIAL" },
-    title: "Anamnese + exame físico",
-    time: "09:00 · 60 min",
+    badge: { kind: 'eval', text: 'AVALIAÇÃO INICIAL' },
+    title: 'Anamnese + exame físico',
+    time: '09:00 · 60 min',
     body: (
       <>
         Quadro de dor anterior no joelho direito há ~4 meses, agravada por agachar e descer escadas.
@@ -154,24 +154,24 @@ const TIMELINE: TimelineEntry[] = [
       </>
     ),
     metrics: [
-      { label: "Dor pico", value: "6/10", pain: "high" },
-      { label: "ROM joelho", value: "78°" },
-      { label: "Simetria", value: "71%" },
+      { label: 'Dor pico', value: '6/10', pain: 'high' },
+      { label: 'ROM joelho', value: '78°' },
+      { label: 'Simetria', value: '71%' },
     ],
     attachments: [
-      { label: "Baseline biomecânico", icon: ic(Video), bio: true },
-      { label: "Ficha de avaliação.pdf", icon: ic(FileText) },
+      { label: 'Baseline biomecânico', icon: ic(Video), bio: true },
+      { label: 'Ficha de avaliação.pdf', icon: ic(FileText) },
     ],
   },
 ];
 
 const TABS = [
-  "Resumo",
-  "Evolução clínica",
-  "Agendamentos",
-  "Protocolo",
-  "Avaliações",
-  "Documentos",
+  'Resumo',
+  'Evolução clínica',
+  'Agendamentos',
+  'Protocolo',
+  'Avaliações',
+  'Documentos',
 ];
 
 function MetricsStrip({ metrics }: { metrics: Metric[] }) {
@@ -189,10 +189,10 @@ function MetricsStrip({ metrics }: { metrics: Metric[] }) {
             className="text-[15px] font-extrabold tabular-nums"
             style={{
               color:
-                m.pain === "high"
-                  ? "hsl(0 70% 45%)"
-                  : m.pain === "low"
-                    ? "hsl(158 64% 32%)"
+                m.pain === 'high'
+                  ? 'hsl(0 70% 45%)'
+                  : m.pain === 'low'
+                    ? 'hsl(158 64% 32%)'
                     : undefined,
             }}
           >
@@ -241,8 +241,8 @@ function TimelineCard({ entry }: { entry: TimelineEntry }) {
                   key={a.label}
                   className={`flex cursor-pointer items-center gap-[5px] rounded-lg px-[10px] py-[5px] text-[11px] font-bold ${
                     a.bio
-                      ? "bg-[hsl(211_100%_95%)] text-[hsl(211_100%_35%)]"
-                      : "bg-muted/60 text-foreground hover:bg-primary/10 hover:text-primary"
+                      ? 'bg-[hsl(211_100%_95%)] text-[hsl(211_100%_35%)]'
+                      : 'bg-muted/60 text-foreground hover:bg-primary/10 hover:text-primary'
                   }`}
                 >
                   {a.icon}
@@ -277,10 +277,10 @@ function Widget({ title, children }: { title: string; children: ReactNode }) {
 }
 
 const GOALS = [
-  { label: "ROM ≥ 120°", pct: 98, green: true },
-  { label: "Dor < 3/10 sustentada", pct: 70, green: false },
-  { label: "Valgo dinâmico < 8°", pct: 45, green: false },
-  { label: "Simetria ≥ 90%", pct: 62, green: false },
+  { label: 'ROM ≥ 120°', pct: 98, green: true },
+  { label: 'Dor < 3/10 sustentada', pct: 70, green: false },
+  { label: 'Valgo dinâmico < 8°', pct: 45, green: false },
+  { label: 'Simetria ≥ 90%', pct: 62, green: false },
 ];
 
 export default function EvolucaoClinica() {
@@ -290,13 +290,13 @@ export default function EvolucaoClinica() {
         {/* Patient header */}
         <div className="px-6 pt-4">
           <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[hsl(211_100%_60%)] to-[hsl(211_100%_40%)] text-[19px] font-extrabold text-white">
+            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-[19px] font-extrabold text-primary">
               CF
             </div>
             <div>
               <h1 className="text-2xl font-extrabold tracking-[-0.02em]">Carla Ferreira</h1>
               <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs font-semibold text-muted-foreground">
-                <span>34 anos · ♀</span>
+                <span>34 anos · F</span>
                 <span className="h-[3px] w-[3px] rounded-full bg-muted-foreground" />
                 <span>Início em 17/03/2026</span>
                 <span className="h-[3px] w-[3px] rounded-full bg-muted-foreground" />
@@ -323,7 +323,7 @@ export default function EvolucaoClinica() {
               <button className="flex items-center gap-1.5 rounded-[10px] border border-border bg-card px-3.5 py-2 text-[13px] font-bold text-foreground">
                 {ic(Paperclip, 14)} Anexar
               </button>
-              <button className="flex items-center gap-1.5 rounded-[10px] border border-primary bg-primary px-3.5 py-2 text-[13px] font-bold text-white shadow-[0_0_0_4px_hsl(211_100%_50%/0.15)]">
+              <button className="flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-[13px] font-bold text-primary-foreground hover:bg-primary/90">
                 {ic(Plus, 14)} Nova evolução
               </button>
             </div>
@@ -333,14 +333,14 @@ export default function EvolucaoClinica() {
         {/* Tabs */}
         <div className="flex gap-1 border-b border-border px-6 pt-4">
           {TABS.map((t) => {
-            const active = t === "Evolução clínica";
+            const active = t === 'Evolução clínica';
             return (
               <span
                 key={t}
                 className={`-mb-px cursor-pointer border-b-2 px-3.5 py-2.5 text-[13px] font-bold ${
                   active
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground"
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground'
                 }`}
               >
                 {t}
@@ -365,10 +365,10 @@ export default function EvolucaoClinica() {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 {[
-                  { icon: ic(Activity), label: "Dor (VAS)" },
-                  { icon: ic(TrendingUp), label: "ROM" },
-                  { icon: ic(Dumbbell), label: "Condutas" },
-                  { icon: ic(Video), label: "Anexar vídeo" },
+                  { icon: ic(Activity), label: 'Dor (VAS)' },
+                  { icon: ic(TrendingUp), label: 'ROM' },
+                  { icon: ic(Dumbbell), label: 'Condutas' },
+                  { icon: ic(Video), label: 'Anexar vídeo' },
                 ].map((c) => (
                   <span
                     key={c.label}
@@ -481,7 +481,7 @@ export default function EvolucaoClinica() {
                     </div>
                     <div className="mb-3 h-2 overflow-hidden rounded-full bg-secondary">
                       <div
-                        className={`h-full rounded-full ${g.green ? "bg-[hsl(158_64%_45%)]" : "bg-primary"}`}
+                        className={`h-full rounded-full ${g.green ? 'bg-[hsl(158_64%_45%)]' : 'bg-primary'}`}
                         style={{ width: `${g.pct}%` }}
                       />
                     </div>

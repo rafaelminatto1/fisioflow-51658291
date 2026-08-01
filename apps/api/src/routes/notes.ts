@@ -95,7 +95,7 @@ function isCapability(value: unknown): value is Capability {
 }
 
 function setVersionHeader(c: NotesContext, note: typeof notes.$inferSelect) {
-  c.header("ETag", `\"${note.metadataVersion}\"`);
+  c.header("ETag", `"${note.metadataVersion}"`);
 }
 
 function safeAttachmentName(name: string) {
@@ -638,7 +638,7 @@ app.patch("/:id", requireAuth, async (c) => {
     return c.json({ error: "Nota não encontrada" }, 404);
   }
   const ifMatch = c.req.header("If-Match");
-  if (ifMatch && ifMatch !== `\"${note.metadataVersion}\"`) {
+  if (ifMatch && ifMatch !== `"${note.metadataVersion}"`) {
     return c.json({ error: "A nota foi alterada por outra pessoa. Atualize e tente novamente." }, 412);
   }
   if (body.status && !NOTE_STATUSES.has(body.status)) {
@@ -1047,7 +1047,7 @@ app.get("/:id/attachments/:attachmentId/download", requireAuth, async (c) => {
   const object = await c.env.MEDIA_BUCKET.get(attachment.storageKey);
   if (!object) return c.json({ error: "Anexo não encontrado" }, 404);
   await auditNote(c, id, "note.attachment_download");
-  return new Response(object.body, { headers: { "Content-Type": attachment.mimeType, "Content-Disposition": `attachment; filename=\"${attachment.originalName}\"`, "Cache-Control": "private, no-store" } });
+  return new Response(object.body, { headers: { "Content-Type": attachment.mimeType, "Content-Disposition": `attachment; filename="${attachment.originalName}"`, "Cache-Control": "private, no-store" } });
 });
 
 app.delete("/:id/attachments/:attachmentId", requireAuth, async (c) => {

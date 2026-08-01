@@ -44,7 +44,7 @@ export function AppointmentPaymentTab({
   watchPaymentMethod,
   watchPaymentAmount,
   patientId,
-  patientName,
+  patientName: _patientName,
 }: AppointmentPaymentTabProps) {
   const { register, setValue, watch } = useFormContext<AppointmentFormData>();
   const { data: patientPackages, isLoading: isLoadingPackages } = usePatientPackages(patientId);
@@ -55,8 +55,6 @@ export function AppointmentPaymentTab({
   const selectedPackage = activePackages.find((pkg) => pkg.id === selectedPackageId) || null;
   const resolvedPackage =
     selectedPackage || (activePackages.length === 1 ? activePackages[0] : null);
-  const resolvedPatientName = patientName?.trim() || "Paciente selecionado acima";
-
   const isPaid = watchPaymentStatus !== "pending";
   const watchedStatus = watch("status");
   const isAvulsa = watchPaymentStatus === "paid_single";

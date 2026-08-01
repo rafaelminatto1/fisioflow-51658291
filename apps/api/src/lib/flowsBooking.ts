@@ -1,6 +1,5 @@
 import type { Env } from "../types/env";
 import { createPool } from "./db";
-import { buildSlotGrid } from "../routes/publicBooking";
 
 // Tipos de atendimento oferecidos no Flow (id casa com normalizeAppointmentType).
 export const BOOKING_TYPES = [

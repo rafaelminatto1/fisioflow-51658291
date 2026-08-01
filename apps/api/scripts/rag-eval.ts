@@ -71,7 +71,7 @@ async function main() {
       const haystack = norm(data.answer) + " " + sources.map((s) => norm(s.title) + norm(s.filename) + norm(s.content)).join(" ");
       const hit = item.expect.some((e) => haystack.includes(norm(e)));
       rows.push({ q: item.q, hit, answered: Boolean(data.answered), sources: sources.length });
-    } catch (e) {
+    } catch {
       rows.push({ q: item.q, hit: false, answered: false, sources: 0 });
     }
   }

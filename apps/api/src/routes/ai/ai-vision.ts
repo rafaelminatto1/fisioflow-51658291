@@ -62,7 +62,7 @@ app.post("/vision/analyze-pose", async (c) => {
 
   const { landmarks, movementType, jointAngles: clientAngles } = parsed.data;
 
-  const angles: Record<string, number> = { ...(clientAngles || {}) };
+  const angles: Record<string, number> = { ...clientAngles };
 
   // Se tivermos 33 landmarks do MediaPipe Pose
   if (landmarks.length >= 33) {
@@ -182,7 +182,7 @@ Escreva uma seção de OBSERVACAO OBJETIVA (seção 'O' do formulário SOAP) em 
       symmetryScore: symmetryScore ?? null,
       generatedAt: new Date().toISOString(),
     });
-  } catch (err: any) {
+  } catch {
     const fallbackText = `Análise cinemática em ${movementType}: MQI Score de ${mqiScore ?? 80}/100 com simetria bilateral de ${symmetryScore ?? 90}%. Ângulos articulares registrados dentro do padrão de acompanhamento.`;
     return c.json({
       success: true,

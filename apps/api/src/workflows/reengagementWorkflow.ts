@@ -27,7 +27,7 @@ export class PatientReengagementWorkflow extends WorkflowEntrypoint<
   PatientReengagementParams
 > {
   async run(event: WorkflowEvent<PatientReengagementParams>, step: WorkflowStep) {
-    const { patientId, patientName, patientPhone, organizationId, therapistName } = event.payload;
+    const { patientId, patientName, patientPhone, organizationId, therapistName: _therapistName } = event.payload;
 
     // Tentativa 1 — Mensagem amigável
     await step.do("send-reengagement-1", async () => {

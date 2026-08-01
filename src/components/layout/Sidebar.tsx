@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { useNavPreload } from "@/hooks/useIntelligentPreload";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { useNavPreload } from '@/hooks/useIntelligentPreload';
+import { useToast } from '@/hooks/use-toast';
 import {
   LayoutDashboard,
   Users,
@@ -45,21 +45,21 @@ import {
   Calculator,
   Clock,
   TrendingUp,
-} from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useAuth } from "@/contexts/AuthContext";
-import { useGamification } from "@/hooks/useGamification";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { GlobalCommandPalette } from "@/components/evolution/search/GlobalCommandPalette";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { APP_ROUTES } from "@/lib/routing/appRoutes";
-import { useWhatsAppUnreadCount } from "@/hooks/useWhatsAppUnreadCount";
+} from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useAuth } from '@/contexts/AuthContext';
+import { useGamification } from '@/hooks/useGamification';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { GlobalCommandPalette } from '@/components/evolution/search/GlobalCommandPalette';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { APP_ROUTES } from '@/lib/routing/appRoutes';
+import { useWhatsAppUnreadCount } from '@/hooks/useWhatsAppUnreadCount';
 
 const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
   const { profile: authProfile } = useAuth();
-  const isPatientContext = authProfile?.role === "paciente" || authProfile?.role === "patient";
-  const patientId = isPatientContext ? authProfile?.id || "" : "";
+  const isPatientContext = authProfile?.role === 'paciente' || authProfile?.role === 'patient';
+  const patientId = isPatientContext ? authProfile?.id || '' : '';
   const { currentLevel, progressPercentage, currentXp, xpPerLevel } = useGamification(patientId);
 
   if (!isPatientContext) {
@@ -113,117 +113,117 @@ const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
 const mainMenuItems = [
   {
     icon: Calendar,
-    label: "AGENDA",
+    label: 'AGENDA',
     href: APP_ROUTES.AGENDA,
   },
-  { icon: Users, label: "Pacientes", href: APP_ROUTES.PATIENTS },
-  { icon: MessageSquare, label: "CRM · WhatsApp", href: "/crm-whatsapp" },
+  { icon: Users, label: 'Pacientes', href: APP_ROUTES.PATIENTS },
+  { icon: MessageSquare, label: 'CRM · WhatsApp', href: '/crm-whatsapp' },
 ];
 
 const clinicaMenuItems = [
-  { icon: ClipboardList, label: "Avaliação Inicial", href: "/avaliacao-inicial" },
-  { icon: Activity, label: "Evolução Clínica", href: "/evolucao-clinica" },
-  { icon: Dumbbell, label: "Exercícios", href: APP_ROUTES.EXERCISES },
-  { icon: Target, label: "Protocolos", href: "/protocols" },
-  { icon: FlaskConical, label: "Testes Clínicos", href: "/clinical-tests" },
-  { icon: ClipboardList, label: "Avaliações", href: "/templates" },
+  { icon: ClipboardList, label: 'Avaliação Inicial', href: '/avaliacao-inicial' },
+  { icon: Activity, label: 'Evolução Clínica', href: '/evolucao-clinica' },
+  { icon: Dumbbell, label: 'Exercícios', href: APP_ROUTES.EXERCISES },
+  { icon: Target, label: 'Protocolos', href: '/protocols' },
+  { icon: FlaskConical, label: 'Testes Clínicos', href: '/clinical-tests' },
+  { icon: ClipboardList, label: 'Avaliações', href: '/templates' },
 ];
 
 const biomecanicaSubmenu = [
   {
     icon: User,
-    label: "Postura & Escoliose",
-    href: "/clinical/biomechanics/posture",
+    label: 'Postura & Escoliose',
+    href: '/clinical/biomechanics/posture',
   },
   {
     icon: Activity,
-    label: "Corrida & Marcha",
-    href: "/clinical/biomechanics/gait",
+    label: 'Corrida & Marcha',
+    href: '/clinical/biomechanics/gait',
   },
   {
     icon: Zap,
-    label: "Performance de Salto",
-    href: "/clinical/biomechanics/jump",
+    label: 'Performance de Salto',
+    href: '/clinical/biomechanics/jump',
   },
   {
     icon: Move,
-    label: "Gesto Funcional",
-    href: "/clinical/biomechanics/functional",
+    label: 'Gesto Funcional',
+    href: '/clinical/biomechanics/functional',
   },
 ];
 
 const inteligenciaMenuItems = [
   {
     icon: Brain,
-    label: "Central de Inteligência",
-    href: "/inteligencia",
-    badge: "AI",
+    label: 'Central de Inteligência',
+    href: '/inteligencia',
+    badge: 'AI',
   },
-  { icon: MessageSquare, label: "Copiloto Clínico", href: "/copiloto", badge: "AI" },
-  { icon: Sparkles, label: "Base de Conhecimento", href: "/base-conhecimento", badge: "AI" },
+  { icon: MessageSquare, label: 'Copiloto Clínico', href: '/copiloto', badge: 'AI' },
+  { icon: Sparkles, label: 'Base de Conhecimento', href: '/base-conhecimento', badge: 'AI' },
 ];
 
 const rotinaSubmenu = [
-  { icon: BarChart3, label: "Briefing do Dia", href: "/briefing" },
-  { icon: Activity, label: "Monitor de Atividades", href: "/monitor" },
-  { icon: CalendarDays, label: "Eventos", href: "/eventos" },
-  { icon: LayoutGrid, label: "Boards", href: "/boards" },
-  { icon: Zap, label: "Automações", href: "/automacoes" },
+  { icon: BarChart3, label: 'Briefing do Dia', href: '/briefing' },
+  { icon: Activity, label: 'Monitor de Atividades', href: '/monitor' },
+  { icon: CalendarDays, label: 'Eventos', href: '/eventos' },
+  { icon: LayoutGrid, label: 'Boards', href: '/boards' },
+  { icon: Zap, label: 'Automações', href: '/automacoes' },
 ];
 
 const clinicaGestaoSubmenu = [
-  { icon: Video, label: "Telemedicina", href: "/telemedicine" },
-  { icon: MessageSquare, label: "Comunicação", href: "/communications" },
-  { icon: Package, label: "Estoque", href: "/inventory" },
-  { icon: BookOpen, label: "Wiki Clínica", href: "/wiki" },
-  { icon: FileText, label: "Notas", href: "/notes" },
-  { icon: FileText, label: "Cadastros", href: "/cadastros" },
+  { icon: Video, label: 'Telemedicina', href: '/telemedicine' },
+  { icon: MessageSquare, label: 'Comunicação', href: '/communications' },
+  { icon: Package, label: 'Estoque', href: '/inventory' },
+  { icon: BookOpen, label: 'Wiki Clínica', href: '/wiki' },
+  { icon: FileText, label: 'Notas', href: '/notes' },
+  { icon: FileText, label: 'Cadastros', href: '/cadastros' },
 ];
 
 const adminSubmenu = [
-  { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
-  { icon: Building2, label: "Regional (Enterprise)", href: "/regional" },
-  { icon: Users, label: "Usuários", href: "/admin/users" },
-  { icon: Clock, label: "Pendentes de Aprovação", href: "/admin/usuarios-pendentes" },
-  { icon: Shield, label: "Segurança", href: "/admin/security" },
-  { icon: FileText, label: "Logs de Auditoria", href: "/admin/audit-logs" },
-  { icon: Mail, label: "Convites", href: "/admin/invitations" },
-  { icon: Building2, label: "Organização", href: "/admin/organization" },
-  { icon: Database, label: "CRUD Admin", href: "/admin/crud" },
-  { icon: Users, label: "Cohorts", href: "/admin/cohorts" },
-  { icon: Target, label: "Metas", href: "/admin/goals" },
-  { icon: Trophy, label: "Gamificação", href: "/admin/gamification" },
+  { icon: BarChart3, label: 'Analytics', href: '/admin/analytics' },
+  { icon: Building2, label: 'Regional (Enterprise)', href: '/regional' },
+  { icon: Users, label: 'Usuários', href: '/admin/users' },
+  { icon: Clock, label: 'Pendentes de Aprovação', href: '/admin/usuarios-pendentes' },
+  { icon: Shield, label: 'Segurança', href: '/admin/security' },
+  { icon: FileText, label: 'Logs de Auditoria', href: '/admin/audit-logs' },
+  { icon: Mail, label: 'Convites', href: '/admin/invitations' },
+  { icon: Building2, label: 'Organização', href: '/admin/organization' },
+  { icon: Database, label: 'CRUD Admin', href: '/admin/crud' },
+  { icon: Users, label: 'Cohorts', href: '/admin/cohorts' },
+  { icon: Target, label: 'Metas', href: '/admin/goals' },
+  { icon: Trophy, label: 'Gamificação', href: '/admin/gamification' },
 ];
 
 const financeiroSubmenu = [
-  { icon: DollarSign, label: "Financeiro Hub", href: APP_ROUTES.FINANCIAL },
+  { icon: DollarSign, label: 'Financeiro Hub', href: APP_ROUTES.FINANCIAL },
   {
     icon: TrendingUp,
-    label: "Previsão de Receita (IA)",
+    label: 'Previsão de Receita (IA)',
     href: `${APP_ROUTES.FINANCIAL}?tab=analytics`,
   },
   {
     icon: Receipt,
-    label: "Faturamento e Recibos",
-    href: "/financeiro/recibos",
+    label: 'Faturamento e Recibos',
+    href: '/financeiro/recibos',
   },
   {
     icon: Calculator,
-    label: "Simulador de Receitas",
-    href: "/financeiro/simulador",
+    label: 'Simulador de Receitas',
+    href: '/financeiro/simulador',
   },
-  { icon: Users, label: "Comissões", href: "/financeiro/comissoes" },
-  { icon: FileText, label: "Demonstrativo", href: "/financeiro/demonstrativo" },
+  { icon: Users, label: 'Comissões', href: '/financeiro/comissoes' },
+  { icon: FileText, label: 'Demonstrativo', href: '/financeiro/demonstrativo' },
 ];
 
 const configuracoesSubmenu = [
-  { icon: Settings, label: "Geral", href: APP_ROUTES.SETTINGS },
+  { icon: Settings, label: 'Geral', href: APP_ROUTES.SETTINGS },
   {
     icon: CalendarDays,
-    label: "Google Calendar",
-    href: "/configuracoes/calendario",
+    label: 'Google Calendar',
+    href: '/configuracoes/calendario',
   },
-  { icon: LinkIcon, label: "Integrações Google", href: "/integrations" },
+  { icon: LinkIcon, label: 'Integrações Google', href: '/integrations' },
 ];
 
 const SidebarSection = ({
@@ -259,52 +259,52 @@ export function Sidebar() {
   const { toast } = useToast();
   const { profile: sidebarProfile, signOut } = useAuth();
   const isAdmin =
-    sidebarProfile?.role === "admin" ||
+    sidebarProfile?.role === 'admin' ||
     (Array.isArray((sidebarProfile as any)?.roles) &&
-      (sidebarProfile as any).roles.includes("admin"));
+      (sidebarProfile as any).roles.includes('admin'));
   const isRecepcionista =
-    sidebarProfile?.role === "recepcionista" ||
+    sidebarProfile?.role === 'recepcionista' ||
     (Array.isArray((sidebarProfile as any)?.roles) &&
-      (sidebarProfile as any).roles.includes("recepcionista"));
+      (sidebarProfile as any).roles.includes('recepcionista'));
   // CRM/WhatsApp: admin + recepcionista (fisio/estagiário não veem).
   const canSeeCrm = isAdmin || isRecepcionista;
 
   const { preloadRoute } = useNavPreload();
   const whatsappUnread = useWhatsAppUnreadCount();
 
-  const isAdminActive = location.pathname.startsWith("/admin");
+  const isAdminActive = location.pathname.startsWith('/admin');
   const isBiomecanicaActive =
-    location.pathname.startsWith("/clinical/biomechanics") || location.pathname === "/biomechanics";
+    location.pathname.startsWith('/clinical/biomechanics') || location.pathname === '/biomechanics';
   const isFinanceiroActive =
-    location.pathname.startsWith("/financial") || location.pathname.startsWith("/financeiro");
+    location.pathname.startsWith('/financial') || location.pathname.startsWith('/financeiro');
   const isConfiguracoesActive =
-    location.pathname === "/profile" ||
-    location.pathname === "/settings" ||
-    location.pathname.startsWith("/configuracoes") ||
-    location.pathname === "/integrations";
+    location.pathname === '/profile' ||
+    location.pathname === '/settings' ||
+    location.pathname.startsWith('/configuracoes') ||
+    location.pathname === '/integrations';
   const isRotinaActive =
-    location.pathname === "/briefing" ||
-    location.pathname === "/monitor" ||
-    location.pathname === "/eventos" ||
-    location.pathname === "/boards" ||
-    location.pathname === "/automacoes";
+    location.pathname === '/briefing' ||
+    location.pathname === '/monitor' ||
+    location.pathname === '/eventos' ||
+    location.pathname === '/boards' ||
+    location.pathname === '/automacoes';
   const isClinicaGestaoActive =
-    location.pathname === "/telemedicine" ||
-    location.pathname === "/communications" ||
-    location.pathname === "/inventory" ||
-    location.pathname === "/wiki" ||
-    location.pathname.startsWith("/notes") ||
-    location.pathname === "/cadastros";
+    location.pathname === '/telemedicine' ||
+    location.pathname === '/communications' ||
+    location.pathname === '/inventory' ||
+    location.pathname === '/wiki' ||
+    location.pathname.startsWith('/notes') ||
+    location.pathname === '/cadastros';
 
   const handleLogout = async () => {
     try {
       await signOut();
-      toast({ title: "Logout realizado", description: "Até breve!" });
+      toast({ title: 'Logout realizado', description: 'Até breve!' });
     } catch (error) {
       toast({
-        title: "Erro ao sair",
-        description: (error as Error)?.message || "Ocorreu um erro",
-        variant: "destructive",
+        title: 'Erro ao sair',
+        description: (error as Error)?.message || 'Ocorreu um erro',
+        variant: 'destructive',
       });
     }
   };
@@ -313,9 +313,9 @@ export function Sidebar() {
     const Icon = item.icon;
     const isActive =
       location.pathname === item.href ||
-      (item.href !== "/" && location.pathname.startsWith(`${item.href}/`));
-    const unread = item.href === "/crm-whatsapp" ? whatsappUnread : 0;
-    const unreadLabel = unread > 99 ? "99+" : String(unread);
+      (item.href !== '/' && location.pathname.startsWith(`${item.href}/`));
+    const unread = item.href === '/crm-whatsapp' ? whatsappUnread : 0;
+    const unreadLabel = unread > 99 ? '99+' : String(unread);
 
     return (
       <Link
@@ -323,18 +323,18 @@ export function Sidebar() {
         to={item.href}
         onMouseEnter={() => preloadRoute(item.href)}
         className={cn(
-          "flex items-center gap-3 rounded-2xl transition-all duration-500 group relative overflow-hidden",
-          collapsed ? "justify-center px-2 py-3.5" : "px-4 py-3",
+          'flex items-center gap-3 rounded-2xl transition-all duration-500 group relative overflow-hidden',
+          collapsed ? 'justify-center px-2 py-3.5' : 'px-4 py-3',
           isActive
-            ? "bg-primary/10 dark:bg-primary/20 text-primary font-black"
-            : "text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-white",
+            ? 'bg-primary/10 dark:bg-primary/20 text-primary font-black'
+            : 'text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-white'
         )}
       >
         <div className="relative flex-shrink-0">
           <Icon
             className={cn(
-              "h-5 w-5 transition-all duration-500",
-              isActive ? "scale-110" : "group-hover:scale-110 group-hover:text-primary",
+              'h-5 w-5 transition-all duration-500',
+              isActive ? 'scale-110' : 'group-hover:scale-110 group-hover:text-primary'
             )}
           />
           {collapsed && unread > 0 && (
@@ -373,8 +373,8 @@ export function Sidebar() {
         id="main-navigation"
         tabIndex={-1}
         className={cn(
-          "hidden md:flex bg-card border-r border-border/40 transition-all duration-500 ease-in-out flex-col h-screen sticky top-0 shadow-premium-lg z-50",
-          collapsed ? "w-[84px]" : "w-[240px]",
+          'hidden md:flex bg-card border-r border-border/40 transition-all duration-500 ease-in-out flex-col h-screen sticky top-0 shadow-premium-lg z-50',
+          collapsed ? 'w-[84px]' : 'w-[240px]'
         )}
       >
         {/* Premium Header */}
@@ -426,7 +426,7 @@ export function Sidebar() {
         {!collapsed && (
           <div className="px-4 mb-2">
             <button
-              onClick={() => document.dispatchEvent(new CustomEvent("open-command-palette"))}
+              onClick={() => document.dispatchEvent(new CustomEvent('open-command-palette'))}
               aria-label="Buscar paciente... (⌘K)"
               data-testid="open-global-search"
               className="w-full h-10 px-3 rounded-xl bg-muted/50 border border-border/50 flex items-center justify-between group hover:bg-primary/5 hover:border-primary/20 transition-all"
@@ -449,7 +449,7 @@ export function Sidebar() {
           <div className="space-y-3">
             <SidebarSection label="Atendimento" collapsed={collapsed}>
               {mainMenuItems
-                .filter((item) => item.href !== "/crm-whatsapp" || canSeeCrm)
+                .filter((item) => item.href !== '/crm-whatsapp' || canSeeCrm)
                 .map(renderMenuItem)}
             </SidebarSection>
 
@@ -463,10 +463,10 @@ export function Sidebar() {
                 <CollapsibleTrigger asChild>
                   <button
                     className={cn(
-                      "flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group",
+                      'flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group',
                       isBiomecanicaActive
-                        ? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black"
-                        : "text-slate-500",
+                        ? 'bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black'
+                        : 'text-slate-500'
                     )}
                   >
                     <div className="flex items-center gap-3">
@@ -480,8 +480,8 @@ export function Sidebar() {
                     {!collapsed && (
                       <ChevronDown
                         className={cn(
-                          "h-3.5 w-3.5 transition-transform",
-                          (biomecanicaOpen || isBiomecanicaActive) && "rotate-180",
+                          'h-3.5 w-3.5 transition-transform',
+                          (biomecanicaOpen || isBiomecanicaActive) && 'rotate-180'
                         )}
                       />
                     )}
@@ -490,16 +490,16 @@ export function Sidebar() {
                 <CollapsibleContent className="pl-9 space-y-1 mt-1 animate-in slide-in-from-top-2">
                   <Link
                     to="/biomechanics"
-                    onMouseEnter={() => preloadRoute("/biomechanics")}
+                    onMouseEnter={() => preloadRoute('/biomechanics')}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                      location.pathname === "/biomechanics"
-                        ? "text-primary bg-primary/5 font-black"
-                        : "text-muted-foreground hover:text-foreground hover:pl-4",
+                      'flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
+                      location.pathname === '/biomechanics'
+                        ? 'text-primary bg-primary/5 font-black'
+                        : 'text-muted-foreground hover:text-foreground hover:pl-4'
                     )}
                   >
                     <LayoutDashboard className="h-3.5 w-3.5 flex-shrink-0" />
-                    {!collapsed && "Dashboard Lab"}
+                    {!collapsed && 'Dashboard Lab'}
                   </Link>
                   {biomecanicaSubmenu.map((item) => {
                     const SubIcon = item.icon;
@@ -510,10 +510,10 @@ export function Sidebar() {
                         to={item.href}
                         onMouseEnter={() => preloadRoute(item.href)}
                         className={cn(
-                          "flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                          'flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
                           isSubActive
-                            ? "text-primary bg-primary/5"
-                            : "text-muted-foreground hover:text-foreground hover:pl-4",
+                            ? 'text-primary bg-primary/5'
+                            : 'text-muted-foreground hover:text-foreground hover:pl-4'
                         )}
                       >
                         <SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
@@ -530,17 +530,14 @@ export function Sidebar() {
             </SidebarSection>
 
             <SidebarSection label="Gestão & Operação" collapsed={collapsed}>
-              <Collapsible
-                open={rotinaOpen || isRotinaActive}
-                onOpenChange={setRotinaOpen}
-              >
+              <Collapsible open={rotinaOpen || isRotinaActive} onOpenChange={setRotinaOpen}>
                 <CollapsibleTrigger asChild>
                   <button
                     className={cn(
-                      "flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group",
+                      'flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group',
                       isRotinaActive
-                        ? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black"
-                        : "text-slate-500",
+                        ? 'bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black'
+                        : 'text-slate-500'
                     )}
                   >
                     <div className="flex items-center gap-3">
@@ -554,8 +551,8 @@ export function Sidebar() {
                     {!collapsed && (
                       <ChevronDown
                         className={cn(
-                          "h-3.5 w-3.5 transition-transform",
-                          (rotinaOpen || isRotinaActive) && "rotate-180",
+                          'h-3.5 w-3.5 transition-transform',
+                          (rotinaOpen || isRotinaActive) && 'rotate-180'
                         )}
                       />
                     )}
@@ -571,10 +568,10 @@ export function Sidebar() {
                         to={item.href}
                         onMouseEnter={() => preloadRoute(item.href)}
                         className={cn(
-                          "flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                          'flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
                           isSubActive
-                            ? "text-primary bg-primary/5"
-                            : "text-muted-foreground hover:text-foreground hover:pl-4",
+                            ? 'text-primary bg-primary/5'
+                            : 'text-muted-foreground hover:text-foreground hover:pl-4'
                         )}
                       >
                         <SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
@@ -592,10 +589,10 @@ export function Sidebar() {
                 <CollapsibleTrigger asChild>
                   <button
                     className={cn(
-                      "flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group",
+                      'flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group',
                       isClinicaGestaoActive
-                        ? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black"
-                        : "text-slate-500",
+                        ? 'bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black'
+                        : 'text-slate-500'
                     )}
                   >
                     <div className="flex items-center gap-3">
@@ -609,8 +606,8 @@ export function Sidebar() {
                     {!collapsed && (
                       <ChevronDown
                         className={cn(
-                          "h-3.5 w-3.5 transition-transform",
-                          (clinicaGestaoOpen || isClinicaGestaoActive) && "rotate-180",
+                          'h-3.5 w-3.5 transition-transform',
+                          (clinicaGestaoOpen || isClinicaGestaoActive) && 'rotate-180'
                         )}
                       />
                     )}
@@ -624,12 +621,17 @@ export function Sidebar() {
                       <Link
                         key={item.href}
                         to={item.href}
+                        state={
+                          item.href === '/notes'
+                            ? { returnTo: `${location.pathname}${location.search}` }
+                            : undefined
+                        }
                         onMouseEnter={() => preloadRoute(item.href)}
                         className={cn(
-                          "flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                          'flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
                           isSubActive
-                            ? "text-primary bg-primary/5"
-                            : "text-muted-foreground hover:text-foreground hover:pl-4",
+                            ? 'text-primary bg-primary/5'
+                            : 'text-muted-foreground hover:text-foreground hover:pl-4'
                         )}
                       >
                         <SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
@@ -640,59 +642,59 @@ export function Sidebar() {
                 </CollapsibleContent>
               </Collapsible>
               {isAdmin && (
-              <Collapsible
-                open={financeiroOpen || isFinanceiroActive}
-                onOpenChange={setFinanceiroOpen}
-              >
-                <CollapsibleTrigger asChild>
-                  <button
-                    className={cn(
-                      "flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group",
-                      isFinanceiroActive
-                        ? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black"
-                        : "text-slate-500",
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <DollarSign className="h-5 w-5" />
-                      {!collapsed && (
-                        <span className="text-xs font-bold uppercase tracking-widest">
-                          Financeiro
-                        </span>
+                <Collapsible
+                  open={financeiroOpen || isFinanceiroActive}
+                  onOpenChange={setFinanceiroOpen}
+                >
+                  <CollapsibleTrigger asChild>
+                    <button
+                      className={cn(
+                        'flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group',
+                        isFinanceiroActive
+                          ? 'bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black'
+                          : 'text-slate-500'
                       )}
-                    </div>
-                    {!collapsed && (
-                      <ChevronDown
-                        className={cn(
-                          "h-3.5 w-3.5 transition-transform",
-                          (financeiroOpen || isFinanceiroActive) && "rotate-180",
+                    >
+                      <div className="flex items-center gap-3">
+                        <DollarSign className="h-5 w-5" />
+                        {!collapsed && (
+                          <span className="text-xs font-bold uppercase tracking-widest">
+                            Financeiro
+                          </span>
                         )}
-                      />
-                    )}
-                  </button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pl-9 space-y-1 mt-1 animate-in slide-in-from-top-2">
-                  {financeiroSubmenu.map((item) => {
-                    const SubIcon = item.icon;
-                    return (
-                      <Link
-                        key={item.href}
-                        to={item.href}
-                        onMouseEnter={() => preloadRoute(item.href)}
-                        className={cn(
-                          "flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                          location.pathname === item.href
-                            ? "text-primary bg-primary/5"
-                            : "text-muted-foreground hover:text-foreground hover:pl-4",
-                        )}
-                      >
-                        <SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
-                        {!collapsed && item.label}
-                      </Link>
-                    );
-                  })}
-                </CollapsibleContent>
-              </Collapsible>
+                      </div>
+                      {!collapsed && (
+                        <ChevronDown
+                          className={cn(
+                            'h-3.5 w-3.5 transition-transform',
+                            (financeiroOpen || isFinanceiroActive) && 'rotate-180'
+                          )}
+                        />
+                      )}
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pl-9 space-y-1 mt-1 animate-in slide-in-from-top-2">
+                    {financeiroSubmenu.map((item) => {
+                      const SubIcon = item.icon;
+                      return (
+                        <Link
+                          key={item.href}
+                          to={item.href}
+                          onMouseEnter={() => preloadRoute(item.href)}
+                          className={cn(
+                            'flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
+                            location.pathname === item.href
+                              ? 'text-primary bg-primary/5'
+                              : 'text-muted-foreground hover:text-foreground hover:pl-4'
+                          )}
+                        >
+                          <SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
+                          {!collapsed && item.label}
+                        </Link>
+                      );
+                    })}
+                  </CollapsibleContent>
+                </Collapsible>
               )}
             </SidebarSection>
 
@@ -704,10 +706,10 @@ export function Sidebar() {
                 <CollapsibleTrigger asChild>
                   <button
                     className={cn(
-                      "flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group",
+                      'flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group',
                       isConfiguracoesActive
-                        ? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black"
-                        : "text-slate-500",
+                        ? 'bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black'
+                        : 'text-slate-500'
                     )}
                   >
                     <div className="flex items-center gap-3">
@@ -721,8 +723,8 @@ export function Sidebar() {
                     {!collapsed && (
                       <ChevronDown
                         className={cn(
-                          "h-3.5 w-3.5 transition-transform",
-                          (configuracoesOpen || isConfiguracoesActive) && "rotate-180",
+                          'h-3.5 w-3.5 transition-transform',
+                          (configuracoesOpen || isConfiguracoesActive) && 'rotate-180'
                         )}
                       />
                     )}
@@ -737,10 +739,10 @@ export function Sidebar() {
                         to={item.href}
                         onMouseEnter={() => preloadRoute(item.href)}
                         className={cn(
-                          "flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                          'flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
                           location.pathname === item.href
-                            ? "text-primary bg-primary/5"
-                            : "text-muted-foreground hover:text-foreground hover:pl-4",
+                            ? 'text-primary bg-primary/5'
+                            : 'text-muted-foreground hover:text-foreground hover:pl-4'
                         )}
                       >
                         <SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
@@ -755,10 +757,10 @@ export function Sidebar() {
                   <CollapsibleTrigger asChild>
                     <button
                       className={cn(
-                        "flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group",
+                        'flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group',
                         isAdminActive
-                          ? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black"
-                          : "text-slate-500",
+                          ? 'bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black'
+                          : 'text-slate-500'
                       )}
                     >
                       <div className="flex items-center gap-3">
@@ -772,8 +774,8 @@ export function Sidebar() {
                       {!collapsed && (
                         <ChevronDown
                           className={cn(
-                            "h-3.5 w-3.5 transition-transform",
-                            (adminOpen || isAdminActive) && "rotate-180",
+                            'h-3.5 w-3.5 transition-transform',
+                            (adminOpen || isAdminActive) && 'rotate-180'
                           )}
                         />
                       )}
@@ -788,10 +790,10 @@ export function Sidebar() {
                           to={item.href}
                           onMouseEnter={() => preloadRoute(item.href)}
                           className={cn(
-                            "flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                            'flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
                             location.pathname === item.href
-                              ? "text-primary bg-primary/5"
-                              : "text-muted-foreground hover:text-foreground hover:pl-4",
+                              ? 'text-primary bg-primary/5'
+                              : 'text-muted-foreground hover:text-foreground hover:pl-4'
                           )}
                         >
                           <AdminIcon className="h-3.5 w-3.5 flex-shrink-0" />
@@ -813,8 +815,8 @@ export function Sidebar() {
             variant="ghost"
             onClick={handleLogout}
             className={cn(
-              "w-full justify-start gap-3 text-muted-foreground hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 rounded-2xl transition-all duration-300 group",
-              collapsed ? "px-0 justify-center h-12" : "px-4 py-6",
+              'w-full justify-start gap-3 text-muted-foreground hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 rounded-2xl transition-all duration-300 group',
+              collapsed ? 'px-0 justify-center h-12' : 'px-4 py-6'
             )}
           >
             <LogOut className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />

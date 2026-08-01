@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calendar, Clock, CheckCircle2, Send, Sparkles } from "lucide-react";
+import { Calendar, Clock, CheckCircle2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export interface BookingSlot {

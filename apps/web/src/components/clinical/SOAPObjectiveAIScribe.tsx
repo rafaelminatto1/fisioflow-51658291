@@ -45,7 +45,7 @@ export const SOAPObjectiveAIScribe: React.FC<SOAPObjectiveAIScribeProps> = ({
       }
 
       setGeneratedNote(data.objectiveNote);
-    } catch (err: any) {
+    } catch {
       // Fallback gracioso local em caso de desconexão
       const fallback = `Avaliação cinemática em ${movementType}: Registrado MQI Score de ${mqiScore}/100 com simetria bilateral de ${symmetryScore}%. Flexão de joelhos atingiu 94° E / 98° D. Alinhamento de tronco sem compensações antálgicas.`;
       setGeneratedNote(fallback);

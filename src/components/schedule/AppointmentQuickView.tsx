@@ -7,7 +7,6 @@ import {
   Trash2,
   Clock,
   X,
-  Bell,
   Users,
   UserPlus,
   FileText,
@@ -22,6 +21,7 @@ import {
   CalendarClock,
   UserRound,
   ClipboardList,
+  ExternalLink,
 } from "lucide-react";
 import { LazyTaskQuickCreateModal } from "@/components/tarefas/v2/LazyComponents";
 import { Button } from "@/components/ui/button";
@@ -106,10 +106,9 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
     setShowNoShowConfirmDialog,
     handleStartAttendance,
     handleOpenProfile,
-    handleOpenEvolution,
+    handleOpenEvolutionInNewTab,
     handleOpenEvaluation,
     handleOpenAppointmentNote,
-    handleOpenPrescription,
     handleStatusChange,
     handleNoShowConfirm,
     handleNoShowReschedule,
@@ -485,6 +484,17 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
               Mover p/ hoje
             </Button>
           )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-10 flex-1 rounded-xl font-bold text-xs gap-1.5 border-violet-200 bg-violet-50/50 text-violet-700 hover:bg-violet-100 hover:border-violet-300 transition-all"
+            onClick={handleOpenEvolutionInNewTab}
+            title="Abrir evolução em nova aba"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Evolução
+          </Button>
 
           <Button
             variant="ghost"

@@ -1,8 +1,8 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import type { Patient } from "@/types";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import type { Patient } from '@/types';
 import {
   ArrowLeft,
   Brain,
@@ -15,8 +15,8 @@ import {
   Phone,
   Sparkles,
   Stethoscope,
-} from "lucide-react";
-import { format } from "date-fns";
+} from 'lucide-react';
+import { format } from 'date-fns';
 
 interface PatientProfileHeaderProps {
   patient: Patient;
@@ -35,7 +35,7 @@ interface PatientProfileHeaderProps {
 
 function getPatientAge(birthDate: string): number {
   return Math.floor(
-    (new Date().getTime() - new Date(birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000),
+    (new Date().getTime() - new Date(birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)
   );
 }
 
@@ -54,7 +54,7 @@ export function PatientProfileHeader({
   onOpenMedicalReport,
 }: PatientProfileHeaderProps) {
   const status = patient.status;
-  const isActiveStatus = status === "active" || status === "Em Tratamento";
+  const isActiveStatus = status === 'active' || status === 'Em Tratamento';
 
   return (
     <>
@@ -63,20 +63,21 @@ export function PatientProfileHeader({
           variant="ghost"
           size="icon"
           onClick={onBack}
-          className="-ml-2 hover:bg-transparent hover:text-primary"
+          className="-ml-2 hover:bg-muted hover:text-primary"
+          aria-label="Voltar para pacientes"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <span className="text-sm font-medium hover:text-primary cursor-pointer" onClick={onBack}>
-          Voltar para Pacientes
-        </span>
+        <button type="button" className="text-sm font-semibold hover:text-primary" onClick={onBack}>
+          Voltar para pacientes
+        </button>
       </div>
 
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-blue-100 space-y-6 relative overflow-hidden">
+      <div className="space-y-6 rounded-2xl border border-border bg-card p-6 shadow-none">
         <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between relative z-10">
           <div className="flex items-center gap-5">
             <div className="relative">
-              <Avatar className="h-20 w-20 border-2 border-blue-50 shadow-sm">
+              <Avatar className="h-20 w-20 border border-border shadow-none">
                 <AvatarImage src={patient.photo_url} className="object-cover" />
                 <AvatarFallback className="text-xl bg-blue-50 text-blue-600 font-bold">
                   {initials}
@@ -84,8 +85,8 @@ export function PatientProfileHeader({
               </Avatar>
               <div
                 className={cn(
-                  "absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white",
-                  isActiveStatus ? "bg-emerald-500" : "bg-slate-300",
+                  'absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white',
+                  isActiveStatus ? 'bg-emerald-500' : 'bg-slate-300'
                 )}
               />
             </div>
@@ -96,18 +97,18 @@ export function PatientProfileHeader({
                 <Badge
                   variant="outline"
                   className={cn(
-                    "px-2 py-0 text-[10px] font-bold uppercase tracking-wider",
+                    'px-2 py-0 text-[10px] font-bold uppercase tracking-wider',
                     isActiveStatus
-                      ? "border-emerald-100 bg-emerald-50 text-emerald-700"
-                      : "border-slate-100 bg-slate-50 text-slate-600",
+                      ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                      : 'border-slate-100 bg-slate-50 text-slate-600'
                   )}
                 >
-                  {status || "Status desconhecido"}
+                  {status || 'Status desconhecido'}
                 </Badge>
                 {patient.birth_date && (
                   <span className="text-xs text-slate-500 flex items-center gap-1.5 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
                     <CalendarIcon className="h-3 w-3 text-blue-500" />
-                    {format(new Date(patient.birth_date), "dd/MM/yyyy")}
+                    {format(new Date(patient.birth_date), 'dd/MM/yyyy')}
                     <span className="text-slate-300">|</span>
                     {getPatientAge(patient.birth_date)} anos
                   </span>
@@ -121,7 +122,7 @@ export function PatientProfileHeader({
               onClick={onAskAI}
               variant="default"
               size="sm"
-              className="flex-1 md:flex-none gap-2 bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-premium-md font-bold"
+              className="flex-1 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 md:flex-none"
             >
               <Brain className="h-4 w-4" />
               Chat IA
@@ -176,7 +177,7 @@ export function PatientProfileHeader({
             <Button
               onClick={onEvaluate}
               size="sm"
-              className="flex-1 md:flex-none gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all font-medium"
+              className="flex-1 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 md:flex-none"
             >
               <ClipboardList className="h-4 w-4" />
               Avaliar
@@ -184,7 +185,7 @@ export function PatientProfileHeader({
             <Button
               onClick={onSchedule}
               size="sm"
-              className="flex-1 md:flex-none gap-2 bg-slate-900 hover:bg-slate-800 text-white shadow-sm font-medium"
+              className="flex-1 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 md:flex-none"
             >
               <CalendarIcon className="h-4 w-4" />
               Agendar
@@ -192,7 +193,7 @@ export function PatientProfileHeader({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-blue-50">
+        <div className="grid grid-cols-1 gap-6 border-t border-border pt-6 md:grid-cols-3">
           <div className="flex items-center gap-3 text-sm">
             <div className="p-2 bg-blue-50 rounded-lg text-blue-600 shrink-0">
               <Phone className="h-4 w-4" />
@@ -202,7 +203,7 @@ export function PatientProfileHeader({
                 Telefone
               </p>
               <p className="font-semibold text-slate-700 truncate">
-                {patient.phone || "Não informado"}
+                {patient.phone || 'Não informado'}
               </p>
             </div>
           </div>
@@ -216,7 +217,7 @@ export function PatientProfileHeader({
                 Email
               </p>
               <p className="font-semibold text-slate-700 truncate" title={patient.email}>
-                {patient.email || "Não informado"}
+                {patient.email || 'Não informado'}
               </p>
             </div>
           </div>
@@ -230,7 +231,7 @@ export function PatientProfileHeader({
                 Localização
               </p>
               <p className="font-semibold text-slate-700 truncate">
-                {patient.city ? `${patient.city}/${patient.state || ""}` : "Não informado"}
+                {patient.city ? `${patient.city}/${patient.state || ''}` : 'Não informado'}
               </p>
             </div>
           </div>

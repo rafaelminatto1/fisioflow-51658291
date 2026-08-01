@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import {
+  ArrowLeft,
   AtSign,
   Bold,
   CalendarDays,
@@ -44,20 +45,21 @@ const taskStyles: Record<NoteLinkedTask['status'], string> = {
   archived: 'border-border bg-muted text-muted-foreground',
 };
 
-const kindLabel: Record<NoteBlockViewModel['type'] | NoteEditorProps['viewModel']['kind'], string> = {
-  paragraph: 'Texto',
-  heading: 'Título',
-  checklist: 'Checklist',
-  callout: 'Destaque',
-  divider: 'Separador',
-  attachment: 'Anexo',
-  'clinical-context': 'Contexto clínico',
-  team: 'Equipe',
-  meeting: 'Reunião',
-  knowledge: 'Conhecimento',
-  operational: 'Operacional',
-  private: 'Pessoal',
-};
+const kindLabel: Record<NoteBlockViewModel['type'] | NoteEditorProps['viewModel']['kind'], string> =
+  {
+    paragraph: 'Texto',
+    heading: 'Título',
+    checklist: 'Checklist',
+    callout: 'Destaque',
+    divider: 'Separador',
+    attachment: 'Anexo',
+    'clinical-context': 'Contexto clínico',
+    team: 'Equipe',
+    meeting: 'Reunião',
+    knowledge: 'Conhecimento',
+    operational: 'Operacional',
+    private: 'Pessoal',
+  };
 
 export function NoteEditor({
   viewModel,
@@ -68,12 +70,15 @@ export function NoteEditor({
   onOpenHistory,
   onOpenPatient,
   onOpenTask,
+  onReturnToSystem,
   onShare,
   onTitleChange,
   onToggleTask,
 }: NoteEditorProps) {
   const [isContextOpen, setIsContextOpen] = useState(true);
-  const [contextTab, setContextTab] = useState<'overview' | 'outline' | 'links' | 'tasks' | 'access'>('overview');
+  const [contextTab, setContextTab] = useState<
+    'overview' | 'outline' | 'links' | 'tasks' | 'access'
+  >('overview');
   const attachmentInputRef = useRef<HTMLInputElement>(null);
   const isRestricted = viewModel.visibility === 'restricted' || viewModel.visibility === 'private';
 
@@ -84,6 +89,15 @@ export function NoteEditor({
     >
       <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b border-border bg-card/95 px-4 backdrop-blur sm:px-6">
         <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+          <button
+            type="button"
+            onClick={onReturnToSystem}
+            className="inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-2 font-semibold transition hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            aria-label="Voltar ao FisioFlow"
+          >
+            <ArrowLeft className="size-4" />
+            <span className="hidden lg:inline">Voltar</span>
+          </button>
           <FileText className="size-4 shrink-0 text-primary" />
           <span className="hidden sm:inline">Notas</span>
           {viewModel.breadcrumbs.map((crumb) => (
@@ -172,20 +186,51 @@ export function NoteEditor({
 
             <div className="mb-7 flex flex-wrap items-center gap-1.5 border-y border-border/80 py-2 text-xs text-muted-foreground">
               <PropertyPill icon={CircleDot} label={kindLabel[viewModel.kind]} />
-              <PropertyPill icon={CheckCircle2} label={viewModel.status === 'draft' ? 'Rascunho' : viewModel.status === 'archived' ? 'Arquivada' : 'Ativa'} />
-              <PropertyPill icon={isRestricted ? LockKeyhole : UsersRound} label={isRestricted ? 'Acesso restrito' : 'Equipe'} />
-              {viewModel.patient ? <PropertyPill icon={CalendarDays} label={viewModel.patient.name} tone="patient" /> : null}
-              <span className="ml-auto inline-flex items-center gap-1 rounded-md px-2 py-1.5 font-semibold text-muted-foreground"><Tags className="size-3.5" />Propriedades</span>
+              <PropertyPill
+                icon={CheckCircle2}
+                label={
+                  viewModel.status === 'draft'
+                    ? 'Rascunho'
+                    : viewModel.status === 'archived'
+                      ? 'Arquivada'
+                      : 'Ativa'
+                }
+              />
+              <PropertyPill
+                icon={isRestricted ? LockKeyhole : UsersRound}
+                label={isRestricted ? 'Acesso restrito' : 'Equipe'}
+              />
+              {viewModel.patient ? (
+                <PropertyPill icon={CalendarDays} label={viewModel.patient.name} tone="patient" />
+              ) : null}
+              <span className="ml-auto inline-flex items-center gap-1 rounded-md px-2 py-1.5 font-semibold text-muted-foreground">
+                <Tags className="size-3.5" />
+                Propriedades
+              </span>
             </div>
 
             {viewModel.editorContent ? (
-              <div className="mt-6" aria-label="Conteúdo da nota">{viewModel.editorContent}</div>
+              <div className="mt-6" aria-label="Conteúdo da nota">
+                {viewModel.editorContent}
+              </div>
             ) : (
               <>
                 <EditorToolbar onInsert={onInsert} attachmentInputRef={attachmentInputRef} />
-                <input ref={attachmentInputRef} type="file" className="sr-only" accept="application/pdf,image/jpeg,image/png,image/webp,text/plain,.docx" onChange={(event) => { const file = event.target.files?.[0]; if (file) onInsert?.('attachment', file); event.currentTarget.value = ''; }} />
+                <input
+                  ref={attachmentInputRef}
+                  type="file"
+                  className="sr-only"
+                  accept="application/pdf,image/jpeg,image/png,image/webp,text/plain,.docx"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) onInsert?.('attachment', file);
+                    event.currentTarget.value = '';
+                  }}
+                />
                 <div className="mt-8 space-y-4" aria-label="Conteúdo da nota">
-                  {viewModel.blocks.map((block) => <NoteBlock key={block.id} block={block} />)}
+                  {viewModel.blocks.map((block) => (
+                    <NoteBlock key={block.id} block={block} />
+                  ))}
                 </div>
               </>
             )}
@@ -234,7 +279,12 @@ export function NoteEditor({
   );
 }
 
-function EditorToolbar({ onInsert, attachmentInputRef }: Pick<NoteEditorProps, 'onInsert'> & { attachmentInputRef: React.RefObject<HTMLInputElement | null> }) {
+function EditorToolbar({
+  onInsert,
+  attachmentInputRef,
+}: Pick<NoteEditorProps, 'onInsert'> & {
+  attachmentInputRef: React.RefObject<HTMLInputElement | null>;
+}) {
   const commands = [
     { label: 'Negrito', icon: Bold },
     { label: 'Itálico', icon: Italic },
@@ -259,7 +309,11 @@ function EditorToolbar({ onInsert, attachmentInputRef }: Pick<NoteEditorProps, '
           <button
             key={command.label}
             type="button"
-            onClick={() => command.action === 'attachment' ? attachmentInputRef.current?.click() : command.action && onInsert?.(command.action)}
+            onClick={() =>
+              command.action === 'attachment'
+                ? attachmentInputRef.current?.click()
+                : command.action && onInsert?.(command.action)
+            }
             className="grid size-8 place-items-center rounded-sm text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             aria-label={command.label}
             title={command.label}
@@ -334,8 +388,27 @@ function NoteContextPanel({
   return (
     <aside className="border-t border-border bg-card/70 px-5 py-6 2xl:border-t-0 2xl:border-l">
       <div className="mx-auto max-w-md space-y-5 2xl:mx-0">
-        <div className="-mx-1 flex gap-1 overflow-x-auto border-b border-border pb-2" role="tablist" aria-label="Contexto da nota">
-          {tabs.map((tab) => { const Icon = tab.icon; return <button key={tab.id} type="button" role="tab" aria-selected={activeTab === tab.id} onClick={() => onChangeTab?.(tab.id)} className={`flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-[11px] font-semibold transition ${activeTab === tab.id ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><Icon className="size-3.5" />{tab.label}</button>; })}
+        <div
+          className="-mx-1 flex gap-1 overflow-x-auto border-b border-border pb-2"
+          role="tablist"
+          aria-label="Contexto da nota"
+        >
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                onClick={() => onChangeTab?.(tab.id)}
+                className={`flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-[11px] font-semibold transition ${activeTab === tab.id ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+              >
+                <Icon className="size-3.5" />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
         {activeTab === 'overview' && patient ? (
@@ -374,93 +447,130 @@ function NoteContextPanel({
           </section>
         ) : null}
 
-        {activeTab === 'overview' || activeTab === 'tasks' ? <section>
-          <div className="mb-3 flex items-center justify-between">
-            <PanelHeading label="Tarefas vinculadas" icon={ListChecks} />
-            <button
-              type="button"
-              onClick={onCreateTask}
-              className="rounded-sm p-1 text-primary hover:bg-primary/10"
-              aria-label="Criar tarefa vinculada"
-            >
-              <Plus className="size-4" />
-            </button>
-          </div>
-          <div className="space-y-2">
-            {linkedTasks.map((task) => (
-              <LinkedTask key={task.id} task={task} onOpen={onOpenTask} onToggle={onToggleTask} />
-            ))}
-            {linkedTasks.length === 0 ? (
-              <p className="rounded-md border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">
-                Nenhuma tarefa vinculada.
-              </p>
-            ) : null}
-          </div>
-        </section> : null}
-
-        {activeTab === 'overview' || activeTab === 'access' ? <section>
-          <PanelHeading label="Colaboradores" icon={UsersRound} />
-          <div className="mt-3 space-y-2">
-            {collaborators.map((person) => (
-              <div key={person.id} className="flex items-center gap-2.5">
-                <span className="grid size-8 place-items-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
-                  {person.initials}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-bold">{person.name}</span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    {person.permission ? permissionText[person.permission] : person.role}
-                  </span>
-                </span>
-              </div>
-            ))}
-          </div>
-        </section> : null}
-
-        {activeTab === 'overview' || activeTab === 'links' ? <section>
-          <PanelHeading label="Onde esta nota aparece" icon={Link2} />
-          <div className="mt-2 divide-y divide-border rounded-lg border border-border bg-card">
-            {backlinks.map((backlink) => (
+        {activeTab === 'overview' || activeTab === 'tasks' ? (
+          <section>
+            <div className="mb-3 flex items-center justify-between">
+              <PanelHeading label="Tarefas vinculadas" icon={ListChecks} />
               <button
                 type="button"
-                key={backlink.id}
-                onClick={() => onOpenBacklink?.(backlink.id)}
-                className="flex w-full items-center gap-2 px-3 py-2.5 text-left transition hover:bg-muted"
+                onClick={onCreateTask}
+                className="rounded-sm p-1 text-primary hover:bg-primary/10"
+                aria-label="Criar tarefa vinculada"
               >
-                <FileText className="size-3.5 shrink-0 text-primary" />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold">{backlink.title}</span>
-                  {backlink.description ? (
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {backlink.description}
-                    </span>
-                  ) : null}
-                </span>
-                <ChevronRight className="size-3.5 text-muted-foreground" />
+                <Plus className="size-4" />
               </button>
-            ))}
-            {backlinks.length === 0 ? (
-              <p className="px-3 py-4 text-center text-xs text-muted-foreground">
-                Sem backlinks ainda.
-              </p>
-            ) : null}
-          </div>
-        </section> : null}
+            </div>
+            <div className="space-y-2">
+              {linkedTasks.map((task) => (
+                <LinkedTask key={task.id} task={task} onOpen={onOpenTask} onToggle={onToggleTask} />
+              ))}
+              {linkedTasks.length === 0 ? (
+                <p className="rounded-md border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">
+                  Nenhuma tarefa vinculada.
+                </p>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
 
-        {activeTab === 'outline' ? <section>
-          <PanelHeading label="Estrutura da nota" icon={ListTree} />
-          <div className="mt-3 space-y-1 rounded-lg border border-border bg-card p-2">
-            {viewModel.blocks.filter((block) => block.type === 'heading').map((block) => <button key={block.id} type="button" className="block w-full truncate rounded-md px-2 py-2 text-left text-sm font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground">{block.content || 'Seção sem título'}</button>)}
-            {!viewModel.blocks.some((block) => block.type === 'heading') ? <p className="px-2 py-4 text-center text-xs text-muted-foreground">Use títulos para criar a estrutura da nota.</p> : null}
-          </div>
-        </section> : null}
+        {activeTab === 'overview' || activeTab === 'access' ? (
+          <section>
+            <PanelHeading label="Colaboradores" icon={UsersRound} />
+            <div className="mt-3 space-y-2">
+              {collaborators.map((person) => (
+                <div key={person.id} className="flex items-center gap-2.5">
+                  <span className="grid size-8 place-items-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
+                    {person.initials}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-bold">{person.name}</span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {person.permission ? permissionText[person.permission] : person.role}
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {activeTab === 'overview' || activeTab === 'links' ? (
+          <section>
+            <PanelHeading label="Onde esta nota aparece" icon={Link2} />
+            <div className="mt-2 divide-y divide-border rounded-lg border border-border bg-card">
+              {backlinks.map((backlink) => (
+                <button
+                  type="button"
+                  key={backlink.id}
+                  onClick={() => onOpenBacklink?.(backlink.id)}
+                  className="flex w-full items-center gap-2 px-3 py-2.5 text-left transition hover:bg-muted"
+                >
+                  <FileText className="size-3.5 shrink-0 text-primary" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold">{backlink.title}</span>
+                    {backlink.description ? (
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {backlink.description}
+                      </span>
+                    ) : null}
+                  </span>
+                  <ChevronRight className="size-3.5 text-muted-foreground" />
+                </button>
+              ))}
+              {backlinks.length === 0 ? (
+                <p className="px-3 py-4 text-center text-xs text-muted-foreground">
+                  Sem backlinks ainda.
+                </p>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
+
+        {activeTab === 'outline' ? (
+          <section>
+            <PanelHeading label="Estrutura da nota" icon={ListTree} />
+            <div className="mt-3 space-y-1 rounded-lg border border-border bg-card p-2">
+              {viewModel.blocks
+                .filter((block) => block.type === 'heading')
+                .map((block) => (
+                  <button
+                    key={block.id}
+                    type="button"
+                    className="block w-full truncate rounded-md px-2 py-2 text-left text-sm font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                  >
+                    {block.content || 'Seção sem título'}
+                  </button>
+                ))}
+              {!viewModel.blocks.some((block) => block.type === 'heading') ? (
+                <p className="px-2 py-4 text-center text-xs text-muted-foreground">
+                  Use títulos para criar a estrutura da nota.
+                </p>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
       </div>
     </aside>
   );
 }
 
-function PropertyPill({ icon: Icon, label, tone = 'default' }: { icon: typeof CalendarDays; label: string; tone?: 'default' | 'patient' }) {
-  return <span className={`inline-flex max-w-full items-center gap-1.5 rounded-md px-2 py-1.5 font-semibold ${tone === 'patient' ? 'bg-blue-500/10 text-blue-700' : 'bg-muted text-muted-foreground'}`}><Icon className="size-3.5 shrink-0" /><span className="max-w-[180px] truncate">{label}</span></span>;
+function PropertyPill({
+  icon: Icon,
+  label,
+  tone = 'default',
+}: {
+  icon: typeof CalendarDays;
+  label: string;
+  tone?: 'default' | 'patient';
+}) {
+  return (
+    <span
+      className={`inline-flex max-w-full items-center gap-1.5 rounded-md px-2 py-1.5 font-semibold ${tone === 'patient' ? 'bg-blue-500/10 text-blue-700' : 'bg-muted text-muted-foreground'}`}
+    >
+      <Icon className="size-3.5 shrink-0" />
+      <span className="max-w-[180px] truncate">{label}</span>
+    </span>
+  );
 }
 
 function PanelHeading({ icon: Icon, label }: { icon: typeof CalendarDays; label: string }) {

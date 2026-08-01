@@ -1,12 +1,12 @@
-import "@/styles/bundles/evolution.css";
-import { Cake, Filter, Users, Plus, Download, LayoutDashboard } from "lucide-react";
-import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { LazyComponent } from "@/components/common/LazyComponent";
-import { IncompleteRegistrationAlert } from "@/components/dashboard/IncompleteRegistrationAlert";
-import { PageLayout } from "@/components/layout/PageLayout";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { PageContainer } from "@/components/layout/PageContainer";
+import '@/styles/bundles/evolution.css';
+import { Cake, Filter, Users, Plus, Download, LayoutDashboard } from 'lucide-react';
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { LazyComponent } from '@/components/common/LazyComponent';
+import { IncompleteRegistrationAlert } from '@/components/dashboard/IncompleteRegistrationAlert';
+import { PageLayout } from '@/components/layout/PageLayout';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { PageContainer } from '@/components/layout/PageContainer';
 import {
   countActiveFilters,
   PatientAdvancedFilters,
@@ -14,21 +14,21 @@ import {
   PatientCreateModal,
   PatientsPageHeader,
   type HeaderFilterChip,
-} from "@/components/patient";
-import { PatientBirthdaysBanner } from "@/components/patient/PatientBirthdaysBanner";
-import { PatientListItem } from "@/components/patient/PatientListItem";
-import { EmptyState } from "@/components/ui";
-import { Button } from "@/components/ui/button";
+} from '@/components/patient';
+import { PatientBirthdaysBanner } from '@/components/patient/PatientBirthdaysBanner';
+import { PatientListItem } from '@/components/patient/PatientListItem';
+import { EmptyState } from '@/components/ui';
+import { Button } from '@/components/ui/button';
 import {
   Pagination,
   PaginationContent,
   PaginationItem,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { usePatientsPageData } from "@/hooks/usePatientsPage";
+} from '@/components/ui/pagination';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { usePatientsPageData } from '@/hooks/usePatientsPage';
 import {
   PATIENT_CARE_PROFILE_LABELS,
   PATIENT_CLASSIFICATION_LABELS,
@@ -37,12 +37,12 @@ import {
   PATIENT_PATHOLOGY_STATUS_LABELS,
   PATIENT_PAYER_MODEL_LABELS,
   PATIENT_THERAPY_FOCUS_LABELS,
-} from "@/lib/constants/patient-directory";
-import { patientRoutes } from "@/lib/routing/appRoutes";
-import { cn } from "@/lib/utils";
-import { AniversariantesContent } from "./relatorios/AniversariantesPage";
-import { usePatientsExport } from "./patients/usePatientsExport";
-import { usePatientsUrlState } from "./patients/usePatientsUrlState";
+} from '@/lib/constants/patient-directory';
+import { patientRoutes } from '@/lib/routing/appRoutes';
+import { cn } from '@/lib/utils';
+import { AniversariantesContent } from './relatorios/AniversariantesPage';
+import { usePatientsExport } from './patients/usePatientsExport';
+import { usePatientsUrlState } from './patients/usePatientsUrlState';
 
 const Patients = () => {
   const navigate = useNavigate();
@@ -69,7 +69,7 @@ const Patients = () => {
       totalPages: Math.max(1, Math.ceil(totalCount / 20)),
       pageSize: 20,
     }),
-    [pageParam, totalCount],
+    [pageParam, totalCount]
   );
 
   const activeAdvancedFiltersCount = countActiveFilters({
@@ -102,14 +102,14 @@ const Patients = () => {
   };
 
   const hasActiveFilters =
-    filtersState.status !== "all" ||
-    filtersState.condition !== "all" ||
-    filtersState.classification !== "all" ||
-    filtersState.pathologyStatus !== "all" ||
-    filtersState.paymentModel !== "all" ||
-    filtersState.financialStatus !== "all" ||
-    filtersState.origin !== "all" ||
-    filtersState.partnerCompany !== "all" ||
+    filtersState.status !== 'all' ||
+    filtersState.condition !== 'all' ||
+    filtersState.classification !== 'all' ||
+    filtersState.pathologyStatus !== 'all' ||
+    filtersState.paymentModel !== 'all' ||
+    filtersState.financialStatus !== 'all' ||
+    filtersState.origin !== 'all' ||
+    filtersState.partnerCompany !== 'all' ||
     Boolean(filtersState.search) ||
     Boolean(filtersState.hasSurgery) ||
     filtersState.pathologies.length > 0 ||
@@ -119,7 +119,7 @@ const Patients = () => {
 
   const handleClassificationToggle = (value: string) => {
     updateSearchParams({
-      classification: filtersState.classification === value ? "all" : value,
+      classification: filtersState.classification === value ? 'all' : value,
     });
   };
 
@@ -133,61 +133,61 @@ const Patients = () => {
       });
     };
 
-    if (filtersState.classification !== "all") {
+    if (filtersState.classification !== 'all') {
       addChip(
-        "classification",
+        'classification',
         PATIENT_CLASSIFICATION_LABELS[
           filtersState.classification as keyof typeof PATIENT_CLASSIFICATION_LABELS
         ] ?? filtersState.classification,
-        { classification: "all" },
+        { classification: 'all' }
       );
     }
 
-    if (filtersState.search) addChip("search", `Busca: ${filtersState.search}`, { q: undefined });
-    if (filtersState.status !== "all")
-      addChip("status", `Status: ${filtersState.status}`, { status: "all" });
-    if (filtersState.condition !== "all")
-      addChip("condition", `Patologia: ${filtersState.condition}`, {
-        condition: "all",
+    if (filtersState.search) addChip('search', `Busca: ${filtersState.search}`, { q: undefined });
+    if (filtersState.status !== 'all')
+      addChip('status', `Status: ${filtersState.status}`, { status: 'all' });
+    if (filtersState.condition !== 'all')
+      addChip('condition', `Patologia: ${filtersState.condition}`, {
+        condition: 'all',
       });
-    if (filtersState.pathologyStatus !== "all")
+    if (filtersState.pathologyStatus !== 'all')
       addChip(
-        "pathologyStatus",
+        'pathologyStatus',
         `Status clínico: ${
           PATIENT_PATHOLOGY_STATUS_LABELS[
             filtersState.pathologyStatus as keyof typeof PATIENT_PATHOLOGY_STATUS_LABELS
           ] ?? filtersState.pathologyStatus
         }`,
-        { pathologyStatus: "all" },
+        { pathologyStatus: 'all' }
       );
-    if (filtersState.paymentModel !== "all")
+    if (filtersState.paymentModel !== 'all')
       addChip(
-        "paymentModel",
+        'paymentModel',
         `Pagamento: ${
           PATIENT_PAYER_MODEL_LABELS[filtersState.paymentModel] ?? filtersState.paymentModel
         }`,
-        { paymentModel: "all" },
+        { paymentModel: 'all' }
       );
-    if (filtersState.financialStatus !== "all")
+    if (filtersState.financialStatus !== 'all')
       addChip(
-        "financialStatus",
+        'financialStatus',
         `Financeiro: ${
           PATIENT_FINANCIAL_STATUS_LABELS[filtersState.financialStatus] ??
           filtersState.financialStatus
         }`,
-        { financialStatus: "all" },
+        { financialStatus: 'all' }
       );
-    if (filtersState.origin !== "all")
+    if (filtersState.origin !== 'all')
       addChip(
-        "origin",
+        'origin',
         `Origem: ${PATIENT_ORIGIN_LABELS[filtersState.origin] ?? filtersState.origin}`,
-        { origin: "all" },
+        { origin: 'all' }
       );
-    if (filtersState.partnerCompany !== "all")
-      addChip("partnerCompany", `Parceria: ${filtersState.partnerCompany}`, {
-        partnerCompany: "all",
+    if (filtersState.partnerCompany !== 'all')
+      addChip('partnerCompany', `Parceria: ${filtersState.partnerCompany}`, {
+        partnerCompany: 'all',
       });
-    if (filtersState.hasSurgery) addChip("hasSurgery", "Com cirurgia", { hasSurgery: undefined });
+    if (filtersState.hasSurgery) addChip('hasSurgery', 'Com cirurgia', { hasSurgery: undefined });
 
     for (const pathology of filtersState.pathologies) {
       addChip(`pathology-${pathology}`, `Patologia: ${pathology}`, {
@@ -201,7 +201,7 @@ const Patients = () => {
         `Perfil: ${PATIENT_CARE_PROFILE_LABELS[profile] ?? profile}`,
         {
           careProfiles: filtersState.careProfiles.filter((value) => value !== profile),
-        },
+        }
       );
     }
 
@@ -238,7 +238,7 @@ const Patients = () => {
                 Exportar
               </Button>
               <Button
-                onClick={() => updateSearchParams({ modal: "create" })}
+                onClick={() => updateSearchParams({ modal: 'create' })}
                 className="h-11 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-wider text-[10px]"
               >
                 <Plus className="mr-2 h-4 w-4" />
@@ -251,11 +251,11 @@ const Patients = () => {
         <div className="space-y-6 mt-6">
           <PatientsPageHeader
             stats={headerStats}
-            onNewPatient={() => updateSearchParams({ modal: "create" })}
+            onNewPatient={() => updateSearchParams({ modal: 'create' })}
             onExport={() => exportPatients(patients, {})}
             onToggleAnalytics={() =>
               updateSearchParams({
-                analytics: showAnalytics ? undefined : "true",
+                analytics: showAnalytics ? undefined : 'true',
               })
             }
             showAnalytics={showAnalytics}
@@ -295,14 +295,17 @@ const Patients = () => {
                   variant="outline"
                   size="icon"
                   className={cn(
-                    "h-14 w-14 rounded-2xl border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900",
-                    activeAdvancedFiltersCount > 0 && "border-primary text-primary bg-primary/5",
+                    'h-12 w-12 rounded-xl border-border bg-card',
+                    activeAdvancedFiltersCount > 0 && 'border-primary text-primary bg-primary/5'
                   )}
                 >
                   <Filter className="h-5 w-5" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[380px] rounded-[1.75rem] p-4 shadow-2xl" align="end">
+              <PopoverContent
+                className="max-h-[min(720px,calc(100vh-7rem))] w-[min(380px,calc(100vw-2rem))] overflow-y-auto rounded-2xl border-border p-4 shadow-popover"
+                align="end"
+              >
                 <PatientAdvancedFilters
                   currentFilters={{
                     hasSurgery: filtersState.hasSurgery,
@@ -321,15 +324,15 @@ const Patients = () => {
                   onClearFilters={() =>
                     updateSearchParams({
                       hasSurgery: undefined,
-                      pathologyStatus: "all",
+                      pathologyStatus: 'all',
                       pathologies: [],
                       careProfiles: [],
                       sports: [],
                       therapyFocuses: [],
-                      paymentModel: "all",
-                      financialStatus: "all",
-                      origin: "all",
-                      partnerCompany: "all",
+                      paymentModel: 'all',
+                      financialStatus: 'all',
+                      origin: 'all',
+                      partnerCompany: 'all',
                     })
                   }
                   facets={facets}
@@ -411,22 +414,22 @@ const Patients = () => {
                   <EmptyState
                     icon={Users}
                     title={
-                      hasActiveFilters ? "Nenhum paciente encontrado" : "Nenhum paciente cadastrado"
+                      hasActiveFilters ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'
                     }
                     description={
                       hasActiveFilters
-                        ? "Ajuste os filtros clínicos para ampliar a busca."
-                        : "Comece cadastrando seu primeiro paciente."
+                        ? 'Ajuste os filtros clínicos para ampliar a busca.'
+                        : 'Comece cadastrando seu primeiro paciente.'
                     }
                     action={
                       hasActiveFilters
                         ? {
-                            label: "Limpar filtros",
+                            label: 'Limpar filtros',
                             onClick: handleClearAllFilters,
                           }
                         : {
-                            label: "Cadastrar paciente",
-                            onClick: () => updateSearchParams({ modal: "create" }),
+                            label: 'Cadastrar paciente',
+                            onClick: () => updateSearchParams({ modal: 'create' }),
                           }
                     }
                   />
@@ -464,8 +467,8 @@ const Patients = () => {
                                 })
                               }
                               className={cn(
-                                "rounded-xl border-slate-200 dark:border-slate-800",
-                                pagination.currentPage <= 1 && "pointer-events-none opacity-40",
+                                'rounded-xl border-slate-200 dark:border-slate-800',
+                                pagination.currentPage <= 1 && 'pointer-events-none opacity-40'
                               )}
                             />
                           </PaginationItem>
@@ -482,9 +485,9 @@ const Patients = () => {
                                 })
                               }
                               className={cn(
-                                "rounded-xl border-slate-200 dark:border-slate-800",
+                                'rounded-xl border-slate-200 dark:border-slate-800',
                                 pagination.currentPage >= pagination.totalPages &&
-                                  "pointer-events-none opacity-40",
+                                  'pointer-events-none opacity-40'
                               )}
                             />
                           </PaginationItem>
@@ -506,7 +509,7 @@ const Patients = () => {
 
         <PatientCreateModal
           open={isNewPatientModalOpen}
-          onOpenChange={(open) => updateSearchParams({ modal: open ? "create" : undefined })}
+          onOpenChange={(open) => updateSearchParams({ modal: open ? 'create' : undefined })}
         />
       </PageContainer>
     </PageLayout>

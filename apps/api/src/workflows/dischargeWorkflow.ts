@@ -29,7 +29,7 @@ export class PatientDischargeWorkflow extends WorkflowEntrypoint<Env, PatientDis
       patientName,
       patientPhone,
       organizationId,
-      therapistName,
+      therapistName: _therapistName,
       dischargeSummary,
     } = event.payload;
 

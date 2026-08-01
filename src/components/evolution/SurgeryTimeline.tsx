@@ -1,7 +1,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Activity, Calendar, Clock, AlertTriangle, FileText, Syringe } from "lucide-react";
 import { format, differenceInDays, differenceInMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -152,4 +151,3 @@ export const SurgeryTimeline: React.FC<SurgeryTimelineProps> = ({ surgeries }) =
     </Card>
   );
 };
-

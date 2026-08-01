@@ -1,13 +1,13 @@
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   AlertTriangle,
   ArrowUpDown,
@@ -18,14 +18,14 @@ import {
   Sparkles,
   Users,
   X,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   PATIENT_DIRECTORY_PATHOLOGY_STATUSES,
   PATIENT_FINANCIAL_STATUS_OPTIONS,
   PATIENT_PAYER_MODEL_OPTIONS,
-} from "@/lib/constants/patient-directory";
-import { cn } from "@/lib/utils";
-import { PatientPageInsights } from "./PatientPageInsights";
+} from '@/lib/constants/patient-directory';
+import { cn } from '@/lib/utils';
+import { PatientPageInsights } from './PatientPageInsights';
 
 export interface PatientsPageHeaderStats {
   totalCount: number;
@@ -106,7 +106,7 @@ export function PatientsPageHeader({
   totalFilteredLabel,
   onClearAllFilters,
   hasActiveFilters,
-  classificationFilter = "all",
+  classificationFilter = 'all',
   onClassificationFilterChange,
   activeFilterChips = [],
   children,
@@ -114,7 +114,7 @@ export function PatientsPageHeader({
 }: PatientsPageHeaderProps) {
   return (
     <div
-      className={cn("space-y-6", isSimplified && "space-y-0")}
+      className={cn('space-y-6', isSimplified && 'space-y-0')}
       data-testid="patients-page-header"
     >
       {!isSimplified && (
@@ -141,42 +141,42 @@ export function PatientsPageHeader({
                   label="Ativos"
                   value={stats.activeCount}
                   tone="emerald"
-                  isSelected={classificationFilter === "active"}
-                  onClick={() => onClassificationFilterChange?.("active")}
+                  isSelected={classificationFilter === 'active'}
+                  onClick={() => onClassificationFilterChange?.('active')}
                   icon={CheckCircle2}
                 />
                 <HeaderStatCard
                   label="Novos"
                   value={stats.newCount}
                   tone="blue"
-                  isSelected={classificationFilter === "new_patient"}
-                  onClick={() => onClassificationFilterChange?.("new_patient")}
+                  isSelected={classificationFilter === 'new_patient'}
+                  onClick={() => onClassificationFilterChange?.('new_patient')}
                   icon={Sparkles}
                 />
                 <HeaderStatCard
                   label="Em risco"
                   value={stats.atRiskCount}
                   tone="amber"
-                  isSelected={classificationFilter === "at_risk"}
-                  onClick={() => onClassificationFilterChange?.("at_risk")}
+                  isSelected={classificationFilter === 'at_risk'}
+                  onClick={() => onClassificationFilterChange?.('at_risk')}
                   icon={AlertTriangle}
                 />
                 <HeaderStatCard
                   label="Alta / Finalizados"
                   value={stats.completedCount}
                   tone="emerald"
-                  isSelected={classificationFilter === "completed"}
-                  onClick={() => onClassificationFilterChange?.("completed")}
+                  isSelected={classificationFilter === 'completed'}
+                  onClick={() => onClassificationFilterChange?.('completed')}
                   icon={CheckCircle2}
                 />
                 <HeaderStatCard
                   label="Avaliação Pendente"
                   value={stats.pendingEvaluation ?? 0}
                   tone="amber"
-                  isSelected={pathologyStatusFilter === "monitoring"}
+                  isSelected={pathologyStatusFilter === 'monitoring'}
                   onClick={() =>
                     onPathologyStatusFilterChange?.(
-                      pathologyStatusFilter === "monitoring" ? "all" : "monitoring",
+                      pathologyStatusFilter === 'monitoring' ? 'all' : 'monitoring'
                     )
                   }
                   icon={AlertTriangle}
@@ -185,10 +185,10 @@ export function PatientsPageHeader({
                   label="Em Débito"
                   value={stats.hasUnpaid}
                   tone="amber"
-                  isSelected={financialStatusFilter === "pending_balance"}
+                  isSelected={financialStatusFilter === 'pending_balance'}
                   onClick={() =>
                     onFinancialStatusFilterChange?.(
-                      financialStatusFilter === "pending_balance" ? "all" : "pending_balance",
+                      financialStatusFilter === 'pending_balance' ? 'all' : 'pending_balance'
                     )
                   }
                   icon={AlertTriangle}
@@ -213,14 +213,14 @@ export function PatientsPageHeader({
                 Exportar
               </Button>
               <Button
-                variant={showAnalytics ? "default" : "outline"}
+                variant={showAnalytics ? 'default' : 'outline'}
                 onClick={onToggleAnalytics}
                 className={cn(
-                  "h-14 rounded-[1.35rem] px-5 text-xs font-black uppercase tracking-[0.18em]",
-                  showAnalytics && "bg-brand-blue hover:bg-brand-blue/90",
+                  'h-14 rounded-[1.35rem] px-5 text-xs font-black uppercase tracking-[0.18em]',
+                  showAnalytics && 'bg-brand-blue hover:bg-brand-blue/90'
                 )}
               >
-                {showAnalytics ? "Ocultar análises" : "Análises"}
+                {showAnalytics ? 'Ocultar análises' : 'Análises'}
               </Button>
             </div>
           </div>
@@ -229,12 +229,12 @@ export function PatientsPageHeader({
 
       <div
         className={cn(
-          "space-y-5 rounded-[2rem] border border-white/50 bg-card p-5 dark:border-slate-800/70 dark:bg-slate-950/40 shadow-premium",
+          'space-y-5 rounded-2xl border border-border bg-card p-5 shadow-none',
           isSimplified &&
-            "mt-0 rounded-2xl border border-slate-200/60 bg-card p-4 md:p-6 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/60",
+            'mt-0 rounded-2xl border-border bg-card p-4 shadow-none md:p-6 dark:bg-slate-900/60'
         )}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
           <div className="relative md:col-span-2 lg:col-span-1">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
@@ -244,7 +244,7 @@ export function PatientsPageHeader({
               value={searchTerm}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="Buscar por nome, contato, patologia, parceiro ou profissional"
-              className="h-14 rounded-[1.2rem] border-slate-200/80 bg-white pl-11 text-sm font-medium dark:border-slate-800 dark:bg-slate-950/60"
+              className="h-12 rounded-xl border-input bg-background pl-11 text-sm font-medium"
             />
           </div>
 
@@ -253,12 +253,12 @@ export function PatientsPageHeader({
             onValueChange={onStatusFilterChange}
             placeholder="Status do paciente"
             items={[
-              { value: "all", label: "Todos status" },
-              { value: "Inicial", label: "Inicial" },
-              { value: "Em Tratamento", label: "Em Tratamento" },
-              { value: "Recuperação", label: "Recuperação" },
-              { value: "Concluído", label: "Concluído" },
-              { value: "Alta", label: "Alta" },
+              { value: 'all', label: 'Todos status' },
+              { value: 'Inicial', label: 'Inicial' },
+              { value: 'Em Tratamento', label: 'Em Tratamento' },
+              { value: 'Recuperação', label: 'Recuperação' },
+              { value: 'Concluído', label: 'Concluído' },
+              { value: 'Alta', label: 'Alta' },
             ]}
           />
 
@@ -267,7 +267,7 @@ export function PatientsPageHeader({
             onValueChange={onPathologyFilterChange}
             placeholder="Patologia principal"
             items={[
-              { value: "all", label: "Patologias" },
+              { value: 'all', label: 'Patologias' },
               ...pathologyOptions.map((option) => ({
                 value: option,
                 label: option,
@@ -280,7 +280,7 @@ export function PatientsPageHeader({
             onValueChange={onPathologyStatusFilterChange}
             placeholder="Status da patologia"
             items={[
-              { value: "all", label: "Status clínico" },
+              { value: 'all', label: 'Status clínico' },
               ...PATIENT_DIRECTORY_PATHOLOGY_STATUSES,
             ]}
           />
@@ -289,14 +289,14 @@ export function PatientsPageHeader({
             value={paymentModelFilter}
             onValueChange={onPaymentModelFilterChange}
             placeholder="Pagamento"
-            items={[{ value: "all", label: "Pagamento" }, ...PATIENT_PAYER_MODEL_OPTIONS]}
+            items={[{ value: 'all', label: 'Pagamento' }, ...PATIENT_PAYER_MODEL_OPTIONS]}
           />
 
           <HeaderSelect
             value={financialStatusFilter}
             onValueChange={onFinancialStatusFilterChange}
             placeholder="Financeiro"
-            items={[{ value: "all", label: "Financeiro" }, ...PATIENT_FINANCIAL_STATUS_OPTIONS]}
+            items={[{ value: 'all', label: 'Financeiro' }, ...PATIENT_FINANCIAL_STATUS_OPTIONS]}
           />
         </div>
 
@@ -308,16 +308,16 @@ export function PatientsPageHeader({
               placeholder="Ordenar"
               className="w-full xl:w-[250px]"
               items={[
-                { value: "created_at_desc", label: "Mais recentes" },
-                { value: "created_at_asc", label: "Mais antigos" },
-                { value: "name_asc", label: "Nome (A-Z)" },
-                { value: "name_desc", label: "Nome (Z-A)" },
-                { value: "main_condition_asc", label: "Patologia (A-Z)" },
-                { value: "main_condition_desc", label: "Patologia (Z-A)" },
-                { value: "next_appointment_asc", label: "Próxima sessão" },
-                { value: "last_activity_desc", label: "Última atividade" },
-                { value: "open_balance_desc", label: "Maior saldo pendente" },
-                { value: "risk_desc", label: "Maior risco" },
+                { value: 'created_at_desc', label: 'Mais recentes' },
+                { value: 'created_at_asc', label: 'Mais antigos' },
+                { value: 'name_asc', label: 'Nome (A-Z)' },
+                { value: 'name_desc', label: 'Nome (Z-A)' },
+                { value: 'main_condition_asc', label: 'Patologia (A-Z)' },
+                { value: 'main_condition_desc', label: 'Patologia (Z-A)' },
+                { value: 'next_appointment_asc', label: 'Próxima sessão' },
+                { value: 'last_activity_desc', label: 'Última atividade' },
+                { value: 'open_balance_desc', label: 'Maior saldo pendente' },
+                { value: 'risk_desc', label: 'Maior risco' },
               ]}
               triggerPrefix={<ArrowUpDown className="h-4 w-4 text-brand-blue" />}
             />
@@ -362,7 +362,7 @@ export function PatientsPageHeader({
           <div className="flex flex-col gap-3 border-t border-slate-200/60 pt-4 dark:border-slate-800">
             <div className="flex items-center justify-between gap-4">
               <p className="text-[11px] font-black uppercase tracking-[0.18em] text-brand-blue">
-                {totalFilteredLabel ?? "Base filtrada"}
+                {totalFilteredLabel ?? 'Base filtrada'}
               </p>
               <Button
                 variant="ghost"
@@ -417,8 +417,8 @@ function HeaderSelect({
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger
         className={cn(
-          "h-14 rounded-[1.2rem] border-slate-200/80 bg-white text-left text-xs font-black uppercase tracking-[0.16em] dark:border-slate-800 dark:bg-slate-950/60",
-          className,
+          'h-12 rounded-xl border-input bg-background text-left text-xs font-bold tracking-wide',
+          className
         )}
       >
         <div className="flex min-w-0 items-center gap-2">
@@ -448,16 +448,16 @@ function HeaderStatCard({
   label: string;
   value: number;
   icon: React.ElementType;
-  tone: "emerald" | "blue" | "amber";
+  tone: 'emerald' | 'blue' | 'amber';
   isSelected?: boolean;
   onClick?: () => void;
 }) {
   const toneMap = {
     emerald:
-      "border-emerald-200/70 bg-emerald-50/80 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-300",
-    blue: "border-blue-200/70 bg-blue-50/80 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/20 dark:text-blue-300",
+      'border-emerald-200/70 bg-emerald-50/80 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-300',
+    blue: 'border-blue-200/70 bg-blue-50/80 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/20 dark:text-blue-300',
     amber:
-      "border-amber-200/70 bg-amber-50/80 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-300",
+      'border-amber-200/70 bg-amber-50/80 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-300',
   } satisfies Record<string, string>;
 
   return (
@@ -465,11 +465,11 @@ function HeaderStatCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "relative overflow-hidden rounded-[1.75rem] border px-4 py-4 text-left transition duration-200",
+        'relative overflow-hidden rounded-[1.75rem] border px-4 py-4 text-left transition duration-200',
         toneMap[tone],
         isSelected
-          ? "ring-2 ring-primary/40 ring-offset-2 ring-offset-background"
-          : "hover:-translate-y-0.5 hover:shadow-lg",
+          ? 'ring-2 ring-primary/40 ring-offset-2 ring-offset-background'
+          : 'hover:-translate-y-0.5 hover:shadow-lg'
       )}
     >
       <div className="flex items-center justify-between">

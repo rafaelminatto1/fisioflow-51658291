@@ -174,8 +174,6 @@ export function PaymentRegistrationModal({
     }
   };
 
-  const typeConfig = PAYMENT_TYPE_CONFIG[watchedType];
-
   return (
     <CustomModal open={open} onOpenChange={onOpenChange} isMobile={isMobile} contentClassName="max-w-md">
       <CustomModalHeader onClose={() => onOpenChange(false)}>

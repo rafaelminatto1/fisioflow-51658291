@@ -5,80 +5,80 @@
  * @module pages/AvaliacaoInicial
  */
 
-import type { ReactNode } from "react";
-import { Check, CheckCircle2, ChevronRight, Plus, Printer } from "lucide-react";
-import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
-import { MedicationsSection } from "@/components/clinical/MedicationsSection";
+import type { ReactNode } from 'react';
+import { Check, CheckCircle2, ChevronRight, Plus, Printer } from 'lucide-react';
+import { PageLayout, PageContainer, PageHeader } from '@/components/layout/PageLayout';
+import { MedicationsSection } from '@/components/clinical/MedicationsSection';
 
 const ic = (Icon: typeof Check, size = 13) => <Icon style={{ width: size, height: size }} />;
 
 const SECTIONS = [
-  { label: "Identificação", state: "done" as const },
-  { label: "Queixa & HMA", state: "active" as const },
-  { label: "Antecedentes", state: "todo" as const },
-  { label: "Inspeção & dor", state: "todo" as const },
-  { label: "ADM & força", state: "todo" as const },
-  { label: "Testes especiais", state: "todo" as const },
-  { label: "Hipótese & plano", state: "todo" as const },
+  { label: 'Identificação', state: 'done' as const },
+  { label: 'Queixa & HMA', state: 'active' as const },
+  { label: 'Antecedentes', state: 'todo' as const },
+  { label: 'Inspeção & dor', state: 'todo' as const },
+  { label: 'ADM & força', state: 'todo' as const },
+  { label: 'Testes especiais', state: 'todo' as const },
+  { label: 'Hipótese & plano', state: 'todo' as const },
 ];
 
 const GONIO_ROWS = [
   {
-    move: "Flexão de joelho",
-    dir: "118",
-    esq: "138",
-    ref: "135°",
-    forca: "4 / 5",
+    move: 'Flexão de joelho',
+    dir: '118',
+    esq: '138',
+    ref: '135°',
+    forca: '4 / 5',
   },
-  { move: "Extensão de joelho", dir: "0", esq: "0", ref: "0°", forca: "4 / 5" },
+  { move: 'Extensão de joelho', dir: '0', esq: '0', ref: '0°', forca: '4 / 5' },
   {
-    move: "Dorsiflexão tornozelo",
-    dir: "18",
-    esq: "22",
-    ref: "20°",
-    forca: "5 / 5",
+    move: 'Dorsiflexão tornozelo',
+    dir: '18',
+    esq: '22',
+    ref: '20°',
+    forca: '5 / 5',
   },
   {
-    move: "Abdução de quadril",
-    dir: "32",
-    esq: "40",
-    ref: "45°",
-    forca: "3 / 4",
+    move: 'Abdução de quadril',
+    dir: '32',
+    esq: '40',
+    ref: '45°',
+    forca: '3 / 4',
   },
 ];
 
 const SPECIAL_TESTS = [
   {
-    name: "Compressão patelar (Clarke)",
-    meta: "Condromalácia / dor patelofemoral",
-    result: "pos" as const,
+    name: 'Compressão patelar (Clarke)',
+    meta: 'Condromalácia / dor patelofemoral',
+    result: 'pos' as const,
   },
   {
-    name: "Teste de apreensão patelar",
-    meta: "Instabilidade patelar",
-    result: "neg" as const,
+    name: 'Teste de apreensão patelar',
+    meta: 'Instabilidade patelar',
+    result: 'neg' as const,
   },
   {
-    name: "Step-down test",
-    meta: "Controle do valgo dinâmico",
-    result: "pos" as const,
+    name: 'Step-down test',
+    meta: 'Controle do valgo dinâmico',
+    result: 'pos' as const,
   },
   {
-    name: "Gaveta anterior",
-    meta: "Integridade do LCA",
-    result: "neg" as const,
+    name: 'Gaveta anterior',
+    meta: 'Integridade do LCA',
+    result: 'neg' as const,
   },
 ];
 
 const OBJECTIVES = [
-  { label: "Reduzir dor para EVA < 3 em 8 semanas", done: true },
-  { label: "Restaurar ROM de flexão ≥ 130°", done: true },
-  { label: "Corrigir valgo dinâmico no agachamento", done: false },
-  { label: "Fortalecer glúteo médio (MMT 5)", done: false },
+  { label: 'Reduzir dor para EVA < 3 em 8 semanas', done: true },
+  { label: 'Restaurar ROM de flexão ≥ 130°', done: true },
+  { label: 'Corrigir valgo dinâmico no agachamento', done: false },
+  { label: 'Fortalecer glúteo médio (MMT 5)', done: false },
 ];
 
 const INPUT =
-  "w-full box-border rounded-[10px] border border-border bg-card px-3.5 py-2.5 font-sans text-[13px] font-semibold text-foreground placeholder:font-medium placeholder:text-muted-foreground";
+  'w-full box-border rounded-xl border border-input bg-card px-3.5 py-2.5 font-sans text-[13px] font-semibold text-foreground placeholder:font-medium placeholder:text-muted-foreground';
 
 function FieldLabel({ children }: { children: ReactNode }) {
   return (
@@ -88,16 +88,16 @@ function FieldLabel({ children }: { children: ReactNode }) {
   );
 }
 
-function SelChip({ children, variant }: { children: ReactNode; variant?: "on" | "warn" | "add" }) {
-  const base = "cursor-pointer rounded-full border px-3.5 py-[7px] text-xs font-bold";
+function SelChip({ children, variant }: { children: ReactNode; variant?: 'on' | 'warn' | 'add' }) {
+  const base = 'cursor-pointer rounded-full border px-3.5 py-[7px] text-xs font-bold';
   const styles =
-    variant === "on"
-      ? "border-primary bg-primary text-white"
-      : variant === "warn"
-        ? "border-[hsl(28_85%_50%)] bg-[hsl(28_85%_50%)] text-white"
-        : variant === "add"
-          ? "border-border bg-card text-primary"
-          : "border-border bg-card text-muted-foreground";
+    variant === 'on'
+      ? 'border-primary bg-primary text-white'
+      : variant === 'warn'
+        ? 'border-[hsl(28_85%_50%)] bg-[hsl(28_85%_50%)] text-white'
+        : variant === 'add'
+          ? 'border-border bg-card text-primary'
+          : 'border-border bg-card text-muted-foreground';
   return <span className={`${base} ${styles}`}>{children}</span>;
 }
 
@@ -120,7 +120,7 @@ export default function AvaliacaoInicial() {
           {/* Topbar */}
           <div className="flex items-center gap-3.5 border-b border-border px-6 py-3.5">
             <div className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground">
-              Pacientes {ic(ChevronRight, 14)} Marina Alves {ic(ChevronRight, 14)}{" "}
+              Pacientes {ic(ChevronRight, 14)} Marina Alves {ic(ChevronRight, 14)}{' '}
               <strong className="font-extrabold text-foreground">Avaliação inicial</strong>
             </div>
             <span className="flex items-center gap-1.5 text-[11px] font-bold text-[hsl(158_60%_38%)]">
@@ -130,7 +130,7 @@ export default function AvaliacaoInicial() {
               <button className="flex items-center gap-1.5 rounded-[10px] border border-border bg-card px-3.5 py-2 text-[13px] font-bold text-foreground">
                 {ic(Printer, 15)} Imprimir
               </button>
-              <button className="flex items-center gap-1.5 rounded-[10px] border border-primary bg-primary px-3.5 py-2 text-[13px] font-bold text-white shadow-[0_0_0_4px_hsl(211_100%_50%/0.15)]">
+              <button className="flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-[13px] font-bold text-primary-foreground hover:bg-primary/90">
                 {ic(Check, 15)} Finalizar avaliação
               </button>
             </div>
@@ -141,7 +141,7 @@ export default function AvaliacaoInicial() {
             {/* Section nav */}
             <div className="overflow-y-auto border-r border-border bg-muted/25 px-3 py-[18px] lg:col-span-2">
               <div className="mb-3 flex items-center gap-2.5 border-b border-border px-1.5 pb-3.5">
-                <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full bg-gradient-to-br from-[hsl(264_55%_62%)] to-[hsl(264_55%_48%)] text-[13px] font-extrabold text-white">
+                <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full bg-primary/10 text-[13px] font-extrabold text-primary">
                   MA
                 </div>
                 <div>
@@ -152,22 +152,22 @@ export default function AvaliacaoInicial() {
                 </div>
               </div>
               {SECTIONS.map((s) => {
-                const active = s.state === "active";
-                const done = s.state === "done";
+                const active = s.state === 'active';
+                const done = s.state === 'done';
                 return (
                   <div
                     key={s.label}
                     className={`mb-0.5 flex cursor-pointer items-center gap-2.5 rounded-[9px] px-2.5 py-2.5 text-xs font-bold ${
-                      active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-card"
+                      active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-card'
                     }`}
                   >
                     <span
                       className={`h-[7px] w-[7px] flex-shrink-0 rounded-full border-2 ${
                         done
-                          ? "border-[hsl(142_60%_42%)] bg-[hsl(142_60%_42%)]"
+                          ? 'border-[hsl(142_60%_42%)] bg-[hsl(142_60%_42%)]'
                           : active
-                            ? "border-primary"
-                            : "border-border"
+                            ? 'border-primary'
+                            : 'border-border'
                       }`}
                     />
                     {s.label}
@@ -285,11 +285,11 @@ export default function AvaliacaoInicial() {
                 <table className="w-full border-collapse text-xs">
                   <thead>
                     <tr>
-                      {["Movimento", "Dir (°)", "Esq (°)", "Ref.", "Força D/E"].map((h, i) => (
+                      {['Movimento', 'Dir (°)', 'Esq (°)', 'Ref.', 'Força D/E'].map((h, i) => (
                         <th
                           key={h}
                           className={`border-b border-border px-2.5 py-[7px] text-[10px] font-extrabold uppercase tracking-[0.04em] text-muted-foreground ${
-                            i === 0 ? "text-left" : "text-center"
+                            i === 0 ? 'text-left' : 'text-center'
                           }`}
                         >
                           {h}
@@ -346,18 +346,18 @@ export default function AvaliacaoInicial() {
                     <div className="ml-auto flex overflow-hidden rounded-lg border border-border">
                       <span
                         className={`cursor-pointer px-3.5 py-1.5 text-[11px] font-extrabold ${
-                          t.result === "pos"
-                            ? "bg-[hsl(0_80%_50%)] text-white"
-                            : "text-[hsl(0_70%_45%)]"
+                          t.result === 'pos'
+                            ? 'bg-[hsl(0_80%_50%)] text-white'
+                            : 'text-[hsl(0_70%_45%)]'
                         }`}
                       >
                         +
                       </span>
                       <span
                         className={`cursor-pointer px-3.5 py-1.5 text-[11px] font-extrabold ${
-                          t.result === "neg"
-                            ? "bg-[hsl(142_60%_42%)] text-white"
-                            : "text-muted-foreground"
+                          t.result === 'neg'
+                            ? 'bg-[hsl(142_60%_42%)] text-white'
+                            : 'text-muted-foreground'
                         }`}
                       >
                         −
@@ -382,16 +382,16 @@ export default function AvaliacaoInicial() {
                 </div>
                 <div className="mt-3 flex gap-[3px]">
                   {[
-                    "hsl(142 60% 55%)",
-                    "hsl(110 55% 55%)",
-                    "hsl(80 60% 55%)",
-                    "hsl(55 80% 55%)",
-                    "hsl(45 90% 55%)",
-                    "hsl(32 90% 55%)",
-                    "hsl(20 85% 55%)",
-                    "hsl(10 80% 52%)",
-                    "hsl(0 75% 50%)",
-                    "hsl(0 70% 42%)",
+                    'hsl(142 60% 55%)',
+                    'hsl(110 55% 55%)',
+                    'hsl(80 60% 55%)',
+                    'hsl(55 80% 55%)',
+                    'hsl(45 90% 55%)',
+                    'hsl(32 90% 55%)',
+                    'hsl(20 85% 55%)',
+                    'hsl(10 80% 52%)',
+                    'hsl(0 75% 50%)',
+                    'hsl(0 70% 42%)',
                   ].map((color, i) => (
                     <span
                       key={color}
@@ -401,7 +401,7 @@ export default function AvaliacaoInicial() {
                         opacity: i > 5 ? 0.3 : 1,
                         boxShadow:
                           i === 5
-                            ? "0 0 0 2px hsl(0 0% 100%), 0 0 0 4px hsl(32 90% 45%)"
+                            ? '0 0 0 2px hsl(0 0% 100%), 0 0 0 4px hsl(32 90% 45%)'
                             : undefined,
                       }}
                     />
@@ -471,7 +471,7 @@ export default function AvaliacaoInicial() {
                     <div key={o.label} className="flex items-start gap-2 text-xs font-semibold">
                       <span
                         className={`mt-px flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-[5px] border-2 border-primary text-white ${
-                          o.done ? "bg-primary" : ""
+                          o.done ? 'bg-primary' : ''
                         }`}
                       >
                         {o.done ? ic(Check, 11) : null}

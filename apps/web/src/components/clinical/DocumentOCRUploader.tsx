@@ -57,7 +57,7 @@ export const DocumentOCRUploader: React.FC<DocumentOCRUploaderProps> = ({
       const extracted = data.extractedData || {};
       setExtractedData(extracted);
       onDataExtracted?.(extracted);
-    } catch (err: any) {
+    } catch {
       // Fallback estático gracioso para testes/desconexão
       const mockExtracted: ExtractedDocData = {
         title: "Ressonância Magnética - Joelho Direito",

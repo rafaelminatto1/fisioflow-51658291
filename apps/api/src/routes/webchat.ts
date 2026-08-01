@@ -347,7 +347,7 @@ app.post("/message", messageRateLimit, async (c: any) => {
 					// Handoff determinístico (antes do LLM): o visitante pediu um humano.
 					if (wantsHumanAgent(text)) {
 						const bridge = conciergeHandoffMessage(rawConciergeCfg);
-						const handoffMsg = await addMessage(
+						await addMessage(
 							pool,
 							conversation.id,
 							orgId,
@@ -431,7 +431,7 @@ app.post("/message", messageRateLimit, async (c: any) => {
 							const reply = stripGreetingIntro(concierge.reply, greetingSignature);
 
 							if (reply && reply.length >= 2) {
-								const autoMsg = await addMessage(
+								await addMessage(
 									pool,
 									conversation.id,
 									orgId,

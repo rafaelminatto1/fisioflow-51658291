@@ -77,60 +77,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   outro: "Outro",
 };
 
-const INTENSITY_LABELS: Record<string, string> = {
-  low: "Baixa",
-  medium: "Média",
-  high: "Alta",
-};
-
 type ProcedureSuggestion = { selectType: "procedure" } & (typeof COMMON_PROCEDURES)[0];
 type ExerciseSuggestion = { selectType: "exercise" } & Exercise;
 type CombinedSuggestion = ProcedureSuggestion | ExerciseSuggestion;
-
-function formatItemDetail(item: EvolutionItemV3) {
-  if (item.type === "exercise") {
-    return [
-      item.prescription
-        ? {
-            key: "prescription",
-            label: item.prescription,
-            className: "border-emerald-200 bg-emerald-50 text-emerald-700",
-          }
-        : null,
-      item.patientFeedback
-        ? {
-            key: "feedback",
-            label: item.patientFeedback,
-            className: "border-teal-200 bg-teal-50 text-teal-700",
-          }
-        : null,
-    ].filter(Boolean) as Array<{ key: string; label: string; className: string }>;
-  }
-
-  return [
-    item.category && item.category !== "outro"
-      ? {
-          key: "category",
-          label: CATEGORY_LABELS[item.category] || item.category,
-          className: CATEGORY_COLORS[item.category] || CATEGORY_COLORS.outro,
-        }
-      : null,
-    item.intensity
-      ? {
-          key: "intensity",
-          label: INTENSITY_LABELS[item.intensity] || item.intensity,
-          className: "border-amber-200 bg-amber-50 text-amber-700",
-        }
-      : null,
-    item.notes
-      ? {
-          key: "notes",
-          label: item.notes,
-          className: "border-slate-200 bg-slate-50 text-slate-700",
-        }
-      : null,
-  ].filter(Boolean) as Array<{ key: string; label: string; className: string }>;
-}
 
 interface EvolutionItemRowProps {
   item: EvolutionItemV3;
@@ -187,8 +136,6 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
     }
     prevHasContentRef.current = hasContent;
   }, [item.notes, item.intensity, item.patientFeedback]);
-
-  const itemDetails = formatItemDetail(item);
 
   return (
     <Draggable draggableId={item.id} index={index} isDragDisabled={disabled}>

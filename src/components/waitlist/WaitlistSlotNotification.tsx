@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { Phone, Calendar, Clock, ArrowRight, X, Check, AlertCircle } from "lucide-react";
+import { Phone, Calendar, Clock, X, Check, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 

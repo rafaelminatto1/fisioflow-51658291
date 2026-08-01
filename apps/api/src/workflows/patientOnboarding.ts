@@ -28,7 +28,7 @@ export class PatientOnboardingWorkflow extends WorkflowEntrypoint<Env, PatientOn
       patientEmail: _patientEmail,
       patientPhone,
       organizationId,
-      therapistName,
+      therapistName: _therapistName,
     } = event.payload;
 
     // 1. Boas-vindas imediatas

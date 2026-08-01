@@ -3,36 +3,36 @@
 // Consulte o guia detalhado em: docs/clinical-tests.md antes de alterar este arquivo.
 // ============================================================================
 
-import React, { useMemo, useState, useEffect, useRef } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, BookOpenCheck, Plus, ScrollText } from "lucide-react";
-import { toast } from "sonner";
+import React, { useMemo, useState, useEffect, useRef } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AlertCircle, BookOpenCheck, Plus, ScrollText } from 'lucide-react';
+import { toast } from 'sonner';
 
-import { ClinicalTestDeleteDialog } from "@/components/clinical/ClinicalTestDeleteDialog";
-import { ClinicalTestDetailsModal } from "@/components/clinical/ClinicalTestDetailsModal";
-import { ClinicalTestFormModal } from "@/components/clinical/ClinicalTestFormModal";
-import { ClinicalTestProtocolDialog } from "@/components/clinical/ClinicalTestProtocolDialog";
-import { ClinicalTestsFilter } from "@/components/clinical/ClinicalTestsFilter";
-import { ClinicalTestsGrid } from "@/components/clinical/ClinicalTestsGrid";
-import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
-import { Button } from "@/components/ui/button";
-import { useExerciseProtocols } from "@/hooks/useExerciseProtocols";
-import { clinicalTestsApi, type ClinicalTestTemplateRecord } from "@/api/v2";
+import { ClinicalTestDeleteDialog } from '@/components/clinical/ClinicalTestDeleteDialog';
+import { ClinicalTestDetailsModal } from '@/components/clinical/ClinicalTestDetailsModal';
+import { ClinicalTestFormModal } from '@/components/clinical/ClinicalTestFormModal';
+import { ClinicalTestProtocolDialog } from '@/components/clinical/ClinicalTestProtocolDialog';
+import { ClinicalTestsFilter } from '@/components/clinical/ClinicalTestsFilter';
+import { ClinicalTestsGrid } from '@/components/clinical/ClinicalTestsGrid';
+import { PageLayout, PageContainer, PageHeader } from '@/components/layout/PageLayout';
+import { Button } from '@/components/ui/button';
+import { useExerciseProtocols } from '@/hooks/useExerciseProtocols';
+import { clinicalTestsApi, type ClinicalTestTemplateRecord } from '@/api/v2';
 import {
   clinicalTestCategoryOptions,
   clinicalTestJointOptions,
   mergeClinicalTestsCatalog,
   normalizeClinicalTestName,
   type ClinicalTestCatalogRecord,
-} from "@/data/clinicalTestsCatalog";
-import { expandSearchQuery, normalizeForSearch } from "@/lib/utils/bilingualSearch";
+} from '@/data/clinicalTestsCatalog';
+import { expandSearchQuery, normalizeForSearch } from '@/lib/utils/bilingualSearch';
 
 type ClinicalTest = ClinicalTestCatalogRecord;
 
 export default function ClinicalTestsLibrary() {
   const queryClient = useQueryClient();
-  const [activeFilter, setActiveFilter] = useState("Todos");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [activeFilter, setActiveFilter] = useState('Todos');
+  const [searchTerm, setSearchTerm] = useState('');
   const [visibleCount, setVisibleCount] = useState(12);
   const [selectedTest, setSelectedTest] = useState<ClinicalTest | null>(null);
 
@@ -49,7 +49,7 @@ export default function ClinicalTestsLibrary() {
           setVisibleCount((prev) => prev + 12);
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0.1 }
     );
 
     if (sentinelRef.current) {
@@ -59,7 +59,7 @@ export default function ClinicalTestsLibrary() {
     return () => observer.disconnect();
   }, []);
   const [formModalOpen, setFormModalOpen] = useState(false);
-  const [formMode, setFormMode] = useState<"create" | "edit">("create");
+  const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [testToEdit, setTestToEdit] = useState<ClinicalTest | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [testToDelete, setTestToDelete] = useState<ClinicalTest | null>(null);
@@ -72,7 +72,7 @@ export default function ClinicalTestsLibrary() {
     isError,
     refetch,
   } = useQuery({
-    queryKey: ["clinical-tests-library"],
+    queryKey: ['clinical-tests-library'],
     queryFn: async () => {
       const res = await clinicalTestsApi.list();
       return (res?.data ?? []) as ClinicalTestTemplateRecord[];
@@ -101,7 +101,7 @@ export default function ClinicalTestsLibrary() {
       if (!matchesSearch) {
         // Standard search
         matchesSearch = fieldValues.some((value) =>
-          normalizeClinicalTestName(value).includes(normalizedSearch),
+          normalizeClinicalTestName(value).includes(normalizedSearch)
         );
       }
 
@@ -111,12 +111,12 @@ export default function ClinicalTestsLibrary() {
           .filter((v): v is string => !!v)
           .map(normalizeForSearch);
         matchesSearch = expandedTerms.some((term) =>
-          normalizedFields.some((field) => field.includes(term)),
+          normalizedFields.some((field) => field.includes(term))
         );
       }
 
       if (!matchesSearch) return false;
-      if (activeFilter === "Todos") return true;
+      if (activeFilter === 'Todos') return true;
       if (categorySet.has(activeFilter)) return test.category === activeFilter;
       return test.target_joint === activeFilter;
     });
@@ -127,26 +127,26 @@ export default function ClinicalTestsLibrary() {
       await clinicalTestsApi.delete(testId);
     },
     onSuccess: () => {
-      toast.success("Teste excluído com sucesso.");
-      queryClient.invalidateQueries({ queryKey: ["clinical-tests-library"] });
+      toast.success('Teste excluído com sucesso.');
+      queryClient.invalidateQueries({ queryKey: ['clinical-tests-library'] });
       setDeleteDialogOpen(false);
       setTestToDelete(null);
       setSelectedTest(null);
     },
     onError: () => {
-      toast.error("Erro ao excluir teste.");
+      toast.error('Erro ao excluir teste.');
     },
   });
 
   const handleCreateNew = () => {
     setTestToEdit(null);
-    setFormMode("create");
+    setFormMode('create');
     setFormModalOpen(true);
   };
 
   const handleEdit = (test: ClinicalTest) => {
     setTestToEdit(test);
-    setFormMode(test.is_builtin ? "create" : "edit");
+    setFormMode(test.is_builtin ? 'create' : 'edit');
     setFormModalOpen(true);
     setSelectedTest(null);
   };
@@ -158,7 +158,7 @@ export default function ClinicalTestsLibrary() {
 
   const handleAddToProtocol = (test: ClinicalTest) => {
     if (test.is_builtin) {
-      toast.info("Duplique o teste para personalizar antes de vinculá-lo a um protocolo.");
+      toast.info('Duplique o teste para personalizar antes de vinculá-lo a um protocolo.');
       return;
     }
 
@@ -175,7 +175,7 @@ export default function ClinicalTestsLibrary() {
     const currentTests = Array.isArray(protocol.clinical_tests) ? protocol.clinical_tests : [];
 
     if (currentTests.includes(selectedTest.id)) {
-      toast.info("Este teste já está vinculado a este protocolo.");
+      toast.info('Este teste já está vinculado a este protocolo.');
       return;
     }
 
@@ -192,7 +192,7 @@ export default function ClinicalTestsLibrary() {
     <PageLayout>
       <PageContainer>
         <PageHeader title="Biblioteca de Testes Clínicos" />
-        <div className="-mx-2 min-h-screen bg-slate-50 text-slate-800 xs:-mx-4 md:mx-0">
+        <div className="-mx-2 min-h-screen bg-background text-foreground xs:-mx-4 md:mx-0">
           <main className="px-4 py-4 pb-24">
             <div className="space-y-4">
               {/* Compact header */}
@@ -204,7 +204,7 @@ export default function ClinicalTestsLibrary() {
               </div>
 
               {isError ? (
-                <div className="flex items-start gap-4 rounded-[28px] border border-red-100 bg-white px-5 py-4 shadow-sm">
+                <div className="flex items-start gap-4 rounded-2xl border border-red-200 bg-card px-5 py-4 shadow-none">
                   <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50">
                     <AlertCircle className="h-5 w-5 text-red-500" />
                   </div>
@@ -239,7 +239,7 @@ export default function ClinicalTestsLibrary() {
               />
 
               <section className="grid gap-4 lg:grid-cols-12">
-                <div className="rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm lg:col-span-8 xl:col-span-9">
+                <div className="rounded-2xl border border-border bg-card px-5 py-4 shadow-none lg:col-span-8 xl:col-span-9">
                   <div className="flex flex-wrap items-center gap-3">
                     <div className="inline-flex items-center gap-2 rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">
                       <BookOpenCheck className="h-4 w-4" />
@@ -252,7 +252,7 @@ export default function ClinicalTestsLibrary() {
                   </div>
                 </div>
 
-                <div className="rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm flex items-center lg:col-span-4 xl:col-span-3">
+                <div className="flex items-center rounded-2xl border border-border bg-card px-5 py-4 shadow-none lg:col-span-4 xl:col-span-3">
                   <div className="inline-flex items-center gap-2 text-sm font-medium text-slate-600">
                     <ScrollText className="h-4 w-4 text-teal-600" />
                     {filteredTests.length} resultados visíveis
@@ -265,8 +265,8 @@ export default function ClinicalTestsLibrary() {
                 tests={filteredTests.slice(0, visibleCount)}
                 onSelectTest={setSelectedTest}
                 onClearFilters={() => {
-                  setSearchTerm("");
-                  setActiveFilter("Todos");
+                  setSearchTerm('');
+                  setActiveFilter('Todos');
                 }}
               />
 

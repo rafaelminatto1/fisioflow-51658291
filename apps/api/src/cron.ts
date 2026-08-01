@@ -891,7 +891,7 @@ async function dispatchLeadSlaEscalations(pool: any, env: Env) {
  * appointment_reminder_log (ON CONFLICT), então reativar o poll não duplica.
  * Dedup atômico via tabela appointment_reminder_log.
  */
-async function dispatchScheduledReminders(pool: any, env: Env) {
+async function _dispatchScheduledReminders(pool: any, env: Env) {
   const { resolveReminderConfig, computeReminderSendAt } = await import("./lib/reminderScheduling");
   const { WhatsAppService } = await import("./lib/whatsapp");
 

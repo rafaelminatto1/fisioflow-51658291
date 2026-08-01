@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
+  ArrowLeft,
   Archive,
   BookOpen,
   ChevronRight,
@@ -40,19 +41,13 @@ const noteKindLabel: Record<NoteKind, string> = {
   private: 'Pessoal',
 };
 
-const visibilityLabel = {
-  private: 'Privada',
-  restricted: 'Restrita',
-  team: 'Equipe',
-  organization: 'Organização',
-} as const;
-
 export function NotesHome({
   viewModel,
   compact = false,
   selectedNoteId,
   onChangeFilter,
   onCreateNote,
+  onReturnToSystem,
   onSearch,
   onSelectNote,
   onSelectSpace,
@@ -77,7 +72,10 @@ export function NotesHome({
 
   if (compact) {
     return (
-      <section className="flex h-full min-h-0 flex-col bg-card text-foreground" aria-label="Navegador de notas">
+      <section
+        className="flex h-full min-h-0 flex-col bg-card text-foreground"
+        aria-label="Navegador de notas"
+      >
         <div className="border-b border-border px-4 py-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2">
@@ -85,38 +83,112 @@ export function NotesHome({
                 <BookOpen className="size-4" />
               </span>
               <div className="min-w-0">
-                <p className="truncate text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">FisioFlow</p>
+                <p className="truncate text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  FisioFlow
+                </p>
                 <h1 className="truncate font-display text-lg font-bold tracking-tight">Notas</h1>
               </div>
             </div>
-            <button type="button" onClick={onCreateNote} className="grid size-8 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground transition hover:bg-primary/90" aria-label="Criar nova nota">
+            <button
+              type="button"
+              onClick={onCreateNote}
+              className="grid size-8 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground transition hover:bg-primary/90"
+              aria-label="Criar nova nota"
+            >
               <FilePlus2 className="size-4" />
             </button>
           </div>
+          <button
+            type="button"
+            onClick={onReturnToSystem}
+            className="mb-3 inline-flex items-center gap-1.5 rounded-md px-1 py-1 text-xs font-semibold text-muted-foreground transition hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          >
+            <ArrowLeft className="size-3.5" />
+            Voltar ao FisioFlow
+          </button>
           <label className="relative block">
             <span className="sr-only">Pesquisar notas</span>
             <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <input value={query} onChange={(event) => handleSearch(event.target.value)} placeholder="Buscar notas..." className="h-9 w-full rounded-md border border-input bg-background pr-3 pl-9 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-ring/20" />
+            <input
+              value={query}
+              onChange={(event) => handleSearch(event.target.value)}
+              placeholder="Buscar notas..."
+              className="h-9 w-full rounded-md border border-input bg-background pr-3 pl-9 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-ring/20"
+            />
           </label>
         </div>
-        <nav aria-label="Filtros de notas" className="flex gap-1 overflow-x-auto border-b border-border px-3 py-2 lg:block lg:space-y-0.5 lg:overflow-visible">
+        <nav
+          aria-label="Filtros de notas"
+          className="flex gap-1 overflow-x-auto border-b border-border px-3 py-2 lg:block lg:space-y-0.5 lg:overflow-visible"
+        >
           {filterItems.map((item) => {
             const Icon = item.icon;
             const active = (viewModel.activeFilter ?? 'all') === item.id;
-            return <button key={item.id} type="button" onClick={() => onChangeFilter?.(item.id)} className={`flex shrink-0 items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs font-semibold transition lg:w-full ${active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><Icon className="size-3.5" />{item.label}</button>;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onChangeFilter?.(item.id)}
+                className={`flex shrink-0 items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs font-semibold transition lg:w-full ${active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+              >
+                <Icon className="size-3.5" />
+                {item.label}
+              </button>
+            );
           })}
         </nav>
         <div className="min-h-0 flex-1 overflow-y-auto p-3">
           <div className="mb-2 flex items-center justify-between px-1">
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{query ? 'Resultados' : 'Recentes'}</p>
-            <span className="text-[11px] tabular-nums text-muted-foreground">{visibleNotes.length}</span>
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+              {query ? 'Resultados' : 'Recentes'}
+            </p>
+            <span className="text-[11px] tabular-nums text-muted-foreground">
+              {visibleNotes.length}
+            </span>
           </div>
           <div className="space-y-1">
-            {visibleNotes.map((note) => <button key={note.id} type="button" onClick={() => onSelectNote?.(note.id)} className={`group flex w-full items-start gap-2.5 rounded-md px-2.5 py-2.5 text-left transition ${selectedNoteId === note.id ? 'bg-primary/10 text-foreground ring-1 ring-primary/15' : 'hover:bg-muted/70'}`}>
-              <span className={`mt-1 size-2 shrink-0 rounded-full ${note.kind === 'clinical-context' ? 'bg-blue-500' : note.kind === 'team' ? 'bg-emerald-500' : note.kind === 'knowledge' ? 'bg-amber-500' : 'bg-muted-foreground/40'}`} aria-hidden="true" />
-              <span className="min-w-0 flex-1"><span className="flex items-center gap-1.5"><span className="truncate text-sm font-semibold">{note.title || 'Sem título'}</span>{note.isFavorite ? <Star className="size-3 shrink-0 fill-amber-400 text-amber-400" /> : null}</span><span className="mt-0.5 block line-clamp-1 text-xs text-muted-foreground">{note.preview || 'Nota sem conteúdo ainda.'}</span><span className="mt-1 block text-[10px] text-muted-foreground">{note.updatedLabel}{note.patientName ? ` · ${note.patientName}` : ''}</span></span>
-            </button>)}
-            {!visibleNotes.length ? <div className="px-2 py-8 text-center"><p className="text-xs text-muted-foreground">Nenhuma nota encontrada.</p><button type="button" onClick={onCreateNote} className="mt-3 rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground transition hover:bg-primary/90">Criar nota</button></div> : null}
+            {visibleNotes.map((note) => (
+              <button
+                key={note.id}
+                type="button"
+                onClick={() => onSelectNote?.(note.id)}
+                className={`group flex w-full items-start gap-2.5 rounded-md px-2.5 py-2.5 text-left transition ${selectedNoteId === note.id ? 'bg-primary/10 text-foreground ring-1 ring-primary/15' : 'hover:bg-muted/70'}`}
+              >
+                <span
+                  className={`mt-1 size-2 shrink-0 rounded-full ${note.kind === 'clinical-context' ? 'bg-blue-500' : note.kind === 'team' ? 'bg-emerald-500' : note.kind === 'knowledge' ? 'bg-amber-500' : 'bg-muted-foreground/40'}`}
+                  aria-hidden="true"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1.5">
+                    <span className="truncate text-sm font-semibold">
+                      {note.title || 'Sem título'}
+                    </span>
+                    {note.isFavorite ? (
+                      <Star className="size-3 shrink-0 fill-amber-400 text-amber-400" />
+                    ) : null}
+                  </span>
+                  <span className="mt-0.5 block line-clamp-1 text-xs text-muted-foreground">
+                    {note.preview || 'Nota sem conteúdo ainda.'}
+                  </span>
+                  <span className="mt-1 block text-[10px] text-muted-foreground">
+                    {note.updatedLabel}
+                    {note.patientName ? ` · ${note.patientName}` : ''}
+                  </span>
+                </span>
+              </button>
+            ))}
+            {!visibleNotes.length ? (
+              <div className="px-2 py-8 text-center">
+                <p className="text-xs text-muted-foreground">Nenhuma nota encontrada.</p>
+                <button
+                  type="button"
+                  onClick={onCreateNote}
+                  className="mt-3 rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+                >
+                  Criar nota
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
@@ -127,6 +199,14 @@ export function NotesHome({
     <section className="min-h-full bg-background text-foreground" aria-label="Central de notas">
       <div className="mx-auto grid min-h-full max-w-[1600px] grid-cols-1 xl:grid-cols-[252px_minmax(0,1fr)]">
         <aside className="border-b border-border bg-card px-4 py-5 xl:border-r xl:border-b-0">
+          <button
+            type="button"
+            onClick={onReturnToSystem}
+            className="mb-5 inline-flex items-center gap-2 rounded-md px-2 py-1.5 text-xs font-bold text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          >
+            <ArrowLeft className="size-3.5" />
+            Voltar ao FisioFlow
+          </button>
           <div className="mb-7 flex items-center justify-between gap-3 px-2">
             <div>
               <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
@@ -245,7 +325,7 @@ export function NotesHome({
               <input
                 value={query}
                 onChange={(event) => handleSearch(event.target.value)}
-                placeholder="Buscar notas, pacientes, tarefas..."
+                placeholder="Buscar notas no seu espaço..."
                 className="h-11 w-full rounded-md border border-input bg-card pr-4 pl-10 text-sm shadow-xs outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring/20"
               />
             </label>
@@ -258,7 +338,11 @@ export function NotesHome({
                 {visibleNotes.length} notas no seu contexto atual
               </p>
             </div>
-            <button type="button" onClick={() => onChangeFilter?.('archived')} className="hidden items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground sm:flex">
+            <button
+              type="button"
+              onClick={() => onChangeFilter?.('archived')}
+              className="hidden items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground sm:flex"
+            >
               Arquivadas
             </button>
           </div>
@@ -281,7 +365,13 @@ export function NotesHome({
               <p className="mt-1 text-sm text-muted-foreground">
                 Tente outro termo ou crie uma nova nota.
               </p>
-              <button type="button" onClick={onCreateNote} className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition hover:bg-primary/90">Nova nota</button>
+              <button
+                type="button"
+                onClick={onCreateNote}
+                className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition hover:bg-primary/90"
+              >
+                Nova nota
+              </button>
             </div>
           ) : null}
         </main>

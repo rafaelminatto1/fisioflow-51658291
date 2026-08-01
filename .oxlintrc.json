@@ -2,6 +2,12 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "ignorePatterns": [
     "scripts/archive/**",
+    "scripts/**",
+    "design-system/**",
+    "design-system-handoff/**",
+    "scripts/**",
+    "design-system/**",
+    "design-system-handoff/**",
     "evolucao/**",
     "migrate-pages.*",
     "e2e/**",

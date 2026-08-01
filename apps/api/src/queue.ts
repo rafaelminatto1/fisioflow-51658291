@@ -1,7 +1,7 @@
 import type { Env } from "./types/env";
 import { createPool, createPoolForOrg, getRawSql, runWithOrg, createDb } from "./lib/db";
 import { appointments, patients } from "@fisioflow/db";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { runAutomationsForEvent } from "./lib/automation/triggerAutomations";
 import { writeEvent } from "./lib/analytics";
 import { transcribeAudio, analyzeClinicImage } from "./lib/ai-native";
@@ -1286,7 +1286,7 @@ async function handleAppointmentCreated(data: any, env: Env) {
 }
 
 async function handleAppointmentUpdated(data: any, env: Env) {
-  const { appointmentId, patientId, date, startTime, status, organizationId } = data;
+  const { appointmentId, patientId, date, startTime, status: _status, organizationId } = data;
   if (!appointmentId || !env.DATABASE_URL) return;
 
   try {

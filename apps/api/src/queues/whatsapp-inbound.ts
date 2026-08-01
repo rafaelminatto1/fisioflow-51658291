@@ -31,7 +31,6 @@ import {
   createConfirmedAppointmentFromFlow,
   isBookingIntent,
   sendQuickSlotButtonsFallback,
-  sendSlotsListFallback,
   parseBookListId,
   DEFAULT_BOOKING_FLOW_ID,
   notifyWaitlistPatientForFreedSlot,

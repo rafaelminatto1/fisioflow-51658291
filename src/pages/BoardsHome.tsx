@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { useMemo, useState } from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import {
   Banknote,
   Clock3,
@@ -12,10 +12,10 @@ import {
   Star,
   Target,
   TrendingUp,
-} from "lucide-react";
-import { BoardCard } from "@/components/boards/BoardCard";
-import { BoardsEmptyState } from "@/components/boards/BoardsEmptyState";
-import { CreateBoardModal } from "@/components/boards/CreateBoardModal";
+} from 'lucide-react';
+import { BoardCard } from '@/components/boards/BoardCard';
+import { BoardsEmptyState } from '@/components/boards/BoardsEmptyState';
+import { CreateBoardModal } from '@/components/boards/CreateBoardModal';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,25 +25,25 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
-import { cn } from "@/lib/utils";
-import { useBoards, useCreateBoard, useDeleteBoard, useUpdateBoard } from "@/hooks/useBoards";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { boardsApi } from "@/api/v2";
-import { toast } from "sonner";
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { cn } from '@/lib/utils';
+import { useBoards, useCreateBoard, useDeleteBoard, useUpdateBoard } from '@/hooks/useBoards';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { boardsApi } from '@/api/v2';
+import { toast } from 'sonner';
 
-type BoardCollection = "all" | "favorites" | "recent";
+type BoardCollection = 'all' | 'favorites' | 'recent';
 
 export default function BoardsHome() {
   const [createOpen, setCreateOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [collection, setCollection] = useState<BoardCollection>("all");
+  const [search, setSearch] = useState('');
+  const [collection, setCollection] = useState<BoardCollection>('all');
   const { data: boards, isLoading, refetch } = useBoards();
   const createBoard = useCreateBoard();
   const updateBoard = useUpdateBoard();
@@ -51,12 +51,12 @@ export default function BoardsHome() {
   const queryClient = useQueryClient();
 
   const createFromTemplate = useMutation({
-    mutationFn: (template: "financial" | "goals") => boardsApi.createFromTemplate(template),
+    mutationFn: (template: 'financial' | 'goals') => boardsApi.createFromTemplate(template),
     onSuccess: () => {
-      toast.success("Board criado com sucesso a partir do template!");
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      toast.success('Board criado com sucesso a partir do template!');
+      queryClient.invalidateQueries({ queryKey: ['boards'] });
     },
-    onError: () => toast.error("Erro ao criar board a partir do template"),
+    onError: () => toast.error('Erro ao criar board a partir do template'),
   });
 
   const allBoards = boards ?? [];
@@ -71,15 +71,15 @@ export default function BoardsHome() {
       ? allBoards.filter(
           (board) =>
             board.name.toLowerCase().includes(lowerSearch) ||
-            board.description?.toLowerCase().includes(lowerSearch),
+            board.description?.toLowerCase().includes(lowerSearch)
         )
       : allBoards;
 
-    if (collection === "favorites") {
+    if (collection === 'favorites') {
       return searched.filter((board) => board.is_starred);
     }
 
-    if (collection === "recent") {
+    if (collection === 'recent') {
       const recentIds = new Set(recentBoards.map((board) => board.id));
       return searched.filter((board) => recentIds.has(board.id));
     }
@@ -128,42 +128,45 @@ export default function BoardsHome() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.12),transparent_28%),linear-gradient(180deg,rgba(248,250,252,0.96),rgba(248,250,252,1))]">
+    <div className="min-h-screen bg-background">
       <div className="w-full space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-[32px] border border-slate-800/70 bg-[linear-gradient(135deg,#0f172a,#111827,#1e293b)] text-white shadow-2xl">
+        <section className="overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-none">
           <div className="grid gap-8 px-6 py-7 sm:px-8 lg:grid-cols-12 lg:items-end">
             <div className="space-y-6 lg:col-span-8">
-              <div className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-white/78">
+              <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-primary">
                 <Sparkles className="mr-2 h-3.5 w-3.5" />
                 Workspace de boards
               </div>
               <div className="space-y-3">
-                <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                  Trate boards como missão, não só como lista de tarefas.
-                </h1>
-                <p className="max-w-3xl text-sm leading-7 text-white/72 sm:text-base">
-                  Inspire o fluxo no que há de melhor em Trello, Monday e ClickUp: clareza visual,
-                  contexto operacional e acesso rápido às views mais usadas.
+                <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Boards</h1>
+                <p className="max-w-3xl text-sm leading-7 text-muted-foreground sm:text-base">
+                  Organize fluxos operacionais, prioridades e tarefas do time.
                 </p>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-4">
-                <div className="rounded-2xl border border-white/12 bg-white/10 p-4">
-                  <div className="text-xs uppercase tracking-[0.16em] text-white/62">Boards</div>
+                <div className="rounded-xl border border-border bg-background p-4">
+                  <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                    Boards
+                  </div>
                   <div className="mt-2 text-3xl font-semibold">{allBoards.length}</div>
                 </div>
-                <div className="rounded-2xl border border-white/12 bg-white/10 p-4">
-                  <div className="text-xs uppercase tracking-[0.16em] text-white/62">Favoritos</div>
+                <div className="rounded-xl border border-border bg-background p-4">
+                  <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                    Favoritos
+                  </div>
                   <div className="mt-2 text-3xl font-semibold">{starredBoards.length}</div>
                 </div>
-                <div className="rounded-2xl border border-white/12 bg-white/10 p-4">
-                  <div className="text-xs uppercase tracking-[0.16em] text-white/62">Tarefas</div>
+                <div className="rounded-xl border border-border bg-background p-4">
+                  <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                    Tarefas
+                  </div>
                   <div className="mt-2 text-3xl font-semibold">
                     {allBoards.reduce((total, board) => total + Number(board.task_count ?? 0), 0)}
                   </div>
                 </div>
-                <div className="rounded-2xl border border-white/12 bg-white/10 p-4">
-                  <div className="flex items-center gap-1 text-xs uppercase tracking-[0.16em] text-white/62">
+                <div className="rounded-xl border border-border bg-background p-4">
+                  <div className="flex items-center gap-1 text-xs uppercase tracking-[0.16em] text-muted-foreground">
                     <TrendingUp className="h-3.5 w-3.5" />
                     Ritmo
                   </div>
@@ -172,18 +175,18 @@ export default function BoardsHome() {
               </div>
             </div>
 
-            <div className="space-y-4 rounded-[28px] border border-white/12 bg-white/10 p-5 lg:col-span-4">
+            <div className="space-y-4 rounded-2xl border border-border bg-background p-5 lg:col-span-4">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-lg font-semibold">Acesse rápido</div>
-                  <div className="text-sm text-white/68">
+                  <div className="text-sm text-muted-foreground">
                     Busque, atualize ou crie um novo board.
                   </div>
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-white hover:bg-white/10 hover:text-white"
+                  className="text-muted-foreground hover:bg-muted hover:text-foreground"
                   onClick={() => refetch()}
                   title="Atualizar"
                 >
@@ -192,21 +195,21 @@ export default function BoardsHome() {
               </div>
 
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/48" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Buscar boards, descrições ou contexto..."
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  className="h-11 border-white/15 bg-white/10 pl-9 text-white placeholder:text-white/45"
+                  className="h-11 border-input bg-card pl-9"
                 />
               </div>
 
               <div className="flex flex-wrap gap-2">
                 {(
                   [
-                    ["all", "Todos"],
-                    ["favorites", "Favoritos"],
-                    ["recent", "Recentes"],
+                    ['all', 'Todos'],
+                    ['favorites', 'Favoritos'],
+                    ['recent', 'Recentes'],
                   ] as const
                 ).map(([value, label]) => (
                   <button
@@ -214,10 +217,10 @@ export default function BoardsHome() {
                     type="button"
                     onClick={() => setCollection(value)}
                     className={cn(
-                      "rounded-full border px-3 py-1.5 text-sm transition-colors",
+                      'rounded-full border px-3 py-1.5 text-sm transition-colors',
                       collection === value
-                        ? "border-white bg-white text-slate-950"
-                        : "border-white/15 bg-white/10 text-white/78 hover:bg-white/15",
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-card text-muted-foreground hover:bg-muted'
                     )}
                   >
                     {label}
@@ -227,7 +230,7 @@ export default function BoardsHome() {
 
               <Button
                 onClick={() => setCreateOpen(true)}
-                className="h-11 w-full rounded-2xl bg-white text-slate-950 hover:bg-card"
+                className="h-11 w-full rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Novo board
@@ -249,20 +252,20 @@ export default function BoardsHome() {
                   {(
                     [
                       {
-                        value: "all",
-                        label: "Todos os boards",
+                        value: 'all',
+                        label: 'Todos os boards',
                         description: `${allBoards.length} disponíveis`,
                         icon: LayoutGrid,
                       },
                       {
-                        value: "favorites",
-                        label: "Favoritos",
+                        value: 'favorites',
+                        label: 'Favoritos',
                         description: `${starredBoards.length} destacados`,
                         icon: Star,
                       },
                       {
-                        value: "recent",
-                        label: "Atualizados há pouco",
+                        value: 'recent',
+                        label: 'Atualizados há pouco',
                         description: `${recentBoards.length} em foco`,
                         icon: Clock3,
                       },
@@ -275,10 +278,10 @@ export default function BoardsHome() {
                         type="button"
                         onClick={() => setCollection(item.value)}
                         className={cn(
-                          "flex w-full items-start gap-3 rounded-2xl border px-3 py-3 text-left transition-colors",
+                          'flex w-full items-start gap-3 rounded-2xl border px-3 py-3 text-left transition-colors',
                           collection === item.value
-                            ? "border-primary/30 bg-primary/10"
-                            : "border-border/50 bg-background hover:border-primary/20 hover:bg-accent/40",
+                            ? 'border-primary/30 bg-primary/10'
+                            : 'border-border/50 bg-background hover:border-primary/20 hover:bg-accent/40'
                         )}
                       >
                         <div className="rounded-xl bg-muted p-2">
@@ -307,7 +310,7 @@ export default function BoardsHome() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <div className="truncate text-sm font-medium">
-                            {board.icon ? `${board.icon} ` : ""}
+                            {board.icon ? `${board.icon} ` : ''}
                             {board.name}
                           </div>
                           <div className="mt-1 text-xs text-muted-foreground">
@@ -334,7 +337,7 @@ export default function BoardsHome() {
                   <button
                     type="button"
                     disabled={createFromTemplate.isPending}
-                    onClick={() => createFromTemplate.mutate("financial")}
+                    onClick={() => createFromTemplate.mutate('financial')}
                     className="flex w-full items-start gap-3 rounded-2xl border border-border/50 bg-background px-3 py-3 text-left transition-colors hover:border-emerald-300 hover:bg-emerald-50/40 disabled:opacity-60"
                   >
                     <div className="rounded-xl bg-emerald-100 p-2">
@@ -350,7 +353,7 @@ export default function BoardsHome() {
                   <button
                     type="button"
                     disabled={createFromTemplate.isPending}
-                    onClick={() => createFromTemplate.mutate("goals")}
+                    onClick={() => createFromTemplate.mutate('goals')}
                     className="flex w-full items-start gap-3 rounded-2xl border border-border/50 bg-background px-3 py-3 text-left transition-colors hover:border-emerald-300 hover:bg-emerald-50/40 disabled:opacity-60"
                   >
                     <div className="rounded-xl bg-emerald-100 p-2">
@@ -368,7 +371,7 @@ export default function BoardsHome() {
             </aside>
 
             <div className="space-y-6 xl:col-span-9">
-              {starredBoards.length > 0 && collection === "all" && !search && (
+              {starredBoards.length > 0 && collection === 'all' && !search && (
                 <section className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
@@ -400,15 +403,15 @@ export default function BoardsHome() {
                     <h2 className="text-lg font-semibold tracking-tight">
                       {search
                         ? `Resultados para "${search}"`
-                        : collection === "favorites"
-                          ? "Boards favoritos"
-                          : collection === "recent"
-                            ? "Boards recentes"
-                            : "Todos os boards"}
+                        : collection === 'favorites'
+                          ? 'Boards favoritos'
+                          : collection === 'recent'
+                            ? 'Boards recentes'
+                            : 'Todos os boards'}
                     </h2>
                     <p className="text-sm text-muted-foreground">
                       {visibleBoards.length} resultado
-                      {visibleBoards.length !== 1 ? "s" : ""}.
+                      {visibleBoards.length !== 1 ? 's' : ''}.
                     </p>
                   </div>
                   <Button onClick={() => setCreateOpen(true)} className="rounded-2xl">
@@ -441,7 +444,7 @@ export default function BoardsHome() {
                         onDelete={handleDelete}
                       />
                     ))}
-                    {!search && collection === "all" && (
+                    {!search && collection === 'all' && (
                       <button
                         type="button"
                         onClick={() => setCreateOpen(true)}
