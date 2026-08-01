@@ -28,8 +28,8 @@ const MAX_BYTES = 8 * 1024 * 1024;
  * `/intake/apply`.
  */
 app.post("/intake/scan", requireAuth, async (c) => {
-  const user = c.get("user");
-
+  // `requireAuth` já barra anônimo; o scan não toca no banco, então não há
+  // organização a isolar aqui — o isolamento acontece no `apply`.
   if (!c.env.AI?.toMarkdown) {
     return c.json({ error: "Conversão de documentos indisponível neste ambiente" }, 503);
   }
