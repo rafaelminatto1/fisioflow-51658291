@@ -19,7 +19,6 @@ import { KnowledgeActionBridge } from "./KnowledgeActionBridge";
 
 import {
   ShieldCheck,
-  LayoutGrid,
   Share2,
   Search,
   History,
@@ -27,13 +26,14 @@ import {
   Trash2,
   Plus,
   Copy,
-  Lightbulb,
   Filter,
   TrendingUp,
   UserCheck,
-  AlertCircle,
   Eye,
   Stethoscope,
+  ExternalLink,
+  Quote,
+  Rows3,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -66,7 +66,7 @@ const evidenceColorMap: Record<EvidenceTier, string> = {
 function KnowledgeCard({
   item,
   onEdit,
-  onAudit: _onAudit,
+  onAudit,
   onDelete,
   curationMap,
   auditProfiles,
@@ -86,38 +86,107 @@ function KnowledgeCard({
   };
 
   return (
-    <Card className="bg-slate-50/50 border-slate-200/60 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex flex-col h-full overflow-hidden group">
-      <CardContent className="p-0 flex flex-col h-full">
-        {/* Header with Background Accent */}
-        <div
-          className={`h-1.5 w-full ${item.status === "verified" ? "bg-blue-500" : item.status === "review" ? "bg-orange-500" : "bg-slate-300"}`}
-        />
-
-        <div className="p-5 flex flex-col h-full space-y-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1">
-              <h4
-                className="font-bold font-display leading-tight line-clamp-2 text-slate-900 dark:text-slate-100"
-                title={item.title}
-              >
+    <Card className="group relative overflow-hidden rounded-2xl border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-200 hover:border-slate-300 hover:shadow-[0_14px_35px_rgba(15,23,42,0.08)] dark:border-slate-800 dark:bg-slate-950">
+      <span
+        aria-hidden="true"
+        className={`absolute inset-y-0 left-0 w-1.5 ${
+          item.status === "pending"
+            ? "bg-amber-400"
+            : item.evidence === "Consensus"
+              ? "bg-violet-500"
+              : item.evidence === "PositionStatement"
+                ? "bg-orange-500"
+                : "bg-blue-600"
+        }`}
+      />
+      <CardContent className="p-0">
+        <div className="grid gap-5 px-5 py-5 pl-7 md:grid-cols-[minmax(0,1fr)_auto] md:px-7 md:pl-9">
+          <div className="min-w-0 space-y-3.5">
+            <button
+              type="button"
+              onClick={() => navigate(`/wiki/article/${item.id}`)}
+              className="block text-left"
+            >
+              <h4 className="font-display text-base font-extrabold leading-snug text-slate-900 transition-colors group-hover:text-blue-700 dark:text-slate-100 dark:group-hover:text-blue-300">
                 {item.title}
               </h4>
-              <div className="flex items-center gap-2 mt-1.5">
-                <span className="text-[10px] uppercase font-black tracking-widest text-slate-400">
-                  {item.group}
+            </button>
+
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <Badge
+                variant="outline"
+                className={`${evidenceColorMap[item.evidence] || ""} rounded-md border-0 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider`}
+              >
+                {knowledgeEvidenceLabels[item.evidence] || item.evidence}
+              </Badge>
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                <Stethoscope className="h-3.5 w-3.5" />
+                {item.subgroup}
+              </span>
+              {item.status === "review" && reviewerName && (
+                <span className="flex items-center gap-1.5 text-[10px] font-bold text-orange-700">
+                  <UserCheck className="h-3.5 w-3.5" />
+                  {reviewerName}
                 </span>
-                <span className="text-slate-200">•</span>
-                <span className="text-[10px] font-bold uppercase text-slate-400">
-                  {item.subgroup}
-                </span>
-              </div>
+              )}
             </div>
-            <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+
+            {item.highlights?.[0] && (
+              <div className="flex gap-3 rounded-xl bg-slate-50 px-3.5 py-3 dark:bg-slate-900/70">
+                <Quote className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+                <p className="line-clamp-2 text-xs font-medium leading-relaxed text-slate-600 dark:text-slate-300">
+                  {item.highlights[0]}
+                </p>
+              </div>
+            )}
+
+            <KnowledgeActionBridge
+              article={item}
+              onActionSelect={(type, id) => {
+                if (type === "test")
+                  toast.info(`Explorando técnica do teste: ${id}`);
+                else toast.info(`Visualizando protocolo de exercício: ${id}`);
+              }}
+            />
+
+            {item.tags?.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {item.tags.slice(0, 3).map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-md bg-blue-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-3 md:w-36 md:flex-col md:items-end md:justify-start md:border-l md:border-t-0 md:pl-5 md:pt-0 dark:border-slate-800">
+            <Badge
+              variant="outline"
+              className={`rounded-full border-0 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider ${
+                item.status === "verified"
+                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                  : item.status === "review"
+                    ? "bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300"
+                    : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+              }`}
+            >
+              {item.status === "verified"
+                ? "Verificada"
+                : item.status === "review"
+                  ? "Em revisão"
+                  : "Pendente"}
+            </Badge>
+
+            <div className="flex items-center gap-1 md:mt-auto">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate(`/wiki/article/${item.id}`)}
-                className="h-8 w-8 text-blue-600 hover:bg-blue-50 rounded-lg"
+                className="h-8 w-8 rounded-lg text-blue-600 hover:bg-blue-50"
                 title="Ver Detalhes"
               >
                 <Eye className="h-4 w-4" />
@@ -140,6 +209,15 @@ function KnowledgeCard({
               >
                 <Pencil className="h-4 w-4" />
               </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onAudit(item)}
+                className="h-8 w-8 rounded-lg text-slate-400 hover:text-blue-600"
+                title="Ver auditoria"
+              >
+                <History className="h-4 w-4" />
+              </Button>
               {onDelete && (
                 <Button
                   variant="ghost"
@@ -151,120 +229,24 @@ function KnowledgeCard({
                   <Trash2 className="h-4 w-4" />
                 </Button>
               )}
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <div
-              className={`p-1.5 rounded-lg ${item.evidence && evidenceColorMap[item.evidence] ? evidenceColorMap[item.evidence].split(" ")[0] : "bg-slate-100"}`}
-            >
-              {item.group === "Ortopedia" && (
-                <Stethoscope className="h-4 w-4 text-blue-600" />
-              )}
-              {item.group === "Esportiva" && <TrendingUp className="h-4 w-4 text-orange-600" />}
-              {item.group === "Pos-operatorio esportivo" && (
-                <ShieldCheck className="h-4 w-4 text-sky-600" />
-              )}
-            </div>
-            <Badge
-              variant="outline"
-              className={`${evidenceColorMap[item.evidence] || ""} border-0 font-black uppercase tracking-wider text-[9px] px-2.5 py-1 rounded-md`}
-            >
-              {knowledgeEvidenceLabels[item.evidence] || item.evidence}
-            </Badge>
-            {item.status === "review" && reviewerName && (
-              <Badge
-                variant="secondary"
-                className="bg-orange-100 text-orange-800 border-0 text-[10px] font-bold flex items-center gap-1.5 px-2.5 py-1 rounded-md"
-              >
-                <UserCheck className="h-3.5 w-3.5" />
-                {reviewerName ? reviewerName.split(" ")[0] : "---"}
-              </Badge>
-            )}
-            {item.status === "pending" && (
-              <Badge
-                variant="outline"
-                className="text-[9px] uppercase font-black tracking-widest bg-slate-100 text-slate-500 border-transparent flex items-center gap-1.5 px-2.5 py-1 rounded-md"
-              >
-                <AlertCircle className="h-3.5 w-3.5" />
-                IA Pendente
-              </Badge>
-            )}
-          </div>
-
-          {item.keyQuestions && item.keyQuestions.length > 0 && (
-            <div className="bg-white border border-slate-200/60 rounded-xl p-3.5 shadow-sm">
-              <div className="flex items-center gap-1.5 text-slate-400 mb-2">
-                <Lightbulb className="h-3.5 w-3.5 text-orange-500" />
-                <span className="text-[10px] font-black uppercase tracking-widest">
-                  Clinician Q&A
-                </span>
-              </div>
-              <p className="text-xs font-bold text-slate-700 dark:text-slate-300 leading-relaxed italic">
-                "{item.keyQuestions[0]}"
-              </p>
-            </div>
-          )}
-
-          <div className="flex-1 space-y-4 pt-1">
-            <div className="text-xs">
-              <p className="font-black text-[10px] uppercase tracking-widest text-slate-400 mb-2">
-                Key Findings
-              </p>
-              <div className="space-y-2">
-                {(item.highlights && item.highlights.length
-                  ? item.highlights.slice(0, 2)
-                  : ["Aguardando curadoria..."]
-                ).map((hl, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-start gap-2.5 text-slate-600 dark:text-slate-400 leading-relaxed font-medium"
+              {item.url && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  asChild
+                  className="h-8 w-8 rounded-lg"
+                >
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    title="Abrir fonte"
                   >
-                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-blue-400" />
-                    <span className="line-clamp-2">{hl}</span>
-                  </div>
-                ))}
-              </div>
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </Button>
+              )}
             </div>
-
-            {/* Action Bridge - Evidence to Action */}
-            <KnowledgeActionBridge
-              article={item}
-              onActionSelect={(type, id) => {
-                if (type === "test") {
-                  toast.info(`Explorando técnica do teste: ${id}`);
-                } else {
-                  toast.info(`Visualizando protocolo de exercício: ${id}`);
-                }
-              }}
-            />
-          </div>
-
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 mt-auto flex items-center justify-between">
-            <div className="flex flex-wrap gap-1.5">
-              {item.tags &&
-                item.tags.slice(0, 2).map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-[10px] text-blue-600 font-black uppercase tracking-wider bg-blue-50 dark:bg-blue-900 px-2 py-0.5 rounded-md"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-            </div>
-
-            {item.url && (
-              <Button
-                asChild
-                variant="link"
-                size="sm"
-                className="h-auto p-0 text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700"
-              >
-                <a href={item.url} target="_blank" rel="noreferrer">
-                  Ver Fonte
-                </a>
-              </Button>
-            )}
           </div>
         </div>
       </CardContent>
@@ -275,7 +257,11 @@ function KnowledgeCard({
 function KnowledgeMapView({ items }: { items: KnowledgeArticle[] }) {
   const groups = knowledgeGroups.map((group, groupIndex) => {
     const subgroups = Array.from(
-      new Set(items.filter((item) => item.group === group.id).map((item) => item.subgroup)),
+      new Set(
+        items
+          .filter((item) => item.group === group.id)
+          .map((item) => item.subgroup),
+      ),
     );
     return {
       group,
@@ -290,8 +276,9 @@ function KnowledgeMapView({ items }: { items: KnowledgeArticle[] }) {
       subgroup,
       x: group.x,
       y: (index + 1) / (group.subgroups.length + 1),
-      count: items.filter((item) => item.group === group.group.id && item.subgroup === subgroup)
-        .length,
+      count: items.filter(
+        (item) => item.group === group.group.id && item.subgroup === subgroup,
+      ).length,
     })),
   );
 
@@ -314,7 +301,11 @@ function KnowledgeMapView({ items }: { items: KnowledgeArticle[] }) {
 
           // Slight horizontal offset for the curve control points to make it more organic
           const groupOffset =
-            node.group.id === "Ortopedia" ? -2 : node.group.id === "Esportiva" ? 0 : 2;
+            node.group.id === "Ortopedia"
+              ? -2
+              : node.group.id === "Esportiva"
+                ? 0
+                : 2;
           const cp1x = startX + groupOffset;
           const cp2x = endX + groupOffset;
 
@@ -432,15 +423,17 @@ interface KnowledgeHubViewProps {
 
 export function KnowledgeHubView({
   knowledgeStats,
-  knowledgeGroupsFiltered: _knowledgeGroupsFiltered,
+  knowledgeGroupsFiltered,
   filteredKnowledge,
   auditItems,
   auditProfiles,
   semanticScoreMap,
   kbFilters,
   setKbFilters,
-  syncing: _syncing,
-  indexing: _indexing,
+  syncing,
+  indexing,
+  onSync,
+  onIndex,
   onCreateArticle,
   onEditArticle,
   onDeleteArticle,
@@ -451,10 +444,9 @@ export function KnowledgeHubView({
   const trendingArticles = filteredKnowledge.slice(0, 3);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6">
-      {/* Sidebar de Filtros (Left) */}
-      <aside className="lg:w-72 shrink-0 space-y-8 animate-in slide-in-from-left duration-700 hidden lg:block">
-        <div className="space-y-5">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_19rem]">
+      <aside className="order-2 space-y-6 xl:sticky xl:top-24 xl:self-start">
+        <div className="hidden space-y-5">
           <div className="flex items-center gap-2 px-1">
             <Filter className="h-4 w-4 text-blue-500" />
             <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">
@@ -467,7 +459,10 @@ export function KnowledgeHubView({
               <Label className="text-[10px] uppercase font-bold text-muted-foreground ml-1">
                 Especialidade
               </Label>
-              <Select value={kbFilters.group} onValueChange={(v) => setKbFilters.setGroup(v)}>
+              <Select
+                value={kbFilters.group}
+                onValueChange={(v) => setKbFilters.setGroup(v)}
+              >
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="Todas" />
                 </SelectTrigger>
@@ -488,26 +483,35 @@ export function KnowledgeHubView({
               </Label>
               <div className="grid grid-cols-1 gap-1">
                 <Button
-                  variant={kbFilters.evidence === "Todas" ? "secondary" : "ghost"}
+                  variant={
+                    kbFilters.evidence === "Todas" ? "secondary" : "ghost"
+                  }
                   size="sm"
                   className="justify-start h-8 text-xs font-medium"
                   onClick={() => setKbFilters.setEvidence("Todas")}
                 >
                   Todas as fontes
                 </Button>
-                {(["CPG", "Consensus", "Guideline", "SystematicReview"] as EvidenceTier[]).map(
-                  (tier) => (
-                    <Button
-                      key={tier}
-                      variant={kbFilters.evidence === tier ? "secondary" : "ghost"}
-                      size="sm"
-                      className="justify-start h-8 text-xs font-medium"
-                      onClick={() => setKbFilters.setEvidence(tier)}
-                    >
-                      {knowledgeEvidenceLabels[tier]}
-                    </Button>
-                  ),
-                )}
+                {(
+                  [
+                    "CPG",
+                    "Consensus",
+                    "Guideline",
+                    "SystematicReview",
+                  ] as EvidenceTier[]
+                ).map((tier) => (
+                  <Button
+                    key={tier}
+                    variant={
+                      kbFilters.evidence === tier ? "secondary" : "ghost"
+                    }
+                    size="sm"
+                    className="justify-start h-8 text-xs font-medium"
+                    onClick={() => setKbFilters.setEvidence(tier)}
+                  >
+                    {knowledgeEvidenceLabels[tier]}
+                  </Button>
+                ))}
               </div>
             </div>
 
@@ -523,19 +527,30 @@ export function KnowledgeHubView({
                 onValueChange={(v) => v && setKbFilters.setStatus(v)}
                 className="flex flex-col gap-1 w-full"
               >
-                <ToggleGroupItem value="all" className="justify-start px-3 h-8 text-xs w-full">
+                <ToggleGroupItem
+                  value="all"
+                  className="justify-start px-3 h-8 text-xs w-full"
+                >
                   Todos
                 </ToggleGroupItem>
-                <ToggleGroupItem value="verified" className="justify-start px-3 h-8 text-xs w-full">
+                <ToggleGroupItem
+                  value="verified"
+                  className="justify-start px-3 h-8 text-xs w-full"
+                >
                   Verificados
                 </ToggleGroupItem>
-                <ToggleGroupItem value="pending" className="justify-start px-3 h-8 text-xs w-full">
+                <ToggleGroupItem
+                  value="pending"
+                  className="justify-start px-3 h-8 text-xs w-full"
+                >
                   Pendentes
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
           </div>
         </div>
+
+        <ClinicalImportIA />
 
         {/* Estatísticas Rápidas */}
         <div className="rounded-2xl bg-slate-900 text-white p-5 space-y-5 shadow-xl border border-white/5 relative overflow-hidden group">
@@ -546,14 +561,18 @@ export function KnowledgeHubView({
             <div className="h-7 w-7 rounded-lg bg-blue-500/20 flex items-center justify-center">
               <ShieldCheck className="h-4 w-4 text-blue-400 animate-pulse" />
             </div>
-            <h4 className="text-xs font-black uppercase tracking-wider">Base Certificada</h4>
+            <h4 className="text-xs font-black uppercase tracking-wider">
+              Base Certificada
+            </h4>
           </div>
           <div className="space-y-2.5">
             <div className="flex justify-between items-end">
               <span className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">
                 Status da Base
               </span>
-              <span className="text-base font-bold leading-none">{knowledgeStats.total}</span>
+              <span className="text-base font-bold leading-none">
+                {knowledgeStats.total}
+              </span>
             </div>
             <div className="w-full bg-white/10 h-1 rounded-full overflow-hidden">
               <div
@@ -566,6 +585,28 @@ export function KnowledgeHubView({
             <p className="text-[9px] text-slate-400 leading-relaxed italic opacity-70">
               A meta é manter 90% da base "Verificada".
             </p>
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={syncing}
+                onClick={onSync}
+                className="h-8 bg-white/10 text-[10px] font-bold text-white hover:bg-white/15"
+              >
+                {syncing ? "Sincronizando" : "Sincronizar"}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={indexing}
+                onClick={onIndex}
+                className="h-8 bg-blue-500/20 text-[10px] font-bold text-blue-100 hover:bg-blue-500/30"
+              >
+                {indexing ? "Indexando" : "Indexar"}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -581,9 +622,10 @@ export function KnowledgeHubView({
           </div>
           <div className="space-y-3">
             {trendingArticles.map((article, idx) => (
-              <div
+              <button
+                type="button"
                 key={article.id}
-                className="flex gap-3 group cursor-pointer p-2 rounded-lg hover:bg-slate-50 transition-colors"
+                className="flex w-full gap-3 group cursor-pointer p-2 rounded-lg text-left hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 onClick={() => onEditArticle(article)}
               >
                 <div className="h-7 w-7 rounded-md bg-slate-100 flex items-center justify-center shrink-0 font-bold text-[10px] text-slate-400 group-hover:bg-orange-50 group-hover:text-orange-600 transition-colors">
@@ -597,7 +639,7 @@ export function KnowledgeHubView({
                     {article.subgroup}
                   </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -631,10 +673,14 @@ export function KnowledgeHubView({
             )}
             {auditItems &&
               auditItems.slice(0, 5).map((entry) => {
-                const title = articleTitleMap.get(entry.article_id) || entry.article_id;
-                const date = (entry.created_at as any).toDate?.() || new Date(entry.created_at);
+                const title =
+                  articleTitleMap.get(entry.article_id) || entry.article_id;
+                const date =
+                  (entry.created_at as any).toDate?.() ||
+                  new Date(entry.created_at);
                 const actorName =
-                  (auditProfiles && auditProfiles[entry.actor_id]?.full_name) || "Sistema";
+                  (auditProfiles && auditProfiles[entry.actor_id]?.full_name) ||
+                  "Sistema";
                 return (
                   <div key={entry.id} className="flex gap-3 group items-start">
                     <div className="h-2 w-2 rounded-full bg-slate-200 mt-1.5 shrink-0 group-hover:bg-blue-500 transition-colors" />
@@ -664,73 +710,180 @@ export function KnowledgeHubView({
         </div>
       </aside>
 
-      {/* Main Content (Center) */}
-      <main className="flex-1 space-y-6 min-w-0">
-        <ClinicalImportIA />
-
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-background sticky top-0 z-20 pb-2">
-          <div className="relative flex-1 max-w-xl group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-            <Input
-              placeholder="Pesquisar diretrizes clínicas..."
-              value={kbFilters.query}
-              onChange={(e) => setKbFilters.setQuery(e.target.value)}
-              className="pl-11 h-12 bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all rounded-xl font-medium"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 mr-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
-              <Switch
-                checked={kbFilters.useSemantic}
-                onCheckedChange={setKbFilters.setUseSemantic}
-                className="data-[state=checked]:bg-blue-600"
+      <main className="order-1 min-w-0 space-y-5">
+        <header className="sticky top-14 z-20 space-y-3 border-b border-slate-200/80 bg-background/95 pb-4 backdrop-blur-xl dark:border-slate-800">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div className="relative flex-1 max-w-xl group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+              <Input
+                placeholder={
+                  kbFilters.useSemantic
+                    ? "Pergunte à base clínica com linguagem natural..."
+                    : "Pesquisar diretrizes clínicas..."
+                }
+                value={kbFilters.query}
+                onChange={(e) => setKbFilters.setQuery(e.target.value)}
+                className="h-11 rounded-xl border-slate-200 bg-white pl-11 font-medium shadow-sm transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 dark:border-slate-800 dark:bg-slate-950"
               />
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                IA Semantic
-              </span>
             </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-950">
+                <Switch
+                  checked={kbFilters.useSemantic}
+                  onCheckedChange={setKbFilters.setUseSemantic}
+                  className="data-[state=checked]:bg-blue-600"
+                />
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  IA semântica
+                </span>
+              </div>
+              <ToggleGroup
+                type="single"
+                value={kbFilters.view}
+                onValueChange={(v) => v && setKbFilters.setView(v)}
+                className="bg-muted/50 p-1 rounded-lg"
+              >
+                <ToggleGroupItem
+                  value="library"
+                  className="h-8 w-8 p-0"
+                  title="Lista editorial"
+                >
+                  <Rows3 className="h-4 w-4" />
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="map"
+                  className="h-8 w-8 p-0"
+                  title="Mapa de Conhecimento"
+                >
+                  <Share2 className="h-4 w-4" />
+                </ToggleGroupItem>
+              </ToggleGroup>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={onCreateArticle}
+                className="h-9 px-4 rounded-lg font-bold shadow-sm shadow-primary/20"
+              >
+                <Plus className="h-4 w-4 mr-2" /> Novo
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Select
+              value={kbFilters.group}
+              onValueChange={(v) => setKbFilters.setGroup(v)}
+            >
+              <SelectTrigger className="h-8 w-[170px] rounded-lg border-slate-200 bg-white text-xs font-semibold dark:border-slate-800 dark:bg-slate-950">
+                <Filter className="mr-2 h-3.5 w-3.5 text-slate-400" />
+                <SelectValue placeholder="Especialidade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Todas">Todas as especialidades</SelectItem>
+                {knowledgeGroups.map((group) => (
+                  <SelectItem key={group.id} value={group.id}>
+                    {group.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <div className="hidden h-5 w-px bg-slate-200 sm:block dark:bg-slate-800" />
+            {(["Todas", "CPG", "Consensus", "SystematicReview"] as const).map(
+              (tier) => (
+                <Button
+                  key={tier}
+                  variant={kbFilters.evidence === tier ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-8 rounded-full px-3 text-[10px] font-bold"
+                  onClick={() => setKbFilters.setEvidence(tier)}
+                >
+                  {tier === "Todas"
+                    ? "Todas as fontes"
+                    : knowledgeEvidenceLabels[tier]}
+                </Button>
+              ),
+            )}
+
+            <div className="hidden h-5 w-px bg-slate-200 sm:block dark:bg-slate-800" />
             <ToggleGroup
               type="single"
-              value={kbFilters.view}
-              onValueChange={(v) => v && setKbFilters.setView(v)}
-              className="bg-muted/50 p-1 rounded-lg"
+              value={kbFilters.status}
+              onValueChange={(value) => value && setKbFilters.setStatus(value)}
+              className="gap-1"
             >
-              <ToggleGroupItem value="library" className="h-8 w-8 p-0" title="Grade">
-                <LayoutGrid className="h-4 w-4" />
+              <ToggleGroupItem
+                value="all"
+                className="h-8 rounded-full px-3 text-[10px]"
+              >
+                Todos
               </ToggleGroupItem>
-              <ToggleGroupItem value="map" className="h-8 w-8 p-0" title="Mapa de Conhecimento">
-                <Share2 className="h-4 w-4" />
+              <ToggleGroupItem
+                value="verified"
+                className="h-8 rounded-full px-3 text-[10px]"
+              >
+                Verificados
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="pending"
+                className="h-8 rounded-full px-3 text-[10px]"
+              >
+                Pendentes
               </ToggleGroupItem>
             </ToggleGroup>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={onCreateArticle}
-              className="h-9 px-4 rounded-lg font-bold shadow-sm shadow-primary/20"
-            >
-              <Plus className="h-4 w-4 mr-2" /> Novo
-            </Button>
+
+            <span className="ml-auto text-[10px] font-black uppercase tracking-widest text-slate-400">
+              {filteredKnowledge.length} resultados
+            </span>
           </div>
         </header>
 
         {kbFilters.view === "library" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 animate-in fade-in duration-700">
-            {filteredKnowledge.map((item) => (
-              <KnowledgeCard
-                key={item.id}
-                item={item}
-                onEdit={onEditArticle}
-                onAudit={onAuditArticle}
-                onDelete={onDeleteArticle}
-                curationMap={curationMap}
-                auditProfiles={auditProfiles}
-                score={kbFilters.useSemantic ? semanticScoreMap.get(item.id) : undefined}
-              />
-            ))}
+          <div className="space-y-7 animate-in fade-in duration-500">
+            {Array.from(knowledgeGroupsFiltered.entries()).map(
+              ([group, items]) => (
+                <section key={group} className="space-y-3">
+                  <div className="flex items-center gap-3 px-1">
+                    <h2 className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-600 dark:text-slate-300">
+                      {knowledgeGroups.find(
+                        (candidate) => candidate.id === group,
+                      )?.label || group}
+                    </h2>
+                    <Badge
+                      variant="secondary"
+                      className="h-5 rounded-full px-2 text-[9px]"
+                    >
+                      {items.length}
+                    </Badge>
+                    <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                  </div>
+                  <div className="space-y-3">
+                    {items.map((item) => (
+                      <KnowledgeCard
+                        key={item.id}
+                        item={item}
+                        onEdit={onEditArticle}
+                        onAudit={onAuditArticle}
+                        onDelete={onDeleteArticle}
+                        curationMap={curationMap}
+                        auditProfiles={auditProfiles}
+                        score={
+                          kbFilters.useSemantic
+                            ? semanticScoreMap.get(item.id)
+                            : undefined
+                        }
+                      />
+                    ))}
+                  </div>
+                </section>
+              ),
+            )}
           </div>
         )}
 
-        {kbFilters.view === "map" && <KnowledgeMapView items={filteredKnowledge} />}
+        {kbFilters.view === "map" && (
+          <KnowledgeMapView items={filteredKnowledge} />
+        )}
 
         {filteredKnowledge.length === 0 && (
           <div className="flex flex-col items-center justify-center py-32 text-center animate-in fade-in zoom-in duration-500">
@@ -742,13 +895,19 @@ export function KnowledgeHubView({
               Nenhuma diretriz localizada
             </h3>
             <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-3 font-medium">
-              Tente ajustar seus filtros de especialidade ou termos de pesquisa para localizar o
-              recurso desejado.
+              Tente ajustar seus filtros de especialidade ou termos de pesquisa
+              para localizar o recurso desejado.
             </p>
             <Button
               variant="outline"
               className="mt-8 rounded-xl font-bold border-slate-200"
-              onClick={() => setKbFilters.setSearch("")}
+              onClick={() => {
+                setKbFilters.setQuery("");
+                setKbFilters.setGroup("Todas");
+                setKbFilters.setEvidence("Todas");
+                setKbFilters.setStatus("all");
+                setKbFilters.setUseSemantic(false);
+              }}
             >
               Limpar todos os filtros
             </Button>

@@ -3,16 +3,25 @@
  * Refatorada para ser modular e simplificada com navegação aprimorada.
  */
 
-import { useState, useMemo, useEffect } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
-import { Search, Plus, FileText, Star, History, Library } from 'lucide-react';
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  BookOpenCheck,
+  FileText,
+  History,
+  Library,
+  Plus,
+  Search,
+  Sparkles,
+  Star,
+} from "lucide-react";
 
-import { PageLayout, PageContainer, PageHeader } from '@/components/layout/PageLayout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { PageContainer, PageLayout } from "@/components/layout/PageLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -20,53 +29,74 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+} from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
-import { WikiTopNav } from '@/components/wiki/WikiTopNav';
-import { WikiEditor, WikiPageViewer } from '@/components/wiki/WikiEditor';
-import { useAuth } from '@/contexts/AuthContext';
-import { wikiService } from '@/lib/services/wikiService';
-import { instantiateTemplate } from '@/features/wiki/templates/templateTransform';
+import { WikiTopNav } from "@/components/wiki/WikiTopNav";
+import { WikiEditor, WikiPageViewer } from "@/components/wiki/WikiEditor";
+import { useAuth } from "@/contexts/AuthContext";
+import { wikiService } from "@/lib/services/wikiService";
+import { instantiateTemplate } from "@/features/wiki/templates/templateTransform";
 import {
   getTemplateById,
   listTemplateCatalog,
   type WikiTemplateBlueprint,
-} from '@/features/wiki/templates/templateCatalog';
-import { toast } from 'sonner';
+} from "@/features/wiki/templates/templateCatalog";
+import { toast } from "sonner";
 
-import type { WikiPage } from '@/types/wiki';
-import type { KnowledgeArticle, KnowledgeCurationStatus } from '@/types/knowledge-base';
+import type { WikiPage } from "@/types/wiki";
+import type {
+  KnowledgeArticle,
+  KnowledgeCurationStatus,
+} from "@/types/knowledge-base";
 
 // Hooks Modulares
-import { useWikiPages } from '@/hooks/wiki/useWikiPages';
-import { useWikiTriage } from '@/hooks/wiki/useWikiTriage';
-import { useKnowledgeBase } from '@/hooks/wiki/useKnowledgeBase';
+import { useWikiPages } from "@/hooks/wiki/useWikiPages";
+import { useWikiTriage } from "@/hooks/wiki/useWikiTriage";
+import { useKnowledgeBase } from "@/hooks/wiki/useKnowledgeBase";
 
 // Componentes Modulares
-import { WikiTriageBoard } from '@/features/wiki/components/WikiTriageBoard';
-import { KnowledgeHubView } from '@/features/wiki/components/KnowledgeHubView';
-import { WikiPageCard } from '@/features/wiki/components/WikiPageCard';
-import { KnowledgeArticleDialog } from '@/features/wiki/components/KnowledgeArticleDialog';
-import { PhysioDictionaryView } from '@/features/wiki/components/PhysioDictionaryView';
-import { AIHubView } from '@/features/wiki/components/AIHubView';
-import { ScientificPapersView } from '@/components/wiki/ScientificPapersView';
-import { bilingualFilter } from '@/lib/utils/bilingualSearch';
-import { getEvidenceTree, isEvidencePage } from '@/features/wiki/utils/evidenceTrails';
+import { WikiTriageBoard } from "@/features/wiki/components/WikiTriageBoard";
+import { KnowledgeHubView } from "@/features/wiki/components/KnowledgeHubView";
+import { WikiPageCard } from "@/features/wiki/components/WikiPageCard";
+import { KnowledgeArticleDialog } from "@/features/wiki/components/KnowledgeArticleDialog";
+import { PhysioDictionaryView } from "@/features/wiki/components/PhysioDictionaryView";
+import { AIHubView } from "@/features/wiki/components/AIHubView";
+import { ScientificPapersView } from "@/components/wiki/ScientificPapersView";
+import { bilingualFilter } from "@/lib/utils/bilingualSearch";
+import {
+  getEvidenceTree,
+  isEvidencePage,
+} from "@/features/wiki/utils/evidenceTrails";
 
 const TRIAGE_WIP_LIMITS = {
   backlog: 30,
-  'in-progress': 10,
+  "in-progress": 10,
   done: 999,
 };
+
+const WIKI_VIEWS = [
+  "dashboard",
+  "knowledge-hub",
+  "dictionary",
+  "ai-hub",
+  "papers",
+] as const;
+type WikiView = (typeof WIKI_VIEWS)[number] | "page";
+
+function normalizeWikiView(value: string | null): Exclude<WikiView, "page"> {
+  return WIKI_VIEWS.includes(value as (typeof WIKI_VIEWS)[number])
+    ? (value as Exclude<WikiView, "page">)
+    : "dashboard";
+}
 
 export default function WikiPage() {
   const { slug } = useParams<{ slug?: string }>();
@@ -75,36 +105,54 @@ export default function WikiPage() {
   const currentUserId = user?.uid ?? profile?.user_id ?? profile?.id;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Estados Locais
-  const [activeView, setActiveView] = useState<
-    'dashboard' | 'knowledge-hub' | 'dictionary' | 'page' | 'ai-hub' | 'papers'
-  >((searchParams.get('view') as any) || 'dashboard');
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [activeView, setActiveView] = useState<WikiView>(() =>
+    normalizeWikiView(searchParams.get("view")),
+  );
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get("search") || "",
+  );
   const [isEditing, setIsEditing] = useState(false);
   const [selectedPage, setSelectedPage] = useState<WikiPage | null>(null);
   const [draftPage, setDraftPage] = useState<Partial<WikiPage> | null>(null);
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('blank');
-  const [templateValues, setTemplateValues] = useState<Record<string, string>>({});
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("blank");
+  const [templateValues, setTemplateValues] = useState<Record<string, string>>(
+    {},
+  );
 
   // Estados de Curadoria (KB)
-  const [activeArticle, setActiveArticle] = useState<KnowledgeArticle | null>(null);
-  const [annotationScope, setAnnotationScope] = useState<'organization' | 'user'>('organization');
-  const [annotationHighlights, setAnnotationHighlights] = useState('');
-  const [annotationObservations, setAnnotationObservations] = useState('');
-  const [annotationStatus, setAnnotationStatus] = useState<KnowledgeCurationStatus>('pending');
-  const [annotationNotes, setAnnotationNotes] = useState('');
-  const [auditArticle, setAuditArticle] = useState<KnowledgeArticle | null>(null);
+  const [activeArticle, setActiveArticle] = useState<KnowledgeArticle | null>(
+    null,
+  );
+  const [annotationScope, setAnnotationScope] = useState<
+    "organization" | "user"
+  >("organization");
+  const [annotationHighlights, setAnnotationHighlights] = useState("");
+  const [annotationObservations, setAnnotationObservations] = useState("");
+  const [annotationStatus, setAnnotationStatus] =
+    useState<KnowledgeCurationStatus>("pending");
+  const [annotationNotes, setAnnotationNotes] = useState("");
+  const [auditArticle, setAuditArticle] = useState<KnowledgeArticle | null>(
+    null,
+  );
   const [isArticleDialogOpen, setIsArticleDialogOpen] = useState(false);
-  const [editingArticle, setEditingArticle] = useState<KnowledgeArticle | null>(null);
+  const [editingArticle, setEditingArticle] = useState<KnowledgeArticle | null>(
+    null,
+  );
 
   // Hooks Customizados
-  const { pages, categories, favorites, isLoading, savePage, deletePage } = useWikiPages(
-    currentOrganizationId,
-    currentUserId
-  );
+  const {
+    pages,
+    categories,
+    favorites,
+    recentPages,
+    isLoading,
+    savePage,
+    deletePage,
+  } = useWikiPages(currentOrganizationId, currentUserId);
 
   const {
     triageBuckets,
@@ -137,24 +185,27 @@ export default function WikiPage() {
 
   const templates = useMemo(() => listTemplateCatalog(), []);
   const activeTemplate = useMemo(
-    () => (selectedTemplateId === 'blank' ? null : getTemplateById(selectedTemplateId)),
-    [selectedTemplateId]
+    () =>
+      selectedTemplateId === "blank"
+        ? null
+        : getTemplateById(selectedTemplateId),
+    [selectedTemplateId],
   );
 
   // Filtragem de páginas
   const filteredPages = useMemo(() => {
     // Se a query começar com #, filtramos especificamente por tag
-    if (searchQuery.startsWith('#')) {
+    if (searchQuery.startsWith("#")) {
       const tagName = searchQuery.slice(1).toLowerCase();
       return pages.filter((page) =>
-        (page.tags || []).some((t) => t && t.toLowerCase().includes(tagName))
+        (page.tags || []).some((t) => t && t.toLowerCase().includes(tagName)),
       );
     }
 
     if (!searchQuery) return pages;
 
     // Utilizando a busca bilíngue (Português/Inglês) + Sinônimos
-    return bilingualFilter(pages, searchQuery, ['title', 'content', 'tags']);
+    return bilingualFilter(pages, searchQuery, ["title", "content", "tags"]);
   }, [pages, searchQuery]);
 
   const evidenceTree = useMemo(() => getEvidenceTree(pages), [pages]);
@@ -165,10 +216,12 @@ export default function WikiPage() {
   }, [filteredPages, searchQuery]);
 
   const handleTagSelect = (tag: string) => {
-    setActiveView('dashboard');
-    setSearchQuery(`#${tag}`);
+    const query = `#${tag}`;
+    setActiveView("dashboard");
+    setSearchQuery(query);
     setSelectedPage(null);
-    navigate('/wiki');
+    const nextSearchParams = new URLSearchParams({ search: query });
+    navigate(`/wiki?${nextSearchParams.toString()}`);
   };
 
   const articleTitleMap = useMemo(() => {
@@ -177,58 +230,80 @@ export default function WikiPage() {
     return map;
   }, [filteredKnowledge]);
 
+  const wikiStats = useMemo(
+    () => ({
+      pages: pages.length,
+      published: pages.filter((page) => page.is_published).length,
+      verified: knowledgeStats.verified,
+      triage:
+        (triageBuckets.backlog?.length ?? 0) +
+        (triageBuckets["in-progress"]?.length ?? 0),
+    }),
+    [knowledgeStats.verified, pages, triageBuckets],
+  );
+
   // Efeitos
   useEffect(() => {
-    const view = searchParams.get('view');
-    const search = searchParams.get('search');
-    if (view) setActiveView(view as any);
-    if (search) setSearchQuery(search);
-  }, [searchParams]);
+    if (slug) return;
+    const view = searchParams.get("view");
+    const search = searchParams.get("search");
+    const normalizedView = normalizeWikiView(view);
+
+    setActiveView(normalizedView);
+    setSearchQuery(normalizedView === "dashboard" ? search || "" : "");
+
+    if (view && view !== normalizedView) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("view");
+      if (normalizedView !== "dashboard") next.set("view", normalizedView);
+      if (normalizedView !== "dashboard") next.delete("search");
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, slug]);
 
   useEffect(() => {
     if (!slug) {
-      if (activeView === 'page') setActiveView('dashboard');
       setSelectedPage(null);
       return;
     }
     const page = pages.find((p) => p.slug === slug || p.id === slug) ?? null;
     if (page) {
       setSelectedPage(page);
-      setActiveView('page');
+      setActiveView("page");
     }
   }, [pages, slug]);
 
   useEffect(() => {
     if (!activeArticle) return;
     const currentAnnotation =
-      annotationScope === 'user'
+      annotationScope === "user"
         ? annotationMap.user.get(activeArticle.id)
         : annotationMap.org.get(activeArticle.id);
     setAnnotationHighlights(
       (Array.isArray(currentAnnotation?.highlights)
         ? currentAnnotation.highlights
         : activeArticle.highlights || []
-      ).join('\n')
+      ).join("\n"),
     );
     setAnnotationObservations(
       (Array.isArray(currentAnnotation?.observations)
         ? currentAnnotation.observations
         : activeArticle.observations || []
-      ).join('\n')
+      ).join("\n"),
     );
   }, [annotationScope, activeArticle, annotationMap]);
 
   // Handlers
   const handlePageSelect = (page: WikiPage) => {
     setSelectedPage(page);
-    setActiveView('page');
+    setActiveView("page");
     navigate(`/wiki/${page.slug}`);
   };
 
   const handleCreatePage = () => {
     setSelectedPage(null);
     setDraftPage(null);
-    setSelectedTemplateId('blank');
+    setSelectedTemplateId("blank");
     setTemplateValues({});
     setIsTemplateDialogOpen(true);
   };
@@ -248,22 +323,25 @@ export default function WikiPage() {
       });
 
       if (instantiated.missingRequired.length > 0) {
-        toast.error(`Campos obrigatórios ausentes: ${instantiated.missingRequired.join(', ')}`);
+        toast.error(
+          `Campos obrigatórios ausentes: ${instantiated.missingRequired.join(", ")}`,
+        );
         return;
       }
 
-      const lines = (instantiated.content || '').split('\n');
-      const derivedTitle = lines[0]?.replace(/^#\s*/, '').trim() || template.name;
+      const lines = (instantiated.content || "").split("\n");
+      const derivedTitle =
+        lines[0]?.replace(/^#\s*/, "").trim() || template.name;
       const isTriageTemplate = [
-        'incident-postmortem-v1',
-        'meeting-notes-v1',
-        'product-prd-v1',
+        "incident-postmortem-v1",
+        "meeting-notes-v1",
+        "product-prd-v1",
       ].includes(template.id);
 
       setDraftPage({
         title: derivedTitle,
         content: instantiated.content,
-        category: isTriageTemplate ? 'triage' : template.domain,
+        category: isTriageTemplate ? "triage" : template.domain,
         tags: template.tags,
         is_published: true,
         template_id: template.id,
@@ -272,25 +350,29 @@ export default function WikiPage() {
       setIsTemplateDialogOpen(false);
       setIsEditing(true);
     } catch (error) {
-      console.error('Erro ao instanciar template:', error);
-      toast.error('Não foi possível aplicar o template.');
+      console.error("Erro ao instanciar template:", error);
+      toast.error("Não foi possível aplicar o template.");
     }
   };
 
   const onSavePage = async (data: any) => {
     try {
-      const savedId = await savePage(data, selectedPage?.id, selectedPage?.version);
+      const savedId = await savePage(
+        data,
+        selectedPage?.id,
+        selectedPage?.version,
+      );
       setIsEditing(false);
       setDraftPage(null);
       // Busca a página salva para navegar
       const refreshed = await queryClient.fetchQuery({
-        queryKey: ['wiki-pages', currentOrganizationId],
+        queryKey: ["wiki-pages", currentOrganizationId],
         queryFn: () => wikiService.listPages(currentOrganizationId!),
       });
       const page = refreshed.find((p) => p.id === savedId);
       if (page) {
         setSelectedPage(page);
-        setActiveView('page');
+        setActiveView("page");
         navigate(`/wiki/${page.slug}`);
       }
     } catch {
@@ -304,11 +386,17 @@ export default function WikiPage() {
       await handleSaveAnnotation({
         articleId: activeArticle.id,
         scope: annotationScope,
-        highlights: (typeof annotationHighlights === 'string' ? annotationHighlights : '')
-          .split('\n')
+        highlights: (typeof annotationHighlights === "string"
+          ? annotationHighlights
+          : ""
+        )
+          .split("\n")
           .filter(Boolean),
-        observations: (typeof annotationObservations === 'string' ? annotationObservations : '')
-          .split('\n')
+        observations: (typeof annotationObservations === "string"
+          ? annotationObservations
+          : ""
+        )
+          .split("\n")
           .filter(Boolean),
         status: annotationStatus,
         notes: annotationNotes,
@@ -330,9 +418,23 @@ export default function WikiPage() {
   };
 
   const handleDeleteArticleClick = async (article: KnowledgeArticle) => {
-    if (window.confirm(`Tem certeza que deseja excluir o artigo "${article.title}"?`)) {
+    if (
+      window.confirm(
+        `Tem certeza que deseja excluir o artigo "${article.title}"?`,
+      )
+    ) {
       await handleDeleteArticle(article.id);
     }
+  };
+
+  const handleDeletePage = async (page: WikiPage) => {
+    if (
+      !window.confirm(
+        `Tem certeza que deseja excluir a página "${page.title}"?`,
+      )
+    )
+      return;
+    await deletePage(page.id);
   };
 
   const handleSaveArticle = async (data: Partial<KnowledgeArticle>) => {
@@ -344,20 +446,37 @@ export default function WikiPage() {
       }
       setIsArticleDialogOpen(false);
     } catch (error) {
-      console.error('Failed to save article:', error);
+      console.error("Failed to save article:", error);
     }
   };
 
   const handleDashboardSelect = () => {
-    setActiveView('dashboard');
+    setActiveView("dashboard");
     setSelectedPage(null);
-    navigate('/wiki');
+    const next = new URLSearchParams();
+    if (searchQuery) next.set("search", searchQuery);
+    navigate(`/wiki${next.size ? `?${next}` : ""}`);
   };
 
   const handleKnowledgeHubSelect = () => {
-    setActiveView('knowledge-hub');
+    setActiveView("knowledge-hub");
     setSelectedPage(null);
-    navigate('/wiki');
+    navigate("/wiki?view=knowledge-hub");
+  };
+
+  const handleViewSelect = (
+    view: Exclude<WikiView, "dashboard" | "knowledge-hub" | "page">,
+  ) => {
+    setActiveView(view);
+    setSelectedPage(null);
+    navigate(`/wiki?view=${view}`);
+  };
+
+  const handleDashboardSearchChange = (value: string) => {
+    setSearchQuery(value);
+    const next = new URLSearchParams();
+    if (value) next.set("search", value);
+    setSearchParams(next, { replace: true });
   };
 
   // Renderização Condicional: Editor
@@ -381,48 +500,97 @@ export default function WikiPage() {
 
   // Renderização Principal
   return (
-    <PageLayout>
-      <PageHeader
-        title="Wiki & Documentação"
-        description="Central de conhecimento e triagem de documentação clínica."
-        icon={Library}
-        breadcrumb={[{ label: 'Wiki', href: '/wiki' }]}
-        actions={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-2xl font-bold border-brand-blue/20 text-brand-blue hover:bg-brand-blue/5"
-              disabled={syncing}
-              onClick={async () => {
-                if (!currentOrganizationId || !currentUserId) return;
-                const promise = wikiService.syncClinicalTestsToWiki(
-                  currentOrganizationId,
-                  currentUserId
-                );
-                toast.promise(promise, {
-                  loading: 'Sincronizando inteligência clínica...',
-                  success: (data) =>
-                    `Inteligência atualizada: ${data.created} criados, ${data.updated} atualizados.`,
-                  error: 'Erro ao sincronizar inteligência clínica.',
-                });
-              }}
-            >
-              <History className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-              Sincronizar
-            </Button>
-            <Button
-              onClick={handleCreatePage}
-              size="sm"
-              className="h-10 rounded-xl bg-primary px-5 font-bold text-primary-foreground hover:bg-primary/90"
-            >
-              <Plus className="h-4 w-4 mr-2" /> Nova Página
-            </Button>
+    <PageLayout className="bg-slate-50/40">
+      <PageContainer>
+        <section className="relative mb-4 overflow-hidden rounded-[24px] border border-slate-800 bg-[#101c31] px-5 py-5 text-white shadow-[0_20px_48px_rgba(15,23,42,0.14)] sm:px-7 sm:py-6">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(14,165,233,0.2),transparent_32%),linear-gradient(120deg,transparent_45%,rgba(20,184,166,0.08))]" />
+          <div className="relative">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-2xl">
+                <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-sky-200">
+                  <BookOpenCheck className="h-3.5 w-3.5" />
+                  Evidência no ponto de uso
+                </div>
+                <h1 className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-[38px]">
+                  Biblioteca Clínica
+                </h1>
+                <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-slate-300">
+                  Diretrizes, trilhas, artigos e inteligência clínica
+                  organizados para decisões mais seguras.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-10 rounded-xl border-white/15 bg-white/5 font-bold text-white hover:bg-white/10 hover:text-white"
+                  disabled={syncing || !currentOrganizationId || !currentUserId}
+                  onClick={handleSyncArticles}
+                >
+                  <History
+                    className={`mr-2 h-4 w-4 ${syncing ? "animate-spin" : ""}`}
+                  />
+                  Sincronizar
+                </Button>
+                <Button
+                  onClick={handleCreatePage}
+                  size="sm"
+                  className="h-10 rounded-xl bg-sky-500 px-4 font-black text-white shadow-[0_8px_20px_rgba(14,165,233,0.25)] hover:bg-sky-400"
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Nova página
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+              {activeView === "dashboard" ? (
+                <div className="relative max-w-2xl">
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    aria-label="Buscar na Biblioteca Clínica"
+                    placeholder="Buscar por diretriz, protocolo, tema ou #tag..."
+                    value={searchQuery}
+                    onChange={(event) =>
+                      handleDashboardSearchChange(event.target.value)
+                    }
+                    className="h-12 rounded-xl border-white/10 bg-white/95 pl-11 font-semibold text-slate-900 placeholder:text-slate-400 focus-visible:ring-sky-400"
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-300">
+                  <Sparkles className="h-4 w-4 text-sky-300" />
+                  Conteúdo organizado por contexto clínico e nível de evidência.
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {[
+                  ["Páginas", wikiStats.pages],
+                  ["Publicadas", wikiStats.published],
+                  ["Verificadas", wikiStats.verified],
+                  ["Em triagem", wikiStats.triage],
+                ].map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="min-w-[96px] rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 backdrop-blur-sm"
+                  >
+                    <p className="text-lg font-black tabular-nums text-white">
+                      {isLoading && label !== "Verificadas" ? "—" : value}
+                    </p>
+                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+                      {label}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        }
-      />
+        </section>
+      </PageContainer>
 
       <WikiTopNav
+        activeView={activeView}
         pages={pages}
         categories={categories}
         selectedPageId={selectedPage?.id}
@@ -430,23 +598,14 @@ export default function WikiPage() {
         onCreatePage={handleCreatePage}
         onDashboardSelect={handleDashboardSelect}
         onKnowledgeHubSelect={handleKnowledgeHubSelect}
-        onDictionarySelect={() => {
-          setActiveView('dictionary');
-          setSelectedPage(null);
-        }}
-        onAIHubSelect={() => {
-          setActiveView('ai-hub');
-          setSelectedPage(null);
-        }}
-        onPapersSelect={() => {
-          setActiveView('papers');
-          setSelectedPage(null);
-        }}
+        onDictionarySelect={() => handleViewSelect("dictionary")}
+        onAIHubSelect={() => handleViewSelect("ai-hub")}
+        onPapersSelect={() => handleViewSelect("papers")}
         onTagSelect={handleTagSelect}
       />
 
       <PageContainer>
-        {activeView === 'page' && selectedPage ? (
+        {activeView === "page" && selectedPage ? (
           <div className="animate-in fade-in duration-300 h-full">
             <WikiPageViewer
               page={selectedPage}
@@ -454,7 +613,7 @@ export default function WikiPage() {
               onBack={handleDashboardSelect}
             />
           </div>
-        ) : activeView === 'knowledge-hub' ? (
+        ) : activeView === "knowledge-hub" ? (
           <div className="animate-in slide-in-from-bottom-4 duration-500">
             <KnowledgeHubView
               knowledgeStats={knowledgeStats}
@@ -477,13 +636,13 @@ export default function WikiPage() {
               curationMap={curationMap}
             />
           </div>
-        ) : activeView === 'dictionary' ? (
+        ) : activeView === "dictionary" ? (
           <PhysioDictionaryView />
-        ) : activeView === 'ai-hub' ? (
+        ) : activeView === "ai-hub" ? (
           <div className="animate-in slide-in-from-bottom-4 duration-500">
             <AIHubView />
           </div>
-        ) : activeView === 'papers' ? (
+        ) : activeView === "papers" ? (
           <div className="animate-in slide-in-from-bottom-4 duration-500">
             <ScientificPapersView />
           </div>
@@ -512,8 +671,9 @@ export default function WikiPage() {
                           {evidenceTree.root.title}
                         </h3>
                         <p className="max-w-3xl text-sm text-slate-600">
-                          Acesso rápido às páginas estratégicas de ortopedia, esportiva e
-                          pós-operatório, com desdobramento prático por protocolo.
+                          Acesso rápido às páginas estratégicas de ortopedia,
+                          esportiva e pós-operatório, com desdobramento prático
+                          por protocolo.
                         </p>
                       </div>
                       <Button
@@ -536,21 +696,31 @@ export default function WikiPage() {
                         <div className="flex items-start justify-between gap-4">
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="border-blue-200 text-blue-800">
+                              <Badge
+                                variant="outline"
+                                className="border-blue-200 text-blue-800"
+                              >
                                 Trilha
                               </Badge>
                               <Badge variant="secondary">
                                 {protocols.length} protocolo
-                                {protocols.length === 1 ? '' : 's'}
+                                {protocols.length === 1 ? "" : "s"}
                               </Badge>
                             </div>
-                            <h3 className="text-lg font-semibold text-slate-900">{trail.title}</h3>
+                            <h3 className="text-lg font-semibold text-slate-900">
+                              {trail.title}
+                            </h3>
                             <p className="text-sm text-muted-foreground line-clamp-3">
-                              {(trail.content || '').replace(/[#*`>-]/g, '').slice(0, 180)}
+                              {(trail.content || "")
+                                .replace(/[#*`>-]/g, "")
+                                .slice(0, 180)}
                               ...
                             </p>
                           </div>
-                          <Button variant="outline" onClick={() => handlePageSelect(trail)}>
+                          <Button
+                            variant="outline"
+                            onClick={() => handlePageSelect(trail)}
+                          >
                             Abrir trilha
                           </Button>
                         </div>
@@ -570,7 +740,9 @@ export default function WikiPage() {
                                   className="max-w-full justify-start"
                                 >
                                   <FileText className="mr-2 h-4 w-4" />
-                                  <span className="truncate">{protocol.title}</span>
+                                  <span className="truncate">
+                                    {protocol.title}
+                                  </span>
                                 </Button>
                               ))}
                             </div>
@@ -589,7 +761,9 @@ export default function WikiPage() {
                 <Badge variant="secondary" className="px-2 py-0.5">
                   Workflow
                 </Badge>
-                <h2 className="text-xl font-semibold">Triagem de Documentação</h2>
+                <h2 className="text-xl font-semibold">
+                  Triagem de Documentação
+                </h2>
               </div>
 
               <WikiTriageBoard
@@ -620,19 +794,27 @@ export default function WikiPage() {
                       className="flex flex-col gap-1 rounded-lg border bg-background p-3 shadow-sm"
                     >
                       <span className="font-semibold text-foreground truncate">
-                        {event.page_title || 'Página sem título'}
+                        {event.page_title || "Página sem título"}
                       </span>
                       <div className="flex items-center gap-2 text-muted-foreground">
-                        <Badge variant="outline" className="text-[10px] h-4 px-1">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] h-4 px-1"
+                        >
                           {event.from_status}
                         </Badge>
                         <span className="text-[10px]">→</span>
-                        <Badge variant="outline" className="text-[10px] h-4 px-1">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] h-4 px-1"
+                        >
                           {event.to_status}
                         </Badge>
                       </div>
                       <span className="text-[10px] mt-1 opacity-60">
-                        {(event.created_at as any)?.toDate?.()?.toLocaleString('pt-BR') || '-'}
+                        {(event.created_at as any)
+                          ?.toDate?.()
+                          ?.toLocaleString("pt-BR") || "-"}
                       </span>
                     </div>
                   ))}
@@ -641,23 +823,21 @@ export default function WikiPage() {
             </section>
 
             {/* Explorer Section */}
-            <section className="space-y-8 pt-4 border-t">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <section className="space-y-8 border-t border-slate-200 pt-5">
+              <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="px-2 py-0.5">
-                    Explorar
+                  <Badge className="border-0 bg-sky-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-sky-700 hover:bg-sky-50">
+                    Acervo
                   </Badge>
-                  <h2 className="text-xl font-semibold">Base de Conhecimento</h2>
-                </div>
-
-                <div className="relative w-full md:w-96 group">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                  <Input
-                    placeholder="Buscar na base de conhecimento..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="h-12 rounded-xl border-input bg-background pl-11 font-medium focus-visible:ring-2 focus-visible:ring-primary"
-                  />
+                  <div>
+                    <h2 className="text-xl font-black tracking-tight text-slate-900">
+                      Base de Conhecimento
+                    </h2>
+                    <p className="text-xs font-medium text-slate-500">
+                      Use a busca principal para filtrar por tema, conteúdo ou
+                      #tag.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -667,7 +847,8 @@ export default function WikiPage() {
                 {favorites.length > 0 && !searchQuery && (
                   <div className="space-y-4">
                     <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                      <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" /> Mais Visitadas
+                      <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />{" "}
+                      Mais Visitadas
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                       {favorites.map((page) => (
@@ -681,11 +862,31 @@ export default function WikiPage() {
                   </div>
                 )}
 
+                {recentPages.length > 0 && !searchQuery ? (
+                  <div className="space-y-4">
+                    <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.16em] text-slate-500">
+                      <History className="h-4 w-4 text-sky-500" /> Atualizadas
+                      recentemente
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                      {recentPages.map((page) => (
+                        <WikiPageCard
+                          key={`recent-${page.id}`}
+                          page={page}
+                          onClick={() => handlePageSelect(page)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
                 {/* All / Filtered Pages */}
                 <div className="space-y-4">
                   <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                     <FileText className="w-4 h-4" />
-                    {searchQuery ? `Resultados para "${searchQuery}"` : 'Todas as Páginas Gerais'}
+                    {searchQuery
+                      ? `Resultados para "${searchQuery}"`
+                      : "Todas as Páginas Gerais"}
                     {displayedPages.length > 0 && (
                       <Badge variant="secondary" className="ml-2 font-mono">
                         {displayedPages.length}
@@ -709,7 +910,7 @@ export default function WikiPage() {
                           key={page.id}
                           page={page}
                           onClick={() => handlePageSelect(page)}
-                          onDelete={() => deletePage(page.id)}
+                          onDelete={() => handleDeletePage(page)}
                         />
                       ))}
                     </div>
@@ -724,7 +925,10 @@ export default function WikiPage() {
                           Tente ajustar seus filtros ou termos de busca.
                         </p>
                       </div>
-                      <Button variant="outline" onClick={() => setSearchQuery('')}>
+                      <Button
+                        variant="outline"
+                        onClick={() => setSearchQuery("")}
+                      >
                         Limpar busca
                       </Button>
                     </div>
@@ -737,14 +941,22 @@ export default function WikiPage() {
       </PageContainer>
 
       {/* Modals */}
-      <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
+      <Dialog
+        open={isTemplateDialogOpen}
+        onOpenChange={setIsTemplateDialogOpen}
+      >
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>Nova página da Wiki</DialogTitle>
-            <DialogDescription>Crie em branco ou aplique um template.</DialogDescription>
+            <DialogDescription>
+              Crie em branco ou aplique um template.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+            <Select
+              value={selectedTemplateId}
+              onValueChange={setSelectedTemplateId}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um template" />
               </SelectTrigger>
@@ -765,7 +977,7 @@ export default function WikiPage() {
                       {v.label}
                     </label>
                     <Input
-                      value={templateValues[v.key] ?? ''}
+                      value={templateValues[v.key] ?? ""}
                       onChange={(e) =>
                         setTemplateValues((prev) => ({
                           ...prev,
@@ -779,12 +991,17 @@ export default function WikiPage() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsTemplateDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsTemplateDialogOpen(false)}
+            >
               Cancelar
             </Button>
             <Button
               onClick={() =>
-                activeTemplate ? startTemplatePage(activeTemplate) : startBlankPage()
+                activeTemplate
+                  ? startTemplatePage(activeTemplate)
+                  : startBlankPage()
               }
             >
               Criar
@@ -858,7 +1075,10 @@ export default function WikiPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(auditArticle)} onOpenChange={(open) => !open && setAuditArticle(null)}>
+      <Dialog
+        open={Boolean(auditArticle)}
+        onOpenChange={(open) => !open && setAuditArticle(null)}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Auditoria do artigo</DialogTitle>
@@ -871,7 +1091,9 @@ export default function WikiPage() {
                   <div key={e.id} className="rounded-lg border p-3 text-xs">
                     <div className="flex justify-between font-medium">
                       <span>{e.action}</span>
-                      <span>{(e.created_at as any)?.toDate?.()?.toLocaleString()}</span>
+                      <span>
+                        {(e.created_at as any)?.toDate?.()?.toLocaleString()}
+                      </span>
                     </div>
                     <div className="mt-1">Por: {e.actor_id}</div>
                   </div>

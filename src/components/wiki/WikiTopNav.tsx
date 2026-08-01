@@ -3,7 +3,7 @@
  * Substitui a sidebar vertical para melhor aproveitamento de tela.
  */
 
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import {
   ChevronDown,
   Folder,
@@ -11,8 +11,6 @@ import {
   Star,
   Clock,
   Library,
-  Search,
-  Plus,
   Pin,
   LayoutDashboard,
   FileText,
@@ -33,9 +31,7 @@ import {
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { normalizeText } from "@/lib/utils/string";
 import type { WikiPage, WikiCategory } from "@/types/wiki";
 import { getEvidenceTree } from "@/features/wiki/utils/evidenceTrails";
 
@@ -62,7 +58,9 @@ const EVIDENCE_PAGE_ORDER = [
 ];
 
 function isEvidencePage(page: Pick<WikiPage, "slug">): boolean {
-  return EVIDENCE_PAGE_ORDER.includes(page.slug as (typeof EVIDENCE_PAGE_ORDER)[number]);
+  return EVIDENCE_PAGE_ORDER.includes(
+    page.slug as (typeof EVIDENCE_PAGE_ORDER)[number],
+  );
 }
 
 const Sparkles = ({ className }: { className?: string }) => (
@@ -87,6 +85,13 @@ const Sparkles = ({ className }: { className?: string }) => (
 );
 
 interface WikiTopNavProps {
+  activeView:
+    | "dashboard"
+    | "knowledge-hub"
+    | "ai-hub"
+    | "papers"
+    | "dictionary"
+    | "page";
   pages: WikiPage[];
   categories: WikiCategory[];
   selectedPageId?: string;
@@ -101,11 +106,10 @@ interface WikiTopNavProps {
 }
 
 export function WikiTopNav({
+  activeView,
   pages,
   categories,
-  selectedPageId,
   onPageSelect,
-  onCreatePage,
   onKnowledgeHubSelect,
   onDashboardSelect,
   onDictionarySelect,
@@ -113,29 +117,22 @@ export function WikiTopNav({
   onPapersSelect,
   onTagSelect,
 }: WikiTopNavProps) {
-  const [searchQuery, setSearchQuery] = React.useState("");
-
-  const normalizedSearchQuery = useMemo(() => normalizeText(searchQuery), [searchQuery]);
-
-  const searchResults = useMemo(() => {
-    if (!normalizedSearchQuery) return [];
-    return pages.filter(
-      (p) =>
-        normalizeText(p.title).includes(normalizedSearchQuery) ||
-        (p.content && normalizeText(p.content).includes(normalizedSearchQuery)) ||
-        p.tags?.some((t) => normalizeText(t).includes(normalizedSearchQuery)),
-    );
-  }, [pages, normalizedSearchQuery]);
-
   const evidenceTree = useMemo(() => getEvidenceTree(pages), [pages]);
-  const generalPages = useMemo(() => pages.filter((page) => !isEvidencePage(page)), [pages]);
+  const generalPages = useMemo(
+    () => pages.filter((page) => !isEvidencePage(page)),
+    [pages],
+  );
 
   // Pinned Pages
-  const pinned = useMemo(() => generalPages.filter((p) => p.is_pinned).slice(0, 5), [generalPages]);
+  const pinned = useMemo(
+    () => generalPages.filter((p) => p.is_pinned).slice(0, 5),
+    [generalPages],
+  );
 
   // Favorites
   const favorites = useMemo(
-    () => generalPages.filter((p) => p.view_count > 10 && !p.is_pinned).slice(0, 5),
+    () =>
+      generalPages.filter((p) => p.view_count > 10 && !p.is_pinned).slice(0, 5),
     [generalPages],
   );
 
@@ -144,8 +141,10 @@ export function WikiTopNav({
     () =>
       [...generalPages]
         .sort((a, b) => {
-          const dateA = (a.updated_at as any)?.toDate?.() || new Date(a.updated_at as any);
-          const dateB = (b.updated_at as any)?.toDate?.() || new Date(b.updated_at as any);
+          const dateA =
+            (a.updated_at as any)?.toDate?.() || new Date(a.updated_at as any);
+          const dateB =
+            (b.updated_at as any)?.toDate?.() || new Date(b.updated_at as any);
           return dateB.getTime() - dateA.getTime();
         })
         .slice(0, 5),
@@ -155,7 +154,9 @@ export function WikiTopNav({
   // Tags
   const allTags = useMemo(() => {
     const counts: Record<string, number> = {};
-    generalPages.forEach((p) => p.tags?.forEach((t) => (counts[t] = (counts[t] || 0) + 1)));
+    generalPages.forEach((p) =>
+      p.tags?.forEach((t) => (counts[t] = (counts[t] || 0) + 1)),
+    );
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10);
@@ -173,81 +174,106 @@ export function WikiTopNav({
   }, [generalPages]);
 
   return (
-    <div className="w-full border-b bg-background sticky top-0 z-30">
-      <div className="flex h-14 items-center gap-4 px-4">
+    <nav
+      aria-label="Navegação da Biblioteca Clínica"
+      className="sticky top-0 z-30 w-full border-b border-slate-200/80 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85"
+    >
+      <div className="flex min-h-14 items-center gap-2 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* Main Nav Items */}
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1">
           <Button
             variant="ghost"
             size="sm"
             className={cn(
               "gap-2 font-bold font-display rounded-xl transition-all duration-300",
-              !selectedPageId
-                ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-                : "hover:bg-slate-100 dark:hover:bg-slate-800",
+              activeView === "dashboard"
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
             onClick={onDashboardSelect}
+            aria-current={activeView === "dashboard" ? "page" : undefined}
           >
             <LayoutDashboard
-              className={cn("h-4 w-4", !selectedPageId ? "text-blue-600" : "text-slate-400")}
+              className={cn(
+                "h-4 w-4",
+                activeView === "dashboard" && "text-primary",
+              )}
             />
             <span className="hidden sm:inline">Dashboard</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="gap-2 font-bold font-display group relative overflow-hidden rounded-xl transition-all duration-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+            className={cn(
+              "gap-2 rounded-xl font-display font-bold transition-colors",
+              activeView === "knowledge-hub"
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
             onClick={onKnowledgeHubSelect}
+            aria-current={activeView === "knowledge-hub" ? "page" : undefined}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/0 via-orange-500/10 to-orange-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-            <Sparkles className="h-4 w-4 text-orange-500 group-hover:animate-pulse" />
-            <span className="hidden sm:inline text-slate-700 dark:text-slate-300 group-hover:text-orange-600 transition-colors">
-              Knowledge Hub
-            </span>
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline">Base Clínica</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="gap-2 font-bold font-display group relative overflow-hidden rounded-xl transition-all duration-300 hover:bg-primary/5 dark:hover:bg-primary/10"
+            className={cn(
+              "gap-2 rounded-xl font-display font-bold transition-colors",
+              activeView === "ai-hub"
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
             onClick={onAIHubSelect}
+            aria-current={activeView === "ai-hub" ? "page" : undefined}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-            <Activity className="h-4 w-4 text-primary group-hover:animate-pulse" />
-            <span className="hidden sm:inline text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors">
-              AI Hub
-            </span>
+            <Activity className="h-4 w-4" />
+            <span className="hidden sm:inline">FisioBrain</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="gap-2 font-bold font-display rounded-xl transition-all duration-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+            className={cn(
+              "gap-2 rounded-xl font-display font-bold transition-colors",
+              activeView === "papers"
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
             onClick={onPapersSelect}
+            aria-current={activeView === "papers" ? "page" : undefined}
           >
-            <BookOpen className="h-4 w-4 text-blue-500" />
-            <span className="hidden sm:inline text-slate-700 dark:text-slate-300 hover:text-blue-600 transition-colors">
-              Artigos
-            </span>
+            <BookOpen className="h-4 w-4" />
+            <span className="hidden sm:inline">Artigos</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="gap-2 font-bold font-display rounded-xl transition-all duration-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+            className={cn(
+              "gap-2 rounded-xl font-display font-bold transition-colors",
+              activeView === "dictionary"
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
             onClick={onDictionarySelect}
+            aria-current={activeView === "dictionary" ? "page" : undefined}
           >
-            <Languages className="h-4 w-4 text-orange-500" />
-            <span className="hidden sm:inline text-slate-700 dark:text-slate-300 group-hover:text-orange-600 transition-colors">
-              Dicionário
-            </span>
+            <Languages className="h-4 w-4" />
+            <span className="hidden sm:inline">Dicionário</span>
           </Button>
         </div>
 
-        <div className="h-6 w-px bg-border mx-1" />
+        <div className="mx-1 h-6 w-px shrink-0 bg-border" aria-hidden="true" />
 
         {/* Trilhas Dropdown */}
         {evidenceTree.root && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="shrink-0 gap-2 rounded-xl font-bold"
+              >
                 <Library className="h-4 w-4 text-blue-600" />
                 <span>Trilhas</span>
                 <ChevronDown className="h-3 w-3 opacity-50" />
@@ -256,7 +282,9 @@ export function WikiTopNav({
             <DropdownMenuContent align="start" className="w-64">
               <DropdownMenuLabel>Trilhas de Evidência</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onPageSelect(evidenceTree.root!)}>
+              <DropdownMenuItem
+                onClick={() => onPageSelect(evidenceTree.root!)}
+              >
                 <Library className="mr-2 h-4 w-4 text-blue-600" />
                 {evidenceTree.root.title}
               </DropdownMenuItem>
@@ -273,7 +301,10 @@ export function WikiTopNav({
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     {protocols.map((protocol) => (
-                      <DropdownMenuItem key={protocol.id} onClick={() => onPageSelect(protocol)}>
+                      <DropdownMenuItem
+                        key={protocol.id}
+                        onClick={() => onPageSelect(protocol)}
+                      >
                         <FileText className="mr-2 h-4 w-4" />
                         <span className="truncate">{protocol.title}</span>
                       </DropdownMenuItem>
@@ -288,7 +319,11 @@ export function WikiTopNav({
         {/* Explorar Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="shrink-0 gap-2 rounded-xl font-bold"
+            >
               <Folder className="h-4 w-4 text-blue-500/70" />
               <span>Explorar</span>
               <ChevronDown className="h-3 w-3 opacity-50" />
@@ -307,7 +342,10 @@ export function WikiTopNav({
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="w-64">
                     {categoryPages.map((page) => (
-                      <DropdownMenuItem key={page.id} onClick={() => onPageSelect(page)}>
+                      <DropdownMenuItem
+                        key={page.id}
+                        onClick={() => onPageSelect(page)}
+                      >
                         <File className="mr-2 h-4 w-4 opacity-70" />
                         <span className="truncate">{page.title}</span>
                       </DropdownMenuItem>
@@ -322,7 +360,10 @@ export function WikiTopNav({
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Sem Categoria</DropdownMenuLabel>
                 {pageTree.uncategorized.map((page) => (
-                  <DropdownMenuItem key={page.id} onClick={() => onPageSelect(page)}>
+                  <DropdownMenuItem
+                    key={page.id}
+                    onClick={() => onPageSelect(page)}
+                  >
                     <File className="mr-2 h-4 w-4 opacity-70" />
                     <span className="truncate">{page.title}</span>
                   </DropdownMenuItem>
@@ -350,7 +391,11 @@ export function WikiTopNav({
         {/* History/Quick Access */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="shrink-0 gap-2 rounded-xl font-bold"
+            >
               <Clock className="h-4 w-4" />
               <span className="hidden md:inline">Acesso Rápido</span>
               <ChevronDown className="h-3 w-3 opacity-50" />
@@ -363,7 +408,10 @@ export function WikiTopNav({
                   <Pin className="h-3 w-3 text-orange-500" /> Fixados
                 </DropdownMenuLabel>
                 {pinned.map((page) => (
-                  <DropdownMenuItem key={page.id} onClick={() => onPageSelect(page)}>
+                  <DropdownMenuItem
+                    key={page.id}
+                    onClick={() => onPageSelect(page)}
+                  >
                     <span className="truncate">{page.title}</span>
                   </DropdownMenuItem>
                 ))}
@@ -376,7 +424,10 @@ export function WikiTopNav({
                   <Star className="h-3 w-3 text-yellow-500" /> Populares
                 </DropdownMenuLabel>
                 {favorites.map((page) => (
-                  <DropdownMenuItem key={page.id} onClick={() => onPageSelect(page)}>
+                  <DropdownMenuItem
+                    key={page.id}
+                    onClick={() => onPageSelect(page)}
+                  >
                     <span className="truncate">{page.title}</span>
                   </DropdownMenuItem>
                 ))}
@@ -387,77 +438,16 @@ export function WikiTopNav({
               <Clock className="h-3 w-3" /> Recentes
             </DropdownMenuLabel>
             {recents.map((page) => (
-              <DropdownMenuItem key={page.id} onClick={() => onPageSelect(page)}>
+              <DropdownMenuItem
+                key={page.id}
+                onClick={() => onPageSelect(page)}
+              >
                 <span className="truncate">{page.title}</span>
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-
-        {/* Search bar expanded */}
-        <div className="flex-1 max-w-sm ml-auto relative group">
-          <DropdownMenu open={searchQuery.length > 0}>
-            <DropdownMenuTrigger asChild>
-              <div className="relative w-full">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
-                <Input
-                  placeholder="Buscar na wiki..."
-                  className="pl-9 h-9 bg-muted/40 border-none focus-visible:ring-1 focus-visible:bg-background transition-all"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-80 max-h-[400px] overflow-y-auto"
-              onCloseAutoFocus={(e) => e.preventDefault()}
-            >
-              <DropdownMenuLabel className="flex items-center justify-between">
-                Resultados da busca
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 px-2 text-[10px]"
-                  onClick={() => setSearchQuery("")}
-                >
-                  Fechar
-                </Button>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {searchResults.length === 0 ? (
-                <div className="p-4 text-center text-xs text-muted-foreground">
-                  Nenhuma página encontrada para "{searchQuery}"
-                </div>
-              ) : (
-                searchResults.map((page) => (
-                  <DropdownMenuItem
-                    key={page.id}
-                    onClick={() => {
-                      onPageSelect(page);
-                      setSearchQuery("");
-                    }}
-                  >
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-medium">{page.title}</span>
-                      {page.category && (
-                        <span className="text-[10px] text-muted-foreground uppercase">
-                          {categories.find((c) => c.id === page.category)?.name || page.category}
-                        </span>
-                      )}
-                    </div>
-                  </DropdownMenuItem>
-                ))
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        <Button onClick={onCreatePage} size="sm" className="hidden sm:flex shadow-sm gap-2">
-          <Plus className="h-4 w-4" />
-          <span className="hidden lg:inline">Nova Página</span>
-        </Button>
       </div>
-    </div>
+    </nav>
   );
 }

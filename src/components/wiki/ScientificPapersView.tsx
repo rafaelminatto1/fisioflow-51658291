@@ -19,19 +19,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileText, Upload, CheckCircle2, Loader2, Plus, BookOpen } from "lucide-react";
+import {
+  AlertCircle,
+  BookOpen,
+  CheckCircle2,
+  Clock3,
+  FileText,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Upload,
+} from "lucide-react";
 import { toast } from "sonner";
-import { getWorkersApiUrl } from "@/lib/api/config";
 import { request } from "@/api/v2/base";
-import { getNeonAccessToken } from "@/lib/auth/neon-token";
+import type { KnowledgeArticleRow } from "@/types/workers";
 
 interface ScientificPaper {
   id: string;
   title: string;
-  article_type: string;
   group: string;
   status: string;
-  created_at: string | null;
+  evidence: string;
+  vectorStatus: string;
+  year?: number;
+  source?: string;
+  createdAt: string | null;
 }
 
 const AREAS_CLINICAS = [
@@ -49,30 +61,77 @@ const AREAS_CLINICAS = [
 ];
 
 async function fetchPapers(): Promise<ScientificPaper[]> {
-  try {
-    const json = await request<{ data?: ScientificPaper[]; articles?: ScientificPaper[] }>(
-      "/api/knowledge/articles?type=pdf&limit=50",
-    );
-    return (json.data ?? json.articles ?? []) as ScientificPaper[];
-  } catch {
-    return [];
-  }
+  const json = await request<{ data: KnowledgeArticleRow[] }>(
+    "/api/knowledge/articles?limit=50",
+  );
+
+  return json.data
+    .filter(
+      (row) =>
+        String((row as unknown as Record<string, unknown>).type ?? "pdf") ===
+        "pdf",
+    )
+    .map((row) => {
+      const raw = row as unknown as Record<string, unknown>;
+      return {
+        id: row.id,
+        title: row.title,
+        group: row.group,
+        status: row.status,
+        evidence: String(
+          raw.evidenceLevel ?? row.evidence ?? "Não classificada",
+        ),
+        vectorStatus: String(
+          raw.vectorStatus ?? raw.vector_status ?? "pending",
+        ),
+        year: row.year,
+        source: row.source,
+        createdAt: raw.createdAt ? String(raw.createdAt) : null,
+      };
+    });
 }
 
-async function uploadPaper(data: FormData): Promise<{ id: string; indexed: boolean }> {
-  const token = await getNeonAccessToken();
-  const res = await fetch(`${getWorkersApiUrl()}/api/knowledge/upload-paper`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
+async function uploadPaper(
+  data: FormData,
+): Promise<{ id: string; indexed: boolean }> {
+  return request<{ id: string; indexed: boolean }>(
+    "/api/knowledge/upload-paper",
+    {
+      method: "POST",
+      body: data,
     },
-    body: data,
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: "Upload failed" }));
-    throw new Error(err.error ?? "Upload failed");
+  );
+}
+
+function getIndexingBadge(vectorStatus: string) {
+  if (vectorStatus === "completed" || vectorStatus === "indexed") {
+    return {
+      label: "Indexado",
+      Icon: CheckCircle2,
+      className: "bg-emerald-100 text-emerald-700",
+    };
   }
-  return res.json();
+  if (vectorStatus === "error") {
+    return {
+      label: "Falha na indexação",
+      Icon: AlertCircle,
+      className: "bg-red-100 text-red-700",
+    };
+  }
+  return {
+    label: "Processando",
+    Icon: Clock3,
+    className: "bg-amber-100 text-amber-700",
+  };
+}
+
+function getCurationLabel(status: string) {
+  if (status === "verified") return "Curadoria verificada";
+  if (status === "active") return "Ativo";
+  if (status === "published") return "Publicado";
+  if (status === "archived") return "Arquivado";
+  if (status === "draft") return "Rascunho";
+  return "Pendente de curadoria";
 }
 
 export function ScientificPapersView() {
@@ -84,7 +143,14 @@ export function ScientificPapersView() {
   const [areaClinica, setAreaClinica] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: papers = [], isLoading } = useQuery({
+  const {
+    data: papers = [],
+    error,
+    isError,
+    isFetching,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["scientific-papers"],
     queryFn: fetchPapers,
     staleTime: 1000 * 60 * 5,
@@ -111,6 +177,7 @@ export function ScientificPapersView() {
     setSelectedFile(null);
     setTitle("");
     setAreaClinica("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function handleFileSelect(file: File) {
@@ -171,18 +238,38 @@ export function ScientificPapersView() {
         <div className="flex items-center justify-center h-40">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
+      ) : isError ? (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-red-200 bg-red-50/50 p-12 text-center">
+          <AlertCircle className="mb-4 h-10 w-10 text-red-500" />
+          <h3 className="text-lg font-semibold text-slate-900">
+            Não foi possível carregar os artigos
+          </h3>
+          <p className="mt-1 max-w-md text-sm text-slate-600">
+            {error instanceof Error
+              ? error.message
+              : "Tente novamente em alguns instantes."}
+          </p>
+          <Button
+            variant="outline"
+            className="mt-5 gap-2"
+            onClick={() => refetch()}
+            disabled={isFetching}
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
+            />
+            Tentar novamente
+          </Button>
+        </div>
       ) : papers.length === 0 ? (
-        <div
-          className="flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-16 text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
-          onClick={() => setIsModalOpen(true)}
-        >
+        <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-16 text-center">
           <FileText className="h-12 w-12 mb-4 text-muted-foreground opacity-30" />
           <h3 className="font-semibold text-lg">Nenhum artigo indexado</h3>
           <p className="text-muted-foreground mt-1 max-w-sm">
-            Faça upload de artigos científicos em PDF para que o FisioBrain use como base de
-            evidência nas buscas clínicas.
+            Faça upload de artigos científicos em PDF para que o FisioBrain use
+            como base de evidência nas buscas clínicas.
           </p>
-          <Button className="mt-6 gap-2">
+          <Button className="mt-6 gap-2" onClick={() => setIsModalOpen(true)}>
             <Upload className="h-4 w-4" /> Upload do primeiro artigo
           </Button>
         </div>
@@ -191,20 +278,25 @@ export function ScientificPapersView() {
           {papers.map((paper) => (
             <Card
               key={paper.id}
-              className="hover:shadow-md transition-shadow border border-slate-100 dark:border-slate-800"
+              className="border border-slate-100 transition-shadow hover:shadow-md dark:border-slate-800"
             >
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between gap-2">
                   <CardTitle className="text-sm font-semibold line-clamp-2 leading-tight">
                     {paper.title}
                   </CardTitle>
-                  <Badge
-                    variant="secondary"
-                    className="shrink-0 text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                  >
-                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Indexado
-                  </Badge>
+                  {(() => {
+                    const indexState = getIndexingBadge(paper.vectorStatus);
+                    return (
+                      <Badge
+                        variant="secondary"
+                        className={`shrink-0 text-[10px] ${indexState.className}`}
+                      >
+                        <indexState.Icon className="mr-1 h-3 w-3" />
+                        {indexState.label}
+                      </Badge>
+                    );
+                  })()}
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
@@ -221,10 +313,24 @@ export function ScientificPapersView() {
                     <FileText className="h-2.5 w-2.5 mr-1" />
                     PDF
                   </Badge>
+                  <Badge variant="outline" className="text-[10px]">
+                    {getCurationLabel(paper.status)}
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px]">
+                    Evidência: {paper.evidence}
+                  </Badge>
                 </div>
-                {paper.created_at && (
+                {(paper.source || paper.year || paper.createdAt) && (
                   <p className="text-[10px] text-muted-foreground mt-2">
-                    {new Date(paper.created_at).toLocaleDateString("pt-BR")}
+                    {[
+                      paper.source,
+                      paper.year,
+                      paper.createdAt
+                        ? new Date(paper.createdAt).toLocaleDateString("pt-BR")
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" • ")}
                   </p>
                 )}
               </CardContent>
@@ -234,7 +340,13 @@ export function ScientificPapersView() {
       )}
 
       {/* Modal de upload */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+      <Dialog
+        open={isModalOpen}
+        onOpenChange={(open) => {
+          setIsModalOpen(open);
+          if (!open && !uploadMutation.isPending) resetForm();
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -246,6 +358,9 @@ export function ScientificPapersView() {
           <div className="space-y-4">
             {/* Dropzone */}
             <div
+              role="button"
+              tabIndex={0}
+              aria-label="Selecionar artigo científico em PDF"
               className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer ${
                 dragOver
                   ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20"
@@ -260,6 +375,12 @@ export function ScientificPapersView() {
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  fileInputRef.current?.click();
+                }
+              }}
             >
               <input
                 ref={fileInputRef}
@@ -324,7 +445,9 @@ export function ScientificPapersView() {
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={uploadMutation.isPending || !selectedFile || !title.trim()}
+              disabled={
+                uploadMutation.isPending || !selectedFile || !title.trim()
+              }
               className="gap-2"
             >
               {uploadMutation.isPending ? (
@@ -332,7 +455,9 @@ export function ScientificPapersView() {
               ) : (
                 <Upload className="h-4 w-4" />
               )}
-              {uploadMutation.isPending ? "Indexando..." : "Indexar no FisioBrain"}
+              {uploadMutation.isPending
+                ? "Indexando..."
+                : "Indexar no FisioBrain"}
             </Button>
           </DialogFooter>
         </DialogContent>
