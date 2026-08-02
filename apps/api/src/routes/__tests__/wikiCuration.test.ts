@@ -76,6 +76,8 @@ describe("wiki curation routes", () => {
       "11111111-1111-4111-8111-111111111111",
     );
     expect(query.mock.calls[1][0]).toContain("i.organization_id = $1");
+    expect(query.mock.calls[1][0]).toContain("LEFT JOIN LATERAL");
+    expect(query.mock.calls[1][0]).not.toContain("GROUP BY i.id");
   });
 
   it("accepts the inbox queue tab and calculates operational counts", async () => {

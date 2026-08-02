@@ -150,10 +150,7 @@ app.get("/queue", async (c) => {
             v.editorial_status, v.technical_status, v.submitted_by,
             a.assignee_id, a.priority, a.due_at,
             r.valid_until,
-            COALESCE(jsonb_agg(DISTINCT jsonb_build_object(
-              'type', s.source_type, 'title', s.title, 'url', s.url,
-              'doi', s.doi, 'pmid', s.pmid, 'license', s.license
-            )) FILTER (WHERE s.id IS NOT NULL), '[]'::jsonb) AS provenance,
+            source_agg.provenance,
             i.updated_at
        FROM knowledge_items i
        JOIN LATERAL (
@@ -168,8 +165,16 @@ app.get("/queue", async (c) => {
           WHERE review.organization_id = i.organization_id AND review.version_id = v.id
           ORDER BY review.created_at DESC LIMIT 1
        ) r ON true
-       LEFT JOIN knowledge_sources s ON s.organization_id = i.organization_id
-         AND s.item_id = i.id AND (s.version_id IS NULL OR s.version_id = v.id)
+       LEFT JOIN LATERAL (
+         SELECT COALESCE(jsonb_agg(DISTINCT jsonb_build_object(
+           'type', source.source_type, 'title', source.title, 'url', source.url,
+           'doi', source.doi, 'pmid', source.pmid, 'license', source.license
+         )), '[]'::jsonb) AS provenance
+           FROM knowledge_sources source
+          WHERE source.organization_id = i.organization_id
+            AND source.item_id = i.id
+            AND (source.version_id IS NULL OR source.version_id = v.id)
+       ) source_agg ON true
       WHERE i.organization_id = $1 AND i.deleted_at IS NULL
         AND ($2::text IS NULL
           OR ($2 = 'inbox' AND v.editorial_status IN ('draft', 'triage'))
@@ -185,7 +190,6 @@ app.get("/queue", async (c) => {
           ($8 = 'due' AND r.valid_until < CURRENT_DATE) OR
           ($8 = 'missing' AND r.valid_until IS NULL))
         AND ($9::timestamptz IS NULL OR (i.updated_at, i.id) < ($9::timestamptz, $10::uuid))
-      GROUP BY i.id, v.id, a.assignee_id, a.priority, a.due_at, r.valid_until
       ORDER BY i.updated_at DESC, i.id DESC LIMIT $11`,
     [
       user.organizationId,
