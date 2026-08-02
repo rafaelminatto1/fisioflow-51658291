@@ -52,7 +52,13 @@ describe("wiki curation routes", () => {
         ],
       })
       .mockResolvedValueOnce({
-        rows: [{ editorial_status: "clinical_review", count: 1 }],
+        rows: [
+          {
+            editorial_status: "clinical_review",
+            technical_status: "indexed",
+            count: 1,
+          },
+        ],
       });
     const response = await wikiCurationRoutes.request(
       "/queue?limit=20",
@@ -70,6 +76,32 @@ describe("wiki curation routes", () => {
       "11111111-1111-4111-8111-111111111111",
     );
     expect(query.mock.calls[1][0]).toContain("i.organization_id = $1");
+  });
+
+  it("accepts the inbox queue tab and calculates operational counts", async () => {
+    query
+      .mockResolvedValueOnce({ rows: [{ capability: "manage_library" }] })
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({
+        rows: [
+          { editorial_status: "draft", technical_status: "not_started", count: 2 },
+          { editorial_status: "triage", technical_status: "failed", count: 3 },
+        ],
+      });
+    const response = await wikiCurationRoutes.request(
+      "/queue?status=inbox&limit=20",
+      {},
+      {} as never,
+    );
+    expect(response.status).toBe(200);
+    const payload = (await response.json()) as any;
+    expect(payload.meta.counts).toMatchObject({
+      inbox: 5,
+      draft: 2,
+      triage: 3,
+      technical_failures: 3,
+    });
+    expect(query.mock.calls[1][1][1]).toBe("inbox");
   });
 
   it("requires an idempotency key before a transition", async () => {

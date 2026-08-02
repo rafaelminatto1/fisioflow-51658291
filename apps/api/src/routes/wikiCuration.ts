@@ -41,7 +41,7 @@ const assignmentBody = z.object({
   expectedVersion: z.number().int().positive(),
 });
 const queueQuery = z.object({
-  status: z.enum(EDITORIAL_STATUSES).optional(),
+  status: z.enum([...EDITORIAL_STATUSES, "inbox", "technical_failures"]).optional(),
   assignee: z.string().max(255).optional(),
   priority: z.enum(["low", "normal", "high", "urgent"]).optional(),
   validity: z.enum(["valid", "due", "missing"]).optional(),
@@ -171,7 +171,10 @@ app.get("/queue", async (c) => {
        LEFT JOIN knowledge_sources s ON s.organization_id = i.organization_id
          AND s.item_id = i.id AND (s.version_id IS NULL OR s.version_id = v.id)
       WHERE i.organization_id = $1 AND i.deleted_at IS NULL
-        AND ($2::text IS NULL OR v.editorial_status = $2)
+        AND ($2::text IS NULL
+          OR ($2 = 'inbox' AND v.editorial_status IN ('draft', 'triage'))
+          OR ($2 = 'technical_failures' AND v.technical_status = 'failed')
+          OR v.editorial_status = $2)
         AND ($3::text IS NULL OR a.assignee_id = $3)
         AND ($4::text IS NULL OR a.priority = $4)
         AND ($5::text IS NULL OR i.kind = $5)
@@ -199,12 +202,13 @@ app.get("/queue", async (c) => {
     ],
   );
   const countResult = await pool.query(
-    `SELECT v.editorial_status, count(*)::int AS count
+    `SELECT v.editorial_status, v.technical_status, count(*)::int AS count
        FROM knowledge_items i
-       JOIN LATERAL (SELECT editorial_status FROM knowledge_item_versions candidate
+       JOIN LATERAL (SELECT editorial_status, technical_status FROM knowledge_item_versions candidate
          WHERE candidate.organization_id = i.organization_id AND candidate.item_id = i.id
          ORDER BY version_number DESC LIMIT 1) v ON true
-      WHERE i.organization_id = $1 AND i.deleted_at IS NULL GROUP BY v.editorial_status`,
+      WHERE i.organization_id = $1 AND i.deleted_at IS NULL
+      GROUP BY v.editorial_status, v.technical_status`,
     [user.organizationId],
   );
   const hasMore = result.rows.length > input.limit;
@@ -237,8 +241,19 @@ app.get("/queue", async (c) => {
         hasMore && last
           ? encodeCursor({ updatedAt: String(last.updated_at), id: last.id })
           : null,
-      counts: Object.fromEntries(
-        countResult.rows.map((row: any) => [row.editorial_status, row.count]),
+      counts: countResult.rows.reduce(
+        (counts: Record<string, number>, row: any) => {
+          const count = Number(row.count);
+          counts[row.editorial_status] =
+            (counts[row.editorial_status] ?? 0) + count;
+          if (["draft", "triage"].includes(row.editorial_status))
+            counts.inbox = (counts.inbox ?? 0) + count;
+          if (row.technical_status === "failed")
+            counts.technical_failures =
+              (counts.technical_failures ?? 0) + count;
+          return counts;
+        },
+        {},
       ),
       requestId: requestId(c),
     },
