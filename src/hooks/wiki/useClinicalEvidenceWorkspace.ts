@@ -46,7 +46,7 @@ export interface EvidenceComparison {
 interface WorkspaceData {
   articles: EvidenceArticle[];
   collections: EvidenceCollection[];
-  capabilities: Set<EvidenceCapability>;
+  capabilities: EvidenceCapability[];
   source: "workspace" | "knowledge";
 }
 
@@ -143,15 +143,15 @@ function normalizeCollections(value: unknown): EvidenceCollection[] {
   });
 }
 
-function parseCapabilities(value: unknown): Set<EvidenceCapability> {
-  const result = new Set<EvidenceCapability>();
+function parseCapabilities(value: unknown): EvidenceCapability[] {
+  const result: EvidenceCapability[] = [];
   if (!value || typeof value !== "object") return result;
   const flags = value as Record<string, unknown>;
   if (flags.import === true || flags.importArticles === true)
-    result.add("import");
-  if (flags.collections === true) result.add("collections");
+    result.push("import");
+  if (flags.collections === true) result.push("collections");
   if (flags.patientContext === true || flags.patient_context === true) {
-    result.add("patientContext");
+    result.push("patientContext");
   }
   return result;
 }
@@ -160,7 +160,7 @@ async function fetchWorkspace(): Promise<WorkspaceData> {
   try {
     const articles: EvidenceArticle[] = [];
     let collections: EvidenceCollection[] = [];
-    let capabilities = new Set<EvidenceCapability>();
+    let capabilities: EvidenceCapability[] = [];
     let cursor: { updatedAt: string; id: string } | null = null;
     do {
       const params = new URLSearchParams({ limit: "50" });
@@ -215,7 +215,7 @@ async function fetchWorkspace(): Promise<WorkspaceData> {
     return {
       articles: normalizeArticles(fallback.data),
       collections: [],
-      capabilities: new Set(),
+      capabilities: [],
       source: "knowledge",
     };
   }
@@ -273,10 +273,11 @@ export function useClinicalEvidenceWorkspace() {
     articles: query.data?.articles ?? [],
     collections: query.data?.collections ?? [],
     source: query.data?.source,
-    canImport: query.data?.capabilities.has("import") ?? false,
-    canUseCollections: query.data?.capabilities.has("collections") ?? false,
+    canImport: query.data?.capabilities.includes("import") ?? false,
+    canUseCollections:
+      query.data?.capabilities.includes("collections") ?? false,
     canUsePatientContext:
-      query.data?.capabilities.has("patientContext") ?? false,
+      query.data?.capabilities.includes("patientContext") ?? false,
     importArticle: importMutation.mutateAsync,
     isImporting: importMutation.isPending,
     importError: importMutation.error,
