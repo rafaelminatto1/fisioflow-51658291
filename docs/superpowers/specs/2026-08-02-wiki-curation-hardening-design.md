@@ -38,7 +38,7 @@ Tornar a Gestão da Biblioteca utilizável em produção e clinicamente segura, 
 
 - CREATE materializa item, versão e mapa.
 - UPDATE cria nova versão canônica em `draft` e preserva o mapa.
-- DELETE de `wiki_pages` faz soft-delete do item; remoção/importação desfeita em `knowledge_articles` e `organization_evidence` arquiva a versão atual, preservando proveniência e auditoria.
+- DELETE de `wiki_pages` faz soft-delete do item. Remoção/importação desfeita em `knowledge_articles` e `organization_evidence` inativa somente o vínculo de proveniência; o item é arquivado apenas quando não restar fonte válida nem origem editorial própria. Se houver versão publicada, a operação limpa `published_version_id`, registra uma despublicação auditada e somente então arquiva, atomicamente.
 - Cada evento usa chave `<sourceType>:<sourceId>:<sourceUpdatedAt>:<operation>`. Eventos antigos são ignorados; CREATE ausente pode ser reconstruído antes de UPDATE; DELETE vence UPDATE com timestamp anterior. Conflito entre edição canônica e evento legado cria nova versão `draft` para revisão, nunca sobrescreve versão aprovada/publicada.
 - Operações são idempotentes e reconciliáveis; falha de sincronização não pode produzir publicação implícita.
 
