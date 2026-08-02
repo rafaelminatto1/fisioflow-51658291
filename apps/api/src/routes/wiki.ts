@@ -14,6 +14,7 @@ import { wikiPages, wikiPageVersions, wikiDictionary } from "@fisioflow/db";
 import { searchFilter } from "../lib/db-utils";
 import { removeWikiPageFromIndex, syncWikiPagePatientIndex } from "../lib/wikiIndexing";
 import { syncWikiToIndex, removeWikiFromIndex } from "../lib/contentIndexing";
+import { requireKnowledgeCapability } from "../lib/knowledgeCapabilities";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -76,7 +77,7 @@ app.get("/dictionary", async (c) => {
   return c.json({ data: rows });
 });
 
-app.post("/dictionary", requireAuth, async (c) => {
+app.post("/dictionary", requireAuth, requireKnowledgeCapability("manage_library"), async (c) => {
   const user = c.get("user");
   const db = await createDb(c.env);
   const body = await c.req.json();
@@ -102,7 +103,7 @@ app.post("/dictionary", requireAuth, async (c) => {
   return c.json({ data: row }, 201);
 });
 
-app.put("/dictionary/:id", requireAuth, async (c) => {
+app.put("/dictionary/:id", requireAuth, requireKnowledgeCapability("manage_library"), async (c) => {
   const user = c.get("user");
   const db = await createDb(c.env);
   const { id } = c.req.param();
@@ -127,7 +128,7 @@ app.put("/dictionary/:id", requireAuth, async (c) => {
       updatedBy: user.uid,
       updatedAt: new Date(),
     })
-    .where(eq(wikiDictionary.id, id))
+    .where(and(eq(wikiDictionary.id, id), eq(wikiDictionary.organizationId, user.organizationId)))
     .returning();
 
   if (!row) return c.json({ error: "Termo não encontrado" }, 404);
@@ -135,7 +136,8 @@ app.put("/dictionary/:id", requireAuth, async (c) => {
   return c.json({ data: row });
 });
 
-app.delete("/dictionary/:id", requireAuth, async (c) => {
+app.delete("/dictionary/:id", requireAuth, requireKnowledgeCapability("manage_library"), async (c) => {
+  const user = c.get("user");
   const db = await createDb(c.env);
   const { id } = c.req.param();
 
@@ -145,7 +147,7 @@ app.delete("/dictionary/:id", requireAuth, async (c) => {
       deletedAt: new Date(),
       updatedAt: new Date(),
     })
-    .where(eq(wikiDictionary.id, id))
+    .where(and(eq(wikiDictionary.id, id), eq(wikiDictionary.organizationId, user.organizationId)))
     .returning();
 
   if (!row) return c.json({ error: "Termo não encontrado" }, 404);
@@ -168,7 +170,7 @@ app.get("/categories", requireAuth, async (c) => {
   }
 });
 
-app.post("/categories", requireAuth, async (c) => {
+app.post("/categories", requireAuth, requireKnowledgeCapability("manage_library"), async (c) => {
   const user = c.get("user");
   const db = await createPool(c.env);
   const body = await c.req.json();
@@ -193,7 +195,7 @@ app.post("/categories", requireAuth, async (c) => {
   return c.json({ data: result.rows[0] }, 201);
 });
 
-app.delete("/categories/:id", requireAuth, async (c) => {
+app.delete("/categories/:id", requireAuth, requireKnowledgeCapability("manage_library"), async (c) => {
   const user = c.get("user");
   const db = await createPool(c.env);
   await db.query(`DELETE FROM wiki_categories WHERE id = $1 AND organization_id = $2`, [
@@ -377,7 +379,7 @@ app.get("/by-id/:id", requireAuth, async (c) => {
 });
 
 // ===== BULK UPDATE TRIAGE ORDERING =====
-app.patch("/triage", requireAuth, async (c) => {
+app.patch("/triage", requireAuth, requireKnowledgeCapability("manage_library"), async (c) => {
   const user = c.get("user");
   const db = await createDb(c.env);
   const { updates } = (await c.req.json()) as {
@@ -399,7 +401,7 @@ app.patch("/triage", requireAuth, async (c) => {
           updatedBy: user.uid,
           updatedAt: new Date(),
         })
-        .where(eq(wikiPages.id, id)),
+        .where(and(eq(wikiPages.id, id), eq(wikiPages.organizationId, user.organizationId))),
     ),
   );
 
@@ -412,6 +414,9 @@ app.post("/", requireAuth, async (c) => {
   const user = c.get("user");
   const body = await c.req.json();
   const { comment, ...pageData } = body;
+  delete pageData.isPublished;
+  delete pageData.is_published;
+  pageData.isPublished = false;
 
   if ("patient_visible" in pageData) {
     pageData.patientVisible = Boolean(pageData.patient_visible);
@@ -455,7 +460,7 @@ app.post("/", requireAuth, async (c) => {
 });
 
 // ===== ATUALIZAR PÁGINA =====
-app.put("/:slug", requireAuth, async (c) => {
+app.put("/:slug", requireAuth, requireKnowledgeCapability("manage_library"), async (c) => {
   const db = await createDb(c.env);
   const user = c.get("user");
   const { slug } = c.req.param();
@@ -472,12 +477,14 @@ app.put("/:slug", requireAuth, async (c) => {
   delete pageData.createdAt;
   delete pageData.version;
   delete pageData.viewCount;
+  delete pageData.isPublished;
+  delete pageData.is_published;
 
   // Primeiro busca a versão atual
   const [currentPage] = await db
     .select({ id: wikiPages.id, version: wikiPages.version })
     .from(wikiPages)
-    .where(and(eq(wikiPages.slug, slug), isNull(wikiPages.deletedAt)))
+    .where(and(eq(wikiPages.slug, slug), eq(wikiPages.organizationId, user.organizationId), isNull(wikiPages.deletedAt)))
     .limit(1);
 
   if (!currentPage) return c.json({ error: "Página não encontrada" }, 404);
@@ -545,8 +552,9 @@ app.put("/:slug", requireAuth, async (c) => {
 });
 
 // ===== DELETAR PÁGINA (soft delete) =====
-app.delete("/:slug", requireAuth, async (c) => {
+app.delete("/:slug", requireAuth, requireKnowledgeCapability("manage_library"), async (c) => {
   const db = await createDb(c.env);
+  const user = c.get("user");
   const { slug } = c.req.param();
 
   const [row] = await db
@@ -555,7 +563,7 @@ app.delete("/:slug", requireAuth, async (c) => {
       deletedAt: new Date(),
       updatedAt: new Date(),
     })
-    .where(eq(wikiPages.slug, slug))
+    .where(and(eq(wikiPages.slug, slug), eq(wikiPages.organizationId, user.organizationId)))
     .returning({ id: wikiPages.id });
 
   if (!row) return c.json({ error: "Página não encontrada" }, 404);

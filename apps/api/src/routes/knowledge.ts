@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
+import { requireKnowledgeCapability } from "../lib/knowledgeCapabilities";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -712,7 +713,7 @@ app.post("/articles/:articleId/notes", async (c) => {
   return c.json({ data: result.rows[0] }, 201);
 });
 
-app.put("/curation/:articleId", async (c) => {
+app.put("/curation/:articleId", requireKnowledgeCapability("manage_library"), async (c) => {
   const user = c.get("user");
   const pool = await createPool(c.env);
   const schemaUnavailable = await ensureTables(c, pool, ["knowledge_curation"]);
@@ -778,7 +779,7 @@ app.get("/audit", async (c) => {
   }
 });
 
-app.post("/audit", async (c) => {
+app.post("/audit", requireKnowledgeCapability("manage_library"), async (c) => {
   const user = c.get("user");
   const pool = await createPool(c.env);
   const schemaUnavailable = await ensureTables(c, pool, ["knowledge_audit"]);
@@ -796,7 +797,7 @@ app.post("/audit", async (c) => {
     [
       user.organizationId,
       String(body.article_id ?? ""),
-      body.actor_id ? String(body.actor_id) : user.uid,
+      user.uid,
       String(body.action ?? "update_annotation"),
       body.before ? JSON.stringify(body.before) : null,
       body.after ? JSON.stringify(body.after) : null,
@@ -806,7 +807,7 @@ app.post("/audit", async (c) => {
   return c.json({ data: normalizeAudit(result.rows[0]) }, 201);
 });
 
-app.delete("/articles/:articleId", async (c) => {
+app.delete("/articles/:articleId", requireKnowledgeCapability("manage_library"), async (c) => {
   const user = c.get("user");
   const pool = await createPool(c.env);
   const schemaUnavailable = await ensureTables(c, pool, ["knowledge_articles"]);

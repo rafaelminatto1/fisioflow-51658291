@@ -25,6 +25,7 @@ export * from "./protocols";
 
 // Wiki / Knowledge Base
 export * from "./wiki";
+export * from "./knowledge-curation";
 
 // Gamification & Engagement
 export * from "./gamification";

@@ -1,0 +1,11 @@
+DROP TABLE IF EXISTS knowledge_idempotency_keys;
+DROP TABLE IF EXISTS knowledge_audit_events;
+DROP TABLE IF EXISTS knowledge_sources;
+DROP TABLE IF EXISTS knowledge_source_map;
+DROP TABLE IF EXISTS knowledge_assignments;
+DROP TABLE IF EXISTS knowledge_reviews;
+ALTER TABLE IF EXISTS knowledge_items DROP CONSTRAINT IF EXISTS fk_knowledge_items_published_version;
+ALTER TABLE IF EXISTS knowledge_items DROP CONSTRAINT IF EXISTS fk_knowledge_items_approved_version;
+DROP TABLE IF EXISTS knowledge_item_versions;
+DROP TABLE IF EXISTS knowledge_items;
+DROP TABLE IF EXISTS knowledge_capability_grants;

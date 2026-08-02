@@ -17,6 +17,7 @@ import {
   Languages,
   Activity,
   BookOpen,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -91,6 +92,7 @@ interface WikiTopNavProps {
     | "ai-hub"
     | "papers"
     | "dictionary"
+    | "curation"
     | "page";
   pages: WikiPage[];
   categories: WikiCategory[];
@@ -102,6 +104,8 @@ interface WikiTopNavProps {
   onDictionarySelect?: () => void;
   onAIHubSelect?: () => void;
   onPapersSelect?: () => void;
+  onCurationSelect?: () => void;
+  showCuration?: boolean;
   onTagSelect?: (tag: string) => void;
 }
 
@@ -115,6 +119,8 @@ export function WikiTopNav({
   onDictionarySelect,
   onAIHubSelect,
   onPapersSelect,
+  onCurationSelect,
+  showCuration = false,
   onTagSelect,
 }: WikiTopNavProps) {
   const evidenceTree = useMemo(() => getEvidenceTree(pages), [pages]);
@@ -208,6 +214,30 @@ export function WikiTopNav({
               Dashboard
             </span>
           </Button>
+          {showCuration ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "gap-2 rounded-xl font-display font-bold transition-colors",
+                activeView === "curation"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
+              onClick={onCurationSelect}
+              aria-label="Gestão da Biblioteca"
+              aria-current={activeView === "curation" ? "page" : undefined}
+            >
+              <ShieldCheck className="h-4 w-4" />
+              <span
+                className={cn(
+                  activeView === "curation" ? "inline" : "hidden sm:inline",
+                )}
+              >
+                Gestão da Biblioteca
+              </span>
+            </Button>
+          ) : null}
           <Button
             variant="ghost"
             size="sm"

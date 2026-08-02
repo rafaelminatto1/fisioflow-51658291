@@ -5,6 +5,7 @@ import { requireAuth, type AuthVariables, userHasRole } from "../lib/auth";
 import { getRawSql } from "../lib/db";
 import { searchPubmed } from "../lib/evidence/sources/pubmed";
 import { upsertArticles } from "../lib/evidence/cache";
+import { resolveKnowledgeCapabilities } from "../lib/knowledgeCapabilities";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -420,17 +421,13 @@ app.post("/resources/:articleId/review", requireAuth, async (c) => {
   const articleId = uuid.parse(c.req.param("articleId"));
   const body = reviewBody.parse(await c.req.json());
   const user = c.get("user");
-  const clinicalReviewer = userHasRole(user, [
-    "owner",
-    "admin",
-    "fisioterapeuta",
-  ]);
-  const administrator = canAdminister(user);
-  if (
-    !clinicalReviewer ||
-    ((["reopen", "archive"] as string[]).includes(body.action) &&
-      !administrator)
-  ) {
+  const capabilities = await resolveKnowledgeCapabilities(c.env, user.organizationId, user.uid);
+  const requiredCapability: "manage_library" | "clinical_review" = (
+    ["reopen", "archive"] as string[]
+  ).includes(body.action)
+    ? "manage_library"
+    : "clinical_review";
+  if (!capabilities.includes(requiredCapability)) {
     return errorResponse(
       c,
       403,
@@ -440,7 +437,7 @@ app.post("/resources/:articleId/review", requireAuth, async (c) => {
   }
   const sql = getRawSql(c.env, "write");
   const current = await sql(
-    `SELECT review_status FROM organization_evidence WHERE organization_id = $1 AND article_id = $2`,
+    `SELECT review_status, imported_by FROM organization_evidence WHERE organization_id = $1 AND article_id = $2`,
     [user.organizationId, articleId],
   );
   const currentStatus = current.rows?.[0]?.review_status as string | undefined;
@@ -450,6 +447,13 @@ app.post("/resources/:articleId/review", requireAuth, async (c) => {
       404,
       "ARTICLE_NOT_FOUND",
       "Evidência não encontrada",
+    );
+  if (body.action === "verify" && current.rows?.[0]?.imported_by === user.uid)
+    return errorResponse(
+      c,
+      409,
+      "SELF_APPROVAL_FORBIDDEN",
+      "O autor da importação não pode aprovar a própria evidência",
     );
   const transitions: Record<string, { from: string[]; to: string }> = {
     start_review: { from: ["pending"], to: "in_review" },

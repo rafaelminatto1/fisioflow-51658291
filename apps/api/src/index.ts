@@ -8,6 +8,7 @@ import { requestIdMiddleware } from "./middleware/requestId";
 import { exercisesRoutes } from "./routes/exercises";
 import { protocolsRoutes } from "./routes/protocols";
 import { wikiRoutes } from "./routes/wiki";
+import { wikiCurationRoutes } from "./routes/wikiCuration";
 import { notesRoutes } from "./routes/notes";
 import { knowledgeRoutes } from "./routes/knowledge";
 import { templatesRoutes } from "./routes/templates";
@@ -316,6 +317,7 @@ const apiRoutes = [
   ["/api/ai-clinical-search", aiClinicalSearchRoutes],
   ["/api/exercises", exercisesRoutes],
   ["/api/protocols", protocolsRoutes],
+  ["/api/wiki-curation", wikiCurationRoutes],
   ["/api/wiki", wikiRoutes],
   ["/api/notes", notesRoutes],
   ["/api/knowledge", knowledgeRoutes],

@@ -71,6 +71,8 @@ import { KnowledgeArticleDialog } from "@/features/wiki/components/KnowledgeArti
 import { PhysioDictionaryView } from "@/features/wiki/components/PhysioDictionaryView";
 import { AIHubView } from "@/features/wiki/components/AIHubView";
 import { ScientificPapersView } from "@/components/wiki/ScientificPapersView";
+import { WikiCurationQueue } from "@/features/wiki/components/WikiCurationQueue";
+import { useWikiCurationCapabilities } from "@/hooks/wiki/useWikiCuration";
 import { bilingualFilter } from "@/lib/utils/bilingualSearch";
 import {
   getEvidenceTree,
@@ -89,6 +91,7 @@ const WIKI_VIEWS = [
   "dictionary",
   "ai-hub",
   "papers",
+  "curation",
 ] as const;
 type WikiView = (typeof WIKI_VIEWS)[number] | "page";
 
@@ -106,6 +109,8 @@ export default function WikiPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { canManageLibrary: canManageWikiLibrary } =
+    useWikiCurationCapabilities();
 
   // Estados Locais
   const [activeView, setActiveView] = useState<WikiView>(() =>
@@ -635,6 +640,8 @@ export default function WikiPage() {
         onDictionarySelect={() => handleViewSelect("dictionary")}
         onAIHubSelect={() => handleViewSelect("ai-hub")}
         onPapersSelect={() => handleViewSelect("papers")}
+        onCurationSelect={() => handleViewSelect("curation")}
+        showCuration={canManageWikiLibrary}
         onTagSelect={handleTagSelect}
       />
 
@@ -679,6 +686,10 @@ export default function WikiPage() {
         ) : activeView === "papers" ? (
           <div className="animate-in slide-in-from-bottom-4 duration-500">
             <ScientificPapersView />
+          </div>
+        ) : activeView === "curation" ? (
+          <div className="min-w-0 animate-in slide-in-from-bottom-4 duration-500">
+            <WikiCurationQueue />
           </div>
         ) : (
           <div className="space-y-6 animate-in fade-in duration-500">

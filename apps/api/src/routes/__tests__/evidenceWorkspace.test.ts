@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const queryMock = vi.fn();
 const searchPubmedMock = vi.fn();
+const capabilitiesMock = vi.fn();
 
 vi.mock("../../lib/auth", () => ({
   requireAuth: async (c: any, next: () => Promise<void>) => {
@@ -18,6 +19,10 @@ vi.mock("../../lib/auth", () => ({
 
 vi.mock("../../lib/db", () => ({
   getRawSql: () => queryMock,
+}));
+
+vi.mock("../../lib/knowledgeCapabilities", () => ({
+  resolveKnowledgeCapabilities: (...args: unknown[]) => capabilitiesMock(...args),
 }));
 
 vi.mock("../../lib/evidence/sources/pubmed", () => ({
@@ -40,6 +45,8 @@ describe("evidence workspace", () => {
   beforeEach(() => {
     queryMock.mockReset();
     searchPubmedMock.mockReset();
+    capabilitiesMock.mockReset();
+    capabilitiesMock.mockResolvedValue([]);
   });
 
   it("normaliza DOI e valida PMID sem aceitar texto parcial", () => {
@@ -220,7 +227,7 @@ describe("evidence workspace", () => {
     expect(queryMock).not.toHaveBeenCalled();
   });
 
-  it("reserva reabertura de curadoria para owner/admin", async () => {
+  it("reserva reabertura de curadoria para manage_library", async () => {
     const response = await app.request(
       `/resources/${articleId}/review`,
       {
