@@ -11,7 +11,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AlertTriangle, MoreVertical, Edit, ArrowLeft, Clock, ShieldCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  MoreVertical,
+  Edit,
+  ArrowLeft,
+  Clock,
+  ShieldCheck,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WikiPage } from "@/types/wiki";
 import type { TriageStatus } from "@/features/wiki/triage/triageUtils";
@@ -38,26 +45,33 @@ function TriageColumn({
   const isOverLimit = wipLimit < 999 && pages.length > wipLimit;
 
   return (
-    <Card className={cn(
-      "bg-slate-50/50 border-slate-200/60 rounded-xl shadow-sm overflow-hidden flex flex-col h-full min-h-[500px]",
-      isOverLimit && "border-orange-400 bg-orange-50/10"
-    )}>
+    <Card
+      className={cn(
+        "flex h-full min-h-0 flex-col overflow-hidden rounded-xl border-slate-200/60 bg-slate-50/50 shadow-sm",
+        pages.length === 0 ? "md:min-h-44" : "md:min-h-[500px]",
+        isOverLimit && "border-orange-400 bg-orange-50/10",
+      )}
+    >
       <CardContent className="p-4 flex flex-col h-full">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h4 className={cn(
-              "text-xs font-bold uppercase tracking-widest text-slate-500",
-              isOverLimit && "text-orange-700"
-            )}>
+            <h4
+              className={cn(
+                "text-xs font-bold uppercase tracking-widest text-slate-500",
+                isOverLimit && "text-orange-700",
+              )}
+            >
               {title}
             </h4>
-            {isOverLimit && <AlertTriangle className="h-4 w-4 text-orange-500 animate-pulse" />}
+            {isOverLimit && (
+              <AlertTriangle className="h-4 w-4 text-orange-500 animate-pulse" />
+            )}
           </div>
-          <Badge 
+          <Badge
             variant={isOverLimit ? "destructive" : "secondary"}
             className={cn(
               "rounded-lg font-bold px-2 py-0.5",
-              !isOverLimit && "bg-white text-slate-600 border-slate-200"
+              !isOverLimit && "bg-white text-slate-600 border-slate-200",
             )}
           >
             {pages.length} {wipLimit < 999 && `/ ${wipLimit}`}
@@ -77,7 +91,7 @@ function TriageColumn({
               {...provided.droppableProps}
               className={cn(
                 "flex-1 space-y-3 rounded-lg p-1 transition-all duration-200",
-                snapshot.isDraggingOver ? "bg-blue-50/50" : "bg-transparent"
+                snapshot.isDraggingOver ? "bg-blue-50/50" : "bg-transparent",
               )}
             >
               {pages.map((page, index) => (
@@ -96,7 +110,7 @@ function TriageColumn({
                         "group relative w-full rounded-xl border bg-white p-4 text-left shadow-sm transition-all duration-200",
                         dragSnapshot.isDragging
                           ? "ring-2 ring-blue-500/50 shadow-lg scale-[1.02] z-50"
-                          : "hover:border-blue-400/40 hover:shadow-md"
+                          : "hover:border-blue-400/40 hover:shadow-md",
                       )}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -116,13 +130,17 @@ function TriageColumn({
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100"
+                                className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 transition-opacity hover:bg-slate-100"
+                                aria-label={`Ações de ${page.title}`}
                               >
                                 <MoreVertical className="h-3.5 w-3.5 text-slate-500" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="rounded-xl border-slate-200 shadow-lg">
-                              <DropdownMenuItem 
+                            <DropdownMenuContent
+                              align="end"
+                              className="rounded-xl border-slate-200 shadow-lg"
+                            >
+                              <DropdownMenuItem
                                 className="rounded-lg focus:bg-blue-50 focus:text-blue-700"
                                 onClick={() => onOpenPage(page)}
                               >
@@ -144,7 +162,9 @@ function TriageColumn({
                               <DropdownMenuItem
                                 className="rounded-lg focus:bg-slate-50"
                                 disabled={droppableId === "in-progress"}
-                                onClick={() => onMoveStatus(page, "in-progress")}
+                                onClick={() =>
+                                  onMoveStatus(page, "in-progress")
+                                }
                               >
                                 <Clock className="mr-2 h-4 w-4" />
                                 Em execução
@@ -187,6 +207,11 @@ function TriageColumn({
                   )}
                 </Draggable>
               ))}
+              {pages.length === 0 && !snapshot.isDraggingOver ? (
+                <p className="rounded-lg border border-dashed border-slate-200 px-3 py-4 text-center text-xs font-medium text-slate-400 md:py-6">
+                  Nenhum item nesta etapa
+                </p>
+              ) : null}
               {provided.placeholder}
             </div>
           )}
@@ -195,7 +220,6 @@ function TriageColumn({
     </Card>
   );
 }
-
 
 interface WikiTriageBoardProps {
   triageBuckets: Record<TriageStatus, WikiPage[]>;

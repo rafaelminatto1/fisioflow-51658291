@@ -122,6 +122,7 @@ import { eventsRoutes as businessEventsRoutes } from "./routes/events";
 import { wgerRoutes } from "./routes/wger";
 import { autocompleteRoutes } from "./routes/autocomplete";
 import evidenceRoutes from "./routes/evidence";
+import evidenceWorkspaceRoutes from "./routes/evidenceWorkspace";
 import copilotRoutes from "./routes/copilot";
 import briefingRoutes from "./routes/briefing";
 import exerciseImportRoutes from "./routes/exercise-import";
@@ -443,6 +444,7 @@ const apiRoutes = [
   ["/api/enterprise", enterpriseRoutes],
   ["/api/wger", wgerRoutes],
   ["/api/evidence", evidenceRoutes],
+  ["/api/evidence-workspace", evidenceWorkspaceRoutes],
   ["/api/exercise-import", exerciseImportRoutes],
   ["/api/copilot", copilotRoutes],
   ["/api/briefing", briefingRoutes],

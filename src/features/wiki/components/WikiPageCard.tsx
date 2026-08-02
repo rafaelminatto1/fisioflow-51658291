@@ -8,12 +8,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Activity,
+  BookOpen,
+  FileText,
+  Folder,
   MoreHorizontal,
   Edit,
   Trash2,
   Eye,
   CalendarDays,
   Tag,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WikiPage } from "@/types/wiki";
@@ -23,6 +28,36 @@ interface WikiPageCardProps {
   onClick: () => void;
   onEdit?: (e: React.MouseEvent) => void;
   onDelete?: (e: React.MouseEvent) => void;
+}
+
+const PAGE_ICONS = {
+  Activity,
+  BookOpen,
+  FileText,
+  Folder,
+  Zap,
+} as const;
+
+function PageIcon({ icon }: { icon?: string | null }) {
+  if (!icon) return null;
+
+  const Icon = PAGE_ICONS[icon as keyof typeof PAGE_ICONS];
+  const isEmoji = /\p{Extended_Pictographic}/u.test(icon);
+
+  return (
+    <span
+      aria-hidden="true"
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/8 text-lg text-primary"
+    >
+      {Icon ? (
+        <Icon className="h-4.5 w-4.5" />
+      ) : isEmoji ? (
+        icon
+      ) : (
+        <FileText className="h-4.5 w-4.5" />
+      )}
+    </span>
+  );
 }
 
 export function WikiPageCard({
@@ -87,14 +122,7 @@ export function WikiPageCard({
 
       <div className="min-w-0 flex-1 p-4 sm:p-5">
         <div className="flex items-start gap-3">
-          {page.icon ? (
-            <span
-              aria-hidden="true"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/8 text-lg"
-            >
-              {page.icon}
-            </span>
-          ) : null}
+          <PageIcon icon={page.icon} />
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">

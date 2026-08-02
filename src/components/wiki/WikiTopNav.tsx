@@ -191,6 +191,7 @@ export function WikiTopNav({
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
             onClick={onDashboardSelect}
+            aria-label="Dashboard"
             aria-current={activeView === "dashboard" ? "page" : undefined}
           >
             <LayoutDashboard
@@ -199,7 +200,13 @@ export function WikiTopNav({
                 activeView === "dashboard" && "text-primary",
               )}
             />
-            <span className="hidden sm:inline">Dashboard</span>
+            <span
+              className={cn(
+                activeView === "dashboard" ? "inline" : "hidden sm:inline",
+              )}
+            >
+              Dashboard
+            </span>
           </Button>
           <Button
             variant="ghost"
@@ -211,10 +218,17 @@ export function WikiTopNav({
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
             onClick={onKnowledgeHubSelect}
+            aria-label="Base Clínica"
             aria-current={activeView === "knowledge-hub" ? "page" : undefined}
           >
             <Sparkles className="h-4 w-4" />
-            <span className="hidden sm:inline">Base Clínica</span>
+            <span
+              className={cn(
+                activeView === "knowledge-hub" ? "inline" : "hidden sm:inline",
+              )}
+            >
+              Base Clínica
+            </span>
           </Button>
           <Button
             variant="ghost"
@@ -226,10 +240,17 @@ export function WikiTopNav({
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
             onClick={onAIHubSelect}
+            aria-label="FisioBrain"
             aria-current={activeView === "ai-hub" ? "page" : undefined}
           >
             <Activity className="h-4 w-4" />
-            <span className="hidden sm:inline">FisioBrain</span>
+            <span
+              className={cn(
+                activeView === "ai-hub" ? "inline" : "hidden sm:inline",
+              )}
+            >
+              FisioBrain
+            </span>
           </Button>
           <Button
             variant="ghost"
@@ -241,10 +262,17 @@ export function WikiTopNav({
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
             onClick={onPapersSelect}
+            aria-label="Artigos"
             aria-current={activeView === "papers" ? "page" : undefined}
           >
             <BookOpen className="h-4 w-4" />
-            <span className="hidden sm:inline">Artigos</span>
+            <span
+              className={cn(
+                activeView === "papers" ? "inline" : "hidden sm:inline",
+              )}
+            >
+              Artigos
+            </span>
           </Button>
           <Button
             variant="ghost"
@@ -256,10 +284,17 @@ export function WikiTopNav({
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
             onClick={onDictionarySelect}
+            aria-label="Dicionário"
             aria-current={activeView === "dictionary" ? "page" : undefined}
           >
             <Languages className="h-4 w-4" />
-            <span className="hidden sm:inline">Dicionário</span>
+            <span
+              className={cn(
+                activeView === "dictionary" ? "inline" : "hidden sm:inline",
+              )}
+            >
+              Dicionário
+            </span>
           </Button>
         </div>
 

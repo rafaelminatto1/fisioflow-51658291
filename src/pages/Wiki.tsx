@@ -114,6 +114,7 @@ export default function WikiPage() {
   const [searchQuery, setSearchQuery] = useState(
     searchParams.get("search") || "",
   );
+  const [dashboardPageLimit, setDashboardPageLimit] = useState(8);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedPage, setSelectedPage] = useState<WikiPage | null>(null);
   const [draftPage, setDraftPage] = useState<Partial<WikiPage> | null>(null);
@@ -215,6 +216,19 @@ export default function WikiPage() {
     return filteredPages.filter((page) => !isEvidencePage(page));
   }, [filteredPages, searchQuery]);
 
+  const recentPageIds = useMemo(
+    () => new Set(recentPages.map((page) => page.id)),
+    [recentPages],
+  );
+  const catalogPages = useMemo(
+    () =>
+      searchQuery
+        ? displayedPages
+        : displayedPages.filter((page) => !recentPageIds.has(page.id)),
+    [displayedPages, recentPageIds, searchQuery],
+  );
+  const visibleCatalogPages = catalogPages.slice(0, dashboardPageLimit);
+
   const handleTagSelect = (tag: string) => {
     const query = `#${tag}`;
     setActiveView("dashboard");
@@ -260,6 +274,8 @@ export default function WikiPage() {
       setSearchParams(next, { replace: true });
     }
   }, [searchParams, slug]);
+
+  useEffect(() => setDashboardPageLimit(8), [searchQuery]);
 
   useEffect(() => {
     if (!slug) {
@@ -502,91 +518,109 @@ export default function WikiPage() {
   return (
     <PageLayout className="bg-slate-50/40">
       <PageContainer>
-        <section className="relative mb-4 overflow-hidden rounded-[24px] border border-slate-800 bg-[#101c31] px-5 py-5 text-white shadow-[0_20px_48px_rgba(15,23,42,0.14)] sm:px-7 sm:py-6">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(14,165,233,0.2),transparent_32%),linear-gradient(120deg,transparent_45%,rgba(20,184,166,0.08))]" />
-          <div className="relative">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-              <div className="max-w-2xl">
-                <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-sky-200">
-                  <BookOpenCheck className="h-3.5 w-3.5" />
-                  Evidência no ponto de uso
+        {activeView !== "page" ? (
+          <section
+            className={`relative mb-4 overflow-hidden border border-slate-800 bg-[#101c31] text-white shadow-[0_20px_48px_rgba(15,23,42,0.14)] ${
+              activeView === "dashboard"
+                ? "rounded-[24px] px-5 py-5 sm:px-7 sm:py-6"
+                : "rounded-2xl px-5 py-4 sm:px-6"
+            }`}
+          >
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(14,165,233,0.2),transparent_32%),linear-gradient(120deg,transparent_45%,rgba(20,184,166,0.08))]" />
+            <div className="relative">
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                <div className="max-w-2xl">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-sky-200">
+                    <BookOpenCheck className="h-3.5 w-3.5" />
+                    Evidência no ponto de uso
+                  </div>
+                  <h1
+                    className={`font-black tracking-[-0.04em] ${
+                      activeView === "dashboard"
+                        ? "mt-3 text-3xl sm:text-[38px]"
+                        : "mt-2 text-2xl"
+                    }`}
+                  >
+                    Biblioteca Clínica
+                  </h1>
+                  <p className="mt-1 max-w-xl text-sm font-medium leading-6 text-slate-300">
+                    Diretrizes, trilhas, artigos e inteligência clínica
+                    organizados para decisões mais seguras.
+                  </p>
                 </div>
-                <h1 className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-[38px]">
-                  Biblioteca Clínica
-                </h1>
-                <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-slate-300">
-                  Diretrizes, trilhas, artigos e inteligência clínica
-                  organizados para decisões mais seguras.
-                </p>
+
+                {activeView === "dashboard" ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-10 rounded-xl border-white/15 bg-white/5 font-bold text-white hover:bg-white/10 hover:text-white"
+                      disabled={
+                        syncing || !currentOrganizationId || !currentUserId
+                      }
+                      onClick={handleSyncArticles}
+                    >
+                      <History
+                        className={`mr-2 h-4 w-4 ${syncing ? "animate-spin" : ""}`}
+                      />
+                      Sincronizar
+                    </Button>
+                    <Button
+                      onClick={handleCreatePage}
+                      size="sm"
+                      className="h-10 rounded-xl bg-sky-500 px-4 font-black text-white shadow-[0_8px_20px_rgba(14,165,233,0.25)] hover:bg-sky-400"
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Nova página
+                    </Button>
+                  </div>
+                ) : null}
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-10 rounded-xl border-white/15 bg-white/5 font-bold text-white hover:bg-white/10 hover:text-white"
-                  disabled={syncing || !currentOrganizationId || !currentUserId}
-                  onClick={handleSyncArticles}
-                >
-                  <History
-                    className={`mr-2 h-4 w-4 ${syncing ? "animate-spin" : ""}`}
-                  />
-                  Sincronizar
-                </Button>
-                <Button
-                  onClick={handleCreatePage}
-                  size="sm"
-                  className="h-10 rounded-xl bg-sky-500 px-4 font-black text-white shadow-[0_8px_20px_rgba(14,165,233,0.25)] hover:bg-sky-400"
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Nova página
-                </Button>
-              </div>
-            </div>
-
-            <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
               {activeView === "dashboard" ? (
-                <div className="relative max-w-2xl">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    aria-label="Buscar na Biblioteca Clínica"
-                    placeholder="Buscar por diretriz, protocolo, tema ou #tag..."
-                    value={searchQuery}
-                    onChange={(event) =>
-                      handleDashboardSearchChange(event.target.value)
-                    }
-                    className="h-12 rounded-xl border-white/10 bg-white/95 pl-11 font-semibold text-slate-900 placeholder:text-slate-400 focus-visible:ring-sky-400"
-                  />
+                <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+                  <div className="relative max-w-2xl">
+                    <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Input
+                      aria-label="Buscar na Biblioteca Clínica"
+                      placeholder="Buscar por diretriz, protocolo, tema ou #tag..."
+                      value={searchQuery}
+                      onChange={(event) =>
+                        handleDashboardSearchChange(event.target.value)
+                      }
+                      className="h-12 rounded-xl border-white/10 bg-white/95 pl-11 font-semibold text-slate-900 placeholder:text-slate-400 focus-visible:ring-sky-400"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {[
+                      ["Páginas", wikiStats.pages],
+                      ["Publicadas", wikiStats.published],
+                      ["Verificadas", wikiStats.verified],
+                      ["Em triagem", wikiStats.triage],
+                    ].map(([label, value]) => (
+                      <div
+                        key={label}
+                        className="min-w-[96px] rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 backdrop-blur-sm"
+                      >
+                        <p className="text-lg font-black tabular-nums text-white">
+                          {isLoading && label !== "Verificadas" ? "—" : value}
+                        </p>
+                        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+                          {label}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-300">
+                <div className="mt-2 flex items-center gap-2 text-xs font-bold text-slate-300">
                   <Sparkles className="h-4 w-4 text-sky-300" />
                   Conteúdo organizado por contexto clínico e nível de evidência.
                 </div>
               )}
-
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {[
-                  ["Páginas", wikiStats.pages],
-                  ["Publicadas", wikiStats.published],
-                  ["Verificadas", wikiStats.verified],
-                  ["Em triagem", wikiStats.triage],
-                ].map(([label, value]) => (
-                  <div
-                    key={label}
-                    className="min-w-[96px] rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 backdrop-blur-sm"
-                  >
-                    <p className="text-lg font-black tabular-nums text-white">
-                      {isLoading && label !== "Verificadas" ? "—" : value}
-                    </p>
-                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
-                      {label}
-                    </p>
-                  </div>
-                ))}
-              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        ) : null}
       </PageContainer>
 
       <WikiTopNav
@@ -887,9 +921,9 @@ export default function WikiPage() {
                     {searchQuery
                       ? `Resultados para "${searchQuery}"`
                       : "Todas as Páginas Gerais"}
-                    {displayedPages.length > 0 && (
+                    {catalogPages.length > 0 && (
                       <Badge variant="secondary" className="ml-2 font-mono">
-                        {displayedPages.length}
+                        {catalogPages.length}
                       </Badge>
                     )}
                   </h3>
@@ -903,17 +937,31 @@ export default function WikiPage() {
                         />
                       ))}
                     </div>
-                  ) : displayedPages.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                      {displayedPages.map((page) => (
-                        <WikiPageCard
-                          key={page.id}
-                          page={page}
-                          onClick={() => handlePageSelect(page)}
-                          onDelete={() => handleDeletePage(page)}
-                        />
-                      ))}
-                    </div>
+                  ) : catalogPages.length > 0 ? (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {visibleCatalogPages.map((page) => (
+                          <WikiPageCard
+                            key={page.id}
+                            page={page}
+                            onClick={() => handlePageSelect(page)}
+                            onDelete={() => handleDeletePage(page)}
+                          />
+                        ))}
+                      </div>
+                      {visibleCatalogPages.length < catalogPages.length ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full rounded-xl"
+                          onClick={() =>
+                            setDashboardPageLimit((limit) => limit + 8)
+                          }
+                        >
+                          Carregar mais páginas
+                        </Button>
+                      ) : null}
+                    </>
                   ) : (
                     <div className="rounded-2xl border border-dashed p-20 text-center space-y-4">
                       <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center">

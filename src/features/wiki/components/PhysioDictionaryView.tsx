@@ -1,9 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Search, BookA, Languages, Plus, Edit, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useDictionary, DictionaryTerm } from "@/hooks/useDictionary";
@@ -13,7 +19,12 @@ import { protocolDictionary, ProtocolEntry } from "@/data/protocolDictionary";
 
 import { ExerciseViewModal } from "@/components/exercises/ExerciseViewModal";
 import { useExercises } from "@/hooks/useExercises";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,20 +50,44 @@ const CATEGORIES = [
   { id: "medicament", label: "Medicamentos" },
 ];
 
+const TERMS_PER_PAGE = 18;
+
 export function PhysioDictionaryView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [showModal, setShowModal] = useState(false);
-  const [editTerm, setEditTerm] = useState<DictionaryTerm | undefined>(undefined);
+  const [editTerm, setEditTerm] = useState<DictionaryTerm | undefined>(
+    undefined,
+  );
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [selectedProtocol, setSelectedProtocol] = useState<ProtocolEntry | null>(null);
-  const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
+  const [selectedProtocol, setSelectedProtocol] =
+    useState<ProtocolEntry | null>(null);
+  const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(
+    null,
+  );
+  const [visibleCount, setVisibleCount] = useState(TERMS_PER_PAGE);
 
   const { exercises } = useExercises();
   const selectedExercise = exercises.find((e) => e.id === selectedExerciseId);
 
-  const { terms, isLoading, createTerm, updateTerm, deleteTerm, isCreating, isUpdating } =
-    useDictionary(searchQuery, activeCategory);
+  const {
+    terms,
+    isLoading,
+    createTerm,
+    updateTerm,
+    deleteTerm,
+    isCreating,
+    isUpdating,
+  } = useDictionary(searchQuery, activeCategory);
+  const visibleTerms = useMemo(
+    () => terms.slice(0, visibleCount),
+    [terms, visibleCount],
+  );
+  const hasMoreTerms = visibleCount < terms.length;
+
+  useEffect(() => {
+    setVisibleCount(TERMS_PER_PAGE);
+  }, [searchQuery, activeCategory]);
 
   const handleAdd = () => {
     setEditTerm(undefined);
@@ -80,6 +115,23 @@ export function PhysioDictionaryView() {
     }
   };
 
+  const handleOpenTerm = (term: DictionaryTerm) => {
+    if (term.category === "procedure" || term.subcategory === "Protocolo") {
+      const protocol = protocolDictionary.find((item) => item.id === term.id);
+      if (protocol) setSelectedProtocol(protocol);
+      return;
+    }
+
+    if (term.category === "exercise") {
+      setSelectedExerciseId(term.id);
+    }
+  };
+
+  const canOpenTerm = (term: DictionaryTerm) =>
+    term.category === "exercise" ||
+    term.category === "procedure" ||
+    term.subcategory === "Protocolo";
+
   return (
     <div className="flex flex-col h-full bg-muted dark:bg-slate-900/50">
       <div className="border-b bg-background px-6 py-6 space-y-4">
@@ -92,12 +144,13 @@ export function PhysioDictionaryView() {
               Dicionário Bilíngue
             </h1>
             <p className="text-slate-500 font-medium mt-2 max-w-2xl leading-relaxed">
-              Consulte termos técnicos em português ou inglês e encontre traduções, 
-              sinônimos e referências cruzadas aplicadas em toda a plataforma FisioFlow.
+              Consulte termos técnicos em português ou inglês e encontre
+              traduções, sinônimos e referências cruzadas aplicadas em toda a
+              plataforma FisioFlow.
             </p>
           </div>
-          <Button 
-            onClick={handleAdd} 
+          <Button
+            onClick={handleAdd}
             premium
             glow
             className="gap-2 h-11 px-6 rounded-2xl bg-slate-900 text-white font-bold shadow-lg shadow-slate-900/10"
@@ -119,19 +172,20 @@ export function PhysioDictionaryView() {
 
         <div className="flex flex-wrap gap-2 pt-2">
           {CATEGORIES.map((cat) => (
-            <Badge
+            <button
+              type="button"
               key={cat.id}
-              variant={activeCategory === cat.id ? "default" : "outline"}
+              aria-pressed={activeCategory === cat.id}
               className={cn(
-                "cursor-pointer px-4 py-1.5 text-xs font-bold uppercase tracking-widest rounded-xl transition-all",
-                activeCategory === cat.id 
-                  ? "bg-orange-600 text-white border-transparent shadow-md shadow-orange-500/20" 
-                  : "bg-white text-slate-400 border-slate-200 hover:text-slate-600 hover:border-slate-300"
+                "rounded-xl border px-4 py-1.5 text-xs font-bold uppercase tracking-widest transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2",
+                activeCategory === cat.id
+                  ? "bg-orange-600 text-white border-transparent shadow-md shadow-orange-500/20"
+                  : "bg-white text-slate-400 border-slate-200 hover:text-slate-600 hover:border-slate-300",
               )}
               onClick={() => setActiveCategory(cat.id)}
             >
               {cat.label}
-            </Badge>
+            </button>
           ))}
         </div>
       </div>
@@ -148,16 +202,25 @@ export function PhysioDictionaryView() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-1">
-            {terms.map((term) => (
+            {visibleTerms.map((term) => (
               <Card
                 key={term.id}
-                className="group relative border-slate-200/60 dark:border-slate-800/60 bg-slate-50/50 rounded-2xl transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-1 overflow-hidden cursor-pointer"
-                onClick={() => {
-                  if (term.category === "procedure" || term.subcategory === "Protocolo") {
-                    const proto = protocolDictionary.find((p) => p.id === term.id);
-                    if (proto) setSelectedProtocol(proto);
-                  } else if (term.category === "exercise") {
-                    setSelectedExerciseId(term.id);
+                role={canOpenTerm(term) ? "button" : undefined}
+                tabIndex={canOpenTerm(term) ? 0 : undefined}
+                aria-label={canOpenTerm(term) ? `Abrir ${term.pt}` : undefined}
+                className={cn(
+                  "group relative overflow-hidden rounded-2xl border-slate-200/60 bg-slate-50/50 transition-all duration-300 [contain-intrinsic-size:auto_280px] [content-visibility:auto] dark:border-slate-800/60",
+                  canOpenTerm(term) &&
+                    "cursor-pointer hover:-translate-y-1 hover:shadow-xl hover:shadow-orange-500/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2",
+                )}
+                onClick={() => handleOpenTerm(term)}
+                onKeyDown={(event) => {
+                  if (
+                    event.target === event.currentTarget &&
+                    (event.key === "Enter" || event.key === " ")
+                  ) {
+                    event.preventDefault();
+                    handleOpenTerm(term);
                   }
                 }}
               >
@@ -172,7 +235,8 @@ export function PhysioDictionaryView() {
                         variant="secondary"
                         className="text-[9px] font-black uppercase tracking-widest whitespace-nowrap bg-white text-slate-400 border-slate-100 rounded-md"
                       >
-                        {CATEGORIES.find((c) => c.id === term.category)?.label || term.category}
+                        {CATEGORIES.find((c) => c.id === term.category)
+                          ?.label || term.category}
                       </Badge>
                     </div>
                   </div>
@@ -181,11 +245,12 @@ export function PhysioDictionaryView() {
                     {term.en}
                   </CardDescription>
 
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-300 flex gap-1 bg-white p-1 rounded-xl border border-slate-200/50 dark:border-slate-800/50 shadow-lg z-10 translate-y-1 group-hover:translate-y-0">
+                  <div className="absolute right-2 top-2 z-10 flex gap-1 rounded-xl border border-slate-200/50 bg-white p-1 shadow-lg transition-all duration-300 dark:border-slate-800/50 lg:translate-y-1 lg:opacity-0 lg:group-focus-within:translate-y-0 lg:group-focus-within:opacity-100 lg:group-hover:translate-y-0 lg:group-hover:opacity-100">
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 rounded-lg hover:bg-slate-100"
+                      aria-label={`Editar ${term.pt}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEdit(term);
@@ -197,6 +262,7 @@ export function PhysioDictionaryView() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/5"
+                      aria-label={`Excluir ${term.pt}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         setDeleteId(term.id);
@@ -254,6 +320,25 @@ export function PhysioDictionaryView() {
             ))}
           </div>
         )}
+        {!isLoading && hasMoreTerms ? (
+          <div className="flex justify-center px-1 py-8">
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11 rounded-xl px-6 font-bold"
+              onClick={() =>
+                setVisibleCount((count) =>
+                  Math.min(count + TERMS_PER_PAGE, terms.length),
+                )
+              }
+            >
+              Carregar mais
+              <span className="ml-2 text-xs font-medium text-muted-foreground">
+                {visibleTerms.length} de {terms.length}
+              </span>
+            </Button>
+          </div>
+        ) : null}
         {!isLoading && terms.length === 0 && (
           <div className="flex flex-col items-center justify-center py-32 text-center animate-in fade-in zoom-in duration-500">
             <div className="h-24 w-24 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-6 relative">
@@ -264,7 +349,8 @@ export function PhysioDictionaryView() {
               Dicionário Vazio
             </h3>
             <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-3 font-medium">
-              Não encontramos termos para sua busca. Deseja cadastrar uma nova terminologia clínica?
+              Não encontramos termos para sua busca. Deseja cadastrar uma nova
+              terminologia clínica?
             </p>
             <Button
               variant="default"
@@ -295,7 +381,10 @@ export function PhysioDictionaryView() {
       )}
 
       {/* Modal de Detalhes do Protocolo */}
-      <Dialog open={!!selectedProtocol} onOpenChange={(open) => !open && setSelectedProtocol(null)}>
+      <Dialog
+        open={!!selectedProtocol}
+        onOpenChange={(open) => !open && setSelectedProtocol(null)}
+      >
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {selectedProtocol && (
             <>
@@ -314,13 +403,16 @@ export function PhysioDictionaryView() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+      <AlertDialog
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir este termo do dicionário? Esta ação não pode ser
-              desfeita.
+              Tem certeza que deseja excluir este termo do dicionário? Esta ação
+              não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
