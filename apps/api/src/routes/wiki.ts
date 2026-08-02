@@ -15,6 +15,7 @@ import { searchFilter } from "../lib/db-utils";
 import { removeWikiPageFromIndex, syncWikiPagePatientIndex } from "../lib/wikiIndexing";
 import { syncWikiToIndex, removeWikiFromIndex } from "../lib/contentIndexing";
 import { requireKnowledgeCapability } from "../lib/knowledgeCapabilities";
+import { syncLegacyKnowledgeItem } from "../lib/knowledgeLegacySync";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -454,6 +455,16 @@ app.post("/", requireAuth, async (c) => {
     version: 1,
     comment: comment || "Página criada",
     createdBy: user.uid,
+  });
+
+  await syncLegacyKnowledgeItem(c.env, {
+    organizationId: user.organizationId,
+    actorId: user.uid,
+    sourceType: "wiki_pages",
+    sourceId: row.id,
+    kind: "page",
+    title: row.title,
+    content: row.content,
   });
 
   return c.json({ data: row });

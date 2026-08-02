@@ -1,5 +1,3 @@
--- Canonical, organization-scoped editorial model for Wiki curation.
--- Additive: legacy tables remain authoritative until their adapters are enabled.
 
 CREATE TABLE knowledge_capability_grants (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -65,18 +63,11 @@ CREATE TABLE knowledge_item_versions (
   submitted_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (organization_id, id),
+  UNIQUE (organization_id, item_id, id),
   UNIQUE (organization_id, item_id, version_number),
   FOREIGN KEY (organization_id, item_id)
     REFERENCES knowledge_items(organization_id, id) ON DELETE CASCADE
 );
-
-ALTER TABLE knowledge_items
-  ADD CONSTRAINT fk_knowledge_items_approved_version
-    FOREIGN KEY (organization_id, approved_version_id)
-    REFERENCES knowledge_item_versions(organization_id, id) ON DELETE RESTRICT,
-  ADD CONSTRAINT fk_knowledge_items_published_version
-    FOREIGN KEY (organization_id, published_version_id)
-    REFERENCES knowledge_item_versions(organization_id, id) ON DELETE RESTRICT;
 
 CREATE INDEX idx_knowledge_versions_queue
   ON knowledge_item_versions (organization_id, editorial_status, created_at DESC, id DESC);
@@ -97,8 +88,8 @@ CREATE TABLE knowledge_reviews (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   FOREIGN KEY (organization_id, item_id)
     REFERENCES knowledge_items(organization_id, id) ON DELETE CASCADE,
-  FOREIGN KEY (organization_id, version_id)
-    REFERENCES knowledge_item_versions(organization_id, id) ON DELETE CASCADE
+  FOREIGN KEY (organization_id, item_id, version_id)
+    REFERENCES knowledge_item_versions(organization_id, item_id, id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_knowledge_reviews_item
@@ -119,8 +110,8 @@ CREATE TABLE knowledge_assignments (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   FOREIGN KEY (organization_id, item_id)
     REFERENCES knowledge_items(organization_id, id) ON DELETE CASCADE,
-  FOREIGN KEY (organization_id, version_id)
-    REFERENCES knowledge_item_versions(organization_id, id) ON DELETE CASCADE
+  FOREIGN KEY (organization_id, item_id, version_id)
+    REFERENCES knowledge_item_versions(organization_id, item_id, id) ON DELETE CASCADE
 );
 
 CREATE UNIQUE INDEX uq_knowledge_assignments_active
@@ -162,12 +153,15 @@ CREATE TABLE knowledge_sources (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   FOREIGN KEY (organization_id, item_id)
     REFERENCES knowledge_items(organization_id, id) ON DELETE CASCADE,
-  FOREIGN KEY (organization_id, version_id)
-    REFERENCES knowledge_item_versions(organization_id, id) ON DELETE CASCADE
+  FOREIGN KEY (organization_id, item_id, version_id)
+    REFERENCES knowledge_item_versions(organization_id, item_id, id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_knowledge_sources_item
   ON knowledge_sources (organization_id, item_id, version_id);
+CREATE UNIQUE INDEX uq_knowledge_sources_version_source
+  ON knowledge_sources (organization_id, version_id, source_type, source_id)
+  WHERE version_id IS NOT NULL AND source_id IS NOT NULL;
 
 CREATE TABLE knowledge_audit_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -200,127 +194,48 @@ CREATE TABLE knowledge_idempotency_keys (
 CREATE INDEX idx_knowledge_idempotency_expiry
   ON knowledge_idempotency_keys (organization_id, expires_at);
 
--- Conservative, restartable backfill. Legacy publication/verification never becomes
--- canonical approval without an auditable review.
-DO $backfill$
-DECLARE source RECORD; item_uuid UUID; version_uuid UUID;
-BEGIN
-  FOR source IN
-    SELECT id, organization_id, title, slug, content, html_content, is_published,
-           COALESCE(created_by, 'legacy-backfill') AS actor
-      FROM wiki_pages WHERE organization_id IS NOT NULL AND deleted_at IS NULL
-  LOOP
-    SELECT knowledge_item_id INTO item_uuid FROM knowledge_source_map
-      WHERE organization_id = source.organization_id AND source_type = 'wiki_pages'
-        AND source_id = source.id::text;
-    IF item_uuid IS NULL THEN
-      INSERT INTO knowledge_items (organization_id, kind, title, slug, created_by)
-      VALUES (source.organization_id, 'page', source.title, source.slug, source.actor)
-      RETURNING id INTO item_uuid;
-      INSERT INTO knowledge_source_map (organization_id, source_type, source_id, knowledge_item_id)
-      VALUES (source.organization_id, 'wiki_pages', source.id::text, item_uuid);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM knowledge_item_versions WHERE organization_id = source.organization_id AND item_id = item_uuid) THEN
-      INSERT INTO knowledge_item_versions
-        (organization_id,item_id,version_number,title,content,metadata,editorial_status,authored_by)
-      VALUES (source.organization_id,item_uuid,1,source.title,COALESCE(source.content,''),
-        jsonb_build_object('legacyWikiPageId',source.id,'htmlContent',source.html_content),
-        CASE WHEN source.is_published THEN 'triage' ELSE 'draft' END,source.actor)
-      RETURNING id INTO version_uuid;
-    END IF;
-  END LOOP;
-
-  IF to_regclass('public.knowledge_articles') IS NOT NULL THEN
-    FOR source IN EXECUTE
-      'SELECT organization_id, article_id, title, COALESCE(created_by, ''legacy-backfill'') actor,
-              COALESCE(raw_text, summary, '''') content, url, source, evidence
-         FROM knowledge_articles'
-    LOOP
-      SELECT knowledge_item_id INTO item_uuid FROM knowledge_source_map
-        WHERE organization_id = source.organization_id AND source_type = 'knowledge_articles'
-          AND source_id = source.article_id::text;
-      IF item_uuid IS NULL THEN
-        INSERT INTO knowledge_items (organization_id,kind,title,created_by)
-        VALUES (source.organization_id,'source',COALESCE(NULLIF(source.title,''),'Fonte sem título'),source.actor)
-        RETURNING id INTO item_uuid;
-        INSERT INTO knowledge_source_map (organization_id,source_type,source_id,knowledge_item_id)
-        VALUES (source.organization_id,'knowledge_articles',source.article_id::text,item_uuid);
-      END IF;
-      IF NOT EXISTS (SELECT 1 FROM knowledge_item_versions WHERE organization_id = source.organization_id AND item_id = item_uuid) THEN
-        INSERT INTO knowledge_item_versions
-          (organization_id,item_id,version_number,title,content,metadata,editorial_status,authored_by)
-        VALUES (source.organization_id,item_uuid,1,COALESCE(NULLIF(source.title,''),'Fonte sem título'),
-          COALESCE(source.content,''),jsonb_build_object('legacyEvidence',source.evidence),'triage',source.actor)
-        RETURNING id INTO version_uuid;
-        INSERT INTO knowledge_sources (organization_id,item_id,version_id,source_type,source_id,title,url)
-        VALUES (source.organization_id,item_uuid,version_uuid,'knowledge_articles',source.article_id::text,
-          COALESCE(NULLIF(source.title,''),'Fonte sem título'),source.url);
-      END IF;
-    END LOOP;
-  END IF;
-
-  IF to_regclass('public.organization_evidence') IS NOT NULL THEN
-    FOR source IN
-      SELECT oe.organization_id, oe.article_id, oe.imported_by actor, er.doi, er.pmid,
-             COALESCE(ea.title, er.doi, er.pmid, 'Fonte científica sem título') title
-        FROM organization_evidence oe JOIN evidence_resources er ON er.article_id = oe.article_id
-        LEFT JOIN evidence_articles ea ON ea.pmid = er.pmid
-    LOOP
-      SELECT knowledge_item_id INTO item_uuid FROM knowledge_source_map
-        WHERE organization_id = source.organization_id AND source_type = 'organization_evidence'
-          AND source_id = source.article_id::text;
-      IF item_uuid IS NULL THEN
-        INSERT INTO knowledge_items (organization_id,kind,title,created_by)
-        VALUES (source.organization_id,'source',source.title,source.actor) RETURNING id INTO item_uuid;
-        INSERT INTO knowledge_source_map (organization_id,source_type,source_id,knowledge_item_id)
-        VALUES (source.organization_id,'organization_evidence',source.article_id::text,item_uuid);
-      END IF;
-      IF NOT EXISTS (SELECT 1 FROM knowledge_item_versions WHERE organization_id = source.organization_id AND item_id = item_uuid) THEN
-        INSERT INTO knowledge_item_versions
-          (organization_id,item_id,version_number,title,editorial_status,authored_by)
-        VALUES (source.organization_id,item_uuid,1,source.title,'triage',source.actor)
-        RETURNING id INTO version_uuid;
-        INSERT INTO knowledge_sources
-          (organization_id,item_id,version_id,source_type,source_id,title,doi,pmid)
-        VALUES (source.organization_id,item_uuid,version_uuid,'evidence_resources',source.article_id::text,
-          source.title,source.doi,source.pmid);
-      END IF;
-    END LOOP;
-  END IF;
-END $backfill$;
-
--- Bootstrap administrativo idempotente. O owner ativo mais antigo de cada
--- organização recebe somente capacidades administrativas; revisão clínica nunca é
--- concedida por papel ou migration.
-WITH first_owner AS (
-  SELECT DISTINCT ON (organization_id)
-         organization_id, user_id
-    FROM profiles
-   WHERE organization_id IS NOT NULL
-     AND user_id IS NOT NULL
-     AND is_active IS NOT FALSE
-     AND (role = 'owner' OR 'owner' = ANY(COALESCE(roles, ARRAY[]::text[])))
-   ORDER BY organization_id, created_at ASC, id ASC
-), bootstrap_capabilities(capability) AS (
-  VALUES ('manage_library'), ('publish_knowledge'), ('manage_library_policy')
-)
-INSERT INTO knowledge_capability_grants
-  (organization_id, user_id, capability, granted_by, reason)
-SELECT owner.organization_id, owner.user_id, capability.capability,
-       owner.user_id, 'bootstrap owner inicial — migration 0158'
-  FROM first_owner owner CROSS JOIN bootstrap_capabilities capability
-ON CONFLICT (organization_id, user_id, capability) DO NOTHING;
-
-DO $rls$
-DECLARE table_name TEXT;
-BEGIN
-  FOREACH table_name IN ARRAY ARRAY[
-    'knowledge_capability_grants','knowledge_items','knowledge_item_versions',
-    'knowledge_reviews','knowledge_assignments','knowledge_source_map',
-    'knowledge_sources','knowledge_audit_events','knowledge_idempotency_keys'
-  ] LOOP
-    EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', table_name);
-    EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', table_name);
-    EXECUTE format('CREATE POLICY %I ON %I USING (organization_id::text = current_setting(''app.org_id'', true)) WITH CHECK (organization_id::text = current_setting(''app.org_id'', true))', table_name || '_org_isolation', table_name);
-  END LOOP;
-END $rls$;
+ALTER TABLE knowledge_capability_grants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE knowledge_capability_grants FORCE ROW LEVEL SECURITY;
+CREATE POLICY knowledge_capability_grants_org_isolation ON knowledge_capability_grants
+  USING (organization_id::text = current_setting('app.org_id', true))
+  WITH CHECK (organization_id::text = current_setting('app.org_id', true));
+ALTER TABLE knowledge_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE knowledge_items FORCE ROW LEVEL SECURITY;
+CREATE POLICY knowledge_items_org_isolation ON knowledge_items
+  USING (organization_id::text = current_setting('app.org_id', true))
+  WITH CHECK (organization_id::text = current_setting('app.org_id', true));
+ALTER TABLE knowledge_item_versions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE knowledge_item_versions FORCE ROW LEVEL SECURITY;
+CREATE POLICY knowledge_item_versions_org_isolation ON knowledge_item_versions
+  USING (organization_id::text = current_setting('app.org_id', true))
+  WITH CHECK (organization_id::text = current_setting('app.org_id', true));
+ALTER TABLE knowledge_reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE knowledge_reviews FORCE ROW LEVEL SECURITY;
+CREATE POLICY knowledge_reviews_org_isolation ON knowledge_reviews
+  USING (organization_id::text = current_setting('app.org_id', true))
+  WITH CHECK (organization_id::text = current_setting('app.org_id', true));
+ALTER TABLE knowledge_assignments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE knowledge_assignments FORCE ROW LEVEL SECURITY;
+CREATE POLICY knowledge_assignments_org_isolation ON knowledge_assignments
+  USING (organization_id::text = current_setting('app.org_id', true))
+  WITH CHECK (organization_id::text = current_setting('app.org_id', true));
+ALTER TABLE knowledge_source_map ENABLE ROW LEVEL SECURITY;
+ALTER TABLE knowledge_source_map FORCE ROW LEVEL SECURITY;
+CREATE POLICY knowledge_source_map_org_isolation ON knowledge_source_map
+  USING (organization_id::text = current_setting('app.org_id', true))
+  WITH CHECK (organization_id::text = current_setting('app.org_id', true));
+ALTER TABLE knowledge_sources ENABLE ROW LEVEL SECURITY;
+ALTER TABLE knowledge_sources FORCE ROW LEVEL SECURITY;
+CREATE POLICY knowledge_sources_org_isolation ON knowledge_sources
+  USING (organization_id::text = current_setting('app.org_id', true))
+  WITH CHECK (organization_id::text = current_setting('app.org_id', true));
+ALTER TABLE knowledge_audit_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE knowledge_audit_events FORCE ROW LEVEL SECURITY;
+CREATE POLICY knowledge_audit_events_org_isolation ON knowledge_audit_events
+  USING (organization_id::text = current_setting('app.org_id', true))
+  WITH CHECK (organization_id::text = current_setting('app.org_id', true));
+ALTER TABLE knowledge_idempotency_keys ENABLE ROW LEVEL SECURITY;
+ALTER TABLE knowledge_idempotency_keys FORCE ROW LEVEL SECURITY;
+CREATE POLICY knowledge_idempotency_keys_org_isolation ON knowledge_idempotency_keys
+  USING (organization_id::text = current_setting('app.org_id', true))
+  WITH CHECK (organization_id::text = current_setting('app.org_id', true));

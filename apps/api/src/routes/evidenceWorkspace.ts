@@ -6,6 +6,7 @@ import { getRawSql } from "../lib/db";
 import { searchPubmed } from "../lib/evidence/sources/pubmed";
 import { upsertArticles } from "../lib/evidence/cache";
 import { resolveKnowledgeCapabilities } from "../lib/knowledgeCapabilities";
+import { syncLegacyKnowledgeItem } from "../lib/knowledgeLegacySync";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -324,6 +325,22 @@ app.post("/import", requireAuth, async (c) => {
       article.abstract ? "abstract_only" : "unknown",
     ],
   );
+  await syncLegacyKnowledgeItem(c.env, {
+    organizationId: c.get("user").organizationId,
+    actorId: c.get("user").uid,
+    sourceType: "organization_evidence",
+    sourceId: row.article_id,
+    kind: "source",
+    title: article.title || doi || pmid,
+    content: article.abstract ?? "",
+    source: {
+      type: "evidence_resources",
+      title: article.title || doi || pmid,
+      url: article.url,
+      doi,
+      pmid,
+    },
+  });
   return c.json(
     { data: { articleId: row.article_id, pmid, doi, duplicate } },
     duplicate ? 200 : 202,

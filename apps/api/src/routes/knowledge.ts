@@ -3,6 +3,7 @@ import { createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 import { requireKnowledgeCapability } from "../lib/knowledgeCapabilities";
+import { syncLegacyKnowledgeItem } from "../lib/knowledgeLegacySync";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -229,7 +230,23 @@ app.post("/articles", async (c) => {
     ],
   );
 
-  return c.json({ data: normalizeArticle(result.rows[0]) }, 201);
+  const created = result.rows[0] as Record<string, unknown>;
+  await syncLegacyKnowledgeItem(c.env, {
+    organizationId: user.organizationId,
+    actorId: user.uid,
+    sourceType: "knowledge_articles",
+    sourceId: articleId,
+    kind: "source",
+    title: String(created.title ?? body.title ?? "Fonte sem título"),
+    content: created.raw_text ? String(created.raw_text) : created.summary ? String(created.summary) : "",
+    source: {
+      type: "knowledge_articles",
+      title: String(created.title ?? body.title ?? "Fonte sem título"),
+      url: created.url ? String(created.url) : null,
+    },
+  });
+
+  return c.json({ data: normalizeArticle(created) }, 201);
 });
 
 app.put("/articles/:articleId", async (c) => {
@@ -314,6 +331,7 @@ app.post("/articles/sync", async (c) => {
   const articles = Array.isArray(body.articles) ? body.articles : [];
 
   for (const article of articles) {
+    const syncedArticleId = String(article.id ?? article.article_id ?? "");
     await pool.query(
       `
         INSERT INTO knowledge_articles (
@@ -345,7 +363,7 @@ app.post("/articles/sync", async (c) => {
       `,
       [
         user.organizationId,
-        String(article.id ?? article.article_id ?? ""),
+        syncedArticleId,
         String(article.title ?? ""),
         String(article.group ?? ""),
         String(article.subgroup ?? ""),
@@ -367,6 +385,19 @@ app.post("/articles/sync", async (c) => {
         user.uid,
       ],
     );
+    await syncLegacyKnowledgeItem(c.env, {
+      organizationId: user.organizationId,
+      actorId: user.uid,
+      sourceType: "knowledge_articles",
+      sourceId: syncedArticleId,
+      kind: "source",
+      title: String(article.title ?? "Fonte sem título"),
+      source: {
+        type: "knowledge_articles",
+        title: String(article.title ?? "Fonte sem título"),
+        url: article.url ? String(article.url) : null,
+      },
+    });
   }
 
   return c.json({ indexed: articles.length });

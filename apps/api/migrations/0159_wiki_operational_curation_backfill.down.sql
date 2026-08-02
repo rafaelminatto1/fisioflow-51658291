@@ -1,0 +1,3 @@
+-- Backfill reverso intencionalmente vazio.
+-- Remover dados canônicos após o sistema começar a gravar neles destruiria
+-- decisões editoriais. O rollback funcional deve desativar a rota/feature.

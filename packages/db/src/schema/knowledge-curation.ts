@@ -107,6 +107,11 @@ export const knowledgeItemVersions = pgTable(
       table.organizationId,
       table.id,
     ),
+    unique("uq_knowledge_item_versions_identity").on(
+      table.organizationId,
+      table.itemId,
+      table.id,
+    ),
     unique("uq_knowledge_item_versions_number").on(
       table.organizationId,
       table.itemId,
@@ -246,6 +251,12 @@ export const knowledgeSources = pgTable(
       .notNull(),
   },
   (table) => [
+    unique("uq_knowledge_sources_version_source").on(
+      table.organizationId,
+      table.versionId,
+      table.sourceType,
+      table.sourceId,
+    ),
     index("idx_knowledge_sources_item").on(
       table.organizationId,
       table.itemId,
