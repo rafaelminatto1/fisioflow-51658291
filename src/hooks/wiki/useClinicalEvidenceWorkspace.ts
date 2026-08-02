@@ -268,16 +268,18 @@ export function useClinicalEvidenceWorkspace() {
       ).then((response) => response.data),
   });
 
+  const capabilities = Array.isArray(query.data?.capabilities)
+    ? query.data.capabilities
+    : [];
+
   return {
     ...query,
     articles: query.data?.articles ?? [],
     collections: query.data?.collections ?? [],
     source: query.data?.source,
-    canImport: query.data?.capabilities.includes("import") ?? false,
-    canUseCollections:
-      query.data?.capabilities.includes("collections") ?? false,
-    canUsePatientContext:
-      query.data?.capabilities.includes("patientContext") ?? false,
+    canImport: capabilities.includes("import"),
+    canUseCollections: capabilities.includes("collections"),
+    canUsePatientContext: capabilities.includes("patientContext"),
     importArticle: importMutation.mutateAsync,
     isImporting: importMutation.isPending,
     importError: importMutation.error,
