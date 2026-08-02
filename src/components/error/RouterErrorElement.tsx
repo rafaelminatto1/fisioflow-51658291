@@ -1,6 +1,11 @@
-import { AlertTriangle, Home, RefreshCw, Stethoscope } from "lucide-react";
+import { AlertTriangle, Ban, Home, RefreshCw, Stethoscope } from "lucide-react";
 import { useEffect } from "react";
-import { isRouteErrorResponse, Link, useLocation, useRouteError } from "react-router-dom";
+import {
+  isRouteErrorResponse,
+  Link,
+  useLocation,
+  useRouteError,
+} from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
@@ -57,8 +62,9 @@ export function RouterErrorElement() {
                   A tela travou, mas o sistema isolou a falha.
                 </h1>
                 <p className="max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
-                  Esta rota encontrou um erro durante a renderização. Você pode recarregar a tela,
-                  voltar para onde estava, ou tentar limpar o cache.
+                  Esta rota encontrou um erro durante a renderização. Você pode
+                  recarregar a tela, voltar para onde estava, ou tentar limpar o
+                  cache.
                 </p>
               </div>
 
@@ -73,7 +79,11 @@ export function RouterErrorElement() {
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Button type="button" className="gap-2" onClick={() => window.location.reload()}>
+                <Button
+                  type="button"
+                  className="gap-2"
+                  onClick={() => window.location.reload()}
+                >
                   <RefreshCw className="h-4 w-4" />
                   Recarregar tela
                 </Button>
