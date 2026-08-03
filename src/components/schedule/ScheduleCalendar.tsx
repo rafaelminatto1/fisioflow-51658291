@@ -32,6 +32,11 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import "@/styles/fullcalendar.css";
 
+import type { PendencyFlag } from "@/hooks/clinical/useAppointmentPendencies";
+import {
+  describePendency,
+  useAppointmentPendencies,
+} from "@/hooks/clinical/useAppointmentPendencies";
 import { useAgendaAppearancePersistence } from "@/hooks/useAgendaAppearancePersistence";
 import { useScheduleSettings } from "@/hooks/useScheduleSettings";
 import { useStatusConfig } from "@/hooks/useStatusConfig";
@@ -170,6 +175,35 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
   const { cssVariables, slotHeightPx, appearance, display } =
     useAgendaAppearancePersistence(viewType);
   const { businessHours: settingsHours, blockedTimes } = useScheduleSettings();
+
+  // Janela das pendências clínicas: derivada dos próprios agendamentos já
+  // carregados, para a consulta cobrir exatamente o que está na tela — nem um
+  // card a mais, nem uma chamada por card.
+  const pendencyRange = useMemo(() => {
+    const days: string[] = [];
+    for (const a of Array.isArray(appointments) ? appointments : []) {
+      const ymd =
+        a?.date instanceof Date
+          ? formatLocalDate(a.date)
+          : typeof a?.date === "string"
+            ? a.date.slice(0, 10)
+            : "";
+      if (ymd.length === 10) days.push(ymd);
+    }
+    if (days.length === 0) return { from: null, to: null };
+    days.sort();
+    const to = days[days.length - 1];
+    let from = days[0];
+    // O endpoint recusa janelas maiores que o mês; a agenda nunca precisa de
+    // mais, mas o cache pode entregar um intervalo maior após navegação.
+    const spanDays = Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86400000);
+    if (spanDays > 62) {
+      from = new Date(Date.parse(`${to}T00:00:00Z`) - 62 * 86400000).toISOString().slice(0, 10);
+    }
+    return { from, to };
+  }, [appointments]);
+
+  const { data: pendencies } = useAppointmentPendencies(pendencyRange);
 
   const [quickViewAppointment, setQuickViewAppointment] = useState<RawAppointment | null>(null);
   const [popoverAnchorRect, setPopoverAnchorRect] = useState<DOMRect | null>(null);
@@ -346,6 +380,7 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
         statusConfig.agendado?.calendarCardColors ??
         DEFAULT_EVENT_COLORS;
       const isGroup = Boolean(a.isGroup ?? a.is_group);
+      const pendency = pendencies?.data?.[String(a.id ?? "")];
 
       apptEvents.push({
         id: String(a.id || a.tempId),
@@ -366,6 +401,8 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
           groupCount: Number(a.currentParticipants ?? a.current_participants ?? 0),
           hasHighPain: Boolean(a.has_high_pain_alert),
           hasNoShowRisk: Boolean(a.risk_of_no_show),
+          pendencyFlags: pendency?.flags,
+          pendencyTitle: pendency ? describePendency(pendency, pendencies?.meta) : undefined,
         },
       });
     }
@@ -406,7 +443,16 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
     });
 
     return [...apptEvents, ...taskEvents, ...blockedEvents];
-  }, [appointments, tarefas, blockedTimes, statusConfig, selectedIds, selectionOn, showTasks]);
+  }, [
+    appointments,
+    tarefas,
+    blockedTimes,
+    statusConfig,
+    selectedIds,
+    selectionOn,
+    showTasks,
+    pendencies,
+  ]);
 
   useEffect(() => {
     const api = calendarRef.current?.getApi();
@@ -550,6 +596,8 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
       groupCount?: number;
       hasHighPain?: boolean;
       hasNoShowRisk?: boolean;
+      pendencyFlags?: PendencyFlag[];
+      pendencyTitle?: string;
       original?: RawAppointment;
     };
 
@@ -612,6 +660,8 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
         }}
         status={original?.status}
         theme={appearance.colorTheme}
+        pendencyFlags={props.pendencyFlags}
+        pendencyTitle={props.pendencyTitle}
       />
     );
   };

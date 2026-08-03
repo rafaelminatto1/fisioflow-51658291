@@ -44,3 +44,42 @@ describe("ScheduleEventContent — conteúdo condicional", () => {
     expect(screen.getByText(/50min/)).toBeInTheDocument();
   });
 });
+
+describe("ScheduleEventContent — pendências clínicas", () => {
+  it("não desenha nada quando não há pendência — badge onipresente vira ruído", () => {
+    const { container } = render(<ScheduleEventContent {...base} />);
+    expect(container.querySelector(".fc-event-pendencies")).toBeNull();
+  });
+
+  it("não desenha nada com lista vazia", () => {
+    const { container } = render(<ScheduleEventContent {...base} pendencyFlags={[]} />);
+    expect(container.querySelector(".fc-event-pendencies")).toBeNull();
+  });
+
+  it("expõe o critério no tooltip, não só o ícone", () => {
+    render(
+      <ScheduleEventContent
+        {...base}
+        pendencyFlags={["sem_evolucao"]}
+        pendencyTitle="Sem evolução: atendimento já realizado e nenhuma evolução escrita"
+      />,
+    );
+    expect(
+      screen.getByLabelText(/Sem evolução: atendimento já realizado/),
+    ).toBeInTheDocument();
+  });
+
+  it("agrupa os dois sinais num único selo, sem texto — visão de semana é apertada", () => {
+    const { container } = render(
+      <ScheduleEventContent
+        {...base}
+        pendencyFlags={["sem_evolucao", "plato"]}
+        pendencyTitle="Sem evolução\nPlatô"
+      />,
+    );
+    const badge = container.querySelector(".fc-event-pendencies");
+    expect(badge).not.toBeNull();
+    expect(badge?.querySelectorAll("svg")).toHaveLength(2);
+    expect(badge?.textContent).toBe("");
+  });
+});

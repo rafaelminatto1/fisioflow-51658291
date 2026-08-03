@@ -1,5 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { soapKeys } from "./types";
+import { APPOINTMENT_PENDENCIES_KEY } from "@/hooks/clinical/useAppointmentPendencies";
 
 /**
  * Soap Cache Invalidation Logic
@@ -36,4 +37,10 @@ export const invalidateSoapCache = async (
       queryKey: soapKeys.detail(recordId),
     });
   }
+
+  // O badge "sem evolução" na agenda deriva de haver observação escrita. Sem esta
+  // invalidação ele só sumiria no próximo staleTime (5 min) — e badge que continua
+  // aceso depois do trabalho feito ensina a equipe a desconfiar do indicador.
+  // Invalidado por prefixo porque a agenda mantém uma entrada por janela de datas.
+  await queryClient.invalidateQueries({ queryKey: APPOINTMENT_PENDENCIES_KEY });
 };

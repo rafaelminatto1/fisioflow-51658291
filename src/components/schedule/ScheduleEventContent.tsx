@@ -1,5 +1,6 @@
 import React from "react";
-import { AlertTriangle, CheckCircle, Clock, XCircle, UserCheck } from "lucide-react";
+import { AlertTriangle, CheckCircle, Clock, FileWarning, TrendingDown, XCircle, UserCheck } from "lucide-react";
+import type { PendencyFlag } from "@/hooks/clinical/useAppointmentPendencies";
 
 export interface ScheduleEventColors {
   background: string;
@@ -24,7 +25,20 @@ export interface ScheduleEventContentProps {
   show?: { duration: boolean; type: boolean; phone: boolean };
   status?: string;
   theme?: string;
+  /** Pendências clínicas do card (`useAppointmentPendencies`). */
+  pendencyFlags?: PendencyFlag[];
+  /** Critério de cada pendência, já formatado para o tooltip. */
+  pendencyTitle?: string;
 }
+
+/**
+ * Ícone por pendência. Só ícone, sem texto: na visão de semana o card tem uma
+ * linha de meta e qualquer rótulo empurraria horário e tipo para fora.
+ */
+const PENDENCY_ICON: Record<PendencyFlag, typeof FileWarning> = {
+  sem_evolucao: FileWarning,
+  plato: TrendingDown,
+};
 
 /**
  * Render React de um único evento do calendário. Mantido enxuto e
@@ -53,6 +67,8 @@ export function ScheduleEventContent({
   show = { duration: true, type: true, phone: false },
   status,
   theme = "status",
+  pendencyFlags,
+  pendencyTitle,
 }: ScheduleEventContentProps) {
   const safeColors = colors || {
     background: "transparent",
@@ -115,6 +131,21 @@ export function ScheduleEventContent({
         >
           {title}
         </p>
+        {/* Pendências clínicas: pontos discretos no canto do card. Ficam na
+            linha do nome (e não na linha de meta, já disputada por horário,
+            duração e tipo) para não quebrar a visão de semana. */}
+        {pendencyFlags && pendencyFlags.length > 0 && (
+          <span
+            className="fc-event-pendencies flex shrink-0 items-center gap-0.5 rounded bg-amber-100 px-1 py-0.5 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+            title={pendencyTitle}
+            aria-label={pendencyTitle}
+          >
+            {pendencyFlags.map((flag) => {
+              const Icon = PENDENCY_ICON[flag];
+              return <Icon key={flag} className="h-2.5 w-2.5" aria-hidden />;
+            })}
+          </span>
+        )}
       </div>
 
       {/* Linha 2: ícone de status + tipo + alerta de dor */}
