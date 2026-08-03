@@ -702,7 +702,7 @@ GET,/api/reports/convenio,apps/api/src/routes/reports.ts:287,jwt,,reports,sim,at
 POST,/api/reports/convenio,apps/api/src/routes/reports.ts:307,jwt,,reports,sim,ativo
 PUT,/api/reports/convenio/:id,apps/api/src/routes/reports.ts:337,jwt,,reports,sim,ativo
 DELETE,/api/reports/convenio/:id,apps/api/src/routes/reports.ts:378,jwt,,reports,sim,ativo
-GET,/api/reports/chart,apps/api/src/routes/reports.ts:391,jwt,,reports,sim,ativo
+GET,/api/reports/chart,apps/api/src/routes/reports.ts:391,jwt,,reports,sim,órfão
 GET,/api/wiki/dictionary,apps/api/src/routes/wiki.ts:52,public,,wiki,sim,ativo
 POST,/api/wiki/dictionary,apps/api/src/routes/wiki.ts:82,jwt,,wiki,sim,ativo
 PUT,/api/wiki/dictionary/:id,apps/api/src/routes/wiki.ts:108,jwt,,wiki,sim,ativo

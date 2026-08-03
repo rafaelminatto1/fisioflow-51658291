@@ -28,7 +28,7 @@ ntfy.sh,Alertas operacionais push (health/SLO) ao celular do Rafael,ntfy.sh,out,
 Expo Push,Push notifications dos apps mobile (patient-app/professional-app),exp.host,out,sem secret (tokens de device),não,best-effort,prod,ativo,médio (acoplado ao ecossistema Expo)
 Jitsi Meet,Telemedicina: sala de vídeo pública por roomCode,meet.jit.si,out,sem auth (URL pública),não,n/a,prod,ativo,baixo (mas sem privacidade garantida — sala pública)
 LiveKit,Telemedicina: token JWT gerado manualmente no Worker,LIVEKIT_URL (*.livekit.cloud),out,LIVEKIT_API_KEY/LIVEKIT_API_SECRET,não,n/a,prod,parcial (URL placeholder default),baixo
-QuickChart,Geração de gráficos em relatórios,quickchart.io,out,sem auth,não,best-effort,prod,ativo,baixo
+QuickChart (removido),Geração de gráficos em relatórios,quickchart.io,out,sem auth,não,best-effort,prod,órfão,baixo
 Google Maps,Geocoding/links de endereço,maps.googleapis.com,out,GOOGLE_MAPS_API_KEY (vazio em prod),não,n/a,prod,configurado-desligado,baixo
 R2 SQL (Data Catalog),Consulta ao data lake Iceberg (events/sessions_archive),api.sql.cloudflarestorage.com,out,R2_SQL_TOKEN,não,ausente = data lake off,prod,ativo,alto
 Inngest (removido),Antigo orquestrador de jobs — client agora só repassa à BACKGROUND_QUEUE,n/a (sem chamada externa),out,INNGEST_SIGNING_KEY (residual),não,n/a,prod,órfão/residual,nenhum
