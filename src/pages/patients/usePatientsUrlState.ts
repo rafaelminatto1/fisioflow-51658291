@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDebounce } from "@/hooks/performance/useDebounce";
+import {
+  isPatientPendingFilterKey,
+  type PatientPendingFilterKey,
+} from "@/hooks/patients/usePatientPendingFilters";
 import type { PatientsFilters } from "@/hooks/usePatientsPage";
 
 type SearchParamValue = string | string[] | boolean | undefined;
@@ -31,6 +35,12 @@ export function usePatientsUrlState() {
   const partnerCompanyParam = searchParams.get("partnerCompany") || "all";
   const sortByParam = searchParams.get("sortBy") || "created_at_desc";
   const hasSurgeryParam = searchParams.get("hasSurgery") === "true";
+  // Link antigo com pendência que não existe mais não pode quebrar a tela: cai
+  // para "sem filtro", que é o estado honesto.
+  const pendingRaw = searchParams.get("pending");
+  const pendingParam: PatientPendingFilterKey | null = isPatientPendingFilterKey(pendingRaw)
+    ? pendingRaw
+    : null;
   const pathologiesParam = readArrayParam(searchParams, "pathologies");
   const careProfilesParam = readArrayParam(searchParams, "careProfiles");
   const sportsParam = readArrayParam(searchParams, "sports");
@@ -71,6 +81,7 @@ export function usePatientsUrlState() {
       partnerCompany: partnerCompanyParam,
       sortBy: sortByParam,
       hasSurgery: hasSurgeryParam,
+      pending: pendingParam,
       page: pageParam,
       pageSize: 20,
     }),
@@ -90,6 +101,7 @@ export function usePatientsUrlState() {
       partnerCompanyParam,
       sortByParam,
       hasSurgeryParam,
+      pendingParam,
       pageParam,
     ],
   );
@@ -111,6 +123,7 @@ export function usePatientsUrlState() {
       partnerCompany: partnerCompanyParam,
       sortBy: sortByParam,
       hasSurgery: hasSurgeryParam,
+      pending: pendingParam,
     }),
     [
       searchParam,
@@ -128,6 +141,7 @@ export function usePatientsUrlState() {
       partnerCompanyParam,
       sortByParam,
       hasSurgeryParam,
+      pendingParam,
     ],
   );
 

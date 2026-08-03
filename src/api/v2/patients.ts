@@ -72,6 +72,8 @@ export interface PatientsListParams {
   origin?: string;
   partnerCompany?: string;
   hasSurgery?: boolean;
+  /** Pendência clínica/operacional — ver `usePatientPendingFilters`. */
+  pending?: string;
   minimal?: boolean;
   limit?: number;
   offset?: number;

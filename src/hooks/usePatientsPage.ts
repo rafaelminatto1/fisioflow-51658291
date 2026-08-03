@@ -22,6 +22,11 @@ export interface PatientsFilters {
   partnerCompany?: string;
   sortBy?: string;
   hasSurgery?: boolean;
+  /**
+   * Pendência clínica/operacional (tiles do painel). A contagem do tile e o
+   * total desta lista saem do mesmo predicado no backend — não derive nada aqui.
+   */
+  pending?: string | null;
   page?: number;
   pageSize?: number;
 }
@@ -85,6 +90,7 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
     partnerCompany = "all",
     sortBy = "created_at_desc",
     hasSurgery = false,
+    pending = null,
     page = 1,
     pageSize = 20,
   } = filters;
@@ -111,6 +117,7 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
       partnerCompany,
       sortBy,
       hasSurgery,
+      pending,
       page,
       pageSize,
     ],
@@ -132,6 +139,7 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
           origin: origin === "all" ? undefined : origin,
           partnerCompany: partnerCompany === "all" ? undefined : partnerCompany,
           hasSurgery: hasSurgery || undefined,
+          pending: pending ?? undefined,
           limit: pageSize,
           offset: (page - 1) * pageSize,
         });

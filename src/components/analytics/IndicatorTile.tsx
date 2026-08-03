@@ -30,6 +30,14 @@ export interface IndicatorTileProps {
   onVerLista: () => void;
   verListaLabel?: string;
   isLoading?: boolean;
+  /**
+   * Desabilita a ação mantendo o tile visível. Usado quando a contagem é zero:
+   * esconder o filtro faria a pessoa concluir que o dado não existe, quando o
+   * que existe é a boa notícia de não haver pendência.
+   */
+  disabled?: boolean;
+  /** Tile cujo filtro está aplicado na lista. */
+  active?: boolean;
   className?: string;
 }
 
@@ -50,10 +58,15 @@ export function IndicatorTile({
   onVerLista,
   verListaLabel = "Ver lista",
   isLoading = false,
+  disabled = false,
+  active = false,
   className,
 }: IndicatorTileProps) {
   return (
-    <Card className={cn("bg-card", className)}>
+    <Card
+      className={cn("bg-card", active && "border-primary ring-1 ring-primary", className)}
+      data-active={active || undefined}
+    >
       <CardContent className="flex h-full flex-col gap-3 p-4">
         <div>
           <p className="text-sm font-medium text-muted-foreground">{label}</p>
@@ -75,7 +88,12 @@ export function IndicatorTile({
         )}
 
         <div className="mt-auto pt-1">
-          <Button variant="outline" size="sm" onClick={onVerLista}>
+          <Button
+            variant={active ? "default" : "outline"}
+            size="sm"
+            onClick={onVerLista}
+            disabled={disabled}
+          >
             <List className="mr-2 h-4 w-4" aria-hidden="true" />
             {verListaLabel}
           </Button>

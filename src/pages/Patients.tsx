@@ -29,6 +29,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePatientsPageData } from '@/hooks/usePatientsPage';
+import { usePatientPendingFilters } from '@/hooks/patients/usePatientPendingFilters';
 import {
   PATIENT_CARE_PROFILE_LABELS,
   PATIENT_CLASSIFICATION_LABELS,
@@ -63,6 +64,11 @@ const Patients = () => {
   const { data, isLoading } = usePatientsPageData(filters);
   const { patients, totalCount, summary, facets } = data;
   const { exportPatients } = usePatientsExport();
+  // Só para rotular o chip e a linha de ajuda. O número exibido continua vindo
+  // do total da listagem — os dois saem do mesmo predicado no backend.
+  const { data: pendingCounts } = usePatientPendingFilters();
+  const activePending =
+    pendingCounts?.data.find((item) => item.key === filtersState.pending) ?? null;
 
   const pagination = useMemo(
     () => ({
@@ -111,6 +117,7 @@ const Patients = () => {
     filtersState.financialStatus !== 'all' ||
     filtersState.origin !== 'all' ||
     filtersState.partnerCompany !== 'all' ||
+    filtersState.pending !== null ||
     Boolean(filtersState.search) ||
     Boolean(filtersState.hasSurgery) ||
     filtersState.pathologies.length > 0 ||
@@ -143,6 +150,9 @@ const Patients = () => {
         { classification: 'all' }
       );
     }
+
+    if (activePending)
+      addChip('pending', `Pendência: ${activePending.label}`, { pending: undefined });
 
     if (filtersState.search) addChip('search', `Busca: ${filtersState.search}`, { q: undefined });
     if (filtersState.status !== 'all')
@@ -219,7 +229,7 @@ const Patients = () => {
     }
 
     return chips;
-  }, [filtersState, updateSearchParams]);
+  }, [activePending, filtersState, updateSearchParams]);
 
   return (
     <PageLayout>
@@ -343,13 +353,18 @@ const Patients = () => {
           </PatientsPageHeader>
 
           {/*
-            Pendências da clínica, com caminho para os nomes.
+            Pendências da clínica como filtro da lista logo abaixo.
 
-            Fica na listagem porque é onde a recepção já está quando vai agir:
-            "146 ativos sem próxima sessão" só vira trabalho se der para abrir
-            a lista e começar a ligar.
+            Fica aqui porque é onde a recepção já está quando vai agir: "165
+            ativos sem próxima sessão" só vira trabalho se der para ver os nomes
+            e começar a ligar — e ver os nomes na PRÓPRIA lista, com busca,
+            ordenação e caminho para o prontuário, em vez de num diálogo à parte
+            que responde a mesma pergunta de outro jeito.
           */}
-          <ClinicPendingPanel />
+          <ClinicPendingPanel
+            value={filtersState.pending}
+            onChange={(key) => updateSearchParams({ pending: key ?? undefined })}
+          />
 
           <Tabs
             value={activeTab}
@@ -427,9 +442,11 @@ const Patients = () => {
                       hasActiveFilters ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'
                     }
                     description={
-                      hasActiveFilters
-                        ? 'Ajuste os filtros clínicos para ampliar a busca.'
-                        : 'Comece cadastrando seu primeiro paciente.'
+                      activePending
+                        ? `Nenhum paciente atende ao critério "${activePending.criterio}" junto dos demais filtros.`
+                        : hasActiveFilters
+                          ? 'Ajuste os filtros clínicos para ampliar a busca.'
+                          : 'Comece cadastrando seu primeiro paciente.'
                     }
                     action={
                       hasActiveFilters

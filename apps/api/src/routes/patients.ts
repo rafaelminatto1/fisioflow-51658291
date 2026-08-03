@@ -12,6 +12,13 @@ import { triggerInngestEvent } from "../lib/inngest-client";
 import { registerPatientClinicalDetailRoutes } from "./patients/clinical-details";
 import { isUuid } from "../lib/validators";
 import {
+  PATIENT_PENDING_FILTERS,
+  PATIENT_PENDING_FILTER_KEYS,
+  buildPatientPendingCountsSql,
+  isPatientPendingFilterKey,
+  patientPendingFilterClause,
+} from "../lib/clinical/patientPendingFilters";
+import {
   type DbRow,
   type PatientPayload,
   trimmedString,
@@ -596,6 +603,11 @@ app.get("/", async (c) => {
   const origin = trimmedString(c.req.query("origin"));
   const partnerCompany = trimmedString(c.req.query("partnerCompany"));
   const incompleteRegistration = c.req.query("incompleteRegistration") === "true";
+  // Pendência clínica/operacional. O valor inválido é ignorado em vez de virar
+  // 400: o parâmetro vem da URL da tela, e um link antigo não pode quebrar a
+  // listagem inteira — pior desfecho seria a página em branco.
+  const pendingRaw = trimmedString(c.req.query("pending"));
+  const pending = isPatientPendingFilterKey(pendingRaw) ? pendingRaw : null;
   const isMinimal = c.req.query("minimal") === "true";
   const limit = Math.min(
     200,
@@ -881,6 +893,12 @@ app.get("/", async (c) => {
       baseConditions.push(`directory."hasSurgery" = TRUE`);
     }
 
+    // Mesmo predicado que `/api/patients/pending-counts` usa para contar. Não é
+    // "uma consulta equivalente": é a mesma função. Ver patientPendingFilters.ts.
+    if (pending) {
+      baseConditions.push(patientPendingFilterClause(pending, `directory.id`, `$1`));
+    }
+
     const finalConditions = [...baseConditions];
     if (classification && classification !== "all") {
       finalConditions.push(`directory.classification = $${paramIndex++}`);
@@ -1162,6 +1180,46 @@ app.get("/", async (c) => {
       },
       500,
     );
+  }
+});
+
+/**
+ * GET /api/patients/pending-counts
+ *
+ * Contagem de cada pendência sobre a base de pacientes, para os filtros da
+ * listagem. Devolve label e critério junto do número porque um filtro clínico
+ * sem critério visível é lido como opinião do sistema — e porque a contagem
+ * precisa ser auditável por quem duvida dela.
+ *
+ * Contagem zero é devolvida como zero, nunca omitida: sumir com a opção faz a
+ * pessoa concluir que o dado não existe, quando o que existe é a boa notícia.
+ */
+app.get("/pending-counts", async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  try {
+    const result = await pool.query(buildPatientPendingCountsSql("$1"), [user.organizationId]);
+    const row = (result.rows[0] ?? {}) as Record<string, unknown>;
+
+    return c.json({
+      data: PATIENT_PENDING_FILTER_KEYS.map((key) => ({
+        key,
+        label: PATIENT_PENDING_FILTERS[key].label,
+        criterio: PATIENT_PENDING_FILTERS[key].criterio,
+        count: Number(row[key] ?? 0),
+      })),
+      meta: {
+        // Denominador explícito: "165 sem próxima sessão" só tem sentido contra
+        // o tamanho da base.
+        total: Number(row.total ?? 0),
+        contrato:
+          "cada contagem usa exatamente o mesmo predicado SQL que GET /api/patients?pending=<key> aplica na listagem",
+      },
+    });
+  } catch (error) {
+    console.error("[Patients/PendingCounts] Error:", error);
+    return c.json({ error: "Erro ao contar pendências" }, 500);
   }
 });
 
