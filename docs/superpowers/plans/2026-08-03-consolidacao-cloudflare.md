@@ -696,28 +696,23 @@ Cloudflare passa a receber uma cópia de cada e-mail numa caixa de monitoramento
 - Consumes: `sendEmail`, `EmailMessage`, `resolveFrom` da Task 4
 - Produces: `sendViaCloudflare(env: Env, message: EmailMessage): Promise<boolean>`
 
-- [ ] **Step 1: Pré-requisito manual — verificar o endereço de destino**
+- [x] **Step 1: Pré-requisito — CONCLUÍDO em 03/08/2026**
 
-**Já executado em 03/08/2026 via API:** Email Routing habilitado na zona `moocafisio.com.br`
-(`status: ready`) e `rafaelstarton@gmail.com` adicionado como endereço de destino
-(tag `1bba13f7ace74679b17e74738bfdee3a`).
+Nada a fazer. Registrado aqui para quem executar o plano depois.
 
-O apex não tinha MX antes, então nada de inbound foi quebrado. Os registros de envio do
-Resend em `send.moocafisio.com.br` (MX para `amazonses.com` e SPF próprio) permaneceram
-intactos — Email Routing só escreve no apex.
+- Email Routing habilitado na zona `moocafisio.com.br` via API — `status: ready`
+- `rafaelstarton@gmail.com` adicionado e **verificado** em `2026-08-03T19:39:32Z`
+  (tag `1bba13f7ace74679b17e74738bfdee3a`)
 
-**Falta apenas (só o Rafael pode fazer):** abrir o e-mail de verificação da Cloudflare na
-caixa `rafaelstarton@gmail.com` e clicar no link. Confirmar com:
+O apex não tinha MX antes, então nenhum fluxo de inbound foi quebrado. Os registros de
+envio do Resend em `send.moocafisio.com.br` (MX para `amazonses.com` e SPF próprio)
+permaneceram intactos — Email Routing só escreve no apex.
 
-```bash
-cd apps/api && npx wrangler email routing addresses list
-```
-
-Expected: `rafaelstarton@gmail.com` com `verified` preenchido (não `null`).
-
-Em seguida, onboardar o domínio em **Email Service → Domains** para liberar o envio a
-destinatários arbitrários (DKIM/DMARC são criados automaticamente porque a zona já está
-na Cloudflare).
+**Onboarding de domínio NÃO é necessário para esta task.** Envio para endereço de destino
+verificado é liberado em qualquer plano, inclusive com apenas Email Routing configurado.
+Como o modo sombra escreve exclusivamente para `rafaelstarton@gmail.com`, a task roda
+inteira sem isso. O onboarding em **Email Service → Domains** só é exigido no Step 12,
+quando o binding passa a escrever para destinatário arbitrário.
 
 **Por que o alvo da sombra é o Gmail e não `deliverability@moocafisio.com.br`:** o binding
 `send_email` só aceita endereços **verificados como destino** no Email Routing. Um alias da
@@ -885,7 +880,11 @@ Verificar na caixa `rafaelstarton@gmail.com`: a cópia chega? Com que atraso em 
 
 - [ ] **Step 12: Corte final (só após o critério do Step 11)**
 
-Remover `allowed_destination_addresses` do bloco `[[send_email]]` (o binding precisa escrever para qualquer paciente), trocar `EMAIL_TRANSPORT` para `"cloudflare"` nos três blocos de vars, remover `sendViaResend` de `transports.ts`, remover a dependência `resend` do `apps/api/package.json` e apagar o secret:
+Primeiro, onboardar `moocafisio.com.br` em **Email Service → Domains** no dashboard — só a
+partir daí o binding pode escrever para destinatário arbitrário (DKIM/DMARC são gerados
+automaticamente porque a zona já está na Cloudflare). Sem isso, o envio a paciente falha.
+
+Depois: remover `allowed_destination_addresses` do bloco `[[send_email]]` (o binding precisa escrever para qualquer paciente), trocar `EMAIL_TRANSPORT` para `"cloudflare"` nos três blocos de vars, remover `sendViaResend` de `transports.ts`, remover a dependência `resend` do `apps/api/package.json` e apagar o secret:
 
 ```bash
 cd apps/api && npx wrangler secret delete RESEND_API_KEY --env production
