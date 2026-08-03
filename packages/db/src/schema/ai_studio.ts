@@ -56,7 +56,7 @@ export const aiUsageEvents = pgTable("ai_usage_events", {
   estimatedCostUsd: doublePrecision("estimated_cost_usd").default(0),
   estimatedCostBrl: doublePrecision("estimated_cost_brl").default(0),
   latencyMs: integer("latency_ms"),
-  status: integer("status").default(200),
+  status: varchar("status", { length: 32 }).default("completed").notNull(),
   gatewayUsed: boolean("gateway_used").default(false),
   cacheHit: boolean("cache_hit").default(false),
   errorMessage: text("error_message"),
