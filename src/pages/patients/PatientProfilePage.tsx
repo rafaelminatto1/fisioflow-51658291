@@ -39,6 +39,7 @@ import {
   CheckSquare,
   TrendingUp,
   ChevronDown,
+  ScanLine,
   User,
   Stethoscope,
   Wallet,
@@ -60,7 +61,12 @@ import { EvidenceTab } from "@/components/patient/EvidenceTab";
 import { AIMedicalReportModal } from "@/components/patient/AIMedicalReportModal";
 
 // Hooks Otimizados
-import { usePatientProfileOptimized } from "@/hooks/usePatientProfileOptimized";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  patientProfileKeys,
+  usePatientProfileOptimized,
+} from "@/hooks/usePatientProfileOptimized";
+import { PatientIntakeScanDialog } from "@/components/patient/PatientIntakeScanDialog";
 import { usePatientEvolutionReport } from "@/hooks/usePatientEvolutionReport";
 import { useEvaluationForms } from "@/hooks/useEvaluationForms";
 import { Patient360ChatDrawer } from "@/features/ia-studio/components/Patient360ChatDrawer";
@@ -233,6 +239,8 @@ const PatientProfileContent = () => {
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
   const [isMedicalReportOpen, setIsMedicalReportOpen] = useState<boolean>(false);
   const [generatedMedicalReport, setGeneratedMedicalReport] = useState<any>(null);
+  const [scanFichaOpen, setScanFichaOpen] = useState<boolean>(false);
+  const queryClient = useQueryClient();
 
   const { data: evaluationForms = [] } = useEvaluationForms();
 
@@ -428,6 +436,41 @@ const PatientProfileContent = () => {
             onAskAI={handleAskAI}
             onOpenMedicalReport={handleOpenMedicalReport}
           />
+          {/*
+            Aparece só para quem não tem telefone (997 de 1.022 pacientes hoje).
+            O aviso vive onde a lacuna é visível em vez de virar mais um botão no
+            cabeçalho de todo mundo: para quem já tem telefone não há nada a fazer.
+          */}
+          {patient && !(patient as any).phone ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-900 dark:bg-amber-950">
+              <div className="text-sm">
+                <p className="font-semibold text-amber-900 dark:text-amber-100">
+                  Sem telefone no cadastro
+                </p>
+                <p className="text-amber-800 dark:text-amber-200">
+                  Lembretes, follow-up e confirmação de alta dependem deste dado. A ficha
+                  de papel pode ser fotografada para preencher.
+                </p>
+              </div>
+              <Button variant="outline" onClick={() => setScanFichaOpen(true)}>
+                <ScanLine className="mr-2 h-4 w-4" />
+                Digitalizar ficha
+              </Button>
+            </div>
+          ) : null}
+
+          <PatientIntakeScanDialog
+            open={scanFichaOpen}
+            onOpenChange={setScanFichaOpen}
+            patientId={id || ""}
+            patientName={patientName}
+            onApplied={() =>
+              queryClient.invalidateQueries({
+                queryKey: patientProfileKeys.patient(id || ""),
+              })
+            }
+          />
+
           {/* Chat IA Contextual 360° */}
           <Patient360ChatDrawer
             open={isChatOpen}
