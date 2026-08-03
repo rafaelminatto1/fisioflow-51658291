@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const send = vi.fn(async () => ({ id: "e1" }));
-vi.mock("../../email", () => ({ createResend: () => ({ emails: { send } }) }));
+const { sendEmail } = vi.hoisted(() => ({ sendEmail: vi.fn(async () => true) }));
+vi.mock("../../email/dispatch", () => ({ sendEmail }));
 vi.mock("../../../routes/briefing", () => ({
   getBriefing: vi.fn(async () => ({
     date: "2026-06-16",
@@ -22,7 +22,7 @@ describe("dispatchMorningBriefing (gating)", () => {
   it("does nothing when the flag is off", async () => {
     const sent = await dispatchMorningBriefing({ MORNING_BRIEFING_TO: "a@b.com", MORNING_BRIEFING_ORG_ID: "o1" } as any);
     expect(sent).toBe(false);
-    expect(send).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
   });
 
   it("does nothing when recipient/org are missing", async () => {
@@ -38,6 +38,6 @@ describe("dispatchMorningBriefing (gating)", () => {
       RESEND_API_KEY: "k",
     } as any);
     expect(sent).toBe(true);
-    expect(send).toHaveBeenCalledOnce();
+    expect(sendEmail).toHaveBeenCalledOnce();
   });
 });

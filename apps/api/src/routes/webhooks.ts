@@ -14,7 +14,7 @@
 import { Hono } from "hono";
 import type { Env } from "../types/env";
 import { createPool } from "../lib/db";
-import { createResend } from "../lib/email";
+import { sendEmail } from "../lib/email/dispatch";
 import { markInvitationUsed, resolveInvitedRole } from "../lib/userInvitations";
 
 const app = new Hono<{ Bindings: Env }>();
@@ -175,17 +175,13 @@ app.post("/neon-auth", async (c) => {
 
     // Notifica admin por email (non-blocking)
     try {
-      const resend = createResend(c.env);
-      if (resend) {
-        const adminEmail = c.env.ADMIN_NOTIFICATION_EMAIL ?? "";
-        const from = c.env.RESEND_FROM_EMAIL ?? "FisioFlow <noreply@moocafisio.com.br>";
-        await resend.emails.send({
-          from,
-          to: adminEmail,
-          subject: invited
-            ? `[FisioFlow] Acesso liberado por convite (${invited.role}): ${userName}`
-            : `[FisioFlow] Novo cadastro aguardando aprovação: ${userName}`,
-          html: `
+      const adminEmail = c.env.ADMIN_NOTIFICATION_EMAIL ?? "";
+      const sent = await sendEmail(c.env, {
+        to: adminEmail,
+        subject: invited
+          ? `[FisioFlow] Acesso liberado por convite (${invited.role}): ${userName}`
+          : `[FisioFlow] Novo cadastro aguardando aprovação: ${userName}`,
+        html: `
             <div style="font-family:sans-serif;max-width:600px;margin:0 auto;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;">
               <div style="background:#2563eb;padding:20px 24px;">
                 <h2 style="color:#fff;margin:0;font-size:18px;">${invited ? "Cadastro por Convite" : "Novo Cadastro Pendente"}</h2>
@@ -214,9 +210,8 @@ app.post("/neon-auth", async (c) => {
               </div>
             </div>
           `,
-        });
-        console.log(`[Webhook] Email de notificação enviado para ${adminEmail}`);
-      }
+      });
+      if (sent) console.log(`[Webhook] Email de notificação enviado para ${adminEmail}`);
     } catch (emailErr: any) {
       console.warn("[Webhook] Falha ao enviar email de notificação:", emailErr.message);
     }

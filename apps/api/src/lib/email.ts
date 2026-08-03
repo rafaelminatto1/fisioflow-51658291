@@ -1,22 +1,12 @@
-import { Resend } from "resend";
 import type { Env } from "../types/env";
-
-export function createResend(env: Env) {
-  if (!env.RESEND_API_KEY) return null;
-  return new Resend(env.RESEND_API_KEY);
-}
-
-const FROM = (env: Env) => env.RESEND_FROM_EMAIL ?? "FisioFlow <noreply@moocafisio.com.br>";
+import { sendEmail } from "./email/dispatch";
 
 export async function sendAppointmentReminderEmail(
   env: Env,
   to: string,
   data: { patientName: string; date: string; time: string; therapistName?: string },
 ) {
-  const resend = createResend(env);
-  if (!resend) return;
-  await resend.emails.send({
-    from: FROM(env),
+  await sendEmail(env, {
     to,
     subject: `Lembrete: Sessão amanhã às ${data.time}`,
     html: `
@@ -40,11 +30,7 @@ export async function sendNfseToAccounting(
     razaoSocialPrestador: string;
   },
 ) {
-  const resend = createResend(env);
-  if (!resend) return;
-
-  await resend.emails.send({
-    from: FROM(env),
+  await sendEmail(env, {
     to,
     subject: `[NFS-e] Nova Nota Emitida - ${data.razaoSocialPrestador} - NF nº ${data.numeroNfse}`,
     html: `
@@ -84,11 +70,7 @@ export async function sendNfseCancellationToAccounting(
     razaoSocialPrestador: string;
   },
 ) {
-  const resend = createResend(env);
-  if (!resend) return;
-
-  await resend.emails.send({
-    from: FROM(env),
+  await sendEmail(env, {
     to,
     subject: `[CANCELAMENTO NFS-e] Nota Cancelada - ${data.razaoSocialPrestador} - NF nº ${data.numeroNfse}`,
     html: `
@@ -130,9 +112,6 @@ export async function sendInvitationEmail(
   to: string,
   data: { role: string; inviteUrl: string; expiresAt?: string; invitedByEmail?: string },
 ) {
-  const resend = createResend(env);
-  if (!resend) throw new Error("RESEND_API_KEY não configurado");
-
   const roleLabel = ROLE_LABELS[data.role] ?? data.role;
   const expires = data.expiresAt ? new Date(data.expiresAt) : null;
   const expiresLabel =
@@ -140,8 +119,7 @@ export async function sendInvitationEmail(
       ? expires.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })
       : null;
 
-  const { error } = await resend.emails.send({
-    from: FROM(env),
+  const sent = await sendEmail(env, {
     to,
     subject: `Seu acesso ao FisioFlow (${roleLabel})`,
     html: `
@@ -176,18 +154,16 @@ export async function sendInvitationEmail(
     `,
   });
 
-  if (error) throw new Error(error.message ?? "Falha ao enviar e-mail via Resend");
+  if (!sent) throw new Error("RESEND_API_KEY não configurado");
 }
 
 export async function sendTestEmail(env: Env, to: string) {
-  const resend = createResend(env);
-  if (!resend) throw new Error("RESEND_API_KEY não configurado");
-  return resend.emails.send({
-    from: FROM(env),
+  const sent = await sendEmail(env, {
     to,
     subject: "Email de teste — FisioFlow",
     html: "<p>Email de teste enviado com sucesso via Resend 🎉</p>",
   });
+  if (!sent) throw new Error("RESEND_API_KEY não configurado");
 }
 
 export async function sendPrescriptionEmail(
@@ -195,10 +171,7 @@ export async function sendPrescriptionEmail(
   to: string,
   data: { patientName: string; pdfUrl: string; title: string },
 ) {
-  const resend = createResend(env);
-  if (!resend) return;
-  await resend.emails.send({
-    from: FROM(env),
+  await sendEmail(env, {
     to,
     subject: `Sua Prescrição de Fisioterapia: ${data.title}`,
     html: `

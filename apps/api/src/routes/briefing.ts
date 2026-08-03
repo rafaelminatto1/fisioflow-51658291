@@ -6,7 +6,7 @@ import { getRawSql } from "../lib/db";
 import { gatherBriefingData } from "../lib/briefing/queries";
 import { buildBriefing } from "../lib/briefing/buildBriefing";
 import { formatBriefingEmail } from "../lib/briefing/formatBriefingEmail";
-import { createResend } from "../lib/email";
+import { sendEmail } from "../lib/email/dispatch";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -37,16 +37,10 @@ app.post(
     const body = await c.req.json().catch(() => ({}));
     const to = String(body?.to ?? c.env.MORNING_BRIEFING_TO ?? user.email ?? "");
     if (!to) return c.json({ error: "Sem destinatário (informe 'to' ou configure MORNING_BRIEFING_TO)" }, 400);
-    const resend = createResend(c.env);
-    if (!resend) return c.json({ error: "Resend não configurado" }, 503);
     const briefing = await getBriefing(c.env, user);
     const { subject, html } = formatBriefingEmail(briefing);
-    await resend.emails.send({
-      from: c.env.RESEND_FROM_EMAIL ?? "FisioFlow <noreply@moocafisio.com.br>",
-      to,
-      subject,
-      html,
-    });
+    const sent = await sendEmail(c.env, { to, subject, html });
+    if (!sent) return c.json({ error: "Transporte de e-mail não configurado" }, 503);
     return c.json({ ok: true, to, summary: briefing.summary });
   },
 );

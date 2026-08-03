@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 
-const send = vi.fn(async () => ({ id: "e1" }));
-vi.mock("../../email", () => ({ createResend: (env: any) => (env.RESEND_API_KEY ? { emails: { send } } : null) }));
+const sendEmail = vi.fn(async (env: any, _message: unknown) => Boolean(env.RESEND_API_KEY));
+vi.mock("../../email/dispatch", () => ({ sendEmail: (env: unknown, message: unknown) => sendEmail(env, message) }));
 
 const sqlInsert = vi.fn(async (_q: string, _p?: unknown[]) => ({ rows: [] }));
 vi.mock("../../db", () => ({
@@ -16,7 +16,7 @@ describe("buildActionHandlers", () => {
     const handlers = buildActionHandlers({ RESEND_API_KEY: "k" } as any);
     const out: any = await handlers.send_email({ to: "a@b.com", subject: "Oi", message: "<p>oi</p>" }, {});
     expect(out.sent).toBe(true);
-    expect(send).toHaveBeenCalled();
+    expect(sendEmail).toHaveBeenCalled();
   });
 
   it("send_email skips without a recipient", async () => {

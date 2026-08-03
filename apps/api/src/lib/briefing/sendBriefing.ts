@@ -1,6 +1,6 @@
 import type { Env } from "../../types/env";
 import type { AuthUser } from "../auth";
-import { createResend } from "../email";
+import { sendEmail } from "../email/dispatch";
 import { getBriefing } from "../../routes/briefing";
 import { formatBriefingEmail } from "./formatBriefingEmail";
 
@@ -15,16 +15,7 @@ export async function dispatchMorningBriefing(env: Env): Promise<boolean> {
   const orgId = env.MORNING_BRIEFING_ORG_ID;
   if (!to || !orgId) return false;
 
-  const resend = createResend(env);
-  if (!resend) return false;
-
   const briefing = await getBriefing(env, { organizationId: orgId } as AuthUser);
   const { subject, html } = formatBriefingEmail(briefing);
-  await resend.emails.send({
-    from: env.RESEND_FROM_EMAIL ?? "FisioFlow <noreply@moocafisio.com.br>",
-    to,
-    subject,
-    html,
-  });
-  return true;
+  return sendEmail(env, { to, subject, html });
 }

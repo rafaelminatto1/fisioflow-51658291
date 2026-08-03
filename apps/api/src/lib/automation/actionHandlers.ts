@@ -1,5 +1,5 @@
 import type { Env } from "../../types/env";
-import { createResend } from "../email";
+import { sendEmail } from "../email/dispatch";
 import { getRawSql, runWithOrg } from "../db";
 import type { ActionHandler } from "./runAutomation";
 
@@ -17,14 +17,12 @@ export function buildActionHandlers(env: Env): Record<string, ActionHandler> {
     send_email: async (params) => {
       const to = String(params.to ?? "");
       if (!to) return { skipped: "sem destinatário" };
-      const resend = createResend(env);
-      if (!resend) return { skipped: "Resend não configurado" };
-      await resend.emails.send({
-        from: env.RESEND_FROM_EMAIL ?? "FisioFlow <noreply@moocafisio.com.br>",
+      const sent = await sendEmail(env, {
         to,
         subject: String(params.subject ?? "Notificação FisioFlow"),
         html: String(params.html ?? params.message ?? ""),
       });
+      if (!sent) return { skipped: "Transporte de e-mail não configurado" };
       return { sent: true, to };
     },
 
