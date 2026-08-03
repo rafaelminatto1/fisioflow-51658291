@@ -18,8 +18,8 @@ vi.mock("../lib/monitor", () => ({
   runHealthMonitor: mocks.runHealthMonitor,
 }));
 
-vi.mock("../lib/inngest-client", () => ({
-  triggerInngestEvent: vi.fn(),
+vi.mock("../lib/backgroundEvents", () => ({
+  triggerBackgroundEvent: vi.fn(),
 }));
 
 vi.mock("../lib/email", () => ({

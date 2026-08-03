@@ -8,7 +8,7 @@ import { createDb, createPool } from "../lib/db";
 import { upsertContact, logContactActivity } from "../lib/contacts";
 import { withTenant } from "../lib/db-utils";
 import { stripHtml } from "../lib/stripHtml";
-import { triggerInngestEvent } from "../lib/inngest-client";
+import { triggerBackgroundEvent } from "../lib/backgroundEvents";
 import { registerPatientClinicalDetailRoutes } from "./patients/clinical-details";
 import { isUuid } from "../lib/validators";
 import {
@@ -1373,7 +1373,7 @@ app.post("/", async (c) => {
     }
 
     // Inngest Event: Patient Created (Sequência de Boas-vindas)
-    triggerInngestEvent(
+    triggerBackgroundEvent(
       c.env,
       c.executionCtx,
       "patient.created",

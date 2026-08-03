@@ -1,6 +1,6 @@
 import type { Env } from "../types/env";
 
-export async function triggerInngestEvent(
+export async function triggerBackgroundEvent(
   env: Env,
   ctx: ExecutionContext,
   eventName: string,
@@ -26,4 +26,3 @@ export async function triggerInngestEvent(
     }),
   );
 }
-

@@ -158,7 +158,6 @@ export interface Env {
   VITE_ML_SALT?: string;
   FISIOFLOW_AI_GATEWAY_URL?: string;
   FISIOFLOW_AI_GATEWAY_TOKEN?: string;
-  INNGEST_SIGNING_KEY?: string;
   /** "true" para habilitar refinamento via IA no lead scoring (default: heurística). */
   LEAD_SCORING_AI?: string;
   /** Base URL pública para links de NPS (ex: https://app.moocafisio.com.br). */

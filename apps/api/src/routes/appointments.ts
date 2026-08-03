@@ -24,7 +24,7 @@ import {
 import { createDb } from "../lib/db";
 import { withTenant } from "../lib/db-utils";
 import { isUuid } from "../lib/validators";
-import { triggerInngestEvent } from "../lib/inngest-client";
+import { triggerBackgroundEvent } from "../lib/backgroundEvents";
 import { broadcastToOrg } from "../lib/realtime";
 import { sendPushToOrg } from "../lib/webpush";
 import { createPool } from "../lib/db";
@@ -369,7 +369,7 @@ app.post(
                 columns: { fullName: true, phone: true },
               });
 
-              await triggerInngestEvent(
+              await triggerBackgroundEvent(
                 c.env,
                 c.executionCtx,
                 "appointment.created",
@@ -384,7 +384,7 @@ app.post(
                 },
                 { id: user.uid },
                 { delaySeconds: 60 },
-              ).catch((err) => console.error("[Appointments/Create] Inngest trigger failed:", err));
+              ).catch((err) => console.error("[Appointments/Create] Queue trigger failed:", err));
 
               // 3. Agenda o lembrete por evento (Workflow sleepUntil). Best-effort.
               const rem = await loadReminderInput(c.env, row.organization_id, row.id);
@@ -708,7 +708,7 @@ const updateAppointmentHandler: MiddlewareHandler<{
               .limit(1)
               .then((res) => res[0]);
 
-            await triggerInngestEvent(
+            await triggerBackgroundEvent(
               c.env,
               c.executionCtx,
               "appointment.completed",
@@ -722,7 +722,7 @@ const updateAppointmentHandler: MiddlewareHandler<{
               { id: user.uid },
             );
           } else {
-            await triggerInngestEvent(
+            await triggerBackgroundEvent(
               c.env,
               c.executionCtx,
               "appointment.updated",

@@ -4,7 +4,7 @@ import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 import { callAI } from "../lib/ai/callAI";
 import { searchAiSearch } from "../lib/cloudflareAiSearch";
-import { triggerInngestEvent } from "../lib/inngest-client";
+import { triggerBackgroundEvent } from "../lib/backgroundEvents";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -84,7 +84,7 @@ app.post("/", requireAuth, async (c) => {
   }
 
   // Trigger prescription.created event for PDF and Email
-  triggerInngestEvent(c.env, c.executionCtx, "prescription.created", {
+  triggerBackgroundEvent(c.env, c.executionCtx, "prescription.created", {
     planId: plan.id,
     patientId: plan.patient_id,
     organizationId: user.organizationId,
@@ -107,7 +107,7 @@ app.post("/:id/pdf", requireAuth, async (c) => {
 
   const plan = check.rows[0];
 
-  triggerInngestEvent(c.env, c.executionCtx, "prescription.created", {
+  triggerBackgroundEvent(c.env, c.executionCtx, "prescription.created", {
     planId: plan.id,
     patientId: plan.patient_id,
     organizationId: user.organizationId,

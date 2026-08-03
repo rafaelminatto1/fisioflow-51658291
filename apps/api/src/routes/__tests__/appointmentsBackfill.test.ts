@@ -29,7 +29,7 @@ vi.mock("../../lib/auth", () => ({
 
 vi.mock("../../lib/realtime", () => ({ broadcastToOrg: vi.fn() }));
 vi.mock("../../lib/webpush", () => ({ sendPushToOrg: vi.fn() }));
-vi.mock("../../lib/inngest-client", () => ({ triggerInngestEvent: vi.fn() }));
+vi.mock("../../lib/backgroundEvents", () => ({ triggerBackgroundEvent: vi.fn() }));
 
 const adminUser = {
   uid: "admin-1",

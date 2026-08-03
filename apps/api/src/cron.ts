@@ -1,6 +1,6 @@
 import { Env } from "./types/env";
 import { createPool } from "./lib/db";
-import { triggerInngestEvent } from "./lib/inngest-client";
+import { triggerBackgroundEvent } from "./lib/backgroundEvents";
 import { sendAppointmentReminderEmail } from "./lib/email";
 import { dispatchMorningBriefing } from "./lib/briefing/sendBriefing";
 import type { WhatsAppQueuePayload } from "./queue";
@@ -388,7 +388,7 @@ async function processBirthdays(db: any, env: Env, ctx: ExecutionContext) {
   `);
 
   for (const row of result.rows) {
-    await triggerInngestEvent(env, ctx, "patient.birthday", {
+    await triggerBackgroundEvent(env, ctx, "patient.birthday", {
       patientId: row.id,
       name: row.full_name,
       phone: row.phone,
@@ -413,7 +413,7 @@ async function processInactivePatients(db: any, env: Env, ctx: ExecutionContext)
 
   for (const row of result.rows) {
     // 1. Inngest event (legacy/analytics)
-    await triggerInngestEvent(env, ctx, "patient.inactive", {
+    await triggerBackgroundEvent(env, ctx, "patient.inactive", {
       patientId: row.id,
       name: row.full_name,
       phone: row.phone,
