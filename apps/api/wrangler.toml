@@ -286,6 +286,10 @@ max_batch_size = 1
 max_batch_timeout = 60
 max_retries = 0
 
+[[send_email]]
+name = "EMAIL"
+allowed_destination_addresses = [ "rafaelstarton@gmail.com" ]
+
 # ===== VARIÁVEIS DE AMBIENTE =====
 [vars]
 ENVIRONMENT = "production"
@@ -303,6 +307,8 @@ NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.n
 NEON_AUTH_AUDIENCE = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
 FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway"
 GOOGLE_AI_PREMIUM_ENABLED = "false"
+EMAIL_TRANSPORT = "shadow"
+EMAIL_SHADOW_TO = "rafaelstarton@gmail.com"
 
 # ===== AMBIENTE DE PRODUCAO =====
 [env.production]
@@ -327,6 +333,12 @@ NEON_DATA_API_URL = "https://ep-wandering-bonus-acj4zwvo.apirest.sa-east-1.aws.n
 PAGES_URL = "https://moocafisio.com.br"
 FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway"
 TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
+EMAIL_TRANSPORT = "shadow"
+EMAIL_SHADOW_TO = "rafaelstarton@gmail.com"
+
+[[env.production.send_email]]
+name = "EMAIL"
+allowed_destination_addresses = [ "rafaelstarton@gmail.com" ]
 
 [[env.production.kv_namespaces]]
 binding = "FISIOFLOW_CONFIG"
@@ -590,6 +602,12 @@ NEON_AUTH_AUDIENCE = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.
 PAGES_URL = "https://fisioflow-web-staging.rafalegollas.workers.dev"
 FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway-staging"
 TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
+EMAIL_TRANSPORT = "shadow"
+EMAIL_SHADOW_TO = "rafaelstarton@gmail.com"
+
+[[env.staging.send_email]]
+name = "EMAIL"
+allowed_destination_addresses = [ "rafaelstarton@gmail.com" ]
 
 [[env.staging.kv_namespaces]]
 binding = "FISIOFLOW_CONFIG"

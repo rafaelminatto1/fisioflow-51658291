@@ -330,6 +330,11 @@ export interface Env {
   RESEND_FROM_EMAIL?: string;
   ADMIN_NOTIFICATION_EMAIL?: string;
 
+  // Cloudflare Email Routing (send_email binding) — modo sombra ao lado do Resend
+  EMAIL: SendEmail;
+  EMAIL_TRANSPORT?: "resend" | "shadow" | "cloudflare";
+  EMAIL_SHADOW_TO?: string;
+
   // Morning Briefing daily dispatch (off unless explicitly enabled)
   MORNING_BRIEFING_ENABLED?: string;
   MORNING_BRIEFING_TO?: string;

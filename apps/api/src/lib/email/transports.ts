@@ -20,3 +20,14 @@ export async function sendViaResend(env: Env, message: EmailMessage): Promise<bo
   if (error) throw new Error(error.message ?? "Falha ao enviar e-mail via Resend");
   return true;
 }
+
+export async function sendViaCloudflare(env: Env, message: EmailMessage): Promise<boolean> {
+  if (!env.EMAIL) return false;
+  await env.EMAIL.send({
+    from: resolveFrom(env),
+    to: message.to,
+    subject: message.subject,
+    html: message.html,
+  });
+  return true;
+}

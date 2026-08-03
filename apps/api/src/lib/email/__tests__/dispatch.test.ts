@@ -51,3 +51,47 @@ describe("sendEmail", () => {
     await expect(sendEmail(env, message)).rejects.toThrow("Domínio não verificado");
   });
 });
+
+describe("sendEmail — modo sombra", () => {
+  it("envia pelo Resend ao destinatário real e a cópia para a caixa sombra", async () => {
+    const cfSend = vi.fn().mockResolvedValue({ messageId: "cf_1" });
+    const env = {
+      RESEND_API_KEY: "re_test",
+      EMAIL_TRANSPORT: "shadow",
+      EMAIL_SHADOW_TO: "rafaelstarton@gmail.com",
+      EMAIL: { send: cfSend },
+    } as unknown as Env;
+
+    expect(await sendEmail(env, message)).toBe(true);
+
+    expect(send.mock.calls[0][0].to).toBe("paciente@example.com");
+    expect(cfSend).toHaveBeenCalledTimes(1);
+    expect(cfSend.mock.calls[0][0].to).toBe("rafaelstarton@gmail.com");
+  });
+
+  it("não derruba o envio principal quando a sombra falha", async () => {
+    const cfSend = vi.fn().mockRejectedValue(new Error("beta instável"));
+    const env = {
+      RESEND_API_KEY: "re_test",
+      EMAIL_TRANSPORT: "shadow",
+      EMAIL_SHADOW_TO: "rafaelstarton@gmail.com",
+      EMAIL: { send: cfSend },
+    } as unknown as Env;
+
+    expect(await sendEmail(env, message)).toBe(true);
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it("no modo cloudflare envia ao destinatário real e não usa o Resend", async () => {
+    const cfSend = vi.fn().mockResolvedValue({ messageId: "cf_2" });
+    const env = {
+      RESEND_API_KEY: "re_test",
+      EMAIL_TRANSPORT: "cloudflare",
+      EMAIL: { send: cfSend },
+    } as unknown as Env;
+
+    expect(await sendEmail(env, message)).toBe(true);
+    expect(cfSend.mock.calls[0][0].to).toBe("paciente@example.com");
+    expect(send).not.toHaveBeenCalled();
+  });
+});
