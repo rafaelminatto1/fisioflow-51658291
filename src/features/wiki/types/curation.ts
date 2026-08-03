@@ -88,6 +88,16 @@ export interface CurationItemDetail extends CurationQueueItem {
   limitations?: string | null;
   sources?: CurationProvenance[];
   review?: CurationReview | null;
+  reviews?: CurationReview[];
+  assignments?: CurationAssignment[];
+}
+
+export interface CurationAssignment {
+  id?: string;
+  assignee: CurationPerson;
+  assignmentType?: "owner" | "reviewer" | string;
+  priority?: string | null;
+  dueAt?: string | null;
 }
 
 export interface CurationCounts {

@@ -6,6 +6,7 @@ import {
   Loader2,
   ShieldCheck,
   UserRound,
+  UserRoundPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -36,6 +37,7 @@ import {
 } from "@/features/wiki/curation/curationUtils";
 import type {
   CurationAction,
+  AssignmentInput,
   CurationItemDetail,
   CurationQueueItem,
   TransitionInput,
@@ -48,9 +50,12 @@ interface WikiCurationDetailProps {
   isLoading: boolean;
   error?: unknown;
   transitionPending: boolean;
+  assignmentPending: boolean;
+  canAssign: boolean;
   onOpenChange: (open: boolean) => void;
   onRetry: () => void;
   onTransition: (input: TransitionInput) => Promise<unknown>;
+  onAssign: (input: AssignmentInput) => Promise<unknown>;
 }
 
 function formatDate(value?: string | null) {
@@ -85,19 +90,30 @@ export function WikiCurationDetail({
   isLoading,
   error,
   transitionPending,
+  assignmentPending,
+  canAssign,
   onOpenChange,
   onRetry,
   onTransition,
+  onAssign,
 }: WikiCurationDetailProps) {
   const current = detail ?? item;
   const [action, setAction] = useState<CurationAction>();
   const [reason, setReason] = useState("");
   const [validUntil, setValidUntil] = useState("");
+  const [assignmentOpen, setAssignmentOpen] = useState(false);
+  const [assigneeId, setAssigneeId] = useState("");
+  const [priority, setPriority] = useState("normal");
+  const [dueAt, setDueAt] = useState("");
 
   useEffect(() => {
     setAction(undefined);
     setReason("");
     setValidUntil("");
+    setAssignmentOpen(false);
+    setAssigneeId("");
+    setPriority("normal");
+    setDueAt("");
   }, [item?.id]);
 
   const primaryAction = current
@@ -130,6 +146,30 @@ export function WikiCurationDetail({
         );
       } else
         toast.error(apiError.message || "Não foi possível concluir a ação.");
+    }
+  }
+
+  async function submitAssignment() {
+    if (!current || !assigneeId.trim()) return;
+    try {
+      await onAssign({
+        item: current,
+        assigneeId: assigneeId.trim(),
+        priority,
+        dueAt: dueAt ? new Date(dueAt).toISOString() : null,
+      });
+      toast.success("Responsável atualizado.");
+      setAssignmentOpen(false);
+    } catch (assignmentError) {
+      const apiError = assignmentError as Error & {
+        status?: number;
+        payload?: { error?: { code?: string; message?: string } };
+      };
+      toast.error(
+        apiError.payload?.error?.code === "VERSION_CONFLICT"
+          ? "O item mudou enquanto estava aberto. Revise os dados atualizados."
+          : apiError.message || "Não foi possível atribuir o item.",
+      );
     }
   }
 
@@ -199,6 +239,21 @@ export function WikiCurationDetail({
                   {formatDate(current.validUntil)}
                 </Definition>
               </dl>
+              {canAssign ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setAssigneeId(current.assignee?.id || "");
+                    setPriority(current.priority || "normal");
+                    setDueAt(current.dueAt ? current.dueAt.slice(0, 16) : "");
+                    setAssignmentOpen(true);
+                  }}
+                >
+                  <UserRoundPlus className="mr-2 h-4 w-4" />
+                  Atribuir responsável
+                </Button>
+              ) : null}
 
               <section
                 aria-labelledby="provenance-heading"
@@ -207,28 +262,40 @@ export function WikiCurationDetail({
                 <h3 id="provenance-heading" className="font-semibold">
                   Proveniência e licença
                 </h3>
-                <dl className="grid gap-4 rounded-xl bg-muted/50 p-4 sm:grid-cols-2">
-                  <Definition label="Origem">
-                    {current.provenance?.sourceTitle ||
-                      current.provenance?.sourceType}
-                  </Definition>
-                  <Definition label="Licença">
-                    {current.provenance?.license}
-                  </Definition>
-                  <Definition label="DOI">{current.provenance?.doi}</Definition>
-                  <Definition label="PMID">
-                    {current.provenance?.pmid}
-                  </Definition>
-                </dl>
-                {current.provenance?.sourceUrl ? (
-                  <a
-                    className="inline-flex items-center gap-1 text-sm text-primary underline-offset-4 hover:underline"
-                    href={current.provenance.sourceUrl}
-                    target="_blank"
-                    rel="noreferrer"
+                {(detail?.sources?.length
+                  ? detail.sources
+                  : current.provenance
+                    ? [current.provenance]
+                    : []
+                ).map((source, index) => (
+                  <div
+                    key={`${source.sourceType || "source"}-${source.sourceId || index}`}
+                    className="rounded-xl bg-muted/50 p-4"
                   >
-                    Abrir fonte <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
+                    <dl className="grid gap-4 sm:grid-cols-2">
+                      <Definition label="Origem">
+                        {source.sourceTitle || source.sourceType}
+                      </Definition>
+                      <Definition label="Licença">{source.license}</Definition>
+                      <Definition label="DOI">{source.doi}</Definition>
+                      <Definition label="PMID">{source.pmid}</Definition>
+                    </dl>
+                    {source.sourceUrl ? (
+                      <a
+                        className="mt-3 inline-flex items-center gap-1 text-sm text-primary underline-offset-4 hover:underline"
+                        href={source.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Abrir fonte <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    ) : null}
+                  </div>
+                ))}
+                {!detail?.sources?.length && !current.provenance ? (
+                  <p className="rounded-xl bg-muted/50 p-4 text-sm text-muted-foreground">
+                    Proveniência não informada.
+                  </p>
                 ) : null}
               </section>
 
@@ -354,6 +421,62 @@ export function WikiCurationDetail({
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}{" "}
               Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={assignmentOpen} onOpenChange={setAssignmentOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Atribuir responsável</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="assignment-user">ID do responsável *</Label>
+              <Input
+                id="assignment-user"
+                value={assigneeId}
+                onChange={(event) => setAssigneeId(event.target.value)}
+                autoComplete="off"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="assignment-priority">Prioridade</Label>
+              <select
+                id="assignment-priority"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={priority}
+                onChange={(event) => setPriority(event.target.value)}
+              >
+                <option value="low">Baixa</option>
+                <option value="normal">Normal</option>
+                <option value="high">Alta</option>
+                <option value="urgent">Urgente</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="assignment-due">Prazo</Label>
+              <Input
+                id="assignment-due"
+                type="datetime-local"
+                value={dueAt}
+                onChange={(event) => setDueAt(event.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignmentOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={submitAssignment}
+              disabled={assignmentPending || !assigneeId.trim()}
+            >
+              {assignmentPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              Salvar atribuição
             </Button>
           </DialogFooter>
         </DialogContent>

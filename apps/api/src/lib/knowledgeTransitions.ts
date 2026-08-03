@@ -109,6 +109,8 @@ export function validateKnowledgeTransition(input: {
   status: EditorialStatus;
   actorId: string;
   submittedBy?: string | null;
+  authoredBy?: string | null;
+  isAssigned?: boolean;
   reason?: string | null;
   capabilities: readonly KnowledgeCapability[];
 }): TransitionValidation {
@@ -119,10 +121,21 @@ export function validateKnowledgeTransition(input: {
   if (rule.capability && !input.capabilities.includes(rule.capability)) {
     return { ok: false, code: "FORBIDDEN" };
   }
+  if (
+    input.action === "submit" &&
+    input.actorId !== input.authoredBy &&
+    !input.isAssigned &&
+    !input.capabilities.includes("manage_library")
+  ) {
+    return { ok: false, code: "FORBIDDEN" };
+  }
   if (rule.requiresReason && !input.reason?.trim()) {
     return { ok: false, code: "REASON_REQUIRED" };
   }
-  if (input.action === "approve" && input.submittedBy === input.actorId) {
+  if (
+    input.action === "approve" &&
+    (input.submittedBy === input.actorId || input.authoredBy === input.actorId)
+  ) {
     return { ok: false, code: "SELF_APPROVAL_FORBIDDEN" };
   }
   return { ok: true, rule };
@@ -132,6 +145,8 @@ export function allowedKnowledgeActions(input: {
   status: EditorialStatus;
   actorId: string;
   submittedBy?: string | null;
+  authoredBy?: string | null;
+  isAssigned?: boolean;
   capabilities: readonly KnowledgeCapability[];
 }): TransitionAction[] {
   return (Object.keys(TRANSITION_RULES) as TransitionAction[]).filter(

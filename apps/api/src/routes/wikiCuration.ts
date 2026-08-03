@@ -13,7 +13,12 @@ import {
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 app.use("*", requireAuth);
 
-const uuid = z.string().uuid();
+// PostgreSQL accepts UUID-shaped hexadecimal values whose version/variant bits do
+// not satisfy RFC 4122. Legacy deterministic IDs in this domain use that form.
+export const postgresUuid = z
+  .string()
+  .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+const uuid = postgresUuid;
 const transitionBody = z.object({
   action: z.enum([
     "submit",
@@ -86,6 +91,43 @@ function encodeCursor(value: { updatedAt: string; id: string }): string {
   return btoa(JSON.stringify(value));
 }
 
+function person(id: unknown, name?: unknown) {
+  return typeof id === "string" && id
+    ? { id, name: typeof name === "string" && name ? name : id }
+    : null;
+}
+
+function provenance(row: any) {
+  return {
+    sourceType: row.source_type ?? row.type ?? undefined,
+    sourceId: row.source_id ?? undefined,
+    sourceTitle: row.source_title ?? row.title ?? undefined,
+    sourceUrl: row.source_url ?? row.url ?? undefined,
+    doi: row.doi ?? undefined,
+    pmid: row.pmid ?? undefined,
+    license: row.license ?? undefined,
+  };
+}
+
+export function normalizeQueueRow(row: any, allowedActions: string[]) {
+  const rawProvenance = Array.isArray(row.provenance) ? row.provenance : [];
+  return {
+    id: row.id,
+    versionId: row.version_id,
+    rowVersion: Number(row.row_version),
+    title: row.title,
+    kind: row.kind,
+    editorialStatus: row.editorial_status,
+    technicalStatus: row.technical_status,
+    assignee: person(row.assignee_id, row.assignee_name),
+    priority: row.priority ?? "normal",
+    dueAt: row.due_at ?? null,
+    validUntil: row.valid_until ?? null,
+    provenance: rawProvenance.map(provenance),
+    allowedActions,
+  };
+}
+
 async function payloadHash(payload: unknown): Promise<string> {
   const bytes = new TextEncoder().encode(JSON.stringify(payload));
   const digest = await crypto.subtle.digest("SHA-256", bytes);
@@ -147,8 +189,9 @@ app.get("/queue", async (c) => {
   const pool = createPool(c.env);
   const result = await pool.query(
     `SELECT i.id, v.id AS version_id, i.row_version, v.title, i.kind,
-            v.editorial_status, v.technical_status, v.submitted_by,
-            a.assignee_id, a.priority, a.due_at,
+            v.editorial_status, v.technical_status, v.authored_by, v.submitted_by,
+            a.assignee_id, ap.full_name AS assignee_name,
+            a.priority, a.due_at,
             r.valid_until,
             source_agg.provenance,
             i.updated_at
@@ -160,9 +203,12 @@ app.get("/queue", async (c) => {
        ) v ON true
        LEFT JOIN knowledge_assignments a ON a.organization_id = i.organization_id
          AND a.version_id = v.id AND a.completed_at IS NULL AND a.assignment_type = 'owner'
+       LEFT JOIN profiles ap ON ap.organization_id = i.organization_id
+         AND ap.user_id = a.assignee_id
        LEFT JOIN LATERAL (
          SELECT valid_until FROM knowledge_reviews review
           WHERE review.organization_id = i.organization_id AND review.version_id = v.id
+            AND review.action = 'approve'
           ORDER BY review.created_at DESC LIMIT 1
        ) r ON true
        LEFT JOIN LATERAL (
@@ -217,26 +263,13 @@ app.get("/queue", async (c) => {
   );
   const hasMore = result.rows.length > input.limit;
   const rows = result.rows.slice(0, input.limit);
-  const data = rows.map((row: any) => ({
-    id: row.id,
-    versionId: row.version_id,
-    rowVersion: row.row_version,
-    title: row.title,
-    kind: row.kind,
-    editorialStatus: row.editorial_status,
-    technicalStatus: row.technical_status,
-    assignee: row.assignee_id ?? null,
-    priority: row.priority ?? "normal",
-    dueAt: row.due_at ?? null,
-    validUntil: row.valid_until ?? null,
-    provenance: row.provenance ?? [],
-    allowedActions: allowedKnowledgeActions({
+  const data = rows.map((row: any) => normalizeQueueRow(row, allowedKnowledgeActions({
       status: row.editorial_status,
       actorId: user.uid,
       submittedBy: row.submitted_by,
+      authoredBy: row.authored_by,
       capabilities,
-    }),
-  }));
+    })));
   const last = rows.at(-1);
   return c.json({
     data,
@@ -282,7 +315,8 @@ app.get("/items/:id", async (c) => {
   const pool = createPool(c.env);
   const item = await pool.query(
     `SELECT i.*, v.id AS version_id, v.version_number, v.title AS version_title,
-            v.content, v.metadata, v.editorial_status, v.technical_status, v.submitted_by
+            v.content, v.metadata, v.editorial_status, v.technical_status,
+            v.authored_by, v.submitted_by
        FROM knowledge_items i JOIN LATERAL (
          SELECT * FROM knowledge_item_versions candidate
           WHERE candidate.organization_id = i.organization_id AND candidate.item_id = i.id
@@ -294,29 +328,62 @@ app.get("/items/:id", async (c) => {
     return errorResponse(c, 404, "ITEM_NOT_FOUND", "Item não encontrado");
   const [sources, reviews, assignments] = await Promise.all([
     pool.query(
-      `SELECT * FROM knowledge_sources WHERE organization_id = $1 AND item_id = $2 ORDER BY created_at`,
+      `SELECT source_type, source_id, title, url, doi, pmid, license
+         FROM knowledge_sources WHERE organization_id = $1 AND item_id = $2 ORDER BY created_at`,
       [user.organizationId, id],
     ),
     pool.query(
-      `SELECT * FROM knowledge_reviews WHERE organization_id = $1 AND item_id = $2 ORDER BY created_at DESC`,
+      `SELECT r.action, r.reason, r.valid_until, r.created_at,
+              r.reviewer_id, rp.full_name reviewer_name,
+              r.approved_by, ap.full_name approved_name
+         FROM knowledge_reviews r
+         LEFT JOIN profiles rp ON rp.organization_id = r.organization_id AND rp.user_id = r.reviewer_id
+         LEFT JOIN profiles ap ON ap.organization_id = r.organization_id AND ap.user_id = r.approved_by
+        WHERE r.organization_id = $1 AND r.item_id = $2 ORDER BY r.created_at DESC`,
       [user.organizationId, id],
     ),
     pool.query(
-      `SELECT * FROM knowledge_assignments WHERE organization_id = $1 AND item_id = $2 AND completed_at IS NULL ORDER BY created_at DESC`,
+      `SELECT a.assignment_type, a.assignee_id, p.full_name assignee_name,
+              a.priority, a.due_at, a.created_at
+         FROM knowledge_assignments a LEFT JOIN profiles p
+           ON p.organization_id = a.organization_id AND p.user_id = a.assignee_id
+        WHERE a.organization_id = $1 AND a.item_id = $2 AND a.completed_at IS NULL
+        ORDER BY a.created_at DESC`,
       [user.organizationId, id],
     ),
   ]);
   const row: any = item.rows[0];
   return c.json({
     data: {
-      ...row,
-      sources: sources.rows,
-      reviews: reviews.rows,
-      assignments: assignments.rows,
+      id: row.id,
+      versionId: row.version_id,
+      rowVersion: Number(row.row_version),
+      title: row.version_title,
+      kind: row.kind,
+      editorialStatus: row.editorial_status,
+      technicalStatus: row.technical_status,
+      summary: row.metadata?.summary ?? null,
+      limitations: row.metadata?.limitations ?? null,
+      sources: sources.rows.map(provenance),
+      reviews: reviews.rows.map((review: any) => ({
+        decision: review.action,
+        reason: review.reason ?? null,
+        reviewedAt: review.created_at,
+        validUntil: review.valid_until ?? null,
+        reviewer: person(review.reviewer_id, review.reviewer_name),
+        approvedBy: person(review.approved_by, review.approved_name),
+      })),
+      assignments: assignments.rows.map((assignment: any) => ({
+        assignmentType: assignment.assignment_type,
+        assignee: person(assignment.assignee_id, assignment.assignee_name),
+        priority: assignment.priority,
+        dueAt: assignment.due_at ?? null,
+      })),
       allowedActions: allowedKnowledgeActions({
         status: row.editorial_status,
         actorId: user.uid,
         submittedBy: row.submitted_by,
+        authoredBy: row.authored_by,
         capabilities,
       }),
     },
@@ -342,6 +409,12 @@ app.post("/items/:id/transitions", async (c) => {
   );
   const pool = createPool(c.env);
   const hash = await payloadHash(body);
+  await pool.query(
+    `DELETE FROM knowledge_idempotency_keys
+      WHERE organization_id = $1 AND actor_id = $2 AND operation = $3
+        AND idempotency_key = $4 AND expires_at <= now()`,
+    [user.organizationId, user.uid, `transition:${id}`, key],
+  );
   const prior = await pool.query(
     `SELECT payload_hash, response_status, response_body FROM knowledge_idempotency_keys
       WHERE organization_id = $1 AND actor_id = $2 AND operation = $3 AND idempotency_key = $4 AND expires_at > now()`,
@@ -362,11 +435,29 @@ app.post("/items/:id/transitions", async (c) => {
   }
   const current = await pool.query(
     `SELECT i.row_version, i.approved_version_id, i.published_version_id,
-            v.editorial_status, v.submitted_by
+            v.editorial_status, v.authored_by, v.submitted_by,
+            EXISTS (
+              SELECT 1 FROM knowledge_assignments assignment
+               WHERE assignment.organization_id = i.organization_id
+                 AND assignment.version_id = v.id
+                 AND assignment.assignee_id = $4 AND assignment.completed_at IS NULL
+            ) AS actor_is_assigned,
+            EXISTS (
+              SELECT 1 FROM knowledge_reviews approval
+              JOIN knowledge_capability_grants grant_row
+                ON grant_row.organization_id = approval.organization_id
+               AND grant_row.user_id = approval.approved_by
+               AND grant_row.capability = 'clinical_review'
+               AND grant_row.revoked_at IS NULL
+               WHERE approval.organization_id = i.organization_id
+                 AND approval.version_id = v.id AND approval.action = 'approve'
+                 AND approval.valid_until IS NOT NULL
+                 AND approval.valid_until >= CURRENT_DATE
+            ) AS has_current_approval
        FROM knowledge_items i JOIN knowledge_item_versions v
          ON v.organization_id = i.organization_id AND v.item_id = i.id
       WHERE i.organization_id = $1 AND i.id = $2 AND v.id = $3 AND i.deleted_at IS NULL`,
-    [user.organizationId, id, body.versionId],
+    [user.organizationId, id, body.versionId, user.uid],
   );
   const row: any = current.rows[0];
   if (!row)
@@ -378,6 +469,8 @@ app.post("/items/:id/transitions", async (c) => {
     status: row.editorial_status,
     actorId: user.uid,
     submittedBy: row.submitted_by,
+    authoredBy: row.authored_by,
+    isAssigned: row.actor_is_assigned === true,
     reason: body.reason,
     capabilities,
   });
@@ -396,6 +489,14 @@ app.post("/items/:id/transitions", async (c) => {
       409,
       "INVALID_TRANSITION",
       "A versão não é a versão aprovada",
+    );
+  }
+  if (body.action === "publish" && row.has_current_approval !== true) {
+    return errorResponse(
+      c,
+      409,
+      "APPROVAL_NOT_CURRENT",
+      "A versão não possui aprovação clínica vigente",
     );
   }
   const nextVersion = body.expectedVersion + 1;
@@ -493,6 +594,16 @@ app.post("/items/:id/transitions", async (c) => {
           AND EXISTS (SELECT 1 FROM knowledge_item_versions guard
             WHERE guard.organization_id = $1 AND guard.item_id = $2
               AND guard.id = $5 AND guard.editorial_status = $9)
+          AND ($8 <> 'publish' OR EXISTS (
+            SELECT 1 FROM knowledge_reviews approval
+            JOIN knowledge_capability_grants grant_row
+              ON grant_row.organization_id = approval.organization_id
+             AND grant_row.user_id = approval.approved_by
+             AND grant_row.capability = 'clinical_review'
+             AND grant_row.revoked_at IS NULL
+             WHERE approval.organization_id = $1 AND approval.version_id = $5
+               AND approval.action = 'approve' AND approval.valid_until IS NOT NULL
+               AND approval.valid_until >= CURRENT_DATE))
         RETURNING id
      ), changed_version AS (
        UPDATE knowledge_item_versions SET editorial_status = $7,
@@ -552,6 +663,14 @@ app.post("/items/:id/transitions", async (c) => {
 
 app.post("/items/:id/assignments", async (c) => {
   const id = uuid.parse(c.req.param("id"));
+  const key = c.req.header("Idempotency-Key")?.trim();
+  if (!key)
+    return errorResponse(
+      c,
+      400,
+      "IDEMPOTENCY_KEY_REQUIRED",
+      "Idempotency-Key é obrigatório",
+    );
   const body = assignmentBody.parse(await c.req.json());
   const user = c.get("user");
   const capabilities = await resolveKnowledgeCapabilities(
@@ -567,23 +686,61 @@ app.post("/items/:id/assignments", async (c) => {
       "Capability manage_library necessária",
     );
   const pool = createPool(c.env);
+  const operation = `assignment:${id}:${body.assignmentType}`;
+  const hash = await payloadHash(body);
+  await pool.query(
+    `DELETE FROM knowledge_idempotency_keys
+      WHERE organization_id = $1 AND actor_id = $2 AND operation = $3
+        AND idempotency_key = $4 AND expires_at <= now()`,
+    [user.organizationId, user.uid, operation, key],
+  );
+  const prior = await pool.query(
+    `SELECT payload_hash, response_status, response_body FROM knowledge_idempotency_keys
+      WHERE organization_id = $1 AND actor_id = $2 AND operation = $3
+        AND idempotency_key = $4 AND expires_at > now()`,
+    [user.organizationId, user.uid, operation, key],
+  );
+  if (prior.rows[0]) {
+    if (prior.rows[0].payload_hash !== hash)
+      return errorResponse(c, 409, "IDEMPOTENCY_CONFLICT", "Chave reutilizada com outro payload");
+    return c.json(prior.rows[0].response_body, prior.rows[0].response_status ?? 201);
+  }
   const result = await pool.query(
-    `WITH changed_item AS (
+    `WITH valid_assignee AS (
+       SELECT p.user_id FROM profiles p
+        WHERE p.organization_id = $1 AND p.user_id = $6 AND p.is_active IS NOT FALSE
+     ), changed_item AS (
        UPDATE knowledge_items SET row_version = row_version + 1, updated_at = now()
         WHERE organization_id = $1 AND id = $2 AND row_version = $3 AND deleted_at IS NULL
           AND EXISTS (SELECT 1 FROM knowledge_item_versions guard
             WHERE guard.organization_id = $1 AND guard.item_id = $2 AND guard.id = $4)
+          AND EXISTS (SELECT 1 FROM valid_assignee)
         RETURNING row_version
      ), completed AS (
        UPDATE knowledge_assignments SET completed_at = now(), updated_at = now()
         WHERE organization_id = $1 AND version_id = $4 AND assignment_type = $5
           AND completed_at IS NULL AND EXISTS (SELECT 1 FROM changed_item)
-     )
+     ), inserted AS (
      INSERT INTO knowledge_assignments
        (organization_id,item_id,version_id,assignment_type,assignee_id,priority,due_at,assigned_by)
      SELECT $1,$2,v.id,$5,$6,$7,$8,$9 FROM knowledge_item_versions v
       WHERE v.organization_id = $1 AND v.item_id = $2 AND v.id = $4
-        AND EXISTS (SELECT 1 FROM changed_item) RETURNING *`,
+        AND EXISTS (SELECT 1 FROM changed_item) RETURNING *
+     ), audit AS (
+       INSERT INTO knowledge_audit_events
+         (organization_id,actor_id,entity_type,entity_id,action,request_id,metadata)
+       SELECT $1,$9,'knowledge_item',$2,'assignment',$10,
+              jsonb_build_object('versionId',$4,'assignmentType',$5,'assigneeId',$6,
+                                 'priority',$7,'dueAt',$8)
+         FROM inserted RETURNING id
+     ), idempotency AS (
+       INSERT INTO knowledge_idempotency_keys
+         (organization_id,actor_id,operation,idempotency_key,payload_hash,response_status,response_body)
+       SELECT $1,$9,$11,$12,$13,201,
+              jsonb_build_object('data',to_jsonb(inserted.*),
+                                 'meta',jsonb_build_object('requestId',$10))
+         FROM inserted RETURNING idempotency_key
+     ) SELECT * FROM inserted`,
     [
       user.organizationId,
       id,
@@ -594,15 +751,14 @@ app.post("/items/:id/assignments", async (c) => {
       body.priority,
       body.dueAt ?? null,
       user.uid,
+      requestId(c),
+      operation,
+      key,
+      hash,
     ],
   );
   if (!result.rows[0])
-    return errorResponse(
-      c,
-      409,
-      "VERSION_CONFLICT",
-      "Item ou versão foi alterado",
-    );
+    return errorResponse(c, 404, "ASSIGNEE_OR_ITEM_NOT_FOUND", "Responsável, item ou versão não encontrado");
   return c.json(
     { data: result.rows[0], meta: { requestId: requestId(c) } },
     201,

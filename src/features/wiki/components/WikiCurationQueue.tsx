@@ -1,4 +1,4 @@
-import { useDeferredValue, useState } from "react";
+import { useDeferredValue, useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
   ChevronRight,
@@ -47,12 +47,12 @@ function QueueRow({
   onOpen,
 }: {
   item: CurationQueueItem;
-  onOpen: () => void;
+  onOpen: (trigger: HTMLButtonElement) => void;
 }) {
   return (
     <button
       type="button"
-      onClick={onOpen}
+      onClick={(event) => onOpen(event.currentTarget)}
       className="grid w-full gap-2 border-b p-4 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring md:grid-cols-[minmax(220px,2fr)_minmax(120px,1fr)_minmax(130px,1fr)_minmax(120px,1fr)_auto] md:items-center"
     >
       <div className="min-w-0">
@@ -97,13 +97,44 @@ export function WikiCurationQueue() {
   const deferredQuery = useDeferredValue(queryInput);
   const filters = { ...urlFilters, q: deferredQuery || undefined };
   const [selectedItem, setSelectedItem] = useState<CurationQueueItem>();
+  const selectedTriggerRef = useRef<HTMLButtonElement>();
   const curation = useWikiCuration(filters, selectedItem?.id);
+
+  useEffect(() => {
+    const nextQuery = urlFilters.q || "";
+    setQueryInput((current) => (current === nextQuery ? current : nextQuery));
+  }, [urlFilters.q]);
 
   function updateFilters(patch: Partial<CurationQueueFilters>) {
     const nextFilters = { ...urlFilters, ...patch };
     setSearchParams(writeCurationFilters(searchParams, nextFilters), {
       replace: true,
     });
+  }
+
+  function clearFilters() {
+    setQueryInput("");
+    setSearchParams(
+      writeCurationFilters(searchParams, { status: filters.status || "inbox" }),
+      { replace: true },
+    );
+  }
+
+  function handleTabKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    const tabs = Array.from(
+      event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]'),
+    );
+    const currentIndex = tabs.indexOf(document.activeElement as HTMLButtonElement);
+    if (currentIndex < 0) return;
+    event.preventDefault();
+    const nextIndex = event.key === "Home"
+      ? 0
+      : event.key === "End"
+        ? tabs.length - 1
+        : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+    tabs[nextIndex]?.focus();
+    tabs[nextIndex]?.click();
   }
 
   if (curation.capabilitiesLoading) {
@@ -118,9 +149,17 @@ export function WikiCurationQueue() {
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
+        <AlertDescription className="flex flex-wrap items-center gap-2">
           Não foi possível verificar suas capacidades editoriais. Tente
           novamente em alguns instantes.
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => curation.retryCapabilities()}
+          >
+            Tentar novamente
+          </Button>
         </AlertDescription>
       </Alert>
     );
@@ -156,12 +195,16 @@ export function WikiCurationQueue() {
         className="flex gap-1 overflow-x-auto pb-1 [scrollbar-width:none]"
         role="tablist"
         aria-label="Etapas da curadoria"
+        onKeyDown={handleTabKeyDown}
       >
         {CURATION_TABS.map((tab) => (
           <Button
             key={tab.value}
             role="tab"
+            id={`curation-tab-${tab.value}`}
+            aria-controls="curation-queue-panel"
             aria-selected={filters.status === tab.value}
+            tabIndex={filters.status === tab.value ? 0 : -1}
             variant={filters.status === tab.value ? "default" : "ghost"}
             size="sm"
             className="shrink-0"
@@ -175,7 +218,7 @@ export function WikiCurationQueue() {
         ))}
       </div>
 
-      <div className="grid gap-3 rounded-xl border bg-card p-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 rounded-xl border bg-card p-3 sm:grid-cols-2 xl:grid-cols-7">
         <div className="relative sm:col-span-2">
           <Label htmlFor="curation-search" className="sr-only">
             Buscar na fila
@@ -221,9 +264,8 @@ export function WikiCurationQueue() {
           <SelectContent>
             <SelectItem value="all">Toda validade</SelectItem>
             <SelectItem value="valid">Vigente</SelectItem>
-            <SelectItem value="expiring">Vencendo</SelectItem>
-            <SelectItem value="expired">Vencida</SelectItem>
-            <SelectItem value="unknown">Não informada</SelectItem>
+            <SelectItem value="due">Vencida</SelectItem>
+            <SelectItem value="missing">Não informada</SelectItem>
           </SelectContent>
         </Select>
         <Select
@@ -237,14 +279,56 @@ export function WikiCurationQueue() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todo tipo</SelectItem>
-            <SelectItem value="article">Artigo</SelectItem>
-            <SelectItem value="guideline">Diretriz</SelectItem>
+            <SelectItem value="source">Fonte científica</SelectItem>
+            <SelectItem value="guidance">Orientação clínica</SelectItem>
             <SelectItem value="protocol">Protocolo</SelectItem>
-            <SelectItem value="clinical_content">Conteúdo clínico</SelectItem>
+            <SelectItem value="trail">Trilha</SelectItem>
+            <SelectItem value="test">Teste ou critério</SelectItem>
+            <SelectItem value="exercise">Exercício</SelectItem>
+            <SelectItem value="term">Termo</SelectItem>
+            <SelectItem value="page">Página</SelectItem>
           </SelectContent>
         </Select>
+        <Select
+          value={filters.technicalStatus || "all"}
+          onValueChange={(value) =>
+            updateFilters({
+              technicalStatus: value === "all" ? undefined : value,
+            })
+          }
+        >
+          <SelectTrigger aria-label="Filtrar por estado técnico">
+            <SelectValue placeholder="Estado técnico" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todo estado técnico</SelectItem>
+            <SelectItem value="not_started">Não iniciada</SelectItem>
+            <SelectItem value="queued">Na fila</SelectItem>
+            <SelectItem value="processing">Processando</SelectItem>
+            <SelectItem value="indexed">Indexado</SelectItem>
+            <SelectItem value="failed">Falha técnica</SelectItem>
+          </SelectContent>
+        </Select>
+        <div>
+          <Label htmlFor="curation-assignee" className="sr-only">
+            Filtrar por responsável
+          </Label>
+          <Input
+            id="curation-assignee"
+            value={filters.assignee || ""}
+            onChange={(event) =>
+              updateFilters({ assignee: event.target.value || undefined })
+            }
+            placeholder="ID do responsável"
+          />
+        </div>
       </div>
 
+      <div
+        id="curation-queue-panel"
+        role="tabpanel"
+        aria-labelledby={`curation-tab-${filters.status || "inbox"}`}
+      >
       {curation.queueQuery.isLoading ? (
         <div
           className="flex min-h-56 items-center justify-center"
@@ -280,6 +364,11 @@ export function WikiCurationQueue() {
           <p className="mt-1 text-sm text-muted-foreground">
             A fila está em dia ou os filtros não encontraram resultados.
           </p>
+          {Object.values(filters).some(Boolean) ? (
+            <Button variant="outline" className="mt-4" onClick={clearFilters}>
+              Limpar filtros
+            </Button>
+          ) : null}
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border bg-card">
@@ -294,11 +383,19 @@ export function WikiCurationQueue() {
             <QueueRow
               key={`${item.id}-${item.versionId}`}
               item={item}
-              onOpen={() => setSelectedItem(item)}
+              onOpen={(trigger) => {
+                selectedTriggerRef.current = trigger;
+                setSelectedItem(item);
+              }}
             />
           ))}
         </div>
       )}
+      </div>
+
+      <p className="sr-only" aria-live="polite">
+        {curation.items.length} itens exibidos na fila.
+      </p>
 
       {curation.queueQuery.hasNextPage ? (
         <Button
@@ -321,9 +418,16 @@ export function WikiCurationQueue() {
         isLoading={curation.detailQuery.isLoading}
         error={curation.detailQuery.error}
         transitionPending={curation.transitionPending}
-        onOpenChange={(open) => !open && setSelectedItem(undefined)}
+        assignmentPending={curation.assignmentPending}
+        canAssign={curation.capabilities.includes("manage_library")}
+        onOpenChange={(open) => {
+          if (open) return;
+          setSelectedItem(undefined);
+          queueMicrotask(() => selectedTriggerRef.current?.focus());
+        }}
         onRetry={() => curation.detailQuery.refetch()}
         onTransition={curation.transition}
+        onAssign={curation.assign}
       />
     </section>
   );

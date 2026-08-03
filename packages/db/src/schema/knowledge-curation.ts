@@ -1,16 +1,33 @@
 import {
+  check,
   date,
+  foreignKey,
   index,
   integer,
   jsonb,
+  pgPolicy,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { organizations } from "./organizations";
-import { withOrganizationPolicy } from "./rls_helper";
+
+function knowledgeOrganizationPolicy(
+  tableName: string,
+  organizationId: AnyPgColumn,
+) {
+  return pgPolicy(`${tableName}_org_isolation`, {
+    for: "all",
+    using: sql`${organizationId}::text = current_setting('app.org_id', true)`,
+    withCheck: sql`${organizationId}::text = current_setting('app.org_id', true)`,
+  });
+}
 
 export const knowledgeCapabilityGrants = pgTable(
   "knowledge_capability_grants",
@@ -18,7 +35,7 @@ export const knowledgeCapabilityGrants = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     organizationId: uuid("organization_id")
       .notNull()
-      .references(() => organizations.id),
+      .references(() => organizations.id, { onDelete: "cascade" }),
     userId: text("user_id").notNull(),
     capability: text("capability").notNull(),
     grantedBy: text("granted_by").notNull(),
@@ -30,16 +47,24 @@ export const knowledgeCapabilityGrants = pgTable(
     reason: text("reason"),
   },
   (table) => [
-    unique("uq_knowledge_capability_grants").on(
-      table.organizationId,
-      table.userId,
-      table.capability,
+    unique(
+      "knowledge_capability_grants_organization_id_user_id_capability_key",
+    ).on(table.organizationId, table.userId, table.capability),
+    check(
+      "knowledge_capability_grants_capability_check",
+      sql`${table.capability} IN ('manage_library','clinical_review','publish_knowledge','manage_library_policy')`,
     ),
-    index("idx_knowledge_capability_grants_lookup").on(
-      table.organizationId,
-      table.userId,
+    check(
+      "knowledge_capability_grants_reason_check",
+      sql`${table.reason} IS NULL OR char_length(${table.reason}) <= 500`,
     ),
-    withOrganizationPolicy("knowledge_capability_grants", table.organizationId),
+    index("idx_knowledge_capability_grants_active")
+      .on(table.organizationId, table.userId, table.capability)
+      .where(sql`${table.revokedAt} IS NULL`),
+    knowledgeOrganizationPolicy(
+      "knowledge_capability_grants",
+      table.organizationId,
+    ),
   ],
 );
 
@@ -49,7 +74,7 @@ export const knowledgeItems = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     organizationId: uuid("organization_id")
       .notNull()
-      .references(() => organizations.id),
+      .references(() => organizations.id, { onDelete: "cascade" }),
     kind: text("kind").notNull(),
     title: text("title").notNull(),
     slug: text("slug"),
@@ -66,13 +91,28 @@ export const knowledgeItems = pgTable(
       .notNull(),
   },
   (table) => [
-    unique("uq_knowledge_items_org_id").on(table.organizationId, table.id),
-    index("idx_knowledge_items_queue").on(
+    // Os FKs compostos e deferrable destes dois ponteiros são geridos pela
+    // migration 0160; Drizzle não representa DEFERRABLE neste builder.
+    unique("knowledge_items_organization_id_id_key").on(
       table.organizationId,
-      table.updatedAt,
       table.id,
     ),
-    withOrganizationPolicy("knowledge_items", table.organizationId),
+    uniqueIndex("uq_knowledge_items_slug_active")
+      .on(table.organizationId, table.slug)
+      .where(sql`${table.slug} IS NOT NULL AND ${table.deletedAt} IS NULL`),
+    index("idx_knowledge_items_queue")
+      .on(table.organizationId, table.updatedAt.desc(), table.id.desc())
+      .where(sql`${table.deletedAt} IS NULL`),
+    check(
+      "knowledge_items_kind_check",
+      sql`${table.kind} IN ('guidance','protocol','trail','test','exercise','source','term','page')`,
+    ),
+    check(
+      "knowledge_items_title_check",
+      sql`char_length(${table.title}) BETWEEN 1 AND 500`,
+    ),
+    check("knowledge_items_row_version_check", sql`${table.rowVersion} > 0`),
+    knowledgeOrganizationPolicy("knowledge_items", table.organizationId),
   ],
 );
 
@@ -82,10 +122,8 @@ export const knowledgeItemVersions = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     organizationId: uuid("organization_id")
       .notNull()
-      .references(() => organizations.id),
-    itemId: uuid("item_id")
-      .notNull()
-      .references(() => knowledgeItems.id),
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    itemId: uuid("item_id").notNull(),
     versionNumber: integer("version_number").notNull(),
     title: text("title").notNull(),
     content: text("content").default("").notNull(),
@@ -103,27 +141,49 @@ export const knowledgeItemVersions = pgTable(
       .notNull(),
   },
   (table) => [
-    unique("uq_knowledge_item_versions_org_id").on(
+    unique("knowledge_item_versions_organization_id_id_key").on(
       table.organizationId,
       table.id,
     ),
-    unique("uq_knowledge_item_versions_identity").on(
+    unique("knowledge_item_versions_organization_id_item_id_id_key").on(
       table.organizationId,
       table.itemId,
       table.id,
     ),
-    unique("uq_knowledge_item_versions_number").on(
-      table.organizationId,
-      table.itemId,
-      table.versionNumber,
-    ),
+    unique(
+      "knowledge_item_versions_organization_id_item_id_version_number_key",
+    ).on(table.organizationId, table.itemId, table.versionNumber),
+    foreignKey({
+      columns: [table.organizationId, table.itemId],
+      foreignColumns: [knowledgeItems.organizationId, knowledgeItems.id],
+      name: "knowledge_item_versions_organization_id_item_id_fkey",
+    }).onDelete("cascade"),
     index("idx_knowledge_versions_queue").on(
       table.organizationId,
       table.editorialStatus,
-      table.createdAt,
-      table.id,
+      table.createdAt.desc(),
+      table.id.desc(),
     ),
-    withOrganizationPolicy("knowledge_item_versions", table.organizationId),
+    check(
+      "knowledge_item_versions_version_number_check",
+      sql`${table.versionNumber} > 0`,
+    ),
+    check(
+      "knowledge_item_versions_title_check",
+      sql`char_length(${table.title}) BETWEEN 1 AND 500`,
+    ),
+    check(
+      "knowledge_item_versions_editorial_status_check",
+      sql`${table.editorialStatus} IN ('draft','triage','clinical_review','changes_requested','rejected','approved','published','review_due','superseded','archived')`,
+    ),
+    check(
+      "knowledge_item_versions_technical_status_check",
+      sql`${table.technicalStatus} IN ('not_started','queued','processing','indexed','failed')`,
+    ),
+    knowledgeOrganizationPolicy(
+      "knowledge_item_versions",
+      table.organizationId,
+    ),
   ],
 );
 
@@ -133,13 +193,9 @@ export const knowledgeReviews = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     organizationId: uuid("organization_id")
       .notNull()
-      .references(() => organizations.id),
-    itemId: uuid("item_id")
-      .notNull()
-      .references(() => knowledgeItems.id),
-    versionId: uuid("version_id")
-      .notNull()
-      .references(() => knowledgeItemVersions.id),
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    itemId: uuid("item_id").notNull(),
+    versionId: uuid("version_id").notNull(),
     action: text("action").notNull(),
     fromStatus: text("from_status").notNull(),
     toStatus: text("to_status").notNull(),
@@ -153,12 +209,35 @@ export const knowledgeReviews = pgTable(
       .notNull(),
   },
   (table) => [
+    foreignKey({
+      columns: [table.organizationId, table.itemId],
+      foreignColumns: [knowledgeItems.organizationId, knowledgeItems.id],
+      name: "knowledge_reviews_organization_id_item_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.organizationId, table.itemId, table.versionId],
+      foreignColumns: [
+        knowledgeItemVersions.organizationId,
+        knowledgeItemVersions.itemId,
+        knowledgeItemVersions.id,
+      ],
+      name: "knowledge_reviews_organization_id_item_id_version_id_fkey",
+    }).onDelete("cascade"),
     index("idx_knowledge_reviews_item").on(
       table.organizationId,
       table.itemId,
-      table.createdAt,
+      table.createdAt.desc(),
     ),
-    withOrganizationPolicy("knowledge_reviews", table.organizationId),
+    index("idx_knowledge_reviews_version_latest").on(
+      table.organizationId,
+      table.versionId,
+      table.createdAt.desc(),
+    ),
+    check(
+      "knowledge_reviews_reason_check",
+      sql`${table.reason} IS NULL OR char_length(${table.reason}) <= 4000`,
+    ),
+    knowledgeOrganizationPolicy("knowledge_reviews", table.organizationId),
   ],
 );
 
@@ -168,13 +247,9 @@ export const knowledgeAssignments = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     organizationId: uuid("organization_id")
       .notNull()
-      .references(() => organizations.id),
-    itemId: uuid("item_id")
-      .notNull()
-      .references(() => knowledgeItems.id),
-    versionId: uuid("version_id")
-      .notNull()
-      .references(() => knowledgeItemVersions.id),
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    itemId: uuid("item_id").notNull(),
+    versionId: uuid("version_id").notNull(),
     assignmentType: text("assignment_type").default("owner").notNull(),
     assigneeId: text("assignee_id").notNull(),
     priority: text("priority").default("normal").notNull(),
@@ -189,12 +264,35 @@ export const knowledgeAssignments = pgTable(
       .notNull(),
   },
   (table) => [
-    index("idx_knowledge_assignments_queue").on(
-      table.organizationId,
-      table.assigneeId,
-      table.dueAt,
+    foreignKey({
+      columns: [table.organizationId, table.itemId],
+      foreignColumns: [knowledgeItems.organizationId, knowledgeItems.id],
+      name: "knowledge_assignments_organization_id_item_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.organizationId, table.itemId, table.versionId],
+      foreignColumns: [
+        knowledgeItemVersions.organizationId,
+        knowledgeItemVersions.itemId,
+        knowledgeItemVersions.id,
+      ],
+      name: "knowledge_assignments_organization_id_item_id_version_id_fkey",
+    }).onDelete("cascade"),
+    uniqueIndex("uq_knowledge_assignments_active")
+      .on(table.organizationId, table.versionId, table.assignmentType)
+      .where(sql`${table.completedAt} IS NULL`),
+    index("idx_knowledge_assignments_queue")
+      .on(table.organizationId, table.assigneeId, table.dueAt)
+      .where(sql`${table.completedAt} IS NULL`),
+    check(
+      "knowledge_assignments_assignment_type_check",
+      sql`${table.assignmentType} IN ('owner','reviewer')`,
     ),
-    withOrganizationPolicy("knowledge_assignments", table.organizationId),
+    check(
+      "knowledge_assignments_priority_check",
+      sql`${table.priority} IN ('low','normal','high','urgent')`,
+    ),
+    knowledgeOrganizationPolicy("knowledge_assignments", table.organizationId),
   ],
 );
 
@@ -204,18 +302,16 @@ export const knowledgeSourceMap = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     organizationId: uuid("organization_id")
       .notNull()
-      .references(() => organizations.id),
+      .references(() => organizations.id, { onDelete: "cascade" }),
     sourceType: text("source_type").notNull(),
     sourceId: text("source_id").notNull(),
-    knowledgeItemId: uuid("knowledge_item_id")
-      .notNull()
-      .references(() => knowledgeItems.id),
+    knowledgeItemId: uuid("knowledge_item_id").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
   },
   (table) => [
-    unique("uq_knowledge_source_map_source").on(
+    unique("knowledge_source_map_organization_id_source_type_source_id_key").on(
       table.organizationId,
       table.sourceType,
       table.sourceId,
@@ -224,7 +320,16 @@ export const knowledgeSourceMap = pgTable(
       table.organizationId,
       table.knowledgeItemId,
     ),
-    withOrganizationPolicy("knowledge_source_map", table.organizationId),
+    foreignKey({
+      columns: [table.organizationId, table.knowledgeItemId],
+      foreignColumns: [knowledgeItems.organizationId, knowledgeItems.id],
+      name: "knowledge_source_map_organization_id_knowledge_item_id_fkey",
+    }).onDelete("cascade"),
+    check(
+      "knowledge_source_map_source_type_check",
+      sql`${table.sourceType} IN ('wiki_pages','knowledge_articles','evidence_resources','organization_evidence')`,
+    ),
+    knowledgeOrganizationPolicy("knowledge_source_map", table.organizationId),
   ],
 );
 
@@ -234,11 +339,9 @@ export const knowledgeSources = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     organizationId: uuid("organization_id")
       .notNull()
-      .references(() => organizations.id),
-    itemId: uuid("item_id")
-      .notNull()
-      .references(() => knowledgeItems.id),
-    versionId: uuid("version_id").references(() => knowledgeItemVersions.id),
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    itemId: uuid("item_id").notNull(),
+    versionId: uuid("version_id"),
     sourceType: text("source_type").notNull(),
     sourceId: text("source_id"),
     title: text("title").notNull(),
@@ -251,18 +354,36 @@ export const knowledgeSources = pgTable(
       .notNull(),
   },
   (table) => [
-    unique("uq_knowledge_sources_version_source").on(
-      table.organizationId,
-      table.versionId,
-      table.sourceType,
-      table.sourceId,
-    ),
+    foreignKey({
+      columns: [table.organizationId, table.itemId],
+      foreignColumns: [knowledgeItems.organizationId, knowledgeItems.id],
+      name: "knowledge_sources_organization_id_item_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.organizationId, table.itemId, table.versionId],
+      foreignColumns: [
+        knowledgeItemVersions.organizationId,
+        knowledgeItemVersions.itemId,
+        knowledgeItemVersions.id,
+      ],
+      name: "knowledge_sources_organization_id_item_id_version_id_fkey",
+    }).onDelete("cascade"),
+    uniqueIndex("uq_knowledge_sources_version_source")
+      .on(
+        table.organizationId,
+        table.versionId,
+        table.sourceType,
+        table.sourceId,
+      )
+      .where(
+        sql`${table.versionId} IS NOT NULL AND ${table.sourceId} IS NOT NULL`,
+      ),
     index("idx_knowledge_sources_item").on(
       table.organizationId,
       table.itemId,
       table.versionId,
     ),
-    withOrganizationPolicy("knowledge_sources", table.organizationId),
+    knowledgeOrganizationPolicy("knowledge_sources", table.organizationId),
   ],
 );
 
@@ -272,7 +393,7 @@ export const knowledgeAuditEvents = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     organizationId: uuid("organization_id")
       .notNull()
-      .references(() => organizations.id),
+      .references(() => organizations.id, { onDelete: "cascade" }),
     actorId: text("actor_id").notNull(),
     entityType: text("entity_type").notNull(),
     entityId: text("entity_id").notNull(),
@@ -291,9 +412,9 @@ export const knowledgeAuditEvents = pgTable(
       table.organizationId,
       table.entityType,
       table.entityId,
-      table.createdAt,
+      table.createdAt.desc(),
     ),
-    withOrganizationPolicy("knowledge_audit_events", table.organizationId),
+    knowledgeOrganizationPolicy("knowledge_audit_events", table.organizationId),
   ],
 );
 
@@ -302,7 +423,7 @@ export const knowledgeIdempotencyKeys = pgTable(
   {
     organizationId: uuid("organization_id")
       .notNull()
-      .references(() => organizations.id),
+      .references(() => organizations.id, { onDelete: "cascade" }),
     actorId: text("actor_id").notNull(),
     operation: text("operation").notNull(),
     idempotencyKey: text("idempotency_key").notNull(),
@@ -312,19 +433,28 @@ export const knowledgeIdempotencyKeys = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
-    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true })
+      .default(sql`now() + interval '24 hours'`)
+      .notNull(),
   },
   (table) => [
-    unique("uq_knowledge_idempotency_key").on(
-      table.organizationId,
-      table.actorId,
-      table.operation,
-      table.idempotencyKey,
-    ),
+    primaryKey({
+      name: "knowledge_idempotency_keys_pkey",
+      columns: [
+        table.organizationId,
+        table.actorId,
+        table.operation,
+        table.idempotencyKey,
+      ],
+    }),
     index("idx_knowledge_idempotency_expiry").on(
       table.organizationId,
       table.expiresAt,
     ),
-    withOrganizationPolicy("knowledge_idempotency_keys", table.organizationId),
+    index("idx_knowledge_idempotency_cleanup").on(table.expiresAt),
+    knowledgeOrganizationPolicy(
+      "knowledge_idempotency_keys",
+      table.organizationId,
+    ),
   ],
 );

@@ -26,6 +26,9 @@ function queryState(overrides: Record<string, unknown> = {}) {
     detailQuery: { isLoading: false, refetch: vi.fn() },
     transition: vi.fn(),
     transitionPending: false,
+    assign: vi.fn(),
+    assignmentPending: false,
+    retryCapabilities: vi.fn(),
     ...overrides,
   } as never;
 }
@@ -91,5 +94,16 @@ describe("WikiCurationQueue", () => {
     );
     expect(screen.getAllByText("Em triagem")).toHaveLength(2);
     expect(screen.getByText("Falha técnica")).toBeInTheDocument();
+  });
+
+  it("oferece filtros compatíveis de validade e tipo canônico", () => {
+    render(
+      <MemoryRouter>
+        <WikiCurationQueue />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole("combobox", { name: /validade/i })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /tipo/i })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /estado técnico/i })).toBeInTheDocument();
   });
 });

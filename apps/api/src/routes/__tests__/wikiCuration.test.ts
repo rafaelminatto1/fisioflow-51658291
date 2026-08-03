@@ -131,6 +131,7 @@ describe("wiki curation routes", () => {
     query
       .mockResolvedValueOnce({ rows: [{ capability: "manage_library" }] })
       .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({
         rows: [
           {
@@ -168,7 +169,7 @@ describe("wiki curation routes", () => {
     expect(await response.json()).toMatchObject({
       data: { editorialStatus: "triage", rowVersion: 5 },
     });
-    const mutationSql = query.mock.calls[3][0] as string;
+    const mutationSql = query.mock.calls[4][0] as string;
     expect(mutationSql).toContain("INSERT INTO knowledge_item_versions");
     expect(mutationSql).toContain("old.version_number + 1");
     expect(mutationSql).not.toContain(
@@ -181,6 +182,7 @@ describe("wiki curation routes", () => {
     query
       .mockResolvedValueOnce({ rows: [{ capability: "publish_knowledge" }] })
       .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({
         rows: [
           {
@@ -189,6 +191,7 @@ describe("wiki curation routes", () => {
             submitted_by: "author-1",
             approved_version_id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
             published_version_id: previousVersionId,
+            has_current_approval: true,
           },
         ],
       })
@@ -217,9 +220,36 @@ describe("wiki curation routes", () => {
     expect(await response.json()).toMatchObject({
       data: { editorialStatus: "published", rowVersion: 8 },
     });
-    const mutationSql = query.mock.calls[3][0] as string;
+    const mutationSql = query.mock.calls[4][0] as string;
     expect(mutationSql).toContain("published_version_id = $5");
     expect(mutationSql).toContain("editorial_status = 'superseded'");
-    expect(query.mock.calls[3][1][19]).toBe(previousVersionId);
+    expect(query.mock.calls[4][1][19]).toBe(previousVersionId);
+  });
+
+  it("rejects publication without a current approval", async () => {
+    query
+      .mockResolvedValueOnce({ rows: [{ capability: "publish_knowledge" }] })
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [{
+        row_version: 2,
+        editorial_status: "approved",
+        authored_by: "author-1",
+        submitted_by: "author-1",
+        approved_version_id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+        published_version_id: null,
+        has_current_approval: false,
+      }] });
+    const response = await wikiCurationRoutes.request(
+      "/items/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/transitions",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json", "Idempotency-Key": "publish-expired" },
+        body: JSON.stringify({ action: "publish", versionId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", expectedVersion: 2 }),
+      },
+      {} as never,
+    );
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ error: { code: "APPROVAL_NOT_CURRENT" } });
   });
 });

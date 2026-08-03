@@ -10,13 +10,19 @@ import { hasEditorialCapability } from "@/features/wiki/curation/curationUtils";
 
 type RequestError = Error & {
   status?: number;
-  payload?: { error?: string; code?: string };
+  payload?: {
+    error?: string | { code?: string; message?: string };
+    code?: string;
+  };
 };
 
 export function getCurationErrorMessage(error: unknown): string {
   const apiError = error as RequestError;
   if (apiError.status === 409) {
-    const code = apiError.payload?.code ?? apiError.payload?.error;
+    const nestedError = apiError.payload?.error;
+    const code =
+      apiError.payload?.code ??
+      (typeof nestedError === "object" ? nestedError.code : nestedError);
     return code === "VERSION_CONFLICT"
       ? "Este item foi alterado por outra pessoa. Os dados foram atualizados."
       : "Esta ação não é mais válida para o estado atual do item.";
@@ -88,6 +94,7 @@ export function useWikiCuration(
     canManageLibrary: capabilitiesQuery.canManageLibrary,
     capabilitiesLoading: capabilitiesQuery.isLoading,
     capabilitiesError: capabilitiesQuery.error,
+    retryCapabilities: capabilitiesQuery.refetch,
     items: queueQuery.data?.pages.flatMap((page) => page.data) ?? [],
     counts: queueQuery.data?.pages[0]?.meta.counts ?? {},
     queueQuery,

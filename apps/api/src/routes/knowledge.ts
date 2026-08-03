@@ -3,7 +3,11 @@ import { createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 import { requireKnowledgeCapability } from "../lib/knowledgeCapabilities";
-import { syncLegacyKnowledgeItem } from "../lib/knowledgeLegacySync";
+import {
+  archiveLegacyKnowledgeSource,
+  syncLegacyKnowledgeItem,
+  syncLegacyKnowledgeUpdate,
+} from "../lib/knowledgeLegacySync";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -319,6 +323,21 @@ app.put("/articles/:articleId", async (c) => {
   );
 
   if (!result.rows.length) return c.json({ error: "Artigo não encontrado" }, 404);
+  const updated = result.rows[0] as Record<string, unknown>;
+  await syncLegacyKnowledgeUpdate(c.env, {
+    organizationId: user.organizationId,
+    actorId: user.uid,
+    sourceType: "knowledge_articles",
+    sourceId: articleId,
+    kind: "source",
+    title: String(updated.title ?? "Fonte sem título"),
+    content: updated.raw_text ? String(updated.raw_text) : updated.summary ? String(updated.summary) : "",
+    source: {
+      type: "knowledge_articles",
+      title: String(updated.title ?? "Fonte sem título"),
+      url: updated.url ? String(updated.url) : null,
+    },
+  });
   return c.json({ data: normalizeArticle(result.rows[0]) });
 });
 
@@ -853,6 +872,12 @@ app.delete("/articles/:articleId", requireKnowledgeCapability("manage_library"),
   );
 
   if (!result.rows.length) return c.json({ error: "Artigo não encontrado" }, 404);
+  await archiveLegacyKnowledgeSource(c.env, {
+    organizationId: user.organizationId,
+    actorId: user.uid,
+    sourceType: "knowledge_articles",
+    sourceId: articleId,
+  });
   return c.json({ success: true });
 });
 

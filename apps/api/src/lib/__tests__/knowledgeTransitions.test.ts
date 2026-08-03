@@ -11,6 +11,7 @@ describe("knowledge transitions", () => {
         action: "submit",
         status: "draft",
         actorId: "author",
+        authoredBy: "author",
         capabilities: [],
       }),
     ).toMatchObject({ ok: true, rule: { to: "triage" } });
@@ -23,6 +24,32 @@ describe("knowledge transitions", () => {
         status: "clinical_review",
         actorId: "author",
         submittedBy: "author",
+        capabilities: ["clinical_review"],
+      }),
+    ).toEqual({ ok: false, code: "SELF_APPROVAL_FORBIDDEN" });
+  });
+
+  it("blocks a non-author from submitting an unassigned draft", () => {
+    expect(
+      validateKnowledgeTransition({
+        action: "submit",
+        status: "draft",
+        actorId: "other-user",
+        authoredBy: "author",
+        isAssigned: false,
+        capabilities: [],
+      }),
+    ).toEqual({ ok: false, code: "FORBIDDEN" });
+  });
+
+  it("blocks an author from approving even when another user submitted", () => {
+    expect(
+      validateKnowledgeTransition({
+        action: "approve",
+        status: "clinical_review",
+        actorId: "author",
+        authoredBy: "author",
+        submittedBy: "submitter",
         capabilities: ["clinical_review"],
       }),
     ).toEqual({ ok: false, code: "SELF_APPROVAL_FORBIDDEN" });

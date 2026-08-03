@@ -15,7 +15,11 @@ import { searchFilter } from "../lib/db-utils";
 import { removeWikiPageFromIndex, syncWikiPagePatientIndex } from "../lib/wikiIndexing";
 import { syncWikiToIndex, removeWikiFromIndex } from "../lib/contentIndexing";
 import { requireKnowledgeCapability } from "../lib/knowledgeCapabilities";
-import { syncLegacyKnowledgeItem } from "../lib/knowledgeLegacySync";
+import {
+  archiveLegacyKnowledgeSource,
+  syncLegacyKnowledgeItem,
+  syncLegacyKnowledgeUpdate,
+} from "../lib/knowledgeLegacySync";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -559,6 +563,16 @@ app.put("/:slug", requireAuth, requireKnowledgeCapability("manage_library"), asy
     );
   }
 
+  await syncLegacyKnowledgeUpdate(c.env, {
+    organizationId: user.organizationId,
+    actorId: user.uid,
+    sourceType: "wiki_pages",
+    sourceId: updatedPage.id,
+    kind: "page",
+    title: updatedPage.title,
+    content: updatedPage.content,
+  });
+
   return c.json({ data: updatedPage });
 });
 
@@ -578,6 +592,13 @@ app.delete("/:slug", requireAuth, requireKnowledgeCapability("manage_library"), 
     .returning({ id: wikiPages.id });
 
   if (!row) return c.json({ error: "Página não encontrada" }, 404);
+
+  await archiveLegacyKnowledgeSource(c.env, {
+    organizationId: user.organizationId,
+    actorId: user.uid,
+    sourceType: "wiki_pages",
+    sourceId: row.id,
+  });
 
   c.executionCtx.waitUntil(
     Promise.all([
