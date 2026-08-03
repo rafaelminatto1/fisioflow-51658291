@@ -1372,7 +1372,7 @@ app.post("/", async (c) => {
       }
     }
 
-    // Inngest Event: Patient Created (Sequência de Boas-vindas)
+    // Background event: Patient Created (Sequência de Boas-vindas)
     triggerBackgroundEvent(
       c.env,
       c.executionCtx,

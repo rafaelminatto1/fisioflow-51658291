@@ -363,7 +363,7 @@ app.post(
                 c.env,
               ).catch(() => {});
 
-              // 2. Trigger Inngest Event for Automation (WhatsApp confirmation, etc)
+              // 2. Trigger background event for automation (WhatsApp confirmation, etc)
               const patientData = await db.query.patients.findFirst({
                 where: (p, { eq }) => eq(p.id, row.patient_id),
                 columns: { fullName: true, phone: true },
@@ -696,7 +696,7 @@ const updateAppointmentHandler: MiddlewareHandler<{
             payload: { id: row.id, action: "updated", timestamp: new Date().toISOString() },
           });
 
-          // Eventos Inngest baseasedos em mudança de status
+          // Background events based on status change
           if (row.status === "atendido") {
             const patientRow = await db
               .select({

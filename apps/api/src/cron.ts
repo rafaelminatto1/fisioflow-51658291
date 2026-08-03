@@ -412,7 +412,7 @@ async function processInactivePatients(db: any, env: Env, ctx: ExecutionContext)
   `);
 
   for (const row of result.rows) {
-    // 1. Inngest event (legacy/analytics)
+    // 1. Trigger background event (BACKGROUND_QUEUE) for analytics
     await triggerBackgroundEvent(env, ctx, "patient.inactive", {
       patientId: row.id,
       name: row.full_name,

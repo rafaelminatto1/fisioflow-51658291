@@ -236,7 +236,7 @@ export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Pro
           await syncNoteToSemanticIndex(env, task.payload);
           break;
 
-        // Event-driven triggers (from triggerInngestEvent)
+        // Event-driven triggers (from triggerBackgroundEvent → BACKGROUND_QUEUE)
         case "appointment.created" as any:
           await handleAppointmentCreated((task as any).data, env);
           break;
@@ -253,17 +253,17 @@ export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Pro
           await handlePatientBirthday((task as any).data, env);
           break;
 
-        // Prescrição criada → gera PDF + envia email (portado do Inngest morto).
+        // Prescrição criada → gera PDF + envia email
         case "prescription.created" as any:
           await processPrescriptionCreated((task as any).data, env);
           break;
 
-        // Paciente criado → mensagem de boas-vindas (portado do Inngest morto).
+        // Paciente criado → mensagem de boas-vindas
         case "patient.created" as any:
           await processPatientCreatedWelcome((task as any).data, env);
           break;
 
-        // Consulta concluída → review (5ª sessão) + feedback (+2h) (portado do Inngest).
+        // Consulta concluída → review (5ª sessão) + feedback (+2h)
         case "appointment.completed" as any:
           await processAppointmentCompleted((task as any).data, env);
           break;
@@ -1135,7 +1135,7 @@ export async function processPrescriptionCreated(
   return { pdfUrl, emailSent: false };
 }
 
-// ===== FLUXOS WHATSAPP AUTOMÁTICOS (portados do Inngest morto) =====
+// ===== FLUXOS WHATSAPP AUTOMÁTICOS (via BACKGROUND_QUEUE) =====
 
 function firstName(name: unknown): string {
   return String(name ?? "").trim().split(/\s+/)[0] || "Paciente";

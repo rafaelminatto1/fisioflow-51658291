@@ -137,7 +137,7 @@ export class RTMAlertsService {
       [alert.patientId, alert.type, alert.severity, alert.message, JSON.stringify(alert.data)],
     );
 
-    // Note: Inngest trigger requires ExecutionContext — log for now, notifications handled by cron
+    // Note: Background event dispatch requires ExecutionContext — log for now, notifications handled by cron
     console.log(JSON.stringify({ event: "rtm_alert", ...alert }));
   }
 }

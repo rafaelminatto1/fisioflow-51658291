@@ -1,9 +1,8 @@
 /**
  * Templates de automação do WhatsApp (Meta Cloud API).
  *
- * Definições centrais dos 4 templates usados pelos fluxos automáticos portados do
- * Inngest morto (ver [[project-crm-transversal-p1-jun2026]]). Cada um tem {{1}} =
- * primeiro nome do paciente. O registro na Meta é feito via
+ * Definições centrais dos 4 templates usados pelos fluxos automáticos. Cada um
+ * tem {{1}} = primeiro nome do paciente. O registro na Meta é feito via
  * `POST /api/whatsapp/inbox/templates/automation/register`; a APROVAÇÃO é
  * assíncrona (lado da Meta). Enquanto não aprovados + com o gate
  * `settings.crm_whatsapp.automations_enabled` ligado, os fluxos NÃO enviam.

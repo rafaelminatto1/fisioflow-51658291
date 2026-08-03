@@ -1,10 +1,10 @@
 /**
  * Lembrete de exercícios em casa, ~2 dias após uma consulta concluída.
  *
- * Portado do Inngest morto (que usava step.sleep 2d). O atraso de 2 dias excede
- * o limite de delay da Cloudflare Queue (~12h), então roda no cron diário.
- * Dedup atômico via `appointment_reminder_log (appointment_id, kind='exercise_2d')`.
- * Gated por `settings.crm_whatsapp.automations_enabled` (default OFF).
+ * Roda no cron diário (pois o atraso de 2 dias excede o limite de delay da
+ * Cloudflare Queue ~12h). Dedup atômico via `appointment_reminder_log
+ * (appointment_id, kind='exercise_2d')`. Gated por
+ * `settings.crm_whatsapp.automations_enabled` (default OFF).
  */
 import type { Env } from "../types/env";
 import type { DbPool } from "./db";
