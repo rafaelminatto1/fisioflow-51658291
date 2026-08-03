@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import type { AuthVariables } from "../../lib/auth";
+import { converterParaMarkdown } from "../../lib/ai/toMarkdown";
 import type { Env } from "../../types/env";
 
 import { unifiedThinking, unifiedStructured } from "../../lib/ai/unifiedAI";
@@ -213,9 +214,13 @@ app.post("/document/to-markdown", async (c) => {
   }
 
   try {
-    const arrayBuffer = await file.arrayBuffer();
-    const markdown = await c.env.AI.toMarkdown(arrayBuffer);
-    return c.json({ success: true, markdown, fileName: file.name, size: file.size });
+    // `toMarkdown` devolve objeto, não string: passar o ArrayBuffer direto e
+    // serializar o retorno produzia "[object Object]" no lugar do texto.
+    const { texto, tokens } = await converterParaMarkdown(c.env, {
+      name: file.name || "documento",
+      blob: file,
+    });
+    return c.json({ success: true, markdown: texto, tokens, fileName: file.name, size: file.size });
   } catch (error: any) {
     return c.json({ error: "Falha na conversão", details: error.message }, 500);
   }

@@ -106,6 +106,23 @@ export type AiSearchBinding = {
   };
 };
 
+/** Documento de entrada de `AI.toMarkdown()`. */
+export interface MarkdownDocument {
+  name: string;
+  blob: Blob;
+}
+
+/** Resultado de `AI.toMarkdown()`. `data` ausente quando `format === "error"`. */
+export interface ConversionResult {
+  id?: string;
+  name: string;
+  format: "markdown" | "text" | "error";
+  mimetype?: string;
+  tokens?: number;
+  data?: string;
+  error?: string;
+}
+
 export interface Env {
   // Hyperdrive: connection pooler edge → Neon PostgreSQL
   HYPERDRIVE: Hyperdrive;
@@ -250,10 +267,21 @@ export interface Env {
         filters?: Record<string, any>;
       }): Promise<any>;
     };
+    /**
+     * Conversão de documento para markdown.
+     *
+     * A declaração anterior dizia `(ArrayBuffer) => Promise<string>` e estava
+     * errada nos dois lados: a API recebe `{ name, blob }` e devolve um OBJETO
+     * com o texto em `.data`. Quem tratava o retorno como string obtinha
+     * "[object Object]" — falha silenciosa, porque o tipo prometia string e o
+     * TypeScript não reclamava.
+     *
+     * Ref.: developers.cloudflare.com/workers-ai/features/markdown-conversion
+     */
     toMarkdown(
-      input: ReadableStream | ArrayBuffer | Blob | string,
-      options?: { maxDepth?: number },
-    ): Promise<string>;
+      files: MarkdownDocument | MarkdownDocument[],
+      options?: { conversionOptions?: Record<string, unknown> },
+    ): Promise<ConversionResult | ConversionResult[]>;
   };
   BROWSER: any;
 

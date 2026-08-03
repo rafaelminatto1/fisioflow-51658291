@@ -5,6 +5,7 @@ import type { Env } from "../../types/env";
 import type { AuthVariables } from "../../lib/auth";
 import { requireAuth } from "../../lib/auth";
 import { getRawSql } from "../../lib/db";
+import { converterParaMarkdown } from "../../lib/ai/toMarkdown";
 import {
   CONFIANCA_MINIMA_REVISAO,
   candidatosParaRevisao,
@@ -46,9 +47,10 @@ app.post("/intake/scan", requireAuth, async (c) => {
   }
 
   try {
-    const buffer = await arquivo.arrayBuffer();
-    const markdown = await c.env.AI.toMarkdown(buffer);
-    const texto = typeof markdown === "string" ? markdown : String(markdown ?? "");
+    const { texto } = await converterParaMarkdown(c.env, {
+      name: arquivo.name || "ficha",
+      blob: arquivo,
+    });
 
     const candidatos = candidatosParaRevisao(extractIntakeFields(texto));
 
