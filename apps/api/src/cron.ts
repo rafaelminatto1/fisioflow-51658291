@@ -1025,7 +1025,7 @@ async function sendAppointmentReminders(pool: any, env: Env, _ctx: ExecutionCont
         });
         emailSent++;
       } catch (err) {
-        console.error(`[Cron] Failed to send email to ${row.patient_email}:`, err);
+        console.error(`[Cron] Failed to send email to patient ${row.patient_id}:`, err);
       }
     }
 
@@ -1065,7 +1065,7 @@ async function sendAppointmentReminders(pool: any, env: Env, _ctx: ExecutionCont
           whatsappSent++;
         }
       } catch (err) {
-        console.error(`[Cron] Failed to enqueue WhatsApp for ${row.patient_phone}:`, err);
+        console.error(`[Cron] Failed to enqueue WhatsApp for patient ${row.patient_id} (appointment ${row.id}):`, err);
       }
     }
   }

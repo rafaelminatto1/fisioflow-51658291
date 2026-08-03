@@ -167,7 +167,7 @@ app.post("/neon-auth", async (c) => {
           `[Webhook] Perfil criado via convite para user ${user.id} (${user.email}) com papel '${invited.role}'`,
         );
       } else {
-        console.log(`[Webhook] Perfil pendente criado para user ${user.id} (${user.email})`);
+        console.log(`[Webhook] Perfil pendente criado para user ${user.id}`);
       }
     } catch (err: any) {
       console.error("[Webhook] Erro ao criar perfil:", err.message);
@@ -211,7 +211,7 @@ app.post("/neon-auth", async (c) => {
             </div>
           `,
       });
-      if (sent) console.log(`[Webhook] Email de notificação enviado para ${adminEmail}`);
+      if (sent) console.log("[Webhook] Email de notificação enviado ao admin");
     } catch (emailErr: any) {
       console.warn("[Webhook] Falha ao enviar email de notificação:", emailErr.message);
     }

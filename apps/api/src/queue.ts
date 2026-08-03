@@ -1132,7 +1132,7 @@ export async function processPrescriptionCreated(
       });
       return { pdfUrl, emailSent: true };
     } catch (err) {
-      console.error(`[Queue] Failed to send prescription email to ${plan.email}:`, err);
+      console.error(`[Queue] Failed to send prescription email for patient ${patientId}:`, err);
     }
   }
 

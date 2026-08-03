@@ -893,7 +893,7 @@ app.post("/:id/cancel", requireAuth, async (c) => {
               },
             });
 
-            console.log(`[Waitlist] Notified patient ${waitlistEntry.patient_name} for slot ${currentAppt.date} ${currentAppt.startTime}`);
+            console.log(`[Waitlist] Notified patient ${waitlistEntry.patient_id} for slot ${currentAppt.date} ${currentAppt.startTime}`);
           }
         } catch (err) {
           console.error("[Appointments/Cancel] Broadcast/Waitlist failed:", err);
@@ -993,7 +993,7 @@ app.delete("/:id", requireAuth, async (c) => {
               },
             });
 
-            console.log(`[Waitlist] Notified patient ${waitlistEntry.patient_name} for slot ${currentAppt.date} ${currentAppt.startTime}`);
+            console.log(`[Waitlist] Notified patient ${waitlistEntry.patient_id} for slot ${currentAppt.date} ${currentAppt.startTime}`);
           }
         } catch (err) {
           console.error("[Appointments/Delete] Broadcast/Waitlist failed:", err);

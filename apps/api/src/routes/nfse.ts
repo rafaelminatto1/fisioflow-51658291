@@ -621,7 +621,7 @@ app.post("/cancel/:id", requireAuth, async (c) => {
         valor: Number(nfse.valor_servico),
         razaoSocialPrestador: nfse.razao_social || "FisioFlow Client",
       });
-      console.log(`[NFSe] Cancelamento enviado para contabilidade: ${nfse.contabilidade_email}`);
+      console.log(`[NFSe] Cancelamento enviado para contabilidade (nfse ${nfse.id})`);
     } catch (mailErr) {
       console.error("[NFSe] Falha ao notificar cancelamento para contabilidade:", mailErr);
     }
