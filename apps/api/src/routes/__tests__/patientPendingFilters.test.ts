@@ -207,4 +207,26 @@ describe("GET /api/patients?pending=", () => {
     // data + summary + total: os três recortes precisam concordar.
     expect(comFiltro.length).toBe(3);
   });
+
+  /**
+   * "Sem evolução" aparece em duas telas: filtro da lista de pacientes e badge da
+   * agenda. São o mesmo conceito, e divergir faz a lista dizer um número e a
+   * agenda outro — foi o que aconteceu (565 contra 513, 52 pacientes de
+   * diferença, porque só o filtro exigia vínculo por `appointment_id` e a base
+   * importada não tem esse vínculo).
+   */
+  it("'sem evolução' usa o mesmo critério do badge da agenda", () => {
+    const sql = normaliza(
+      patientPendingFilterClause("atendimentoSemEvolucao", "p.id", "$1"),
+    );
+
+    // Casa a sessão pelo vínculo direto OU por paciente+data: sem o segundo
+    // caminho, todo atendimento importado conta como pendente.
+    expect(sql).toContain("s.appointment_id = a.id");
+    expect(sql).toContain("s.patient_id = a.patient_id");
+    expect(sql).toContain("s.date::date = a.date");
+
+    // Existir a linha em `sessions` não é ter registro clínico.
+    expect(sql).toContain("btrim(s.observacao)");
+  });
 });

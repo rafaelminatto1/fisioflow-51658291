@@ -217,8 +217,18 @@ export const PATIENT_PENDING_FILTERS: Record<PatientPendingFilterKey, PatientPen
     key: "atendimentoSemEvolucao",
     label: "Com atendimento sem evolução",
     criterio:
-      "paciente com ao menos um agendamento 'atendido' sem nenhuma sessão ativa vinculada. " +
+      "paciente com ao menos um agendamento 'atendido' sem evolução escrita para aquela data. " +
       "Conta PACIENTES, não atendimentos — o total de atendimentos em aberto é maior",
+    /**
+     * Mesmo critério do badge `sem_evolucao` da agenda (`appointmentPendencies.ts`),
+     * e não por acaso: são o mesmo conceito visto em duas telas, e divergir aqui
+     * faria a lista dizer um número e a agenda outro.
+     *
+     * Casa a sessão por `appointment_id` OU por paciente+data porque a base
+     * importada não tem `appointment_id` — só pelo vínculo direto, 52 pacientes
+     * apareciam como pendentes tendo a evolução escrita. Observação em branco
+     * conta como não escrita: existir a linha não é ter registro clínico.
+     */
     predicate: (id, org) =>
       `${id} IN (SELECT a.patient_id FROM appointments a
          WHERE a.organization_id = ${org}::uuid
@@ -227,7 +237,11 @@ export const PATIENT_PENDING_FILTERS: Record<PatientPendingFilterKey, PatientPen
            AND a.patient_id IS NOT NULL
            AND NOT EXISTS (
              SELECT 1 FROM sessions s
-              WHERE s.appointment_id = a.id AND s.deleted_at IS NULL))`,
+              WHERE s.organization_id = ${org}::uuid
+                AND s.deleted_at IS NULL
+                AND (s.appointment_id = a.id
+                     OR (s.patient_id = a.patient_id AND s.date::date = a.date))
+                AND coalesce(btrim(s.observacao), '') <> ''))`,
   },
   ativoSemProximaSessao: {
     key: "ativoSemProximaSessao",
