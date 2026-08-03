@@ -696,11 +696,36 @@ Cloudflare passa a receber uma cópia de cada e-mail numa caixa de monitoramento
 - Consumes: `sendEmail`, `EmailMessage`, `resolveFrom` da Task 4
 - Produces: `sendViaCloudflare(env: Env, message: EmailMessage): Promise<boolean>`
 
-- [ ] **Step 1: Pré-requisito manual — habilitar Email Routing e verificar o domínio**
+- [ ] **Step 1: Pré-requisito manual — verificar o endereço de destino**
 
-No dashboard da zona `moocafisio.com.br`, habilitar **Email Routing** (hoje `status: unconfigured`) e criar o endereço de destino verificado `deliverability@moocafisio.com.br`, encaminhando para a caixa do Rafael. Em seguida, onboardar o domínio em **Email Service → Domains** para liberar o envio (DKIM/SPF/DMARC são criados automaticamente porque a zona já está na Cloudflare).
+**Já executado em 03/08/2026 via API:** Email Routing habilitado na zona `moocafisio.com.br`
+(`status: ready`) e `rafaelstarton@gmail.com` adicionado como endereço de destino
+(tag `1bba13f7ace74679b17e74738bfdee3a`).
 
-Sem o endereço de destino verificado, o binding `send_email` não pode ser criado.
+O apex não tinha MX antes, então nada de inbound foi quebrado. Os registros de envio do
+Resend em `send.moocafisio.com.br` (MX para `amazonses.com` e SPF próprio) permaneceram
+intactos — Email Routing só escreve no apex.
+
+**Falta apenas (só o Rafael pode fazer):** abrir o e-mail de verificação da Cloudflare na
+caixa `rafaelstarton@gmail.com` e clicar no link. Confirmar com:
+
+```bash
+cd apps/api && npx wrangler email routing addresses list
+```
+
+Expected: `rafaelstarton@gmail.com` com `verified` preenchido (não `null`).
+
+Em seguida, onboardar o domínio em **Email Service → Domains** para liberar o envio a
+destinatários arbitrários (DKIM/DMARC são criados automaticamente porque a zona já está
+na Cloudflare).
+
+**Por que o alvo da sombra é o Gmail e não `deliverability@moocafisio.com.br`:** o binding
+`send_email` só aceita endereços **verificados como destino** no Email Routing. Um alias da
+zona é endereço de *roteamento*, não de *destino* — tentar usá-lo em
+`allowed_destination_addresses` falha com `2054: Destination address is not verified`
+(verificado empiricamente em 03/08/2026). Se quiser o alias por estética, crie depois uma
+regra `deliverability@moocafisio.com.br → rafaelstarton@gmail.com`; ela é opcional e não
+participa do shadow-send.
 
 - [ ] **Step 2: Adicionar o binding e as vars**
 
@@ -709,14 +734,14 @@ Em `apps/api/wrangler.toml`, nos blocos raiz, `[env.production]` e `[env.staging
 ```toml
 [[send_email]]
 name = "EMAIL"
-allowed_destination_addresses = [ "deliverability@moocafisio.com.br" ]
+allowed_destination_addresses = [ "rafaelstarton@gmail.com" ]
 ```
 
 E em cada bloco de `vars`:
 
 ```toml
 EMAIL_TRANSPORT = "shadow"
-EMAIL_SHADOW_TO = "deliverability@moocafisio.com.br"
+EMAIL_SHADOW_TO = "rafaelstarton@gmail.com"
 ```
 
 O `allowed_destination_addresses` é uma trava deliberada: enquanto o modo for sombra, o binding é incapaz de escrever para um paciente, mesmo que haja bug no dispatch.
@@ -742,7 +767,7 @@ describe("sendEmail — modo sombra", () => {
     const env = {
       RESEND_API_KEY: "re_test",
       EMAIL_TRANSPORT: "shadow",
-      EMAIL_SHADOW_TO: "deliverability@moocafisio.com.br",
+      EMAIL_SHADOW_TO: "rafaelstarton@gmail.com",
       EMAIL: { send: cfSend },
     } as unknown as Env;
 
@@ -750,7 +775,7 @@ describe("sendEmail — modo sombra", () => {
 
     expect(send.mock.calls[0][0].to).toBe("paciente@example.com");
     expect(cfSend).toHaveBeenCalledTimes(1);
-    expect(cfSend.mock.calls[0][0].to).toBe("deliverability@moocafisio.com.br");
+    expect(cfSend.mock.calls[0][0].to).toBe("rafaelstarton@gmail.com");
   });
 
   it("não derruba o envio principal quando a sombra falha", async () => {
@@ -758,7 +783,7 @@ describe("sendEmail — modo sombra", () => {
     const env = {
       RESEND_API_KEY: "re_test",
       EMAIL_TRANSPORT: "shadow",
-      EMAIL_SHADOW_TO: "deliverability@moocafisio.com.br",
+      EMAIL_SHADOW_TO: "rafaelstarton@gmail.com",
       EMAIL: { send: cfSend },
     } as unknown as Env;
 
@@ -854,7 +879,7 @@ Falha da sombra não derruba o envio principal."
 
 - [ ] **Step 11: Período de observação (~2 semanas)**
 
-Verificar na caixa `deliverability@moocafisio.com.br`: a cópia chega? Com que atraso em relação à do Resend? O HTML renderiza igual? Cai em spam?
+Verificar na caixa `rafaelstarton@gmail.com`: a cópia chega? Com que atraso em relação à do Resend? O HTML renderiza igual? Cai em spam?
 
 **Critério de corte:** ao menos 2 semanas sem falha de entrega e sem classificação como spam. Só então prosseguir para o Step 12.
 

@@ -101,7 +101,7 @@ idênticos**. O padrão adotado é sombra:
 
 ```
 Resend     → destinatário real           (principal; nada muda para o paciente)
-Cloudflare → deliverability@moocafisio   (cópia sombra, só para comparação)
+Cloudflare → rafaelstarton@gmail.com    (cópia sombra, destino verificado no Email Routing)
 ```
 
 Observa-se por ~2 semanas se a cópia chega, com que latência, se o HTML renderiza e se cai
@@ -118,8 +118,12 @@ em spam. Depois inverte-se o principal e remove-se o Resend.
 
 ### Pré-requisitos
 
-- Habilitar **Email Routing** na zona `moocafisio.com.br` (hoje `status: unconfigured`);
-  é pré-requisito do Email Sending e fornece a caixa `deliverability@`
+- Habilitar **Email Routing** na zona `moocafisio.com.br` — **feito em 03/08/2026**
+  (`status: ready`). O apex não tinha MX, então nada de inbound foi quebrado; os registros
+  de envio do Resend em `send.moocafisio.com.br` continuam intactos
+- Ter ao menos um **endereço de destino verificado**: `rafaelstarton@gmail.com` foi
+  adicionado, mas a verificação exige clique no e-mail da Cloudflare. O binding `send_email`
+  só aceita destino verificado — um alias da zona não serve (`2054`)
 - Binding `send_email` no `wrangler.toml`
 - Registros DKIM/SPF/DMARC (a zona já está na Cloudflare)
 - Envio para destinatário arbitrário exige Workers Paid — já atendido
@@ -151,7 +155,7 @@ Cada fase tem critério objetivo, não impressão:
 | 1.2 Inngest | suíte Vitest do `apps/api` verde; evento chega na `BACKGROUND_QUEUE` | `git revert` |
 | 1.3 Axiom | consultar Workers Logs e confirmar eventos com campos redigidos | `git revert` |
 | 1.4 Logpush | job listado na API e objeto novo no bucket R2 | deletar job |
-| 2 E-mail | cópia sombra chegando em `deliverability@` | `EMAIL_TRANSPORT=resend` |
+| 2 E-mail | cópia sombra chegando em `rafaelstarton@gmail.com` | `EMAIL_TRANSPORT=resend` |
 | 3 Gráfico | rota retorna 404; suíte verde | `git revert` |
 
 ### Testes novos
