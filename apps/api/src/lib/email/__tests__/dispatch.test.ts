@@ -44,4 +44,10 @@ describe("sendEmail", () => {
     await sendEmail(env, message);
     expect(send.mock.calls[0][0].from).toBe("FisioFlow <noreply@moocafisio.com.br>");
   });
+
+  it("lança erro quando o Resend rejeita o envio, em vez de retornar false", async () => {
+    send.mockResolvedValue({ data: null, error: { message: "Domínio não verificado" } });
+    const env = { RESEND_API_KEY: "re_test" } as Env;
+    await expect(sendEmail(env, message)).rejects.toThrow("Domínio não verificado");
+  });
 });

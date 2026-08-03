@@ -11,11 +11,12 @@ export function resolveFrom(env: Env): string {
 export async function sendViaResend(env: Env, message: EmailMessage): Promise<boolean> {
   if (!env.RESEND_API_KEY) return false;
   const resend = new Resend(env.RESEND_API_KEY);
-  await resend.emails.send({
+  const { error } = await resend.emails.send({
     from: resolveFrom(env),
     to: message.to,
     subject: message.subject,
     html: message.html,
   });
+  if (error) throw new Error(error.message ?? "Falha ao enviar e-mail via Resend");
   return true;
 }
