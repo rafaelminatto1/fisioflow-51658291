@@ -3,6 +3,7 @@ main = "src/index.ts"
 compatibility_date = "2026-06-06"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
+logpush = true
 
 [placement]
 mode = "smart"
@@ -306,6 +307,7 @@ GOOGLE_AI_PREMIUM_ENABLED = "false"
 # ===== AMBIENTE DE PRODUCAO =====
 [env.production]
 name = "fisioflow-api"
+logpush = true
 
 [env.production.vars]
 ENVIRONMENT = "production"
