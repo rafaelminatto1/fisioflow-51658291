@@ -151,6 +151,7 @@ psql "$NEON_PROD_URL" -f apps/api/migrations/0054_patient_directory_filters.sql
 | `0154_patient_goals_icf_class.sql` | Classe CIF no objetivo terapêutico | ✅ 31/07/2026 | ✅ | Classe do objetivo prediz desfecho (OR 1,80 p/ atividade/participação; vago prediz pior) — FYSIOPRIM N=2.591. |
 | `0155_clinical_extractions_avaliacao.sql` | Categorias de avaliação (hipótese diagnóstica, anamnese, antecedente, exame físico, plano terapêutico) | ✅ 31/07/2026 | ✅ | As 531 avaliações ZenFisio vêm em DUAS formas: blob único (269) e campos JSON separados (262). O parser normaliza as duas. |
 | `0156_sessions_fulltext_pt.sql` | `sessions.observacao_tsv` (coluna gerada) + índice GIN | ✅ 31/07/2026 | ✅ | Coluna GERADA, não trigger: não há como esquecer de atualizar. Compõe a busca híbrida — o léxico acerta o jargão local (TFS, IQT, QDP) onde o embedding erra. |
+| `0164_clinical_extractions_plateau_index.sql` | Índices parciais para a detecção de platô | ✅ 03/08/2026 | ✅ | 510 ms → 127 ms em produção. Sem eles, Seq Scan em 363.858 linhas e sort em disco (10 MB) — pago a cada abertura da lista de pacientes, porque o painel conta platô junto. Os índices só são usados porque os subselects de carga/EVA passaram a filtrar `source_table` e `rejected`, que faltavam. |
 
 ---
 

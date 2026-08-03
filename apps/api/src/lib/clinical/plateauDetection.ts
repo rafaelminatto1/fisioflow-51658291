@@ -143,19 +143,27 @@ export async function detectPlateaus(
         (SELECT count(DISTINCT ce.value_numeric)
            FROM clinical_extractions ce
           WHERE ce.source_id = ANY(q.session_ids)
-            AND ce.category = 'carga') AS cargas_distintas,
+            AND ce.category = 'carga'
+            AND ce.source_table = 'sessions'
+            AND ce.rejected = false) AS cargas_distintas,
         (SELECT count(*)
            FROM clinical_extractions ce
           WHERE ce.source_id = ANY(q.session_ids)
-            AND ce.category = 'carga') AS cargas_total,
+            AND ce.category = 'carga'
+            AND ce.source_table = 'sessions'
+            AND ce.rejected = false) AS cargas_total,
         (SELECT max(ce.value_numeric) - min(ce.value_numeric)
            FROM clinical_extractions ce
           WHERE ce.source_id = ANY(q.session_ids)
-            AND ce.category = 'eva') AS amplitude_dor,
+            AND ce.category = 'eva'
+            AND ce.source_table = 'sessions'
+            AND ce.rejected = false) AS amplitude_dor,
         (SELECT count(*)
            FROM clinical_extractions ce
           WHERE ce.source_id = ANY(q.session_ids)
-            AND ce.category = 'eva') AS leituras_dor
+            AND ce.category = 'eva'
+            AND ce.source_table = 'sessions'
+            AND ce.rejected = false) AS leituras_dor
       FROM sequencias q
     )
     SELECT m.patient_id AS "patientId",
