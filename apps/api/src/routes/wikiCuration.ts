@@ -19,24 +19,34 @@ export const postgresUuid = z
   .string()
   .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
 const uuid = postgresUuid;
-const transitionBody = z.object({
-  action: z.enum([
-    "submit",
-    "start_review",
-    "request_changes",
-    "reject",
-    "approve",
-    "publish",
-    "unpublish",
-    "mark_review_due",
-    "reopen",
-    "archive",
-  ]),
-  versionId: uuid,
-  expectedVersion: z.number().int().positive(),
-  reason: z.string().trim().max(4000).optional(),
-  validUntil: z.iso.date().optional(),
-});
+const transitionBody = z
+  .object({
+    action: z.enum([
+      "submit",
+      "start_review",
+      "request_changes",
+      "reject",
+      "approve",
+      "publish",
+      "unpublish",
+      "mark_review_due",
+      "reopen",
+      "archive",
+    ]),
+    versionId: uuid,
+    expectedVersion: z.number().int().positive(),
+    reason: z.string().trim().max(4000).optional(),
+    validUntil: z.iso.date().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.action === "approve" && !value.validUntil) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["validUntil"],
+        message: "validUntil é obrigatório para aprovação clínica",
+      });
+    }
+  });
 const assignmentBody = z.object({
   versionId: uuid,
   assigneeId: z.string().trim().min(1).max(255),

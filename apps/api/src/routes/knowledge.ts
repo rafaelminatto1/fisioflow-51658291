@@ -764,41 +764,16 @@ app.post("/articles/:articleId/notes", async (c) => {
 });
 
 app.put("/curation/:articleId", requireKnowledgeCapability("manage_library"), async (c) => {
-  const user = c.get("user");
-  const pool = await createPool(c.env);
-  const schemaUnavailable = await ensureTables(c, pool, ["knowledge_curation"]);
-  if (schemaUnavailable) return schemaUnavailable;
-  const articleId = c.req.param("articleId");
-  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
-
-  const result = await pool.query(
-    `
-      INSERT INTO knowledge_curation (
-        organization_id, article_id, status, notes, assigned_to,
-        created_by, updated_by, created_at, updated_at
-      ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, NOW(), NOW()
-      )
-      ON CONFLICT (organization_id, article_id)
-      DO UPDATE SET
-        status = EXCLUDED.status,
-        notes = EXCLUDED.notes,
-        assigned_to = EXCLUDED.assigned_to,
-        updated_by = EXCLUDED.updated_by,
-        updated_at = NOW()
-      RETURNING *
-    `,
-    [
-      user.organizationId,
-      articleId,
-      String(body.status ?? "pending"),
-      body.notes ? String(body.notes) : null,
-      body.assigned_to ? String(body.assigned_to) : null,
-      user.uid,
-      user.uid,
-    ],
+  return c.json(
+    {
+      data: null,
+      error: {
+        code: "LEGACY_CURATION_RETIRED",
+        message: "Use a fila canônica /api/wiki-curation para operações editoriais.",
+      },
+    },
+    410,
   );
-  return c.json({ data: normalizeCuration(result.rows[0]) });
 });
 
 app.get("/audit", async (c) => {
@@ -830,31 +805,16 @@ app.get("/audit", async (c) => {
 });
 
 app.post("/audit", requireKnowledgeCapability("manage_library"), async (c) => {
-  const user = c.get("user");
-  const pool = await createPool(c.env);
-  const schemaUnavailable = await ensureTables(c, pool, ["knowledge_audit"]);
-  if (schemaUnavailable) return schemaUnavailable;
-  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
-  const result = await pool.query(
-    `
-      INSERT INTO knowledge_audit (
-        organization_id, article_id, actor_id, action, before, after, context, created_at
-      ) VALUES (
-        $1, $2, $3, $4, $5::jsonb, $6::jsonb, $7::jsonb, NOW()
-      )
-      RETURNING *
-    `,
-    [
-      user.organizationId,
-      String(body.article_id ?? ""),
-      user.uid,
-      String(body.action ?? "update_annotation"),
-      body.before ? JSON.stringify(body.before) : null,
-      body.after ? JSON.stringify(body.after) : null,
-      body.context ? JSON.stringify(body.context) : null,
-    ],
+  return c.json(
+    {
+      data: null,
+      error: {
+        code: "LEGACY_AUDIT_RETIRED",
+        message: "Auditoria é emitida pelo fluxo canônico de curadoria.",
+      },
+    },
+    410,
   );
-  return c.json({ data: normalizeAudit(result.rows[0]) }, 201);
 });
 
 app.delete("/articles/:articleId", requireKnowledgeCapability("manage_library"), async (c) => {
@@ -865,10 +825,11 @@ app.delete("/articles/:articleId", requireKnowledgeCapability("manage_library"),
   const { articleId } = c.req.param();
 
   const result = await pool.query(
-    `DELETE FROM knowledge_articles
+    `UPDATE knowledge_articles
+        SET status = 'archived', updated_by = $3, updated_at = NOW()
       WHERE organization_id = $1 AND article_id = $2
       RETURNING *`,
-    [user.organizationId, articleId],
+    [user.organizationId, articleId, user.uid],
   );
 
   if (!result.rows.length) return c.json({ error: "Artigo não encontrado" }, 404);
