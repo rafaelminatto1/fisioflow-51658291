@@ -14,7 +14,7 @@ import { Progress } from "@/components/ui/progress";
 
 /**
  * CRMAutomationDashboard
- * Painel de monitoramento das automações Inngest + WhatsApp
+ * Painel de monitoramento das automações WhatsApp
  */
 export function CRMAutomationDashboard() {
   // Simulando dados que virão da API/Hasura
@@ -98,7 +98,7 @@ export function CRMAutomationDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg">Status por Automação</CardTitle>
-              <CardDescription>Desempenho dos fluxos ativos no Inngest</CardDescription>
+              <CardDescription>Desempenho dos fluxos de automação ativos</CardDescription>
             </div>
             <Button variant="outline" size="sm" className="rounded-xl h-8">
               <RefreshCw className="h-3.5 w-3.5 mr-2" /> Sincronizar

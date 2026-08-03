@@ -28,7 +28,7 @@ export async function sendEmail(env: Env, message: EmailMessage): Promise<boolea
 
   const result = await sendViaResend(env, message);
 
-  if (mode === "shadow" && env.EMAIL_SHADOW_TO) {
+  if (result && mode === "shadow" && env.EMAIL_SHADOW_TO) {
     const shadow = sendViaCloudflare(env, { ...message, to: env.EMAIL_SHADOW_TO }).catch((err) => {
       console.error(JSON.stringify({ level: "warn", message: "shadow email falhou", err: String(err) }));
       return false;

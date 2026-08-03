@@ -53,6 +53,19 @@ describe("sendEmail", () => {
 });
 
 describe("sendEmail — modo sombra", () => {
+  it("não envia a cópia sombra quando nenhum transporte real está configurado", async () => {
+    const cfSend = vi.fn().mockResolvedValue({ messageId: "cf_0" });
+    const env = {
+      EMAIL_TRANSPORT: "shadow",
+      EMAIL_SHADOW_TO: "rafaelstarton@gmail.com",
+      EMAIL: { send: cfSend },
+    } as unknown as Env;
+
+    expect(await sendEmail(env, message)).toBe(false);
+    expect(send).not.toHaveBeenCalled();
+    expect(cfSend).not.toHaveBeenCalled();
+  });
+
   it("envia pelo Resend ao destinatário real e a cópia para a caixa sombra", async () => {
     const cfSend = vi.fn().mockResolvedValue({ messageId: "cf_1" });
     const env = {

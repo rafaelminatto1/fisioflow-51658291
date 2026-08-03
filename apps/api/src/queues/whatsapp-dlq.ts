@@ -8,6 +8,7 @@ import type { Env } from "../types/env";
 import type { WhatsAppInboundMessage } from "../lib/whatsapp-queue";
 import { createPool } from "../lib/db";
 import { logEvent } from "../lib/logger";
+import { maskPhone } from "../routes/whatsapp-inbox";
 
 export async function handleWhatsAppDLQ(
   batch: MessageBatch<WhatsAppInboundMessage>,
@@ -26,10 +27,9 @@ export async function handleWhatsAppDLQ(
         message: "whatsapp_message_dlq",
         event: "whatsapp_dlq",
         messageId: msg.metaMessageId,
-        from: msg.from,
+        from: maskPhone(msg.from),
         phoneNumberId: msg.phoneNumberId,
         error: "Message failed after max retries",
-        rawPayload: JSON.stringify(msg.rawPayload).slice(0, 2000),
       })
     );
 

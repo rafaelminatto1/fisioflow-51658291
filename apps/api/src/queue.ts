@@ -1124,12 +1124,16 @@ export async function processPrescriptionCreated(
   const pdfUrl = `${env.R2_PUBLIC_URL}/${pdfKey}`;
 
   if (plan.email) {
-    await sendPrescriptionEmail(env, plan.email, {
-      patientName: plan.patient_name,
-      pdfUrl,
-      title: plan.plan_name || "Prescrição de Exercícios",
-    });
-    return { pdfUrl, emailSent: true };
+    try {
+      await sendPrescriptionEmail(env, plan.email, {
+        patientName: plan.patient_name,
+        pdfUrl,
+        title: plan.plan_name || "Prescrição de Exercícios",
+      });
+      return { pdfUrl, emailSent: true };
+    } catch (err) {
+      console.error(`[Queue] Failed to send prescription email to ${plan.email}:`, err);
+    }
   }
 
   return { pdfUrl, emailSent: false };

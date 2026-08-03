@@ -533,8 +533,6 @@ app.post("/auth/request-otp", async (c) => {
   );
 
   // 3. Enviar via WhatsApp (Simulado se não houver credenciais)
-  console.log(`[PatientPortal] OTP para ${phone}: ${otp}`);
-
   if (c.env.WHATSAPP_PHONE_NUMBER_ID && c.env.WHATSAPP_ACCESS_TOKEN) {
     // Aqui integraria com o serviço de WhatsApp real
   }

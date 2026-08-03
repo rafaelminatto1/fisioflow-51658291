@@ -5,7 +5,7 @@
  * 2. Send notifications via FCM or other channels
  * 3. Handle reschedule and cancellation notifications
  *
- * The current implementation uses Inngest for scheduling.
+ * The current implementation uses Cloudflare Queues/cron for scheduling.
  */
 
 import { fisioLogger as logger } from "@/lib/errors/logger";
