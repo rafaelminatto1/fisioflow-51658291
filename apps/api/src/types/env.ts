@@ -304,11 +304,6 @@ export interface Env {
   // TEMPORARY: token for /api/exercises/content/backfill/preview (dry-run only)
   ADMIN_PREVIEW_TOKEN?: string;
 
-  // Axiom Logging Configuration
-  AXIOM_TOKEN?: string;
-  AXIOM_ORG_ID?: string;
-  AXIOM_DATASET?: string;
-
   // URL base da API (ex: https://api-pro.moocafisio.com.br)
   API_BASE_URL?: string;
 

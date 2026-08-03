@@ -12,7 +12,7 @@ import {
 } from "../../lib/ai-context-cache";
 import { AssessmentRecordingService } from "../../services/ai/AssessmentRecordingService";
 import { isUuid } from "../../lib/validators";
-import { logToAxiom } from "../../lib/axiom";
+import { logEvent } from "../../lib/logger";
 import { ClinicalReportSchema, SoapSummarySchema } from "../../schemas/ai-schemas";
 import { createPool } from "../../lib/db";
 import { hasTable } from "../analytics/shared";
@@ -59,7 +59,7 @@ app.post("/patient-360/prime", async (c) => {
     });
   } catch (error: any) {
     console.error("[AI/Patient360/prime] Error:", error);
-    await logToAxiom(c.env, c.executionCtx, {
+    await logEvent(c.env, c.executionCtx, {
       level: "error",
       message: "ai.patient_360.prime.error",
       patientId: body.patientId,
@@ -114,7 +114,7 @@ app.post("/patient-360/ask", async (c) => {
     });
   } catch (error: any) {
     console.error("[AI/Patient360/ask] Error:", error);
-    await logToAxiom(c.env, c.executionCtx, {
+    await logEvent(c.env, c.executionCtx, {
       level: "error",
       message: "ai.patient_360.ask.error",
       patientId: body.patientId,
@@ -167,7 +167,7 @@ app.post("/patient-360/clinical-report", async (c) => {
     });
   } catch (error: any) {
     console.error("[AI/Patient360/clinical-report] Error:", error);
-    await logToAxiom(c.env, c.executionCtx, {
+    await logEvent(c.env, c.executionCtx, {
       level: "error",
       message: "ai.patient_360.report.error",
       patientId: body.patientId,
@@ -251,7 +251,7 @@ app.post("/assessment/recording", async (c) => {
     });
   } catch (error: any) {
     console.error("[AI/Assessment/recording] Error:", error);
-    await logToAxiom(c.env, c.executionCtx, {
+    await logEvent(c.env, c.executionCtx, {
       level: "error",
       message: "ai.assessment.recording.error",
       patientId: body.patientId,
@@ -301,7 +301,7 @@ app.post("/assessment/transcript", async (c) => {
     });
   } catch (error: any) {
     console.error("[AI/Assessment/transcript] Error:", error);
-    await logToAxiom(c.env, c.executionCtx, {
+    await logEvent(c.env, c.executionCtx, {
       level: "error",
       message: "ai.assessment.transcript.error",
       patientId: body.patientId,

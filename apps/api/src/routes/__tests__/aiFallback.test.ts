@@ -37,8 +37,8 @@ vi.mock("../../lib/ai-native", () => ({
   summarizeClinicalNote: vi.fn(),
 }));
 
-vi.mock("../../lib/axiom", () => ({
-  logToAxiom: vi.fn(),
+vi.mock("../../lib/logger", () => ({
+  logEvent: vi.fn(),
 }));
 
 vi.mock("../../schemas/ai-schemas", () => ({

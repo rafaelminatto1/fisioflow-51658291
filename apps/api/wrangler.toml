@@ -300,8 +300,6 @@ NEON_AUTH_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon
 NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
 NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
 NEON_AUTH_AUDIENCE = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
-AXIOM_ORG_ID = "activity-dbyc"
-AXIOM_DATASET = "fisioflow-logs"
 FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway"
 GOOGLE_AI_PREMIUM_ENABLED = "false"
 
@@ -324,8 +322,6 @@ NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws
 NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
 NEON_AUTH_AUDIENCE = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
 NEON_DATA_API_URL = "https://ep-wandering-bonus-acj4zwvo.apirest.sa-east-1.aws.neon.tech/neondb/rest/v1"
-AXIOM_ORG_ID = "activity-dbyc"
-AXIOM_DATASET = "fisioflow-logs"
 PAGES_URL = "https://moocafisio.com.br"
 FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway"
 TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
@@ -553,7 +549,7 @@ crons = [
 enabled = true
 
 [observability.logs]
-head_sampling_rate = 0.1
+head_sampling_rate = 1
 
 [observability.traces]
 enabled = true
@@ -563,7 +559,7 @@ head_sampling_rate = 0.05
 enabled = true
 
 [env.production.observability.logs]
-head_sampling_rate = 0.1
+head_sampling_rate = 1
 
 [env.production.observability.traces]
 enabled = true
@@ -592,8 +588,6 @@ NEON_AUTH_AUDIENCE = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.
 PAGES_URL = "https://fisioflow-web-staging.rafalegollas.workers.dev"
 FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway-staging"
 TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
-AXIOM_ORG_ID = "activity-dbyc"
-AXIOM_DATASET = "fisioflow-logs-staging"
 
 [[env.staging.kv_namespaces]]
 binding = "FISIOFLOW_CONFIG"
@@ -762,7 +756,7 @@ dead_letter_queue = "fisioflow-tasks-dlq-staging"
 enabled = true
 
 [env.staging.observability.logs]
-head_sampling_rate = 0.1
+head_sampling_rate = 1
 
 [env.staging.observability.traces]
 enabled = true

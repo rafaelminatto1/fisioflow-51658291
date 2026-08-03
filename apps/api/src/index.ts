@@ -148,7 +148,7 @@ import { getRawSql } from "./lib/db";
 import { routeAgentRequest } from "agents";
 import { getServerByName } from "partyserver";
 import { analyticsMiddleware } from "./lib/analytics";
-import { logToAxiom } from "./lib/axiom";
+import { logEvent } from "./lib/logger";
 
 import { cors } from "hono/cors";
 import { handleWhatsAppInboundQueue } from "./queues/whatsapp-inbound";
@@ -574,7 +574,7 @@ export default {
 
     if (isSensitiveScannerPath(pathname)) {
       ctx.waitUntil(
-        logToAxiom(env, ctx, {
+        logEvent(env, ctx, {
           level: "warn",
           message: "blocked_sensitive_scanner_path",
           event: "blocked_scanner",
@@ -594,7 +594,7 @@ export default {
 
     if (isSuspiciousRootProbe(pathname, method)) {
       ctx.waitUntil(
-        logToAxiom(env, ctx, {
+        logEvent(env, ctx, {
           level: "info",
           message: "root_probe",
           event: "root_probe",

@@ -4,7 +4,7 @@ import type { Env } from "../../types/env";
 
 import { transcribeAudioWithGemini } from "../../lib/ai-gemini";
 import { smartStructured, smartTranscribe } from "../../lib/ai/smartAI";
-import { logToAxiom } from "../../lib/axiom";
+import { logEvent } from "../../lib/logger";
 import { transcribeAudio as transcribeWithWhisper } from "../../lib/ai-native";
 import { EvolutionObservacaoSchema } from "../../schemas/ai-schemas";
 import { safeText, buildSoapFromText, buildEvolutionFromText } from "./ai-helpers";
@@ -51,7 +51,7 @@ app.post("/transcribe-audio", async (c) => {
     const duration = performance.now() - start;
 
     c.executionCtx.waitUntil(
-      logToAxiom(c.env, c.executionCtx, {
+      logEvent(c.env, c.executionCtx, {
         level: "info",
         type: "ai_inference_latency",
         message: "Audio transcription completed",
@@ -97,7 +97,7 @@ Relato bruto:
     const duration = performance.now() - start;
 
     c.executionCtx.waitUntil(
-      logToAxiom(c.env, c.executionCtx, {
+      logEvent(c.env, c.executionCtx, {
         level: "info",
         type: "ai_inference_latency",
         message: "Evolution generation completed",
@@ -127,7 +127,7 @@ Relato bruto:
   } catch (error) {
     const duration = performance.now() - start;
     c.executionCtx.waitUntil(
-      logToAxiom(c.env, c.executionCtx, {
+      logEvent(c.env, c.executionCtx, {
         level: "error",
         type: "ai_inference_error",
         message: "Evolution generation failed, using heuristic fallback",

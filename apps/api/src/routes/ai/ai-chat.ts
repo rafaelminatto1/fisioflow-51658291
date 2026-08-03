@@ -6,7 +6,7 @@ import { callGemini, streamGeminiChat } from "../../lib/ai-gemini";
 import { smartChat, smartStructured } from "../../lib/ai/smartAI";
 import { unifiedThinking, unifiedStructured } from "../../lib/ai/unifiedAI";
 import { runAi, summarizeClinicalNote } from "../../lib/ai-native";
-import { logToAxiom } from "../../lib/axiom";
+import { logEvent } from "../../lib/logger";
 import { searchAiSearch } from "../../lib/cloudflareAiSearch";
 import {
   ClinicalReportSchema,
@@ -60,7 +60,7 @@ app.post("/service", async (c) => {
         const duration = performance.now() - start;
 
         c.executionCtx.waitUntil(
-          logToAxiom(c.env, c.executionCtx, {
+          logEvent(c.env, c.executionCtx, {
             level: "info",
             type: "ai_inference_latency",
             message: "smartChat clinicalChat completed",
@@ -102,7 +102,7 @@ app.post("/service", async (c) => {
         return c.json({ data: { success: true, data: parsed } });
       } catch (error) {
         c.executionCtx.waitUntil(
-          logToAxiom(c.env, c.executionCtx, {
+          logEvent(c.env, c.executionCtx, {
             level: "error",
             type: "ai_inference_error",
             message: "exerciseSuggestion failed",
@@ -329,7 +329,7 @@ Regras:
         const duration = performance.now() - start;
 
         c.executionCtx.waitUntil(
-          logToAxiom(c.env, c.executionCtx, {
+          logEvent(c.env, c.executionCtx, {
             level: "info",
             type: "ai_inference_latency",
             message: "Treatment assistant completed",
@@ -345,7 +345,7 @@ Regras:
         return c.json({ data: { suggestion: result.text } });
       } catch (error) {
         c.executionCtx.waitUntil(
-          logToAxiom(c.env, c.executionCtx, {
+          logEvent(c.env, c.executionCtx, {
             level: "error",
             type: "ai_inference_error",
             message: "Treatment assistant failed, using heuristic",
@@ -408,7 +408,7 @@ Analise o risco de não-aderência ao tratamento fisioterapêutico, identifique 
     const duration = performance.now() - start;
 
     c.executionCtx.waitUntil(
-      logToAxiom(c.env, c.executionCtx, {
+      logEvent(c.env, c.executionCtx, {
         level: "info",
         type: "ai_inference_latency",
         message: "Treatment adherence prediction completed",
@@ -432,7 +432,7 @@ Analise o risco de não-aderência ao tratamento fisioterapêutico, identifique 
     });
   } catch (error) {
     c.executionCtx.waitUntil(
-      logToAxiom(c.env, c.executionCtx, {
+      logEvent(c.env, c.executionCtx, {
         level: "error",
         type: "ai_inference_error",
         message: "Treatment adherence prediction failed, using heuristic",
@@ -481,7 +481,7 @@ Gere uma análise clínica estruturada em português brasileiro com resumo execu
     const duration = performance.now() - start;
 
     c.executionCtx.waitUntil(
-      logToAxiom(c.env, c.executionCtx, {
+      logEvent(c.env, c.executionCtx, {
         level: "info",
         type: "ai_inference_latency",
         message: "Clinical analysis completed",
@@ -504,7 +504,7 @@ Gere uma análise clínica estruturada em português brasileiro com resumo execu
     });
   } catch (error) {
     c.executionCtx.waitUntil(
-      logToAxiom(c.env, c.executionCtx, {
+      logEvent(c.env, c.executionCtx, {
         level: "error",
         type: "ai_inference_error",
         message: "Clinical analysis failed, using heuristic",

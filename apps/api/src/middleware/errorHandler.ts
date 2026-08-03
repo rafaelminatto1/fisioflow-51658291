@@ -1,4 +1,4 @@
-import { logToAxiom, redactPII } from "../lib/axiom";
+import { logEvent, redactPII } from "../lib/logger";
 import { QueryTimeoutError, DatabaseError } from "../lib/dbWrapper";
 import type { CustomContext } from "./requestId";
 
@@ -129,20 +129,18 @@ export async function errorHandler(err: Error, c: CustomContext) {
       }),
     );
 
-    if (c.env.AXIOM_TOKEN) {
-      logToAxiom(c.env, c.executionCtx, {
-        level: "error",
-        message: `[${appError.type}] ${appError.message}`,
-        requestId,
-        errorType: appError.type,
-        statusCode: appError.statusCode,
-        path: c.req.path,
-        method: c.req.method,
-        userAgent: c.req.header("User-Agent"),
-        details: appError.details,
-        stack: isProduction ? undefined : err.stack,
-      });
-    }
+    logEvent(c.env, c.executionCtx, {
+      level: "error",
+      message: `[${appError.type}] ${appError.message}`,
+      requestId,
+      errorType: appError.type,
+      statusCode: appError.statusCode,
+      path: c.req.path,
+      method: c.req.method,
+      userAgent: c.req.header("User-Agent"),
+      details: appError.details,
+      stack: isProduction ? undefined : err.stack,
+    });
   }
 
   return c.json(errorResponse, appError.statusCode as any, {

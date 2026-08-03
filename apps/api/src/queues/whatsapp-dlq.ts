@@ -7,7 +7,7 @@
 import type { Env } from "../types/env";
 import type { WhatsAppInboundMessage } from "../lib/whatsapp-queue";
 import { createPool } from "../lib/db";
-import { logToAxiom } from "../lib/axiom";
+import { logEvent } from "../lib/logger";
 
 export async function handleWhatsAppDLQ(
   batch: MessageBatch<WhatsAppInboundMessage>,
@@ -21,7 +21,7 @@ export async function handleWhatsAppDLQ(
 
     // Log for investigation
     ctx.waitUntil(
-      logToAxiom(env, ctx, {
+      logEvent(env, ctx, {
         level: "error",
         message: "whatsapp_message_dlq",
         event: "whatsapp_dlq",

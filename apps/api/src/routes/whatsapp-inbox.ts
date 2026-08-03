@@ -4,7 +4,7 @@ import { createDb, createPool } from "../lib/db";
 import { requireAuth, type AuthUser } from "../lib/auth";
 import { broadcastToOrg } from "../lib/realtime";
 import { extFromContentType } from "../lib/media-mirror";
-import { logToAxiom } from "../lib/axiom";
+import { logEvent } from "../lib/logger";
 import {
   getInboxConversations,
   getConversationWithMessages,
@@ -514,7 +514,7 @@ function logWhatsAppInboxEvent(
     console.info(`[WhatsApp Inbox] ${message}`, payload);
   }
 
-  logToAxiom(c.env, c.executionCtx, payload);
+  logEvent(c.env, c.executionCtx, payload);
 }
 
 app.get("/conversations", requireAuth, async (c) => {
