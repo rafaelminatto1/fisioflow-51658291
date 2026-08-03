@@ -80,6 +80,30 @@ describe("sendEmail — modo sombra", () => {
 
     expect(await sendEmail(env, message)).toBe(true);
     expect(send).toHaveBeenCalledTimes(1);
+    expect(cfSend).toHaveBeenCalledTimes(1);
+    expect(cfSend.mock.calls[0][0].to).toBe("rafaelstarton@gmail.com");
+  });
+
+  it("resolve dentro do timeout mesmo quando a sombra nunca assenta", async () => {
+    vi.useFakeTimers();
+    try {
+      const cfSend = vi.fn().mockReturnValue(new Promise(() => {}));
+      const env = {
+        RESEND_API_KEY: "re_test",
+        EMAIL_TRANSPORT: "shadow",
+        EMAIL_SHADOW_TO: "rafaelstarton@gmail.com",
+        EMAIL: { send: cfSend },
+      } as unknown as Env;
+
+      const pending = sendEmail(env, message);
+      await vi.advanceTimersByTimeAsync(3000);
+
+      expect(await pending).toBe(true);
+      expect(send).toHaveBeenCalledTimes(1);
+      expect(cfSend).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("no modo cloudflare envia ao destinatário real e não usa o Resend", async () => {
