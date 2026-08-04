@@ -116,3 +116,53 @@ Rollback a qualquer momento: `EMAIL_TRANSPORT=resend`.
 - `maskPhone` mora em `routes/whatsapp-inbox.ts` e é importado por um consumidor de fila.
   Não é import circular nem custo de bundle (Worker único), mas o lugar honesto seria
   um `lib/phone.ts`.
+
+## Encerramento da infraestrutura — 04/08/2026
+
+Fechamento dos itens da auditoria original que não pertenciam ao plano de consolidação.
+
+### Corrigido
+
+- **Staging escrevia no banco de PRODUÇÃO.** O config Hyperdrive `fisioflow-neon-staging`
+  apontava para `ep-wandering-bonus-acj4zwvo-pooler`, o mesmo endpoint da produção, com
+  cache de 300s sobre dado clínico. O `wrangler.toml` afirmava isolar staging, e isolava
+  R2, D1, KV e filas — mas não o banco. Criada a branch Neon `staging`
+  (`br-dark-waterfall-acco722l`) e o config reapontado, mantendo o papel `app_runtime`
+  para não mascarar falhas de RLS. Rollback: host anterior
+  `ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech`, limite 60.
+- **Hyperdrive de produção com limite de 5 conexões** (padrão do produto é 25, e o Neon
+  aceita 112). Elevado para 25 via PATCH. Cache segue **desligado** de propósito: dado
+  clínico não deve ser servido de cache. O padrão correto para leitura imutável seria um
+  segundo config com cache, o que exige mudança de código — fica para quando doer.
+- **App do paciente apontava para o worker errado.** `apps/patient-app` usava
+  `api.moocafisio.com.br`, que roteia para `activity-lab-api` e devolve **404** em
+  `/api/patient-portal`. Corrigido para `api-paciente.moocafisio.com.br` (401 = rota
+  existe). Latente porque não há usuários, mas o app estava quebrado.
+
+### Apagado
+
+16 configs Hyperdrive órfãs (`moocafisio-auth/backup/jobs/staff`, `moocafisio-br-*`,
+`moocafisio-clean-*`, `moocafisio-staging-*`), as filas `moocafisio-outbox` e
+`-dlq` (sem produtor nem consumidor), os índices Vectorize `fisioflow-clinical` e
+`-staging` (sem binding e sem uso no código), e os workers `scheduled-worker` e
+`turnstile-siteverify-moocafisio` (sem rota, sem domínio, sem fonte no repo).
+
+### NÃO apagado, e por quê
+
+- **`activity-lab-api/web/whc06-web`** — a auditoria original os listou como órfãos, mas
+  têm domínios ativos: `api.moocafisio.com.br`, `lab.moocafisio.com.br`,
+  `lab2.moocafisio.com.br`. São outro produto. Decisão sua.
+- **`gestao-saude-db`** (Hyperdrive) — pertence ao worker `gestao-saude-cloudflare`, cujo
+  wrangler vive em outro repositório.
+- **`fisioflow-tasks-dlq` e `-staging`** — aparecem com 0 produtores e 0 consumidores na
+  API, mas são as DLQ declaradas no `wrangler.toml`. A API não conta destino de DLQ.
+- **Todos os buckets R2** — `wrangler r2 object list` não deu contagem confiável e apagar
+  bucket com dado é irreversível. Armazenamento custa centavos; o risco não compensa.
+  Verificar manualmente antes de mexer.
+
+### Ainda em aberto
+
+- **Zero Trust Access** não foi habilitado. Ao testar, o staging **não** estava aberto:
+  `/api/patients` e `/api/appointments` devolvem 401; só `/api/health` é público, por
+  design. O ganho de Access seria esconder a superfície, não proteger dado — defesa em
+  profundidade, não emergência.

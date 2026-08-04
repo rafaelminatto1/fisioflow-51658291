@@ -697,6 +697,9 @@ name = "automation-executor"
 binding = "WORKFLOW_AUTOMATION"
 class_name = "AutomationExecutor"
 
+# Aponta para a branch Neon `staging` (br-dark-waterfall-acco722l) desde 04/08/2026.
+# ATÉ ENTÃO ESTE CONFIG APONTAVA PARA O BANCO DE PRODUÇÃO — o staging escrevia nos
+# dados clínicos reais, com cache de 300s por cima. Não reapontar para ep-wandering-bonus.
 [[env.staging.hyperdrive]]
 binding = "HYPERDRIVE"
 id = "37189eb42d314a0a8fd0e169a2b27ad1"
