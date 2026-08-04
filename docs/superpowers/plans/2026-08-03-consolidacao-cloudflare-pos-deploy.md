@@ -13,17 +13,31 @@ Review final da branch: **aprovada para produção**. Nada foi pushado ainda.
 2. **Confirmar os logs.** No Workers Logs do `fisioflow-api`, verificar eventos com os
    campos `level`, `message`, `environment`, e campos sensíveis como `[REDACTED]`.
 
-3. **Job de Logpush → R2 — LIBERADO** (Step 3 da Task 3 do plano).
+3. **Job de Logpush → R2 — ADIADO DE PROPÓSITO** (Step 3 da Task 3 do plano).
 
-   O bloqueio caiu em 03/08/2026: os 8 `console.*` que carregavam PII foram saneados no
-   commit `f605f1b9d` (nome, e-mail e telefone de paciente trocados por IDs já em escopo).
-   Uma varredura sobre os 893 `console.*` de `apps/api/src` confirmou que os 7 restantes
-   que citam campo suspeito usam UUID, contagem ou o `phone_number_id` da própria clínica.
+   O bloqueio de PII caiu: os 8 `console.*` que carregavam nome, e-mail e telefone de
+   paciente foram saneados em `f605f1b9d`, trocados por IDs já em escopo. Uma varredura
+   sobre os 893 `console.*` de `apps/api/src` confirmou que os 7 restantes que citam
+   campo suspeito usam UUID, contagem ou o `phone_number_id` da própria clínica.
 
-   Correção ao que este documento dizia antes: o destino do Logpush é
-   `fisioflow-db-backups`, um bucket R2 **da própria conta** — o dado não sai para
-   terceiro. A diferença real é de permanência: Workers Logs apaga sozinho em 7 dias,
-   o R2 acumula até alguém apagar.
+   Mesmo assim o job **não** foi criado, por decisão de 04/08/2026:
+   - Não há usuários. Não existe tráfego para arquivar; o job só acumularia log de um
+     sistema ocioso.
+   - Workers Logs (7 dias) já é melhor do que se tinha com o Axiom. O ganho marginal
+     do R2 hoje é nulo.
+   - Restam 893 `console.*` sem auditoria. Um arquivo **permanente** antes de haver
+     disciplina de log acumula dívida, não observabilidade.
+   - Criar o job exige cunhar uma credencial R2 de vida longa
+     (`1002: invalid destination_conf: access-key-id must be provided`). Credencial
+     permanente sem benefício presente é risco sem contrapartida.
+
+   **Criar quando entrar uso real.** Comando pronto no plano original, Task 3 Step 3 —
+   precisa de `R2_ACCESS_KEY_ID` e `R2_SECRET_ACCESS_KEY` (as mesmas já usadas como
+   secrets do Worker, ou um token R2 novo escopado só ao bucket de destino).
+
+   Correção ao que este documento dizia antes: o destino é `fisioflow-db-backups`, um
+   bucket R2 **da própria conta** — o dado não sai para terceiro. A diferença real é de
+   permanência: Workers Logs apaga sozinho em 7 dias, o R2 acumula até alguém apagar.
 
 4. **Vigiar o volume de logs por 48h.** O plano inclui 20M eventos/mês, depois
    US$ 0,60/milhão. A amostragem subiu de 0,1 para 1 — 10x mais eventos. Erros custam
