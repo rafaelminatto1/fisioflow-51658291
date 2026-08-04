@@ -19,8 +19,10 @@ import {
 } from "@/types/api";
 import { Mappers } from "./mappers";
 
-// CANONICAL API DOMAIN (Migração Neon/Cloudflare 2026)
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "https://api.moocafisio.com.br"; // Novo domínio unificado (Hono/Cloudflare)
+// api.moocafisio.com.br roteia para o worker `activity-lab-api`, que NÃO implementa
+// /api/patient-portal (devolve 404). O domínio do fisioflow-api para o app do paciente
+// é api-paciente.moocafisio.com.br, declarado em apps/api/wrangler.toml.
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "https://api-paciente.moocafisio.com.br";
 
 const PATIENT_PORTAL_PREFIX = "/api/patient-portal";
 
