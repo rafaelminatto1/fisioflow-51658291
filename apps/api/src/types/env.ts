@@ -331,7 +331,7 @@ export interface Env {
   ADMIN_NOTIFICATION_EMAIL?: string;
 
   // Cloudflare Email Routing (send_email binding) — modo sombra ao lado do Resend
-  EMAIL: SendEmail;
+  EMAIL?: SendEmail;
   EMAIL_TRANSPORT?: "resend" | "shadow" | "cloudflare";
   EMAIL_SHADOW_TO?: string;
 
