@@ -13,11 +13,17 @@ Review final da branch: **aprovada para produção**. Nada foi pushado ainda.
 2. **Confirmar os logs.** No Workers Logs do `fisioflow-api`, verificar eventos com os
    campos `level`, `message`, `environment`, e campos sensíveis como `[REDACTED]`.
 
-3. **Job de Logpush → R2 — NÃO criar ainda.** É o Step 3 da Task 3 do plano.
-   Motivo do bloqueio: o Workers Logs mantém o dado dentro da conta Cloudflare; o Logpush
-   o exporta para fora. Enquanto os ~890 `console.*` crus do Worker não forem saneados
-   (ver "Dívida conhecida" abaixo), exportar é uma exposição materialmente diferente.
-   Liberar só depois de tratar os call sites que carregam PII.
+3. **Job de Logpush → R2 — LIBERADO** (Step 3 da Task 3 do plano).
+
+   O bloqueio caiu em 03/08/2026: os 8 `console.*` que carregavam PII foram saneados no
+   commit `f605f1b9d` (nome, e-mail e telefone de paciente trocados por IDs já em escopo).
+   Uma varredura sobre os 893 `console.*` de `apps/api/src` confirmou que os 7 restantes
+   que citam campo suspeito usam UUID, contagem ou o `phone_number_id` da própria clínica.
+
+   Correção ao que este documento dizia antes: o destino do Logpush é
+   `fisioflow-db-backups`, um bucket R2 **da própria conta** — o dado não sai para
+   terceiro. A diferença real é de permanência: Workers Logs apaga sozinho em 7 dias,
+   o R2 acumula até alguém apagar.
 
 4. **Vigiar o volume de logs por 48h.** O plano inclui 20M eventos/mês, depois
    US$ 0,60/milhão. A amostragem subiu de 0,1 para 1 — 10x mais eventos. Erros custam
@@ -46,10 +52,16 @@ Rollback a qualquer momento: `EMAIL_TRANSPORT=resend`.
 ## Dívida conhecida (aceita conscientemente, não esquecida)
 
 - **`redactPII` não é a barreira que o spec afirmava.** Ele só protege o que passa por
-  `logEvent`. Há ~890 `console.*` crus em `apps/api/src`, e com amostragem 1 todos
-  persistem. Carregam PII pelo menos em: `cron.ts:1028` (e-mail do paciente),
-  `routes/appointments.ts:896` e `:996` (nome completo), `routes/webhooks.ts:170`
-  (e-mail), `routes/nfse.ts:624` (e-mail do contador). Sanear é pré-requisito do item 3.
+  `logEvent`; os 893 `console.*` crus de `apps/api/src` não passam por ele, e com
+  amostragem 1 todos persistem. Os 8 que carregavam PII foram saneados (`f605f1b9d`),
+  mas **a porta continua aberta para o próximo `console.log` que alguém escrever**.
+  Não foi criada regra de lint proibindo `console.*`: seriam 893 violações preexistentes
+  e o ruído enterraria o sinal. Alternativa melhor quando incomodar: uma regra que
+  proíba apenas interpolação de identificadores conhecidos (`*email*`, `*phone*`,
+  `*name*`) dentro de `console.*`.
+- `routes/webhooks.ts:214` perdeu o `adminEmail` do log sem substituto. Não é dado de
+  paciente; o custo é não conseguir diagnosticar um `ADMIN_NOTIFICATION_EMAIL` errado
+  por esse log.
 - `redactPII` casa chave exata e case-sensitive: `full_name`, `patient_name`,
   `patient_phone`, `wa_id` passam batido. Nenhum call site atual espalha linha crua do
   banco, mas nada impede o próximo de fazer.
