@@ -5,6 +5,7 @@ import { requireAuth, type AuthUser } from "../lib/auth";
 import { broadcastToOrg } from "../lib/realtime";
 import { extFromContentType } from "../lib/media-mirror";
 import { logEvent } from "../lib/logger";
+import { maskPhone } from "../lib/phone";
 import {
   getInboxConversations,
   getConversationWithMessages,
@@ -443,12 +444,6 @@ function mapContactRow(row: any) {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
-}
-
-export function maskPhone(phone?: string | null) {
-  const digits = String(phone ?? "").replace(/\D/g, "");
-  if (!digits) return undefined;
-  return `${digits.slice(0, 4)}...${digits.slice(-4)}`;
 }
 
 function serializeError(error: unknown) {

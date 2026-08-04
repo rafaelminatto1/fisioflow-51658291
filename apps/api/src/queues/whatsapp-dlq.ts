@@ -8,7 +8,7 @@ import type { Env } from "../types/env";
 import type { WhatsAppInboundMessage } from "../lib/whatsapp-queue";
 import { createPool } from "../lib/db";
 import { logEvent } from "../lib/logger";
-import { maskPhone } from "../routes/whatsapp-inbox";
+import { maskPhone } from "../lib/phone";
 
 export async function handleWhatsAppDLQ(
   batch: MessageBatch<WhatsAppInboundMessage>,
