@@ -16,6 +16,7 @@ import type { Env } from "../types/env";
 import { createPool } from "../lib/db";
 import { sendEmail } from "../lib/email/dispatch";
 import { markInvitationUsed, resolveInvitedRole } from "../lib/userInvitations";
+import { maskEmail } from "../lib/logger";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -211,7 +212,7 @@ app.post("/neon-auth", async (c) => {
             </div>
           `,
       });
-      if (sent) console.log("[Webhook] Email de notificação enviado ao admin");
+      if (sent) console.log(`[Webhook] Email de notificação enviado ao admin (${maskEmail(adminEmail)})`);
     } catch (emailErr: any) {
       console.warn("[Webhook] Falha ao enviar email de notificação:", emailErr.message);
     }

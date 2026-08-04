@@ -26,6 +26,13 @@ export function redactPII(data: any): any {
   return redacted;
 }
 
+export function maskEmail(email?: string | null): string {
+  if (!email) return "";
+  const [user, domain] = email.split("@");
+  if (!domain) return "***";
+  return `${user.charAt(0)}***@${domain}`;
+}
+
 export async function logEvent(env: Env, _ctx: ExecutionContext, data: LogEvent) {
   console.log(
     JSON.stringify({

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { redactPII, logEvent } from "../logger";
+import { redactPII, logEvent, maskEmail } from "../logger";
 import type { Env } from "../../types/env";
 
 describe("redactPII", () => {
@@ -55,6 +55,24 @@ describe("redactPII", () => {
   it("preserva valores não-objeto", () => {
     expect(redactPII("texto")).toBe("texto");
     expect(redactPII(null)).toBe(null);
+  });
+});
+
+describe("maskEmail", () => {
+  it("mantém o primeiro caractere e o domínio", () => {
+    expect(maskEmail("rafael@gmail.com")).toBe("r***@gmail.com");
+  });
+
+  it("retorna string vazia para undefined", () => {
+    expect(maskEmail(undefined)).toBe("");
+  });
+
+  it("retorna string vazia para vazio", () => {
+    expect(maskEmail("")).toBe("");
+  });
+
+  it("não lança para valor sem @", () => {
+    expect(maskEmail("naoehemail")).toBe("***");
   });
 });
 
