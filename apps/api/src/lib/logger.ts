@@ -10,16 +10,10 @@ export function redactPII(data: any): any {
   if (!data || typeof data !== "object") return data;
   if (Array.isArray(data)) return data.map(redactPII);
 
-  const sensitiveKeys = [
-    "cpf",
-    "phone",
-    "email",
-    "patientName",
-    "fullName",
-    "patientId",
-    "name",
-    "password",
-  ];
+  // `patientId` fica DE FORA de propósito: é UUID, não identifica sem acesso ao banco,
+  // e é a única alça para depurar as chamadas clínicas de IA. A política do projeto é
+  // logar ID em vez de nome — redigi-lo também anularia essa troca.
+  const sensitiveKeys = ["cpf", "phone", "email", "patientName", "fullName", "name", "password"];
   const redacted = { ...data };
 
   for (const key in redacted) {

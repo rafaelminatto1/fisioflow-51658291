@@ -11,11 +11,33 @@ describe("redactPII", () => {
 
   it("redige campos sensíveis aninhados", () => {
     const result = redactPII({
-      context: { patientName: "Maria Silva", patientId: "abc-123", sessionId: "s-1" },
+      context: { patientName: "Maria Silva", sessionId: "s-1" },
     });
     expect(result.context.patientName).toBe("[REDACTED]");
-    expect(result.context.patientId).toBe("[REDACTED]");
     expect(result.context.sessionId).toBe("s-1");
+  });
+
+  it("PRESERVA patientId: é UUID e a única alça para depurar chamada clínica de IA", () => {
+    const result = redactPII({
+      patientId: "abc-123",
+      context: { patientId: "def-456", patientName: "Maria Silva" },
+    });
+    expect(result.patientId).toBe("abc-123");
+    expect(result.context.patientId).toBe("def-456");
+    expect(result.context.patientName).toBe("[REDACTED]");
+  });
+
+  it("redige as demais chaves identificantes", () => {
+    const result = redactPII({
+      email: "a@b.com",
+      fullName: "Maria Silva",
+      name: "Maria",
+      password: "x",
+    });
+    expect(result.email).toBe("[REDACTED]");
+    expect(result.fullName).toBe("[REDACTED]");
+    expect(result.name).toBe("[REDACTED]");
+    expect(result.password).toBe("[REDACTED]");
   });
 
   it("redige dentro de arrays", () => {
