@@ -1,14 +1,16 @@
 # Consolidação Cloudflare — pendências pós-deploy
 
 Execução do plano `2026-08-03-consolidacao-cloudflare.md` concluída em 03/08/2026.
-Review final da branch: **aprovada para produção**. Nada foi pushado ainda.
+Review final da branch: **aprovada para produção**.
+
+**EM PRODUÇÃO desde 04/08/2026** (`cac7d3f9a`, deploy às 00:23:57Z). Itens 1 e 2 abaixo
+já executados; 3 adiado por decisão; 4, 5 e 6 seguem pendentes.
 
 ## Ordem obrigatória após o push
 
-1. **Aguardar o deploy concluir.** Só então:
-   `cd apps/api && npx wrangler secret delete AXIOM_TOKEN --env production`
-   Apagar antes faria a produção, ainda rodando o código antigo, cair no `console.log`
-   com a amostragem antiga.
+1. **Apagar o `AXIOM_TOKEN` após o deploy — FEITO em 04/08/2026.** Removido via API;
+   restaram 41 secrets, nenhum do Axiom. A ordem importava: apagar antes faria a
+   produção, ainda rodando o código antigo, cair no `console.log`.
 
 2. **Confirmar os logs — FEITO em 04/08/2026.** Verificado em produção sondando
    `GET /.git/<algo>`, que dispara `logEvent` nível `warn` e devolve 403 sem efeito
@@ -23,21 +25,20 @@ Review final da branch: **aprovada para produção**. Nada foi pushado ainda.
    O Workers Logs indexou **cada campo separadamente** — dá para filtrar por `level`,
    `path` ou `requestId` no painel, o que o Axiom não entregava.
 
-## Política de log definida em 04/08/2026
+   > **Política de log definida em 04/08/2026**, a partir da inspeção do log real de
+   > produção — não prevista no spec:
 
-Descoberta ao inspecionar o log real de produção, não prevista no spec:
-
-- **`patientId` NÃO é redigido** (commit `44bfb41b7`). Era, e isso deixava as 5
-  chamadas de `logEvent` em `ai-clinical.ts` registrando `[REDACTED]` — sem alça para
-  depurar. Também contradizia a política dos `console.*`, onde nome de paciente foi
-  trocado **por** id. UUID não identifica ninguém sem acesso ao banco, e quem lê o log
-  da Cloudflare não tem o banco.
-- **O IP do requisitante é logado e permanece assim.** Aparece nos dois `logEvent` de
-  `index.ts` (bloqueio de scanner e sondagem de raiz). IP é dado pessoal sob a LGPD,
-  mas a finalidade aqui é segurança — legítimo interesse do art. 7º, IX. Logar o IP de
-  quem tenta ler `/.git/` é o propósito da linha, não um efeito colateral.
-- Continuam redigidos: `cpf`, `phone`, `email`, `patientName`, `fullName`, `name`,
-  `password` — todos com teste próprio desde `44bfb41b7`.
+   > - **`patientId` NÃO é redigido** (commit `44bfb41b7`). Era, e isso deixava as 5
+   > chamadas de `logEvent` em `ai-clinical.ts` registrando `[REDACTED]` — sem alça para
+   > depurar. Também contradizia a política dos `console.*`, onde nome de paciente foi
+   > trocado **por** id. UUID não identifica ninguém sem acesso ao banco, e quem lê o log
+   > da Cloudflare não tem o banco.
+   > - **O IP do requisitante é logado e permanece assim.** Aparece nos dois `logEvent` de
+   > `index.ts` (bloqueio de scanner e sondagem de raiz). IP é dado pessoal sob a LGPD,
+   > mas a finalidade aqui é segurança — legítimo interesse do art. 7º, IX. Logar o IP de
+   > quem tenta ler `/.git/` é o propósito da linha, não um efeito colateral.
+   > - Continuam redigidos: `cpf`, `phone`, `email`, `patientName`, `fullName`, `name`,
+   > `password` — todos com teste próprio desde `44bfb41b7`.
 
 3. **Job de Logpush → R2 — ADIADO DE PROPÓSITO** (Step 3 da Task 3 do plano).
 
@@ -106,8 +107,8 @@ Rollback a qualquer momento: `EMAIL_TRANSPORT=resend`.
   `patient_phone`, `wa_id` passam batido. Nenhum call site atual espalha linha crua do
   banco, mas nada impede o próximo de fazer.
 - `redactPII` sobre um `Error` devolve `{}` — `message` e `stack` não são enumeráveis.
-- `errorHandler.ts:132` loga `path`, que contém UUID de paciente, enquanto `patientId`
-  é redigido como chave. A política é incoerente consigo mesma.
+- `errorHandler.ts:132` loga `path`, que contém UUID de paciente. Coerente com a
+  política desde `44bfb41b7` (UUID não é redigido), mas continua sendo dado que persiste.
 - `EMAIL: SendEmail` está declarado como obrigatório em `types/env.ts`, diferente dos
   bindings vizinhos. Sem efeito funcional.
 - `reconstruction-dossier/inventories/api-endpoints.csv:705` ainda aponta para
