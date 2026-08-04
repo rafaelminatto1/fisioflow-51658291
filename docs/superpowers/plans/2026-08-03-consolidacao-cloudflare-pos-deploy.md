@@ -10,8 +10,34 @@ Review final da branch: **aprovada para produção**. Nada foi pushado ainda.
    Apagar antes faria a produção, ainda rodando o código antigo, cair no `console.log`
    com a amostragem antiga.
 
-2. **Confirmar os logs.** No Workers Logs do `fisioflow-api`, verificar eventos com os
-   campos `level`, `message`, `environment`, e campos sensíveis como `[REDACTED]`.
+2. **Confirmar os logs — FEITO em 04/08/2026.** Verificado em produção sondando
+   `GET /.git/<algo>`, que dispara `logEvent` nível `warn` e devolve 403 sem efeito
+   colateral (é o guarda anti-scanner de `index.ts:159`). O evento chegou íntegro:
+
+   ```json
+   { "_time": "2026-08-04T16:50:06.045Z", "environment": "production",
+     "level": "warn", "message": "blocked_sensitive_scanner_path",
+     "path": "/.git/pos-deploy-check", "requestId": "c0e5d8d4-..." }
+   ```
+
+   O Workers Logs indexou **cada campo separadamente** — dá para filtrar por `level`,
+   `path` ou `requestId` no painel, o que o Axiom não entregava.
+
+## Política de log definida em 04/08/2026
+
+Descoberta ao inspecionar o log real de produção, não prevista no spec:
+
+- **`patientId` NÃO é redigido** (commit `44bfb41b7`). Era, e isso deixava as 5
+  chamadas de `logEvent` em `ai-clinical.ts` registrando `[REDACTED]` — sem alça para
+  depurar. Também contradizia a política dos `console.*`, onde nome de paciente foi
+  trocado **por** id. UUID não identifica ninguém sem acesso ao banco, e quem lê o log
+  da Cloudflare não tem o banco.
+- **O IP do requisitante é logado e permanece assim.** Aparece nos dois `logEvent` de
+  `index.ts` (bloqueio de scanner e sondagem de raiz). IP é dado pessoal sob a LGPD,
+  mas a finalidade aqui é segurança — legítimo interesse do art. 7º, IX. Logar o IP de
+  quem tenta ler `/.git/` é o propósito da linha, não um efeito colateral.
+- Continuam redigidos: `cpf`, `phone`, `email`, `patientName`, `fullName`, `name`,
+  `password` — todos com teste próprio desde `44bfb41b7`.
 
 3. **Job de Logpush → R2 — ADIADO DE PROPÓSITO** (Step 3 da Task 3 do plano).
 
