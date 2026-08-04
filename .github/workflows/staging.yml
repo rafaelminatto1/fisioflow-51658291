@@ -17,8 +17,8 @@ env:
   PNPM_VERSION: "11.0.9"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   NODE_OPTIONS: "--max-old-space-size=8192"
-  VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://fisioflow-api-staging.rafalegollas.workers.dev/api' }}
-  VITE_WORKERS_API_URL: ${{ vars.VITE_WORKERS_API_URL || 'https://fisioflow-api-staging.rafalegollas.workers.dev' }}
+  VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://api-staging.moocafisio.com.br/api' }}
+  VITE_WORKERS_API_URL: ${{ vars.VITE_WORKERS_API_URL || 'https://api-staging.moocafisio.com.br' }}
   VITE_NEON_AUTH_URL: ${{ vars.VITE_NEON_AUTH_URL || 'https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech/neondb/auth' }}
   VITE_NEON_DATA_API_URL: ${{ vars.VITE_NEON_DATA_API_URL || '' }}
   VITE_GOOGLE_AI_API_KEY: ${{ secrets.VITE_GOOGLE_AI_API_KEY || '' }}

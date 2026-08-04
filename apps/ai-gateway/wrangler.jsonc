@@ -25,7 +25,7 @@
     "staging": {
       "vars": {
         "ENVIRONMENT": "staging",
-        "ALLOWED_ORIGINS": "https://fisioflow-web-staging.rafalegollas.workers.dev,http://localhost:5173",
+        "ALLOWED_ORIGINS": "https://staging.moocafisio.com.br,http://localhost:5173",
         "GOOGLE_AI_URL": "https://generativelanguage.googleapis.com/v1beta/models",
         "OLLAMA_ENDPOINT": "https://ollama-staging.moocafisio.com.br",
       },

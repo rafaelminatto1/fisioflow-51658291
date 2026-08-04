@@ -166,3 +166,43 @@ Fechamento dos itens da auditoria original que não pertenciam ao plano de conso
   `/api/patients` e `/api/appointments` devolvem 401; só `/api/health` é público, por
   design. O ganho de Access seria esconder a superfície, não proteger dado — defesa em
   profundidade, não emergência.
+
+## Zero Trust Access — habilitado em 04/08/2026
+
+O que mudou a prioridade: a branch Neon `staging` criada hoje é **cópia da produção** —
+tem os 1.022 pacientes reais. Proteger o staging deixou de ser cosmético.
+
+### Provisionado
+- Organização Zero Trust criada (não existia): `moocafisio.cloudflareaccess.com`
+- Provedor de identidade: **PIN por e-mail** (`onetimepin`) — não exige IdP externo
+- Domínio novo `staging.moocafisio.com.br` → `fisioflow-web-staging`
+  (o `api-staging.moocafisio.com.br` já existia)
+- Três aplicações Access:
+  - `api-staging.moocafisio.com.br/api/health` → **bypass** (todos), para o monitoramento
+  - `api-staging.moocafisio.com.br` → allow `rafaelstarton@gmail.com`
+  - `staging.moocafisio.com.br` → allow `rafaelstarton@gmail.com`
+
+### O detalhe que faz o Access valer alguma coisa
+Access só protege hostname em zona sua — **não alcança `*.workers.dev`**. Com a URL
+workers.dev viva, ela contornaria a política inteira. Por isso o subdomínio foi desligado
+nos dois workers de staging (hoje respondem 404), e `workers_dev = false` foi fixado em
+`[env.staging]` para o próximo deploy não reabrir.
+
+As vars que apontavam para `*.workers.dev` foram migradas para os domínios novos em
+`apps/api/wrangler.toml`, `.github/workflows/staging.yml` e `apps/ai-gateway/wrangler.jsonc`.
+
+### Verificado
+```
+api-staging.moocafisio.com.br/api/patients → 302 (login do Access)
+api-staging.moocafisio.com.br/api/health   → 200 (bypass)
+staging.moocafisio.com.br/                 → 302 (login do Access)
+fisioflow-api-staging.<...>.workers.dev    → 404
+fisioflow-web-staging.<...>.workers.dev    → 404
+api-pro.moocafisio.com.br/api/health       → 200 (produção intacta)
+```
+
+### Correção ao que foi dito antes
+A auditoria original chamou o staging de "exposto". Ao testar, `/api/patients` e
+`/api/appointments` já devolviam **401** — o dado estava atrás de auth. O ganho do Access
+é esconder a superfície e impedir enumeração, não destrancar algo que estava aberto.
+Produção **não** foi posta atrás de Access: ela tem usuários finais e auth própria.

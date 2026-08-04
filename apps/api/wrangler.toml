@@ -584,22 +584,25 @@ head_sampling_rate = 0.05
 # para impedir que testes de notas, anexos ou colaboração toquem recursos de produção.
 [env.staging]
 name = "fisioflow-api-staging"
+# workers.dev desligado em 04/08/2026: a URL *.workers.dev contornaria o Cloudflare
+# Access que protege api-staging.moocafisio.com.br. Não reativar.
+workers_dev = false
 
 [env.staging.vars]
 ENVIRONMENT = "staging"
-MONITOR_HEALTH_URL = "https://fisioflow-api-staging.rafalegollas.workers.dev/api/health"
+MONITOR_HEALTH_URL = "https://api-staging.moocafisio.com.br/api/health"
 MONITOR_NTFY_TOPIC = "fisioflow-mon-rafael-staging"
 MONITOR_AI_GATEWAY_URL = "https://fisioflow-ai-gateway.rafalegollas.workers.dev/health"
 IMAGE_TRANSFORMATIONS = "enabled"
 GOOGLE_AI_PREMIUM_ENABLED = "false"
 R2_PUBLIC_URL = "https://pub-7d7f6b6af4684fb3a18be682c4b610d9.r2.dev"
-ALLOWED_ORIGINS = "https://fisioflow-web-staging.rafalegollas.workers.dev,http://localhost:5173"
+ALLOWED_ORIGINS = "https://staging.moocafisio.com.br,http://localhost:5173"
 GOOGLE_MAPS_API_KEY = ""
 NEON_AUTH_URL = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech/neondb/auth"
 NEON_AUTH_JWKS_URL = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
 NEON_AUTH_ISSUER = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech"
 NEON_AUTH_AUDIENCE = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech"
-PAGES_URL = "https://fisioflow-web-staging.rafalegollas.workers.dev"
+PAGES_URL = "https://staging.moocafisio.com.br"
 FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway-staging"
 TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
 EMAIL_TRANSPORT = "shadow"
