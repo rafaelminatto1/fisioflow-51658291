@@ -44,7 +44,12 @@ jobs:
       - name: Patch Podfile (inject SWIFT_STRICT_CONCURRENCY into existing post_install)
         working-directory: apps/${{ inputs.app }}/ios
         run: |
-          if grep -q "post_install do |installer|" Podfile; then
+          # O config plugin `withSwiftConcurrency` (registrado em app.json) já
+          # funde este ajuste durante o prebuild. Sem esta guarda, este passo
+          # injetaria uma segunda vez no mesmo bloco.
+          if grep -q "SWIFT_STRICT_CONCURRENCY" Podfile; then
+            echo "SWIFT_STRICT_CONCURRENCY já presente (config plugin) — nada a fazer."
+          elif grep -q "post_install do |installer|" Podfile; then
             ruby -i -e '
               src = STDIN.read
               inject = <<~RUBY
