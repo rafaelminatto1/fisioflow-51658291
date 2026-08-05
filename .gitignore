@@ -312,6 +312,10 @@ claudehermes.md
 
 # debug/scratch DB scripts (nunca versionar — podem conter credenciais)
 test-db-*.cjs
+*.tmp.ts
+
+# protótipos de design gerados (13MB de HTML estático, não é código de produção)
+claudedesign/
 specs/**/.~lock*
 
 testsprite_tests/tmp/config.json
