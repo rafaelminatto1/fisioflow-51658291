@@ -491,6 +491,7 @@ bindings = [
   { name = "VOICE_SCRIBE_AGENT", class_name = "VoiceScribeAgent" },
   { name = "EVOLUTION_COLLABORATION", class_name = "EvolutionCollaborationSql" },
   { name = "NOTES_COLLABORATION", class_name = "NotesCollaboration" },
+  { name = "BIOMECHANICS_POSE", class_name = "BiomechanicsPoseContainer" },
 ]
 
 [[env.production.migrations]]
@@ -522,6 +523,21 @@ deleted_classes = ["EvolutionCollaboration"]
 [[env.production.migrations]]
 tag = "v15"
 new_sqlite_classes = ["NotesCollaboration"]
+
+[[env.production.migrations]]
+tag = "v16"
+new_sqlite_classes = ["BiomechanicsPoseContainer"]
+
+# `containers` NÃO é herdado pelos ambientes — o wrangler avisa isso ao operar
+# em --env production. Sem este bloco, o deploy de produção subiria sem o
+# container e todo reprocessamento em nuvem falharia com 503.
+[[env.production.containers]]
+class_name = "BiomechanicsPoseContainer"
+image = "./containers/biomechanics-pose/Dockerfile"
+name = "fisioflow-biomechanics-pose"
+max_instances = 5
+instance_type = "standard-4"
+rollout_step_percentage = 25
 
 [env.production.ai]
 binding = "AI"
@@ -754,6 +770,7 @@ bindings = [
   { name = "VOICE_SCRIBE_AGENT", class_name = "VoiceScribeAgent" },
   { name = "EVOLUTION_COLLABORATION", class_name = "EvolutionCollaborationSql" },
   { name = "NOTES_COLLABORATION", class_name = "NotesCollaboration" },
+  { name = "BIOMECHANICS_POSE", class_name = "BiomechanicsPoseContainer" },
 ]
 
 [[env.staging.migrations]]
