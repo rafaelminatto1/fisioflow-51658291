@@ -1854,7 +1854,10 @@ function r2BiomechanicsLandmarksKey(params: {
   mediaId: string;
   attempt: number;
 }) {
-  return `orgs/${params.organizationId}/patients/${params.patientId}/videos/biomechanics/${params.assessmentId}/landmarks/${params.mediaId}-a${params.attempt}-v1.ndjson.gz`;
+  // Sem extensão .gz: o app sobe NDJSON cru (não há biblioteca de compressão
+  // no bundle RN). `decodePoseBundle` detecta gzip pelo magic number, então um
+  // cliente que passe a comprimir funciona sem mudança no servidor.
+  return `orgs/${params.organizationId}/patients/${params.patientId}/videos/biomechanics/${params.assessmentId}/landmarks/${params.mediaId}-a${params.attempt}-v1.ndjson`;
 }
 
 /** 3 min a 30 fps. Acima disso é erro de cliente, não captura clínica. */
@@ -1935,7 +1938,7 @@ app.post("/:id/landmarks/upload-url", requireAuth, async (c) => {
     attempt,
   });
 
-  const uploadUrl = await new R2Service(c.env).getUploadUrl(key, "application/gzip");
+  const uploadUrl = await new R2Service(c.env).getUploadUrl(key, "application/x-ndjson");
 
   return c.json({ data: { uploadUrl, key, attempt } });
 });

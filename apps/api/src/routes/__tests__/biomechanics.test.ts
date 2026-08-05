@@ -161,7 +161,7 @@ describe("POST /:id/pdf — portão do laudo", () => {
     const res = await app.fetch(req("POST", "/api/biomechanics/assess-001/pdf", {}), ENV());
 
     expect(res.status).toBe(409);
-    expect((await res.json()).code).toBe("not_validated");
+    expect(((await res.json()) as any).code).toBe("not_validated");
   });
 
   it("422 quando há métrica com procedência sintética", async () => {
@@ -173,7 +173,7 @@ describe("POST /:id/pdf — portão do laudo", () => {
     const res = await app.fetch(req("POST", "/api/biomechanics/assess-001/pdf", {}), ENV());
 
     expect(res.status).toBe(422);
-    const json = await res.json();
+    const json = (await res.json()) as any;
     expect(json.code).toBe("unvalidated_metrics");
     expect(json.details.map((d: any) => d.metricKey)).toContain("cadence");
   });
@@ -187,7 +187,7 @@ describe("POST /:id/pdf — portão do laudo", () => {
     const res = await app.fetch(req("POST", "/api/biomechanics/assess-001/pdf", {}), ENV());
 
     expect(res.status).toBe(422);
-    expect((await res.json()).details[0].acknowledged).toBe(false);
+    expect(((await res.json()) as any).details[0].acknowledged).toBe(false);
   });
 
   it("404 para avaliação de outra organização", async () => {
@@ -207,7 +207,7 @@ describe("POST /:id/process — sem insumo não há processamento", () => {
     const res = await app.fetch(req("POST", "/api/biomechanics/assess-001/process", {}), ENV());
 
     expect(res.status).toBe(409);
-    expect((await res.json()).code).toBe("no_landmarks_available");
+    expect(((await res.json()) as any).code).toBe("no_landmarks_available");
     expect(inserted).toHaveLength(0);
   });
 
@@ -218,7 +218,7 @@ describe("POST /:id/process — sem insumo não há processamento", () => {
     const res = await app.fetch(req("POST", "/api/biomechanics/assess-001/process", {}), ENV());
 
     expect(res.status).toBe(200);
-    expect((await res.json()).data.job.id).toBe("job-1");
+    expect(((await res.json()) as any).data.job.id).toBe("job-1");
     expect(inserted).toHaveLength(0);
   });
 });
@@ -241,7 +241,7 @@ describe("POST /:id/landmarks/upload-url", () => {
     );
 
     expect(res.status).toBe(200);
-    const { data } = await res.json();
+    const { data } = (await res.json()) as any;
     expect(data.key.startsWith(`orgs/${mockOrgId}/`)).toBe(true);
     expect(data.key).not.toContain("clinica-alheia");
     expect(data.key).not.toContain("org-invasora");
@@ -256,7 +256,7 @@ describe("POST /:id/landmarks/upload-url", () => {
     );
 
     expect(res.status).toBe(400);
-    expect((await res.json()).code).toBe("too_many_frames");
+    expect(((await res.json()) as any).code).toBe("too_many_frames");
   });
 
   it("400 sem frameCount", async () => {
@@ -283,7 +283,7 @@ describe("POST /:id/landmarks/complete", () => {
     );
 
     expect(res.status).toBe(409);
-    expect((await res.json()).code).toBe("landmarks_object_missing");
+    expect(((await res.json()) as any).code).toBe("landmarks_object_missing");
   });
 
   it("409 quando o tamanho no R2 diverge do declarado", async () => {
@@ -299,7 +299,7 @@ describe("POST /:id/landmarks/complete", () => {
     );
 
     expect(res.status).toBe(409);
-    expect((await res.json()).code).toBe("landmarks_size_mismatch");
+    expect(((await res.json()) as any).code).toBe("landmarks_size_mismatch");
   });
 
   it("400 com sha256 malformado", async () => {
@@ -363,7 +363,7 @@ describe("POST /:id/landmarks/complete", () => {
     );
 
     expect(res.status).toBe(200);
-    const json = await res.json();
+    const json = (await res.json()) as any;
     expect(json.data.replayed).toBe(true);
     expect(json.data.job.id).toBe("job-existente");
     expect(sendMock).not.toHaveBeenCalled();
@@ -398,7 +398,7 @@ describe("POST /:id/metrics/:metricId/acknowledge — conferir não é editar", 
     );
 
     expect(res.status).toBe(422);
-    expect((await res.json()).code).toBe("non_clinical_provenance");
+    expect(((await res.json()) as any).code).toBe("non_clinical_provenance");
   });
 
   it("409 em avaliação já assinada", async () => {
@@ -419,7 +419,7 @@ describe("POST /:id/validate", () => {
     const res = await app.fetch(req("POST", "/api/biomechanics/assess-001/validate", {}), ENV());
 
     expect(res.status).toBe(422);
-    expect((await res.json()).code).toBe("unacknowledged_metrics");
+    expect(((await res.json()) as any).code).toBe("unacknowledged_metrics");
   });
 
   it("422 quando não há métrica nenhuma", async () => {
@@ -428,7 +428,7 @@ describe("POST /:id/validate", () => {
     const res = await app.fetch(req("POST", "/api/biomechanics/assess-001/validate", {}), ENV());
 
     expect(res.status).toBe(422);
-    expect((await res.json()).code).toBe("no_metrics");
+    expect(((await res.json()) as any).code).toBe("no_metrics");
   });
 
   it("409 em laudo já assinado", async () => {
@@ -456,7 +456,7 @@ describe("POST /:id/sign", () => {
     const res = await app.fetch(req("POST", "/api/biomechanics/assess-001/sign", {}), ENV());
 
     expect(res.status).toBe(409);
-    expect((await res.json()).code).toBe("not_validated");
+    expect(((await res.json()) as any).code).toBe("not_validated");
   });
 
   it("409 quando já está assinado", async () => {
@@ -472,6 +472,6 @@ describe("POST /:id/sign", () => {
     const res = await app.fetch(req("POST", "/api/biomechanics/assess-001/sign", {}), ENV());
 
     expect(res.status).toBe(422);
-    expect((await res.json()).code).toBe("unvalidated_metrics");
+    expect(((await res.json()) as any).code).toBe("unvalidated_metrics");
   });
 });

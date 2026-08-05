@@ -184,6 +184,35 @@ export interface BiomechanicsComparison {
   }>;
 }
 
+/**
+ * Linha de `biomechanics_metrics` como o workbench devolve.
+ *
+ * `provenance` é a coluna autoritativa (migration 0165) — a UI mostra o chip
+ * "no dispositivo" / "nuvem" / "manual" a partir dela. `acknowledgedAt` marca
+ * a conferência individual do profissional, exigida antes de validar o laudo.
+ */
+export interface BiomechanicsMetricRow {
+  id: string;
+  assessmentId: string;
+  metricKey: string;
+  metricValue: string | number;
+  unit?: string | null;
+  side?: string | null;
+  phase?: string | null;
+  view?: string | null;
+  confidence?: string | number | null;
+  severity?: string | null;
+  provenance: "device_pose" | "container_pose" | "manual" | "patient_reported" | "derived" | "synthetic_demo";
+  poseEngine?: string | null;
+  sampleCount?: number | null;
+  attempt?: number | null;
+  acknowledgedBy?: string | null;
+  acknowledgedAt?: string | null;
+  supersededAt?: string | null;
+  algorithmVersion?: string | null;
+  createdAt: string;
+}
+
 export interface BiomechanicsPdfResult {
   pdfUrl: string;
   pdfKey: string;
@@ -215,7 +244,7 @@ export interface BiomechanicsWorkbench {
   assessment: BiomechanicsAssessment;
   media: BiomechanicsMedia[];
   jobs: BiomechanicsJob[];
-  metrics: BiomechanicsComparisonMetric[];
+  metrics: BiomechanicsMetricRow[];
   frames: any[];
   events: any[];
   annotations: BiomechanicsAnnotation[];
@@ -275,6 +304,47 @@ export const biomechanicsApi = {
     fetchApi<{ data: { media: BiomechanicsMedia } }>(
       `/api/biomechanics/${encodeURIComponent(id)}/media/complete`,
       { method: "POST", data: payload },
+    ),
+
+  /**
+   * Presigned PUT para o bundle de landmarks (`ff-pose-33-v1`, NDJSON gzip).
+   * A chave vem do servidor — mandar `key` daqui não adianta e é ignorado.
+   */
+  createLandmarksUploadUrl: (
+    id: string,
+    payload: { mediaId?: string; frameCount: number; attempt?: number },
+  ) =>
+    fetchApi<{ data: { uploadUrl: string; key: string; attempt: number } }>(
+      `/api/biomechanics/${encodeURIComponent(id)}/landmarks/upload-url`,
+      { method: "POST", data: payload },
+    ),
+
+  /**
+   * Avisa que o bundle subiu e enfileira o processamento.
+   * Idempotente pelo sha256: reenviar depois de um timeout devolve o mesmo job
+   * em vez de reprocessar a mesma captura.
+   */
+  completeLandmarksUpload: (
+    id: string,
+    payload: {
+      mediaId?: string;
+      sha256: string;
+      bytes?: number;
+      schema?: string;
+      attempt?: number;
+      header: Record<string, unknown>;
+    },
+  ) =>
+    fetchApi<{ data: { media: BiomechanicsMedia; job: BiomechanicsJob; replayed: boolean } }>(
+      `/api/biomechanics/${encodeURIComponent(id)}/landmarks/complete`,
+      { method: "POST", data: payload },
+    ),
+
+  /** Conferência humana de uma métrica. NÃO altera a procedência. */
+  acknowledgeMetric: (id: string, metricId: string) =>
+    fetchApi<{ data: BiomechanicsMetricRow }>(
+      `/api/biomechanics/${encodeURIComponent(id)}/metrics/${encodeURIComponent(metricId)}/acknowledge`,
+      { method: "POST" },
     ),
 
   process: (id: string) =>
