@@ -32,59 +32,6 @@ import {
 } from "@/lib/api/biomechanics";
 import { getOrGenerateCloudPDF, shareCloudPDF } from "@/lib/services/cloudPdfService";
 
-const DEMO_METRICS: BiomechanicsComparisonMetric[] = [
-  {
-    key: "knee_rom",
-    label: "ROM joelho",
-    unit: "deg",
-    fromValue: 78,
-    toValue: 118,
-    delta: 40,
-    direction: "improved",
-    lowerIsBetter: false,
-  },
-  {
-    key: "trunk_inclination",
-    label: "Tronco",
-    unit: "deg",
-    fromValue: 48,
-    toValue: 32,
-    delta: -16,
-    direction: "improved",
-    lowerIsBetter: true,
-  },
-  {
-    key: "dynamic_valgus",
-    label: "Valgo dinâmico",
-    unit: "deg",
-    fromValue: 18,
-    toValue: 14,
-    delta: -4,
-    direction: "improved",
-    lowerIsBetter: true,
-  },
-  {
-    key: "symmetry",
-    label: "Simetria E/D",
-    unit: "%",
-    fromValue: 71,
-    toValue: 84,
-    delta: 13,
-    direction: "improved",
-    lowerIsBetter: false,
-  },
-  {
-    key: "pain",
-    label: "Dor EVA",
-    unit: "/10",
-    fromValue: 6,
-    toValue: 3,
-    delta: -3,
-    direction: "improved",
-    lowerIsBetter: true,
-  },
-];
-
 function formatDate(value?: string | Date | null) {
   if (!value) return "Data nao informada";
   return new Date(value).toLocaleDateString("pt-BR", {
@@ -225,7 +172,9 @@ export default function ReportScreen() {
     };
   }, [assessmentId, assessment?.type, comparisonAssessmentId, resolvedPatientId]);
 
-  const metrics = comparison?.metrics?.length ? comparison.metrics : DEMO_METRICS;
+  // Sem métricas reais o laudo não inventa linhas: mostra o estado vazio. O
+  // backend também recusa gerar o PDF antes da validação clínica (409).
+  const metrics = comparison?.metrics ?? [];
   const improvedCount = metrics.filter((metric) => metric.direction === "improved").length;
   const worseCount = metrics.filter((metric) => metric.direction === "worse").length;
   const mainMetric = metrics.find((metric) => metric.key.includes("knee")) ?? metrics[0];

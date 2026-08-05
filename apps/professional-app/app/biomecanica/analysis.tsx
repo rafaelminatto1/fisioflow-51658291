@@ -49,6 +49,7 @@ import {
 } from "lucide-react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { bio, font } from "@/constants/biomecanica";
+import { jointAngleSeries } from "@fisioflow/core";
 import { biomechanicsApi } from "@/lib/api/biomechanics";
 import { LineChart } from "react-native-gifted-charts";
 import { SymmetryMeter } from "@/components/biomecanica/SymmetryMeter";
@@ -70,11 +71,6 @@ const PROTOCOLS = [
 
 const COLLAPSED = 330;
 
-const MOCK_TRAJECTORY = Array.from({ length: 40 }, (_, i) => ({
-  value: 40 + Math.sin(i / 5) * 40 + Math.random() * 5,
-  label: `${(i / 4).toFixed(1)}s`,
-  dataPointText: i === 15 ? "118°" : undefined,
-}));
 
 export default function AnalysisScreen() {
   const router = useRouter();
@@ -112,6 +108,13 @@ export default function AnalysisScreen() {
     clearAllAnnotations,
   } = useGoniometerCanvas();
 
+  // Série real do ângulo articular, derivada dos keyframes que o pipeline
+  // gravou. Vazia enquanto não houver captura processada — o gráfico mostra o
+  // estado de "aguardando processamento" em vez de uma senoide inventada.
+  const [trajectory, setTrajectory] = useState<
+    Array<{ value: number; label: string; dataPointText?: string }>
+  >([]);
+
   useEffect(() => {
     if (!assessmentId) return;
     let mounted = true;
@@ -129,6 +132,36 @@ export default function AnalysisScreen() {
           },
           {},
         );
+        // Ângulo do joelho ao longo do movimento, a partir dos landmarks
+        // gravados — mesmo cálculo que o Worker usou para o laudo.
+        const frames = (workbench.frames ?? []) as Array<{
+          timeMs?: number;
+          time_ms?: number;
+          landmarks?: unknown;
+        }>;
+        const series = frames
+          .map((frame) => {
+            const landmarks = Array.isArray(frame.landmarks) ? frame.landmarks : [];
+            if (landmarks.length === 0) return null;
+            const angle = jointAngleSeries(
+              [
+                {
+                  frameIndex: 0,
+                  timeMs: Number(frame.timeMs ?? frame.time_ms ?? 0),
+                  landmarks: landmarks as never,
+                  confidence: 1,
+                },
+              ],
+              "knee",
+              "right",
+            )[0];
+            if (angle === null || angle === undefined) return null;
+            const timeMs = Number(frame.timeMs ?? frame.time_ms ?? 0);
+            return { value: angle, label: `${(timeMs / 1000).toFixed(1)}s` };
+          })
+          .filter(Boolean) as Array<{ value: number; label: string }>;
+        setTrajectory(series);
+
         if (Object.keys(workbenchMetrics).length) {
           setNote(
             `Análise processada. Qualidade ${workbench.assessment.qualityScore ?? "--"}%. Revise métricas, anotações e valide o laudo.`,
@@ -164,56 +197,29 @@ export default function AnalysisScreen() {
       return;
     }
 
-    if (!patientId) {
-      Alert.alert("Erro", "Paciente não identificado.");
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const res = await biomechanicsApi.create({
-        patientId,
-        type: protocol,
-        analysisData: {
-          metrics: {
-            knee_rom: 118,
-            valgus: protocol === "DYNAMIC_VALGUS" ? 14 : 2,
-            symmetry: 84,
-            pelvic_drop: protocol === "TRENDELENBURG" ? 6 : 1,
-          },
-          patientName,
+    // Não existe caminho de "salvar análise" sem uma captura processada.
+    //
+    // Aqui havia um `biomechanicsApi.create()` que gravava métricas fixas
+    // (knee_rom 118, simetria 84, valgo 14) com `aiValidationStatus:
+    // "validated"` — dado inventado entrando já marcado como validado, por
+    // cima de todos os portões clínicos. Foi removido.
+    //
+    // Uma análise nasce da captura: vídeo + landmarks -> fila -> métricas
+    // calculadas -> conferência métrica a métrica -> validação.
+    Alert.alert(
+      "Captura necessária",
+      "Esta análise ainda não foi processada. Faça uma nova captura para gerar as métricas a partir do movimento do paciente.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Nova captura",
+          onPress: () =>
+            router.push(
+              `/biomecanica/capture?patientId=${patientId ?? ""}&patientName=${encodeURIComponent(patientName || "")}` as never,
+            ),
         },
-        symmetryScore: 84,
-        trajectoryData: MOCK_TRAJECTORY,
-        aiValidationStatus: "validated",
-        observations: note,
-        mediaUrl: uri,
-      });
-
-      if (res.data?.id) {
-        // Trigger Auto-Prescribe
-        const suggestRes = await fetchApi<any>("/api/clinical/prescriptions/suggest", {
-          method: "POST",
-          body: JSON.stringify({
-            assessmentId: res.data.id,
-            testType: protocol,
-          }),
-        });
-
-        if (suggestRes.success) {
-          setSuggestions(suggestRes.suggestions);
-          setBrainModalVisible(true);
-        } else {
-          router.push(
-            `/biomecanica/report?assessmentId=${res.data.id}&patientId=${patientId}&patientName=${encodeURIComponent(patientName || "")}`,
-          );
-        }
-      }
-    } catch (err: any) {
-      Alert.alert("Erro", "Falha ao salvar análise");
-    } finally {
-      setSaving(false);
-    }
+      ],
+    );
   };
 
 
@@ -480,7 +486,7 @@ export default function AnalysisScreen() {
         <View style={styles.controls}>
           <View style={styles.chartContainer}>
             <LineChart
-              data={MOCK_TRAJECTORY}
+              data={trajectory}
               width={SCREEN_WIDTH - 60}
               height={80}
               thickness={3}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Alert, View, Text, Pressable, StyleSheet, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -27,7 +27,8 @@ import {
 import { bio, font } from "@/constants/biomecanica";
 import { Camera, useCameraDevice, useCameraPermission } from "react-native-vision-camera";
 import * as ImagePicker from "expo-image-picker";
-import { biomechanicsApi } from "@/lib/api/biomechanics";
+import { useBiomechanicsCapture } from "@/hooks/useBiomechanicsCapture";
+import type { CaptureView } from "@fisioflow/core";
 
 const JOINTS: Record<string, [number, number]> = {
   nose: [50, 12],
@@ -77,6 +78,14 @@ const PROTOCOLS = [
 const VIEWS = ["Frontal", "Sagital", "Posterior"];
 const COLLAPSED = 300;
 
+/** Rótulo em PT-BR da UI -> plano canônico usado pelo pipeline. */
+function viewToPlane(label: string): CaptureView {
+  const v = label.toLowerCase();
+  if (v.startsWith("front")) return "frontal";
+  if (v.startsWith("poster")) return "posterior";
+  return "sagittal";
+}
+
 export default function CaptureScreen() {
   const router = useRouter();
   const { patientId, patientName, protocolId, protocolName } = useLocalSearchParams<{
@@ -98,81 +107,120 @@ export default function CaptureScreen() {
         .join("")
         .toUpperCase()
         .slice(0, 2)
-    : "CF";
-  const displayName = patientName || "Carla Ferreira";
+    : "--";
+  const displayName = patientName || "Selecione um paciente";
 
   const device = useCameraDevice("back");
   const { hasPermission, requestPermission } = useCameraPermission();
+  const cameraRef = useRef<Camera>(null);
+
+  const capture = useBiomechanicsCapture({
+    patientId,
+    protocolId,
+    view: viewToPlane(view),
+  });
 
   const ty = useSharedValue(COLLAPSED);
   const start = useSharedValue(COLLAPSED);
 
-  const handleToggleRecording = () => {
+  /**
+   * Grava de verdade.
+   *
+   * Antes este handler só invertia um booleano e navegava para a análise — o
+   * `<Camera>` nem tinha ref, então `startRecording` nunca era chamado e
+   * nenhum vídeo existia. A tela dava a impressão de ter capturado algo.
+   */
+  const handleToggleRecording = async () => {
+    if (!patientId) {
+      Alert.alert("Paciente não selecionado", "Escolha o paciente antes de iniciar a captura.");
+      return;
+    }
+
     if (recording) {
       setRecording(false);
-      const params = new URLSearchParams();
-      if (patientId) params.append("patientId", patientId);
-      if (patientName) params.append("patientName", patientName);
-      if (protocol) params.append("protocolName", protocol);
-      router.push(`/biomecanica/analysis?${params.toString()}`);
-    } else {
-      setRecording(true);
+      try {
+        await cameraRef.current?.stopRecording();
+      } catch (error) {
+        Alert.alert("Erro", error instanceof Error ? error.message : "Falha ao parar a gravação.");
+      }
+      return;
     }
+
+    if (!cameraRef.current) {
+      Alert.alert("Câmera indisponível", "Não foi possível acessar a câmera neste dispositivo.");
+      return;
+    }
+
+    setRecording(true);
+    capture.beginRecording();
+
+    cameraRef.current.startRecording({
+      fileType: "mp4",
+      onRecordingFinished: async (video) => {
+        try {
+          const result = await capture.finishCapture({
+            videoUri: video.path,
+            durationMs: Math.round((video.duration ?? 0) * 1000),
+            contentType: "video/mp4",
+          });
+          goToAnalysis(result.assessmentId, result.deferredToCloud);
+        } catch (error) {
+          Alert.alert(
+            "Falha ao enviar",
+            error instanceof Error ? error.message : "Não foi possível enviar a captura.",
+          );
+        }
+      },
+      onRecordingError: (error) => {
+        setRecording(false);
+        Alert.alert("Erro na gravação", error.message);
+      },
+    });
   };
 
+  const goToAnalysis = (assessmentId: string, deferred: boolean) => {
+    if (deferred) {
+      Alert.alert(
+        "Análise em nuvem",
+        "Não foi possível estimar a pose neste aparelho. O vídeo foi enviado e a análise será processada na nuvem.",
+      );
+    }
+    const params = new URLSearchParams({ assessmentId });
+    if (patientId) params.append("patientId", patientId);
+    if (patientName) params.append("patientName", patientName);
+    router.push(`/biomecanica/analysis?${params.toString()}` as never);
+  };
+
+  /** Vídeo da galeria segue exatamente o mesmo caminho da gravação. */
   const handlePickVideo = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
+    if (!patientId) {
+      Alert.alert("Paciente não selecionado", "Escolha o paciente antes de enviar um vídeo.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["videos"],
       allowsEditing: false,
       quality: 1,
     });
-    if (!result.canceled) {
-      console.log("Video selected:", result.assets[0].uri);
-      const params = new URLSearchParams();
-      params.append("uri", result.assets[0].uri);
-      if (patientId) params.append("patientId", patientId);
-      if (patientName) params.append("patientName", patientName);
-      if (patientId) {
-        try {
-          const capture = await biomechanicsApi.createCapture({
-            patientId,
-            protocolId,
-            view: view.toLowerCase() as any,
-            attempt: 1,
-            mediaType: "video",
-            contentType: result.assets[0].mimeType || "video/mp4",
-            durationMs: result.assets[0].duration
-              ? Math.round(result.assets[0].duration)
-              : undefined,
-            width: result.assets[0].width,
-            height: result.assets[0].height,
-            sizeBytes: result.assets[0].fileSize,
-            source: "professional-app-upload",
-            metadata: { localUri: result.assets[0].uri },
-          });
-          const assessmentId = capture.data.assessment.id;
-          const mediaId = capture.data.media.id;
-          await biomechanicsApi.completeMediaUpload(assessmentId, {
-            mediaId,
-            durationMs: result.assets[0].duration
-              ? Math.round(result.assets[0].duration)
-              : undefined,
-            width: result.assets[0].width,
-            height: result.assets[0].height,
-            sizeBytes: result.assets[0].fileSize,
-            qualityScore: 82,
-            metadata: { localUri: result.assets[0].uri, uploadMode: "local-library" },
-          });
-          await biomechanicsApi.process(assessmentId);
-          params.append("assessmentId", assessmentId);
-        } catch (error: any) {
-          Alert.alert(
-            "Processamento indisponível",
-            error?.message ?? "Abrindo análise local do vídeo.",
-          );
-        }
-      }
-      router.push(`/biomecanica/analysis?${params.toString()}`);
+    if (result.canceled) return;
+
+    const asset = result.assets[0];
+    try {
+      const captured = await capture.finishCapture({
+        videoUri: asset.uri,
+        durationMs: asset.duration ? Math.round(asset.duration) : undefined,
+        width: asset.width,
+        height: asset.height,
+        sizeBytes: asset.fileSize,
+        contentType: asset.mimeType || "video/mp4",
+      });
+      goToAnalysis(captured.assessmentId, captured.deferredToCloud);
+    } catch (error) {
+      Alert.alert(
+        "Falha ao enviar",
+        error instanceof Error ? error.message : "Não foi possível enviar o vídeo.",
+      );
     }
   };
 
@@ -204,6 +252,7 @@ export default function CaptureScreen() {
       <View style={styles.camera}>
         {device && hasPermission ? (
           <Camera
+            ref={cameraRef}
             style={StyleSheet.absoluteFill}
             device={device}
             isActive={!open} // pause camera when sheet is open

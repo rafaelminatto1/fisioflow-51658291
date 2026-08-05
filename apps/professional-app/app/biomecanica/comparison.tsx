@@ -31,59 +31,71 @@ type JL = {
   alert?: boolean;
 };
 
-const PANELS = {
-  antes: {
-    tag: "17 MAR",
-    tagTone: "before" as const,
-    pain: "Dor 6/10",
-    painTone: "high" as const,
-    tc: "00:04.21 / 00:11.40",
-    bg: "#181F2A",
-    stroke: "#94A3B8",
-    labels: [
-      { text: "Tronco 48°", tone: "warn", top: "34%", left: "8%", alert: true },
-      { text: "Joelho 78°", tone: "crit", top: "58%", left: "10%", alert: true },
-      { text: "Valgo +18°", tone: "warn", top: "62%", left: "58%" },
-      { text: "Tornozelo 18°", tone: "mute", top: "80%", left: "56%" },
-    ] as JL[],
-    readouts: [
-      { l: "ROM", v: "78°", tone: "crit" },
-      { l: "Tronco", v: "48°", tone: "warn" },
-      { l: "Valgo", v: "+18°", tone: "crit" },
-      { l: "Simet.", v: "71%", tone: "warn" },
-    ],
-  },
-  depois: {
-    tag: "02 JUN",
-    tagTone: "after" as const,
-    pain: "Dor 3/10",
-    painTone: "mid" as const,
-    tc: "00:04.21 / 00:10.05",
-    bg: "#0F1420",
-    stroke: "#CBD5E1",
-    labels: [
-      { text: "Tronco 32°", tone: "primary", top: "16%", left: "52%" },
-      { text: "Joelho 92°", tone: "ok", top: "60%", left: "8%" },
-      { text: "Valgo +14°", tone: "warn", top: "62%", left: "58%" },
-      { text: "Tornozelo 24°", tone: "ok", top: "80%", left: "58%" },
-    ] as JL[],
-    readouts: [
-      { l: "ROM", v: "118°", tone: "ok" },
-      { l: "Tronco", v: "32°", tone: "ok" },
-      { l: "Valgo", v: "+14°", tone: "warn" },
-      { l: "Simet.", v: "84%", tone: "ok" },
-    ],
-  },
+
+
+type PanelData = {
+  tag: string;
+  tagTone: "before" | "after";
+  pain: string;
+  painTone: "high" | "mid" | "low";
+  tc: string;
+  bg: string;
+  stroke: string;
+  labels: JL[];
+  readouts: Array<{ l: string; v: string; tone: string }>;
 };
 
-const VARIATION = [
-  { name: "ROM joelho", sub: "flexão", s03: "78°", s12: "118°", change: "+40°", up: true },
-  { name: "Tronco", sub: "menor = melhor", s03: "48°", s12: "32°", change: "−16°", up: true },
-  { name: "Valgo (D)", sub: "menor = melhor", s03: "+18°", s12: "+14°", change: "−4°", up: false },
-  { name: "Simetria L/R", sub: "carga", s03: "71%", s12: "84%", change: "+13", up: true },
-  { name: "Dorsiflexão (D)", sub: "tornozelo", s03: "18°", s12: "24°", change: "+6°", up: true },
-  { name: "Dor (VAS)", sub: "pico", s03: "6", s12: "3", change: "−3", up: true },
-];
+const PANEL_VAZIO: PanelData = {
+  tag: "--",
+  tagTone: "before",
+  pain: "Dor --",
+  painTone: "mid",
+  tc: "--:-- / --:--",
+  bg: "#181F2A",
+  stroke: "#94A3B8",
+  labels: [],
+  readouts: [],
+};
+
+/** Monta o painel a partir das métricas reais daquela ponta da comparação. */
+function buildPanel(
+  side: "antes" | "depois",
+  comparison: BiomechanicsComparison | null,
+): PanelData {
+  const ponta = side === "antes" ? comparison?.from : comparison?.to;
+  if (!ponta) return { ...PANEL_VAZIO, tagTone: side === "antes" ? "before" : "after" };
+
+  const valorDe = (chave: string): number | null => {
+    const metrica = comparison?.metrics?.find((m) => m.key === chave);
+    if (!metrica) return null;
+    const v = side === "antes" ? metrica.fromValue : metrica.toValue;
+    return typeof v === "number" ? v : null;
+  };
+
+  const fmt = (v: number | null, sufixo: string) => (v === null ? "--" : `${Math.round(v)}${sufixo}`);
+  const dor = valorDe("pain");
+
+  const readouts = [
+    { l: "ROM", v: fmt(valorDe("knee_rom"), "°"), tone: "mute" },
+    { l: "Tronco", v: fmt(valorDe("trunk_inclination"), "°"), tone: "mute" },
+    { l: "Valgo", v: fmt(valorDe("dynamic_valgus"), "°"), tone: "mute" },
+    { l: "Simet.", v: fmt(valorDe("symmetry"), "%"), tone: "mute" },
+  ].filter((r) => r.v !== "--");
+
+  return {
+    tag: new Date(ponta.date)
+      .toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })
+      .toUpperCase(),
+    tagTone: side === "antes" ? "before" : "after",
+    pain: dor === null ? "Dor --" : `Dor ${Math.round(dor)}/10`,
+    painTone: dor === null ? "mid" : dor >= 6 ? "high" : dor >= 3 ? "mid" : "low",
+    tc: "--:-- / --:--",
+    bg: side === "antes" ? "#181F2A" : "#0F1420",
+    stroke: side === "antes" ? "#94A3B8" : "#CBD5E1",
+    labels: [],
+    readouts,
+  };
+}
 
 const JL_BG: Record<JL["tone"], string> = {
   primary: bio.primary,
@@ -122,8 +134,16 @@ function formatMetricDelta(delta: number | null, unit: string) {
   return `${sign}${rounded}`;
 }
 
-function Panel({ which }: { which: "antes" | "depois" }) {
-  const p = PANELS[which];
+/**
+ * Painel de uma das pontas da comparação.
+ *
+ * Recebia um objeto fixo com "Tronco 48°", "Dor 6/10" e a data "17 MAR"
+ * renderizados SEMPRE, independentemente do paciente. Agora vem do endpoint
+ * de comparação; sem dado, o painel se assume vazio em vez de mostrar os
+ * números de outra pessoa.
+ */
+function Panel({ which, data }: { which: "antes" | "depois"; data: PanelData }) {
+  const p = data;
   return (
     <View>
       <View style={styles.vidHead}>
@@ -241,8 +261,13 @@ export default function ComparisonScreen() {
     };
   }, [fromAssessmentId, patientId, toAssessmentId, type]);
 
+  const panelAntes = useMemo(() => buildPanel("antes", comparison), [comparison]);
+  const panelDepois = useMemo(() => buildPanel("depois", comparison), [comparison]);
+
   const variation = useMemo(() => {
-    if (!comparison?.metrics?.length) return VARIATION;
+    // Sem comparação real, tabela vazia — a tela mostra o estado de "ainda
+    // não há duas avaliações para comparar".
+    if (!comparison?.metrics?.length) return [];
     return comparison.metrics.map((metric) => ({
       name: metric.label,
       sub: metric.lowerIsBetter ? "menor = melhor" : "maior = melhor",
@@ -378,23 +403,23 @@ export default function ComparisonScreen() {
           <View style={styles.ghostContainer}>
             {/* Base video (Before) with lower opacity */}
             <View style={[styles.ghostLayer, { opacity: tab === "antes" ? 1 : 0.4 }]}>
-              <Panel which="antes" />
+              <Panel which="antes" data={panelAntes} />
             </View>
             {/* Top video (After) */}
             <View
               style={[styles.ghostLayer, { opacity: tab === "depois" ? 1 : 0.6 }]}
               pointerEvents={tab === "depois" ? "auto" : "none"}
             >
-              <Panel which="depois" />
+              <Panel which="depois" data={panelDepois} />
             </View>
           </View>
         ) : (
           <View style={styles.sideBySideContainer}>
             <View style={styles.sidePanel}>
-              <Panel which="antes" />
+              <Panel which="antes" data={panelAntes} />
             </View>
             <View style={styles.sidePanel}>
-              <Panel which="depois" />
+              <Panel which="depois" data={panelDepois} />
             </View>
           </View>
         )}

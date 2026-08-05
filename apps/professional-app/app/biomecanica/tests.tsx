@@ -44,80 +44,6 @@ const REGION: Record<
   },
 };
 
-const TESTS = [
-  {
-    id: "squat",
-    name: "Agachamento",
-    region: "knee" as Region,
-    views: ["SAGITAL", "FRONTAL"],
-    desc: "ROM de flexão, valgo dinâmico e inclinação de tronco na descida.",
-    metrics: ["ROM joelho", "Valgo", "Tronco"],
-    meta: [
-      { icon: Clock, t: "~2 min" },
-      { icon: Repeat, t: "5 reps" },
-    ],
-  },
-  {
-    id: "gait",
-    name: "Análise de marcha",
-    region: "gait" as Region,
-    views: ["SAGITAL"],
-    desc: "Cadência, comprimento de passada, simetria e tempo de apoio.",
-    metrics: ["Cadência", "Simetria", "Fase apoio"],
-    meta: [
-      { icon: Clock, t: "~3 min" },
-      { icon: Ruler, t: "6 m" },
-    ],
-  },
-  {
-    id: "stepdown",
-    name: "Step-down",
-    region: "knee" as Region,
-    views: ["FRONTAL"],
-    desc: "Controle pélvico (Trendelenburg) e valgo em descida unipodal.",
-    metrics: ["Queda pélvica", "Valgo"],
-    meta: [
-      { icon: Clock, t: "~2 min" },
-      { icon: Repeat, t: "5 reps" },
-    ],
-  },
-  {
-    id: "cmj",
-    name: "Salto vertical (CMJ)",
-    region: "knee" as Region,
-    views: ["FRONTAL", "SAGITAL"],
-    desc: "Altura, simetria de impulsão e absorção na aterrissagem (LSI).",
-    metrics: ["Altura", "LSI", "Aterrissagem"],
-    meta: [
-      { icon: Clock, t: "~2 min" },
-      { icon: Repeat, t: "3 reps" },
-    ],
-  },
-  {
-    id: "shoulder",
-    name: "Elevação de ombro",
-    region: "shoulder" as Region,
-    views: ["FRONTAL"],
-    desc: "ROM de flexão/abdução glenoumeral e ritmo escapuloumeral.",
-    metrics: ["ROM ombro", "Ritmo escapular"],
-    meta: [
-      { icon: Clock, t: "~2 min" },
-      { icon: Repeat, t: "3 reps" },
-    ],
-  },
-  {
-    id: "posture",
-    name: "Avaliação postural",
-    region: "trunk" as Region,
-    views: ["FRONTAL", "SAGITAL"],
-    desc: "Alinhamento de cabeça, ombros, pelve e joelhos sobre o prumo.",
-    metrics: ["Alinhamento", "Assimetrias"],
-    meta: [
-      { icon: Clock, t: "~3 min" },
-      { icon: Camera, t: "foto" },
-    ],
-  },
-];
 
 const FILTERS = [
   { label: "Todos", dot: null },
@@ -219,7 +145,7 @@ export default function TestsScreen() {
           protocol,
         };
       })
-    : TESTS.map((test) => ({ ...test, protocol: null }));
+    : [];
 
   return (
     <View style={styles.root}>

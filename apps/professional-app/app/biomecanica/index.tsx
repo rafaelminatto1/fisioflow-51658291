@@ -6,95 +6,33 @@ import { Bell, Clock, Video, Users, ChevronRight } from "lucide-react-native";
 import { bio, font } from "@/constants/biomecanica";
 import { BioTabBar } from "@/components/biomecanica/BioTabBar";
 import { Silhouette } from "@/components/biomecanica/Silhouette";
+import { useAppointments } from "@/hooks/useAppointments";
 import {
   biomechanicsApi,
   type BiomechanicsAssessment,
   type BiomechanicsJob,
 } from "@/lib/api/biomechanics";
 
-const KPIS = [
-  {
-    icon: Clock,
-    bg: "hsl(28, 92%, 93%)",
-    fg: "hsl(25, 72%, 42%)",
-    v: "5",
-    l: "Análises pendentes",
-  },
-  { icon: Video, bg: "hsl(211, 100%, 93%)", fg: "hsl(211, 100%, 42%)", v: "8", l: "Capturas hoje" },
-  {
-    icon: Users,
-    bg: "hsl(142, 60%, 92%)",
-    fg: "hsl(142, 55%, 32%)",
-    v: "62",
-    l: "Pacientes ativos",
-  },
-];
 
-const PENDING = [
-  {
-    id: "1",
-    initials: "CF",
-    color: bio.avatarBlue,
-    name: "Carla Ferreira",
-    test: "Agachamento",
-    when: "hoje 14:30",
-  },
-  {
-    id: "2",
-    initials: "RS",
-    color: bio.avatarOrange,
-    name: "Rafael Souza",
-    test: "Marcha",
-    when: "hoje 11:05",
-  },
-  {
-    id: "3",
-    initials: "JP",
-    color: bio.avatarPink,
-    name: "Juliana Pires",
-    test: "Salto vertical",
-    when: "ontem",
-  },
-  {
-    id: "4",
-    initials: "LM",
-    color: bio.avatarGreen,
-    name: "Lucas Martins",
-    test: "Step-down",
-    when: "ontem",
-  },
-];
 
-const CAPTURES = [
-  { id: "1", tag: "AGACHAMENTO", name: "Carla Ferreira", when: "hoje 14:30", dur: "00:11" },
-  { id: "2", tag: "MARCHA", name: "Rafael Souza", when: "hoje 11:05", dur: "00:18" },
-  { id: "3", tag: "SALTO VERTICAL", name: "Juliana Pires", when: "ontem 16:20", dur: "00:07" },
-  { id: "4", tag: "STEP-DOWN", name: "Lucas Martins", when: "ontem 09:40", dur: "00:09" },
-];
 
-const AGENDA = [
-  {
-    time: "14:30",
-    name: "Carla Ferreira",
-    desc: "Reavaliação · agachamento + step-down",
-    chip: "EM 1H",
-    now: true,
-  },
-  {
-    time: "15:30",
-    name: "Marina Alves",
-    desc: "Avaliação inicial · marcha",
-    chip: "A SEGUIR",
-    now: false,
-  },
-  {
-    time: "17:00",
-    name: "Bruno Dias",
-    desc: "Controle · salto vertical",
-    chip: "A SEGUIR",
-    now: false,
-  },
-];
+
+const startOfToday = (() => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+})();
+const endOfToday = (() => {
+  const d = new Date();
+  d.setHours(23, 59, 59, 999);
+  return d;
+})();
+
+function formatDuration(durationMs?: number): string {
+  if (!durationMs || durationMs <= 0) return "--:--";
+  const total = Math.round(durationMs / 1000);
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
 
 function SectionHead({
   title,
@@ -145,9 +83,14 @@ export default function PainelScreen() {
     };
   }, []);
 
-  const kpis =
-    jobs.length || assessments.length
-      ? [
+  // Sem fallback de demonstração: zero revisões pendentes é uma informação
+  // verdadeira e útil; nomes fictícios de paciente na tela não são.
+  const { data: todayAppointments } = useAppointments({
+    startDate: startOfToday,
+    endDate: endOfToday,
+  });
+
+  const kpis = [
           {
             icon: Clock,
             bg: "hsl(28, 92%, 93%)",
@@ -169,11 +112,9 @@ export default function PainelScreen() {
             v: String(assessments.length),
             l: "Capturas recentes",
           },
-        ]
-      : KPIS;
+  ];
 
-  const pending = assessments.length
-    ? assessments
+  const pending = assessments
         .filter((assessment) =>
           ["needs_review", "queued", "processing"].includes(String(assessment.status)),
         )
@@ -185,8 +126,32 @@ export default function PainelScreen() {
           name: assessment.analysisData?.patientName ?? "Paciente",
           test: String(assessment.type).replace(/_/g, " "),
           when: new Date(assessment.createdAt).toLocaleDateString("pt-BR"),
-        }))
-    : PENDING;
+        }));
+
+  const captures = assessments.slice(0, 8).map((assessment) => ({
+    id: assessment.id,
+    tag: String(assessment.type).replace(/_/g, " ").toUpperCase(),
+    name: assessment.analysisData?.patientName ?? "Paciente",
+    when: new Date(assessment.createdAt).toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    dur: formatDuration(assessment.analysisData?.processing?.durationMs),
+  }));
+
+  const agenda = (todayAppointments ?? []).slice(0, 6).map((appointment: any) => {
+    const start = new Date(appointment.start_time ?? appointment.startTime ?? Date.now());
+    const minutesAway = Math.round((start.getTime() - Date.now()) / 60000);
+    return {
+      time: start.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+      name: appointment.patient_name ?? appointment.patientName ?? "Paciente",
+      desc: appointment.notes ?? appointment.type ?? "Atendimento",
+      chip: minutesAway <= 60 && minutesAway >= -15 ? "AGORA" : "A SEGUIR",
+      now: minutesAway <= 60 && minutesAway >= -15,
+    };
+  });
 
   return (
     <View style={styles.root}>
@@ -302,7 +267,14 @@ export default function PainelScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.capRail}
           >
-            {CAPTURES.map((c) => (
+            {captures.length === 0 ? (
+              <View style={styles.emptyRail}>
+                <Text style={styles.emptyText}>
+                  Nenhuma captura ainda. Toque em Nova captura para começar.
+                </Text>
+              </View>
+            ) : null}
+            {captures.map((c) => (
               <Pressable
                 key={c.id}
                 style={styles.cap}
@@ -340,10 +312,15 @@ export default function PainelScreen() {
             onPress={() => router.push("/(tabs)" as never)}
           />
           <View style={styles.agenda}>
-            {AGENDA.map((a, i) => (
+            {agenda.length === 0 ? (
+              <View style={styles.agRow}>
+                <Text style={styles.emptyText}>Nenhum atendimento agendado para hoje.</Text>
+              </View>
+            ) : null}
+            {agenda.map((a: (typeof agenda)[number], i: number) => (
               <View
                 key={a.time}
-                style={[styles.agRow, i < AGENDA.length - 1 && styles.agRowBorder]}
+                style={[styles.agRow, i < agenda.length - 1 && styles.agRowBorder]}
               >
                 <Text style={styles.agTime}>{a.time}</Text>
                 <View style={{ flex: 1, minWidth: 0 }}>
@@ -372,6 +349,17 @@ export default function PainelScreen() {
 }
 
 const styles = StyleSheet.create({
+  emptyRail: {
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    maxWidth: 280,
+  },
+  emptyText: {
+    fontFamily: font.medium,
+    fontSize: 13,
+    color: bio.muted,
+    lineHeight: 18,
+  },
   root: { flex: 1, backgroundColor: bio.bg },
   safe: { backgroundColor: bio.bg },
   header: {
