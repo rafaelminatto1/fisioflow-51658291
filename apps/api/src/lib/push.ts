@@ -1,6 +1,6 @@
 import type { Env } from "../types/env";
 
-interface PushPayload {
+export interface PushPayload {
   title: string;
   body: string;
   data?: Record<string, string>;
@@ -53,7 +53,51 @@ async function sendExpoPushBatch(messages: ExpoPushMessage[]): Promise<ExpoPushT
   return json.data ?? [];
 }
 
-export async function sendPushBatch(_env: Env, tokens: string[], payload: PushPayload) {
+/**
+ * Desativa tokens que o Expo reportou como mortos.
+ *
+ * Sem isto a tabela só cresce: aparelho trocado, app desinstalado ou permissão
+ * revogada continuam recebendo tentativa de envio para sempre, e cada lote
+ * volta com uma fatia de erros que ninguém lê. O ticket vem na mesma ordem dos
+ * tokens enviados, então dá para mapear um a um.
+ */
+async function deactivateDeadTokens(
+  pool: { query: (sql: string, params: unknown[]) => Promise<unknown> } | undefined,
+  tokens: string[],
+  tickets: ExpoPushTicket[],
+): Promise<number> {
+  if (!pool) return 0;
+
+  const mortos = tokens.filter((_, i) => {
+    const ticket = tickets[i];
+    return (
+      ticket?.status === "error" &&
+      (ticket.details?.error === "DeviceNotRegistered" ||
+        ticket.details?.error === "InvalidCredentials")
+    );
+  });
+
+  if (mortos.length === 0) return 0;
+
+  try {
+    await pool.query(
+      `UPDATE fcm_tokens SET active = false, updated_at = NOW() WHERE token = ANY($1::text[])`,
+      [mortos],
+    );
+    console.log(`[Push] ${mortos.length} token(s) desativado(s) por DeviceNotRegistered`);
+  } catch (error) {
+    console.error("[Push] falha ao desativar tokens mortos:", error);
+  }
+
+  return mortos.length;
+}
+
+export async function sendPushBatch(
+  _env: Env,
+  tokens: string[],
+  payload: PushPayload,
+  pool?: { query: (sql: string, params: unknown[]) => Promise<unknown> },
+) {
   if (!tokens || tokens.length === 0) return [];
 
   const expoTokens = tokens.filter(isExpoPushToken);
@@ -85,6 +129,7 @@ export async function sendPushBatch(_env: Env, tokens: string[], payload: PushPa
       const errors = tickets.filter((t) => t.status === "error");
       if (errors.length > 0) {
         console.warn(`[Push] ${errors.length}/${tickets.length} tickets with errors:`, errors);
+        await deactivateDeadTokens(pool, chunk, tickets);
       }
     } catch (err) {
       console.error("[Push] sendExpoPushBatch error:", err);
@@ -106,7 +151,7 @@ export async function notifyOrganization(
       [organizationId],
     );
     const tokens = (result.rows || []).map((r: any) => r.token as string);
-    if (tokens.length > 0) return sendPushBatch(env, tokens, payload);
+    if (tokens.length > 0) return sendPushBatch(env, tokens, payload, pool);
   } catch (error) {
     console.error("[NotifyOrg] Error fetching tokens:", error);
   }
@@ -119,7 +164,7 @@ export async function notifyUser(env: Env, pool: any, userId: string, payload: P
       [userId],
     );
     const tokens = (result.rows || []).map((r: any) => r.token as string);
-    if (tokens.length > 0) return sendPushBatch(env, tokens, payload);
+    if (tokens.length > 0) return sendPushBatch(env, tokens, payload, pool);
   } catch (error) {
     console.error("[NotifyUser] Error fetching tokens:", error);
   }

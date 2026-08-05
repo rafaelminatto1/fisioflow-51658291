@@ -10,6 +10,7 @@ import { createPool } from "../lib/db";
 import { resolveOrCreateContact, linkContactToPatient } from "../lib/whatsapp-identity";
 import { findOrCreateConversation, addMessage } from "../lib/whatsapp-conversations";
 import { broadcastToOrg } from "../lib/realtime";
+import { notifyInboxMessage } from "../lib/whatsapp/inboxPush";
 import { writeEvent } from "../lib/analytics";
 import {
   AIConciergeService,
@@ -180,7 +181,24 @@ export async function handleWhatsAppInboundQueue(
           .run();
       }
 
-      // 8. Broadcast to frontend via Durable Object
+      // 8. Push para o profissional. O broadcast abaixo só alcança quem está
+      // com o app aberto; sem push, mensagem recebida fora do horário de tela
+      // só é descoberta por acaso.
+      try {
+        await notifyInboxMessage(env, pool, {
+          organizationId: orgId,
+          conversationId: conversation.id,
+          contactName: contact.display_name || msg.from,
+          preview: content,
+          messageType: msg.messageType,
+        });
+      } catch (pushError) {
+        // Push é acessório: falhar aqui não pode derrubar a ingestão da
+        // mensagem, que é o dado real.
+        console.error("[WhatsAppInbound] push do inbox falhou:", pushError);
+      }
+
+      // 9. Broadcast to frontend via Durable Object
       await broadcastToOrg(env, orgId, {
         type: "whatsapp_new_message",
         conversationId: conversation.id,
