@@ -1,50 +1,54 @@
-export const Colors = {
+/**
+ * Cores da aplicação.
+ *
+ * Reexporta `constants/theme.ts`, a única tradução do `colors_and_type.css`
+ * do design system. Este arquivo mantinha uma segunda paleta escrita à mão que
+ * já divergia da de `constants/biomecanica.ts` — o azul batia, os cinzas não.
+ *
+ * O formato `Colors.light` / `Colors.dark` foi preservado porque dezenas de
+ * telas dependem dele.
+ */
+
+import { palette, paletteDark } from "./theme";
+
+/**
+ * Valores como `string`, não literais.
+ *
+ * O `as const` do theme deixa cada cor com tipo literal, e aí `Colors.light` e
+ * `Colors.dark` deixam de ser intercambiáveis — qualquer tela que escolhe a
+ * paleta por tema em runtime para de compilar.
+ */
+export type ColorTokens = Record<keyof typeof palette | ColorAlias, string>;
+
+type ColorAlias =
+  | "secondary"
+  | "errorLight"
+  | "successLight"
+  | "warningLight"
+  | "infoLight"
+  | "borderDark";
+
+export const Colors: { light: ColorTokens; dark: ColorTokens } = {
   light: {
-    primary: "#0080FF",
-    primaryDark: "#0066CC",
-    primaryLight: "#4DA6FF",
-    secondary: "#0D9488",
-    background: "#F7F9FB",
-    card: "#FFFFFF",
-    surface: "#F9FAFB",
-    surfaceHover: "#F3F4F6",
-    text: "#0B1220",
-    textSecondary: "#6B7280",
-    textMuted: "#9CA3AF",
-    border: "#E5E7EB",
-    borderDark: "#D1D5DB",
-    error: "#EF4444",
-    errorLight: "#FEE2E2",
-    success: "#10B981",
-    successLight: "#D1FAE5",
-    warning: "#F59E0B",
-    warningLight: "#FEF3C7",
-    info: "#3B82F6",
-    infoLight: "#DBEAFE",
+    ...palette,
+    // aliases históricos, mantidos para não quebrar as telas existentes
+    secondary: palette.accentDark,
+    errorLight: palette.errorSoft,
+    successLight: palette.successSoft,
+    warningLight: palette.warningSoft,
+    infoLight: palette.infoSoft,
+    borderDark: palette.borderStrong,
   },
   dark: {
-    primary: "#0080FF",
-    primaryDark: "#0066CC",
-    primaryLight: "#4DA6FF",
-    secondary: "#14B8A6",
-    background: "#0B1220",
-    card: "#111A2B",
-    surface: "#1F2937",
-    surfaceHover: "#374151",
-    text: "#F9FAFB",
-    textSecondary: "#D1D5DB",
-    textMuted: "#9CA3AF",
-    border: "#374151",
-    borderDark: "#4B5563",
-    error: "#F87171",
-    errorLight: "#7F1D1D",
-    success: "#34D399",
-    successLight: "#064E3B",
-    warning: "#FBBF24",
-    warningLight: "#78350F",
-    info: "#60A5FA",
-    infoLight: "#1E3A8A",
+    ...paletteDark,
+    secondary: paletteDark.accentDark,
+    errorLight: paletteDark.errorSoft,
+    successLight: paletteDark.successSoft,
+    warningLight: paletteDark.warningSoft,
+    infoLight: paletteDark.infoSoft,
+    borderDark: paletteDark.borderStrong,
   },
 };
 
 export type ColorScheme = "light" | "dark";
+

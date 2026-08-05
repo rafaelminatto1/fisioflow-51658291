@@ -1,16 +1,20 @@
 /**
- * Tema do módulo de Biomecânica (FisioFlow Pro mobile).
- * Recriação dos tokens do FisioFlow Design System para React Native:
- * fonte Nunito + paleta de domínio (azul Activity, dor, status, regiões).
+ * Tema do módulo de Biomecânica.
+ *
+ * As cores base vêm de `constants/theme.ts`, a única tradução do
+ * `colors_and_type.css` do design system. Este arquivo mantém só o que é
+ * específico do módulo (tons por região corporal) e os nomes de export que as
+ * telas já usam.
+ *
+ * Antes daqui e de `constants/colors.ts` serem duas paletas paralelas — e elas
+ * já divergiam: o azul batia, os cinzas não.
  */
 
-export const font = {
-  regular: "Nunito-Regular",
-  medium: "Nunito-Medium",
-  semibold: "Nunito-SemiBold",
-  bold: "Nunito-Bold",
-  extrabold: "Nunito-ExtraBold",
-} as const;
+import { fontFamily, media, painColor, palette, radius, spacing } from "./theme";
+
+export { painColor, radius, spacing };
+
+export const font = fontFamily;
 
 /** Mapa para expo-font useFonts() */
 export const nunitoFonts = {
@@ -23,21 +27,21 @@ export const nunitoFonts = {
 
 /** Paleta de domínio — espelha as cores HSL do design system. */
 export const bio = {
-  // superfícies
-  bg: "#F7F9FB",
-  card: "#FFFFFF",
-  border: "#E6E9EE",
-  borderSoft: "#EDF0F4",
-  fg: "#0B1220",
-  muted: "#6B7280",
-  mutedSoft: "#9AA3AF",
+  // superfícies — do theme
+  bg: palette.background,
+  card: palette.card,
+  border: palette.border,
+  borderSoft: palette.borderSoft,
+  fg: palette.text,
+  muted: palette.textSecondary,
+  mutedSoft: palette.textMuted,
 
-  // brand
-  primary: "#0080FF",
-  primaryDark: "#0066CC",
-  primarySoft: "hsl(211, 100%, 93%)",
-  primaryText: "hsl(211, 100%, 42%)",
-  primaryTint: "hsl(211, 100%, 96%)",
+  // brand — do theme
+  primary: palette.primary,
+  primaryDark: palette.primaryDark,
+  primarySoft: palette.primarySoft,
+  primaryText: palette.primaryText,
+  primaryTint: palette.primaryTint,
 
   // status / domínio
   amberBg: "hsl(28, 92%, 93%)",
@@ -49,10 +53,10 @@ export const bio = {
   red: "hsl(0, 72%, 50%)",
   amber: "hsl(28, 90%, 52%)",
 
-  // câmera / vídeo (fundos escuros)
-  cameraBg: "#0E1320",
-  videoBg: "#0F1420",
-  silhouette: "#94A3B8",
+  // câmera / vídeo — do theme
+  cameraBg: media.cameraBg,
+  videoBg: media.videoBg,
+  silhouette: media.silhouette,
 
   // avatares (cores sólidas por inicial)
   avatarBlue: "hsl(211, 100%, 50%)",
@@ -83,20 +87,12 @@ export const bio = {
   cDorText: "hsl(0, 74%, 40%)",
 } as const;
 
-/** Escala de dor (VAS 0–10) do design system. */
-export const painScale = [
-  "#9ca3af",
-  "#bef264",
-  "#bef264",
-  "#fde047",
-  "#fde047",
-  "#fdba74",
-  "#fdba74",
-  "#f87171",
-  "#f87171",
-  "#ef4444",
-  "#7f1d1d",
-];
+/**
+ * Escala de dor indexada pela nota (0–10).
+ * Derivada de `painColor()` para não existir uma segunda definição: a mesma
+ * nota tem que ter a mesma cor na agenda, na evolução e no laudo.
+ */
+export const painScale = Array.from({ length: 11 }, (_, nota) => painColor(nota));
 
 /** Sombras padronizadas do Design System Handoff */
 export const shadows = {
