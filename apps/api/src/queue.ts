@@ -17,6 +17,13 @@ import { resolveOrCreateContact } from "./lib/whatsapp-identity";
 import { findOrCreateConversation, addMessage } from "./lib/whatsapp-conversations";
 import { broadcastToOrg } from "./lib/realtime";
 import { syncNoteToSemanticIndex } from "./lib/notesIndexing";
+import {
+  computeAssessmentMetrics,
+  decodePoseBundle,
+  KINEMATICS_VERSION,
+  type BundleHeader,
+  type LandmarkFrame,
+} from "@fisioflow/core";
 
 export type WhatsAppQueuePayload = {
   to: string;
@@ -80,6 +87,8 @@ export type BiomechanicsProcessPayload = {
   mediaId?: string;
   organizationId: string;
   patientId: string;
+  /** 'device' = landmarks do aparelho; 'container' = reprocessamento em nuvem. */
+  phase?: "device" | "container";
 };
 
 type GenerateNFSePayload = {
@@ -568,179 +577,39 @@ async function processExamUpload(payload: ExamProcessPayload, env: Env): Promise
 
 // ===== BIOMECHANICS MEDIA PROCESSING =====
 
-function deterministicBiomechanicsMetrics(type: string) {
-  if (type === "running_analysis") {
-    return [
-      {
-        key: "cadence",
-        value: 168,
-        unit: "spm",
-        phase: "steady_state",
-        confidence: 0.84,
-        severity: "normal",
-      },
-      {
-        key: "contact_time",
-        value: 248,
-        unit: "ms",
-        phase: "stance",
-        confidence: 0.78,
-        severity: "watch",
-      },
-      {
-        key: "trunk_inclination",
-        value: 9,
-        unit: "deg",
-        phase: "mid_stance",
-        confidence: 0.82,
-        severity: "normal",
-      },
-      {
-        key: "dynamic_valgus",
-        value: 12,
-        unit: "deg",
-        phase: "loading",
-        confidence: 0.76,
-        severity: "watch",
-      },
-      {
-        key: "symmetry",
-        value: 86,
-        unit: "%",
-        phase: "global",
-        confidence: 0.81,
-        severity: "normal",
-      },
-    ];
-  }
-  if (type === "gait_analysis") {
-    return [
-      {
-        key: "cadence",
-        value: 104,
-        unit: "spm",
-        phase: "global",
-        confidence: 0.86,
-        severity: "normal",
-      },
-      {
-        key: "stance_time",
-        value: 642,
-        unit: "ms",
-        phase: "stance",
-        confidence: 0.8,
-        severity: "normal",
-      },
-      {
-        key: "step_symmetry",
-        value: 88,
-        unit: "%",
-        phase: "global",
-        confidence: 0.82,
-        severity: "normal",
-      },
-      {
-        key: "pelvic_drop",
-        value: 5,
-        unit: "deg",
-        phase: "mid_stance",
-        confidence: 0.77,
-        severity: "watch",
-      },
-    ];
-  }
-  if (type === "static_posture") {
-    return [
-      {
-        key: "head_alignment",
-        value: 4,
-        unit: "deg",
-        phase: "static",
-        confidence: 0.83,
-        severity: "normal",
-      },
-      {
-        key: "shoulder_asymmetry",
-        value: 6,
-        unit: "deg",
-        phase: "static",
-        confidence: 0.79,
-        severity: "watch",
-      },
-      {
-        key: "pelvic_tilt",
-        value: 3,
-        unit: "deg",
-        phase: "static",
-        confidence: 0.8,
-        severity: "normal",
-      },
-      {
-        key: "knee_alignment",
-        value: 2,
-        unit: "deg",
-        phase: "static",
-        confidence: 0.78,
-        severity: "normal",
-      },
-    ];
-  }
-  return [
-    {
-      key: "knee_rom",
-      value: 118,
-      unit: "deg",
-      phase: "peak_flexion",
-      confidence: 0.84,
-      severity: "normal",
-    },
-    {
-      key: "dynamic_valgus",
-      value: 14,
-      unit: "deg",
-      phase: "loading",
-      confidence: 0.79,
-      severity: "watch",
-    },
-    {
-      key: "trunk_inclination",
-      value: 32,
-      unit: "deg",
-      phase: "descent",
-      confidence: 0.82,
-      severity: "normal",
-    },
-    {
-      key: "pelvic_drop",
-      value: 6,
-      unit: "deg",
-      phase: "single_leg",
-      confidence: 0.76,
-      severity: "watch",
-    },
-    { key: "symmetry", value: 84, unit: "%", phase: "global", confidence: 0.81, severity: "watch" },
-  ];
-}
-
+/**
+ * Processa uma captura biomecânica a partir dos landmarks REAIS enviados pelo
+ * aparelho (ou, na fase 2, extraídos do vídeo por um Container).
+ *
+ * Antes, esta função chamava `deterministicBiomechanicsMetrics()`, que devolvia
+ * números fixos por tipo de avaliação — cadência 168, valgo 12, simetria 86 —
+ * independentemente do vídeo. Aquilo alimentava um laudo assinado com CREFITO.
+ * A função foi apagada; o teste `noSyntheticMetrics.test.ts` impede que volte.
+ *
+ * Sem bundle de landmarks NÃO há métrica: o job falha com
+ * `missing_landmarks` e a avaliação vai para `awaiting_landmarks`. Nenhuma
+ * linha é escrita. Não produzir número é o comportamento correto quando não há
+ * insumo.
+ */
 async function processBiomechanicsMedia(
   payload: BiomechanicsProcessPayload,
   env: Env,
 ): Promise<void> {
   const pool = await createPoolForOrg(env, payload.organizationId);
-  const algorithmVersion = "bio-pipeline-1.0.0";
+  const algorithmVersion = KINEMATICS_VERSION;
 
   console.log(`[Queue/Biomechanics] Processing job ${payload.jobId}`);
 
   await pool.query(
     `UPDATE biomechanics_jobs
-       SET status = 'running', stage = 'pose_detection', progress = 25,
+       SET status = 'running', stage = 'fetch_landmarks', progress = 10,
            started_at = COALESCE(started_at, NOW()), updated_at = NOW()
      WHERE id = $1 AND organization_id = $2`,
     [payload.jobId, payload.organizationId],
   );
 
   const assessmentResult = await pool.query(
-    `SELECT id, patient_id, type, primary_media_id, analysis_data
+    `SELECT id, patient_id, type, primary_media_id, analysis_data, protocol_id
        FROM biomechanics_assessments
       WHERE id = $1 AND organization_id = $2`,
     [payload.assessmentId, payload.organizationId],
@@ -751,131 +620,260 @@ async function processBiomechanicsMedia(
   }
 
   const mediaId = payload.mediaId ?? assessment.primary_media_id ?? null;
-  const metrics = deterministicBiomechanicsMetrics(String(assessment.type));
-  const symmetry = metrics.find((metric) => metric.key === "symmetry")?.value ?? 84;
-  const qualityScore = Math.round(
-    (metrics.reduce((sum, metric) => sum + metric.confidence, 0) / metrics.length) * 100,
+
+  const mediaResult = await pool.query(
+    `SELECT id, landmarks_r2_key, landmarks_sha256, landmarks_schema, fps, view,
+            attempt, pose_engine, coordinate_space, frame_count, duration_ms
+       FROM biomechanics_media
+      WHERE id = $1 AND organization_id = $2`,
+    [mediaId, payload.organizationId],
   );
+  const media = mediaResult.rows[0];
+
+  if (!media?.landmarks_r2_key) {
+    await failJob(
+      pool,
+      payload,
+      "missing_landmarks",
+      "A captura não tem bundle de landmarks. Envie os landmarks do aparelho ou solicite o reprocessamento em nuvem.",
+      "awaiting_landmarks",
+    );
+    return;
+  }
+
+  // ── ler e verificar o bundle ──────────────────────────────────────────────
+  const object = await env.MEDIA_BUCKET.get(media.landmarks_r2_key as string);
+  if (!object) {
+    await failJob(
+      pool,
+      payload,
+      "landmarks_object_missing",
+      `Bundle não encontrado no R2: ${media.landmarks_r2_key}`,
+    );
+    return;
+  }
+
+  const rawBytes = new Uint8Array(await object.arrayBuffer());
+  const digest = await sha256Hex(rawBytes);
+
+  if (media.landmarks_sha256 && digest !== media.landmarks_sha256) {
+    // Falha explícita em vez de seguir com dado possivelmente corrompido: um
+    // laudo tirado de bundle truncado é indistinguível de um laudo válido.
+    await failJob(
+      pool,
+      payload,
+      "landmarks_digest_mismatch",
+      "O bundle de landmarks no R2 não confere com o hash registrado.",
+    );
+    return;
+  }
+
+  let bundle: { header: BundleHeader; frames: LandmarkFrame[] };
+  try {
+    bundle = await decodePoseBundle(rawBytes);
+  } catch (error) {
+    await failJob(
+      pool,
+      payload,
+      "landmarks_decode_failed",
+      error instanceof Error ? error.message : "Bundle de landmarks ilegível.",
+    );
+    return;
+  }
+
+  if (bundle.frames.length === 0) {
+    await failJob(pool, payload, "landmarks_empty", "O bundle não contém frames.");
+    return;
+  }
 
   await pool.query(
     `UPDATE biomechanics_jobs
-       SET stage = 'metric_calculation', progress = 70, updated_at = NOW()
+       SET stage = 'metric_calculation', progress = 60, updated_at = NOW()
      WHERE id = $1 AND organization_id = $2`,
     [payload.jobId, payload.organizationId],
   );
 
+  // ── protocolo (define quais métricas o exame pede) ────────────────────────
+  let protocol: { slug?: string; metricDefinitions?: Array<{ key: string }> } | null = null;
+  if (assessment.protocol_id) {
+    const protocolResult = await pool.query(
+      `SELECT slug, metric_definitions FROM biomechanics_protocols WHERE id = $1`,
+      [assessment.protocol_id],
+    );
+    const row = protocolResult.rows[0];
+    if (row) {
+      protocol = {
+        slug: row.slug,
+        metricDefinitions: Array.isArray(row.metric_definitions) ? row.metric_definitions : [],
+      };
+    }
+  }
+
+  const phase = (payload.phase ?? "device") as "device" | "container";
+  const provenance = phase === "container" ? "container_pose" : "device_pose";
+
+  const result = computeAssessmentMetrics({
+    header: bundle.header,
+    frames: bundle.frames,
+    protocol,
+    provenance,
+    algorithmVersion,
+  });
+
+  const poseEngine =
+    (media.pose_engine as string | null) ??
+    `${bundle.header.poseEngine?.name ?? "unknown"}@${bundle.header.poseEngine?.version ?? "0"}`;
+
+  // ── persistência ──────────────────────────────────────────────────────────
+  // Supersessão em vez de DELETE: a linha antiga continua consultável para
+  // responder "por que o número mudou?" meses depois.
   await pool.query(
-    `DELETE FROM biomechanics_metrics
-      WHERE assessment_id = $1 AND organization_id = $2 AND source = 'algorithm'`,
+    `UPDATE biomechanics_metrics
+        SET superseded_at = NOW()
+      WHERE assessment_id = $1 AND organization_id = $2
+        AND superseded_at IS NULL
+        AND provenance IN ('device_pose','container_pose','synthetic_demo')`,
     [payload.assessmentId, payload.organizationId],
   );
 
-  for (const metric of metrics) {
+  for (const metric of result.metrics) {
     await pool.query(
       `INSERT INTO biomechanics_metrics (
          assessment_id, organization_id, patient_id, metric_key, metric_value, unit,
-         phase, confidence, source, severity, algorithm_version, created_at
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'algorithm',$9,$10,NOW())`,
+         side, phase, view, confidence, source, severity, algorithm_version,
+         provenance, pose_engine, job_id, media_id, attempt, sample_count,
+         computed_at, created_at
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'algorithm',$11,$12,$13,$14,$15,$16,$17,$18,NOW(),NOW())`,
       [
         payload.assessmentId,
         payload.organizationId,
         payload.patientId,
-        metric.key,
-        metric.value,
+        metric.metricKey,
+        metric.metricValue,
         metric.unit,
-        metric.phase,
+        metric.side ?? null,
+        metric.phase ?? null,
+        metric.view,
         metric.confidence,
-        metric.severity,
+        metric.severity ?? null,
         algorithmVersion,
+        metric.provenance,
+        poseEngine,
+        payload.jobId,
+        mediaId,
+        bundle.header.attempt ?? 1,
+        metric.sampleCount,
       ],
     );
   }
 
   await pool.query(
-    `DELETE FROM biomechanics_events
-      WHERE assessment_id = $1 AND organization_id = $2`,
+    `UPDATE biomechanics_events
+        SET superseded_at = NOW()
+      WHERE assessment_id = $1 AND organization_id = $2 AND superseded_at IS NULL`,
     [payload.assessmentId, payload.organizationId],
   );
 
-  const events = [
-    { type: "capture_start", timeMs: 0, frameIndex: 0, confidence: 0.95 },
-    { type: "peak_flexion", timeMs: 2100, frameIndex: 126, confidence: 0.82 },
-    { type: "return_to_neutral", timeMs: 4200, frameIndex: 252, confidence: 0.8 },
-  ];
-  for (const event of events) {
+  for (const event of result.events) {
     await pool.query(
       `INSERT INTO biomechanics_events (
          organization_id, assessment_id, media_id, event_type, time_ms, frame_index,
-         confidence, metadata, created_at
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW())`,
+         confidence, metadata, provenance, job_id, created_at
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW())`,
       [
         payload.organizationId,
         payload.assessmentId,
         mediaId,
-        event.type,
+        event.eventType,
         event.timeMs,
         event.frameIndex,
         event.confidence,
-        JSON.stringify({ generatedBy: algorithmVersion }),
+        JSON.stringify(event.metadata ?? {}),
+        provenance,
+        payload.jobId,
       ],
     );
   }
 
   await pool.query(
     `DELETE FROM biomechanics_frames
-      WHERE assessment_id = $1 AND organization_id = $2`,
-    [payload.assessmentId, payload.organizationId],
+      WHERE assessment_id = $1 AND organization_id = $2 AND media_id IS NOT DISTINCT FROM $3`,
+    [payload.assessmentId, payload.organizationId, mediaId],
   );
 
-  for (let i = 0; i < 5; i += 1) {
+  for (const keyframe of result.keyframes) {
     await pool.query(
       `INSERT INTO biomechanics_frames (
          organization_id, assessment_id, media_id, frame_index, time_ms,
-         landmarks, confidence, events, created_at
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW())`,
+         landmarks, confidence, events, provenance, attempt, view, created_at
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW())`,
       [
         payload.organizationId,
         payload.assessmentId,
         mediaId,
-        i * 60,
-        i * 1000,
-        JSON.stringify([
-          { name: "hip", x: 0.48 + i * 0.01, y: 0.42, confidence: 0.84 },
-          { name: "knee", x: 0.5 + i * 0.01, y: 0.62, confidence: 0.82 },
-          { name: "ankle", x: 0.52 + i * 0.005, y: 0.84, confidence: 0.8 },
-        ]),
-        0.82,
-        JSON.stringify(i === 2 ? [{ type: "peak_flexion" }] : []),
+        keyframe.frameIndex,
+        keyframe.timeMs,
+        JSON.stringify(keyframe.landmarks),
+        keyframe.confidence,
+        JSON.stringify([]),
+        provenance,
+        keyframe.attempt,
+        keyframe.view,
       ],
     );
   }
+
+  // `symmetry_score` fica NULL quando a simetria não foi mensurável. Antes o
+  // código fazia `?? 84`, inventando um número para preencher a coluna.
+  const symmetryMetric = result.metrics.find((m) => m.metricKey === "symmetry");
+  const symmetry = symmetryMetric ? symmetryMetric.metricValue : null;
 
   const previousAnalysisData =
     assessment.analysis_data && typeof assessment.analysis_data === "object"
       ? assessment.analysis_data
       : {};
+
+  // Sem métrica alguma a avaliação não vai para revisão: não há o que revisar.
+  const nextStatus = result.metrics.length > 0 ? "needs_review" : "failed";
+
   await pool.query(
     `UPDATE biomechanics_assessments
-       SET status = 'needs_review',
-           symmetry_score = $1,
-           quality_score = $2,
-           ai_validation_status = 'ready_for_review',
-           algorithm_version = $3,
-           analysis_data = $4,
+       SET status = $1,
+           symmetry_score = $2,
+           quality_score = $3,
+           ai_validation_status = $4,
+           algorithm_version = $5,
+           pose_provenance = $6,
+           analysis_data = $7,
            updated_at = NOW()
-     WHERE id = $5 AND organization_id = $6`,
+     WHERE id = $8 AND organization_id = $9`,
     [
+      nextStatus,
       symmetry,
-      qualityScore,
+      result.quality.score,
+      result.metrics.length > 0 ? "ready_for_review" : "no_measurable_metrics",
       algorithmVersion,
+      provenance,
       JSON.stringify({
         ...previousAnalysisData,
-        metrics: Object.fromEntries(metrics.map((metric) => [metric.key, metric.value])),
+        metrics: Object.fromEntries(
+          result.metrics.map((m) => [
+            m.side && m.side !== "bilateral" ? `${m.metricKey}_${m.side}` : m.metricKey,
+            m.metricValue,
+          ]),
+        ),
+        // As rejeições viajam junto de propósito: a tela mostra "não mensurável
+        // nesta captura" com o motivo, em vez de um campo vazio inexplicado.
+        rejected: result.rejected,
+        quality: result.quality,
         processing: {
           jobId: payload.jobId,
-          completedAt: new Date().toISOString(),
           algorithmVersion,
-          qualityScore,
+          provenance,
+          poseEngine,
+          frameCount: bundle.frames.length,
+          view: bundle.header.view,
+          attempt: bundle.header.attempt,
         },
       }),
       payload.assessmentId,
@@ -885,10 +883,18 @@ async function processBiomechanicsMedia(
 
   await pool.query(
     `UPDATE biomechanics_jobs
-       SET status = 'completed', stage = 'ready_for_review', progress = 100,
+       SET status = $1, stage = $2, progress = 100,
+           model_provider = 'fisioflow', model_name = $3, algorithm_version = $4,
            completed_at = NOW(), updated_at = NOW()
-     WHERE id = $1 AND organization_id = $2`,
-    [payload.jobId, payload.organizationId],
+     WHERE id = $5 AND organization_id = $6`,
+    [
+      result.metrics.length > 0 ? "completed" : "failed",
+      result.metrics.length > 0 ? "ready_for_review" : "no_measurable_metrics",
+      poseEngine,
+      algorithmVersion,
+      payload.jobId,
+      payload.organizationId,
+    ],
   );
 
   writeEvent(env, {
@@ -896,9 +902,43 @@ async function processBiomechanicsMedia(
     orgId: payload.organizationId,
     route: "/queue/biomechanics",
     method: "QUEUE",
-    status: 200,
-    value: qualityScore,
+    status: result.metrics.length > 0 ? 200 : 422,
+    value: result.quality.score,
   });
+}
+
+async function failJob(
+  pool: { query: (sql: string, params: unknown[]) => Promise<unknown> },
+  payload: BiomechanicsProcessPayload,
+  errorCode: string,
+  errorMessage: string,
+  assessmentStatus?: string,
+): Promise<void> {
+  await pool.query(
+    `UPDATE biomechanics_jobs
+       SET status = 'failed', stage = 'failed', error_code = $1, error_message = $2,
+           completed_at = NOW(), updated_at = NOW()
+     WHERE id = $3 AND organization_id = $4`,
+    [errorCode, errorMessage, payload.jobId, payload.organizationId],
+  );
+
+  if (assessmentStatus) {
+    await pool.query(
+      `UPDATE biomechanics_assessments
+         SET status = $1, updated_at = NOW()
+       WHERE id = $2 AND organization_id = $3`,
+      [assessmentStatus, payload.assessmentId, payload.organizationId],
+    );
+  }
+
+  console.warn(`[Queue/Biomechanics] job ${payload.jobId} falhou: ${errorCode} — ${errorMessage}`);
+}
+
+async function sha256Hex(bytes: Uint8Array): Promise<string> {
+  const buffer = await crypto.subtle.digest("SHA-256", bytes as unknown as ArrayBuffer);
+  return Array.from(new Uint8Array(buffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 // ===== TTS: TEXT-TO-SPEECH PARA EXERCÍCIOS =====

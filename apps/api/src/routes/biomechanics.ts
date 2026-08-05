@@ -13,6 +13,7 @@ import {
   biomechanicsMetrics,
   biomechanicsProtocols,
   biomechanicsReviewActions,
+  isClinicalGrade,
   patients,
 } from "@fisioflow/db";
 import type { Env } from "../types/env";
@@ -198,6 +199,25 @@ async function sha256Hex(value: string) {
   return Array.from(new Uint8Array(digest))
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
+}
+
+/**
+ * Hash do CONTEÚDO CLÍNICO do laudo, usado por `/sign` e por `/verify`.
+ *
+ * Antes, `/sign` hasheava `analysisData` inteiro — incluindo `_pdf` — e
+ * `/verify` re-hasheava removendo só `_signature`. Consequência: regerar o PDF
+ * de um laudo legitimamente assinado mudava `_pdf`, o hash deixava de bater e
+ * a verificação marcava o documento como adulterado. Os dois lados precisam
+ * excluir exatamente o mesmo conjunto, e `_pdf` é artefato de renderização,
+ * não conteúdo clínico.
+ *
+ * `stableStringify` garante ordem de chaves determinística — sem isso o mesmo
+ * conteúdo produziria hashes diferentes conforme a ordem de serialização.
+ */
+async function reportContentHash(analysisData: unknown): Promise<string> {
+  const data = safeJson(analysisData);
+  const { _pdf: _ignoredPdf, _signature: _ignoredSignature, ...clinical } = data;
+  return sha256Hex(stableStringify(clinical));
 }
 
 function escapeHtml(value: unknown) {
@@ -829,6 +849,33 @@ app.post("/:id/process", requireAuth, async (c) => {
     return c.json({ data: { job: latestJob } });
   }
 
+  // Sem landmarks não há o que processar. Enfileirar assim mesmo era o que
+  // permitia ao consumidor "produzir" métricas do nada. Esta checagem torna
+  // estruturalmente impossível gerar número sem insumo.
+  if (assessment.primaryMediaId) {
+    const [media] = await db
+      .select()
+      .from(biomechanicsMedia)
+      .where(
+        and(
+          eq(biomechanicsMedia.id, assessment.primaryMediaId),
+          eq(biomechanicsMedia.organizationId, user.organizationId),
+        ),
+      );
+
+    if (!media?.landmarksR2Key) {
+      return c.json(
+        {
+          error:
+            "Esta captura ainda não tem landmarks. Envie os landmarks do aparelho ou solicite o reprocessamento em nuvem.",
+          code: "no_landmarks_available",
+          mediaId: assessment.primaryMediaId,
+        },
+        409,
+      );
+    }
+  }
+
   const [job] = await db
     .insert(biomechanicsJobs)
     .values({
@@ -1063,6 +1110,74 @@ app.patch("/:id/metrics/:metricId", requireAuth, async (c) => {
   return c.json({ data: metric });
 });
 
+// POST /api/biomechanics/:id/metrics/:metricId/acknowledge
+//
+// Conferir NÃO é editar. `PATCH /metrics/:metricId` marcava `source: "manual"`
+// em qualquer escrita, então o fisioterapeuta que apenas concordava com o
+// valor do algoritmo relabelava a procedência como medição própria — e o laudo
+// passava a atribuir a ele um número que ele não mediu.
+app.post("/:id/metrics/:metricId/acknowledge", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const metricId = c.req.param("metricId");
+  const db = await createDb(c.env);
+
+  const [assessment] = await db
+    .select()
+    .from(biomechanicsAssessments)
+    .where(
+      and(
+        eq(biomechanicsAssessments.id, id),
+        eq(biomechanicsAssessments.organizationId, user.organizationId),
+      ),
+    );
+  if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
+
+  if (assessment.signedAt) {
+    return c.json(
+      { error: "Laudo assinado é imutável.", code: "signed_assessment_immutable" },
+      409,
+    );
+  }
+
+  const [metric] = await db
+    .select()
+    .from(biomechanicsMetrics)
+    .where(
+      and(
+        eq(biomechanicsMetrics.id, metricId),
+        eq(biomechanicsMetrics.assessmentId, id),
+        eq(biomechanicsMetrics.organizationId, user.organizationId),
+      ),
+    );
+  if (!metric) return c.json({ error: "Métrica não encontrada" }, 404);
+
+  if (!isClinicalGrade(metric.provenance)) {
+    return c.json(
+      {
+        error:
+          "Métrica sem procedência clínica não pode ser conferida — refaça a análise ou informe a medição manual.",
+        code: "non_clinical_provenance",
+        provenance: metric.provenance,
+      },
+      422,
+    );
+  }
+
+  const [updated] = await db
+    .update(biomechanicsMetrics)
+    .set({ acknowledgedBy: user.uid, acknowledgedAt: new Date() })
+    .where(
+      and(
+        eq(biomechanicsMetrics.id, metricId),
+        eq(biomechanicsMetrics.organizationId, user.organizationId),
+      ),
+    )
+    .returning();
+
+  return c.json({ data: updated });
+});
+
 // POST /api/biomechanics/:id/validate
 app.post("/:id/validate", requireAuth, async (c) => {
   const user = c.get("user");
@@ -1079,6 +1194,59 @@ app.post("/:id/validate", requireAuth, async (c) => {
       ),
     );
   if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
+
+  if (assessment.signedAt) {
+    return c.json(
+      { error: "Laudo já assinado não pode ser revalidado.", code: "already_signed" },
+      409,
+    );
+  }
+
+  // Validar é um ato clínico sobre números concretos, não um botão de "ok".
+  // Cada métrica viva precisa ter procedência de grau clínico E conferência
+  // individual do profissional — a tabela de goniometria (Esq/Dir/Δ) da tela
+  // de análise é exatamente a superfície para isso.
+  const liveMetrics = await db
+    .select()
+    .from(biomechanicsMetrics)
+    .where(
+      and(
+        eq(biomechanicsMetrics.assessmentId, id),
+        eq(biomechanicsMetrics.organizationId, user.organizationId),
+        isNull(biomechanicsMetrics.supersededAt),
+      ),
+    );
+
+  if (liveMetrics.length === 0) {
+    return c.json(
+      {
+        error: "Não há métricas para validar nesta avaliação.",
+        code: "no_metrics",
+      },
+      422,
+    );
+  }
+
+  const pendentes = liveMetrics.filter(
+    (metric) => !isClinicalGrade(metric.provenance) || !metric.acknowledgedAt,
+  );
+
+  if (pendentes.length > 0) {
+    return c.json(
+      {
+        error: "Confira cada métrica antes de validar a avaliação.",
+        code: "unacknowledged_metrics",
+        details: pendentes.map((metric) => ({
+          id: metric.id,
+          metricKey: metric.metricKey,
+          side: metric.side,
+          provenance: metric.provenance,
+          acknowledged: !!metric.acknowledgedAt,
+        })),
+      },
+      422,
+    );
+  }
 
   const [updated] = await db
     .update(biomechanicsAssessments)
@@ -1361,6 +1529,51 @@ app.post("/:id/pdf", requireAuth, async (c) => {
     return c.json({ error: "Avaliação não encontrada" }, 404);
   }
 
+  // ── Portão clínico ────────────────────────────────────────────────────────
+  // Até aqui esta rota renderizava laudo de qualquer avaliação, inclusive uma
+  // em `draft` cheia de métricas sintéticas. Era o buraco por onde número
+  // inventado chegava a um PDF assinado com CREFITO.
+  if (!["validated", "signed"].includes(assessment.status ?? "")) {
+    return c.json(
+      {
+        error: "O laudo só pode ser gerado após a validação clínica das métricas.",
+        code: "not_validated",
+        status: assessment.status,
+      },
+      409,
+    );
+  }
+
+  const liveMetrics = await db
+    .select()
+    .from(biomechanicsMetrics)
+    .where(
+      and(
+        eq(biomechanicsMetrics.assessmentId, id),
+        eq(biomechanicsMetrics.organizationId, user.organizationId),
+        isNull(biomechanicsMetrics.supersededAt),
+      ),
+    );
+
+  const naoConferidas = liveMetrics.filter(
+    (metric) => !isClinicalGrade(metric.provenance) || !metric.acknowledgedAt,
+  );
+
+  if (naoConferidas.length > 0) {
+    return c.json(
+      {
+        error: "Há métricas sem procedência clínica ou sem conferência do profissional.",
+        code: "unvalidated_metrics",
+        details: naoConferidas.map((metric) => ({
+          metricKey: metric.metricKey,
+          provenance: metric.provenance,
+          acknowledged: !!metric.acknowledgedAt,
+        })),
+      },
+      422,
+    );
+  }
+
   const [comparisonAssessment] = body.comparisonAssessmentId
     ? await db
         .select()
@@ -1514,15 +1727,45 @@ app.post("/:id/sign", requireAuth, async (c) => {
   if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
   if (assessment.status === "signed") return c.json({ error: "Avaliação já está assinada" }, 409);
 
+  // Assinar é o ato irreversível: só depois da validação clínica.
+  if (assessment.status !== "validated") {
+    return c.json(
+      {
+        error: "Só é possível assinar um laudo já validado.",
+        code: "not_validated",
+        status: assessment.status,
+      },
+      409,
+    );
+  }
+
+  const liveMetrics = await db
+    .select()
+    .from(biomechanicsMetrics)
+    .where(
+      and(
+        eq(biomechanicsMetrics.assessmentId, id),
+        eq(biomechanicsMetrics.organizationId, user.organizationId),
+        isNull(biomechanicsMetrics.supersededAt),
+      ),
+    );
+
+  const naoClinicas = liveMetrics.filter((metric) => !isClinicalGrade(metric.provenance));
+  if (naoClinicas.length > 0) {
+    // O trigger do banco também barra isto; aqui a mensagem é útil.
+    return c.json(
+      {
+        error: "Há métricas sem procedência clínica nesta avaliação.",
+        code: "unvalidated_metrics",
+        details: naoClinicas.map((metric) => metric.metricKey),
+      },
+      422,
+    );
+  }
+
   const ip = c.req.header("CF-Connecting-IP") ?? "unknown";
   const now = new Date().toISOString();
-  const contentHash = await crypto.subtle
-    .digest("SHA-256", new TextEncoder().encode(JSON.stringify(assessment.analysisData)))
-    .then((b) =>
-      Array.from(new Uint8Array(b))
-        .map((x) => x.toString(16).padStart(2, "0"))
-        .join(""),
-    );
+  const contentHash = await reportContentHash(assessment.analysisData);
 
   // Create Signature Metadata (Simulating ICP-Brasil)
   const signatureMetadata = {
@@ -1577,18 +1820,9 @@ app.get("/:id/verify", async (c) => {
 
   if (!signature) return c.json({ valid: false, error: "Metadados de assinatura ausentes" });
 
-  // Re-calculate hash to verify integrity
-  const dataToHash = { ...analysisData };
-  delete dataToHash._signature;
-
-  const currentHash = await crypto.subtle
-    .digest("SHA-256", new TextEncoder().encode(JSON.stringify(dataToHash)))
-    .then((b) =>
-      Array.from(new Uint8Array(b))
-        .map((x) => x.toString(16).padStart(2, "0"))
-        .join(""),
-    );
-
+  // Mesmo conjunto excluído que em /sign (`_pdf` E `_signature`). Antes daqui
+  // sair só `_signature`, regerar o PDF marcava laudo legítimo como adulterado.
+  const currentHash = await reportContentHash(analysisData);
   const isValid = currentHash === signature.contentHash;
 
   return c.json({
@@ -1596,6 +1830,8 @@ app.get("/:id/verify", async (c) => {
     signer: signature.signerName,
     signedAt: signature.timestamp,
     integrityStatus: isValid ? "verified" : "compromised",
+    // Quem tem o PDF antigo em mãos descobre por aqui que existe retificação.
+    supersededBy: assessment.supersededByAssessmentId ?? null,
   });
 });
 

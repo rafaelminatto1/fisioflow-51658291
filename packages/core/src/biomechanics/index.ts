@@ -20,3 +20,6 @@ export * from "./types";
 export * from "./math";
 export * from "./landmarks";
 export * from "./kinematics";
+export * from "./quality";
+export * from "./pipeline";
+export * from "./ndjson";
