@@ -22,6 +22,38 @@ export const biomechanicsAssessmentTypeEnum = pgEnum("biomechanics_assessment_ty
   "functional_movement",
 ]);
 
+/**
+ * De onde veio cada número biomecânico. Ver migration 0165.
+ *
+ * O DEFAULT no banco é `synthetic_demo` de propósito: quem inserir métrica sem
+ * declarar procedência produz linha em quarentena, que o trigger
+ * `trg_bio_block_synthetic_on_signed` recusa deixar entrar em laudo assinado.
+ */
+export const biomechanicsMetricProvenanceEnum = pgEnum("biomechanics_metric_provenance", [
+  "device_pose",
+  "container_pose",
+  "manual",
+  "patient_reported",
+  "derived",
+  "synthetic_demo",
+]);
+
+/** Procedências que podem sustentar um laudo assinado. */
+export const CLINICAL_GRADE_PROVENANCE = [
+  "device_pose",
+  "container_pose",
+  "manual",
+  "patient_reported",
+  "derived",
+] as const;
+
+export type BiomechanicsMetricProvenance =
+  (typeof biomechanicsMetricProvenanceEnum.enumValues)[number];
+
+export function isClinicalGrade(provenance: string | null | undefined): boolean {
+  return (CLINICAL_GRADE_PROVENANCE as readonly string[]).includes(provenance ?? "");
+}
+
 export const biomechanicsAssessments = pgTable(
   "biomechanics_assessments",
   {
@@ -82,6 +114,14 @@ export const biomechanicsAssessments = pgTable(
     signedAt: timestamp("signed_at"),
     signatureMetadata: jsonb("signature_metadata").default("{}"),
 
+    // Retificação de laudo (0165): reprocessar um assinado nunca o altera —
+    // cria-se uma avaliação nova que o retifica, e o original mantém
+    // report_hash/signed_at/PDF intactos para a verificação pública seguir válida.
+    poseProvenance: biomechanicsMetricProvenanceEnum("pose_provenance"),
+    amendsAssessmentId: uuid("amends_assessment_id"),
+    supersededByAssessmentId: uuid("superseded_by_assessment_id"),
+    lockedAt: timestamp("locked_at", { withTimezone: true }),
+
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -116,10 +156,26 @@ export const biomechanicsMetrics = pgTable(
     phase: varchar("phase", { length: 50 }),
     view: varchar("view", { length: 50 }),
     confidence: numeric("confidence", { precision: 5, scale: 2 }),
+    /** @deprecated legado ('algorithm'|'manual'). `provenance` é a autoritativa. */
     source: varchar("source", { length: 50 }).default("algorithm"),
     normalRange: jsonb("normal_range").default("{}"),
     severity: varchar("severity", { length: 30 }),
     algorithmVersion: varchar("algorithm_version", { length: 50 }),
+
+    // 0165 — procedência e supersessão append-only.
+    provenance: biomechanicsMetricProvenanceEnum("provenance").notNull().default("synthetic_demo"),
+    poseEngine: varchar("pose_engine", { length: 80 }),
+    jobId: uuid("job_id"),
+    mediaId: uuid("media_id"),
+    attempt: integer("attempt"),
+    /** Frames utilizáveis por trás do valor — entra no laudo. */
+    sampleCount: integer("sample_count"),
+    supersededBy: uuid("superseded_by"),
+    supersededAt: timestamp("superseded_at", { withTimezone: true }),
+    /** Conferência humana explícita, métrica a métrica. Exigida antes de assinar. */
+    acknowledgedBy: uuid("acknowledged_by"),
+    acknowledgedAt: timestamp("acknowledged_at", { withTimezone: true }),
+    computedAt: timestamp("computed_at", { withTimezone: true }).defaultNow(),
 
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
@@ -184,6 +240,20 @@ export const biomechanicsMedia = pgTable(
     sizeBytes: integer("size_bytes"),
     qualityScore: numeric("quality_score", { precision: 5, scale: 2 }),
     metadata: jsonb("metadata").default("{}"),
+
+    // 0165 — o bundle de landmarks (NDJSON.gz) mora no R2, não no Postgres:
+    // 10 s a 30 fps são 300 frames x 33 landmarks, ~50 KB gzip contra 9.000
+    // linhas via Hyperdrive.
+    landmarksR2Key: text("landmarks_r2_key"),
+    landmarksSchema: varchar("landmarks_schema", { length: 32 }),
+    landmarksSha256: varchar("landmarks_sha256", { length: 64 }),
+    landmarksBytes: integer("landmarks_bytes"),
+    frameCount: integer("frame_count"),
+    attempt: integer("attempt").default(1),
+    poseEngine: varchar("pose_engine", { length: 80 }),
+    /** mirrored/rotationDegrees: sem isso a câmera frontal troca Esq/Dir no laudo. */
+    coordinateSpace: jsonb("coordinate_space").default("{}"),
+
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -216,6 +286,12 @@ export const biomechanicsJobs = pgTable(
     modelName: varchar("model_name", { length: 120 }).default("deterministic-v1"),
     modelVersion: varchar("model_version", { length: 50 }).default("1.0.0"),
     algorithmVersion: varchar("algorithm_version", { length: 50 }).default("bio-pipeline-1.0.0"),
+    // 0165 — 'device' (landmarks do aparelho) ou 'container' (reprocessamento).
+    phase: varchar("phase", { length: 20 }).notNull().default("device"),
+    /** sha256 do bundle: torna o replay do app idempotente em vez de gerar 2º job. */
+    inputDigest: varchar("input_digest", { length: 64 }),
+    supersedesJobId: uuid("supersedes_job_id"),
+
     startedAt: timestamp("started_at"),
     completedAt: timestamp("completed_at"),
     createdBy: uuid("created_by"),
@@ -245,6 +321,13 @@ export const biomechanicsFrames = pgTable(
     landmarks: jsonb("landmarks").default("[]"),
     confidence: numeric("confidence", { precision: 5, scale: 2 }),
     events: jsonb("events").default("[]"),
+
+    // 0165. Máx. 120 linhas por avaliação: GET /:id/workbench já faz .limit(120),
+    // então mais que isso seria truncado em silêncio e daria gráfico errado.
+    provenance: biomechanicsMetricProvenanceEnum("provenance").notNull().default("synthetic_demo"),
+    attempt: integer("attempt"),
+    view: varchar("view", { length: 50 }),
+
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
@@ -268,6 +351,12 @@ export const biomechanicsEvents = pgTable(
     frameIndex: integer("frame_index"),
     confidence: numeric("confidence", { precision: 5, scale: 2 }),
     metadata: jsonb("metadata").default("{}"),
+
+    // 0165
+    provenance: biomechanicsMetricProvenanceEnum("provenance").notNull().default("synthetic_demo"),
+    jobId: uuid("job_id"),
+    supersededAt: timestamp("superseded_at", { withTimezone: true }),
+
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
