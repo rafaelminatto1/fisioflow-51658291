@@ -1835,4 +1835,255 @@ app.get("/:id/verify", async (c) => {
   });
 });
 
+
+// ═══ Ingestão de landmarks ═══════════════════════════════════════════════════
+//
+// O bundle (`ff-pose-33-v1`, NDJSON gzip) vai para o R2, nunca para o Postgres:
+// 10 s a 30 fps são 300 frames × 33 landmarks — ~50 KB comprimidos contra 9.000
+// linhas via Hyperdrive. Só keyframes decimados (≤120) viram linha, no
+// consumidor da fila.
+//
+// A chave do objeto é SEMPRE derivada no servidor a partir da linha do banco.
+// Aceitar `key` do body deixaria um cliente escrever em `orgs/<outra-clínica>/`.
+
+/** Onde o bundle de uma tentativa mora no R2. */
+function r2BiomechanicsLandmarksKey(params: {
+  organizationId: string;
+  patientId: string;
+  assessmentId: string;
+  mediaId: string;
+  attempt: number;
+}) {
+  return `orgs/${params.organizationId}/patients/${params.patientId}/videos/biomechanics/${params.assessmentId}/landmarks/${params.mediaId}-a${params.attempt}-v1.ndjson.gz`;
+}
+
+/** 3 min a 30 fps. Acima disso é erro de cliente, não captura clínica. */
+const MAX_LANDMARK_FRAMES = 5400;
+/** Teto do corpo do atalho inline. */
+const MAX_INLINE_BUNDLE_BYTES = 2 * 1024 * 1024;
+
+async function loadAssessmentMedia(
+  db: Awaited<ReturnType<typeof createDb>>,
+  organizationId: string,
+  assessmentId: string,
+  mediaId?: string,
+) {
+  const [assessment] = await db
+    .select()
+    .from(biomechanicsAssessments)
+    .where(
+      and(
+        eq(biomechanicsAssessments.id, assessmentId),
+        eq(biomechanicsAssessments.organizationId, organizationId),
+      ),
+    );
+  if (!assessment) return { assessment: null, media: null };
+
+  const targetId = String(mediaId ?? assessment.primaryMediaId ?? "");
+  if (!targetId) return { assessment, media: null };
+
+  const [media] = await db
+    .select()
+    .from(biomechanicsMedia)
+    .where(
+      and(
+        eq(biomechanicsMedia.id, targetId),
+        eq(biomechanicsMedia.assessmentId, assessment.id),
+        eq(biomechanicsMedia.organizationId, organizationId),
+      ),
+    );
+
+  return { assessment, media: media ?? null };
+}
+
+// POST /api/biomechanics/:id/landmarks/upload-url
+app.post("/:id/landmarks/upload-url", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const body = await c.req.json().catch(() => ({}));
+  const db = await createDb(c.env);
+
+  const { assessment, media } = await loadAssessmentMedia(
+    db,
+    user.organizationId,
+    id,
+    body.mediaId ? String(body.mediaId) : undefined,
+  );
+  if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
+  if (!media) return c.json({ error: "Mídia não encontrada" }, 404);
+
+  const frameCount = Number(body.frameCount ?? 0);
+  if (!Number.isFinite(frameCount) || frameCount <= 0) {
+    return c.json({ error: "frameCount é obrigatório", code: "invalid_frame_count" }, 400);
+  }
+  if (frameCount > MAX_LANDMARK_FRAMES) {
+    return c.json(
+      {
+        error: `Captura longa demais: ${frameCount} frames (máximo ${MAX_LANDMARK_FRAMES}).`,
+        code: "too_many_frames",
+      },
+      400,
+    );
+  }
+
+  const attempt = Number(body.attempt ?? media.attempt ?? 1);
+  const key = r2BiomechanicsLandmarksKey({
+    organizationId: user.organizationId,
+    patientId: assessment.patientId,
+    assessmentId: assessment.id,
+    mediaId: media.id,
+    attempt,
+  });
+
+  const uploadUrl = await new R2Service(c.env).getUploadUrl(key, "application/gzip");
+
+  return c.json({ data: { uploadUrl, key, attempt } });
+});
+
+// POST /api/biomechanics/:id/landmarks/complete
+app.post("/:id/landmarks/complete", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const body = await c.req.json().catch(() => ({}));
+  const db = await createDb(c.env);
+
+  const { assessment, media } = await loadAssessmentMedia(
+    db,
+    user.organizationId,
+    id,
+    body.mediaId ? String(body.mediaId) : undefined,
+  );
+  if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
+  if (!media) return c.json({ error: "Mídia não encontrada" }, 404);
+
+  const sha256 = String(body.sha256 ?? "");
+  if (!/^[a-f0-9]{64}$/.test(sha256)) {
+    return c.json({ error: "sha256 do bundle é obrigatório", code: "invalid_digest" }, 400);
+  }
+
+  const header = (body.header ?? {}) as Record<string, unknown>;
+  const attempt = Number(body.attempt ?? header.attempt ?? media.attempt ?? 1);
+  const key = r2BiomechanicsLandmarksKey({
+    organizationId: user.organizationId,
+    patientId: assessment.patientId,
+    assessmentId: assessment.id,
+    mediaId: media.id,
+    attempt,
+  });
+
+  // O objeto tem que existir de fato. Sem esta checagem, um /complete que
+  // chega antes do PUT terminar deixaria a mídia apontando para o vazio e o
+  // job falharia lá na frente, longe da causa.
+  const head = await c.env.MEDIA_BUCKET.head(key);
+  if (!head) {
+    return c.json(
+      { error: "Bundle de landmarks não encontrado no R2.", code: "landmarks_object_missing", key },
+      409,
+    );
+  }
+
+  const declaredBytes = Number(body.bytes ?? 0);
+  if (declaredBytes > 0 && head.size !== declaredBytes) {
+    return c.json(
+      {
+        error: `Tamanho divergente: R2 tem ${head.size} bytes, o cliente declarou ${declaredBytes}.`,
+        code: "landmarks_size_mismatch",
+      },
+      409,
+    );
+  }
+
+  const [updatedMedia] = await db
+    .update(biomechanicsMedia)
+    .set({
+      landmarksR2Key: key,
+      landmarksSha256: sha256,
+      landmarksSchema: String(body.schema ?? header.schema ?? "ff-pose-33-v1"),
+      landmarksBytes: head.size,
+      frameCount: Number(header.frameCount ?? body.frameCount ?? 0) || null,
+      attempt,
+      poseEngine: buildPoseEngineLabel(header),
+      coordinateSpace: (header.coordinateSpace as Record<string, unknown>) ?? {},
+      fps: header.fps != null ? String(header.fps) : media.fps,
+      view: typeof header.view === "string" ? header.view : media.view,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(biomechanicsMedia.id, media.id),
+        eq(biomechanicsMedia.organizationId, user.organizationId),
+      ),
+    )
+    .returning();
+
+  // Idempotência: o app reenvia em timeout ou perda de rede. O digest do
+  // bundle identifica a tentativa, então o replay devolve o MESMO job em vez
+  // de enfileirar um segundo processamento sobre o mesmo dado.
+  const [existingJob] = await db
+    .select()
+    .from(biomechanicsJobs)
+    .where(
+      and(
+        eq(biomechanicsJobs.assessmentId, assessment.id),
+        eq(biomechanicsJobs.organizationId, user.organizationId),
+        eq(biomechanicsJobs.phase, "device"),
+        eq(biomechanicsJobs.inputDigest, sha256),
+      ),
+    );
+
+  if (existingJob) {
+    return c.json({ data: { media: updatedMedia, job: existingJob, replayed: true } });
+  }
+
+  const [job] = await db
+    .insert(biomechanicsJobs)
+    .values({
+      organizationId: user.organizationId,
+      patientId: assessment.patientId,
+      assessmentId: assessment.id,
+      mediaId: media.id,
+      status: "queued",
+      stage: "ingest",
+      progress: 0,
+      phase: "device",
+      inputDigest: sha256,
+      createdBy: user.uid,
+      algorithmVersion: DEFAULT_ALGORITHM_VERSION,
+    })
+    .returning();
+
+  await db
+    .update(biomechanicsAssessments)
+    .set({ status: "queued", jobId: job.id, updatedAt: new Date() })
+    .where(
+      and(
+        eq(biomechanicsAssessments.id, assessment.id),
+        eq(biomechanicsAssessments.organizationId, user.organizationId),
+      ),
+    );
+
+  await c.env.BACKGROUND_QUEUE.send({
+    type: "PROCESS_BIOMECHANICS_MEDIA",
+    payload: {
+      jobId: job.id,
+      assessmentId: assessment.id,
+      mediaId: media.id,
+      organizationId: user.organizationId,
+      patientId: assessment.patientId,
+      phase: "device",
+    },
+  });
+
+  return c.json({ data: { media: updatedMedia, job, replayed: false } }, 201);
+});
+
+function buildPoseEngineLabel(header: Record<string, unknown>): string | null {
+  const engine = header.poseEngine as Record<string, unknown> | undefined;
+  if (!engine?.name) return null;
+  const parts = [String(engine.name)];
+  if (engine.version) parts.push(`@${String(engine.version)}`);
+  if (engine.platform) parts.push(`/${String(engine.platform)}`);
+  return parts.join("").slice(0, 80);
+}
+
 export { app as biomechanicsRoutes };
