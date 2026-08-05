@@ -1,0 +1,16 @@
+diff --git a/ios/VisionCameraV3PoseDetection.m b/ios/VisionCameraV3PoseDetection.m
+index dd5ebbad70a9a3d6aa35ea80495195f2491da1b9..2e98f375ad124dbb76ddca0e69d980e0aaa15f7f 100644
+--- a/ios/VisionCameraV3PoseDetection.m
++++ b/ios/VisionCameraV3PoseDetection.m
+@@ -60,7 +60,10 @@
+                     }
+                     MLKPoseLandmark *rightShoulderPosition = [pose landmarkOfType:MLKPoseLandmarkTypeRightShoulder];
+                     if (rightShoulderPosition.inFrameLikelihood > 0.5) {
+-                        MLKVision3DPoint *position = leftShoulderPosition.position;
++                        // Corrigido: lia leftShoulderPosition.position (copiar/colar do
++                        // bloco acima). No iOS o ombro direito recebia a coordenada do
++                        // esquerdo, enviesando inclinacao de tronco e simetria.
++                        MLKVision3DPoint *position = rightShoulderPosition.position;
+                         data[@"rightShoulderPosition"] = @{@"x": @(position.x), @"y": @(position.y)};
+                     }
+                     MLKPoseLandmark *leftElbowPosition = [pose landmarkOfType:MLKPoseLandmarkTypeLeftElbow];

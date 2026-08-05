@@ -104,4 +104,5 @@ peerDependencyRules:
     "storybook": ">=8.0.0"
 
 patchedDependencies:
+  '@scottjgilroy/react-native-vision-camera-v4-pose-detection@1.2.2': patches/@scottjgilroy__react-native-vision-camera-v4-pose-detection@1.2.2.patch
   "expo-modules-core@55.0.25": "apps/professional-app/patches/expo-modules-core@55.0.25.patch"

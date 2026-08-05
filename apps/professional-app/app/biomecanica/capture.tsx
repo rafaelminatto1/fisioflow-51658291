@@ -1,5 +1,13 @@
-import { useRef, useState } from "react";
-import { Alert, View, Text, Pressable, StyleSheet, useWindowDimensions } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Alert,
+  Platform,
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -25,9 +33,15 @@ import {
   FolderUp,
 } from "lucide-react-native";
 import { bio, font } from "@/constants/biomecanica";
-import { Camera, useCameraDevice, useCameraPermission } from "react-native-vision-camera";
+import { useCameraDevice, useCameraFormat, useCameraPermission } from "react-native-vision-camera";
 import * as ImagePicker from "expo-image-picker";
 import { useBiomechanicsCapture } from "@/hooks/useBiomechanicsCapture";
+import {
+  PoseCamera,
+  poseDetectionAvailable,
+  poseDetectionError,
+  type PoseCameraHandle,
+} from "@/components/biomecanica/PoseCamera";
 import type { CaptureView } from "@fisioflow/core";
 
 const JOINTS: Record<string, [number, number]> = {
@@ -112,13 +126,56 @@ export default function CaptureScreen() {
 
   const device = useCameraDevice("back");
   const { hasPermission, requestPermission } = useCameraPermission();
-  const cameraRef = useRef<Camera>(null);
+  const cameraRef = useRef<PoseCameraHandle>(null);
+  const format = useCameraFormat(device, [
+    { videoResolution: { width: 1920, height: 1080 } },
+    { fps: 30 },
+  ]);
+
+  /**
+   * Dimensões da imagem JÁ ROTACIONADA para cima, que é o espaço em que o ML
+   * Kit devolve os pontos. O buffer do sensor é sempre paisagem; o app está
+   * travado em retrato (`app.json`), então a imagem em pé tem o menor lado como
+   * largura. É por esse par que os pixels do plugin viram 0–1.
+   */
+  const { sourceWidth, sourceHeight } = useMemo(() => {
+    const w = format?.videoWidth ?? 1080;
+    const h = format?.videoHeight ?? 1920;
+    return { sourceWidth: Math.min(w, h), sourceHeight: Math.max(w, h) };
+  }, [format?.videoWidth, format?.videoHeight]);
+
+  /**
+   * A câmera frontal entrega a imagem espelhada. Sem esta flag o pipeline não
+   * troca os pares esquerda/direita e o laudo inteiro sai com Esq/Dir invertidos
+   * — parecendo correto.
+   */
+  const mirrored = device?.position === "front";
 
   const capture = useBiomechanicsCapture({
     patientId,
     protocolId,
     view: viewToPlane(view),
+    poseEngine: poseDetectionAvailable
+      ? { name: "mlkit-pose", version: "vision-camera-v4-pose-detection", platform: Platform.OS }
+      : { name: "none", platform: Platform.OS },
   });
+
+  const { setCoordinateSpace } = capture;
+
+  // Uma única vez por configuração de câmera — nunca por frame.
+  useEffect(() => {
+    setCoordinateSpace({ mirrored, sourceWidth, sourceHeight });
+  }, [setCoordinateSpace, mirrored, sourceWidth, sourceHeight]);
+
+  useEffect(() => {
+    if (!poseDetectionAvailable && poseDetectionError) {
+      console.warn("[biomecanica] pose on-device indisponível:", poseDetectionError);
+    }
+  }, []);
+
+  /** Contador do HUD. Atualizado no máximo 2x/s pelo PoseCamera. */
+  const [detectedJoints, setDetectedJoints] = useState(0);
+  const handleDetectionCount = useCallback((count: number) => setDetectedJoints(count), []);
 
   const ty = useSharedValue(COLLAPSED);
   const start = useSharedValue(COLLAPSED);
@@ -251,12 +308,17 @@ export default function CaptureScreen() {
       {/* camera feed */}
       <View style={styles.camera}>
         {device && hasPermission ? (
-          <Camera
+          <PoseCamera
             ref={cameraRef}
             style={StyleSheet.absoluteFill}
             device={device}
-            isActive={!open} // pause camera when sheet is open
+            format={format}
+            isActive={!open} // pausa a câmera quando a gaveta está aberta
             video={true}
+            onPose={capture.onPose}
+            onDetectionCountChange={handleDetectionCount}
+            sourceWidth={sourceWidth}
+            sourceHeight={sourceHeight}
           />
         ) : (
           <View
@@ -274,25 +336,32 @@ export default function CaptureScreen() {
         )}
         {/* plumb line */}
         <View style={styles.plumb} />
-        {/* skeleton edges */}
-        <Svg style={StyleSheet.absoluteFill} viewBox="0 0 100 100" preserveAspectRatio="none">
-          {EDGES.map(([a, b], i) => (
-            <Line
-              key={i}
-              x1={JOINTS[a][0]}
-              y1={JOINTS[a][1]}
-              x2={JOINTS[b][0]}
-              y2={JOINTS[b][1]}
-              stroke="hsla(211,100%,60%,0.55)"
-              strokeWidth={0.5}
-              strokeLinecap="round"
-            />
-          ))}
-        </Svg>
-        {/* joint dots */}
-        {Object.values(JOINTS).map(([x, y], i) => (
-          <View key={i} style={[styles.joint, { left: `${x}%`, top: `${y}%` }]} />
-        ))}
+        {/*
+          Esqueleto ilustrativo — posições fixas, não são o paciente. Só aparece
+          quando NÃO há detector on-device; desenhá-lo por cima de uma pose real
+          faria a tela mentir sobre o que está sendo rastreado.
+        */}
+        {!poseDetectionAvailable && (
+          <>
+            <Svg style={StyleSheet.absoluteFill} viewBox="0 0 100 100" preserveAspectRatio="none">
+              {EDGES.map(([a, b], i) => (
+                <Line
+                  key={i}
+                  x1={JOINTS[a][0]}
+                  y1={JOINTS[a][1]}
+                  x2={JOINTS[b][0]}
+                  y2={JOINTS[b][1]}
+                  stroke="hsla(211,100%,60%,0.55)"
+                  strokeWidth={0.5}
+                  strokeLinecap="round"
+                />
+              ))}
+            </Svg>
+            {Object.values(JOINTS).map(([x, y], i) => (
+              <View key={i} style={[styles.joint, { left: `${x}%`, top: `${y}%` }]} />
+            ))}
+          </>
+        )}
       </View>
 
       {/* top controls */}
@@ -317,10 +386,16 @@ export default function CaptureScreen() {
         </View>
         <View style={styles.recMeta}>
           <View style={styles.metaPill}>
-            <Text style={styles.metaPillText}>1080p · 60fps</Text>
+            <Text style={styles.metaPillText}>
+              {format
+                ? `${Math.min(format.videoWidth, format.videoHeight)}p · ${format.maxFps}fps`
+                : "1080p · 30fps"}
+            </Text>
           </View>
           <View style={styles.metaPill}>
-            <Text style={styles.metaPillText}>17 / 17 juntas</Text>
+            <Text style={styles.metaPillText}>
+              {poseDetectionAvailable ? `${detectedJoints} / 33 juntas` : "Análise em nuvem"}
+            </Text>
           </View>
         </View>
       </SafeAreaView>
@@ -328,8 +403,10 @@ export default function CaptureScreen() {
       {/* hint */}
       {!recording && !open && (
         <Text style={[styles.hint, { top: height * 0.5 }]}>
-          Posicione o paciente sobre a linha de prumo.{"\n"}17 articulações rastreadas em tempo
-          real.
+          Posicione o paciente sobre a linha de prumo.{"\n"}
+          {poseDetectionAvailable
+            ? "33 articulações rastreadas no aparelho."
+            : "Sem rastreamento no aparelho — o vídeo será analisado na nuvem."}
         </Text>
       )}
 
