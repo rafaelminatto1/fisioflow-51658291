@@ -9,22 +9,13 @@ export const config = {
 
   // Cloudflare Worker API Configuration
   apiUrl: (function () {
-    // Priority: Cloudflare Worker URL, then Environment Variable (if set and not a legacy one)
+    // EXPO_PUBLIC_API_URL é definido por perfil no eas.json e manda sempre.
+    // O domínio custom api-pro.moocafisio.com.br é o destino de produção.
     const defaultWorkerUrl = "https://fisioflow-api.rafalegollas.workers.dev";
-    const envUrl = process.env.EXPO_PUBLIC_API_URL;
+    const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
 
-    // If envUrl is set and is NOT the legacy one, we can use it,
-    // but otherwise we MUST use the defaultWorkerUrl to comply with mandates
-    let finalUrl = defaultWorkerUrl;
-    if (envUrl && !envUrl.includes("moocafisio.com.br") && !envUrl.includes("api-pro")) {
-      finalUrl = envUrl;
-    }
-
-    return finalUrl;
+    return envUrl && envUrl.length > 0 ? envUrl.replace(/\/+$/, "") : defaultWorkerUrl;
   })(),
-
-  // Legacy API (for fallback)
-  legacyApiUrl: "https://api-pro.moocafisio.com.br",
 
   // Feature flags
   enablePushNotifications: true, // Enabled via Cloudflare Worker + Expo Push

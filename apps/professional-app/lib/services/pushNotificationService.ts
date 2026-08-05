@@ -291,13 +291,14 @@ class PushNotificationService {
    */
   async registerPushToken(token: string, deviceName?: string): Promise<void> {
     try {
-      await fetchApi("/api/push-tokens", {
+      // /api/push-tokens não existe no Worker (404). A rota montada é /api/fcm-tokens.
+      await fetchApi("/api/fcm-tokens", {
         method: "POST",
         data: {
-          expo_push_token: token,
-          device_name: deviceName || Platform.OS,
-          device_type: Platform.OS,
+          token,
+          deviceInfo: { model: deviceName || Platform.OS, platform: Platform.OS },
         },
+        skipOfflineQueue: true,
       });
 
       fisioLogger.info(

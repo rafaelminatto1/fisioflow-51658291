@@ -7,18 +7,22 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 app.use("*", requireAuth);
 
+// O device token é sempre gravado para o usuário autenticado e a org do token.
+// userId/tenantId vindos do body são ignorados — aceitá-los permitiria registrar
+// um token em nome de outro usuário ou de outra organização.
 app.post("/", async (c) => {
+  const user = c.get("user");
   const db = await createPool(c.env);
   try {
     const body = await c.req.json();
-    const { token, userId, tenantId, deviceInfo, active = true } = body;
+    const { token, deviceInfo, active = true } = body;
     const platform = deviceInfo?.platform;
     const deviceModel = deviceInfo?.model;
     const osVersion = deviceInfo?.osVersion;
     const appVersion = deviceInfo?.appVersion;
 
-    if (!token || !userId) {
-      return c.json({ error: "token e userId são obrigatórios" }, 400);
+    if (!token) {
+      return c.json({ error: "token é obrigatório" }, 400);
     }
 
     const result = await db.query(
@@ -33,7 +37,16 @@ app.post("/", async (c) => {
        app_version = EXCLUDED.app_version,
        active = EXCLUDED.active,
        updated_at = NOW() RETURNING *`,
-      [token, userId, tenantId, platform, deviceModel, osVersion, appVersion, active],
+      [
+        token,
+        user.uid,
+        user.organizationId,
+        platform,
+        deviceModel,
+        osVersion,
+        appVersion,
+        active,
+      ],
     );
 
     return c.json({ success: true, data: result.rows?.[0] || (result as any)[0] });
@@ -44,14 +57,20 @@ app.post("/", async (c) => {
 });
 
 app.delete("/:token", async (c) => {
+  const user = c.get("user");
   const db = await createPool(c.env);
   const { token } = c.req.param();
   try {
     const result = await db.query(
-      `UPDATE fcm_tokens SET active = false, updated_at = NOW() WHERE token = $1 RETURNING *`,
-      [token],
+      `UPDATE fcm_tokens SET active = false, updated_at = NOW()
+        WHERE token = $1 AND user_id = $2 RETURNING *`,
+      [token, user.uid],
     );
-    return c.json({ success: true, data: result.rows?.[0] || (result as any)[0] });
+    const row = result.rows?.[0] || (result as any)[0];
+    if (!row) {
+      return c.json({ error: "Token não encontrado" }, 404);
+    }
+    return c.json({ success: true, data: row });
   } catch (error: any) {
     console.error("[FCMTokens/Delete] Error:", error.message);
     return c.json({ error: "Erro ao desativar token", details: error.message }, 500);
@@ -59,12 +78,14 @@ app.delete("/:token", async (c) => {
 });
 
 app.get("/user/:userId", async (c) => {
+  const user = c.get("user");
   const db = await createPool(c.env);
   const { userId } = c.req.param();
   try {
     const result = await db.query(
-      `SELECT token FROM fcm_tokens WHERE user_id = $1 AND active = true`,
-      [userId],
+      `SELECT token FROM fcm_tokens
+        WHERE user_id = $1 AND tenant_id = $2 AND active = true`,
+      [userId, user.organizationId],
     );
     const rows = result.rows || (result as any);
     return c.json({ data: rows.map((r: any) => r.token) });
@@ -73,13 +94,14 @@ app.get("/user/:userId", async (c) => {
   }
 });
 
+// Sempre a org do usuário autenticado — o :tenantId da URL é ignorado de propósito.
 app.get("/tenant/:tenantId", async (c) => {
+  const user = c.get("user");
   const db = await createPool(c.env);
-  const { tenantId } = c.req.param();
   try {
     const result = await db.query(
       `SELECT token FROM fcm_tokens WHERE tenant_id = $1 AND active = true`,
-      [tenantId],
+      [user.organizationId],
     );
     const rows = result.rows || (result as any);
     return c.json({ data: rows.map((r: any) => r.token) });

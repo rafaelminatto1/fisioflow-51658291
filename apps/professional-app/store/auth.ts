@@ -6,6 +6,7 @@ import { User, UserRole } from "@/types/auth";
 import { fetchApi } from "@/lib/api";
 import { registerForPushNotificationsAsync } from "@/lib/notifications";
 import * as Notifications from "expo-notifications";
+import { Platform } from "react-native";
 interface AuthState {
   user: User | null;
   isLoading: boolean;
@@ -30,7 +31,7 @@ const AUTHORIZED_ROLES: UserRole[] = [
   "estagiario",
 ];
 
-const isAuthorized = (role: string): boolean => {
+export const isAuthorized = (role: string): boolean => {
   return AUTHORIZED_ROLES.includes(role as UserRole);
 };
 
@@ -74,9 +75,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       registerForPushNotificationsAsync()
         .then((token) => {
           if (token) {
-            fetchApi("/api/push-subscriptions", { method: "POST", data: { token } }).catch(
-              console.error,
-            );
+            // /api/push-subscriptions é web push (VAPID) e exige `endpoint` — devolvia 400.
+            // Device token do Expo vai para /api/fcm-tokens.
+            fetchApi("/api/fcm-tokens", {
+              method: "POST",
+              data: { token, deviceInfo: { platform: Platform.OS } },
+              skipOfflineQueue: true,
+            }).catch(console.error);
           }
         })
         .catch(console.error);
@@ -100,8 +105,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         if (projectId) {
           const pushToken = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
           if (pushToken) {
-            await fetchApi(`/api/push-subscriptions?token=${pushToken}`, {
+            await fetchApi(`/api/fcm-tokens/${encodeURIComponent(pushToken)}`, {
               method: "DELETE",
+              skipOfflineQueue: true,
             }).catch(console.error);
           }
         }
@@ -175,9 +181,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       registerForPushNotificationsAsync()
         .then((token) => {
           if (token) {
-            fetchApi("/api/push-subscriptions", { method: "POST", data: { token } }).catch(
-              console.error,
-            );
+            // /api/push-subscriptions é web push (VAPID) e exige `endpoint` — devolvia 400.
+            // Device token do Expo vai para /api/fcm-tokens.
+            fetchApi("/api/fcm-tokens", {
+              method: "POST",
+              data: { token, deviceInfo: { platform: Platform.OS } },
+              skipOfflineQueue: true,
+            }).catch(console.error);
           }
         })
         .catch(console.error);

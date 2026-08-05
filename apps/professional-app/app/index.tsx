@@ -1,18 +1,16 @@
 import { Redirect } from "expo-router";
-import { useAuthStore } from "@/store/auth";
+import { isAuthorized, useAuthStore } from "@/store/auth";
 
 export default function Index() {
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, isLocked, user } = useAuthStore();
 
-  // If authenticated and is a professional, go to professional tabs
-  if (
-    isAuthenticated &&
-    user &&
-    (user.role === "professional" || user.role === "admin" || user.role === "fisioterapeuta")
-  ) {
+  if (isAuthenticated && user && isAuthorized(user.role)) {
+    // Sessão válida mas bloqueada por inatividade: exige PIN/biometria antes do app.
+    if (isLocked) {
+      return <Redirect href="/(auth)/unlock" />;
+    }
     return <Redirect href="/(tabs)" />;
   }
 
-  // Otherwise, go to login
   return <Redirect href="/(auth)/login" />;
 }

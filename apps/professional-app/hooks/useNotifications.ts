@@ -103,13 +103,14 @@ export function useNotificationMutations() {
  */
 export async function registerPushToken(token: string, deviceName?: string, deviceType?: string) {
   try {
-    await fetchApi("/api/push-tokens", {
+    // /api/push-tokens não existe no Worker (404). A rota montada é /api/fcm-tokens.
+    await fetchApi("/api/fcm-tokens", {
       method: "POST",
       data: {
-        expo_push_token: token,
-        device_name: deviceName,
-        device_type: deviceType,
+        token,
+        deviceInfo: { model: deviceName, platform: deviceType },
       },
+      skipOfflineQueue: true,
     });
     console.log("Push token registered successfully");
   } catch (error) {
