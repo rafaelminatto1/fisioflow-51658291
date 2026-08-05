@@ -174,6 +174,10 @@ export interface Env {
 
   // Cloudflare R2 Config
   MEDIA_BUCKET: R2Bucket;
+  /** Container de reextração de pose (fase 2 da biomecânica). */
+  BIOMECHANICS_POSE?: DurableObjectNamespace;
+  /** Segredo do HMAC do callback do container. */
+  BIOMECHANICS_CALLBACK_SECRET?: string;
   EXAMS_BUCKET?: R2Bucket; // fisioflow-exams: exames, fotos, vídeos clínicos (privado)
   CLINICAL_DOCS_BUCKET?: R2Bucket; // fisioflow-clinical-docs: PDFs de referência (diretrizes/protocolos)
 

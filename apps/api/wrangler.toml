@@ -174,6 +174,12 @@ class_name = "EvolutionCollaborationSql"
 name = "NOTES_COLLABORATION"
 class_name = "NotesCollaboration"
 
+# Reextração de pose a partir do vídeo no R2. Sem isto, Android sem o plugin
+# MLKit e Expo Go ficam sem caminho para virar análise.
+[[durable_objects.bindings]]
+name = "BIOMECHANICS_POSE"
+class_name = "BiomechanicsPoseContainer"
+
 [[migrations]]
 tag = "v1"
 
@@ -243,6 +249,23 @@ deleted_classes = ["EvolutionCollaboration"]
 [[migrations]]
 tag = "v15"
 new_sqlite_classes = ["NotesCollaboration"]
+
+# A classe base Container exige DO com storage SQLite.
+[[migrations]]
+tag = "v16"
+new_sqlite_classes = ["BiomechanicsPoseContainer"]
+
+# ===== CONTAINERS =====
+# standard-4 = 4 vCPU / 12 GiB. A conta é decode de 1080p + uma passada de
+# MediaPipe por quadro; metade disso dobraria a espera para economizar pouco.
+# max_instances limita o gasto — a fila serializa o excedente naturalmente.
+[[containers]]
+class_name = "BiomechanicsPoseContainer"
+image = "./containers/biomechanics-pose/Dockerfile"
+name = "fisioflow-biomechanics-pose"
+max_instances = 5
+instance_type = "standard-4"
+rollout_step_percentage = 25
 
 # ===== AI & BROWSER RENDERING =====
 [ai]
@@ -760,6 +783,17 @@ deleted_classes = ["EvolutionCollaboration"]
 [[env.staging.migrations]]
 tag = "v15"
 new_sqlite_classes = ["NotesCollaboration"]
+
+[[env.staging.migrations]]
+tag = "v16"
+new_sqlite_classes = ["BiomechanicsPoseContainer"]
+
+[[env.staging.containers]]
+class_name = "BiomechanicsPoseContainer"
+image = "./containers/biomechanics-pose/Dockerfile"
+name = "fisioflow-biomechanics-pose-staging"
+max_instances = 2
+instance_type = "standard-2"
 
 [env.staging.ai]
 binding = "AI"

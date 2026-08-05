@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import { asc, eq, and, desc, or, isNull } from "drizzle-orm";
 import { requireAuth, type AuthVariables } from "../lib/auth";
-import { createDb } from "../lib/db";
+import { createDb, createPool, createPoolForOrg } from "../lib/db";
+import { dispatchToPoseContainer, verifyCallbackToken } from "../lib/biomechanics/containerDispatch";
 import { R2Service } from "../lib/storage/R2Service";
 import {
   biomechanicsAnnotations,
@@ -2088,5 +2089,250 @@ function buildPoseEngineLabel(header: Record<string, unknown>): string | null {
   if (engine.platform) parts.push(`/${String(engine.platform)}`);
   return parts.join("").slice(0, 80);
 }
+
+
+// ═══ Callback do container de pose ═══════════════════════════════════════════
+//
+// Rota interna, FORA do escopo de organização: quem chama é o container, que
+// não tem sessão. A autenticação é o token HMAC emitido no despacho, com
+// validade — o container é tratado como não confiável.
+app.post("/internal/jobs/:jobId/pose-callback", async (c) => {
+  const jobId = c.req.param("jobId");
+  const token = c.req.header("X-Pose-Callback-Token") ?? "";
+  const secret = c.env.BIOMECHANICS_CALLBACK_SECRET;
+
+  if (!secret) return c.json({ error: "callback não configurado" }, 503);
+
+  const body = (await c.req.json().catch(() => ({}))) as {
+    status?: string;
+    key?: string;
+    sha256?: string;
+    frameCount?: number;
+    fps?: number;
+    engine?: string;
+    bytes?: number;
+    error?: string;
+  };
+
+  // O job é lido sem contexto de organização porque é ele que informa a org.
+  const pool = await createPool(c.env);
+  const jobResult = await pool.query(
+    `SELECT id, assessment_id, organization_id, patient_id, media_id
+       FROM biomechanics_jobs WHERE id = $1`,
+    [jobId],
+  );
+  const job = jobResult.rows[0];
+  if (!job) return c.json({ error: "job não encontrado" }, 404);
+
+  const valid = await verifyCallbackToken(secret, token, jobId, job.assessment_id, Date.now());
+  if (!valid) return c.json({ error: "token inválido ou expirado" }, 401);
+
+  const orgPool = await createPoolForOrg(c.env, job.organization_id);
+
+  if (body.status !== "succeeded" || !body.key || !body.sha256) {
+    await orgPool.query(
+      `UPDATE biomechanics_jobs
+          SET status = 'failed', stage = 'failed', error_code = 'container_extraction_failed',
+              error_message = $1, completed_at = NOW(), updated_at = NOW()
+        WHERE id = $2 AND organization_id = $3`,
+      [String(body.error ?? "Falha na extração de pose.").slice(0, 500), jobId, job.organization_id],
+    );
+    return c.json({ ok: true, recorded: "failed" });
+  }
+
+  await orgPool.query(
+    `UPDATE biomechanics_media
+        SET landmarks_r2_key = $1, landmarks_sha256 = $2, landmarks_schema = 'ff-pose-33-v1',
+            landmarks_bytes = $3, frame_count = $4, pose_engine = $5, fps = $6, updated_at = NOW()
+      WHERE id = $7 AND organization_id = $8`,
+    [
+      body.key,
+      body.sha256,
+      body.bytes ?? null,
+      body.frameCount ?? null,
+      body.engine ?? "mediapipe-pose/container",
+      body.fps != null ? String(body.fps) : null,
+      job.media_id,
+      job.organization_id,
+    ],
+  );
+
+  // O cálculo das métricas é do Worker, sempre: o container só extrai pose.
+  // Uma implementação de matemática clínica, uma suíte de testes.
+  await c.env.BACKGROUND_QUEUE.send({
+    type: "PROCESS_BIOMECHANICS_MEDIA",
+    payload: {
+      jobId,
+      assessmentId: job.assessment_id,
+      mediaId: job.media_id,
+      organizationId: job.organization_id,
+      patientId: job.patient_id,
+      phase: "container",
+    },
+  });
+
+  return c.json({ ok: true, queued: true });
+});
+
+// POST /api/biomechanics/:id/reprocess — reextração de pose em nuvem
+//
+// POLÍTICA DE LAUDO ASSINADO, explícita porque é a decisão clínica mais
+// delicada do módulo:
+//
+// Laudo assinado é IMUTÁVEL. Reprocessar nunca o altera. Quando o pedido recai
+// sobre um assinado, criamos uma avaliação NOVA que o retifica
+// (`amends_assessment_id`), reaproveitando o mesmo vídeo no R2. O original
+// mantém report_hash, signed_at e o PDF intactos para sempre — a verificação
+// pública de quem tem o documento antigo em mãos continua válida, e passa a
+// informar que existe retificação.
+//
+// A alternativa — sobrescrever os números do laudo assinado — significaria que
+// um documento com CREFITO poderia mudar de conteúdo depois de emitido, sem
+// que o signatário soubesse. Isso não é aceitável em prontuário.
+app.post("/:id/reprocess", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const db = await createDb(c.env);
+
+  const [assessment] = await db
+    .select()
+    .from(biomechanicsAssessments)
+    .where(
+      and(
+        eq(biomechanicsAssessments.id, id),
+        eq(biomechanicsAssessments.organizationId, user.organizationId),
+      ),
+    );
+  if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
+
+  if (!c.env.BIOMECHANICS_POSE) {
+    return c.json(
+      { error: "Reprocessamento em nuvem indisponível.", code: "container_unavailable" },
+      503,
+    );
+  }
+
+  const mediaId = assessment.primaryMediaId;
+  const [media] = mediaId
+    ? await db
+        .select()
+        .from(biomechanicsMedia)
+        .where(
+          and(
+            eq(biomechanicsMedia.id, mediaId),
+            eq(biomechanicsMedia.organizationId, user.organizationId),
+          ),
+        )
+    : [];
+
+  if (!media?.r2Key) {
+    return c.json(
+      { error: "Não há vídeo armazenado para reprocessar.", code: "no_video" },
+      409,
+    );
+  }
+
+  // Laudo assinado: a reextração alimenta uma retificação, não o original.
+  let targetAssessmentId = assessment.id;
+  let amendment = false;
+
+  if (assessment.signedAt) {
+    const [novo] = await db
+      .insert(biomechanicsAssessments)
+      .values({
+        patientId: assessment.patientId,
+        organizationId: user.organizationId,
+        professionalId: user.uid,
+        protocolId: assessment.protocolId,
+        primaryMediaId: assessment.primaryMediaId,
+        type: assessment.type,
+        status: "queued",
+        mediaUrl: assessment.mediaUrl,
+        thumbnailUrl: assessment.thumbnailUrl,
+        amendsAssessmentId: assessment.id,
+        captureContext: assessment.captureContext,
+      })
+      .returning();
+
+    targetAssessmentId = novo.id;
+    amendment = true;
+
+    await db.insert(biomechanicsReviewActions).values({
+      organizationId: user.organizationId,
+      assessmentId: assessment.id,
+      action: "reprocess_requested",
+      fromStatus: assessment.status,
+      toStatus: "amended",
+      notes: `Retificação solicitada; nova avaliação ${novo.id}.`,
+      createdBy: user.uid,
+    });
+  }
+
+  const [job] = await db
+    .insert(biomechanicsJobs)
+    .values({
+      organizationId: user.organizationId,
+      patientId: assessment.patientId,
+      assessmentId: targetAssessmentId,
+      mediaId: media.id,
+      status: "queued",
+      stage: "container_dispatch",
+      progress: 0,
+      phase: "container",
+      createdBy: user.uid,
+      algorithmVersion: DEFAULT_ALGORITHM_VERSION,
+    })
+    .returning();
+
+  const resultKey = r2BiomechanicsLandmarksKey({
+    organizationId: user.organizationId,
+    patientId: assessment.patientId,
+    assessmentId: targetAssessmentId,
+    mediaId: media.id,
+    attempt: media.attempt ?? 1,
+  }).replace("-v1.ndjson", "-container-v1.ndjson");
+
+  const dispatch = await dispatchToPoseContainer(c.env, {
+    jobId: job.id,
+    assessmentId: targetAssessmentId,
+    organizationId: user.organizationId,
+    patientId: assessment.patientId,
+    mediaId: media.id,
+    videoKey: media.r2Key,
+    resultKey,
+    view: media.view ?? "sagittal",
+    attempt: media.attempt ?? 1,
+    capturedAt: assessment.createdAt?.toISOString?.() ?? null,
+    apiBaseUrl: new URL(c.req.url).origin,
+  });
+
+  if (!dispatch.dispatched) {
+    await db
+      .update(biomechanicsJobs)
+      .set({
+        status: "failed",
+        stage: "failed",
+        errorCode: "container_dispatch_failed",
+        errorMessage: dispatch.reason ?? "Falha ao acionar o container.",
+        completedAt: new Date(),
+      })
+      .where(eq(biomechanicsJobs.id, job.id));
+
+    return c.json(
+      { error: "Não foi possível iniciar o reprocessamento.", code: dispatch.reason },
+      502,
+    );
+  }
+
+  return c.json({
+    data: {
+      job,
+      assessmentId: targetAssessmentId,
+      amendment,
+      // Explicita para a UI que o original segue intocado.
+      originalPreserved: amendment ? assessment.id : null,
+    },
+  });
+});
 
 export { app as biomechanicsRoutes };

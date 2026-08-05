@@ -494,6 +494,7 @@ export {
   EvolutionCollaborationSql,
 } from "./agents/EvolutionCollaboration";
 export { NotesCollaboration } from "./agents/NotesCollaboration";
+export { BiomechanicsPoseContainer } from "./containers/BiomechanicsPoseContainer";
 
 export { SessionSummaryWorkflow } from "./workflows/sessionSummary";
 export {

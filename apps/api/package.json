@@ -18,6 +18,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1016.0",
     "@aws-sdk/s3-request-presigner": "^3.1016.0",
+    "@cloudflare/containers": "^0.3.7",
     "@cloudflare/voice": "^0.2.0",
     "@fisioflow/core": "workspace:*",
     "@fisioflow/db": "workspace:*",
