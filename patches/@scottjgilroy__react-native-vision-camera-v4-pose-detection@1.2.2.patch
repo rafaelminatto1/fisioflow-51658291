@@ -14,3 +14,19 @@ index dd5ebbad70a9a3d6aa35ea80495195f2491da1b9..2e98f375ad124dbb76ddca0e69d980e0
                          data[@"rightShoulderPosition"] = @{@"x": @(position.x), @"y": @(position.y)};
                      }
                      MLKPoseLandmark *leftElbowPosition = [pose landmarkOfType:MLKPoseLandmarkTypeLeftElbow];
+diff --git a/react-native-vision-camera-v3-pose-detection.podspec b/react-native-vision-camera-v4-pose-detection.podspec
+similarity index 97%
+rename from react-native-vision-camera-v3-pose-detection.podspec
+rename to react-native-vision-camera-v4-pose-detection.podspec
+index 7fa6309be79c0e39404d60b46fbd91e19fdb663e..f1e5754204930090035119e36fd5b238f8f0f427 100644
+--- a/react-native-vision-camera-v3-pose-detection.podspec
++++ b/react-native-vision-camera-v4-pose-detection.podspec
+@@ -28,7 +28,7 @@ Pod::Spec.new do |s|
+         "OTHER_CPLUSPLUSFLAGS" => "-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1",
+         "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
+     }
+-    s.dependency "React-Codegen"
++    s.dependency "ReactCodegen"
+     s.dependency "RCT-Folly"
+     s.dependency "RCTRequired"
+     s.dependency "RCTTypeSafety"
