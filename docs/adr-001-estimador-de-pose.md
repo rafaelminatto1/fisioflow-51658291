@@ -120,17 +120,20 @@ garantia de concordar com o caminho de nuvem.
       `usableFrames: 0` em vez de alucinar uma pose, e o nosso próprio
       decodificador leu o bundle e produziu **zero métricas** com veredito
       `unusable`. O caminho honesto funciona.
-- [ ] **Sanear a cadeia de migrations de DO.** Investigado: manter apenas a
-      última tag aplicada (`v15`) mais a nova (`v16`) faz o dry-run de produção
-      passar com os containers declarados — confirmado por bisseção. A doc da
-      Cloudflare diz que tags são identificadores únicos usados para determinar
-      o que já foi aplicado, o que sustenta essa leitura, mas o dry-run não
-      consulta o estado do servidor. **Provar no staging (`fisioflow-api-staging`,
-      worker separado) antes de tocar em produção.**
-      Existe também o caminho novo `exports` (jul/2026), que elimina a cadeia
-      legada de vez — mas é porta de mão única ("uma vez com exports, todos os
-      deploys seguintes devem usar exports") e rollback não atravessa mudança
-      de ciclo de vida. Não atravessar sem decisão explícita.
-- [ ] Disparar o container automaticamente após `landmarks/complete` e após
-      `media/complete` sem landmarks. Depende do item acima.
-- [ ] Marcar métricas `device_pose` como provisórias na UI da análise.
+- [x] **Sanear a cadeia de migrations de DO.** Resolvido mantendo apenas a
+      última tag aplicada (`v15`) mais a nova (`v16`). Declarar containers faz o
+      wrangler revalidar a cadeia inteira, e ela tropeçava no
+      `deleted_classes = ["PatientAgent"]` legado da v12.
+      **Provado com deploy real no staging** (`fisioflow-api-staging`, worker
+      separado) em 06/08/2026 antes de ir para produção — o servidor aceitou a
+      cadeia enxuta e o container subiu (`fisioflow-biomechanics-pose-staging`,
+      2 instâncias). Descartado o caminho `exports` (jul/2026): elimina a cadeia
+      legada mas é porta de mão única e impede rollback através da mudança.
+- [x] **Disparar o container automaticamente.** `landmarks/complete` enfileira o
+      job de device e, em seguida, despacha o container. O helper nunca lança:
+      o container melhora a qualidade do dado, não é o caminho crítico da
+      captura — se estiver indisponível, o resultado do aparelho permanece,
+      provisório, em vez de a captura inteira falhar.
+- [x] **Marcar `device_pose` como provisório na UI.** A análise mostra
+      "Resultado provisório — calculado no aparelho" enquanto houver métrica de
+      device viva.

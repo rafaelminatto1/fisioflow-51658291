@@ -260,6 +260,33 @@ export interface BiomechanicsWorkbench {
   annotations: BiomechanicsAnnotation[];
 }
 
+/**
+ * Métrica vinda do aparelho é PROVISÓRIA (ADR-001): aparece na hora para o
+ * fisio mostrar ao paciente, mas o número que fica no laudo vem do
+ * reprocessamento em nuvem, que usa um estimador só em todas as sessões.
+ */
+export function isProvisional(provenance?: string | null): boolean {
+  return provenance === "device_pose";
+}
+
+/** Rótulo do chip de procedência exibido em cada métrica. */
+export function provenanceLabel(provenance?: string | null): string {
+  switch (provenance) {
+    case "device_pose":
+      return "provisório · no aparelho";
+    case "container_pose":
+      return "em nuvem";
+    case "manual":
+      return "medição manual";
+    case "patient_reported":
+      return "relato do paciente";
+    case "derived":
+      return "derivado";
+    default:
+      return "não validado";
+  }
+}
+
 export const biomechanicsApi = {
   dashboard: () =>
     fetchApi<{

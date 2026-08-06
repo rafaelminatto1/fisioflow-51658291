@@ -50,7 +50,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { bio, font } from "@/constants/biomecanica";
 import { jointAngleSeries } from "@fisioflow/core";
-import { biomechanicsApi } from "@/lib/api/biomechanics";
+import { biomechanicsApi, isProvisional } from "@/lib/api/biomechanics";
 import { LineChart } from "react-native-gifted-charts";
 import { SymmetryMeter } from "@/components/biomecanica/SymmetryMeter";
 import { TrendelenburgOverlay, ValgusOverlay } from "@/components/biomecanica/ClinicalTestOverlays";
@@ -111,6 +111,7 @@ export default function AnalysisScreen() {
   // Série real do ângulo articular, derivada dos keyframes que o pipeline
   // gravou. Vazia enquanto não houver captura processada — o gráfico mostra o
   // estado de "aguardando processamento" em vez de uma senoide inventada.
+  const [provisorio, setProvisorio] = useState(false);
   const [trajectory, setTrajectory] = useState<
     Array<{ value: number; label: string; dataPointText?: string }>
   >([]);
@@ -124,6 +125,11 @@ export default function AnalysisScreen() {
         if (!mounted) return;
         const workbench = response.data;
         setJobStatus(workbench.jobs?.[0]?.status ?? workbench.assessment.status ?? null);
+        // Enquanto o reprocessamento em nuvem não terminar, os números na tela
+        // são do aparelho e podem mudar. Dizer isso é obrigação, não enfeite.
+        setProvisorio(
+          (workbench.metrics ?? []).some((m: any) => isProvisional(m.provenance)),
+        );
         const workbenchMetrics = workbench.metrics.reduce(
           (acc: Record<string, number>, metric: any) => {
             const value = Number(metric.metricValue ?? metric.metric_value);
@@ -375,6 +381,12 @@ export default function AnalysisScreen() {
                 ? `${PROTOCOLS.find((p) => p.id === protocol)?.label} · ${jobStatus}`
                 : PROTOCOLS.find((p) => p.id === protocol)?.label}
             </Text>
+            {provisorio ? (
+              <Text style={styles.provisorioTag} numberOfLines={2}>
+                Resultado provisório — calculado no aparelho. Os valores finais
+                virão do reprocessamento em nuvem.
+              </Text>
+            ) : null}
           </View>
           <Pressable
             style={styles.roundBtn}
@@ -651,6 +663,13 @@ export default function AnalysisScreen() {
 }
 
 const styles = StyleSheet.create({
+  provisorioTag: {
+    fontFamily: font.medium,
+    fontSize: 11,
+    lineHeight: 15,
+    color: bio.amberText,
+    marginTop: 2,
+  },
   root: { flex: 1, backgroundColor: "#060910" },
   video: { ...StyleSheet.absoluteFillObject, backgroundColor: "#0B1422", alignItems: "center" },
   topSafe: { position: "absolute", top: 0, left: 0, right: 0 },

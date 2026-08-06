@@ -2110,7 +2110,23 @@ app.post("/:id/landmarks/complete", requireAuth, async (c) => {
     },
   });
 
-  return c.json({ data: { media: updatedMedia, job, replayed: false } }, 201);
+  // O resultado do aparelho é PROVISÓRIO (ver docs/adr-001-estimador-de-pose.md).
+  // Ele aparece na hora, para o fisio mostrar ao paciente ainda na sala, mas o
+  // número que fica gravado vem do container: um estimador só, versionado, o
+  // mesmo em toda sessão. Sem isso, comparar a sessão 1 (aparelho) com a 12
+  // (nuvem) mostraria troca de estimador como progresso.
+  const containerJob = await dispatchContainerReprocess(c, {
+    assessment,
+    media: updatedMedia,
+    organizationId: user.organizationId,
+    userId: user.uid,
+    supersedesJobId: job.id,
+  });
+
+  return c.json(
+    { data: { media: updatedMedia, job, containerJob, replayed: false } },
+    201,
+  );
 });
 
 function buildPoseEngineLabel(header: Record<string, unknown>): string | null {
@@ -2366,5 +2382,86 @@ app.post("/:id/reprocess", requireAuth, async (c) => {
     },
   });
 });
+
+/**
+ * Enfileira a reextração de pose em nuvem, que é a fonte de verdade das
+ * métricas gravadas (ADR-001).
+ *
+ * Nunca lança: o container é uma melhoria da qualidade do dado, não o caminho
+ * crítico da captura. Se ele estiver indisponível, o resultado do aparelho
+ * permanece — provisório, mas presente — em vez de a captura inteira falhar.
+ */
+async function dispatchContainerReprocess(
+  c: { env: Env; req: { url: string } },
+  input: {
+    assessment: typeof biomechanicsAssessments.$inferSelect;
+    media: typeof biomechanicsMedia.$inferSelect;
+    organizationId: string;
+    userId: string;
+    supersedesJobId?: string;
+  },
+): Promise<{ id: string } | null> {
+  if (!c.env.BIOMECHANICS_POSE || !input.media.r2Key) return null;
+
+  try {
+    const db = await createDb(c.env);
+    const [job] = await db
+      .insert(biomechanicsJobs)
+      .values({
+        organizationId: input.organizationId,
+        patientId: input.assessment.patientId,
+        assessmentId: input.assessment.id,
+        mediaId: input.media.id,
+        status: "queued",
+        stage: "container_dispatch",
+        progress: 0,
+        phase: "container",
+        supersedesJobId: input.supersedesJobId ?? null,
+        createdBy: input.userId,
+        algorithmVersion: DEFAULT_ALGORITHM_VERSION,
+      })
+      .returning();
+
+    const resultKey = r2BiomechanicsLandmarksKey({
+      organizationId: input.organizationId,
+      patientId: input.assessment.patientId,
+      assessmentId: input.assessment.id,
+      mediaId: input.media.id,
+      attempt: input.media.attempt ?? 1,
+    }).replace("-v1.ndjson", "-container-v1.ndjson");
+
+    const dispatch = await dispatchToPoseContainer(c.env, {
+      jobId: job.id,
+      assessmentId: input.assessment.id,
+      organizationId: input.organizationId,
+      patientId: input.assessment.patientId,
+      mediaId: input.media.id,
+      videoKey: input.media.r2Key,
+      resultKey,
+      view: input.media.view ?? "sagittal",
+      attempt: input.media.attempt ?? 1,
+      apiBaseUrl: new URL(c.req.url).origin,
+    });
+
+    if (!dispatch.dispatched) {
+      await db
+        .update(biomechanicsJobs)
+        .set({
+          status: "failed",
+          stage: "failed",
+          errorCode: "container_dispatch_failed",
+          errorMessage: dispatch.reason ?? null,
+          completedAt: new Date(),
+        })
+        .where(eq(biomechanicsJobs.id, job.id));
+      return null;
+    }
+
+    return { id: job.id };
+  } catch (error) {
+    console.error("[Biomechanics] falha ao despachar o container:", error);
+    return null;
+  }
+}
 
 export { app as biomechanicsRoutes };
