@@ -319,3 +319,6 @@ claudedesign/
 specs/**/.~lock*
 
 testsprite_tests/tmp/config.json
+
+# Declarações do Worker consumidas pelo RPC tipado da web (geradas)
+apps/api/dist-types/

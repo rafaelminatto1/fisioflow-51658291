@@ -42,7 +42,10 @@
     "db:migrate": "pnpm --filter @fisioflow/db exec drizzle-kit migrate",
     "db:branch": "npx neonctl branches create",
     "db:backup": "echo 'Run: npx neonctl projects restore' && npx neonctl projects restore",
-    "prepare": "husky"
+    "prepare": "husky",
+    "api:types": "pnpm --filter @fisioflow/api types",
+    "pretype-check": "pnpm run api:types",
+    "prebuild": "pnpm run api:types"
   },
   "dependencies": {
     "@cloudflare/voice": "^0.2.0",

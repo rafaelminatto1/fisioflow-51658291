@@ -21,7 +21,15 @@ import { getNeonAccessToken } from "@/lib/auth/neon-token";
 import { getWorkersApiUrl } from "./config";
 
 // Importação de tipo — sem impacto no bundle de runtime
-import type { AppType } from "../../../apps/api/src/index";
+// Tipo vindo das DECLARAÇÕES compiladas do Worker, não do código-fonte.
+//
+// Importar de `apps/api/src/index` arrastava o Worker inteiro para o grafo de
+// tipos da web e produzia ~216 erros fantasmas (DurableObject, WebSocketPair,
+// DurableObjectState não encontrados) — o Worker compila limpo no próprio
+// projeto, com os tipos de Cloudflare. É a orientação do Hono para RPC em
+// aplicações grandes: compilar os tipos e consumir o .d.ts.
+// Gerar com: pnpm --filter @fisioflow/api types
+import type { AppType } from "../../../apps/api/dist-types/index";
 
 function getBaseUrl(): string {
   return getWorkersApiUrl();
