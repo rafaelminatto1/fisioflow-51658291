@@ -222,11 +222,30 @@ export interface ApiPartnership {
   updated_at?: string;
 }
 
+/** Formato que os cards da home consomem — derivado de ApiInsightsDashboard. */
 export interface ApiDashboardStats {
   activePatients: number;
   todayAppointments: number;
   pendingAppointments: number;
   completedAppointments: number;
+}
+
+/** Formato que `GET /api/insights/dashboard` de fato devolve. */
+export interface ApiInsightsDashboard {
+  period: string;
+  appointments: {
+    total: number;
+    completed: number;
+    no_shows: number;
+    upcoming: number;
+  };
+  financial: {
+    total_revenue: number;
+    total_payments: number;
+    avg_ticket: number;
+  };
+  new_patients: number;
+  active_patients: number;
 }
 
 export interface ApiLead {

@@ -1,13 +1,11 @@
 import { useState, useCallback } from "react";
 import { Alert } from "react-native";
-import { getCurrentLocation, type LocationData } from "@/lib/geolocation";
 import { fetchApi } from "@/lib/api";
 
 interface CheckInData {
   appointmentId: string;
   patientId: string;
   professionalId: string;
-  location: LocationData;
   checkedAt: string;
 }
 
@@ -26,29 +24,24 @@ export function useCheckIn() {
       setError(null);
 
       try {
-        // Get current location
-        const location = await getCurrentLocation();
-        if (!location) throw new Error("Não foi possível obter a localização");
-
-        // Create check-in record
+        // Check-in é confirmação de presença: `PATCH /api/appointments/:id` com
+        // status `presenca_confirmada`. A rota antiga (`POST .../check-in`) nunca
+        // existiu, então nenhum check-in jamais chegou ao servidor.
+        //
+        // A geolocalização deixou de ser coletada: não há coluna que a armazene
+        // nem validação que a use, então era pedir permissão de localização ao
+        // profissional em troca de nada. Se um dia houver cerca geográfica, isso
+        // volta junto com a coluna e a regra que a valida.
         const checkInData: CheckInData = {
           appointmentId,
           patientId,
           professionalId,
-          location,
           checkedAt: new Date().toISOString(),
         };
 
-        await fetchApi(`/api/appointments/${appointmentId}/check-in`, {
-          method: "POST",
-          data: {
-            patient_id: patientId,
-            professional_id: professionalId,
-            latitude: location.latitude,
-            longitude: location.longitude,
-            accuracy: location.accuracy,
-            checked_at: checkInData.checkedAt,
-          },
+        await fetchApi(`/api/appointments/${encodeURIComponent(appointmentId)}`, {
+          method: "PATCH",
+          data: { status: "presenca_confirmada" },
         });
 
         setLastCheckIn(checkInData);

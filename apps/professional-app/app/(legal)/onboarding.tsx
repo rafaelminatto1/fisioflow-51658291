@@ -15,12 +15,12 @@ import {
 import { useRouter, type Href } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as Device from "expo-device";
-import Constants from "expo-constants";
 import { LEGAL_VERSIONS } from "@/constants/legalVersions";
+import { CONSENT_TYPES } from "@/constants/consentTypes";
 import MedicalDisclaimerModal from "@/components/legal/MedicalDisclaimerModal";
 import { authApi } from "@/lib/auth-api";
-import { fetchApi } from "@/lib/api";
+import { consentManager } from "@/lib/services/consentManager";
+import { REQUIRED_LEGAL_CONSENTS } from "@/lib/services/policyVersionChecker";
 
 type OnboardingStep = "welcome" | "privacy" | "terms" | "disclaimer" | "biometric" | "complete";
 
@@ -49,13 +49,22 @@ export default function OnboardingScreen() {
     checkOnboardingStatus();
   }, []);
 
+  /**
+   * "Onboarding completo" = os três documentos legais aceitos na versão vigente,
+   * lido de `lgpd_consents`. Antes isto vinha de `onboardingComplete` em
+   * `GET /api/users/:id`, rota inexistente: a chamada dava 404, caía no catch e o
+   * onboarding reaparecia para quem já o tinha concluído.
+   */
   const checkOnboardingStatus = async () => {
     try {
       const currentUser = await authApi.getMe();
       setUser(currentUser);
 
-      const res = await fetchApi<any>(`/api/users/${currentUser.id}`);
-      if (res.data?.onboardingComplete) {
+      const missing = await consentManager.missingLegalConsents(
+        currentUser.id,
+        REQUIRED_LEGAL_CONSENTS,
+      );
+      if (missing.length === 0) {
         router.replace("/(tabs)");
       }
     } catch (error) {
@@ -63,42 +72,9 @@ export default function OnboardingScreen() {
     }
   };
 
-  const getDeviceInfo = () => {
-    return {
-      model: Device.modelName || "Unknown",
-      osVersion: Device.osVersion || "Unknown",
-      appVersion: Constants.expoConfig?.version || "1.0.0",
-      platform: "ios" as const,
-    };
-  };
-
-  const storeAcceptance = async (type: string, version: string) => {
+  const storeAcceptance = async (consentType: string, version: string) => {
     if (!user) throw new Error("No authenticated user");
-    await fetchApi("/api/consents/accept", {
-      method: "POST",
-      data: {
-        userId: user.id,
-        type,
-        version,
-        deviceInfo: getDeviceInfo(),
-      },
-    });
-  };
-
-  const completeOnboarding = async () => {
-    if (!user) throw new Error("No authenticated user");
-
-    await fetchApi(`/api/users/${user.id}`, {
-      method: "PUT",
-      data: {
-        onboardingComplete: true,
-        onboardingCompletedAt: new Date().toISOString(),
-        privacyPolicyVersion: LEGAL_VERSIONS.PRIVACY_POLICY,
-        termsOfServiceVersion: LEGAL_VERSIONS.TERMS_OF_SERVICE,
-        medicalDisclaimerVersion: LEGAL_VERSIONS.MEDICAL_DISCLAIMER,
-        deviceInfo: getDeviceInfo(),
-      },
-    });
+    await consentManager.grantConsent(user.id, consentType, version, { requireServerAck: true });
   };
 
   const goToNextStep = async () => {
@@ -110,12 +86,12 @@ export default function OnboardingScreen() {
           break;
 
         case "privacy":
-          await storeAcceptance("privacy_policy", LEGAL_VERSIONS.PRIVACY_POLICY);
+          await storeAcceptance(CONSENT_TYPES.PRIVACY_POLICY, LEGAL_VERSIONS.PRIVACY_POLICY);
           setState({ ...state, currentStep: "terms", privacyAccepted: true });
           break;
 
         case "terms":
-          await storeAcceptance("terms_of_service", LEGAL_VERSIONS.TERMS_OF_SERVICE);
+          await storeAcceptance(CONSENT_TYPES.TERMS_OF_SERVICE, LEGAL_VERSIONS.TERMS_OF_SERVICE);
           setState({ ...state, currentStep: "disclaimer", termsAccepted: true });
           break;
 
@@ -125,7 +101,6 @@ export default function OnboardingScreen() {
 
         case "biometric":
           setState({ ...state, currentStep: "complete" });
-          await completeOnboarding();
           router.replace("/(tabs)");
           break;
 
@@ -148,7 +123,6 @@ export default function OnboardingScreen() {
   const skipBiometric = async () => {
     setIsLoading(true);
     try {
-      await completeOnboarding();
       router.replace("/(tabs)");
     } catch (error) {
       console.error("Error completing onboarding:", error);

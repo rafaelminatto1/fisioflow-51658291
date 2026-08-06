@@ -86,6 +86,8 @@ export default function AgendaScreen() {
   const {
     data: appointments,
     isLoading,
+    error,
+    refetch,
     updateAsync,
   } = useAppointments({
     startDate: fetchRange.startDate,
@@ -95,6 +97,9 @@ export default function AgendaScreen() {
   });
 
   const showLoading = isLoading && (!appointments || appointments.length === 0);
+  // Falha de carga precisa ser visível: uma agenda em branco por erro de rede é
+  // idêntica a um dia sem consulta, e foi assim que o problema passou despercebido.
+  const showError = Boolean(error) && (!appointments || appointments.length === 0);
 
   const handleDateChange = useCallback(
     (date: Date) => {
@@ -202,6 +207,23 @@ export default function AgendaScreen() {
 
       {showLoading ? (
         <AgendaSkeleton />
+      ) : showError ? (
+        <View style={styles.errorContainer}>
+          <Ionicons name="cloud-offline-outline" size={40} color={colors.textSecondary} />
+          <Text style={[styles.errorTitle, { color: colors.text }]}>
+            Não foi possível carregar a agenda
+          </Text>
+          <Text style={[styles.errorHint, { color: colors.textSecondary }]}>
+            Isto é uma falha de carregamento, não uma agenda vazia.
+          </Text>
+          <TouchableOpacity
+            onPress={() => refetch()}
+            style={[styles.retryButton, { borderColor: colors.primary }]}
+            accessibilityRole="button"
+          >
+            <Text style={[styles.retryLabel, { color: colors.primary }]}>Tentar novamente</Text>
+          </TouchableOpacity>
+        </View>
       ) : (
         <CalendarView
           appointments={appointments ?? []}
@@ -214,7 +236,7 @@ export default function AgendaScreen() {
         />
       )}
 
-      {!showLoading && (
+      {!showLoading && !showError && (
         <TouchableOpacity
           style={[styles.fab, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
           onPress={() => {
@@ -267,6 +289,34 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
+  },
+  errorContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+    gap: 8,
+  },
+  errorTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+    marginTop: 8,
+  },
+  errorHint: {
+    fontSize: 13,
+    textAlign: "center",
+  },
+  retryButton: {
+    marginTop: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  retryLabel: {
+    fontSize: 14,
+    fontWeight: "600",
   },
   skeletonContainer: {
     flex: 1,

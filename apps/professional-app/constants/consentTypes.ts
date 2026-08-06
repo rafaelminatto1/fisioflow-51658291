@@ -1,6 +1,7 @@
 export const CONSENT_TYPES = {
   PRIVACY_POLICY: "privacy-policy",
   TERMS_OF_SERVICE: "terms-of-service",
+  MEDICAL_DISCLAIMER: "medical-disclaimer",
   CAMERA_PERMISSION: "camera-permission",
   PHOTOS_PERMISSION: "photos-permission",
   LOCATION_PERMISSION: "location-permission",

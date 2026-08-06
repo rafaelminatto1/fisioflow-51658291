@@ -24,27 +24,36 @@ class DataExportService {
     return DataExportService.instance;
   }
 
+  /**
+   * Registra o pedido de portabilidade (LGPD art. 18 V/VI).
+   *
+   * Path: `/api/lgpd/data-export-request`. Até 08/2026 isto chamava `/api/export`,
+   * rota inexistente — a tela dizia "sua solicitação está sendo processada" e o
+   * pedido não era gravado em lugar nenhum.
+   */
   async requestExport(request: ExportRequest): Promise<{ status: string; url?: string }> {
     try {
-      const data = await fetchApi<any>("/api/export", {
+      const response = await fetchApi<{
+        data: { status: string; result_url?: string; response_summary?: string };
+      }>("/api/lgpd/data-export-request", {
         method: "POST",
         data: {
           format: request.format,
           types: request.types,
           dateRange: request.dateRange
             ? {
-                start: request.dateRange.start.toISOString(),
-                end: request.dateRange.end.toISOString(),
+                start: request.dateRange.start.toISOString().split("T")[0],
+                end: request.dateRange.end.toISOString().split("T")[0],
               }
             : undefined,
+          request_origin: "professional_app",
         },
       });
 
-      // Log export event
-      // Note: we can get user ID from fetchApi result if needed, but for now assuming successful call
-      // await auditLogger.logExport(userId, 'patient', request.format);
-
-      return data;
+      return {
+        status: response.data?.status ?? "received",
+        url: response.data?.result_url,
+      };
     } catch (error) {
       fisioLogger.error("Export request failed", error, "DataExportService");
       throw error;

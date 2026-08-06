@@ -1,137 +1,144 @@
 import { fetchApi } from "@/lib/api";
-import { authApi } from "@/lib/auth-api";
-import { config } from "@/lib/config";
 
 /**
- * Upload de um arquivo para o Cloudflare R2 (via API)
- * @param uri URI local do arquivo
- * @param path Caminho no storage (ex: 'patients/123/photo.jpg')
- * @returns URL pública do arquivo
+ * Upload para o R2 pelo fluxo de URL pré-assinada do Worker.
+ *
+ * Até 08/2026 este módulo fazia `POST multipart` em `/api/storage/upload`, rota que
+ * não existe (404): todo upload de avatar e de foto de evolução falhava. O Worker
+ * expõe `POST /api/media/upload-url`, que devolve uma URL assinada para um PUT
+ * direto no bucket — é o mesmo fluxo que a tela de exercícios e o app web já usam.
+ *
+ * O Worker monta a chave final (`pasta/data/usuário/uuid.ext`) e ignora caminho
+ * vindo do cliente, então o que passamos é a PASTA, não o caminho completo.
  */
-export async function uploadFile(uri: string, path: string): Promise<string> {
-  try {
-    const token = await authApi.getToken();
-    if (!token) throw new Error("Not authenticated");
 
-    const response = await fetch(uri);
-    const blob = await response.blob();
+const ALLOWED_CONTENT_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/heic",
+  "image/heif",
+  "video/mp4",
+  "video/quicktime",
+  "application/pdf",
+] as const;
 
-    const formData = new FormData();
-    // @ts-expect-error - React Native FormData accepts blob
-    formData.append("file", {
-      uri,
-      name: path.split("/").pop() || "file",
-      type: blob.type || "application/octet-stream",
-    });
-    formData.append("path", path);
+interface UploadUrlResponse {
+  data?: {
+    uploadUrl?: string;
+    publicUrl?: string;
+    key?: string;
+  };
+}
 
-    const uploadRes = await fetch(`${config.apiUrl}/api/storage/upload`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    if (!uploadRes.ok) {
-      throw new Error(`Upload falhou: ${uploadRes.status}`);
-    }
-
-    const data = await uploadRes.json();
-    return data.url;
-  } catch (error) {
-    console.error("Error uploading file:", error);
-    throw new Error("Não foi possível fazer upload do arquivo");
+function guessContentType(uri: string, fallback = "image/jpeg"): string {
+  const ext = uri.split("?")[0].split(".").pop()?.toLowerCase();
+  switch (ext) {
+    case "png":
+      return "image/png";
+    case "webp":
+      return "image/webp";
+    case "gif":
+      return "image/gif";
+    case "heic":
+      return "image/heic";
+    case "heif":
+      return "image/heif";
+    case "mp4":
+      return "video/mp4";
+    case "mov":
+      return "video/quicktime";
+    case "pdf":
+      return "application/pdf";
+    case "jpg":
+    case "jpeg":
+      return "image/jpeg";
+    default:
+      return fallback;
   }
 }
 
 /**
- * Upload de uma foto para a evolução de um paciente
+ * Sobe um arquivo local e devolve a URL pública.
+ * @param uri URI local (file://, content://, data:)
+ * @param folder Pasta lógica no bucket (ex.: 'avatars', 'evolutions')
  */
+export async function uploadToR2(
+  uri: string,
+  folder: string,
+  contentType?: string,
+): Promise<string> {
+  const resolvedType = contentType || guessContentType(uri);
+
+  if (!ALLOWED_CONTENT_TYPES.includes(resolvedType as (typeof ALLOWED_CONTENT_TYPES)[number])) {
+    throw new Error(`Tipo de arquivo não suportado: ${resolvedType}`);
+  }
+
+  const response = await fetchApi<UploadUrlResponse>("/api/media/upload-url", {
+    method: "POST",
+    data: { contentType: resolvedType, folder },
+  });
+
+  const uploadUrl = response.data?.uploadUrl;
+  const publicUrl = response.data?.publicUrl;
+  if (!uploadUrl || !publicUrl) {
+    throw new Error("Servidor não devolveu a URL de upload");
+  }
+
+  const file = await fetch(uri);
+  const blob = await file.blob();
+
+  const putRes = await fetch(uploadUrl, {
+    method: "PUT",
+    body: blob,
+    headers: { "Content-Type": resolvedType },
+  });
+
+  if (!putRes.ok) {
+    throw new Error(`Upload falhou: ${putRes.status}`);
+  }
+
+  return publicUrl;
+}
+
+/** @deprecated Use `uploadToR2`. O segundo argumento agora é a pasta, não o caminho. */
+export async function uploadFile(uri: string, pathOrFolder: string): Promise<string> {
+  const folder = pathOrFolder.split("/")[0] || "uploads";
+  return uploadToR2(uri, folder);
+}
+
 export async function uploadEvolutionPhoto(
-  patientId: string,
-  evolutionId: string,
+  _patientId: string,
+  _evolutionId: string,
   uri: string,
-  fileName: string,
+  _fileName: string,
 ): Promise<string> {
-  const timestamp = Date.now();
-  const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.]/g, "_");
-  const path = `evolutions/${patientId}/${evolutionId}/${timestamp}_${sanitizedFileName}`;
-  return uploadFile(uri, path);
+  return uploadToR2(uri, "evolutions");
 }
 
-/**
- * Upload de uma foto de perfil do paciente
- */
-export async function uploadPatientPhoto(patientId: string, uri: string): Promise<string> {
-  const timestamp = Date.now();
-  const path = `patients/${patientId}/profile_${timestamp}.jpg`;
-  return uploadFile(uri, path);
+export async function uploadPatientPhoto(_patientId: string, uri: string): Promise<string> {
+  return uploadToR2(uri, "patients");
 }
 
-/**
- * Upload de uma foto de perfil do profissional
- */
-export async function uploadAvatar(userId: string, uri: string): Promise<string> {
-  const timestamp = Date.now();
-  const path = `avatars/${userId}/profile_${timestamp}.jpg`;
-  return uploadFile(uri, path);
+export async function uploadAvatar(_userId: string, uri: string): Promise<string> {
+  return uploadToR2(uri, "avatars");
 }
 
-/**
- * Upload de um anexo para o prontuário
- */
 export async function uploadPatientAttachment(
-  patientId: string,
+  _patientId: string,
   uri: string,
-  fileName: string,
+  _fileName: string,
 ): Promise<string> {
-  const timestamp = Date.now();
-  const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.]/g, "_");
-  const path = `patients/${patientId}/attachments/${timestamp}_${sanitizedFileName}`;
-  return uploadFile(uri, path);
+  return uploadToR2(uri, "patients");
 }
 
 /**
- * Deleta um arquivo do Storage
+ * Remove um arquivo do bucket. A rota exige a CHAVE devolvida no upload
+ * (`DELETE /api/media/:key`) e só autoriza chaves do próprio usuário.
  */
-export async function deleteFile(path: string): Promise<void> {
-  try {
-    await fetchApi("/api/storage/delete", {
-      method: "POST",
-      data: { path },
-    });
-  } catch (error) {
-    console.error("Error deleting file:", error);
-    throw new Error("Não foi possível deletar o arquivo");
-  }
-}
-
-/**
- * Deleta uma foto de evolução
- */
-export async function deleteEvolutionPhoto(
-  patientId: string,
-  evolutionId: string,
-  fileName: string,
-): Promise<void> {
-  const path = `evolutions/${patientId}/${evolutionId}/${fileName}`;
-  return deleteFile(path);
-}
-
-/**
- * Obtém a URL de download de um arquivo (se precisar assinar URL)
- * Como o Cloudflare R2 pode ser configurado com domínio público customizado,
- * podemos apenas retornar a URL ou pedir ao backend.
- */
-export async function getFileUrl(path: string): Promise<string> {
-  try {
-    const data = await fetchApi<any>("/api/storage/url", {
-      params: { path },
-    });
-    return data.url;
-  } catch (error) {
-    console.error("Error getting file URL:", error);
-    throw new Error("Não foi possível obter a URL do arquivo");
-  }
+export async function deleteFile(key: string): Promise<void> {
+  await fetchApi(`/api/media/${key.split("/").map(encodeURIComponent).join("/")}`, {
+    method: "DELETE",
+  });
 }

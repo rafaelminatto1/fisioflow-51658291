@@ -22,9 +22,9 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { getMedicalDisclaimerContent } from "@/constants/legalContent";
 import { LEGAL_VERSIONS } from "@/constants/legalVersions";
-import { fetchApi } from "@/lib/api";
+import { CONSENT_TYPES } from "@/constants/consentTypes";
+import { consentManager } from "@/lib/services/consentManager";
 import { authApi } from "@/lib/auth-api";
-import type { MedicalDisclaimerAcknowledgment } from "@/types/legal";
 
 interface MedicalDisclaimerModalProps {
   visible: boolean;
@@ -76,25 +76,13 @@ export default function MedicalDisclaimerModal({
         return;
       }
 
-      // Prepare acknowledgment data
-      const acknowledgmentData: Omit<MedicalDisclaimerAcknowledgment, "id"> = {
-        userId: user.id,
-        context,
-        acknowledgedAt: new Date(),
-        version: LEGAL_VERSIONS.MEDICAL_DISCLAIMER,
-      };
-
-      await fetchApi("/api/consents/accept", {
-        method: "POST",
-        data: {
-          userId: user.id,
-          type: `medical_disclaimer_${context}`,
-          version: LEGAL_VERSIONS.MEDICAL_DISCLAIMER,
-          acknowledgedAt: acknowledgmentData.acknowledgedAt.toISOString(),
-        },
-      });
-
-      console.log(`Medical disclaimer acknowledged for context: ${context}`);
+      // Best-effort de propósito: falha de rede não pode travar o fluxo clínico.
+      // O aceite fica gravado localmente e o consentManager sincroniza o que der.
+      await consentManager.grantConsent(
+        user.id,
+        `${CONSENT_TYPES.MEDICAL_DISCLAIMER}:${context}`,
+        LEGAL_VERSIONS.MEDICAL_DISCLAIMER,
+      );
 
       // Reset state for next use
       setHasScrolledToBottom(false);

@@ -26,11 +26,11 @@ import { uploadAvatar } from "@/lib/storage";
 import { useAuthStore } from "@/store/auth";
 
 const getProfessionalProfile = async (id: string) => {
-  return fetchApi<any>(`/api/users/${id}`);
+  return fetchApi<any>(`/api/profile/users/${encodeURIComponent(id)}`);
 };
 
 const updateProfessionalProfile = async (id: string, data: any) => {
-  return fetchApi<any>(`/api/users/${id}`, {
+  return fetchApi<any>(`/api/profile/users/${encodeURIComponent(id)}`, {
     method: "PUT",
     data,
   });

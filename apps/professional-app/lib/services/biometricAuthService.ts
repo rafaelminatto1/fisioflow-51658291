@@ -94,10 +94,11 @@ class BiometricAuthService {
       }
 
       // Save to API
-      await fetchApi("/api/settings/security", {
+      // Trilha em `security_events` via /api/security/devices. A rota antiga
+      // (/api/settings/security) não existia: o catch engolia um 404 constante.
+      await fetchApi("/api/security/devices", {
         method: "POST",
         data: {
-          userId,
           device: {
             id: deviceId,
             platform: Platform.OS,
@@ -134,9 +135,8 @@ class BiometricAuthService {
 
       // Remove from API
       if (deviceId) {
-        await fetchApi(`/api/settings/security/device/${deviceId}`, {
+        await fetchApi(`/api/security/devices/${encodeURIComponent(deviceId)}`, {
           method: "DELETE",
-          data: { userId },
         }).catch((err) => console.log("Failed to remove biometric device from server", err));
       }
 

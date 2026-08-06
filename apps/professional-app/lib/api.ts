@@ -16,6 +16,7 @@ import {
   ApiTarefa,
   ApiPartnership,
   ApiDashboardStats,
+  ApiInsightsDashboard,
   ApiResponse,
 } from "@/types/api";
 
@@ -253,28 +254,33 @@ function normalizeLead(rawLead: any): ApiLead {
 // ============================================================
 // DASHBOARD API
 // ============================================================
-export async function getDashboardStats(organizationId?: string): Promise<ApiDashboardStats> {
-  try {
-    const response = await fetchApi<ApiResponse<ApiDashboardStats>>("/api/insights/dashboard", {
-      params: { organizationId },
-    });
-    return (
-      response.data || {
-        activePatients: 0,
-        todayAppointments: 0,
-        pendingAppointments: 0,
-        completedAppointments: 0,
-      }
-    );
-  } catch (error) {
-    console.error("[getDashboardStats] Error:", error);
-    return {
-      activePatients: 0,
-      todayAppointments: 0,
-      pendingAppointments: 0,
-      completedAppointments: 0,
-    };
-  }
+/**
+ * `/api/insights/dashboard` responde agregados por período
+ * (`{ appointments: { total, completed, upcoming }, ... }`), não os quatro campos
+ * planos que os cards da home consomem. Até 08/2026 o app tipava a resposta como
+ * se fossem planos, então `stats.activePatients` e companhia vinham `undefined` e
+ * os cards mostravam "..." para sempre. A tradução acontece aqui.
+ *
+ * `period=today` porque três dos quatro cards são do dia ("Consultas Hoje",
+ * "Aguardando Conf.", "Concluídas Hoje"). Pacientes ativos é dos últimos 90 dias
+ * e não depende do período.
+ *
+ * Sem catch devolvendo zeros: falha de rede virava "0 pacientes, 0 consultas",
+ * que é indistinguível de uma agenda de fato vazia.
+ */
+export async function getDashboardStats(): Promise<ApiDashboardStats> {
+  const response = await fetchApi<ApiResponse<ApiInsightsDashboard>>("/api/insights/dashboard", {
+    params: { period: "today" },
+  });
+
+  const data = response.data;
+
+  return {
+    activePatients: Number(data?.active_patients ?? 0),
+    todayAppointments: Number(data?.appointments?.total ?? 0),
+    pendingAppointments: Number(data?.appointments?.upcoming ?? 0),
+    completedAppointments: Number(data?.appointments?.completed ?? 0),
+  };
 }
 
 // ============================================================
@@ -949,23 +955,41 @@ export interface ApiFinancialRecord {
   patient_name?: string;
 }
 
+/** Status "pago" aceitos — o Worker grava o que recebe e há registros em pt e en. */
+const PAID_STATUSES = new Set(["paid", "concluido", "concluído", "completed"]);
+
+export function isPaidStatus(status?: string | null): boolean {
+  return PAID_STATUSES.has(String(status || "").toLowerCase());
+}
+
+/**
+ * `GET /api/financial/accounts` devolve as colunas de `financial_accounts` em
+ * inglês (amount, due_date, payment_method, paid_at). Até 08/2026 este mapper lia
+ * `valor`/`data_vencimento`/`forma_pagamento`, nomes de uma API anterior — o que
+ * não importava porque a rota chamada (`/api/financial/contas`) nem existia.
+ * Os nomes antigos ficam como fallback para não quebrar dado legado.
+ */
 function mapDbRecordToApiRecord(dbRecord: any): ApiFinancialRecord {
+  const amount = Number(dbRecord.amount ?? dbRecord.valor ?? 0);
+  const paid = isPaidStatus(dbRecord.status);
+
   return {
     id: dbRecord.id,
     organization_id: dbRecord.organization_id,
     patient_id: dbRecord.patient_id,
     appointment_id: dbRecord.appointment_id,
-    session_date: dbRecord.data_vencimento || dbRecord.created_at?.split("T")[0],
-    session_value: Number(dbRecord.valor),
+    session_date:
+      dbRecord.due_date ?? dbRecord.data_vencimento ?? dbRecord.created_at?.split("T")[0],
+    session_value: amount,
     discount_value: 0,
     discount_type: undefined,
     partnership_id: undefined,
-    final_value: Number(dbRecord.valor),
-    payment_method: dbRecord.forma_pagamento,
-    payment_status: dbRecord.status === "concluido" ? "paid" : "pending",
-    paid_amount: dbRecord.status === "concluido" ? Number(dbRecord.valor) : 0,
-    paid_date: dbRecord.pago_em,
-    notes: dbRecord.observacoes,
+    final_value: amount,
+    payment_method: dbRecord.payment_method ?? dbRecord.forma_pagamento,
+    payment_status: paid ? "paid" : "pending",
+    paid_amount: paid ? amount : 0,
+    paid_date: dbRecord.paid_at ?? dbRecord.pago_em,
+    notes: dbRecord.notes ?? dbRecord.observacoes,
     is_barter: false,
     barter_notes: undefined,
     created_by: undefined,
@@ -985,13 +1009,23 @@ export interface ApiFinancialSummary {
   average_session_value: number;
 }
 
+/**
+ * Contas a receber do paciente.
+ *
+ * Path: `/api/financial/accounts`. Até 08/2026 o app chamava
+ * `/api/financial/contas`, que nunca existiu no Worker — toda a aba financeira do
+ * paciente vinha vazia (ou com erro) desde sempre.
+ */
 export async function getPatientFinancialRecords(
   patientId: string,
   options?: { status?: string },
 ): Promise<ApiFinancialRecord[]> {
-  const response = await fetchApi<ApiResponse<any[]>>(
-    `/api/financial/contas?patientId=${patientId}${options?.status ? `&status=${options.status === "paid" ? "concluido" : "pendente"}` : ""}`,
-  );
+  const response = await fetchApi<ApiResponse<any[]>>("/api/financial/accounts", {
+    params: {
+      patientId,
+      status: options?.status ? (options.status === "paid" ? "paid" : "pending") : undefined,
+    },
+  });
   return (response.data || []).map(mapDbRecordToApiRecord);
 }
 
@@ -1024,7 +1058,7 @@ export async function getAllFinancialRecords(options?: {
   if (options?.endDate) params.push(`dateTo=${options.endDate}`);
 
   const queryString = params.length > 0 ? `?${params.join("&")}` : "";
-  const response = await fetchApi<ApiResponse<any[]>>(`/api/financial/contas${queryString}`);
+  const response = await fetchApi<ApiResponse<any[]>>(`/api/financial/accounts${queryString}`);
   return (response.data || []).map(mapDbRecordToApiRecord) as (ApiFinancialRecord & {
     patient_name: string;
   })[];
@@ -1037,17 +1071,17 @@ export async function createFinancialRecord(data: {
   payment_method?: string;
   notes?: string;
 }): Promise<ApiFinancialRecord> {
-  const response = await fetchApi<ApiResponse<any>>("/api/financial/contas", {
+  const response = await fetchApi<ApiResponse<any>>("/api/financial/accounts", {
     method: "POST",
     data: {
-      tipo: "receita",
-      valor: data.session_value,
-      status: "pendente",
-      descricao: `Sessão em ${data.session_date}`,
+      type: "receita",
+      amount: data.session_value,
+      status: "pending",
+      description: `Sessão em ${data.session_date}`,
       patient_id: data.patient_id,
-      forma_pagamento: data.payment_method,
-      observacoes: data.notes,
-      data_vencimento: data.session_date.split("T")[0],
+      payment_method: data.payment_method,
+      notes: data.notes,
+      due_date: data.session_date.split("T")[0],
     },
   });
   if (response.error) throw new Error(response.error);
@@ -1061,23 +1095,27 @@ export async function updateFinancialRecord(
   const updateData: any = {};
 
   if (data.payment_status !== undefined)
-    updateData.status = data.payment_status === "paid" ? "concluido" : "pendente";
-  if (data.payment_method !== undefined) updateData.forma_pagamento = data.payment_method;
-  if (data.final_value !== undefined) updateData.valor = data.final_value;
-  if (data.notes !== undefined) updateData.observacoes = data.notes;
+    updateData.status = data.payment_status === "paid" ? "paid" : "pending";
+  if (data.payment_method !== undefined) updateData.payment_method = data.payment_method;
+  if (data.final_value !== undefined) updateData.amount = data.final_value;
+  if (data.notes !== undefined) updateData.notes = data.notes;
 
-  const response = await fetchApi<ApiResponse<any>>(`/api/financial/contas/${recordId}`, {
-    method: "PUT",
-    data: updateData,
-  });
+  const response = await fetchApi<ApiResponse<any>>(
+    `/api/financial/accounts/${encodeURIComponent(recordId)}`,
+    {
+      method: "PUT",
+      data: updateData,
+    },
+  );
   if (response.error) throw new Error(response.error);
   return mapDbRecordToApiRecord(response.data);
 }
 
 export async function deleteFinancialRecord(recordId: string): Promise<void> {
-  await fetchApi<{ success: boolean }>(`/api/financial/contas/${recordId}`, {
-    method: "DELETE",
-  });
+  await fetchApi<{ success: boolean }>(
+    `/api/financial/accounts/${encodeURIComponent(recordId)}`,
+    { method: "DELETE" },
+  );
 }
 
 export async function markFinancialRecordAsPaid(
@@ -1085,14 +1123,17 @@ export async function markFinancialRecordAsPaid(
   paymentMethod: string,
   paidDate?: string,
 ): Promise<ApiFinancialRecord> {
-  const response = await fetchApi<ApiResponse<any>>(`/api/financial/contas/${recordId}`, {
-    method: "PUT",
-    data: {
-      status: "concluido",
-      forma_pagamento: paymentMethod,
-      pago_em: paidDate || new Date().toISOString().split("T")[0],
+  const response = await fetchApi<ApiResponse<any>>(
+    `/api/financial/accounts/${encodeURIComponent(recordId)}`,
+    {
+      method: "PUT",
+      data: {
+        status: "paid",
+        payment_method: paymentMethod,
+        paid_at: paidDate || new Date().toISOString().split("T")[0],
+      },
     },
-  });
+  );
   if (response.error) throw new Error(response.error);
   return mapDbRecordToApiRecord(response.data);
 }
@@ -1316,20 +1357,27 @@ export interface ApiClinicalAlert {
   created_at: string;
 }
 
+/**
+ * Alertas de monitoramento (RTM). Path: `/api/clinic-metrics/clinical-alerts`.
+ * Até 08/2026 o app pedia `/api/clinical/alerts`, que nunca existiu — a tela de
+ * risco proativo ficava sempre vazia, embora o cron popule `clinical_alerts`.
+ */
 export async function getClinicalAlerts(params?: {
   status?: "pending" | "resolved";
   severity?: "high" | "medium";
 }): Promise<ApiClinicalAlert[]> {
-  const response = await fetchApi<ApiResponse<ApiClinicalAlert[]>>("/api/clinical/alerts", {
-    params,
-  });
+  const response = await fetchApi<ApiResponse<ApiClinicalAlert[]>>(
+    "/api/clinic-metrics/clinical-alerts",
+    { params },
+  );
   return response.data || [];
 }
 
 export async function resolveClinicalAlert(id: string): Promise<{ success: boolean }> {
-  return fetchApi<{ success: boolean }>(`/api/clinical/alerts/${id}/resolve`, {
-    method: "POST",
-  });
+  return fetchApi<{ success: boolean }>(
+    `/api/clinic-metrics/clinical-alerts/${encodeURIComponent(id)}/resolve`,
+    { method: "POST" },
+  );
 }
 
 export { reportsApi } from "./api/reports";

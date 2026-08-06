@@ -26,7 +26,7 @@ export default function ProfileScreen() {
 
   const { data: stats } = useQuery({
     queryKey: ["professionalStats"],
-    queryFn: () => getDashboardStats("current-professional"),
+    queryFn: () => getDashboardStats(),
   });
 
   const { data: surveysData } = useQuery({

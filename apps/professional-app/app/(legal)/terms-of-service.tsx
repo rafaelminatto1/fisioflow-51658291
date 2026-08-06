@@ -13,12 +13,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TERMS_OF_SERVICE_CONTENT } from "@/constants/legalContent";
 import { LEGAL_VERSIONS } from "@/constants/legalVersions";
-import { fetchApi } from "@/lib/api";
-import * as Device from "expo-device";
-import Constants from "expo-constants";
+import { CONSENT_TYPES } from "@/constants/consentTypes";
+import { consentManager } from "@/lib/services/consentManager";
+import { useAuthStore } from "@/store/auth";
 
 export default function TermsOfServiceScreen() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const params = useLocalSearchParams();
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
   const [hasAccepted, setHasAccepted] = useState(false);
@@ -54,38 +55,16 @@ export default function TermsOfServiceScreen() {
   };
 
   /**
-   * Get device information for acceptance record
-   */
-  const getDeviceInfo = () => {
-    return {
-      model: Device.modelName || "Unknown",
-      osVersion: Device.osVersion || "Unknown",
-      appVersion: Constants.expoConfig?.version || "1.0.0",
-      platform: "ios" as const,
-    };
-  };
-
-  /**
-   * Store acceptance in API
+   * Registra o aceite em `lgpd_consents` via `PUT /api/security/lgpd-consents/:tipo`.
    */
   const storeAcceptance = async () => {
-    try {
-      const acceptanceData = {
-        type: "terms_of_service",
-        version: LEGAL_VERSIONS.TERMS_OF_SERVICE,
-        acceptedAt: new Date().toISOString(),
-        deviceInfo: getDeviceInfo(),
-      };
-
-      await fetchApi("/api/consents/accept", {
-        method: "POST",
-        data: acceptanceData,
-      });
-      console.log("Terms of service acceptance stored successfully");
-    } catch (error) {
-      console.error("Error storing terms of service acceptance:", error);
-      throw error;
-    }
+    if (!user) throw new Error("Sessão não encontrada para registrar o aceite");
+    await consentManager.grantConsent(
+      user.id,
+      CONSENT_TYPES.TERMS_OF_SERVICE,
+      LEGAL_VERSIONS.TERMS_OF_SERVICE,
+      { requireServerAck: true },
+    );
   };
 
   /**

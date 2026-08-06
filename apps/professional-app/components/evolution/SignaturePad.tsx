@@ -3,7 +3,7 @@ import React, { useRef, useState } from "react";
 import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, Alert } from "react-native";
 import SignatureScreen from "react-native-signature-canvas";
 import { Ionicons } from "@expo/vector-icons";
-import { fetchApi } from "@/lib/api";
+import { uploadToR2 } from "@/lib/storage";
 
 interface SignaturePadProps {
   onSignatureSaved: (url: string) => void;
@@ -24,41 +24,8 @@ export function SignaturePad({
     // signature is a base64 encoded png image
     setIsUploading(true);
     try {
-      // 1. Get Presigned URL
-      const uploadData = await fetchApi<any>("/api/upload-url", {
-        method: "POST",
-        data: {
-          contentType: "image/png",
-          folder: "signatures",
-        },
-      });
-
-      const uploadUrl = uploadData.uploadUrl || uploadData.upload_url;
-      const publicUrl = uploadData.publicUrl || uploadData.public_url;
-
-      if (!uploadUrl || !publicUrl) {
-        throw new Error("Erro ao gerar URL de upload.");
-      }
-
-      // 2. Upload to Cloudflare R2
-      // Convert base64 to Blob
-      const base64Data = signature.replace(/^data:image\/png;base64,/, "");
-
-      // In React Native, fetch can handle base64 data URIs
-      const response = await fetch(signature);
-      const blob = await response.blob();
-
-      const uploadRes = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "image/png",
-        },
-        body: blob,
-      });
-
-      if (!uploadRes.ok) {
-        throw new Error(`Upload falhou: ${uploadRes.status}`);
-      }
+      // `signature` já é um data URI png — o fetch do RN consegue lê-lo direto.
+      const publicUrl = await uploadToR2(signature, "signatures", "image/png");
 
       onSignatureSaved(publicUrl);
       setIsSigning(false);

@@ -40,7 +40,11 @@ export default function GroupSessionScreen() {
 
   const confirmMutation = useMutation({
     mutationFn: async (attendeeId: string) => {
-      return fetchApi(`/api/groups/attendees/${attendeeId}/confirm`, { method: "POST" });
+      // `attendeeId` é o id da MATRÍCULA; a presença é gravada por sessão.
+      return fetchApi(`/api/groups/attendees/${encodeURIComponent(attendeeId)}/confirm`, {
+        method: "POST",
+        data: { sessionId, status: "confirmed" },
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["group-attendees", sessionId] });

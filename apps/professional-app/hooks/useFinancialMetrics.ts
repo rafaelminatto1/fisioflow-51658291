@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchApi } from "@/lib/api";
+import type { ApiResponse, ApiInsightsDashboard } from "@/types/api";
 
 export interface FinancialMetrics {
   totalRevenue: number;
@@ -17,8 +18,25 @@ export interface UseFinancialMetricsOptions {
   enabled?: boolean;
 }
 
+interface InsightsFinancial {
+  summary: {
+    totalRevenue: number;
+    totalExpenses: number;
+    netProfit: number;
+    pendingPayments: number;
+  };
+  details: Array<{ category: string; amount: number; percentage: number }>;
+  revenueByDay: Array<{ date: string; total: number }>;
+}
+
 /**
- * Hook to fetch financial metrics for reports
+ * Métricas financeiras do período.
+ *
+ * Até 08/2026 este hook chamava `/api/financial-metrics`, rota que não existe no
+ * Worker (404) — a aba Financeiro dos relatórios sempre mostrou "Erro ao carregar
+ * dados financeiros". Os números vêm de dois endpoints que existem:
+ * `/api/insights/financial` (receita, pendente e série diária, por intervalo) e
+ * `/api/insights/dashboard` (sessões e pacientes, por período).
  */
 export function useFinancialMetrics(options?: UseFinancialMetricsOptions) {
   const { startDate, endDate, enabled = true } = options || {};
@@ -29,10 +47,29 @@ export function useFinancialMetrics(options?: UseFinancialMetricsOptions) {
 
   return useQuery<FinancialMetrics>({
     queryKey: ["financial-metrics", start, end],
-    queryFn: () =>
-      fetchApi<FinancialMetrics>("/api/financial-metrics", {
-        params: { startDate: start, endDate: end },
-      }),
+    queryFn: async () => {
+      const [financial, dashboard] = await Promise.all([
+        fetchApi<ApiResponse<InsightsFinancial>>("/api/insights/financial", {
+          params: { startDate: start, endDate: end },
+        }),
+        fetchApi<ApiResponse<ApiInsightsDashboard>>("/api/insights/dashboard", {
+          params: { period: "month" },
+        }),
+      ]);
+
+      const summary = financial.data?.summary;
+      const totalRevenue = Number(summary?.totalRevenue ?? 0);
+
+      return {
+        totalRevenue,
+        pendingRevenue: Number(summary?.pendingPayments ?? 0),
+        paidRevenue: totalRevenue,
+        sessionsCount: Number(dashboard.data?.appointments?.completed ?? 0),
+        patientsCount: Number(dashboard.data?.active_patients ?? 0),
+        newPatientsThisMonth: Number(dashboard.data?.new_patients ?? 0),
+        revenueByDay: financial.data?.revenueByDay ?? [],
+      };
+    },
     enabled,
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: true,

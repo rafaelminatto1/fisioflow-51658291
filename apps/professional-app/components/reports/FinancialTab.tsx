@@ -5,7 +5,7 @@ import { startOfMonth, endOfMonth, subMonths, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useColors } from "@/hooks/useColorScheme";
 import { Card } from "@/components";
-import { ServerChart } from "./ServerChart";
+import { FinancialChart } from "@/components/financial/FinancialChart";
 import { StatGrid } from "./StatGrid";
 import { useFinancialMetrics, formatCurrency, formatNumber } from "@/hooks/useFinancialMetrics";
 
@@ -109,13 +109,15 @@ export function FinancialTab({ selectedPeriod }: FinancialTabProps) {
       <StatGrid stats={financialStats} />
 
       {metrics?.revenueByDay && metrics.revenueByDay.length > 0 && (
-        <Card style={styles.chartCard} padding="md">
-          <Text style={[styles.chartTitle, { color: colors.text }]}>Faturamento Diário</Text>
-          <ServerChart
-            endpoint={`/api/reports/financial-chart?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`}
-            height={200}
-          />
-        </Card>
+        <FinancialChart
+          title="Faturamento Diário"
+          type="bar"
+          data={metrics.revenueByDay.map((item) => ({
+            date: item.date,
+            value: typeof item.total === "string" ? parseFloat(item.total) : item.total,
+            label: format(new Date(`${item.date}T00:00:00`), "dd/MM", { locale: ptBR }),
+          }))}
+        />
       )}
 
       <Card style={styles.infoCard} padding="md">

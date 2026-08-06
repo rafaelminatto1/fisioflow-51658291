@@ -2,9 +2,9 @@ import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { startOfMonth, endOfMonth } from "date-fns";
+import { BarChart } from "react-native-gifted-charts";
 import { useColors } from "@/hooks/useColorScheme";
 import { Card } from "@/components";
-import { ServerChart } from "./ServerChart";
 import { StatGrid } from "./StatGrid";
 
 interface OverviewTabProps {
@@ -72,7 +72,30 @@ export function OverviewTab({
 
       <Card style={styles.chartCard} padding="md">
         <Text style={[styles.chartTitle, { color: colors.text }]}>Consultas por Tipo</Text>
-        <ServerChart endpoint="/api/reports/appointments-chart" height={200} />
+        {appointmentsByType.length > 0 ? (
+          <BarChart
+            data={appointmentsByType.map((item) => ({
+              value: item.value,
+              label: item.label,
+              frontColor: colors.primary,
+            }))}
+            height={180}
+            barWidth={28}
+            spacing={20}
+            maxValue={Math.max(maxTypeValue * 1.2, 1)}
+            noOfSections={4}
+            barBorderRadius={4}
+            xAxisThickness={0}
+            yAxisThickness={0}
+            showVerticalLines={false}
+            yAxisTextStyle={{ color: colors.textSecondary, fontSize: 10 }}
+            xAxisLabelTextStyle={{ color: colors.textSecondary, fontSize: 10 }}
+          />
+        ) : (
+          <Text style={[styles.emptyChart, { color: colors.textSecondary }]}>
+            Nenhuma consulta no período.
+          </Text>
+        )}
       </Card>
     </View>
   );
@@ -91,6 +114,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 24,
+  },
+  emptyChart: {
+    fontSize: 13,
+    textAlign: "center",
+    paddingVertical: 32,
   },
   chartContent: {
     flexDirection: "row",

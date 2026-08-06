@@ -37,7 +37,7 @@ export default function ReportsScreen() {
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["professionalStats", user?.id],
-    queryFn: () => (user?.id ? getDashboardStats(user.id) : Promise.resolve(null)),
+    queryFn: () => getDashboardStats(),
     enabled: !!user?.id,
   });
 

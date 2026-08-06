@@ -15,26 +15,25 @@ import { useColors } from "@/hooks/useColorScheme";
 import { useAuthStore } from "@/store/auth";
 import { Card, Button } from "@/components";
 import { dataDeletionService } from "@/lib/services/dataDeletionService";
-import { DataDeletionRequest } from "@/types/dataDeletion";
+import type { DeletionRequestView } from "@/lib/services/dataDeletionService";
 
 export default function DataDeletionScreen() {
   const colors = useColors();
   const { user } = useAuthStore();
   const [password, setPassword] = useState("");
-  const [reason, setReason] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [pendingRequest, setPendingRequest] = useState<DataDeletionRequest | null>(null);
+  const [pendingRequest, setPendingRequest] = useState<DeletionRequestView | null>(null);
 
   useEffect(() => {
     loadDeletionStatus();
   }, []);
 
   const loadDeletionStatus = async () => {
-    if (!user?.id) return;
+    if (!user?.email) return;
     setIsLoading(true);
     try {
-      const status = await dataDeletionService.getDeletionStatus(user.id);
+      const status = await dataDeletionService.getDeletionStatus(user.email);
       setPendingRequest(status);
     } catch (error) {
       console.error("Error loading deletion status:", error);
@@ -44,7 +43,7 @@ export default function DataDeletionScreen() {
   };
 
   const handleRequestDeletion = async () => {
-    if (!user?.id) return;
+    if (!user?.email) return;
 
     if (!password) {
       Alert.alert("Erro", "Por favor, confirme sua senha para prosseguir com a exclusão da conta.");
@@ -52,22 +51,26 @@ export default function DataDeletionScreen() {
     }
 
     Alert.alert(
-      "⚠️ Confirmar Exclusão",
-      "Esta ação irá agendar a exclusão permanente de todos os seus dados. Você terá 30 dias para cancelar este processo. Deseja continuar?",
+      "Confirmar solicitação",
+      "Seus dados cadastrais serão excluídos após análise. Prontuários e evoluções permanecem retidos pelo prazo legal. Deseja continuar?",
       [
         { text: "Não, cancelar", style: "cancel" },
         {
-          text: "Sim, agendar exclusão",
+          text: "Sim, solicitar",
           style: "destructive",
           onPress: async () => {
             setIsProcessing(true);
             try {
-              // In a real app, verify password here before calling service
-              const request = await dataDeletionService.requestDeletion(user.id, reason);
+              const request = await dataDeletionService.requestDeletion(
+                user.email,
+                "cadastral",
+                user.name,
+              );
               setPendingRequest(request);
               Alert.alert(
                 "Solicitação Registrada",
-                "Sua conta foi programada para exclusão. Você receberá um e-mail de confirmação.",
+                request.responseSummary ||
+                  "Seu pedido foi registrado e será analisado em até 15 dias úteis.",
                 [{ text: "Entendido" }],
               );
             } catch (error: any) {
@@ -81,25 +84,6 @@ export default function DataDeletionScreen() {
     );
   };
 
-  const handleCancelDeletion = async () => {
-    if (!user?.id || !pendingRequest) return;
-
-    setIsProcessing(true);
-    try {
-      await dataDeletionService.cancelDeletion(pendingRequest.id, user.id);
-      setPendingRequest(null);
-      Alert.alert("Sucesso", "A exclusão da sua conta foi cancelada. Seus dados estão seguros.");
-    } catch (error) {
-      console.error("Error cancelling deletion:", error);
-      Alert.alert(
-        "Erro",
-        "Não foi possível cancelar a exclusão. Tente novamente ou contate o suporte.",
-      );
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   if (isLoading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
@@ -109,9 +93,10 @@ export default function DataDeletionScreen() {
   }
 
   if (pendingRequest) {
-    const scheduledDate = pendingRequest.scheduledFor
-      ? new Date(pendingRequest.scheduledFor).toLocaleDateString("pt-BR")
-      : "";
+    const requestedAt = new Date(pendingRequest.createdAt).toLocaleDateString("pt-BR");
+    const dueAt = pendingRequest.dueAt
+      ? new Date(pendingRequest.dueAt).toLocaleDateString("pt-BR")
+      : null;
 
     return (
       <SafeAreaView
@@ -122,24 +107,24 @@ export default function DataDeletionScreen() {
           <Card style={styles.statusCard}>
             <View style={styles.statusHeader}>
               <Ionicons name="time-outline" size={32} color={colors.warning} />
-              <Text style={[styles.statusTitle, { color: colors.text }]}>Exclusão Agendada</Text>
+              <Text style={[styles.statusTitle, { color: colors.text }]}>
+                Solicitação registrada
+              </Text>
             </View>
             <Text style={[styles.statusDescription, { color: colors.textSecondary }]}>
-              Sua conta e todos os dados associados estão programados para serem removidos
-              permanentemente em:
+              Pedido enviado em {requestedAt}
+              {dueAt ? ` — prazo de resposta até ${dueAt}` : ""}.
             </Text>
-            <Text style={[styles.dateText, { color: colors.primary }]}>{scheduledDate}</Text>
-            <Text style={[styles.gracePeriodInfo, { color: colors.textMuted }]}>
-              Você pode cancelar esta solicitação a qualquer momento antes desta data para manter
-              seu acesso.
-            </Text>
-            <Button
-              title="Cancelar Exclusão de Conta"
-              onPress={handleCancelDeletion}
-              loading={isProcessing}
-              variant="outline"
-              style={styles.cancelButton}
-            />
+            {pendingRequest.responseSummary && (
+              <Text style={[styles.gracePeriodInfo, { color: colors.textMuted }]}>
+                {pendingRequest.responseSummary}
+              </Text>
+            )}
+            {pendingRequest.legalBasis && (
+              <Text style={[styles.gracePeriodInfo, { color: colors.textMuted }]}>
+                Base legal: {pendingRequest.legalBasis}
+              </Text>
+            )}
           </Card>
         </ScrollView>
       </SafeAreaView>
@@ -171,16 +156,17 @@ export default function DataDeletionScreen() {
           </Text>
           <View style={styles.bulletList}>
             <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
-              • Todos os seus dados de pacientes serão apagados.
+              • Seus dados cadastrais (nome, e-mail, telefone) serão excluídos após análise.
             </Text>
             <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
-              • Suas evoluções e prontuários serão destruídos.
+              • Você perderá o acesso à plataforma FisioFlow Pro.
             </Text>
             <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
-              • Você perderá acesso imediato à plataforma FisioFlow Pro.
+              • Prontuários, evoluções e exames NÃO são apagados: a Lei 13.787/2018 (art. 6) e a
+              Resolução COFFITO 415/2012 exigem retenção mínima de 20 anos.
             </Text>
             <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
-              • Dados financeiros e históricos de pagamentos serão mantidos por fins legais.
+              • Dados financeiros e históricos de pagamentos também são mantidos por prazo legal.
             </Text>
           </View>
           <Text style={[styles.recommendation, { color: colors.text }]}>
@@ -201,18 +187,8 @@ export default function DataDeletionScreen() {
             onChangeText={setPassword}
           />
 
-          <Text style={[styles.label, { color: colors.text }]}>
-            Por que você está nos deixando? (Opcional)
-          </Text>
-          <TextInput
-            style={[styles.textArea, { borderColor: colors.border, color: colors.text }]}
-            placeholder="Conte-nos o motivo para podermos melhorar..."
-            placeholderTextColor={colors.textMuted}
-            multiline
-            numberOfLines={4}
-            value={reason}
-            onChangeText={setReason}
-          />
+          {/* O campo de motivo saiu: `lgpd_deletion_requests` não tem coluna para
+              ele, então era texto que o usuário escrevia e ninguém jamais lia. */}
 
           <Button
             title="Solicitar Exclusão Permanentemente"
@@ -225,8 +201,8 @@ export default function DataDeletionScreen() {
         </View>
 
         <Text style={[styles.graceInfo, { color: colors.textMuted }]}>
-          Após a solicitação, seus dados serão mantidos em um período de carência de 30 dias
-          (conforme a LGPD) caso você mude de ideia. Após esse prazo, a exclusão é definitiva.
+          O pedido é analisado pelo encarregado de dados em até 15 dias úteis (LGPD art. 18). Você
+          receberá a resposta com a decisão e a base legal aplicada.
         </Text>
       </ScrollView>
     </SafeAreaView>

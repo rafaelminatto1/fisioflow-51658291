@@ -20,7 +20,8 @@ import { Button } from "@/components";
 import { useColors } from "@/hooks/useColorScheme";
 import { useExerciseCreate, useExerciseDelete, useExerciseUpdate } from "@/hooks/useExercises";
 import { useHaptics } from "@/hooks/useHaptics";
-import { getExerciseById, fetchApi } from "@/lib/api";
+import { getExerciseById } from "@/lib/api";
+import { uploadToR2 } from "@/lib/storage";
 import * as ImagePicker from "expo-image-picker";
 import {
   BODY_PARTS,
@@ -658,41 +659,8 @@ export default function ExerciseFormScreen() {
         setUploadType(source);
         medium();
 
-        // 1. Get Presigned URL
-        const uploadData = await fetchApi<any>("/api/upload-url", {
-          method: "POST",
-          data: {
-            contentType: "video/mp4",
-            folder: "exercises",
-          },
-        });
+        const publicUrl = await uploadToR2(result.assets[0].uri, "exercises", "video/mp4");
 
-        const uploadUrl = uploadData.uploadUrl || uploadData.upload_url;
-        const publicUrl = uploadData.publicUrl || uploadData.public_url;
-
-        if (!uploadUrl || !publicUrl) {
-          throw new Error("Erro ao gerar URL de upload no servidor.");
-        }
-
-        // 2. Fetch local file
-        const fileUri = result.assets[0].uri;
-        const response = await fetch(fileUri);
-        const blob = await response.blob();
-
-        // 3. Upload to Cloudflare R2
-        const uploadRes = await fetch(uploadUrl, {
-          method: "PUT",
-          body: blob,
-          headers: {
-            "Content-Type": "video/mp4",
-          },
-        });
-
-        if (!uploadRes.ok) {
-          throw new Error("Falha ao enviar o arquivo para o servidor de armazenamento.");
-        }
-
-        // 4. Set Video URL
         updateField("videoUrl", publicUrl);
         success();
         Alert.alert("Sucesso", "Vídeo enviado com sucesso!");

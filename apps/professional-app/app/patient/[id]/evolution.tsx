@@ -20,7 +20,7 @@ import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useEvolutions, useEvolution } from "@/hooks";
 import { useQuery } from "@tanstack/react-query";
-import { uploadFile } from "@/lib/storage";
+import { uploadToR2 } from "@/lib/storage";
 import { Card } from "@/components";
 import { getPatientById } from "@/lib/api";
 import { generateEvolutionPDF } from "@/lib/services/pdfGenerator";
@@ -261,9 +261,7 @@ export default function EvolutionScreen() {
       const uploadedUrls = await Promise.all(
         photos.map(async (photo) => {
           if (photo.isNew) {
-            const fileName = photo.uri.split("/").pop() || `photo-${Date.now()}`;
-            const path = `evolutions/${patientId}/${evolutionId || `new_${Date.now()}`}/${fileName}`;
-            return uploadFile(photo.uri, path);
+            return uploadToR2(photo.uri, "evolutions");
           }
           return photo.uri; // Return existing URL
         }),
