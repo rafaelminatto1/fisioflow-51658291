@@ -259,6 +259,23 @@ new_sqlite_classes = ["BiomechanicsPoseContainer"]
 # standard-4 = 4 vCPU / 12 GiB. A conta é decode de 1080p + uma passada de
 # MediaPipe por quadro; metade disso dobraria a espera para economizar pouco.
 # max_instances limita o gasto — a fila serializa o excedente naturalmente.
+# O container NÃO é declarado nos ambientes por dois motivos, ambos aprendidos
+# na prática em 06/08/2026:
+#
+# 1. O CLOUDFLARE_API_TOKEN do CI não tem permissão de push no registry de
+#    containers. A imagem constrói e o deploy morre com ApiError: Forbidden.
+# 2. Declarar containers faz o wrangler revalidar a cadeia de migrations de DO.
+#    Tentei enxugar a cadeia para contornar e quebrei produção de novo:
+#    "Cannot apply new-sqlite-class migration to class 'NotesCollaboration'
+#    that is already depended on by existing Durable Objects [code 10074]".
+#    O servidor tem v1..v15 aplicadas; declarar só a v15 faz o wrangler tentar
+#    reaplicá-la. O staging aceitou porque tinha estado diferente — ele NÃO é
+#    prova válida para produção neste caso específico.
+#
+# Para ativar o container: (a) dar escopo de registry ao token do CI e
+# (b) resolver a revalidação da cadeia sem remover tags já aplicadas —
+# provavelmente via o campo `exports` (jul/2026), que substitui o array de
+# migrations, com a ressalva de ser porta de mão única.
 [[containers]]
 class_name = "BiomechanicsPoseContainer"
 image = "./containers/biomechanics-pose/Dockerfile"
@@ -493,42 +510,35 @@ bindings = [
   { name = "NOTES_COLLABORATION", class_name = "NotesCollaboration" },
 ]
 
+[[env.production.migrations]]
+tag = "v9"
+new_sqlite_classes = ["VoiceScribeAgent"]
+
+[[env.production.migrations]]
+tag = "v10"
+new_classes = ["EvolutionCollaboration"]
+
+[[env.production.migrations]]
+tag = "v11"
+new_sqlite_classes = ["PatientAgentSql", "ClinicAgentSql"]
+
+[[env.production.migrations]]
+tag = "v12"
+deleted_classes = ["PatientAgent", "ClinicAgent"]
+
 # EvolutionCollaboration (KV) → EvolutionCollaborationSql (SQLite, YServer). Delete da
 # classe KV órfã fica para um deploy separado (v14), como v11 → v12 (CF code 10061).
 [[env.production.migrations]]
+tag = "v13"
+new_sqlite_classes = ["EvolutionCollaborationSql"]
+
+[[env.production.migrations]]
+tag = "v14"
+deleted_classes = ["EvolutionCollaboration"]
+
+[[env.production.migrations]]
 tag = "v15"
 new_sqlite_classes = ["NotesCollaboration"]
-
-# CONTAINER FORA DOS AMBIENTES — motivo: permissão do token de CI.
-#
-# O deploy de produção falhou com `ApiError: Forbidden` DEPOIS de construir a
-# imagem com sucesso: o CLOUDFLARE_API_TOKEN do GitHub Actions não tem
-# permissão de push no registry de containers da Cloudflare. O token local tem,
-# e foi por isso que o deploy manual de staging funcionou.
-#
-# Enquanto a permissão não for adicionada ao token do CI, declarar o container
-# aqui DERRUBA todo deploy de produção — não só o container. Fica no nível raiz
-# (usado por deploy manual) até o token ser corrigido.
-#
-# Para reativar: adicionar "Cloudflare Images/Containers: Edit" (ou o escopo
-# equivalente de registry) ao token do CI e restaurar estes blocos.
-
-# ATENÇÃO — por que o container NÃO está declarado nos ambientes.
-#
-# Declarar `[[env.production.containers]]` faz o wrangler revalidar toda a
-# cadeia de migrations de Durable Object, e ela tropeça num resíduo legado:
-# a v12 tem `deleted_classes = ["PatientAgent"]`, classe que hoje é exportada
-# como `PatientAgentSql`. O dry-run falha com:
-#   Cannot apply deleted_classes migration to non-existent class PatientAgent
-# e isso DERRUBA o deploy de produção inteiro, não só o container.
-#
-# Verificado por bisseção: migration v16 sozinha passa; o bloco containers
-# sozinho quebra.
-#
-# O container fica só no nível raiz (não usado por `--env`) até a cadeia de
-# migrations ser saneada — tarefa separada, que exige conferir o que já está
-# aplicado em produção antes de mexer. A imagem Docker também nunca foi
-# construída, então o container não deployaria de qualquer forma.
 
 [env.production.ai]
 binding = "AI"
@@ -764,9 +774,32 @@ bindings = [
 ]
 
 [[env.staging.migrations]]
+tag = "v9"
+new_sqlite_classes = ["VoiceScribeAgent"]
+
+[[env.staging.migrations]]
+tag = "v10"
+new_classes = ["EvolutionCollaboration"]
+
+[[env.staging.migrations]]
+tag = "v11"
+new_sqlite_classes = ["PatientAgentSql", "ClinicAgentSql"]
+
+[[env.staging.migrations]]
+tag = "v12"
+deleted_classes = ["PatientAgent", "ClinicAgent"]
+
+[[env.staging.migrations]]
+tag = "v13"
+new_sqlite_classes = ["EvolutionCollaborationSql"]
+
+[[env.staging.migrations]]
+tag = "v14"
+deleted_classes = ["EvolutionCollaboration"]
+
+[[env.staging.migrations]]
 tag = "v15"
 new_sqlite_classes = ["NotesCollaboration"]
-
 
 
 [env.staging.ai]
