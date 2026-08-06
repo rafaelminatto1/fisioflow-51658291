@@ -182,7 +182,23 @@ class_name = "BiomechanicsPoseContainer"
 
 [[containers]]
 class_name = "BiomechanicsPoseContainer"
-image = "./containers/biomechanics-pose/Dockerfile"
+# Imagem por DIGEST, não por Dockerfile — de propósito.
+#
+# Apontar para o Dockerfile faz o wrangler reconstruir e dar PUSH no registry a
+# cada deploy. O token do CI recebe 403 em GET /accounts/{acc}/containers/me
+# ("Authentication error"), então isso derruba TODO o deploy de produção, não
+# só o container. Verificado: o token local devolve 200 no mesmo endpoint, o
+# do CI devolve 403.
+#
+# O container muda raramente e não precisa ser reconstruído a cada deploy do
+# Worker. Referenciar o digest desacopla as duas coisas: o CI deploya o Worker
+# sem tocar no registry.
+#
+# Para publicar uma versão nova do container (exige token com permissão de
+# registry):
+#   pnpm --filter @fisioflow/api container:push
+# e depois atualizar o digest abaixo com o que o comando imprimir.
+image = "registry.cloudflare.com/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-biomechanics-pose@sha256:83e312b036bd2acaa46008737b1db6b1d1f9c711b294540af021effeab0841f1"
 name = "fisioflow-biomechanics-pose"
 max_instances = 5
 instance_type = "standard-4"
@@ -479,7 +495,23 @@ bindings = [
 
 [[env.production.containers]]
 class_name = "BiomechanicsPoseContainer"
-image = "./containers/biomechanics-pose/Dockerfile"
+# Imagem por DIGEST, não por Dockerfile — de propósito.
+#
+# Apontar para o Dockerfile faz o wrangler reconstruir e dar PUSH no registry a
+# cada deploy. O token do CI recebe 403 em GET /accounts/{acc}/containers/me
+# ("Authentication error"), então isso derruba TODO o deploy de produção, não
+# só o container. Verificado: o token local devolve 200 no mesmo endpoint, o
+# do CI devolve 403.
+#
+# O container muda raramente e não precisa ser reconstruído a cada deploy do
+# Worker. Referenciar o digest desacopla as duas coisas: o CI deploya o Worker
+# sem tocar no registry.
+#
+# Para publicar uma versão nova do container (exige token com permissão de
+# registry):
+#   pnpm --filter @fisioflow/api container:push
+# e depois atualizar o digest abaixo com o que o comando imprimir.
+image = "registry.cloudflare.com/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-biomechanics-pose@sha256:83e312b036bd2acaa46008737b1db6b1d1f9c711b294540af021effeab0841f1"
 name = "fisioflow-biomechanics-pose"
 max_instances = 5
 instance_type = "standard-4"
