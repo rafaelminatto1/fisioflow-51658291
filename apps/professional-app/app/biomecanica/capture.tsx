@@ -20,7 +20,7 @@ import Animated, {
 import Svg, { Line } from "react-native-svg";
 import {
   X,
-  SettingsIcon,
+  UserRound,
   CheckCircle2,
   RotateCcw,
   Timer,
@@ -36,6 +36,8 @@ import { bio, font } from "@/constants/biomecanica";
 import { useCameraDevice, useCameraFormat, useCameraPermission } from "react-native-vision-camera";
 import * as ImagePicker from "expo-image-picker";
 import { useBiomechanicsCapture } from "@/hooks/useBiomechanicsCapture";
+import { PatientPickerModal } from "@/components/clinical/biomechanics/PatientPickerModal";
+import { usePatients } from "@/hooks/usePatients";
 import {
   PoseCamera,
   poseDetectionAvailable,
@@ -109,20 +111,32 @@ export default function CaptureScreen() {
     protocolName?: string;
   }>();
   const { height } = useWindowDimensions();
+
+  // A tela podia ser aberta sem paciente (o fluxo vindo de /biomecanica/tests
+  // nunca passava patientId), e não havia como escolher um — a captura ficava
+  // travada sem explicação. Agora dá para escolher aqui.
+  const [pickerAberto, setPickerAberto] = useState(false);
+  const [pacienteEscolhido, setPacienteEscolhido] = useState<{ id: string; name: string } | null>(
+    null,
+  );
+  const { data: listaPacientes } = usePatients();
+
+  const pacienteId = pacienteEscolhido?.id ?? patientId;
+  const pacienteNome = pacienteEscolhido?.name ?? patientName;
   const [recording, setRecording] = useState(false);
   const [view, setView] = useState("Sagital");
   const [protocol, setProtocol] = useState(protocolName || "Agachamento");
   const [open, setOpen] = useState(false);
 
-  const initials = patientName
-    ? patientName
+  const initials = pacienteNome
+    ? pacienteNome
         .split(" ")
         .map((n) => n[0])
         .join("")
         .toUpperCase()
         .slice(0, 2)
     : "--";
-  const displayName = patientName || "Selecione um paciente";
+  const displayName = pacienteNome || "Selecione um paciente";
 
   const device = useCameraDevice("back");
   const { hasPermission, requestPermission } = useCameraPermission();
@@ -152,7 +166,7 @@ export default function CaptureScreen() {
   const mirrored = device?.position === "front";
 
   const capture = useBiomechanicsCapture({
-    patientId,
+    patientId: pacienteId,
     protocolId,
     view: viewToPlane(view),
     poseEngine: poseDetectionAvailable
@@ -188,8 +202,15 @@ export default function CaptureScreen() {
    * nenhum vídeo existia. A tela dava a impressão de ter capturado algo.
    */
   const handleToggleRecording = async () => {
-    if (!patientId) {
-      Alert.alert("Paciente não selecionado", "Escolha o paciente antes de iniciar a captura.");
+    if (!pacienteId) {
+      Alert.alert(
+        "Paciente não selecionado",
+        "Escolha o paciente antes de iniciar a captura.",
+        [
+          { text: "Cancelar", style: "cancel" },
+          { text: "Escolher paciente", onPress: () => setPickerAberto(true) },
+        ],
+      );
       return;
     }
 
@@ -235,6 +256,21 @@ export default function CaptureScreen() {
     });
   };
 
+  /**
+   * Fechar de verdade.
+   *
+   * `router.back()` sozinho não fazia nada quando a captura era a primeira
+   * tela da pilha — e é o caso comum, porque se entra em /biomecanica/capture
+   * direto do prontuário do paciente ou da lista de testes.
+   */
+  const fecharCaptura = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace("/biomecanica" as never);
+  };
+
   const goToAnalysis = (assessmentId: string, deferred: boolean) => {
     if (deferred) {
       Alert.alert(
@@ -243,15 +279,22 @@ export default function CaptureScreen() {
       );
     }
     const params = new URLSearchParams({ assessmentId });
-    if (patientId) params.append("patientId", patientId);
-    if (patientName) params.append("patientName", patientName);
+    if (pacienteId) params.append("patientId", pacienteId);
+    if (pacienteNome) params.append("patientName", pacienteNome);
     router.push(`/biomecanica/analysis?${params.toString()}` as never);
   };
 
   /** Vídeo da galeria segue exatamente o mesmo caminho da gravação. */
   const handlePickVideo = async () => {
-    if (!patientId) {
-      Alert.alert("Paciente não selecionado", "Escolha o paciente antes de enviar um vídeo.");
+    if (!pacienteId) {
+      Alert.alert(
+        "Paciente não selecionado",
+        "Escolha o paciente antes de enviar um vídeo.",
+        [
+          { text: "Cancelar", style: "cancel" },
+          { text: "Escolher paciente", onPress: () => setPickerAberto(true) },
+        ],
+      );
       return;
     }
 
@@ -367,15 +410,21 @@ export default function CaptureScreen() {
       {/* top controls */}
       <SafeAreaView edges={["top"]} style={styles.topSafe} pointerEvents="box-none">
         <View style={styles.topctl}>
-          <Pressable style={styles.roundBtn} onPress={() => router.back()} hitSlop={6}>
+          <Pressable style={styles.roundBtn} onPress={fecharCaptura} hitSlop={6}>
             <X size={19} color="#fff" strokeWidth={2.2} />
           </Pressable>
-          <View style={styles.calibChip}>
-            <CheckCircle2 size={14} color="hsl(142,70%,75%)" strokeWidth={2.4} />
-            <Text style={styles.calibText}>CALIBRADO · 3,2 m</Text>
-          </View>
-          <Pressable style={styles.roundBtn} hitSlop={6}>
-            <SettingsIcon size={19} color="#fff" strokeWidth={2.2} />
+          <Pressable style={styles.calibChip} onPress={() => setPickerAberto(true)} hitSlop={8}>
+            {pacienteId ? (
+              <CheckCircle2 size={14} color="hsl(142,70%,75%)" strokeWidth={2.4} />
+            ) : (
+              <UserRound size={14} color="hsl(38,92%,72%)" strokeWidth={2.4} />
+            )}
+            <Text style={styles.calibText} numberOfLines={1}>
+              {pacienteId ? displayName.toUpperCase() : "TOQUE PARA ESCOLHER O PACIENTE"}
+            </Text>
+          </Pressable>
+          <Pressable style={styles.roundBtn} hitSlop={6} onPress={() => setPickerAberto(true)}>
+            <UserRound size={19} color="#fff" strokeWidth={2.2} />
           </Pressable>
         </View>
 
@@ -434,7 +483,10 @@ export default function CaptureScreen() {
           <Pressable style={styles.recSide} hitSlop={6} onPress={handlePickVideo}>
             <FolderUp size={20} color="#fff" strokeWidth={2.2} />
           </Pressable>
-          <Pressable style={styles.recBtn} onPress={handleToggleRecording}>
+          <Pressable
+            style={[styles.recBtn, !pacienteId && { opacity: 0.45 }]}
+            onPress={handleToggleRecording}
+          >
             <View style={[styles.recInner, recording && styles.recInnerActive]} />
           </Pressable>
           <Pressable style={styles.recSide} hitSlop={6}>
@@ -472,7 +524,7 @@ export default function CaptureScreen() {
             <View style={{ flex: 1 }}>
               <Text style={styles.patientPn}>{displayName}</Text>
               <Text style={styles.patientPx}>
-                {patientId ? "Paciente selecionado" : "34 anos · Condromalácia G2 · Sessão 12"}
+                {pacienteId ? "Toque para trocar de paciente" : "Nenhum paciente selecionado"}
               </Text>
             </View>
             <ChevronDown size={18} color={bio.muted} strokeWidth={2.2} />
@@ -502,6 +554,20 @@ export default function CaptureScreen() {
           </View>
         </View>
       </Animated.View>
+
+      <PatientPickerModal
+        visible={pickerAberto}
+        onClose={() => setPickerAberto(false)}
+        patients={(listaPacientes ?? []).map((p: any) => ({
+          id: String(p.id),
+          name: p.full_name ?? p.name ?? "Paciente",
+          cpf: p.cpf ?? undefined,
+        }))}
+        onSelect={(p) => {
+          setPacienteEscolhido({ id: p.id, name: p.name });
+          setPickerAberto(false);
+        }}
+      />
     </View>
   );
 }
