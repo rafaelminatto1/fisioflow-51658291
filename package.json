@@ -45,7 +45,9 @@
     "prepare": "husky",
     "api:types": "pnpm --filter @fisioflow/api types",
     "pretype-check": "pnpm run api:types",
-    "prebuild": "pnpm run api:types"
+    "prebuild": "pnpm run api:types",
+    "typecheck:ratchet": "node scripts/typecheck-ratchet.mjs",
+    "typecheck:ratchet:update": "node scripts/typecheck-ratchet.mjs --update"
   },
   "dependencies": {
     "@cloudflare/voice": "^0.2.0",
