@@ -112,9 +112,25 @@ garantia de concordar com o caminho de nuvem.
 
 ## Pendências desta decisão
 
+- [x] **Construir a imagem Docker.** Feito e testada de ponta a ponta em
+      06/08/2026: a imagem sobe, `/health` responde `mediapipe-pose 0.10.21`,
+      e o fluxo completo funciona — baixa o vídeo, extrai 90 frames a 30 fps,
+      emite `ff-pose-33-v1` válido, faz o PUT e chama de volta com sha256.
+      Contra um vídeo sem pessoa (barra de cores), reportou
+      `usableFrames: 0` em vez de alucinar uma pose, e o nosso próprio
+      decodificador leu o bundle e produziu **zero métricas** com veredito
+      `unusable`. O caminho honesto funciona.
+- [ ] **Sanear a cadeia de migrations de DO.** Investigado: manter apenas a
+      última tag aplicada (`v15`) mais a nova (`v16`) faz o dry-run de produção
+      passar com os containers declarados — confirmado por bisseção. A doc da
+      Cloudflare diz que tags são identificadores únicos usados para determinar
+      o que já foi aplicado, o que sustenta essa leitura, mas o dry-run não
+      consulta o estado do servidor. **Provar no staging (`fisioflow-api-staging`,
+      worker separado) antes de tocar em produção.**
+      Existe também o caminho novo `exports` (jul/2026), que elimina a cadeia
+      legada de vez — mas é porta de mão única ("uma vez com exports, todos os
+      deploys seguintes devem usar exports") e rollback não atravessa mudança
+      de ciclo de vida. Não atravessar sem decisão explícita.
 - [ ] Disparar o container automaticamente após `landmarks/complete` e após
-      `media/complete` sem landmarks.
+      `media/complete` sem landmarks. Depende do item acima.
 - [ ] Marcar métricas `device_pose` como provisórias na UI da análise.
-- [ ] Sanear a cadeia de migrations de DO (o `deleted_classes = ["PatientAgent"]`
-      legado) para o container poder ser declarado nos ambientes.
-- [ ] Construir a imagem Docker pela primeira vez.
