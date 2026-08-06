@@ -1407,9 +1407,34 @@ app.get("/patient/:patientId/comparison", requireAuth, async (c) => {
       metrics: extractMetrics(assessment),
     }));
 
+  // Estimadores de pose diferentes NÃO são intercambiáveis.
+  //
+  // Mundt et al. (Sensors 2022;23(1):78, doi:10.3390/s23010078) testaram
+  // AlphaPose, BlazePose e OpenPose nos mesmos vídeos: só AlphaPose e OpenPose
+  // são permutáveis; BlazePose não é. E não há estudo comparando MLKit (do
+  // aparelho) com MediaPipe (do container), ambos linhagem BlazePose.
+  //
+  // Consequência clínica: comparar uma sessão processada no aparelho com outra
+  // processada em nuvem pode mostrar "progresso" que é só troca de estimador.
+  // Não dá para silenciar isso — a tela precisa avisar.
+  const engineFrom = from?.poseProvenance ?? null;
+  const engineTo = to?.poseProvenance ?? null;
+  const engineMismatch =
+    !!engineFrom && !!engineTo && engineFrom !== engineTo
+      ? {
+          from: engineFrom,
+          to: engineTo,
+          message:
+            "As duas avaliações foram processadas por estimadores de pose diferentes. " +
+            "Parte da variação observada pode vir do método, não do paciente. " +
+            "Para comparação longitudinal confiável, reprocesse ambas pelo mesmo caminho.",
+        }
+      : null;
+
   return c.json({
     data: {
       ...buildComparisonPayload(from, to),
+      engineMismatch,
       availableAssessments: assessments.map((assessment) => ({
         id: assessment.id,
         label: formatDate(assessment.createdAt),

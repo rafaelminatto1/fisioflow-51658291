@@ -482,6 +482,13 @@ export default function ComparisonScreen() {
           ))}
         </View>
 
+        {comparison?.engineMismatch ? (
+          <View style={[styles.mdcNota, styles.avisoMetodo]}>
+            <Text style={styles.mdcNotaTitulo}>Estimadores diferentes</Text>
+            <Text style={styles.mdcNotaTexto}>{comparison.engineMismatch.message}</Text>
+          </View>
+        ) : null}
+
         {variation.some((r) => r.leitura === "sem_mudanca_detectavel") ? (
           <View style={styles.mdcNota}>
             <Text style={styles.mdcNotaTitulo}>Sobre &quot;sem mudança&quot;</Text>
@@ -500,6 +507,7 @@ export default function ComparisonScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: bio.bg },
   changeNeutro: { color: bio.muted },
+  avisoMetodo: { borderColor: bio.amber, backgroundColor: bio.amberBg },
   mdcNota: {
     marginTop: 14,
     marginHorizontal: 14,

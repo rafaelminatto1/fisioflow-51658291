@@ -162,6 +162,16 @@ export interface BiomechanicsComparison {
     thumbnailUrl?: string | null;
   };
   metrics: BiomechanicsComparisonMetric[];
+  /**
+   * Preenchido quando as duas avaliações vieram de estimadores de pose
+   * diferentes. Mundt 2022 mostrou que famílias de estimadores não são
+   * intercambiáveis — parte da variação pode ser do método, não do paciente.
+   */
+  engineMismatch?: {
+    from: string;
+    to: string;
+    message: string;
+  } | null;
   availableAssessments: Array<{
     id: string;
     label: string;
