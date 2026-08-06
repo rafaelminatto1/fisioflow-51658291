@@ -508,6 +508,7 @@ bindings = [
   { name = "VOICE_SCRIBE_AGENT", class_name = "VoiceScribeAgent" },
   { name = "EVOLUTION_COLLABORATION", class_name = "EvolutionCollaborationSql" },
   { name = "NOTES_COLLABORATION", class_name = "NotesCollaboration" },
+  { name = "BIOMECHANICS_POSE", class_name = "BiomechanicsPoseContainer" },
 ]
 
 [[env.production.migrations]]
@@ -539,6 +540,14 @@ deleted_classes = ["EvolutionCollaboration"]
 [[env.production.migrations]]
 tag = "v15"
 new_sqlite_classes = ["NotesCollaboration"]
+
+# v16 JÁ FOI APLICADA no servidor (confirmado: o binding BIOMECHANICS_POSE
+# aparece no worker em produção). Removê-la daqui faz o wrangler achar que
+# precisa voltar atrás e reaplicar a cadeia desde a v9, que falha porque as
+# classes já existem. Migration aplicada não se remove do arquivo.
+[[env.production.migrations]]
+tag = "v16"
+new_sqlite_classes = ["BiomechanicsPoseContainer"]
 
 [env.production.ai]
 binding = "AI"
