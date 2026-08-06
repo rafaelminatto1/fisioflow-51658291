@@ -20,6 +20,7 @@ import {
   TrendingUp,
 } from "lucide-react-native";
 import { bio, font } from "@/constants/biomecanica";
+import { deltaExplanation, interpretDelta } from "@fisioflow/core";
 import { biomechanicsApi, type BiomechanicsComparison } from "@/lib/api/biomechanics";
 import { differenceInWeeks } from "date-fns";
 
@@ -268,14 +269,27 @@ export default function ComparisonScreen() {
     // Sem comparação real, tabela vazia — a tela mostra o estado de "ainda
     // não há duas avaliações para comparar".
     if (!comparison?.metrics?.length) return [];
-    return comparison.metrics.map((metric) => ({
-      name: metric.label,
-      sub: metric.lowerIsBetter ? "menor = melhor" : "maior = melhor",
-      s03: formatMetricValue(metric.fromValue, metric.unit),
-      s12: formatMetricValue(metric.toValue, metric.unit),
-      change: formatMetricDelta(metric.delta, metric.unit),
-      up: metric.direction !== "worse",
-    }));
+    return comparison.metrics.map((metric) => {
+      // A direção NÃO sai mais do sinal do delta.
+      //
+      // Antes, uma variação de 3° no FPPA aparecia como melhora — número menor
+      // que o erro de medição do próprio método. `interpretDelta` compara com
+      // a diferença mínima detectável publicada e devolve "sem mudança
+      // detectável" quando o dado não sustenta afirmar direção.
+      const leitura = interpretDelta(metric.key, metric.delta ?? Number.NaN);
+      return {
+        name: metric.label,
+        sub: metric.lowerIsBetter ? "menor = melhor" : "maior = melhor",
+        s03: formatMetricValue(metric.fromValue, metric.unit),
+        s12: formatMetricValue(metric.toValue, metric.unit),
+        change:
+          leitura === "sem_mudanca_detectavel"
+            ? "sem mudança"
+            : formatMetricDelta(metric.delta, metric.unit),
+        leitura,
+        explicacao: deltaExplanation(metric.key, metric.delta ?? Number.NaN),
+      };
+    });
   }, [comparison]);
 
   const reportParams = {
@@ -452,13 +466,32 @@ export default function ComparisonScreen() {
               <Text style={[styles.vc, styles.vcNum, { color: "hsl(220,9%,50%)" }]}>{r.s03}</Text>
               <Text style={[styles.vc, styles.vcNum]}>{r.s12}</Text>
               <View style={styles.vcChange}>
-                <Text style={[styles.change, r.up ? styles.changeUp : styles.changeWarn]}>
+                <Text
+                  style={[
+                    styles.change,
+                    r.leitura === "melhora" && styles.changeUp,
+                    r.leitura === "piora" && styles.changeWarn,
+                    r.leitura === "sem_mudanca_detectavel" && styles.changeNeutro,
+                    r.leitura === "indeterminado" && styles.changeNeutro,
+                  ]}
+                >
                   {r.change}
                 </Text>
               </View>
             </View>
           ))}
         </View>
+
+        {variation.some((r) => r.leitura === "sem_mudanca_detectavel") ? (
+          <View style={styles.mdcNota}>
+            <Text style={styles.mdcNotaTitulo}>Sobre &quot;sem mudança&quot;</Text>
+            <Text style={styles.mdcNotaTexto}>
+              A variação medida ficou abaixo da diferença mínima detectável do método, ou
+              seja, não é possível distingui-la do erro de medição. Isso não significa que o
+              paciente não evoluiu — significa que esta medida não consegue demonstrar.
+            </Text>
+          </View>
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -466,6 +499,19 @@ export default function ComparisonScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: bio.bg },
+  changeNeutro: { color: bio.muted },
+  mdcNota: {
+    marginTop: 14,
+    marginHorizontal: 14,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: bio.card,
+    borderWidth: 1,
+    borderColor: bio.border,
+    gap: 6,
+  },
+  mdcNotaTitulo: { fontFamily: font.semibold, fontSize: 13, color: bio.fg },
+  mdcNotaTexto: { fontFamily: font.regular, fontSize: 12, lineHeight: 18, color: bio.muted },
   appbar: {
     flexDirection: "row",
     alignItems: "center",

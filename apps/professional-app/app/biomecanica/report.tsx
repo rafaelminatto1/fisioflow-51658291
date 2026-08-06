@@ -30,6 +30,7 @@ import {
   type BiomechanicsComparisonMetric,
   type BiomechanicsPdfResult,
 } from "@/lib/api/biomechanics";
+import { interpretDelta, LAUDO_DISCLAIMER } from "@fisioflow/core";
 import { getOrGenerateCloudPDF, shareCloudPDF } from "@/lib/services/cloudPdfService";
 
 function formatDate(value?: string | Date | null) {
@@ -49,8 +50,20 @@ function formatMetric(value: number | null, unit: string) {
   return `${value}${unit ? ` ${unit}` : ""}`;
 }
 
+/**
+ * Leitura clínica da variação.
+ *
+ * `metric.direction` vem do backend a partir do SINAL do delta, o que faria o
+ * laudo afirmar melhora com variação menor que o erro do método. Aqui a
+ * decisão passa pela diferença mínima detectável publicada.
+ */
+function leituraDe(metric: BiomechanicsComparisonMetric) {
+  return interpretDelta(metric.key, metric.delta ?? Number.NaN);
+}
+
 function formatDelta(metric: BiomechanicsComparisonMetric) {
   if (metric.delta == null) return "novo";
+  if (leituraDe(metric) === "sem_mudanca_detectavel") return "sem mudança";
   const value = Math.abs(metric.delta) >= 10 ? metric.delta.toFixed(0) : metric.delta.toFixed(1);
   const sign = metric.delta > 0 ? "+" : "";
   if (metric.unit === "deg") return `${sign}${value}°`;
@@ -59,8 +72,9 @@ function formatDelta(metric: BiomechanicsComparisonMetric) {
 }
 
 function metricTone(metric: BiomechanicsComparisonMetric) {
-  if (metric.direction === "improved") return styles.deltaUp;
-  if (metric.direction === "worse") return styles.deltaWarn;
+  const leitura = leituraDe(metric);
+  if (leitura === "melhora") return styles.deltaUp;
+  if (leitura === "piora") return styles.deltaWarn;
   return styles.deltaNeutral;
 }
 
@@ -175,8 +189,10 @@ export default function ReportScreen() {
   // Sem métricas reais o laudo não inventa linhas: mostra o estado vazio. O
   // backend também recusa gerar o PDF antes da validação clínica (409).
   const metrics = comparison?.metrics ?? [];
-  const improvedCount = metrics.filter((metric) => metric.direction === "improved").length;
-  const worseCount = metrics.filter((metric) => metric.direction === "worse").length;
+  // Contagens do resumo respeitam o MDC: uma métrica que variou menos que o
+  // erro do método não entra como "melhorou" nem como "piorou".
+  const improvedCount = metrics.filter((metric) => leituraDe(metric) === "melhora").length;
+  const worseCount = metrics.filter((metric) => leituraDe(metric) === "piora").length;
   const mainMetric = metrics.find((metric) => metric.key.includes("knee")) ?? metrics[0];
 
   const rows = useMemo(
@@ -464,6 +480,11 @@ export default function ReportScreen() {
                       : "PDF sob demanda"}
                 </Text>
               </View>
+
+              {/* Ressalva de método. Não é formalidade jurídica: o FPPA
+                  realmente não mede o ângulo frontal do joelho, e o laudo
+                  precisa dizer isso a quem for ler. */}
+              <Text style={styles.disclaimer}>{LAUDO_DISCLAIMER}</Text>
             </View>
           </View>
         </View>
@@ -500,6 +521,16 @@ export default function ReportScreen() {
 }
 
 const styles = StyleSheet.create({
+  disclaimer: {
+    fontFamily: font.regular,
+    fontSize: 10,
+    lineHeight: 15,
+    color: bio.muted,
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: bio.borderSoft,
+  },
   root: { flex: 1, backgroundColor: bio.bg },
   appbar: {
     flexDirection: "row",
