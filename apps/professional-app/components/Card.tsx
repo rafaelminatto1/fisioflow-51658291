@@ -1,14 +1,25 @@
 import React from "react";
 import { View, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 import { useColors } from "@/hooks/useColorScheme";
+import { radius, shadow } from "@/constants/theme";
 
 interface CardProps {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   padding?: "none" | "sm" | "md" | "lg";
+  /**
+   * Eleva a superfície. Use apenas para conteúdo que FLUTUA sobre a página —
+   * popover, menu, bottom sheet.
+   *
+   * O design system pede card chapado: a separação vem da borda e do fundo,
+   * não da sombra. Card de lista com sombra é o erro mais comum ao portar
+   * este kit, e é o que faz uma tela de FisioFlow parecer um template
+   * genérico. Por isso o padrão é `false` e elevar exige dizer que quer.
+   */
+  elevated?: boolean;
 }
 
-export function Card({ children, style, padding = "md" }: CardProps) {
+export function Card({ children, style, padding = "md", elevated = false }: CardProps) {
   const colors = useColors();
 
   const getPadding = () => {
@@ -28,6 +39,7 @@ export function Card({ children, style, padding = "md" }: CardProps) {
     <View
       style={[
         styles.card,
+        elevated && shadow.popover,
         {
           backgroundColor: colors.surface,
           borderColor: colors.border,
@@ -43,12 +55,7 @@ export function Card({ children, style, padding = "md" }: CardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.05,
-    shadowRadius: 16,
-    elevation: 3,
   },
 });
