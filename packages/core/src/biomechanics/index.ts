@@ -22,4 +22,5 @@ export * from "./landmarks";
 export * from "./kinematics";
 export * from "./quality";
 export * from "./pipeline";
+export * from "./clinicalThresholds";
 export * from "./ndjson";

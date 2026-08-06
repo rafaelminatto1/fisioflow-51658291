@@ -14,6 +14,36 @@ não haveria como dizer qual está certo.
 
 O container é descartável e não guarda PHI: baixa para /tmp, processa, sobe o
 resultado e apaga.
+
+## Por que MediaPipe, e não OpenPose
+
+A literatura é clara em que MediaPipe/BlazePose é o MENOS acurado dos
+estimadores testados — Mundt et al. (Sensors 2022;23(1):78) mostram taxa de
+detecção de keypoints nitidamente inferior à do OpenPose e do AlphaPose, e
+Washabaugh et al. (Gait Posture 2022;97:188-95) medem quadril 3,7° com
+OpenPose contra 4,6° do MoveNet Thunder.
+
+Ainda assim ficamos com MediaPipe, por uma razão que não é técnica: OpenPose é
+licenciado pela Carnegie Mellon como "ACADEMIC OR NON-PROFIT ORGANIZATION
+NONCOMMERCIAL RESEARCH USE ONLY". AlphaPose tem restrição equivalente nos
+modelos pré-treinados. FisioFlow é produto comercial em clínica — usar
+qualquer um dos dois seria violação de licença, não otimização.
+
+MediaPipe é Apache 2.0. As mitigações para a acurácia menor são três, e todas
+já estão no sistema:
+
+1. `model_complexity=2` (heavy), a variante mais acurada do MediaPipe.
+2. O FPPA é reportado como EXCURSÃO a partir da postura inicial, nunca como
+   valor absoluto — Asaeda et al. (Heliyon 2024;10(17):e36338) mediram erro de
+   18,8–19,7° no absoluto com MediaPipe, mas confiabilidade adequada na
+   variação. Ver `packages/core/src/biomechanics/pipeline.ts`.
+3. Toda comparação entre sessões passa pela diferença mínima detectável
+   (`clinicalThresholds.ts`), então o erro residual do estimador não vira
+   "progresso" na tela.
+
+Se um dia houver licença comercial de um estimador melhor, trocar é simples: o
+container só precisa emitir o mesmo `ff-pose-33-v1`. A matemática clínica não
+muda de lugar.
 """
 
 import hashlib

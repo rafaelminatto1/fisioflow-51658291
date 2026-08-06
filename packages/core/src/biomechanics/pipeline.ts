@@ -5,11 +5,11 @@
  * métricas. Determinística e sem I/O de propósito: o Worker chama para gravar
  * no laudo e o app chama para desenhar no vídeo, e o resultado é o mesmo.
  *
- * A regra central é a consciência de plano. Valgo dinâmico e queda pélvica só
- * existem no plano frontal; flexão sagital de joelho/quadril/tornozelo só no
- * sagital. Pedir valgo de uma captura sagital não devolve um valor pior — não
- * devolve valor nenhum, e a rejeição aparece na tela como "não mensurável
- * neste plano". Um número plausível é pior que um campo vazio, porque ninguém
+ * A regra central é a consciência de plano. FPPA e queda pélvica só existem no
+ * plano frontal; flexão sagital de joelho/quadril/tornozelo só no sagital.
+ * Pedir FPPA de uma captura sagital não devolve um valor pior — não devolve
+ * valor nenhum, e a rejeição aparece na tela como "não mensurável neste
+ * plano". Um número plausível é pior que um campo vazio, porque ninguém
  * questiona o que parece certo.
  */
 
@@ -72,8 +72,11 @@ const METRIC_PLANE: Record<string, { views: CaptureView[]; supported: boolean }>
   hip_flexion: { views: ["sagittal"], supported: true },
   ankle_dorsiflexion: { views: ["sagittal"], supported: true },
   trunk_inclination: { views: ["sagittal", "frontal", "posterior"], supported: true },
-  dynamic_valgus: { views: ["frontal", "posterior"], supported: true },
-  landing_valgus: { views: ["frontal", "posterior"], supported: true },
+  // FPPA — ângulo de projeção no plano frontal.
+  // NÃO é "valgo de joelho": Lopes 2018 (meta-análise) achou r=0,127 (p=0,094)
+  // contra o ângulo frontal 3D no agachamento unipodal. É marcador de padrão
+  // de movimento, majoritariamente adução de quadril + rotação externa de tíbia.
+  fppa: { views: ["frontal", "posterior"], supported: true },
   pelvic_drop: { views: ["frontal", "posterior"], supported: true },
   symmetry: { views: ["sagittal", "frontal", "posterior"], supported: true },
   step_symmetry: { views: ["sagittal", "frontal", "posterior"], supported: true },
@@ -96,7 +99,7 @@ const METRIC_PLANE: Record<string, { views: CaptureView[]; supported: boolean }>
 };
 
 /** Usado quando o protocolo não declara métricas. */
-const DEFAULT_METRIC_KEYS = ["knee_rom", "trunk_inclination", "dynamic_valgus", "symmetry"];
+const DEFAULT_METRIC_KEYS = ["knee_rom", "trunk_inclination", "fppa", "symmetry"];
 
 const SIDES: Side[] = ["left", "right"];
 
@@ -289,8 +292,7 @@ function computeMetric(
       break;
     }
 
-    case "dynamic_valgus":
-    case "landing_valgus": {
+    case "fppa": {
       for (const side of SIDES) {
         const values = ctx.frames
           .map((f) => dynamicValgusFPPA(f, side))
@@ -298,12 +300,21 @@ function computeMetric(
 
         if (values.length < 10) continue;
 
-        // Pico de valgo (valor medial mais alto), não a média — a média
-        // esconde exatamente o instante que interessa.
+        // VARIAÇÃO a partir da postura inicial, não valor absoluto.
+        //
+        // Asaeda 2024 (Heliyon) mediu erro de 18,8–19,7° no valor absoluto do
+        // FPPA com MediaPipe contra Vicon — sem validade concorrente. O mesmo
+        // estudo mostrou que a variação em relação ao contato inicial TEM
+        // confiabilidade e validade. Reportar o absoluto seria publicar um
+        // número que a literatura já demonstrou não significar o que parece.
+        const referencia = values[0];
+        const excursoes = values.map((v) => v - referencia);
+        const pico = excursoes.reduce((a, b) => (Math.abs(b) > Math.abs(a) ? b : a), 0);
+
         metrics.push({
           ...base,
           metricKey: key,
-          metricValue: round2(Math.max(...values)),
+          metricValue: round2(pico),
           unit: "deg",
           side,
           sampleCount: values.length,

@@ -39,7 +39,13 @@ const METRIC_LABELS: Record<string, { label: string; unit: string; lowerIsBetter
   hip_flexion: { label: "Flexão de quadril", unit: "deg" },
   ankle_dorsiflexion: { label: "Dorsiflexão", unit: "deg" },
   trunk_inclination: { label: "Inclinação de tronco", unit: "deg", lowerIsBetter: true },
-  dynamic_valgus: { label: "Valgo dinâmico", unit: "deg", lowerIsBetter: true },
+  // "Valgo dinâmico" era rótulo errado. Lopes 2018 (JOSPT, meta-análise):
+  // r=0,127 (p=0,094) entre FPPA 2D e ângulo frontal 3D no agachamento
+  // unipodal. O FPPA é marcador de padrão de movimento, não medida do ângulo
+  // do joelho — chamá-lo de valgo num laudo assinado é erro de categoria.
+  fppa: { label: "FPPA (excursão frontal)", unit: "deg", lowerIsBetter: true },
+  // legado: avaliações gravadas antes da correção
+  dynamic_valgus: { label: "Valgo dinâmico (legado)", unit: "deg", lowerIsBetter: true },
   symmetry: { label: "Simetria E/D", unit: "%" },
   pain: { label: "Dor EVA", unit: "/10", lowerIsBetter: true },
 };
@@ -109,7 +115,8 @@ function metricInfo(key: string) {
 
 function normalizeMetricKey(rawKey: string) {
   const key = rawKey.toLowerCase();
-  if (key.includes("valgo")) return "dynamic_valgus";
+  if (key.includes("fppa")) return "fppa";
+  if (key.includes("valgo")) return "fppa";
   if (key.includes("tronco") || key.includes("trunk")) return "trunk_inclination";
   if (key.includes("simetr")) return "symmetry";
   if (key.includes("dor") || key.includes("pain") || key.includes("vas") || key.includes("eva"))

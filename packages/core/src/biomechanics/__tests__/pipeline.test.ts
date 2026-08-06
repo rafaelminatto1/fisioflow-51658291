@@ -67,12 +67,12 @@ function agachamento(frameCount = 60, score = 1): LandmarkFrame[] {
 const SAGITAL = { slug: "functional-squat-stepdown", metricDefinitions: [{ key: "knee_rom" }] };
 
 describe("consciência de plano — o coração da segurança clínica", () => {
-  it("REJEITA valgo dinâmico numa captura sagital em vez de estimar", () => {
+  it("REJEITA FPPA numa captura sagital em vez de estimar", () => {
     const frames = agachamento();
     const result = computeAssessmentMetrics({
       header: header("sagittal", frames.length),
       frames,
-      protocol: { metricDefinitions: [{ key: "dynamic_valgus" }] },
+      protocol: { metricDefinitions: [{ key: "fppa" }] },
       provenance: "device_pose",
       algorithmVersion: "test",
     });
@@ -97,12 +97,12 @@ describe("consciência de plano — o coração da segurança clínica", () => {
     expect(result.rejected[0].reason).toBe("plane_mismatch");
   });
 
-  it("aceita valgo numa captura frontal", () => {
+  it("aceita FPPA numa captura frontal", () => {
     const frames = agachamento();
     const result = computeAssessmentMetrics({
       header: header("frontal", frames.length),
       frames,
-      protocol: { metricDefinitions: [{ key: "dynamic_valgus" }] },
+      protocol: { metricDefinitions: [{ key: "fppa" }] },
       provenance: "device_pose",
       algorithmVersion: "test",
     });
