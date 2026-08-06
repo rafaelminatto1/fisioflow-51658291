@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 import { StyleSheet, View, Text, TouchableOpacity, Dimensions, Image } from "react-native";
 import { Camera, useCameraDevice, useFrameProcessor } from "react-native-vision-camera";
@@ -178,7 +179,7 @@ const styles = StyleSheet.create({
     width: 54,
     height: 54,
     borderRadius: 27,
-    backgroundColor: "#ef4444",
+    backgroundColor: palette.error,
   },
   recordingInner: {
     width: 32,
@@ -200,7 +201,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#ef4444",
+    backgroundColor: palette.error,
     marginRight: 8,
   },
   recordingText: {

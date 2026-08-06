@@ -6,6 +6,7 @@
  * Requirements: 1.9
  */
 
+import { palette } from "@/constants/theme";
 import React, { useState, useRef } from "react";
 import {
   Modal,
@@ -165,7 +166,7 @@ export default function MedicalDisclaimerModal({
         {/* Scroll indicator */}
         {!hasScrolledToBottom && (
           <View style={styles.scrollIndicator}>
-            <Ionicons name="chevron-down" size={20} color="#6B7280" />
+            <Ionicons name="chevron-down" size={20} color={palette.textSecondary} />
             <Text style={styles.scrollIndicatorText}>Role até o final para continuar</Text>
           </View>
         )}
@@ -184,7 +185,7 @@ export default function MedicalDisclaimerModal({
                 !hasScrolledToBottom && styles.checkboxBoxDisabled,
               ]}
             >
-              {hasAccepted && <Ionicons name="checkmark" size={18} color="#FFFFFF" />}
+              {hasAccepted && <Ionicons name="checkmark" size={18} color={palette.card} />}
             </View>
             <Text
               style={[styles.checkboxLabel, !hasScrolledToBottom && styles.checkboxLabelDisabled]}
@@ -206,7 +207,7 @@ export default function MedicalDisclaimerModal({
             disabled={!hasScrolledToBottom || !hasAccepted || isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color={palette.card} />
             ) : (
               <Text style={styles.buttonText}>Reconheço e Aceito</Text>
             )}
@@ -220,14 +221,14 @@ export default function MedicalDisclaimerModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.card,
   },
   header: {
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: palette.border,
     backgroundColor: "#FEF2F2",
   },
   headerContent: {
@@ -243,7 +244,7 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 14,
-    color: "#6B7280",
+    color: palette.textSecondary,
     marginLeft: 36,
   },
   scrollView: {
@@ -262,21 +263,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 12,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: palette.surface,
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    borderTopColor: palette.border,
   },
   scrollIndicatorText: {
     fontSize: 14,
-    color: "#6B7280",
+    color: palette.textSecondary,
     marginLeft: 8,
   },
   checkboxContainer: {
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
-    backgroundColor: "#F9FAFB",
+    borderTopColor: palette.border,
+    backgroundColor: palette.surface,
   },
   checkbox: {
     flexDirection: "row",
@@ -287,20 +288,20 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: "#D1D5DB",
-    backgroundColor: "#FFFFFF",
+    borderColor: palette.borderStrong,
+    backgroundColor: palette.card,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
     marginTop: 2,
   },
   checkboxBoxChecked: {
-    backgroundColor: "#10B981",
-    borderColor: "#10B981",
+    backgroundColor: palette.success,
+    borderColor: palette.success,
   },
   checkboxBoxDisabled: {
-    backgroundColor: "#F3F4F6",
-    borderColor: "#E5E7EB",
+    backgroundColor: palette.surfaceHover,
+    borderColor: palette.border,
   },
   checkboxLabel: {
     flex: 1,
@@ -309,12 +310,12 @@ const styles = StyleSheet.create({
     color: "#374151",
   },
   checkboxLabelDisabled: {
-    color: "#9CA3AF",
+    color: palette.textMuted,
   },
   footer: {
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    borderTopColor: palette.border,
   },
   button: {
     backgroundColor: "#DC2626",
@@ -325,11 +326,11 @@ const styles = StyleSheet.create({
     minHeight: 52,
   },
   buttonDisabled: {
-    backgroundColor: "#D1D5DB",
+    backgroundColor: palette.borderStrong,
   },
   buttonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#FFFFFF",
+    color: palette.card,
   },
 });

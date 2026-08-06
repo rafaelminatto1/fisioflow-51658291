@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { useMemo, useState } from "react";
 import {
   View,
@@ -162,9 +163,9 @@ export default function ProtocolsScreen() {
   });
 
   const evidenceColor = (level: string) => {
-    if (level === "A") return "#10B981";
-    if (level === "B") return "#3B82F6";
-    if (level === "C") return "#F59E0B";
+    if (level === "A") return palette.success;
+    if (level === "B") return palette.info;
+    if (level === "C") return palette.warning;
     return colors.textMuted;
   };
 

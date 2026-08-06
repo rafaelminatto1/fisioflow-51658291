@@ -4,6 +4,7 @@
  * Versão React Native usando SVG para desenhar o esqueleto sobre a câmera.
  */
 
+import { palette } from "@/constants/theme";
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import Svg, { Circle, Line, Text as SvgText } from "react-native-svg";
@@ -115,7 +116,7 @@ export const PoseFeedbackOverlay: React.FC<PoseFeedbackOverlayProps> = ({
                 cy={lm.y * height}
                 r={circleRadius}
                 fill={isGhost ? "#94A3B8" : index < 11 ? "#FF0000" : "#00FF00"} // Vermelho pra face, verde pra corpo
-                stroke="#FFFFFF"
+                stroke={palette.card}
                 strokeWidth="1"
               />
             );
@@ -142,7 +143,7 @@ export const PoseFeedbackOverlay: React.FC<PoseFeedbackOverlayProps> = ({
             <SvgText
               x="20"
               y="50"
-              fill={accuracy > 85 ? "#22C55E" : accuracy > 60 ? "#EAB308" : "#EF4444"}
+              fill={accuracy > 85 ? "#22C55E" : accuracy > 60 ? "#EAB308" : palette.error}
               fontSize="24"
               fontWeight="bold"
               stroke="#000000"
@@ -161,7 +162,7 @@ export const PoseFeedbackOverlay: React.FC<PoseFeedbackOverlayProps> = ({
                 key={`angle-${index}`}
                 x={pivot.x * width + 10}
                 y={pivot.y * height - 10}
-                fill="#FFFFFF"
+                fill={palette.card}
                 fontSize="12"
                 fontWeight="bold"
                 stroke="#000000"

@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   View,
@@ -1047,7 +1048,7 @@ const styles = StyleSheet.create({
   saveButton: { marginTop: 8 },
   startButton: { marginTop: 12 },
   deleteButton: { marginTop: 12, borderWidth: 1 },
-  errorText: { color: "#ef4444", fontSize: 12, marginTop: -12, marginBottom: 12 },
+  errorText: { color: palette.error, fontSize: 12, marginTop: -12, marginBottom: 12 },
   // Payment Section Styles
   paymentSection: {
     marginTop: 20,

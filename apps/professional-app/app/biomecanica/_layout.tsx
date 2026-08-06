@@ -1,8 +1,9 @@
+import { palette } from "@/constants/theme";
 import { Stack } from "expo-router";
 
 export default function BiomecanicaLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#F7F9FB" } }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: palette.background } }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="tests" />
       <Stack.Screen

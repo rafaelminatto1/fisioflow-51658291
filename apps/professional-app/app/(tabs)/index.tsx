@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import {
   View,
   Text,
@@ -406,7 +407,7 @@ export default function DashboardScreen() {
                   activeOpacity={0.7}
                 >
                   <View style={[styles.gridIcon, { backgroundColor: "#10B98112" }]}>
-                    <Ionicons name="videocam" size={22} color="#10B981" />
+                    <Ionicons name="videocam" size={22} color={palette.success} />
                   </View>
                   <View>
                     <Text style={[styles.gridTitle, { color: colors.text }]}>Teleconsulta</Text>
@@ -433,7 +434,7 @@ export default function DashboardScreen() {
                   activeOpacity={0.7}
                 >
                   <View style={[styles.gridIcon, { backgroundColor: "#F59E0B12" }]}>
-                    <Ionicons name="trophy" size={22} color="#F59E0B" />
+                    <Ionicons name="trophy" size={22} color={palette.warning} />
                   </View>
                   <View>
                     <Text style={[styles.gridTitle, { color: colors.text }]}>Ranking</Text>

@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React, { useState } from "react";
 import {
   View,
@@ -95,7 +96,7 @@ export default function DataExportScreen() {
         value={options[key]}
         onValueChange={() => handleToggleOption(key)}
         trackColor={{ false: colors.border, true: colors.primary }}
-        thumbColor="#FFFFFF"
+        thumbColor={palette.card}
       />
     </View>
   );
@@ -126,10 +127,10 @@ export default function DataExportScreen() {
             <Ionicons
               name="code-working"
               size={24}
-              color={format === "json" ? "#FFFFFF" : colors.textSecondary}
+              color={format === "json" ? palette.card : colors.textSecondary}
             />
             <Text
-              style={[styles.formatText, { color: format === "json" ? "#FFFFFF" : colors.text }]}
+              style={[styles.formatText, { color: format === "json" ? palette.card : colors.text }]}
             >
               JSON
             </Text>
@@ -145,10 +146,10 @@ export default function DataExportScreen() {
             <Ionicons
               name="document-text"
               size={24}
-              color={format === "pdf" ? "#FFFFFF" : colors.textSecondary}
+              color={format === "pdf" ? palette.card : colors.textSecondary}
             />
             <Text
-              style={[styles.formatText, { color: format === "pdf" ? "#FFFFFF" : colors.text }]}
+              style={[styles.formatText, { color: format === "pdf" ? palette.card : colors.text }]}
             >
               PDF
             </Text>

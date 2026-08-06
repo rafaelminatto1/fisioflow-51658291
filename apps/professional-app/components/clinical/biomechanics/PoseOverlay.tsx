@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import Svg, { Line, Circle, Polyline, G, Rect, Text as SvgText } from "react-native-svg";
@@ -34,7 +35,7 @@ const CONNECTIONS = [
 const STATUS_COLORS = {
   ok: "#00f2ff", // Cyan
   warning: "#fbbf24", // Amber
-  alert: "#ef4444", // Red
+  alert: palette.error, // Red
 };
 
 export const PoseOverlay: React.FC<PoseOverlayProps> = ({ pose, width, height, pathHistory }) => {
@@ -164,7 +165,7 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({ pose, width, height, p
         <SvgText
           x="60"
           y="20"
-          fill={asymmetry > 15 ? "#ef4444" : "#fbbf24"}
+          fill={asymmetry > 15 ? palette.error : "#fbbf24"}
           fontSize="12"
           fontWeight="bold"
           textAnchor="middle"

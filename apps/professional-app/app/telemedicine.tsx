@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -214,7 +215,7 @@ const styles = StyleSheet.create({
   statusDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
   statusText: { fontSize: 12 },
   enterButton: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
-  enterButtonText: { color: "#FFFFFF", fontWeight: "bold", fontSize: 14 },
+  enterButtonText: { color: palette.card, fontWeight: "bold", fontSize: 14 },
   emptyState: { alignItems: "center", justifyContent: "center", marginTop: 80 },
   emptyText: { fontSize: 16, marginTop: 16, textAlign: "center", marginBottom: 24 },
   createButton: {
@@ -225,5 +226,5 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
   },
-  createButtonText: { color: "#FFFFFF", fontWeight: "bold", fontSize: 16 },
+  createButtonText: { color: palette.card, fontWeight: "bold", fontSize: 16 },
 });

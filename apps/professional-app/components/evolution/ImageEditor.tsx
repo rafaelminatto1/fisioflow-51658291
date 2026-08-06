@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,
@@ -397,7 +398,7 @@ export function ImageEditor({ uri, onSave, onCancel }: ImageEditorProps) {
         </View>
 
         <View style={styles.colorPicker}>
-          {["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ffffff"].map((c) => (
+          {["#ff0000", "#00ff00", "#0000ff", "#ffff00", palette.card].map((c) => (
             <TouchableOpacity
               key={c}
               onPress={() => setColor(c)}
@@ -531,7 +532,7 @@ const styles = StyleSheet.create({
     right: 20,
   },
   confirmCropBtn: {
-    backgroundColor: "#10b981",
+    backgroundColor: palette.success,
     width: 60,
     height: 60,
     borderRadius: 30,

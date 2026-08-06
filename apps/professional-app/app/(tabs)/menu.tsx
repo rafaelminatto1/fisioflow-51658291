@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { View, ScrollView, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,7 +22,7 @@ const MENU_ITEMS: MenuItem[] = [
     icon: "cash-outline",
     route: "/(tabs)/financials",
     description: "Transações, NFS-e e recibos",
-    color: "#10B981",
+    color: palette.success,
   },
   {
     id: "tarefas",
@@ -37,7 +38,7 @@ const MENU_ITEMS: MenuItem[] = [
     icon: "bar-chart-outline",
     route: "/reports",
     description: "Visão geral e métricas clínicas",
-    color: "#F59E0B",
+    color: palette.warning,
   },
   {
     id: "wiki",
@@ -77,7 +78,7 @@ const MENU_ITEMS: MenuItem[] = [
     icon: "sparkles-outline",
     route: "/insights/search",
     description: "Busca clínica e padrões por IA",
-    color: "#0080FF",
+    color: palette.primary,
   },
   {
     id: "settings",

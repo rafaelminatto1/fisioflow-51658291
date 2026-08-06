@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React, { useState } from "react";
 import { View, Text, StyleSheet, PanResponder } from "react-native";
 import { useColors } from "@/hooks/useColorScheme";
@@ -114,7 +115,7 @@ export function Slider({
           <>
             <Text style={[styles.minLabel, { color: colors.textSecondary }]}>{minValue}</Text>
             <View style={[styles.valueBubble, { backgroundColor: colors.primary }]}>
-              <Text style={[styles.valueText, { color: "#FFFFFF" }]}>{value}</Text>
+              <Text style={[styles.valueText, { color: palette.card }]}>{value}</Text>
             </View>
             <Text style={[styles.maxLabel, { color: colors.textSecondary }]}>{maxValue}</Text>
           </>

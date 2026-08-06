@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { useEffect, useState } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -412,7 +413,7 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 24, gap: 22 },
 
   heroCard: {
-    backgroundColor: "#0B1220",
+    backgroundColor: palette.text,
     borderRadius: 18,
     padding: 18,
     borderWidth: 1,
@@ -427,7 +428,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
   },
   heroTitle: {
-    color: "#FFFFFF",
+    color: palette.card,
     fontSize: 18,
     fontFamily: font.extrabold,
     letterSpacing: -0.3,
@@ -449,7 +450,7 @@ const styles = StyleSheet.create({
   },
   hstat: { flex: 1 },
   hstatV: {
-    color: "#FFFFFF",
+    color: palette.card,
     fontSize: 20,
     fontFamily: font.extrabold,
     letterSpacing: -0.4,

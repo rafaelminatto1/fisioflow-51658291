@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { useState, useMemo, useEffect } from "react";
 import {
   View,
@@ -487,7 +488,7 @@ export default function AnalysisScreen() {
                 setDraftPoints([]);
               }}
             >
-              <X size={20} color="#EF4444" />
+              <X size={20} color={palette.error} />
             </Pressable>
           </View>
         )}
@@ -585,7 +586,7 @@ export default function AnalysisScreen() {
           <View>
             <Text style={styles.blockLabel}>Achados do Protocolo</Text>
             <View style={styles.protocolResult}>
-              <Ionicons name="shield-checkmark" size={24} color="#10B981" />
+              <Ionicons name="shield-checkmark" size={24} color={palette.success} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.resultTitle}>Padrão identificado</Text>
                 <Text style={styles.resultDesc}>

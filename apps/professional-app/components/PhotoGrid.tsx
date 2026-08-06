@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -74,7 +75,7 @@ export function PhotoGrid({
                   style={styles.removeButton}
                   onPress={() => handleRemove(photo.id)}
                 >
-                  <Ionicons name="close-circle" size={20} color="#FFFFFF" />
+                  <Ionicons name="close-circle" size={20} color={palette.card} />
                 </TouchableOpacity>
               )}
             </TouchableOpacity>

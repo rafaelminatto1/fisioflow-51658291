@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { useState } from "react";
 import {
   View,
@@ -26,9 +27,9 @@ import type { ThemeColors } from "@/types/theme";
 
 function getPainColor(level: number): string {
   if (level === 0) return "#94a3b8";
-  if (level <= 3) return "#10B981";
-  if (level <= 6) return "#F59E0B";
-  return "#EF4444";
+  if (level <= 3) return palette.success;
+  if (level <= 6) return palette.warning;
+  return palette.error;
 }
 
 // ─── sub-components ─────────────────────────────────────────────────────────

@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
@@ -156,7 +157,7 @@ export default function ChatDetailScreen() {
               : { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
           ]}
         >
-          <Text style={[styles.messageText, { color: isOwn ? "#FFFFFF" : colors.text }]}>
+          <Text style={[styles.messageText, { color: isOwn ? palette.card : colors.text }]}>
             {item.content}
           </Text>
           <View style={styles.messageMeta}>

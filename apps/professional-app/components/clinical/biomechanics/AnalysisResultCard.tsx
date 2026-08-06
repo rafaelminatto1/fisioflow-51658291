@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,7 +26,7 @@ export const AnalysisResultCard: React.FC<AnalysisResultCardProps> = ({
       case "warning":
         return "#eab308";
       case "alert":
-        return "#ef4444";
+        return palette.error;
     }
   };
 

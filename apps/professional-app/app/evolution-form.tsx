@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
@@ -390,7 +391,7 @@ export default function EvolutionFormScreen() {
           <EvolutionChipList
             title="Exercícios para Casa"
             icon="home-outline"
-            accent="#6b7280"
+            accent={palette.textSecondary}
             items={homeExercises}
             onChange={setHomeExercises}
             colors={colors}
@@ -458,10 +459,10 @@ export default function EvolutionFormScreen() {
                   <ActivityIndicator size="small" color={colors.textSecondary} />
                 )}
                 {autoSaveStatus === "saved" && (
-                  <Ionicons name="checkmark-circle" size={16} color="#10B981" />
+                  <Ionicons name="checkmark-circle" size={16} color={palette.success} />
                 )}
                 {autoSaveStatus === "error" && (
-                  <Ionicons name="alert-circle" size={16} color={colors.error ?? "#EF4444"} />
+                  <Ionicons name="alert-circle" size={16} color={colors.error ?? palette.error} />
                 )}
                 <Text
                   style={[
@@ -469,9 +470,9 @@ export default function EvolutionFormScreen() {
                     {
                       color:
                         autoSaveStatus === "error"
-                          ? (colors.error ?? "#EF4444")
+                          ? (colors.error ?? palette.error)
                           : autoSaveStatus === "saved"
-                            ? "#10B981"
+                            ? palette.success
                             : colors.textSecondary,
                     },
                   ]}

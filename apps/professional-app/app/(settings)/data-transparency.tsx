@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -227,7 +228,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   linkButtonText: {
-    color: "#FFFFFF",
+    color: palette.card,
     fontWeight: "600",
     fontSize: 16,
   },

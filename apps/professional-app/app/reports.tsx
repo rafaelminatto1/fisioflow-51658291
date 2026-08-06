@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { useState, useMemo } from "react";
 import {
   View,
@@ -117,7 +118,7 @@ export default function ReportsScreen() {
             <Text
               style={[
                 styles.periodText,
-                selectedPeriod === period ? { color: "#FFFFFF" } : { color: colors.textSecondary },
+                selectedPeriod === period ? { color: palette.card } : { color: colors.textSecondary },
               ]}
             >
               {period === "week"
@@ -207,7 +208,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: palette.border,
   },
   periodText: { fontSize: 14, fontWeight: "500" },
   tabs: { flexDirection: "row", borderBottomWidth: 1 },

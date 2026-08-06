@@ -14,6 +14,7 @@
  * Requirements: 5.2
  */
 
+import { palette } from "@/constants/theme";
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -384,7 +385,7 @@ export default function PINSetupScreen() {
   const renderComplete = () => (
     <View style={styles.stepContainer}>
       <View style={styles.iconContainer}>
-        <Ionicons name="checkmark-circle" size={80} color="#10B981" />
+        <Ionicons name="checkmark-circle" size={80} color={palette.success} />
       </View>
 
       <Text style={styles.title}>{getStepTitle()}</Text>
@@ -392,15 +393,15 @@ export default function PINSetupScreen() {
 
       <View style={styles.summaryList}>
         <View style={styles.summaryItem}>
-          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+          <Ionicons name="checkmark-circle" size={20} color={palette.success} />
           <Text style={styles.summaryText}>PIN de {newPin.length} dígitos configurado</Text>
         </View>
         <View style={styles.summaryItem}>
-          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+          <Ionicons name="checkmark-circle" size={20} color={palette.success} />
           <Text style={styles.summaryText}>Armazenado com segurança no dispositivo</Text>
         </View>
         <View style={styles.summaryItem}>
-          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+          <Ionicons name="checkmark-circle" size={20} color={palette.success} />
           <Text style={styles.summaryText}>Pronto para uso como alternativa biométrica</Text>
         </View>
       </View>
@@ -425,7 +426,7 @@ export default function PINSetupScreen() {
 
       {error && (
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle" size={20} color="#EF4444" />
+          <Ionicons name="alert-circle" size={20} color={palette.error} />
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
@@ -490,7 +491,7 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 16,
     lineHeight: 24,
-    color: "#6B7280",
+    color: palette.textSecondary,
     textAlign: "center",
     marginBottom: 32,
     paddingHorizontal: 16,
@@ -498,7 +499,7 @@ const styles = StyleSheet.create({
   errorContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FEE2E2",
+    backgroundColor: palette.errorSoft,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -507,7 +508,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    color: "#EF4444",
+    color: palette.error,
     marginLeft: 8,
     flex: 1,
   },
@@ -522,7 +523,7 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 9,
     borderWidth: 2,
-    borderColor: "#D1D5DB",
+    borderColor: palette.borderStrong,
     backgroundColor: "transparent",
   },
   pinDotFilled: {
@@ -530,7 +531,7 @@ const styles = StyleSheet.create({
     borderColor: "#007AFF",
   },
   pinDotError: {
-    borderColor: "#EF4444",
+    borderColor: palette.error,
     backgroundColor: "transparent",
   },
   loadingContainer: {
@@ -540,7 +541,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 14,
-    color: "#6B7280",
+    color: palette.textSecondary,
     marginLeft: 8,
   },
   keypad: {
@@ -598,7 +599,7 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: palette.textMuted,
     textAlign: "center",
   },
 });

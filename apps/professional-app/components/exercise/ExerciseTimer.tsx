@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,9 +20,9 @@ export interface ExerciseTimerProps {
 type TimerState = "ready" | "exercising" | "resting" | "complete";
 
 const STATE_COLORS: Record<TimerState, string> = {
-  ready: "#3B82F6",
-  exercising: "#10B981",
-  resting: "#F59E0B",
+  ready: palette.info,
+  exercising: palette.success,
+  resting: palette.warning,
   complete: "#EAB308",
 };
 
@@ -291,7 +292,7 @@ export function ExerciseTimer({
             accessibilityLabel="Iniciar exercício"
             accessibilityRole="button"
           >
-            <Ionicons name="play" size={28} color="#FFFFFF" />
+            <Ionicons name="play" size={28} color={palette.card} />
             <Text style={styles.controlText}>Iniciar</Text>
           </TouchableOpacity>
         )}
@@ -304,7 +305,7 @@ export function ExerciseTimer({
               accessibilityLabel={isPaused ? "Retomar" : "Pausar"}
               accessibilityRole="button"
             >
-              <Ionicons name={isPaused ? "play" : "pause"} size={28} color="#FFFFFF" />
+              <Ionicons name={isPaused ? "play" : "pause"} size={28} color={palette.card} />
               <Text style={styles.controlText}>{isPaused ? "Retomar" : "Pausar"}</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -326,7 +327,7 @@ export function ExerciseTimer({
             accessibilityLabel="Refazer exercício"
             accessibilityRole="button"
           >
-            <Ionicons name="checkmark-done" size={28} color="#FFFFFF" />
+            <Ionicons name="checkmark-done" size={28} color={palette.card} />
             <Text style={styles.controlText}>Concluído</Text>
           </TouchableOpacity>
         )}
@@ -410,7 +411,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   controlText: {
-    color: "#FFFFFF",
+    color: palette.card,
     fontSize: 16,
     fontWeight: "700",
   },

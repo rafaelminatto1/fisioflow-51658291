@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -44,7 +45,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <View style={styles.container}>
           <View style={styles.content}>
-            <Ionicons name="alert-circle-outline" size={80} color="#EF4444" />
+            <Ionicons name="alert-circle-outline" size={80} color={palette.error} />
             <Text style={styles.title}>Ops! Algo deu errado.</Text>
             <Text style={styles.description}>
               Ocorreu um erro inesperado no aplicativo. Nossa equipe técnica já foi notificada.
@@ -72,7 +73,7 @@ export class ErrorBoundary extends Component<Props, State> {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.card,
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
@@ -90,7 +91,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 16,
-    color: "#6B7280",
+    color: palette.textSecondary,
     textAlign: "center",
     lineHeight: 24,
     marginBottom: 32,
@@ -104,14 +105,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonText: {
-    color: "#FFFFFF",
+    color: palette.card,
     fontSize: 16,
     fontWeight: "600",
   },
   devContainer: {
     marginTop: 40,
     padding: 12,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.surfaceHover,
     borderRadius: 8,
     width: "100%",
   },
@@ -123,6 +124,6 @@ const styles = StyleSheet.create({
   devText: {
     fontFamily: "monospace",
     fontSize: 12,
-    color: "#EF4444",
+    color: palette.error,
   },
 });

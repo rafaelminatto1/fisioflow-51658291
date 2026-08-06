@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React, { useState } from "react";
 import {
   View,
@@ -120,7 +121,7 @@ export function FisioFlowBrainWidget({ patientId }: { patientId: string }) {
                           : "alert-circle"
                     }
                     size={16}
-                    color={insight.severity === "high" ? "#EF4444" : colors.primary}
+                    color={insight.severity === "high" ? palette.error : colors.primary}
                   />
                   <Text style={[styles.insightTitle, { color: colors.text }]}>{insight.title}</Text>
                 </View>

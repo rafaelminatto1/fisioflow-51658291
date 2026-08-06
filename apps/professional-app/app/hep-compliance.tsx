@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { useState } from "react";
 import {
   View,
@@ -18,7 +19,7 @@ import { useSyncStore } from "@/store/sync-store";
 import type { ThemeColors } from "@/types/theme";
 
 function ComplianceBar({ rate, colors }: { rate: number; colors: ThemeColors }) {
-  const color = rate >= 70 ? colors.success : rate >= 40 ? "#F59E0B" : colors.error;
+  const color = rate >= 70 ? colors.success : rate >= 40 ? palette.warning : colors.error;
   return (
     <View style={styles.barContainer}>
       <View style={[styles.barTrack, { backgroundColor: colors.border }]}>

@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { useState, useEffect } from "react";
 
 import {
@@ -250,7 +251,7 @@ export default function PatientDetailScreen() {
             style={[styles.actionBtn, { backgroundColor: "#25D366" + "E0" }]}
             onPress={handleWhatsApp}
           >
-            <Ionicons name="logo-whatsapp" size={18} color="#FFFFFF" />
+            <Ionicons name="logo-whatsapp" size={18} color={palette.card} />
             <Text style={styles.actionBtnText}>WhatsApp</Text>
           </TouchableOpacity>
 
@@ -261,7 +262,7 @@ export default function PatientDetailScreen() {
               router.push(`/appointment-form?patientId=${id}&patientName=${name}`);
             }}
           >
-            <Ionicons name="calendar-outline" size={18} color="#FFFFFF" />
+            <Ionicons name="calendar-outline" size={18} color={palette.card} />
             <Text style={styles.actionBtnText}>Agendar</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -271,7 +272,7 @@ export default function PatientDetailScreen() {
               router.push(`/exercises?patientId=${id}&patientName=${name}`);
             }}
           >
-            <Ionicons name="fitness-outline" size={18} color="#FFFFFF" />
+            <Ionicons name="fitness-outline" size={18} color={palette.card} />
             <Text style={styles.actionBtnText}>Planos</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -280,7 +281,7 @@ export default function PatientDetailScreen() {
               openEvolution();
             }}
           >
-            <Ionicons name="document-text-outline" size={18} color="#FFFFFF" />
+            <Ionicons name="document-text-outline" size={18} color={palette.card} />
             <Text style={styles.actionBtnText}>Evoluir</Text>
           </TouchableOpacity>
         </View>
@@ -310,7 +311,7 @@ export default function PatientDetailScreen() {
               <Text
                 style={[
                   styles.tabText,
-                  { color: selectedTab === tabKey ? "#FFFFFF" : colors.textSecondary },
+                  { color: selectedTab === tabKey ? palette.card : colors.textSecondary },
                 ]}
               >
                 {tabKey === "info"
@@ -337,7 +338,7 @@ export default function PatientDetailScreen() {
                 );
               }}
             >
-              <Ionicons name="scan" size={24} color="#FFFFFF" />
+              <Ionicons name="scan" size={24} color={palette.card} />
               <Text style={styles.addEvolutionBtnText}>Nova Avaliação Biomecânica</Text>
             </TouchableOpacity>
 
@@ -387,7 +388,7 @@ export default function PatientDetailScreen() {
                       >
                         <Text
                           style={{
-                            color: assessment.status === "completed" ? "#10B981" : colors.primary,
+                            color: assessment.status === "completed" ? palette.success : colors.primary,
                             fontWeight: "bold",
                             fontSize: 12,
                           }}
@@ -699,7 +700,7 @@ export default function PatientDetailScreen() {
                 router.push(`/patient-form?id=${id}` as Href);
               }}
             >
-              <Ionicons name="create-outline" size={18} color="#FFFFFF" />
+              <Ionicons name="create-outline" size={18} color={palette.card} />
               <Text style={styles.editButtonText}>Editar Perfil</Text>
             </TouchableOpacity>
           </>
@@ -714,7 +715,7 @@ export default function PatientDetailScreen() {
                   openEvolution();
                 }}
               >
-                <Ionicons name="add" size={24} color="#FFFFFF" />
+                <Ionicons name="add" size={24} color={palette.card} />
                 <Text style={styles.addEvolutionBtnText}>Nova Evolução</Text>
               </TouchableOpacity>
 
@@ -947,7 +948,7 @@ export default function PatientDetailScreen() {
                 setShowFinancialModal(true);
               }}
             >
-              <Ionicons name="add" size={24} color="#FFFFFF" />
+              <Ionicons name="add" size={24} color={palette.card} />
               <Text style={styles.addFinancialBtnText}>Adicionar Pagamento</Text>
             </TouchableOpacity>
 
@@ -1118,7 +1119,7 @@ export default function PatientDetailScreen() {
                             );
                           }}
                         >
-                          <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
+                          <Ionicons name="checkmark-circle" size={16} color={palette.card} />
                           <Text style={styles.markPaidBtnText}>Marcar Pago</Text>
                         </TouchableOpacity>
                       )}
@@ -1268,7 +1269,7 @@ export default function PatientDetailScreen() {
                         <Text
                           style={[
                             styles.paymentMethodOptionText,
-                            { color: formData.payment_method === method ? "#FFFFFF" : colors.text },
+                            { color: formData.payment_method === method ? palette.card : colors.text },
                           ]}
                         >
                           {method === "cash"
@@ -1405,7 +1406,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#FFFFFF",
+    color: palette.card,
   },
   headerInfo: {
     flex: 1,
@@ -1440,7 +1441,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   actionBtnText: {
-    color: "#FFFFFF",
+    color: palette.card,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -1519,7 +1520,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   addEvolutionBtnText: {
-    color: "#FFFFFF",
+    color: palette.card,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -1611,7 +1612,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   editButtonText: {
-    color: "#FFFFFF",
+    color: palette.card,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -1646,7 +1647,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   addFinancialBtnText: {
-    color: "#FFFFFF",
+    color: palette.card,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -1739,7 +1740,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   markPaidBtnText: {
-    color: "#FFFFFF",
+    color: palette.card,
     fontSize: 12,
     fontWeight: "600",
   },
@@ -1827,7 +1828,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   modalBtnConfirmText: {
-    color: "#FFFFFF",
+    color: palette.card,
     fontSize: 16,
     fontWeight: "600",
   },

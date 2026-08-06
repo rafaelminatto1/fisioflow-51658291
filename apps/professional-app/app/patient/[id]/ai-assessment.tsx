@@ -4,6 +4,7 @@
  * Permite ao fisioterapeuta avaliar a biomecânica do paciente usando a câmera do dispositivo.
  */
 
+import { palette } from "@/constants/theme";
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -144,7 +145,7 @@ export default function AIAssessmentScreen() {
           </View>
 
           {lastAnalysis?.postureIssues.length > 0 && (
-            <View style={[styles.alertCard, { backgroundColor: "#EF4444" }]}>
+            <View style={[styles.alertCard, { backgroundColor: palette.error }]}>
               <Text style={styles.alertText}>{lastAnalysis.postureIssues[0].description}</Text>
             </View>
           )}
@@ -155,7 +156,7 @@ export default function AIAssessmentScreen() {
       <View style={[styles.controls, { backgroundColor: colors.surface }]}>
         <View style={styles.buttonRow}>
           <TouchableOpacity
-            style={[styles.startButton, { backgroundColor: isActive ? "#EF4444" : colors.success }]}
+            style={[styles.startButton, { backgroundColor: isActive ? palette.error : colors.success }]}
             onPress={() => {
               medium();
               setIsActive(!isActive);

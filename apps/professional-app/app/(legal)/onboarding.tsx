@@ -2,6 +2,7 @@
  * Onboarding Flow Screen
  */
 
+import { palette } from "@/constants/theme";
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -197,11 +198,11 @@ export default function OnboardingScreen() {
       </Text>
       <ScrollView style={styles.bulletList}>
         <View style={styles.bulletItem}>
-          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+          <Ionicons name="checkmark-circle" size={20} color={palette.success} />
           <Text style={styles.bulletText}>Criptografia para todos os dados</Text>
         </View>
         <View style={styles.bulletItem}>
-          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+          <Ionicons name="checkmark-circle" size={20} color={palette.success} />
           <Text style={styles.bulletText}>Conformidade com LGPD</Text>
         </View>
       </ScrollView>
@@ -320,17 +321,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: palette.border,
   },
   progressBar: {
     height: 4,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: palette.border,
     borderRadius: 2,
     overflow: "hidden",
     marginBottom: 8,
   },
   progressFill: { height: "100%", backgroundColor: "#007AFF", borderRadius: 2 },
-  progressText: { fontSize: 12, color: "#6B7280", textAlign: "center" },
+  progressText: { fontSize: 12, color: palette.textSecondary, textAlign: "center" },
   content: { flex: 1 },
   contentContainer: { flexGrow: 1, justifyContent: "center", padding: 20 },
   stepContainer: { alignItems: "center" },
@@ -345,7 +346,7 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 16,
     lineHeight: 24,
-    color: "#6B7280",
+    color: palette.textSecondary,
     textAlign: "center",
     marginBottom: 16,
   },
@@ -357,7 +358,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   bulletText: { flex: 1, fontSize: 15, color: "#374151", marginLeft: 12 },
-  note: { fontSize: 14, color: "#9CA3AF", textAlign: "center", marginTop: 8, marginBottom: 16 },
+  note: { fontSize: 14, color: palette.textMuted, textAlign: "center", marginTop: 8, marginBottom: 16 },
   primaryButton: {
     width: "100%",
     backgroundColor: "#007AFF",

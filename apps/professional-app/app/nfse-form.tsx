@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { useState, useEffect } from "react";
 import { format, addDays, isWeekend, isMonday, isWednesday, isFriday, parseISO } from "date-fns";
 import {
@@ -217,7 +218,7 @@ export default function NFSeForm() {
           <View
             style={[
               styles.infoBox,
-              { backgroundColor: colors.warningLight ?? "#FEF3C7", borderColor: "#F59E0B" },
+              { backgroundColor: colors.warningLight ?? palette.warningSoft, borderColor: palette.warning },
             ]}
           >
             <Ionicons name="information-circle" size={18} color="#92400E" />

@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 import { StyleSheet } from "react-native";
 import { Canvas, Line, Circle, Path, Skia, vec, Text, useFont } from "@shopify/react-native-skia";
@@ -34,7 +35,7 @@ const CONNECTIONS = [
 const STATUS_COLORS = {
   ok: "#00f2ff", // Cyan
   warning: "#fbbf24", // Amber
-  alert: "#ef4444", // Red
+  alert: palette.error, // Red
 };
 
 export const SkiaPoseOverlay: React.FC<PoseOverlayProps> = ({ pose, width, height, pathHistory }) => {

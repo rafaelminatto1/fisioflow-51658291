@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -45,14 +46,14 @@ export const EvolutionCard = React.forwardRef<View, EvolutionCardProps>(
     const pain = painScale ?? painLevel ?? null;
 
     const getPainColor = (level: number) => {
-      if (level > 7) return "#ef4444";
-      if (level > 3) return "#f59e0b";
+      if (level > 7) return palette.error;
+      if (level > 3) return palette.warning;
       return "#22c55e";
     };
 
     const getPainBg = (level: number) => {
-      if (level > 7) return "#fee2e2";
-      if (level > 3) return "#fef3c7";
+      if (level > 7) return palette.errorSoft;
+      if (level > 3) return palette.warningSoft;
       return "#dcfce7";
     };
 
@@ -115,7 +116,7 @@ EvolutionCard.displayName = "EvolutionCard";
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#ffffff",
+    backgroundColor: palette.card,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#e2e8f0",

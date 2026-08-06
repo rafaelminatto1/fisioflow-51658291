@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -160,8 +161,8 @@ export default function DataDeletionScreen() {
 
         <Card style={styles.warningCard}>
           <View style={styles.warningHeader}>
-            <Ionicons name="warning" size={24} color="#EF4444" />
-            <Text style={[styles.warningTitle, { color: "#EF4444" }]}>
+            <Ionicons name="warning" size={24} color={palette.error} />
+            <Text style={[styles.warningTitle, { color: palette.error }]}>
               Atenção: Ação Permanente
             </Text>
           </View>
@@ -218,7 +219,7 @@ export default function DataDeletionScreen() {
             onPress={handleRequestDeletion}
             loading={isProcessing}
             style={styles.deleteButton}
-            textStyle={{ color: "#FFFFFF" }}
+            textStyle={{ color: palette.card }}
             variant="primary" // In a real theme this might be 'danger'
           />
         </View>
@@ -313,8 +314,8 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   deleteButton: {
-    backgroundColor: "#EF4444",
-    borderColor: "#EF4444",
+    backgroundColor: palette.error,
+    borderColor: palette.error,
   },
   graceInfo: {
     fontSize: 12,

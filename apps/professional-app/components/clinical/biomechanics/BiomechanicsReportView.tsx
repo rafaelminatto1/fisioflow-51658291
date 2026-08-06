@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React, { useState } from "react";
 import {
   StyleSheet,
@@ -120,17 +121,17 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
           <Text style={styles.title}>Relatório de Avaliação</Text>
           {isSigned && (
             <View style={styles.signedBadge}>
-              <Ionicons name="ribbon" size={14} color="#10b981" />
+              <Ionicons name="ribbon" size={14} color={palette.success} />
               <Text style={styles.signedText}>CERTIFICADO</Text>
             </View>
           )}
         </View>
         <View style={{ flexDirection: "row", gap: 16 }}>
           <TouchableOpacity onPress={handleExportImage} disabled={isExporting}>
-            <Ionicons name="image-outline" size={24} color="#3b82f6" />
+            <Ionicons name="image-outline" size={24} color={palette.info} />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleExportPDF} disabled={isExporting}>
-            <Ionicons name="document-text-outline" size={24} color="#3b82f6" />
+            <Ionicons name="document-text-outline" size={24} color={palette.info} />
           </TouchableOpacity>
         </View>
       </View>
@@ -205,7 +206,7 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
                       <Text
                         style={[
                           styles.symmetryPercentage,
-                          s.percentage > 10 ? { color: "#ef4444" } : { color: "#10b981" },
+                          s.percentage > 10 ? { color: palette.error } : { color: palette.success },
                         ]}
                       >
                         {s.percentage}%
@@ -335,7 +336,7 @@ const styles = StyleSheet.create({
   signedText: {
     fontSize: 9,
     fontWeight: "bold",
-    color: "#10b981",
+    color: palette.success,
   },
   content: {
     padding: 20,
@@ -379,7 +380,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 24,
     borderBottomWidth: 2,
-    borderBottomColor: "#0080FF",
+    borderBottomColor: palette.primary,
     paddingBottom: 16,
   },
   signatureHeaderBanner: {
@@ -405,7 +406,7 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 24,
     fontWeight: "900",
-    color: "#0080FF",
+    color: palette.primary,
     letterSpacing: 1,
   },
   brandSubtitle: {
@@ -437,10 +438,10 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     borderLeftWidth: 4,
-    borderLeftColor: "#0080FF",
+    borderLeftColor: palette.primary,
   },
   obsContentSigned: {
-    borderLeftColor: "#10b981",
+    borderLeftColor: palette.success,
     backgroundColor: "#f0fdf4",
   },
   obsText: {
@@ -511,7 +512,7 @@ const styles = StyleSheet.create({
   footerUrl: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#0080FF",
+    color: palette.primary,
     marginTop: 4,
   },
   actionsContainer: {

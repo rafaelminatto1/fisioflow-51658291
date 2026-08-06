@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 
 import {
@@ -58,7 +59,7 @@ export function Button({
     switch (variant) {
       case "primary":
       case "secondary":
-        return "#FFFFFF";
+        return palette.card;
       case "outline":
         return colors.primary;
       case "ghost":
@@ -66,7 +67,7 @@ export function Button({
       case "destructive":
         return colors.error;
       default:
-        return "#FFFFFF";
+        return palette.card;
     }
   };
 

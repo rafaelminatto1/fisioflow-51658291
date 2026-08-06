@@ -12,6 +12,7 @@
  * Requirements: 5.1, 5.2
  */
 
+import { palette } from "@/constants/theme";
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -247,7 +248,7 @@ export default function BiometricSetupScreen() {
 
       <View style={styles.benefitsList}>
         <View style={styles.benefitItem}>
-          <Ionicons name="shield-checkmark" size={24} color="#10B981" />
+          <Ionicons name="shield-checkmark" size={24} color={palette.success} />
           <View style={styles.benefitTextContainer}>
             <Text style={styles.benefitTitle}>Segurança Reforçada</Text>
             <Text style={styles.benefitDescription}>
@@ -257,7 +258,7 @@ export default function BiometricSetupScreen() {
         </View>
 
         <View style={styles.benefitItem}>
-          <Ionicons name="flash" size={24} color="#10B981" />
+          <Ionicons name="flash" size={24} color={palette.success} />
           <View style={styles.benefitTextContainer}>
             <Text style={styles.benefitTitle}>Acesso Rápido</Text>
             <Text style={styles.benefitDescription}>
@@ -267,7 +268,7 @@ export default function BiometricSetupScreen() {
         </View>
 
         <View style={styles.benefitItem}>
-          <Ionicons name="checkmark-circle" size={24} color="#10B981" />
+          <Ionicons name="checkmark-circle" size={24} color={palette.success} />
           <View style={styles.benefitTextContainer}>
             <Text style={styles.benefitTitle}>Conformidade</Text>
             <Text style={styles.benefitDescription}>
@@ -473,7 +474,7 @@ export default function BiometricSetupScreen() {
   const renderComplete = () => (
     <View style={styles.stepContainer}>
       <View style={styles.iconContainer}>
-        <Ionicons name="checkmark-circle" size={80} color="#10B981" />
+        <Ionicons name="checkmark-circle" size={80} color={palette.success} />
       </View>
 
       <Text style={styles.title}>Configuração Concluída!</Text>
@@ -485,16 +486,16 @@ export default function BiometricSetupScreen() {
       <View style={styles.summaryList}>
         {isAvailable && biometricType !== "none" && (
           <View style={styles.summaryItem}>
-            <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+            <Ionicons name="checkmark-circle" size={20} color={palette.success} />
             <Text style={styles.summaryText}>{getBiometricName()} ativado</Text>
           </View>
         )}
         <View style={styles.summaryItem}>
-          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+          <Ionicons name="checkmark-circle" size={20} color={palette.success} />
           <Text style={styles.summaryText}>PIN de backup configurado</Text>
         </View>
         <View style={styles.summaryItem}>
-          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+          <Ionicons name="checkmark-circle" size={20} color={palette.success} />
           <Text style={styles.summaryText}>Dados protegidos com criptografia</Text>
         </View>
       </View>
@@ -565,7 +566,7 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 16,
     lineHeight: 24,
-    color: "#6B7280",
+    color: palette.textSecondary,
     textAlign: "center",
     marginBottom: 24,
   },
@@ -591,7 +592,7 @@ const styles = StyleSheet.create({
   },
   benefitDescription: {
     fontSize: 14,
-    color: "#6B7280",
+    color: palette.textSecondary,
     lineHeight: 20,
   },
   instructionsList: {
@@ -632,7 +633,7 @@ const styles = StyleSheet.create({
   pinLabel: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#6B7280",
+    color: palette.textSecondary,
     marginBottom: 12,
   },
   pinLabelSpacing: {
@@ -648,7 +649,7 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: "#D1D5DB",
+    borderColor: palette.borderStrong,
     backgroundColor: "transparent",
   },
   pinDotFilled: {
@@ -725,12 +726,12 @@ const styles = StyleSheet.create({
   },
   skipButtonText: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: palette.textMuted,
     textAlign: "center",
   },
   note: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: palette.textMuted,
     textAlign: "center",
     marginTop: 8,
   },

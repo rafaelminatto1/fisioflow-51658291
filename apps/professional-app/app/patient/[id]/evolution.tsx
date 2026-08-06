@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { useState, useEffect } from "react";
 import {
   Alert,
@@ -125,7 +126,7 @@ const PainLevelSlider = ({
         step={1}
         value={painLevel}
         onValueChange={onValueChange}
-        minimumTrackTintColor={painLevel <= 3 ? "#10B981" : painLevel <= 6 ? "#F59E0B" : "#EF4444"}
+        minimumTrackTintColor={painLevel <= 3 ? palette.success : painLevel <= 6 ? palette.warning : palette.error}
         maximumTrackTintColor={colors.border}
       />
       <Text style={[styles.painLevelValue, { color: colors.primary }]}>{painLevel}/10</Text>

@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 import { View, Text, StyleSheet, DimensionValue } from "react-native";
 import Svg, { Path, Circle } from "react-native-svg";
@@ -14,7 +15,7 @@ export function SymmetryMeter({ score, leftLabel = "E", rightLabel = "D" }: Symm
 
   // Determinamos o tom base no desvio da simetria (50% é o centro perfeito)
   const deviation = Math.abs(50 - score);
-  const statusColor = deviation < 5 ? "#10B981" : deviation < 15 ? "#F59E0B" : "#EF4444";
+  const statusColor = deviation < 5 ? palette.success : deviation < 15 ? palette.warning : palette.error;
 
   return (
     <View style={styles.container}>
@@ -39,7 +40,7 @@ export function SymmetryMeter({ score, leftLabel = "E", rightLabel = "D" }: Symm
                 flex: 1,
                 borderLeftWidth: 1,
                 borderRightWidth: 1,
-                borderColor: "#10B981",
+                borderColor: palette.success,
               },
             ]}
           />
@@ -98,7 +99,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: palette.border,
     flexDirection: "row",
     overflow: "visible",
     position: "relative",

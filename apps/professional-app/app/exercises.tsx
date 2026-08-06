@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { useState, useCallback, useRef } from "react";
 import {
   View,
@@ -237,7 +238,7 @@ export default function ExercisesScreen() {
             <Ionicons
               name={isFavorite(exercise.id) ? "heart" : "heart-outline"}
               size={20}
-              color={isFavorite(exercise.id) ? colors.error : "#FFFFFF"}
+              color={isFavorite(exercise.id) ? colors.error : palette.card}
             />
           </TouchableOpacity>
 
@@ -446,7 +447,7 @@ export default function ExercisesScreen() {
                       selectedEquipment ||
                       selectedBodyPart ||
                       selectedDifficulty
-                        ? "#FFFFFF"
+                        ? palette.card
                         : colors.text
                     }
                   />
@@ -484,14 +485,14 @@ export default function ExercisesScreen() {
                   <Ionicons
                     name={CATEGORY_ICONS[category] || "fitness-outline"}
                     size={16}
-                    color={selectedCategory === category ? "#FFFFFF" : colors.textSecondary}
+                    color={selectedCategory === category ? palette.card : colors.textSecondary}
                     style={{ marginRight: 6 }}
                   />
                   <Text
                     style={[
                       styles.filterText,
                       selectedCategory === category
-                        ? { color: "#FFFFFF", fontWeight: "600" }
+                        ? { color: palette.card, fontWeight: "600" }
                         : { color: colors.textSecondary },
                     ]}
                   >
@@ -624,7 +625,7 @@ export default function ExercisesScreen() {
                         <Text
                           style={[
                             styles.frequencyText,
-                            item.frequency === freq ? { color: "#FFFFFF" } : { color: colors.textSecondary },
+                            item.frequency === freq ? { color: palette.card } : { color: colors.textSecondary },
                           ]}
                         >
                           {freq}
@@ -694,7 +695,7 @@ export default function ExercisesScreen() {
             router.push("/exercise-form");
           }}
         >
-          <Ionicons name="add" size={30} color="#FFFFFF" />
+          <Ionicons name="add" size={30} color={palette.card} />
         </TouchableOpacity>
       )}
     </SafeAreaView>
@@ -752,7 +753,7 @@ function FiltersModal({
         style={[
           styles.filterText,
           current === value
-            ? { color: "#FFFFFF", fontWeight: "600" }
+            ? { color: palette.card, fontWeight: "600" }
             : { color: colors.textSecondary },
         ]}
       >
@@ -1023,7 +1024,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: "#FF3B30",
     borderWidth: 1.5,
-    borderColor: "#FFFFFF",
+    borderColor: palette.card,
   },
   filterScrollContent: {
     paddingHorizontal: 20,
@@ -1190,7 +1191,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   previewName: {
-    color: "#FFFFFF",
+    color: palette.card,
     fontSize: 20,
     fontWeight: "700",
     marginTop: 16,

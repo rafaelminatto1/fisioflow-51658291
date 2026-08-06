@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React, { useState } from "react";
 import {
   View,
@@ -143,7 +144,7 @@ export default function ClinicalInsightsScreen() {
                   <Text
                     style={[
                       styles.painText,
-                      { color: match.painScale > 7 ? "#EF4444" : colors.primary },
+                      { color: match.painScale > 7 ? palette.error : colors.primary },
                     ]}
                   >
                     Dor {match.painScale}/10

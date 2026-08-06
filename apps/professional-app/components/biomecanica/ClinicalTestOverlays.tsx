@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Svg, { Line, Rect, Circle, G } from "react-native-svg";
@@ -38,11 +39,11 @@ export function TrendelenburgOverlay({ points }: OverlayProps) {
             y1={p1.y}
             x2={p2.x}
             y2={p2.y}
-            stroke={isPositive ? "#EF4444" : bio.primary}
+            stroke={isPositive ? palette.error : bio.primary}
             strokeWidth={4}
           />
-          <Circle cx={p1.x} cy={p1.y} r={6} fill={isPositive ? "#EF4444" : bio.primary} />
-          <Circle cx={p2.x} cy={p2.y} r={6} fill={isPositive ? "#EF4444" : bio.primary} />
+          <Circle cx={p1.x} cy={p1.y} r={6} fill={isPositive ? palette.error : bio.primary} />
+          <Circle cx={p2.x} cy={p2.y} r={6} fill={isPositive ? palette.error : bio.primary} />
         </G>
       </Svg>
       <View
@@ -51,7 +52,7 @@ export function TrendelenburgOverlay({ points }: OverlayProps) {
           {
             top: p1.y - 40,
             left: (p1.x + p2.x) / 2 - 40,
-            backgroundColor: isPositive ? "#EF4444" : "#10B981",
+            backgroundColor: isPositive ? palette.error : palette.success,
           },
         ]}
       >
@@ -83,13 +84,13 @@ export function ValgusOverlay({ points }: OverlayProps) {
         <G opacity={0.8}>
           <Line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={bio.primary} strokeWidth={3} />
           <Line x1={p2.x} y1={p2.y} x2={p3.x} y2={p3.y} stroke={bio.primary} strokeWidth={3} />
-          <Circle cx={p2.x} cy={p2.y} r={8} fill={isPositive ? "#EF4444" : "#10B981"} />
+          <Circle cx={p2.x} cy={p2.y} r={8} fill={isPositive ? palette.error : palette.success} />
         </G>
       </Svg>
       <View
         style={[
           styles.badge,
-          { top: p2.y, left: p2.x + 20, backgroundColor: isPositive ? "#EF4444" : "#10B981" },
+          { top: p2.y, left: p2.x + 20, backgroundColor: isPositive ? palette.error : palette.success },
         ]}
       >
         <Text style={styles.badgeText}>{isPositive ? "VALGO" : "ALINHADO"}</Text>

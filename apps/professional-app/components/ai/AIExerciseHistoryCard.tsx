@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,10 +15,10 @@ interface Props {
 
 export function AIExerciseHistoryCard({ session, colors }: Props) {
   const getQualityColor = (score: number) => {
-    if (score >= 90) return "#10B981"; // Perfeito
-    if (score >= 70) return "#3B82F6"; // Bom
-    if (score >= 50) return "#F59E0B"; // Regular
-    return "#EF4444"; // Ruim
+    if (score >= 90) return palette.success; // Perfeito
+    if (score >= 70) return palette.info; // Bom
+    if (score >= 50) return palette.warning; // Regular
+    return palette.error; // Ruim
   };
 
   const dateLabel = session.createdAt?.toDate
@@ -104,8 +105,8 @@ const styles = StyleSheet.create({
   metric: { alignItems: "center", flex: 1 },
   metricValue: { fontSize: 18, fontWeight: "bold" },
   metricLabel: { fontSize: 10, marginTop: 2 },
-  divider: { width: 1, height: 20, backgroundColor: "#e5e7eb" },
-  issuesContainer: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#f3f4f6" },
+  divider: { width: 1, height: 20, backgroundColor: palette.border },
+  issuesContainer: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: palette.surfaceHover },
   issuesTitle: { fontSize: 12, fontWeight: "bold", marginBottom: 4 },
   issueItem: { fontSize: 12, lineHeight: 18 },
 });

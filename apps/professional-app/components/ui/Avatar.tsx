@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 import { View, Text, StyleSheet, Image, ViewStyle } from "react-native";
 import { useColors } from "@/hooks/useColorScheme";
@@ -100,7 +101,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f3f4f6",
+    backgroundColor: palette.surfaceHover,
   },
   image: {
     width: "100%",

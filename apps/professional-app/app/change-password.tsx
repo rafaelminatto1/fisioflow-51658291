@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { useState } from "react";
 import {
   View,
@@ -417,7 +418,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    borderTopColor: palette.border,
   },
   requirementsTitle: {
     fontSize: 13,

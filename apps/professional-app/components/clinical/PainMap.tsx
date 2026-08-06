@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React, { useCallback, useState } from "react";
 import {
   View,
@@ -39,7 +40,7 @@ const INTENSITY_COLORS = [
   "#FACC15",
   "#FB923C",
   "#F97316",
-  "#EF4444",
+  palette.error,
   "#DC2626",
   "#991B1B",
 ];
@@ -505,7 +506,7 @@ function IntensityPicker({
                 <Text
                   style={[
                     styles.intensityBtnText,
-                    { color: currentValue === v ? "#FFFFFF" : colors.text },
+                    { color: currentValue === v ? palette.card : colors.text },
                   ]}
                 >
                   {v}
@@ -640,7 +641,7 @@ export function PainMap({
                     cy={region.centerY}
                     r={10}
                     fill={intensityColor(point.intensity)}
-                    stroke="#FFFFFF"
+                    stroke={palette.card}
                     strokeWidth={2}
                     opacity={0.9}
                   />

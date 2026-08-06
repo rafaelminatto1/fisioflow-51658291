@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { memo, useMemo, useState } from "react";
 import {
@@ -30,12 +31,12 @@ const STATUS_LABELS: Record<ApiLead["estagio"], string> = {
 };
 
 const STATUS_COLORS: Record<ApiLead["estagio"], string> = {
-  aguardando: "#3b82f6",
+  aguardando: palette.info,
   contatado: "#8b5cf6",
-  interessado: "#f59e0b",
-  agendado: "#10b981",
+  interessado: palette.warning,
+  agendado: palette.success,
   convertido: "#059669",
-  perdido: "#ef4444",
+  perdido: palette.error,
 };
 
 const LeadCard = memo(
@@ -503,6 +504,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: palette.border,
   },
 });

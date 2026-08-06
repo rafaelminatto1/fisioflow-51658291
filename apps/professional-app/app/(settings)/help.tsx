@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -71,7 +72,7 @@ export default function HelpScreen() {
             style={[styles.contactButton, { backgroundColor: colors.primary }]}
             onPress={handleContactSupport}
           >
-            <Ionicons name="mail-outline" size={24} color="#FFFFFF" />
+            <Ionicons name="mail-outline" size={24} color={palette.card} />
             <Text style={styles.contactButtonText}>Enviar E-mail para o Suporte</Text>
           </TouchableOpacity>
 
@@ -148,7 +149,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   contactButtonText: {
-    color: "#FFFFFF",
+    color: palette.card,
     fontSize: 16,
     fontWeight: "600",
   },

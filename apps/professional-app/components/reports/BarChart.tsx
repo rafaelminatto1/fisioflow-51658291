@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { useColors } from "@/hooks/useColorScheme";
@@ -38,7 +39,7 @@ const styles = StyleSheet.create({
   barTrack: {
     width: 24,
     height: 120,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.surfaceHover,
     borderRadius: 12,
     justifyContent: "flex-end",
     overflow: "hidden",

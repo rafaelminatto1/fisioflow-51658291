@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
@@ -261,7 +262,7 @@ export default function ProfileEditScreen() {
                     <View
                       style={[styles.avatarEditOverlay, { backgroundColor: "rgba(0,0,0,0.5)" }]}
                     >
-                      <Ionicons name="camera" size={24} color="#FFFFFF" />
+                      <Ionicons name="camera" size={24} color={palette.card} />
                     </View>
                   </View>
                 ) : (
@@ -272,7 +273,7 @@ export default function ProfileEditScreen() {
                     <View
                       style={[styles.avatarEditOverlay, { backgroundColor: "rgba(0,0,0,0.5)" }]}
                     >
-                      <Ionicons name="camera" size={24} color="#FFFFFF" />
+                      <Ionicons name="camera" size={24} color={palette.card} />
                     </View>
                   </View>
                 )}
@@ -594,7 +595,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 48,
     fontWeight: "bold",
-    color: "#FFFFFF",
+    color: palette.card,
   },
   avatarEditOverlay: {
     position: "absolute",

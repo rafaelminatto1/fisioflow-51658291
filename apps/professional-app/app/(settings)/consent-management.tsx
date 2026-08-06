@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, Switch, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -94,7 +95,7 @@ export default function ConsentManagementScreen() {
               value={isGranted}
               onValueChange={() => handleToggleConsent(type, isGranted ? "granted" : "withdrawn")}
               trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor="#FFFFFF"
+              thumbColor={palette.card}
               accessibilityLabel={`Consentimento para ${title}`}
               accessibilityRole="switch"
               accessibilityState={{ checked: isGranted }}

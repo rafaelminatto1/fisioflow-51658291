@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { useState, useCallback } from "react";
 import {
   View,
@@ -387,7 +388,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
   },
   unreadCount: {
-    color: "#FFFFFF",
+    color: palette.card,
     fontSize: 10,
     fontWeight: "700",
   },

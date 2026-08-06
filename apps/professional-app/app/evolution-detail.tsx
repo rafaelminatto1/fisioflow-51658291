@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { useState, useEffect } from "react";
 import {
   View,
@@ -332,7 +333,7 @@ export default function EvolutionDetailScreen() {
             <EvolutionChipList
               title="Exercícios para Casa"
               icon="home-outline"
-              accent="#6b7280"
+              accent={palette.textSecondary}
               items={homeExercises}
               onChange={setHomeExercises}
               colors={colors}
@@ -451,7 +452,7 @@ export default function EvolutionDetailScreen() {
               {
                 title: "Exercícios para Casa",
                 items: homeExercises,
-                accent: "#6b7280",
+                accent: palette.textSecondary,
                 icon: "home-outline" as const,
               },
             ]

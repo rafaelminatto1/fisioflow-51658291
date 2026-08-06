@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -98,13 +99,13 @@ function WhatsAppPlaceholder({ colors }: { colors: ThemeColors }) {
 function CRMPlaceholder({ colors }: { colors: ThemeColors }) {
   return (
     <View style={styles.placeholder}>
-      <Ionicons name="funnel" size={64} color="#F59E0B" />
+      <Ionicons name="funnel" size={64} color={palette.warning} />
       <Text style={[styles.placeholderTitle, { color: colors.text }]}>CRM & Leads</Text>
       <Text style={[styles.placeholderDesc, { color: colors.textSecondary }]}>
         Acompanhe leads e pipeline de vendas
       </Text>
       <TouchableOpacity
-        style={[styles.openButton, { backgroundColor: "#F59E0B" }]}
+        style={[styles.openButton, { backgroundColor: palette.warning }]}
         onPress={() => router.push("/(tabs)/crm")}
         accessibilityRole="button"
         accessibilityLabel="Abrir CRM"

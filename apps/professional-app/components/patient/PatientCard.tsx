@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -33,12 +34,12 @@ export function PatientCard({ name, condition, status, stats, onClick }: Patient
       {stats && (
         <View style={styles.footer}>
           <View style={styles.stat}>
-            <Ionicons name="checkmark-circle-outline" size={16} color="#6b7280" />
+            <Ionicons name="checkmark-circle-outline" size={16} color={palette.textSecondary} />
             <Text style={styles.statText}>{stats.sessionsCompleted} sessões</Text>
           </View>
           {stats.nextAppointment && (
             <View style={styles.stat}>
-              <Ionicons name="calendar-outline" size={16} color="#6b7280" />
+              <Ionicons name="calendar-outline" size={16} color={palette.textSecondary} />
               <Text style={styles.statText}>Próx: {stats.nextAppointment}</Text>
             </View>
           )}
@@ -55,7 +56,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: palette.border,
   },
   header: {
     flexDirection: "row",
@@ -71,7 +72,7 @@ const styles = StyleSheet.create({
   },
   condition: {
     fontSize: 14,
-    color: "#6b7280",
+    color: palette.textSecondary,
   },
   badge: {
     paddingHorizontal: 10,
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   textInfo: {
-    color: "#3b82f6",
+    color: palette.info,
   },
   textSuccess: {
     color: "#22c55e",
@@ -98,7 +99,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 16,
     borderTopWidth: 1,
-    borderTopColor: "#f3f4f6",
+    borderTopColor: palette.surfaceHover,
     paddingTop: 12,
   },
   stat: {
@@ -108,6 +109,6 @@ const styles = StyleSheet.create({
   },
   statText: {
     fontSize: 13,
-    color: "#6b7280",
+    color: palette.textSecondary,
   },
 });

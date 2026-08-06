@@ -1,11 +1,12 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import type { TarefaStatus } from "@/lib/api";
 
 const STATUS_CONFIG: Record<TarefaStatus, { bg: string; text: string; label: string }> = {
   BACKLOG: { bg: "#e2e8f0", text: "#475569", label: "Backlog" },
-  A_FAZER: { bg: "#dbeafe", text: "#1d4ed8", label: "A Fazer" },
-  EM_PROGRESSO: { bg: "#fef3c7", text: "#d97706", label: "Em Progresso" },
+  A_FAZER: { bg: palette.infoSoft, text: "#1d4ed8", label: "A Fazer" },
+  EM_PROGRESSO: { bg: palette.warningSoft, text: "#d97706", label: "Em Progresso" },
   REVISAO: { bg: "#ede9fe", text: "#7c3aed", label: "Revisão" },
   CONCLUIDO: { bg: "#dcfce7", text: "#16a34a", label: "Concluído" },
   ARQUIVADO: { bg: "#f1f5f9", text: "#94a3b8", label: "Arquivado" },

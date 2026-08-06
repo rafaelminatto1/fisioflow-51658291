@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   StyleSheet,
@@ -170,7 +171,7 @@ export const BiomechanicalCamera: React.FC<BiomechanicalCameraProps> = ({
     );
 
   const riskColor =
-    metrics.risk === "high" ? "#ef4444" : metrics.risk === "moderate" ? "#fbbf24" : "#34d399";
+    metrics.risk === "high" ? palette.error : metrics.risk === "moderate" ? "#fbbf24" : "#34d399";
 
   return (
     <View style={styles.container}>

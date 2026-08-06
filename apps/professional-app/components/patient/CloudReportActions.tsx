@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React, { useState } from "react";
 import {
   View,
@@ -102,10 +103,10 @@ export function CloudReportActions({
           disabled={isGenerating}
         >
           {isGenerating ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <ActivityIndicator size="small" color={palette.card} />
           ) : (
             <>
-              <Ionicons name="cloud-upload-outline" size={20} color="#FFFFFF" />
+              <Ionicons name="cloud-upload-outline" size={20} color={palette.card} />
               <Text style={styles.buttonText}>Gerar Link na Nuvem</Text>
             </>
           )}
@@ -118,10 +119,10 @@ export function CloudReportActions({
             disabled={isSharing}
           >
             {isSharing ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
+              <ActivityIndicator size="small" color={palette.card} />
             ) : (
               <>
-                <Ionicons name="share-social-outline" size={20} color="#FFFFFF" />
+                <Ionicons name="share-social-outline" size={20} color={palette.card} />
                 <Text style={styles.buttonText}>Compartilhar Link</Text>
               </>
             )}
@@ -174,7 +175,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   buttonText: {
-    color: "#FFFFFF",
+    color: palette.card,
     fontSize: 14,
     fontWeight: "600",
   },

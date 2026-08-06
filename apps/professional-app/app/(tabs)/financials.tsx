@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { useState, useMemo, useCallback } from "react";
 import {
   View,
@@ -440,7 +441,7 @@ export default function FinancialsScreen() {
                       style={[
                         styles.nfseBadge,
                         {
-                          backgroundColor: (NFSE_STATUS_COLORS[nfse.status] ?? "#9CA3AF") + "15",
+                          backgroundColor: (NFSE_STATUS_COLORS[nfse.status] ?? palette.textMuted) + "15",
                         },
                       ]}
                     >
@@ -448,7 +449,7 @@ export default function FinancialsScreen() {
                         style={[
                           styles.nfseBadgeText,
                           {
-                            color: NFSE_STATUS_COLORS[nfse.status] ?? "#9CA3AF",
+                            color: NFSE_STATUS_COLORS[nfse.status] ?? palette.textMuted,
                           },
                         ]}
                       >

@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import { Card } from "@/components";
@@ -32,7 +33,7 @@ export const ProactiveRiskDashboard: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.sectionHeader}>
         <View style={styles.titleRow}>
-          <ShieldAlert size={20} color={highSeverityCount > 0 ? "#ef4444" : "#fbbf24"} />
+          <ShieldAlert size={20} color={highSeverityCount > 0 ? palette.error : "#fbbf24"} />
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Atenção Proativa</Text>
         </View>
         {highSeverityCount > 0 && (
@@ -63,7 +64,7 @@ export const ProactiveRiskDashboard: React.FC = () => {
                 <View
                   style={[
                     styles.statusDot,
-                    { backgroundColor: alert.severity === "high" ? "#ef4444" : "#fbbf24" },
+                    { backgroundColor: alert.severity === "high" ? palette.error : "#fbbf24" },
                   ]}
                 />
                 <Text style={[styles.patientName, { color: colors.text }]} numberOfLines={1}>
@@ -113,7 +114,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   badge: {
-    backgroundColor: "#ef4444",
+    backgroundColor: palette.error,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,

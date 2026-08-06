@@ -4,6 +4,7 @@
  * Exibe sugestões inteligentes de exercícios baseadas em IA
  */
 
+import { palette } from "@/constants/theme";
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -86,11 +87,11 @@ export function ExerciseSuggestionsCard({
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":
-        return "#EF4444";
+        return palette.error;
       case "medium":
-        return "#F59E0B";
+        return palette.warning;
       case "low":
-        return "#10B981";
+        return palette.success;
       default:
         return colors.textSecondary;
     }

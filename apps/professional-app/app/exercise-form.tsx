@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -457,7 +458,7 @@ const msStyles = StyleSheet.create({
     fontWeight: "600",
   },
   confirmBtn: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: palette.info,
     margin: 16,
     borderRadius: 10,
     paddingVertical: 14,

@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Animated, {
@@ -46,8 +47,8 @@ function getCardColors(apt: AppointmentBase, primary: string) {
   if (statusLower === "agendado" || statusLower === "scheduled") {
     return {
       bg: "#fffbeb",
-      borderLeft: "#f59e0b",
-      border: "#fef3c7",
+      borderLeft: palette.warning,
+      border: palette.warningSoft,
       text: "#b45309",
     }; // Amber
   }
@@ -59,8 +60,8 @@ function getCardColors(apt: AppointmentBase, primary: string) {
   ) {
     return {
       bg: "#ecfdf5",
-      borderLeft: "#10b981",
-      border: "#d1fae5",
+      borderLeft: palette.success,
+      border: palette.successSoft,
       text: "#047857",
     }; // Emerald
   }

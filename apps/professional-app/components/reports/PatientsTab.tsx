@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -95,14 +96,14 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.surfaceHover,
     alignItems: "center",
     justifyContent: "center",
   },
   rankText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#6B7280",
+    color: palette.textSecondary,
   },
   patientName: {
     flex: 1,

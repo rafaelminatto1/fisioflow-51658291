@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React, { useRef, useState } from "react";
 import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, Alert } from "react-native";
 import SignatureScreen from "react-native-signature-canvas";
@@ -116,7 +117,7 @@ export function SignaturePad({
           descriptionText=""
           clearText="Limpar"
           confirmText="Confirmar"
-          backgroundColor="#ffffff"
+          backgroundColor={palette.card}
           penColor="#000000"
         />
       </View>

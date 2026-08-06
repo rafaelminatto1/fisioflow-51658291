@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React, { useMemo, useRef, useState } from "react";
 import {
   Alert,
@@ -73,10 +74,10 @@ const INITIAL_HISTORY: HistorySession[] = [
 ];
 
 const EVA_META = [
-  { label: "Sem dor", color: "#9CA3AF" },
+  { label: "Sem dor", color: palette.textMuted },
   { label: "Dor leve", color: "#22C55E" },
   { label: "Dor moderada", color: "#EAB308" },
-  { label: "Dor intensa", color: "#EF4444" },
+  { label: "Dor intensa", color: palette.error },
   { label: "Dor máxima", color: "#7F1D1D" },
 ];
 
@@ -290,7 +291,7 @@ export function EvolutionMobileScreen({
         <View style={styles.evaBar}>
           <View style={[styles.evaSegment, { flex: 45, backgroundColor: "#22C55E" }]} />
           <View style={[styles.evaSegment, { flex: 30, backgroundColor: "#EAB308" }]} />
-          <View style={[styles.evaSegment, { flex: 15, backgroundColor: "#EF4444" }]} />
+          <View style={[styles.evaSegment, { flex: 15, backgroundColor: palette.error }]} />
           <View style={[styles.evaSegment, { flex: 10, backgroundColor: "#7F1D1D" }]} />
           <View
             style={[
@@ -325,7 +326,7 @@ export function EvolutionMobileScreen({
       <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }, historyOpen ? styles.sheetOpen : null]}>
         <View style={styles.sheetGrabber} />
         <View style={styles.sheetHeader}>
-          <View style={[styles.cardIcon, { backgroundColor: "#DBEAFE" }]}>
+          <View style={[styles.cardIcon, { backgroundColor: palette.infoSoft }]}>
             <Ionicons name="time-outline" size={18} color="#2563EB" />
           </View>
           <View style={styles.sheetTitleWrap}>
@@ -356,7 +357,7 @@ export function EvolutionMobileScreen({
                   style={[
                     styles.sessionBadgePill,
                     {
-                      backgroundColor: session.tone === "good" ? "#DBEAFE" : "#F1F5F9",
+                      backgroundColor: session.tone === "good" ? palette.infoSoft : "#F1F5F9",
                     },
                   ]}
                 >
@@ -538,7 +539,7 @@ export function EvolutionMobileScreen({
                 onPress={handleOpenHistory}
                 style={[styles.historyCard, { backgroundColor: "#EFF6FF", borderColor: "#BFDBFE" }]}
               >
-                <View style={[styles.cardIcon, { backgroundColor: "#DBEAFE" }]}>
+                <View style={[styles.cardIcon, { backgroundColor: palette.infoSoft }]}>
                   <Ionicons name="time-outline" size={18} color="#2563EB" />
                 </View>
                 <View style={styles.cardTitleWrap}>
@@ -553,7 +554,7 @@ export function EvolutionMobileScreen({
           {activeTab === "conduta" ? (
             <View style={styles.sectionStack}>
               <MobileCard
-                accent="#10B981"
+                accent={palette.success}
                 icon="fitness-outline"
                 title="Procedimentos & Exercicios"
                 subtitle="Sessao + plano de casa"
@@ -633,8 +634,8 @@ export function EvolutionMobileScreen({
             <View style={styles.sectionStack}>
               <View style={styles.metricsGrid}>
                 {[
-                  { icon: "speedometer-outline", title: "Medições", subtitle: "0 registradas", color: "#10B981", bg: "#DCFCE7" },
-                  { icon: "medkit-outline", title: "Retorno Medico", subtitle: "Adicionar", color: "#2563EB", bg: "#DBEAFE" },
+                  { icon: "speedometer-outline", title: "Medições", subtitle: "0 registradas", color: palette.success, bg: "#DCFCE7" },
+                  { icon: "medkit-outline", title: "Retorno Medico", subtitle: "Adicionar", color: "#2563EB", bg: palette.infoSoft },
                   { icon: "cut-outline", title: "Cirurgias", subtitle: "Nenhuma", color: "#7C3AED", bg: "#EDE9FE" },
                   { icon: "paperclip-outline", title: "Anexos", subtitle: "Nenhum arquivo", color: "#64748B", bg: "#E2E8F0" },
                 ].map((item) => (
@@ -653,7 +654,7 @@ export function EvolutionMobileScreen({
                 onPress={handleOpenHistory}
                 style={[styles.historyCard, { backgroundColor: "#EFF6FF", borderColor: "#BFDBFE" }]}
               >
-                <View style={[styles.cardIcon, { backgroundColor: "#DBEAFE" }]}>
+                <View style={[styles.cardIcon, { backgroundColor: palette.infoSoft }]}>
                   <Ionicons name="time-outline" size={18} color="#2563EB" />
                 </View>
                 <View style={styles.cardTitleWrap}>
@@ -723,7 +724,7 @@ const styles = StyleSheet.create({
     borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#DBEAFE",
+    backgroundColor: palette.infoSoft,
   },
   avatarText: {
     fontSize: 13,
@@ -768,7 +769,7 @@ const styles = StyleSheet.create({
     minHeight: 42,
     paddingHorizontal: 12,
     borderRadius: 15,
-    backgroundColor: "#0080FF",
+    backgroundColor: palette.primary,
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
@@ -1055,7 +1056,7 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 999,
     marginTop: 12,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: palette.border,
     overflow: "hidden",
     flexDirection: "row",
   },
@@ -1274,7 +1275,7 @@ const styles = StyleSheet.create({
   replicateButton: {
     minHeight: 42,
     borderRadius: 14,
-    backgroundColor: "#0080FF",
+    backgroundColor: palette.primary,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",

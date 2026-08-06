@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React, { useCallback } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
 import { router } from "expo-router";
@@ -7,8 +8,8 @@ import type { ApiTarefa, TarefaStatus } from "@/lib/api";
 
 const COLUMN_META: Record<TarefaStatus, { label: string; accent: string }> = {
   BACKLOG: { label: "Backlog", accent: "#94a3b8" },
-  A_FAZER: { label: "A Fazer", accent: "#3b82f6" },
-  EM_PROGRESSO: { label: "Em Progresso", accent: "#f59e0b" },
+  A_FAZER: { label: "A Fazer", accent: palette.info },
+  EM_PROGRESSO: { label: "Em Progresso", accent: palette.warning },
   REVISAO: { label: "Revisão", accent: "#8b5cf6" },
   CONCLUIDO: { label: "Concluído", accent: "#22c55e" },
   ARQUIVADO: { label: "Arquivado", accent: "#94a3b8" },
@@ -55,7 +56,7 @@ export function KanbanColumn({ status, tarefas, onMoveCard }: Props) {
         onPress={() => router.push(`/tarefa-form?status=${status}`)}
         activeOpacity={0.7}
       >
-        <Ionicons name="add" size={15} color="#6b7280" />
+        <Ionicons name="add" size={15} color={palette.textSecondary} />
         <Text style={styles.addBtnText}>Adicionar</Text>
       </TouchableOpacity>
     </View>
@@ -103,7 +104,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 13,
-    color: "#9ca3af",
+    color: palette.textMuted,
   },
   addBtn: {
     flexDirection: "row",
@@ -116,12 +117,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: palette.border,
     borderStyle: "dashed",
     justifyContent: "center",
   },
   addBtnText: {
     fontSize: 12,
-    color: "#6b7280",
+    color: palette.textSecondary,
   },
 });

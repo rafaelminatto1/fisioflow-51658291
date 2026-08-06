@@ -1,3 +1,4 @@
+import { palette } from "@/constants/theme";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Slider from "@react-native-community/slider";
@@ -12,9 +13,9 @@ interface PainLevelSliderProps {
 export function PainLevelSlider({ painLevel, onValueChange, colors }: PainLevelSliderProps) {
   const getPainColor = (level: number) => {
     if (level === 0) return colors.textMuted;
-    if (level <= 3) return "#10B981"; // green
-    if (level <= 6) return "#F59E0B"; // yellow
-    return "#EF4444"; // red
+    if (level <= 3) return palette.success; // green
+    if (level <= 6) return palette.warning; // yellow
+    return palette.error; // red
   };
 
   const getPainLabel = (level: number) => {
