@@ -108,6 +108,112 @@ app.post("/classes", requireAuth, async (c) => {
 });
 
 /**
+ * GET /api/groups/sessions/:sessionId/attendees
+ * Lista de presença de uma sessão: matriculados na turma + check-in da sessão.
+ *
+ * Modelo: `group_sessions` (aula de uma data) → `group_classes` → matrículas em
+ * `group_enrollments` → presença em `group_checkins`. A tela de sessão em grupo
+ * do app já chamava este caminho; faltava a rota.
+ */
+app.get("/sessions/:sessionId/attendees", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+  const { sessionId } = c.req.param();
+
+  try {
+    const result = await pool.query(
+      `SELECT
+         e.id,
+         e.patient_id,
+         p.full_name AS patient_name,
+         COALESCE(ch.status, 'pending') AS status,
+         ch.checked_in_at
+       FROM group_sessions gs
+       JOIN group_enrollments e
+         ON e.class_id = gs.class_id
+        AND e.organization_id = gs.organization_id
+        AND e.unenrolled_at IS NULL
+       JOIN patients p ON p.id = e.patient_id
+       LEFT JOIN group_checkins ch
+              ON ch.session_id = gs.id
+             AND ch.patient_id = e.patient_id
+      WHERE gs.id = $2
+        AND gs.organization_id = $1
+        AND gs.deleted_at IS NULL
+      ORDER BY p.full_name`,
+      [user.organizationId, sessionId],
+    );
+
+    return c.json({ data: result.rows });
+  } catch (error) {
+    console.error("[Groups] Error listing attendees:", error);
+    return c.json({ error: "Failed to list attendees" }, 500);
+  }
+});
+
+/**
+ * POST /api/groups/attendees/:enrollmentId/confirm
+ * Confirma presença do matriculado na sessão informada.
+ *
+ * `group_checkins.session_id` e `patient_id` são NOT NULL — os dois saem do
+ * próprio SELECT da matrícula, e não do corpo da requisição, para não haver como
+ * registrar presença de paciente de outra organização.
+ */
+app.post("/attendees/:enrollmentId/confirm", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+  const { enrollmentId } = c.req.param();
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const sessionId = (body.sessionId ?? body.session_id) as string | undefined;
+  const status = String(body.status ?? "confirmed");
+
+  if (!sessionId) return c.json({ error: "sessionId é obrigatório" }, 400);
+
+  try {
+    const existing = await pool.query(
+      `SELECT id FROM group_checkins
+        WHERE organization_id = $1 AND session_id = $2 AND enrollment_id = $3
+        LIMIT 1`,
+      [user.organizationId, sessionId, enrollmentId],
+    );
+
+    if (existing.rows.length > 0) {
+      const updated = await pool.query(
+        `UPDATE group_checkins
+            SET status = $2, checked_in_at = NOW(), notes = COALESCE($3, notes)
+          WHERE id = $1
+        RETURNING *`,
+        [existing.rows[0].id, status, (body.notes as string) ?? null],
+      );
+      return c.json({ data: updated.rows[0] });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO group_checkins
+         (organization_id, session_id, enrollment_id, patient_id, session_date, status, checked_in_at, notes)
+       SELECT $1, gs.id, e.id, e.patient_id, gs.date, $4, NOW(), $5
+         FROM group_enrollments e
+         JOIN group_sessions gs
+           ON gs.id = $2
+          AND gs.organization_id = e.organization_id
+          AND gs.class_id = e.class_id
+        WHERE e.id = $3 AND e.organization_id = $1
+       RETURNING *`,
+      [user.organizationId, sessionId, enrollmentId, status, (body.notes as string) ?? null],
+    );
+
+    if (result.rows.length === 0) {
+      return c.json({ error: "Matrícula ou sessão não encontrada" }, 404);
+    }
+
+    return c.json({ data: result.rows[0] }, 201);
+  } catch (error) {
+    console.error("[Groups] Error confirming attendance:", error);
+    return c.json({ error: "Failed to confirm attendance" }, 500);
+  }
+});
+
+/**
  * POST /api/groups/enroll
  * Matrícula um paciente em uma turma
  */

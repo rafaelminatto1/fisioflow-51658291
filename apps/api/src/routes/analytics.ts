@@ -167,21 +167,23 @@ app.get("/dashboard", async (c) => {
         break;
     }
 
-    // Agendamentos no período
-    const appointmentsRes = await pool.query(
-      `SELECT 
+    const [appointmentsRes, revenueRes, newPatientsRes, activePatientsRes] = await Promise.all([
+      // Agendamentos no período
+      pool.query(
+        `SELECT
         COUNT(*) as total,
         COUNT(*) filter (where status IN ('completed', 'realizado')) as completed,
         COUNT(*) filter (where status = 'no_show') as no_shows,
         COUNT(*) filter (where status IN ('confirmed', 'scheduled', 'agendado')) as upcoming
       FROM appointments a
-      WHERE a.organization_id = $1 ${dateFilter}`,
-      [user.organizationId],
-    );
+      WHERE a.organization_id = $1
+        AND a.deleted_at IS NULL ${dateFilter}`,
+        [user.organizationId],
+      ),
 
-    // Receita no período (payments usa amount numeric, paid_at date)
-    const revenueRes = await pool.query(
-      `SELECT 
+      // Receita no período (payments usa amount numeric, paid_at date)
+      pool.query(
+        `SELECT
         COALESCE(SUM(amount), 0) as total_revenue,
         COUNT(*) as total_payments,
         AVG(amount) as avg_ticket
@@ -190,17 +192,32 @@ app.get("/dashboard", async (c) => {
         AND status = 'completed'
         AND paid_at >= date_trunc('${truncPeriod}', CURRENT_DATE)
         AND deleted_at IS NULL`,
-      [user.organizationId],
-    );
+        [user.organizationId],
+      ),
 
-    // Novos pacientes no período
-    const newPatientsRes = await pool.query(
-      `SELECT COUNT(*) as count
+      // Novos pacientes no período
+      pool.query(
+        `SELECT COUNT(*) as count
       FROM patients
       WHERE organization_id = $1
         AND created_at >= date_trunc('${truncPeriod}', CURRENT_DATE)`,
-      [user.organizationId],
-    );
+        [user.organizationId],
+      ),
+
+      // Pacientes ativos: mesma definição usada em /insights/retention — quem teve
+      // ao menos um agendamento nos últimos 90 dias. `patients.status` e
+      // `patients.is_active` não discriminam nada em produção (1021 de 1021 ativos),
+      // então contá-los daria "1021 pacientes ativos" para uma clínica que atende ~226.
+      pool.query(
+        `SELECT COUNT(DISTINCT patient_id) as count
+      FROM appointments
+      WHERE organization_id = $1
+        AND patient_id IS NOT NULL
+        AND deleted_at IS NULL
+        AND date >= CURRENT_DATE - 90`,
+        [user.organizationId],
+      ),
+    ]);
 
     return c.json({
       data: {
@@ -217,6 +234,7 @@ app.get("/dashboard", async (c) => {
           avg_ticket: Number(revenueRes.rows[0]?.avg_ticket || 0),
         },
         new_patients: Number(newPatientsRes.rows[0]?.count || 0),
+        active_patients: Number(activePatientsRes.rows[0]?.count || 0),
       },
     });
   } catch (error) {
@@ -237,7 +255,7 @@ app.get("/financial", async (c) => {
   const endDate = c.req.query("endDate") || new Date().toISOString().split("T")[0];
 
   try {
-    const [revenueRes, expensesRes, pendingRes, categoriesRes] = await Promise.all([
+    const [revenueRes, expensesRes, pendingRes, categoriesRes, revenueByDayRes] = await Promise.all([
       pool.query(
         `SELECT COALESCE(SUM(amount), 0)::numeric AS total_revenue
          FROM payments
@@ -276,6 +294,20 @@ app.get("/financial", async (c) => {
          ORDER BY amount DESC`,
         [user.organizationId, startDate, endDate],
       ),
+      // Série diária de faturamento — alimenta o gráfico da aba Financeiro do app
+      // profissional, que antes pedia um PNG a `/api/reports/financial-chart`
+      // (rota inexistente).
+      pool.query(
+        `SELECT created_at::date AS date, COALESCE(SUM(amount), 0)::numeric AS total
+         FROM payments
+         WHERE organization_id = $1
+           AND status IN ('completed', 'paid', 'realizado')
+           AND created_at >= $2::timestamptz AND created_at <= ($3::timestamptz + interval '1 day')
+           AND deleted_at IS NULL
+         GROUP BY 1
+         ORDER BY 1`,
+        [user.organizationId, startDate, endDate],
+      ),
     ]);
 
     const totalRevenue = Number(revenueRes.rows[0]?.total_revenue || 0);
@@ -302,6 +334,10 @@ app.get("/financial", async (c) => {
           pendingPayments,
         },
         details,
+        revenueByDay: revenueByDayRes.rows.map((row) => ({
+          date: String(row.date).split("T")[0],
+          total: Number(row.total || 0),
+        })),
       },
     });
   } catch (error) {

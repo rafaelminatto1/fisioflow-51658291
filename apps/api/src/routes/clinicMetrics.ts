@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { createReplicaPool } from "../lib/db";
+import { createPool, createReplicaPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { WORKERS_AI_MODELS } from "../lib/workersAi";
 import type { Env } from "../types/env";
@@ -473,29 +473,79 @@ app.get("/clinical-quality", requireAuth, async (c) => {
 });
 
 /**
- * GET /api/clinic-metrics/clinical-alerts
- * Lista todos os alertas pendentes de monitoramento (RTM/IA).
+ * GET /api/clinic-metrics/clinical-alerts?status=&severity=
+ * Alertas de monitoramento (RTM/IA). `status` default `pending`.
+ *
+ * `clinical_alerts` não tem `organization_id` — o escopo vem do JOIN com
+ * `patients`. Não remova o join achando que é só para pegar o nome.
  */
 app.get("/clinical-alerts", requireAuth, async (c) => {
   const user = c.get("user");
   const pool = createReplicaPool(c.env);
 
+  const status = c.req.query("status") || "pending";
+  const severity = c.req.query("severity");
+
   try {
+    const params: unknown[] = [user.organizationId, status];
+    let severityFilter = "";
+    if (severity) {
+      params.push(severity);
+      severityFilter = ` AND ca.severity = $${params.length}`;
+    }
+
     const result = await pool.query(
-      `SELECT 
+      `SELECT
         ca.*,
         p.full_name as patient_name
        FROM clinical_alerts ca
        JOIN patients p ON p.id = ca.patient_id
-       WHERE p.organization_id = $1 AND ca.status = 'pending'
-       ORDER BY ca.created_at DESC`,
-      [user.organizationId],
+       WHERE p.organization_id = $1
+         AND ca.status = $2${severityFilter}
+       ORDER BY ca.created_at DESC
+       LIMIT 200`,
+      params,
     );
 
     return c.json({ data: result.rows });
   } catch (error) {
     console.error("[Metrics] Clinical Alerts error:", error);
     return c.json({ error: "Failed to fetch clinical alerts" }, 500);
+  }
+});
+
+/**
+ * POST /api/clinic-metrics/clinical-alerts/:id/resolve
+ * Marca o alerta como resolvido. O UPDATE só alcança alertas de paciente da
+ * própria organização; id de outra org devolve 404, não 200 silencioso.
+ */
+app.post("/clinical-alerts/:id/resolve", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { id } = c.req.param();
+  const pool = createPool(c.env);
+
+  try {
+    const result = await pool.query(
+      `UPDATE clinical_alerts ca
+          SET status = 'resolved',
+              resolved_at = NOW(),
+              resolved_by = $3
+         FROM patients p
+        WHERE p.id = ca.patient_id
+          AND ca.id = $2
+          AND p.organization_id = $1
+      RETURNING ca.id`,
+      [user.organizationId, id, user.profileId || null],
+    );
+
+    if (result.rows.length === 0) {
+      return c.json({ error: "Alerta não encontrado" }, 404);
+    }
+
+    return c.json({ success: true });
+  } catch (error) {
+    console.error("[Metrics] Resolve clinical alert error:", error);
+    return c.json({ error: "Failed to resolve clinical alert" }, 500);
   }
 });
 

@@ -9,7 +9,7 @@
  * GET/POST /api/clinical/standardized-tests
  */
 import { Hono } from "hono";
-import { createDb } from "../lib/db";
+import { createDb, createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { withTenant } from "../lib/db-utils";
 import type { Env } from "../types/env";
@@ -118,6 +118,75 @@ app.get("/insights", requireAuth, async (c) => {
       timestamp: new Date().toISOString(),
     },
   });
+});
+
+/**
+ * GET/POST /api/clinical/generated-reports
+ *
+ * Registro de laudo/relatório emitido para o paciente. A tabela
+ * `generated_reports` já existia e era escrita só pelo gerador em
+ * `analytics/patient.ts`; o app profissional tentava registrar o compartilhamento
+ * por WhatsApp aqui e recebia 404, então essa emissão não ficava em lugar nenhum.
+ */
+app.post("/generated-reports", requireAuth, async (c) => {
+  const user = c.get("user");
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+
+  const patientId = (body.patient_id ?? body.patientId) as string | undefined;
+  const reportType = (body.report_type ?? body.reportType ?? "evolution") as string;
+  const content = (body.content ?? body.report_content) as string | undefined;
+
+  if (!patientId) return c.json({ error: "patient_id é obrigatório" }, 400);
+  if (!content) return c.json({ error: "content é obrigatório" }, 400);
+
+  const pool = createPool(c.env);
+
+  try {
+    // O filtro por organização vai no SELECT do paciente, não no INSERT: assim um
+    // patient_id de outra org não cria linha órfã.
+    const result = await pool.query(
+      `INSERT INTO generated_reports
+         (organization_id, patient_id, report_type, report_content, created_by, created_at)
+       SELECT $1, p.id, $3, $4, $5, NOW()
+         FROM patients p
+        WHERE p.id = $2 AND p.organization_id = $1
+       RETURNING id, patient_id, report_type, created_at`,
+      [user.organizationId, patientId, reportType, content, user.uid],
+    );
+
+    if (result.rows.length === 0) {
+      return c.json({ error: "Paciente não encontrado" }, 404);
+    }
+
+    return c.json({ data: result.rows[0] }, 201);
+  } catch (error) {
+    console.error("[Clinical/GeneratedReports] Insert error:", error);
+    return c.json({ error: "Erro ao registrar relatório" }, 500);
+  }
+});
+
+app.get("/generated-reports", requireAuth, async (c) => {
+  const user = c.get("user");
+  const patientId = c.req.query("patient_id");
+  const pool = createPool(c.env);
+
+  try {
+    const result = await pool.query(
+      `SELECT id, patient_id, report_type, report_content, created_by, created_at
+         FROM generated_reports
+        WHERE organization_id = $1
+          AND deleted_at IS NULL
+          AND ($2::uuid IS NULL OR patient_id = $2::uuid)
+        ORDER BY created_at DESC
+        LIMIT 100`,
+      [user.organizationId, patientId ?? null],
+    );
+
+    return c.json({ data: result.rows });
+  } catch (error) {
+    console.error("[Clinical/GeneratedReports] List error:", error);
+    return c.json({ error: "Erro ao listar relatórios" }, 500);
+  }
 });
 
 app.route("/home-exercises", homeExerciseRoutes);

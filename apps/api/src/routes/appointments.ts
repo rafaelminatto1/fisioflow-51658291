@@ -223,8 +223,10 @@ app.get("/", requireAuth, async (c) => {
     c.header("Cache-Control", "no-store");
     return c.json({ data: sanitizedRows });
   } catch (error: any) {
+    // Devolver `{ data: [] }` aqui tornava falha de banco indistinguível de
+    // agenda vazia: a tela mostrava um dia limpo e ninguém era avisado de nada.
     console.error("[Appointments/List] Error:", error.message);
-    return c.json({ data: [] });
+    return c.json({ error: "Erro ao carregar agendamentos" }, 500);
   }
 });
 

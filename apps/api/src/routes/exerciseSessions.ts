@@ -7,23 +7,31 @@ import { notifyHEPMilestone } from "../lib/push";
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 // GET /api/exercise-sessions?patientId=&exerciseId=&limit=20
+//
+// `exercise_sessions` não tem organization_id — o escopo sai do JOIN com
+// `patients`. Sem ele, qualquer usuário autenticado lia as sessões de qualquer
+// paciente de qualquer clínica passando o id na query.
 app.get("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const { patientId, exerciseId, limit: lim } = c.req.query();
   const db = await createPool(c.env);
 
-  let sql = "SELECT * FROM exercise_sessions WHERE 1=1";
-  const params: unknown[] = [];
-  let idx = 1;
+  let sql = `SELECT es.*
+               FROM exercise_sessions es
+               JOIN patients p ON p.id = es.patient_id
+              WHERE p.organization_id = $1`;
+  const params: unknown[] = [user.organizationId];
+  let idx = 2;
 
   if (patientId) {
-    sql += ` AND patient_id = $${idx++}`;
+    sql += ` AND es.patient_id = $${idx++}`;
     params.push(patientId);
   }
   if (exerciseId) {
-    sql += ` AND exercise_id = $${idx++}`;
+    sql += ` AND es.exercise_id = $${idx++}`;
     params.push(exerciseId);
   }
-  sql += ` ORDER BY created_at DESC LIMIT $${idx++}`;
+  sql += ` ORDER BY es.created_at DESC LIMIT $${idx++}`;
   params.push(Math.min(Number(lim) || 20, 100));
 
   const result = await db.query(sql, params);
@@ -36,8 +44,21 @@ app.get("/", requireAuth, async (c) => {
 
 // POST /api/exercise-sessions
 app.post("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const body = await c.req.json();
   const db = await createPool(c.env);
+
+  // Idem GET: sem esta checagem dava para gravar sessão no prontuário de um
+  // paciente de outra organização.
+  if (body.patient_id) {
+    const owner = await db.query(
+      `SELECT 1 FROM patients WHERE id = $1 AND organization_id = $2 LIMIT 1`,
+      [body.patient_id, user.organizationId],
+    );
+    if (owner.rows.length === 0) {
+      return c.json({ error: "Paciente não encontrado" }, 404);
+    }
+  }
 
   const {
     patient_id,

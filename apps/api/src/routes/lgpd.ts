@@ -16,6 +16,69 @@ const deletionRequestSchema = z.object({
   request_origin: z.string().max(32).optional(),
 });
 
+const exportRequestSchema = z.object({
+  format: z.enum(["json", "csv", "pdf"]).default("json"),
+  types: z.array(z.enum(["appointments", "evolutions", "exercises", "profile"])).min(1),
+  dateRange: z
+    .object({
+      start: z.string(),
+      end: z.string(),
+    })
+    .optional(),
+  request_origin: z.string().max(32).optional(),
+});
+
+/**
+ * POST /api/lgpd/data-export-request
+ * LGPD art. 18 V/VI — registra pedido de portabilidade/acesso do proprio usuario.
+ *
+ * Registra o pedido e devolve o prazo; a geracao do arquivo e feita pelo
+ * encarregado. A alternativa seria montar o export na hora, mas exportacao de
+ * prontuario nao e coisa que se dispare sem conferencia humana.
+ */
+app.post("/data-export-request", zValidator("json", exportRequestSchema), async (c) => {
+  const body = c.req.valid("json");
+  const user = c.get("user");
+  const orgId = user.organizationId;
+  if (!orgId) return c.json({ error: "missing_org_context" }, 400);
+
+  const sql = getRawSql(c.env, "write");
+  const result = await sql`
+    INSERT INTO public.lgpd_export_requests
+      (organization_id, requester_user_id, requester_email, requester_name, request_origin,
+       format, types, date_range_start, date_range_end, status, response_summary)
+    VALUES
+      (${orgId}, ${user.uid}, ${user.email ?? ""}, ${null},
+       ${body.request_origin ?? "professional_app"}, ${body.format}, ${body.types},
+       ${body.dateRange?.start ?? null}, ${body.dateRange?.end ?? null}, 'received',
+       ${"Pedido de exportacao registrado. Sera atendido em ate 15 dias uteis (LGPD art. 18)."})
+    RETURNING id, status, format, types, response_summary, due_at, created_at
+  `;
+
+  return c.json({ data: result.rows[0] }, 201);
+});
+
+/**
+ * GET /api/lgpd/data-export-requests
+ * Pedidos de exportacao do proprio usuario.
+ */
+app.get("/data-export-requests", async (c) => {
+  const user = c.get("user");
+  const orgId = user.organizationId;
+  if (!orgId) return c.json({ error: "missing_org_context" }, 400);
+
+  const sql = getRawSql(c.env, "write");
+  const result = await sql`
+    SELECT id, status, format, types, response_summary, result_url, due_at, responded_at, created_at
+      FROM public.lgpd_export_requests
+     WHERE organization_id = ${orgId} AND requester_user_id = ${user.uid}
+     ORDER BY created_at DESC
+     LIMIT 50
+  `;
+
+  return c.json({ data: result.rows });
+});
+
 /**
  * POST /api/lgpd/data-deletion-request
  * LGPD G3 (Parecer DPO 2026-05-19) — registra pedido de exclusao com resposta
@@ -78,11 +141,19 @@ app.get("/data-deletion-requests", async (c) => {
   if (!orgId) return c.json({ error: "missing_org_context" }, 400);
 
   const status = c.req.query("status");
+  // `requester_email` permite ao app pedir só os próprios pedidos, em vez de
+  // baixar a fila inteira da organização para filtrar no cliente.
+  const requesterEmail = c.req.query("requester_email");
   const sql = getRawSql(c.env, "write");
 
-  const result = status
-    ? await sql`SELECT * FROM public.lgpd_deletion_requests WHERE organization_id = ${orgId} AND status = ${status} ORDER BY created_at DESC LIMIT 200`
-    : await sql`SELECT * FROM public.lgpd_deletion_requests WHERE organization_id = ${orgId} ORDER BY created_at DESC LIMIT 200`;
+  const result = await sql`
+    SELECT * FROM public.lgpd_deletion_requests
+    WHERE organization_id = ${orgId}
+      AND (${status ?? null}::text IS NULL OR status = ${status ?? null})
+      AND (${requesterEmail ?? null}::text IS NULL OR requester_email = ${requesterEmail ?? null})
+    ORDER BY created_at DESC
+    LIMIT 200
+  `;
 
   return c.json({ data: result.rows });
 });

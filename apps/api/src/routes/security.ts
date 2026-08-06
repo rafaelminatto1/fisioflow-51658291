@@ -199,6 +199,50 @@ app.put("/lgpd-consents/:consentType", async (c) => {
   return c.json({ data: result.rows[0] ?? null });
 });
 
+/**
+ * POST /api/security/devices — registra que um dispositivo passou a usar
+ * biometria/PIN. DELETE /api/security/devices/:deviceId — registra a remoção.
+ *
+ * O segredo em si (biometria, PIN) nunca sai do dispositivo: fica no SecureStore.
+ * O que se guarda aqui é a TRILHA em `security_events`, para o usuário e o
+ * encarregado enxergarem de quais aparelhos a conta foi habilitada. O app já
+ * mandava esses eventos para `/api/settings/security`, rota inexistente — a
+ * chamada era `.catch(console.log)` e sumia em silêncio.
+ */
+app.post("/devices", async (c) => {
+  const user = c.get("user");
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const device = (body.device ?? {}) as Record<string, unknown>;
+  const deviceId = String(device.id ?? body.deviceId ?? "").trim();
+
+  if (!deviceId) return c.json({ error: "device.id é obrigatório" }, 400);
+
+  await logSecurityEvent(c.env, user.uid, user.organizationId, "device_biometrics_enabled", "info", {
+    deviceId,
+    platform: device.platform ?? null,
+    addedAt: device.addedAt ?? new Date().toISOString(),
+    biometricsEnabled: body.biometricsEnabled !== false,
+  });
+
+  return c.json({ data: { deviceId, status: "registered" } }, 201);
+});
+
+app.delete("/devices/:deviceId", async (c) => {
+  const user = c.get("user");
+  const deviceId = c.req.param("deviceId");
+
+  await logSecurityEvent(
+    c.env,
+    user.uid,
+    user.organizationId,
+    "device_biometrics_disabled",
+    "info",
+    { deviceId },
+  );
+
+  return c.json({ data: { deviceId, status: "revoked" } });
+});
+
 app.post("/mfa/enable", async (c) => {
   const user = c.get("user");
   const pool = await createPool(c.env);
