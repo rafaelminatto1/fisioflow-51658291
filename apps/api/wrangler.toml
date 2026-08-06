@@ -180,102 +180,6 @@ class_name = "NotesCollaboration"
 name = "BIOMECHANICS_POSE"
 class_name = "BiomechanicsPoseContainer"
 
-[[migrations]]
-tag = "v1"
-
-[[migrations]]
-tag = "v2"
-
-[[migrations]]
-tag = "v3"
-
-[[migrations]]
-tag = "v4"
-
-[[migrations]]
-tag = "v5"
-
-[[migrations]]
-tag = "v6"
-new_classes = ["PatientAgent"]
-
-[[migrations]]
-tag = "v7"
-new_classes = ["AssessmentLiveSession"]
-
-[[migrations]]
-tag = "v8"
-new_classes = ["ClinicAgent"]
-
-[[migrations]]
-tag = "v9"
-new_sqlite_classes = ["VoiceScribeAgent"]
-
-[[migrations]]
-tag = "v10"
-new_classes = ["EvolutionCollaboration"]
-
-# PatientAgent/ClinicAgent estendem o Agents SDK (requer SQLite), mas foram criados como
-# KV (new_classes v6/v8) → setState falhava (500). KV→SQLite in-place não é suportado.
-# Solução: novas classes SQLite (PatientAgentSql/ClinicAgentSql) assumem os bindings.
-# As classes KV antigas ficam órfãs (sem binding, nunca instanciadas) — não podem ser
-# deletadas no mesmo deploy em que o binding muda (CF code 10061); limpeza opcional depois.
-[[migrations]]
-tag = "v11"
-new_sqlite_classes = ["PatientAgentSql", "ClinicAgentSql"]
-
-# Limpeza das classes KV órfãs (sem binding desde v11/#207). Delete em deploy separado da
-# troca de binding (CF code 10061 proíbe deletar uma classe ainda referenciada por binding).
-[[migrations]]
-tag = "v12"
-deleted_classes = ["PatientAgent", "ClinicAgent"]
-
-# EvolutionCollaboration foi criada como KV (new_classes v10). YServer (y-partyserver)
-# exige backend SQLite e KV→SQLite in-place não é suportado — mesmo caso de
-# PatientAgent/ClinicAgent. Solução: EvolutionCollaborationSql (SQLite) assume o
-# binding. A classe KV antiga fica órfã (sem binding, dormante, sem dados) e só pode
-# ser removida via `deleted_classes` num deploy SEPARADO da troca de binding
-# (CF code 10061), como foi feito em v11 → v12.
-[[migrations]]
-tag = "v13"
-new_sqlite_classes = ["EvolutionCollaborationSql"]
-
-# v14: remove a classe KV órfã EvolutionCollaboration (v10), num deploy SEPARADO
-# do v13 (CF code 10061 proíbe delete+rebind no mesmo deploy). Sem dados/binding.
-[[migrations]]
-tag = "v14"
-deleted_classes = ["EvolutionCollaboration"]
-
-[[migrations]]
-tag = "v15"
-new_sqlite_classes = ["NotesCollaboration"]
-
-# A classe base Container exige DO com storage SQLite.
-[[migrations]]
-tag = "v16"
-new_sqlite_classes = ["BiomechanicsPoseContainer"]
-
-# ===== CONTAINERS =====
-# standard-4 = 4 vCPU / 12 GiB. A conta é decode de 1080p + uma passada de
-# MediaPipe por quadro; metade disso dobraria a espera para economizar pouco.
-# max_instances limita o gasto — a fila serializa o excedente naturalmente.
-# O container NÃO é declarado nos ambientes por dois motivos, ambos aprendidos
-# na prática em 06/08/2026:
-#
-# 1. O CLOUDFLARE_API_TOKEN do CI não tem permissão de push no registry de
-#    containers. A imagem constrói e o deploy morre com ApiError: Forbidden.
-# 2. Declarar containers faz o wrangler revalidar a cadeia de migrations de DO.
-#    Tentei enxugar a cadeia para contornar e quebrei produção de novo:
-#    "Cannot apply new-sqlite-class migration to class 'NotesCollaboration'
-#    that is already depended on by existing Durable Objects [code 10074]".
-#    O servidor tem v1..v15 aplicadas; declarar só a v15 faz o wrangler tentar
-#    reaplicá-la. O staging aceitou porque tinha estado diferente — ele NÃO é
-#    prova válida para produção neste caso específico.
-#
-# Para ativar o container: (a) dar escopo de registry ao token do CI e
-# (b) resolver a revalidação da cadeia sem remover tags já aplicadas —
-# provavelmente via o campo `exports` (jul/2026), que substitui o array de
-# migrations, com a ressalva de ser porta de mão única.
 [[containers]]
 class_name = "BiomechanicsPoseContainer"
 image = "./containers/biomechanics-pose/Dockerfile"
@@ -283,6 +187,68 @@ name = "fisioflow-biomechanics-pose"
 max_instances = 5
 instance_type = "standard-4"
 rollout_step_percentage = 25
+
+# ===== DURABLE OBJECT CLASS EXPORTS =====
+# Substitui o array [[migrations]] legado (declarativo em vez de imperativo).
+#
+# Por que a troca: declarar `[[containers]]` fazia o wrangler revalidar a cadeia
+# inteira de migrations, que tropeçava no `deleted_classes = ["PatientAgent"]`
+# da v12 — resíduo de 2024 — e derrubava TODO o deploy, não só o container.
+#
+# O storage de cada classe NÃO foi inferido do histórico de migrations: foi
+# lido do servidor via
+#   GET /accounts/{acc}/workers/durable_objects/namespaces
+# porque o backend é IMUTÁVEL depois de provisionado e errar aqui é destrutivo.
+# OrganizationState, em particular, não aparecia em migration nenhuma.
+#
+# Regra ao mexer: toda classe exportada precisa de entrada, e classe aposentada
+# vira tombstone (`deleted`/`renamed`), nunca sumindo em silêncio.
+
+[exports.OrganizationState]
+type = "durable-object"
+storage = "legacy-kv"
+
+[exports.AssessmentLiveSession]
+type = "durable-object"
+storage = "legacy-kv"
+
+[exports.VoiceScribeAgent]
+type = "durable-object"
+storage = "sqlite"
+
+[exports.PatientAgentSql]
+type = "durable-object"
+storage = "sqlite"
+
+[exports.ClinicAgentSql]
+type = "durable-object"
+storage = "sqlite"
+
+[exports.EvolutionCollaborationSql]
+type = "durable-object"
+storage = "sqlite"
+
+[exports.NotesCollaboration]
+type = "durable-object"
+storage = "sqlite"
+
+[exports.BiomechanicsPoseContainer]
+type = "durable-object"
+storage = "sqlite"
+
+# Tombstones — classes KV aposentadas, já deletadas nas migrations v12 e v14.
+# Ficam declaradas para a Cloudflare reconciliar explicitamente.
+[exports.PatientAgent]
+type = "durable-object"
+state = "deleted"
+
+[exports.ClinicAgent]
+type = "durable-object"
+state = "deleted"
+
+[exports.EvolutionCollaboration]
+type = "durable-object"
+state = "deleted"
 
 # ===== AI & BROWSER RENDERING =====
 [ai]
@@ -511,43 +477,13 @@ bindings = [
   { name = "BIOMECHANICS_POSE", class_name = "BiomechanicsPoseContainer" },
 ]
 
-[[env.production.migrations]]
-tag = "v9"
-new_sqlite_classes = ["VoiceScribeAgent"]
-
-[[env.production.migrations]]
-tag = "v10"
-new_classes = ["EvolutionCollaboration"]
-
-[[env.production.migrations]]
-tag = "v11"
-new_sqlite_classes = ["PatientAgentSql", "ClinicAgentSql"]
-
-[[env.production.migrations]]
-tag = "v12"
-deleted_classes = ["PatientAgent", "ClinicAgent"]
-
-# EvolutionCollaboration (KV) → EvolutionCollaborationSql (SQLite, YServer). Delete da
-# classe KV órfã fica para um deploy separado (v14), como v11 → v12 (CF code 10061).
-[[env.production.migrations]]
-tag = "v13"
-new_sqlite_classes = ["EvolutionCollaborationSql"]
-
-[[env.production.migrations]]
-tag = "v14"
-deleted_classes = ["EvolutionCollaboration"]
-
-[[env.production.migrations]]
-tag = "v15"
-new_sqlite_classes = ["NotesCollaboration"]
-
-# v16 JÁ FOI APLICADA no servidor (confirmado: o binding BIOMECHANICS_POSE
-# aparece no worker em produção). Removê-la daqui faz o wrangler achar que
-# precisa voltar atrás e reaplicar a cadeia desde a v9, que falha porque as
-# classes já existem. Migration aplicada não se remove do arquivo.
-[[env.production.migrations]]
-tag = "v16"
-new_sqlite_classes = ["BiomechanicsPoseContainer"]
+[[env.production.containers]]
+class_name = "BiomechanicsPoseContainer"
+image = "./containers/biomechanics-pose/Dockerfile"
+name = "fisioflow-biomechanics-pose"
+max_instances = 5
+instance_type = "standard-4"
+rollout_step_percentage = 25
 
 [env.production.ai]
 binding = "AI"
@@ -781,34 +717,6 @@ bindings = [
   { name = "EVOLUTION_COLLABORATION", class_name = "EvolutionCollaborationSql" },
   { name = "NOTES_COLLABORATION", class_name = "NotesCollaboration" },
 ]
-
-[[env.staging.migrations]]
-tag = "v9"
-new_sqlite_classes = ["VoiceScribeAgent"]
-
-[[env.staging.migrations]]
-tag = "v10"
-new_classes = ["EvolutionCollaboration"]
-
-[[env.staging.migrations]]
-tag = "v11"
-new_sqlite_classes = ["PatientAgentSql", "ClinicAgentSql"]
-
-[[env.staging.migrations]]
-tag = "v12"
-deleted_classes = ["PatientAgent", "ClinicAgent"]
-
-[[env.staging.migrations]]
-tag = "v13"
-new_sqlite_classes = ["EvolutionCollaborationSql"]
-
-[[env.staging.migrations]]
-tag = "v14"
-deleted_classes = ["EvolutionCollaboration"]
-
-[[env.staging.migrations]]
-tag = "v15"
-new_sqlite_classes = ["NotesCollaboration"]
 
 
 [env.staging.ai]
