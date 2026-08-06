@@ -61,6 +61,9 @@ importers:
       '@fisioflow/config':
         specifier: workspace:*
         version: link:packages/config
+      '@fisioflow/core':
+        specifier: workspace:*
+        version: link:packages/core
       '@fullcalendar/core':
         specifier: ^6.1.20
         version: 6.1.20

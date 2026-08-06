@@ -1,3 +1,4 @@
+import { deltaExplanation, interpretDelta, LAUDO_DISCLAIMER } from "@fisioflow/core";
 import React, { useState } from "react";
 import { BiomechanicsAssessment } from "@/api/v2/biomechanics";
 import { AnalyticalVideoPlayer } from "./video/AnalyticalVideoPlayer";
@@ -13,6 +14,28 @@ import { Layers, TrendingUp } from "lucide-react";
 interface BiomechanicsComparisonProps {
   baseAssessment: BiomechanicsAssessment;
   compareAssessment: BiomechanicsAssessment;
+}
+
+/**
+ * Nomes de ângulo vindos de `analysisData.angles` para as chaves do
+ * @fisioflow/core, que é onde vivem os limiares clínicos.
+ *
+ * "valgo" NÃO vira métrica de valgo de joelho: mapeia para `fppa`, porque é
+ * isso que a medida 2D é. Lopes 2018 (JOSPT, meta-análise) achou r=0,127
+ * (p=0,094) entre FPPA 2D e ângulo frontal 3D — chamar de valgo é erro de
+ * categoria num laudo.
+ */
+function normalizarChaveMetrica(nome: string): string {
+  const n = nome.toLowerCase();
+  if (n.includes("valgo") || n.includes("valgus") || n.includes("fppa")) return "fppa";
+  if (n.includes("tronco") || n.includes("trunk")) return "trunk_inclination";
+  if (n.includes("simetr") || n.includes("symmetr")) return "symmetry";
+  if (n.includes("dor") || n.includes("pain")) return "pain";
+  if (n.includes("quadril") || n.includes("hip")) return "hip_flexion";
+  if (n.includes("tornozelo") || n.includes("ankle")) return "ankle_dorsiflexion";
+  if (n.includes("joelho") || n.includes("knee"))
+    return n.includes("rom") ? "knee_rom" : "knee_flexion";
+  return n.replace(/[^a-z0-9]+/g, "_");
 }
 
 export const BiomechanicsComparison: React.FC<BiomechanicsComparisonProps> = ({
@@ -83,7 +106,25 @@ export const BiomechanicsComparison: React.FC<BiomechanicsComparisonProps> = ({
             if (baseVal === undefined) return null;
 
             const delta = currentVal - baseVal;
-            const isImprovement = delta > 0; // Depende do contexto, mas geralmente +ADM é bom
+
+            // A direção NÃO sai mais do sinal do delta.
+            //
+            // O comentário anterior aqui era "depende do contexto, mas
+            // geralmente +ADM é bom" — e essa incerteza virava seta verde. Uma
+            // variação de 3° em FPPA é menor que o erro de medição do método
+            // (MDC 9,2°, Mansfield 2022), e pintá-la de verde afirma progresso
+            // que o dado não sustenta.
+            //
+            // `interpretDelta` compara com a diferença mínima detectável
+            // publicada por métrica e resolve também a polaridade: mais ROM é
+            // melhor, menos FPPA é melhor.
+            const leitura = interpretDelta(normalizarChaveMetrica(name), delta);
+            const corDelta =
+              leitura === "melhora"
+                ? "text-emerald-500"
+                : leitura === "piora"
+                  ? "text-rose-500"
+                  : "text-slate-400";
 
             return (
               <div
@@ -93,11 +134,15 @@ export const BiomechanicsComparison: React.FC<BiomechanicsComparisonProps> = ({
                 <p className="text-[10px] text-muted-foreground uppercase font-bold">{name}</p>
                 <div className="flex items-baseline gap-2 mt-1">
                   <span className="text-xl font-black">{currentVal.toFixed(1)}°</span>
-                  <span
-                    className={`text-xs font-bold ${delta === 0 ? "text-slate-400" : isImprovement ? "text-emerald-500" : "text-rose-500"}`}
-                  >
-                    {delta > 0 ? "+" : ""}
-                    {delta.toFixed(1)}°
+                  <span className={`text-xs font-bold ${corDelta}`} title={deltaExplanation(normalizarChaveMetrica(name), delta)}>
+                    {leitura === "sem_mudanca_detectavel" ? (
+                      "sem mudança"
+                    ) : (
+                      <>
+                        {delta > 0 ? "+" : ""}
+                        {delta.toFixed(1)}°
+                      </>
+                    )}
                   </span>
                 </div>
               </div>
@@ -105,6 +150,13 @@ export const BiomechanicsComparison: React.FC<BiomechanicsComparisonProps> = ({
           })}
         </div>
       </div>
+
+        <p className="mt-4 pt-3 border-t border-primary/10 text-[10px] leading-relaxed text-muted-foreground">
+          Variação abaixo da diferença mínima detectável do método aparece como
+          &quot;sem mudança&quot; — não é possível distingui-la do erro de medição. Isso não
+          significa que o paciente não evoluiu; significa que esta medida não consegue
+          demonstrar. {LAUDO_DISCLAIMER}
+        </p>
     </div>
   );
 };
