@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShieldAlert, AlertTriangle, MessageSquare, Phone, Clock, Sparkles } from "lucide-react";
+import { ShieldAlert, MessageSquare, Phone, Clock } from "lucide-react";
 import { usePatientsAtRisk, PatientAtRisk } from "@/hooks/usePatientRetention";
 import { toast } from "sonner";
 

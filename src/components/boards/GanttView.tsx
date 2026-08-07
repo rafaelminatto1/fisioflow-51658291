@@ -1,9 +1,9 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, GanttChart, Clock, User, CheckCircle2 } from "lucide-react";
+import { Calendar, GanttChart, User } from "lucide-react";
 import { BoardItem } from "@/types/boards";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface GanttViewProps {

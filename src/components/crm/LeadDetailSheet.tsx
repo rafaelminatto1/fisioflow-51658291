@@ -404,6 +404,7 @@ export function LeadDetailSheet({ lead, onClose, onEdit, estagios }: LeadDetailS
                     </div>
                   );
                 })
+              )}
             </div>
           </div>
 
