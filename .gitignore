@@ -322,3 +322,6 @@ testsprite_tests/tmp/config.json
 
 # Declarações do Worker consumidas pelo RPC tipado da web (geradas)
 apps/api/dist-types/
+
+# Declarações geradas por engano dentro de packages/db/src (ver scripts api:types)
+packages/db/src/**/*.d.ts
