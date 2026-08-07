@@ -76,21 +76,6 @@ export const authApi = {
     });
   },
 
-  async resendVerificationEmail(email: string): Promise<void> {
-    await fetchApi("/api/auth/send-verification-email", {
-      method: "POST",
-      data: { email },
-      skipAuth: true,
-    });
-  },
-
-  async updatePassword(newPassword: string): Promise<void> {
-    await fetchApi("/api/auth/update-password", {
-      method: "POST",
-      data: { newPassword },
-    });
-  },
-
   async refreshToken(): Promise<AuthResponse> {
     if (isRefreshing && refreshPromise) {
       return refreshPromise;

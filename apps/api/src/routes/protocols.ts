@@ -224,6 +224,65 @@ app.post("/", requireAuth, async (c) => {
   return c.json({ data: created }, 201);
 });
 
+/**
+ * POST /api/protocols/:id/duplicate
+ *
+ * Copia um protocolo para a organização de quem chamou. A cópia é sempre
+ * privada (`isPublic: false`) e da própria org — duplicar um protocolo público
+ * do catálogo é justamente para poder adaptá-lo sem alterar o original.
+ *
+ * A tela de protocolos do app já oferecia "duplicar" e recebia 404.
+ */
+app.post("/:id/duplicate", requireAuth, async (c) => {
+  const user = c.get("user");
+  const db = await createDb(c.env);
+  const { id } = c.req.param();
+
+  const [source] = await db
+    .select()
+    .from(exerciseProtocols)
+    .where(
+      and(
+        eq(exerciseProtocols.id, id),
+        // Só dá para copiar o que se pode ver: público do catálogo ou da própria org.
+        or(
+          eq(exerciseProtocols.isPublic, true),
+          eq(exerciseProtocols.organizationId, user.organizationId),
+        ),
+      ),
+    )
+    .limit(1);
+
+  if (!source) return c.json({ error: "Protocolo não encontrado" }, 404);
+
+  const name = `${source.name} (cópia)`;
+  const slug = `${
+    name
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "") || "protocolo"
+  }-${Date.now()}`;
+
+  const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = source as any;
+
+  const [created] = await db
+    .insert(exerciseProtocols)
+    .values({
+      ...rest,
+      name,
+      slug,
+      isPublic: false,
+      organizationId: user.organizationId ?? null,
+      createdBy: user.uid,
+    })
+    .returning();
+
+  c.executionCtx.waitUntil(kvDelete(c.env, KV_LIST_PREFIX + "p1:l20", KV_LIST_PREFIX + "p1:l500"));
+  return c.json({ data: created }, 201);
+});
+
 // ===== ATUALIZAR PROTOCOLO (AUTH) =====
 app.put("/:id", requireAuth, async (c) => {
   const db = await createDb(c.env);

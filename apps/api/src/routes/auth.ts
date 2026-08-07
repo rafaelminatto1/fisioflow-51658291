@@ -309,6 +309,101 @@ app.post("/reset-password", passwordResetRateLimit, turnstileVerify, async (c) =
   }
 });
 
+/**
+ * POST /api/auth/refresh
+ *
+ * O app chama isto ao receber 401 em `/api/profile/me`. A rota não existia
+ * (404), então o catch caía em `clearToken()` e o profissional era deslogado
+ * assim que o JWT expirava — o refresh nunca teve chance de funcionar.
+ *
+ * A sessão do Better Auth vive mais que o JWT: `/get-session` devolve um JWT
+ * novo no header `set-auth-jwt` enquanto a sessão for válida. Quem valida é o
+ * servidor de auth — se o token apresentado não presta, não sai JWT nenhum e
+ * respondemos 401.
+ */
+app.post("/refresh", async (c) => {
+  const neonAuthUrl = c.env.NEON_AUTH_URL;
+  if (!neonAuthUrl) return c.json({ error: "Configuração de auth ausente no servidor" }, 500);
+
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const headerToken = c.req.header("Authorization")?.replace(/^Bearer\s+/i, "");
+  const currentToken = String(body.token || headerToken || "").trim();
+
+  if (!currentToken) return c.json({ error: "Token não informado" }, 400);
+
+  try {
+    const token = await materializeJwtToken(c.env, neonAuthUrl, currentToken);
+    if (!token) return c.json({ error: "Sessão expirada" }, 401);
+
+    const userId = extractSubFromJwt(token);
+    let userProfile: any = null;
+    if (userId) {
+      try {
+        const pool = createPool(c.env);
+        userProfile = await fetchUserProfile(pool, userId);
+      } catch {
+        // Perfil é complemento; o token novo já é o essencial da resposta.
+      }
+    }
+
+    return c.json({
+      token,
+      user: {
+        id: userProfile?.id || userId,
+        email: userProfile?.email,
+        name: userProfile?.name,
+        role: userProfile?.role || "fisioterapeuta",
+        organizationId: userProfile?.organization_id || null,
+      },
+    });
+  } catch (error: any) {
+    console.error("[Auth] Refresh error:", error?.message || error);
+    return c.json({ error: "Erro ao renovar sessão" }, 500);
+  }
+});
+
+/**
+ * POST /api/auth/change-password
+ * Troca de senha com o usuário logado (exige a senha atual).
+ * Distinto de `/reset-password`, que é o fluxo por e-mail com token.
+ */
+app.post("/change-password", async (c) => {
+  const neonAuthUrl = c.env.NEON_AUTH_URL;
+  if (!neonAuthUrl) return c.json({ error: "Configuração de auth ausente no servidor" }, 500);
+
+  const authHeader = c.req.header("Authorization");
+  if (!authHeader) return c.json({ error: "Não autenticado" }, 401);
+
+  const { currentPassword, newPassword } = (await c.req.json().catch(() => ({}))) as Record<
+    string,
+    string
+  >;
+  if (!currentPassword || !newPassword) {
+    return c.json({ error: "Senha atual e nova senha são obrigatórias" }, 400);
+  }
+
+  try {
+    const neonRes = await forwardToNeonAuth(
+      neonAuthUrl,
+      "/change-password",
+      "POST",
+      { currentPassword, newPassword, revokeOtherSessions: true },
+      authHeader,
+    );
+
+    if (!neonRes.ok) {
+      const neonData = (await neonRes.json().catch(() => ({}))) as Record<string, any>;
+      const status = neonRes.status === 400 ? 400 : neonRes.status === 401 ? 401 : 500;
+      return c.json({ error: neonData.message || "Não foi possível alterar a senha" }, status);
+    }
+
+    return c.json({ success: true, message: "Senha alterada com sucesso" });
+  } catch (error: any) {
+    console.error("[Auth] Change password error:", error?.message || error);
+    return c.json({ error: "Erro ao processar solicitação" }, 500);
+  }
+});
+
 // POST /api/auth/logout
 app.post("/logout", async (c) => {
   const authHeader = c.req.header("Authorization");
