@@ -3,19 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   Calendar, 
-  FileText, 
   MessageSquare, 
-  DollarSign, 
-  User, 
   Clock, 
-  CheckCircle2, 
-  XCircle, 
-  Sparkles,
-  ArrowRight
 } from "lucide-react";
-import { useAppointments } from "@/hooks/useAppointmentsData";
+import { useAppointments } from "@/hooks/appointments/useAppointments";
 import { useLeadHistorico } from "@/hooks/useLeads";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface PatientTimeline360Props {
@@ -24,7 +17,7 @@ interface PatientTimeline360Props {
   patientName?: string;
 }
 
-export function PatientTimeline360({ patientId, leadId, patientName }: PatientTimeline360Props) {
+export function PatientTimeline360({ patientId, leadId }: PatientTimeline360Props) {
   const { data: appointments = [] } = useAppointments({
     patientId: patientId || undefined,
   });
