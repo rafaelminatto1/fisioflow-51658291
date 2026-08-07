@@ -36,10 +36,19 @@ import {
   getMessageTextPreview,
 } from "@/services/whatsapp-api";
 import type { Patient } from "@/types";
+import {
+  avatarColorFor,
+  fontFamily,
+  radius,
+  shadow,
+  spacing,
+  typography,
+} from "@/constants/theme";
 
 import { format, isToday, isYesterday, differenceInDays, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+/** Verde do WhatsApp — semântica do canal, não cor de ação do produto. */
 const WA_GREEN = "#25D366";
 
 const STATUS_FILTERS = [
@@ -52,6 +61,64 @@ const STATUS_FILTERS = [
 ] as const;
 
 type StatusFilter = (typeof STATUS_FILTERS)[number]["key"];
+
+type ColorTokens = ReturnType<typeof useColors>;
+
+/** Cor do ponto de cada filtro, espelhando os chips de etapa do mockup. */
+function getFilterDotColor(key: StatusFilter, colors: ColorTokens): string | null {
+  switch (key) {
+    case "open":
+      return colors.success;
+    case "pending":
+      return colors.warning;
+    case "mine":
+      return colors.primary;
+    case "unassigned":
+      return colors.textMuted;
+    case "resolved":
+      return colors.borderStrong;
+    default:
+      return null;
+  }
+}
+
+/** Badge de etapa da conversa: rótulo curto em caixa alta + ponto da cor do status. */
+function getStageBadge(
+  status: string,
+  colors: ColorTokens,
+): { label: string; background: string; foreground: string; dot: string } {
+  switch (status) {
+    case "open":
+      return {
+        label: "Em andamento",
+        background: colors.successSoft,
+        foreground: colors.success,
+        dot: colors.success,
+      };
+    case "pending":
+      return {
+        label: "Aguardando",
+        background: colors.warningSoft,
+        foreground: colors.warning,
+        dot: colors.warning,
+      };
+    case "resolved":
+    case "closed":
+      return {
+        label: "Resolvida",
+        background: colors.surfaceHover,
+        foreground: colors.textSecondary,
+        dot: colors.textMuted,
+      };
+    default:
+      return {
+        label: status,
+        background: colors.surfaceHover,
+        foreground: colors.textSecondary,
+        dot: colors.textMuted,
+      };
+  }
+}
 type WhatsAppRealtimeEvent = {
   type: string;
   conversationId?: string;
@@ -99,30 +166,11 @@ function formatRelativeTime(dateStr?: string): string {
   }
 }
 
-function getStatusColor(status: string): string {
-  switch (status) {
-    case "open":
-      return WA_GREEN;
-    case "pending":
-      return "#FF9500";
-    case "resolved":
-    case "closed":
-    default:
-      return "#8E8E93";
-  }
-}
-
-function ConversationSkeleton({ colors }: { colors: ReturnType<typeof useColors> }) {
+function ConversationSkeleton({ colors }: { colors: ColorTokens }) {
   return (
-    <View
-      style={[
-        styles.convItem,
-        styles.convCard,
-        { borderColor: colors.border, backgroundColor: colors.surface },
-      ]}
-    >
+    <View style={styles.convItem}>
       <View style={[styles.avatar, { backgroundColor: colors.border, opacity: 0.4 }]} />
-      <View style={{ flex: 1, gap: 8 }}>
+      <View style={{ flex: 1, gap: spacing[2] }}>
         <View style={[styles.skeletonLine, { width: "55%", backgroundColor: colors.border }]} />
         <View
           style={[
@@ -141,107 +189,103 @@ function ConversationItem({
   onPress,
 }: {
   item: WaConversation;
-  colors: ReturnType<typeof useColors>;
+  colors: ColorTokens;
   onPress: () => void;
 }) {
   const name = getContactName(item);
   const phone = getContactPhone(item);
   const preview = getMessageTextPreview(item.lastMessage);
   const time = formatRelativeTime(item.lastMessageAt || item.updatedAt);
-  const statusColor = getStatusColor(item.status);
+  const stage = getStageBadge(item.status, colors);
   const unread = item.unreadCount ?? 0;
   const isOutbound = item.lastMessage?.direction === "outbound";
   const isHighPriority = item.priority === "high" || item.priority === "urgent";
   const tags = item.tags ?? [];
+  const showPhone = Boolean(phone) && phone !== name;
 
   return (
-    <TouchableOpacity
-      style={[
-        styles.convItem,
-        styles.convCard,
-        { borderColor: colors.border, backgroundColor: colors.surface },
-      ]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <View style={[styles.avatar, { backgroundColor: WA_GREEN + "22" }]}>
-        <Text style={[styles.avatarText, { color: WA_GREEN }]}>{name.charAt(0).toUpperCase()}</Text>
-        {/* Online/status dot on avatar */}
-        <View
-          style={[
-            styles.avatarStatusDot,
-            { backgroundColor: statusColor, borderColor: colors.background },
-          ]}
-        />
+    <TouchableOpacity style={styles.convItem} onPress={onPress} activeOpacity={0.6}>
+      <View style={[styles.avatar, { backgroundColor: avatarColorFor(name) }]}>
+        <Text style={styles.avatarText}>{name.charAt(0).toUpperCase()}</Text>
       </View>
 
       <View style={styles.convBody}>
         <View style={styles.convTopRow}>
           <View style={styles.convNameRow}>
             {isHighPriority && (
-              <Ionicons name="alert-circle" size={13} color="#FF3B30" style={{ marginRight: 3 }} />
+              <Ionicons
+                name="alert-circle"
+                size={13}
+                color={colors.error}
+                style={{ marginRight: 3 }}
+              />
             )}
             <Text style={[styles.convName, { color: colors.text }]} numberOfLines={1}>
               {name}
             </Text>
           </View>
-          <Text style={[styles.convTime, { color: unread > 0 ? WA_GREEN : colors.textMuted }]}>
+          <Text
+            style={[
+              styles.convTime,
+              unread > 0
+                ? { color: WA_GREEN, fontFamily: fontFamily.bold }
+                : { color: colors.textMuted },
+            ]}
+          >
             {time}
           </Text>
         </View>
 
-        {phone ? (
-          <Text style={[styles.convPhone, { color: colors.textMuted }]} numberOfLines={1}>
-            {phone}
-          </Text>
-        ) : null}
-
-        <View style={styles.convBottomRow}>
+        <View style={styles.convPreviewRow}>
+          {isOutbound && preview ? (
+            <Ionicons name="checkmark-done" size={14} color={colors.info} />
+          ) : null}
           <Text
             style={[
               styles.convPreview,
-              {
-                color: unread > 0 ? colors.text : colors.textSecondary,
-                fontWeight: unread > 0 ? "500" : "400",
-              },
+              unread > 0
+                ? { color: colors.text, fontFamily: fontFamily.semibold }
+                : { color: colors.textSecondary },
             ]}
             numberOfLines={1}
           >
-            {preview ? (isOutbound ? "Você: " + preview : preview) : "Sem mensagens"}
+            {preview || (showPhone ? phone : "Sem mensagens")}
           </Text>
-
-          {unread > 0 && (
-            <View style={[styles.unreadBadge, { backgroundColor: WA_GREEN }]}>
-              <Text style={styles.unreadText}>{unread > 99 ? "99+" : unread}</Text>
-            </View>
-          )}
         </View>
-        {(item.assignedToName || tags.length > 0) && (
-          <View style={styles.convMetaRow}>
-            {item.assignedToName ? (
-              <View style={[styles.ownerPill, { backgroundColor: WA_GREEN + "14" }]}>
-                <Ionicons name="person" size={10} color={WA_GREEN} />
-                <Text style={[styles.ownerText, { color: WA_GREEN }]} numberOfLines={1}>
-                  {item.assignedToName}
-                </Text>
-              </View>
-            ) : null}
-            {tags.slice(0, 2).map((tag) => (
-              <View
-                key={tag.id}
-                style={[styles.tagPill, { borderColor: tag.color ?? colors.border }]}
-              >
-                <Text
-                  style={[styles.tagText, { color: tag.color ?? colors.textSecondary }]}
-                  numberOfLines={1}
-                >
-                  {tag.name}
-                </Text>
-              </View>
-            ))}
+
+        <View style={styles.convMetaRow}>
+          <View style={[styles.stagePill, { backgroundColor: stage.background }]}>
+            <View style={[styles.stageDot, { backgroundColor: stage.dot }]} />
+            <Text style={[styles.stageText, { color: stage.foreground }]} numberOfLines={1}>
+              {stage.label}
+            </Text>
           </View>
-        )}
+          {item.assignedToName ? (
+            <View style={[styles.ownerPill, { backgroundColor: colors.surfaceHover }]}>
+              <Ionicons name="person" size={10} color={colors.textSecondary} />
+              <Text style={[styles.ownerText, { color: colors.textSecondary }]} numberOfLines={1}>
+                {item.assignedToName}
+              </Text>
+            </View>
+          ) : null}
+          {tags.slice(0, 2).map((tag) => (
+            <View key={tag.id} style={[styles.tagPill, { borderColor: tag.color ?? colors.border }]}>
+              <Text
+                style={[styles.tagText, { color: tag.color ?? colors.textSecondary }]}
+                numberOfLines={1}
+              >
+                {tag.name}
+              </Text>
+            </View>
+          ))}
+        </View>
       </View>
+
+      {unread > 0 && (
+        <View style={[styles.unreadBadge, { backgroundColor: WA_GREEN }]}>
+          <Text style={styles.unreadText}>{unread > 99 ? "99+" : unread}</Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 }
@@ -295,15 +339,28 @@ export default function WhatsAppScreen() {
     () => (data?.data ?? []).reduce((sum, c) => sum + (c.unreadCount ?? 0), 0),
     [data],
   );
-  const summary = useMemo(() => {
+  /**
+   * Contagem por filtro derivada da lista já carregada — não há endpoint de
+   * agregação. Quando um filtro de status está ativo a lista vem recortada pelo
+   * servidor, então só o chip ativo tem número; é a mesma derivação que o painel
+   * de resumo anterior fazia.
+   */
+  const filterCounts = useMemo(() => {
     const list = data?.data ?? [];
-    return {
-      total: list.length,
-      open: list.filter((item) => item.status === "open").length,
-      pending: list.filter((item) => item.status === "pending").length,
-      unread: totalUnread,
-    };
-  }, [data, totalUnread]);
+    const counts: Partial<Record<StatusFilter, number>> = { all: list.length };
+    if (statusFilter === "all") {
+      counts.open = list.filter((item) => item.status === "open").length;
+      counts.pending = list.filter((item) => item.status === "pending").length;
+      counts.resolved = list.filter(
+        (item) => item.status === "resolved" || item.status === "closed",
+      ).length;
+      counts.unassigned = list.filter((item) => !item.assignedToName).length;
+    } else {
+      counts.all = undefined;
+      counts[statusFilter] = list.length;
+    }
+    return counts;
+  }, [data, statusFilter]);
   const isCreatingConversation =
     resolveContactMutation.isPending || openConversationMutation.isPending;
   const canSubmitManual = manualPhone.replace(/\D/g, "").length >= 10;
@@ -426,54 +483,16 @@ export default function WhatsAppScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Ionicons name="logo-whatsapp" size={26} color={WA_GREEN} />
-          <View>
-            <View style={styles.headerTitleRow}>
-              <Text style={[styles.headerTitle, { color: colors.text }]}>WhatsApp</Text>
-              {totalUnread > 0 && (
-                <View style={[styles.headerBadge, { backgroundColor: WA_GREEN }]}>
-                  <Text style={styles.headerBadgeText}>
-                    {totalUnread > 99 ? "99+" : totalUnread}
-                  </Text>
-                </View>
-              )}
-            </View>
-            <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-              Central de conversas e acompanhamento
+          <Text style={[styles.headerTitle, { color: colors.text }]}>CRM</Text>
+          <View style={[styles.channelChip, { backgroundColor: WA_GREEN + "1F" }]}>
+            <View style={[styles.channelDot, { backgroundColor: WA_GREEN }]} />
+            <Text style={[styles.channelChipText, { color: WA_GREEN }]}>
+              {totalUnread > 0
+                ? `WhatsApp · ${totalUnread > 99 ? "99+" : totalUnread} não lidas`
+                : "WhatsApp"}
             </Text>
           </View>
         </View>
-        <TouchableOpacity
-          style={[styles.primaryCta, { backgroundColor: WA_GREEN }]}
-          onPress={handleOpenComposer}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="add" size={16} color="#fff" />
-          <Text style={styles.primaryCtaText}>Nova</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Search */}
-      <View
-        style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}
-      >
-        <Ionicons name="search" size={16} color={colors.textMuted} />
-        <TextInput
-          style={[styles.searchInput, { color: colors.text }]}
-          placeholder="Buscar conversas..."
-          placeholderTextColor={colors.textMuted}
-          value={search}
-          onChangeText={setSearch}
-          returnKeyType="search"
-        />
-        {search.length > 0 && (
-          <TouchableOpacity
-            onPress={() => setSearch("")}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Ionicons name="close-circle" size={16} color={colors.textMuted} />
-          </TouchableOpacity>
-        )}
       </View>
 
       {/* Status filters */}
@@ -485,26 +504,69 @@ export default function WhatsAppScreen() {
       >
         {STATUS_FILTERS.map((f) => {
           const active = statusFilter === f.key;
+          const dot = getFilterDotColor(f.key, colors);
+          const count = filterCounts[f.key];
           return (
             <TouchableOpacity
               key={f.key}
               style={[
                 styles.filterChip,
                 {
-                  backgroundColor: active ? WA_GREEN : colors.surface,
-                  borderColor: active ? WA_GREEN : colors.border,
+                  backgroundColor: active ? colors.primary : colors.card,
+                  borderColor: active ? colors.primary : colors.border,
                 },
               ]}
               onPress={() => setStatusFilter(f.key)}
               activeOpacity={0.7}
             >
+              {dot && !active ? (
+                <View style={[styles.filterDot, { backgroundColor: dot }]} />
+              ) : null}
               <Text style={[styles.filterLabel, { color: active ? "#fff" : colors.textSecondary }]}>
                 {f.label}
               </Text>
+              {typeof count === "number" ? (
+                <View
+                  style={[
+                    styles.filterCount,
+                    { backgroundColor: active ? "#FFFFFF33" : colors.surfaceHover },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.filterCountText,
+                      { color: active ? "#fff" : colors.textSecondary },
+                    ]}
+                  >
+                    {count}
+                  </Text>
+                </View>
+              ) : null}
             </TouchableOpacity>
           );
         })}
       </ScrollView>
+
+      {/* Search */}
+      <View style={[styles.searchBar, { backgroundColor: colors.surfaceHover }]}>
+        <Ionicons name="search" size={17} color={colors.textMuted} />
+        <TextInput
+          style={[styles.searchInput, { color: colors.text }]}
+          placeholder="Buscar conversa ou paciente"
+          placeholderTextColor={colors.textMuted}
+          value={search}
+          onChangeText={setSearch}
+          returnKeyType="search"
+        />
+        {search.length > 0 && (
+          <TouchableOpacity
+            onPress={() => setSearch("")}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="close-circle" size={17} color={colors.textMuted} />
+          </TouchableOpacity>
+        )}
+      </View>
 
       {tags.length > 0 && (
         <ScrollView
@@ -517,8 +579,8 @@ export default function WhatsAppScreen() {
             style={[
               styles.categoryChip,
               {
-                backgroundColor: selectedTagId ? colors.surface : WA_GREEN + "18",
-                borderColor: selectedTagId ? colors.border : WA_GREEN,
+                backgroundColor: colors.card,
+                borderColor: selectedTagId ? colors.border : colors.primary,
               },
             ]}
             onPress={() => setSelectedTagId(null)}
@@ -527,7 +589,7 @@ export default function WhatsAppScreen() {
             <Text
               style={[
                 styles.categoryLabel,
-                { color: selectedTagId ? colors.textSecondary : WA_GREEN },
+                { color: selectedTagId ? colors.textSecondary : colors.primaryText },
               ]}
             >
               Todas categorias
@@ -541,18 +603,20 @@ export default function WhatsAppScreen() {
                 style={[
                   styles.categoryChip,
                   {
-                    backgroundColor: active ? (tag.color ?? WA_GREEN) + "18" : colors.surface,
-                    borderColor: active ? (tag.color ?? WA_GREEN) : colors.border,
+                    backgroundColor: colors.card,
+                    borderColor: active ? (tag.color ?? colors.primary) : colors.border,
                   },
                 ]}
                 onPress={() => setSelectedTagId(active ? null : tag.id)}
                 activeOpacity={0.75}
               >
-                <View style={[styles.categoryDot, { backgroundColor: tag.color ?? WA_GREEN }]} />
+                <View
+                  style={[styles.categoryDot, { backgroundColor: tag.color ?? colors.textMuted }]}
+                />
                 <Text
                   style={[
                     styles.categoryLabel,
-                    { color: active ? (tag.color ?? WA_GREEN) : colors.textSecondary },
+                    { color: active ? (tag.color ?? colors.primaryText) : colors.textSecondary },
                   ]}
                 >
                   {tag.name}
@@ -562,36 +626,6 @@ export default function WhatsAppScreen() {
           })}
         </ScrollView>
       )}
-
-      <View style={styles.summaryRow}>
-        <View
-          style={[
-            styles.summaryCard,
-            { backgroundColor: colors.surface, borderColor: colors.border },
-          ]}
-        >
-          <Text style={[styles.summaryValue, { color: colors.text }]}>{summary.open}</Text>
-          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Em andamento</Text>
-        </View>
-        <View
-          style={[
-            styles.summaryCard,
-            { backgroundColor: colors.surface, borderColor: colors.border },
-          ]}
-        >
-          <Text style={[styles.summaryValue, { color: colors.text }]}>{summary.pending}</Text>
-          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Pendentes</Text>
-        </View>
-        <View
-          style={[
-            styles.summaryCard,
-            { backgroundColor: colors.surface, borderColor: colors.border },
-          ]}
-        >
-          <Text style={[styles.summaryValue, { color: colors.text }]}>{summary.unread}</Text>
-          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Não lidas</Text>
-        </View>
-      </View>
 
       {/* Conversation list */}
       {isLoading && !data ? (
@@ -609,6 +643,9 @@ export default function WhatsAppScreen() {
           )}
           contentContainerStyle={styles.listContent}
           keyboardShouldPersistTaps="handled"
+          ItemSeparatorComponent={() => (
+            <View style={[styles.convSeparator, { backgroundColor: colors.borderSoft }]} />
+          )}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -638,6 +675,16 @@ export default function WhatsAppScreen() {
           }
         />
       )}
+
+      <TouchableOpacity
+        style={[styles.fab, { backgroundColor: WA_GREEN }]}
+        onPress={handleOpenComposer}
+        activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel="Nova conversa"
+      >
+        <Ionicons name="create-outline" size={24} color="#fff" />
+      </TouchableOpacity>
 
       <Modal
         visible={isComposerOpen}
@@ -854,129 +901,109 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 12,
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[1],
+    paddingBottom: spacing[3],
   },
   headerLeft: {
-    flexDirection: "row",
     alignItems: "flex-start",
-    gap: 10,
+    gap: spacing[1],
     flex: 1,
   },
-  headerTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: "700",
+    ...typography.h2,
+    fontFamily: fontFamily.extrabold,
   },
-  headerSubtitle: {
-    fontSize: 13,
-    marginTop: 2,
-  },
-  headerBadge: {
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 5,
-  },
-  headerBadgeText: {
-    color: "#fff",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  primaryCta: {
-    height: 38,
-    borderRadius: 19,
-    paddingHorizontal: 14,
-    alignItems: "center",
-    justifyContent: "center",
+  channelChip: {
     flexDirection: "row",
-    gap: 6,
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
   },
-  primaryCtaText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "700",
+  channelDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  channelChipText: {
+    fontFamily: fontFamily.bold,
+    fontSize: 10,
+    letterSpacing: 0.2,
   },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: 16,
-    marginBottom: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: 8,
+    marginHorizontal: spacing[5],
+    marginBottom: spacing[3],
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderRadius: radius.md,
+    gap: 9,
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
+    fontFamily: fontFamily.medium,
+    fontSize: 14,
     paddingVertical: 0,
   },
   filtersScroll: {
-    height: 38,
-    marginBottom: 6,
+    flexGrow: 0,
+    marginBottom: spacing[3],
   },
   filtersContent: {
-    paddingHorizontal: 16,
-    gap: 8,
+    paddingHorizontal: spacing[5],
+    gap: spacing[2],
     alignItems: "center",
   },
-  summaryRow: {
-    flexDirection: "row",
-    gap: 10,
-    paddingHorizontal: 16,
-    marginBottom: 12,
-  },
-  summaryCard: {
-    flex: 1,
-    borderRadius: 18,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 12,
-    paddingVertical: 14,
-  },
-  summaryValue: {
-    fontSize: 24,
-    fontWeight: "800",
-  },
-  summaryLabel: {
-    fontSize: 12,
-    marginTop: 4,
-  },
   filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
     borderWidth: 1,
   },
+  filterDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
   filterLabel: {
+    fontFamily: fontFamily.bold,
     fontSize: 13,
-    fontWeight: "500",
+  },
+  filterCount: {
+    minWidth: 20,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: radius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  filterCountText: {
+    fontFamily: fontFamily.bold,
+    fontSize: 11,
   },
   categoryFiltersScroll: {
-    maxHeight: 34,
-    marginBottom: 8,
+    flexGrow: 0,
+    marginBottom: spacing[3],
   },
   categoryFiltersContent: {
-    paddingHorizontal: 16,
-    gap: 8,
+    paddingHorizontal: spacing[5],
+    gap: spacing[2],
     alignItems: "center",
   },
   categoryChip: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    borderWidth: 1,
   },
   categoryDot: {
     width: 7,
@@ -984,46 +1011,36 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   categoryLabel: {
+    fontFamily: fontFamily.semibold,
     fontSize: 12,
-    fontWeight: "600",
   },
   listContent: {
     flexGrow: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 28,
+    paddingBottom: 96,
   },
   convItem: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    gap: 12,
+    alignItems: "center",
+    paddingVertical: 13,
+    paddingHorizontal: spacing[5],
+    gap: spacing[3],
   },
-  convCard: {
-    borderRadius: 20,
-    borderWidth: StyleSheet.hairlineWidth,
-    marginBottom: 12,
+  convSeparator: {
+    height: StyleSheet.hairlineWidth,
+    marginLeft: 80,
   },
   avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 18,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
   avatarText: {
-    fontSize: 20,
-    fontWeight: "700",
-  },
-  avatarStatusDot: {
-    position: "absolute",
-    bottom: 1,
-    right: 1,
-    width: 13,
-    height: 13,
-    borderRadius: 7,
-    borderWidth: 2,
+    color: "#fff",
+    fontFamily: fontFamily.extrabold,
+    fontSize: 15,
   },
   convBody: {
     flex: 1,
@@ -1033,35 +1050,32 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 1,
+    marginBottom: 3,
+    gap: spacing[2],
   },
   convNameRow: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
-    marginRight: 8,
   },
   convName: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontFamily: fontFamily.bold,
+    fontSize: 15,
+    letterSpacing: -0.15,
     flexShrink: 1,
   },
   convTime: {
-    fontSize: 12,
+    fontFamily: fontFamily.semibold,
+    fontSize: 11,
     flexShrink: 0,
-    fontWeight: "500",
   },
-  convPhone: {
-    fontSize: 12,
-    marginBottom: 3,
-  },
-  convBottomRow: {
+  convPreviewRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
+    gap: 5,
   },
   convPreview: {
+    fontFamily: fontFamily.regular,
     fontSize: 13,
     lineHeight: 18,
     flex: 1,
@@ -1071,46 +1085,76 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     alignItems: "center",
     gap: 6,
-    marginTop: 8,
+    marginTop: 7,
+  },
+  stagePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+  },
+  stageText: {
+    fontFamily: fontFamily.bold,
+    fontSize: 10,
+    letterSpacing: 0.2,
+    textTransform: "uppercase",
+  },
+  stageDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   ownerPill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
     maxWidth: 150,
-    paddingHorizontal: 7,
+    paddingHorizontal: 9,
     paddingVertical: 3,
-    borderRadius: 10,
+    borderRadius: radius.pill,
   },
   ownerText: {
-    fontSize: 11,
-    fontWeight: "600",
+    fontFamily: fontFamily.semibold,
+    fontSize: 10,
     flexShrink: 1,
   },
   tagPill: {
     maxWidth: 120,
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 10,
-    paddingHorizontal: 7,
+    borderRadius: radius.pill,
+    paddingHorizontal: 9,
     paddingVertical: 3,
   },
   tagText: {
-    fontSize: 11,
-    fontWeight: "600",
+    fontFamily: fontFamily.semibold,
+    fontSize: 10,
   },
   unreadBadge: {
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
+    minWidth: 21,
+    height: 21,
+    borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 5,
+    paddingHorizontal: 6,
     flexShrink: 0,
   },
   unreadText: {
     color: "#fff",
+    fontFamily: fontFamily.extrabold,
     fontSize: 11,
-    fontWeight: "700",
+  },
+  fab: {
+    position: "absolute",
+    right: spacing[5],
+    bottom: spacing[6],
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadow.popover,
   },
   skeletonLine: {
     height: 14,
@@ -1119,28 +1163,26 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: "center",
     paddingTop: 80,
-    gap: 10,
-    paddingHorizontal: 32,
+    gap: spacing[2],
+    paddingHorizontal: spacing[8],
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: "600",
+    ...typography.h3,
   },
   emptySubtitle: {
-    fontSize: 14,
+    ...typography.body,
     textAlign: "center",
-    lineHeight: 20,
   },
   emptyAction: {
-    marginTop: 6,
-    borderRadius: 16,
+    marginTop: spacing[2],
+    borderRadius: radius.lg,
     paddingHorizontal: 18,
     paddingVertical: 12,
   },
   emptyActionText: {
     color: "#fff",
+    fontFamily: fontFamily.bold,
     fontSize: 14,
-    fontWeight: "700",
   },
   modalOverlay: {
     flex: 1,
@@ -1151,60 +1193,61 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalCard: {
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 28,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[5],
+    paddingBottom: spacing[6],
     borderWidth: StyleSheet.hairlineWidth,
+    ...shadow.sheet,
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    gap: 12,
-    marginBottom: 16,
+    gap: spacing[3],
+    marginBottom: spacing[4],
   },
   modalTitle: {
-    fontSize: 22,
-    fontWeight: "700",
+    ...typography.h2,
+    fontFamily: fontFamily.extrabold,
   },
   modalSubtitle: {
-    fontSize: 13,
-    marginTop: 4,
-    lineHeight: 18,
+    ...typography.small,
+    marginTop: spacing[1],
   },
   modeSwitch: {
     flexDirection: "row",
-    borderRadius: 16,
+    borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
     padding: 4,
-    marginBottom: 16,
+    marginBottom: spacing[4],
     gap: 6,
   },
   modeChip: {
     flex: 1,
-    borderRadius: 12,
+    borderRadius: radius.sm,
     paddingVertical: 10,
     alignItems: "center",
   },
   modeChipText: {
+    fontFamily: fontFamily.bold,
     fontSize: 13,
-    fontWeight: "700",
   },
   modalSection: {
-    gap: 12,
+    gap: spacing[3],
   },
   modalInputWrap: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 16,
+    borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 12,
-    gap: 8,
+    paddingHorizontal: spacing[3],
+    gap: spacing[2],
   },
   modalInput: {
     flex: 1,
+    fontFamily: fontFamily.regular,
     fontSize: 15,
     paddingVertical: 14,
   },
@@ -1212,41 +1255,40 @@ const styles = StyleSheet.create({
     maxHeight: 280,
   },
   patientOption: {
-    borderRadius: 16,
+    borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 14,
     paddingVertical: 13,
     marginBottom: 10,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: spacing[2],
   },
   patientName: {
+    fontFamily: fontFamily.semibold,
     fontSize: 15,
-    fontWeight: "600",
   },
   patientPhone: {
-    fontSize: 13,
+    ...typography.small,
     marginTop: 3,
   },
   helperText: {
-    fontSize: 12,
-    lineHeight: 17,
+    ...typography.small,
   },
   loadingBlock: {
-    paddingVertical: 24,
+    paddingVertical: spacing[6],
     alignItems: "center",
   },
   submitButton: {
     marginTop: 18,
-    borderRadius: 18,
+    borderRadius: radius.lg,
     paddingVertical: 14,
     alignItems: "center",
     justifyContent: "center",
   },
   submitButtonText: {
     color: "#fff",
+    fontFamily: fontFamily.bold,
     fontSize: 15,
-    fontWeight: "700",
   },
 });
