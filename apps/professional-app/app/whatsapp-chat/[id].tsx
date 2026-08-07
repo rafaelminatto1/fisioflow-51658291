@@ -40,8 +40,16 @@ import {
   getContactPhone,
   getMessageText,
 } from "@/services/whatsapp-api";
+import { avatarColorFor, fontFamily, radius, shadow, spacing, typography } from "@/constants/theme";
 
+/** Verde do WhatsApp — semântica do canal, não cor de ação do produto. */
 const WA_GREEN = "#25D366";
+/** Tinta das notas internas: amarelo de aviso, fora da paleta de tema. */
+const NOTE_BG = "#FFF7E0";
+const NOTE_BORDER = "#F2D9A0";
+const NOTE_INK = "#8A6220";
+
+type ColorTokens = ReturnType<typeof useColors>;
 type WhatsAppRealtimeEvent = {
   type: string;
   conversationId?: string;
@@ -57,29 +65,45 @@ type WhatsAppRealtimeEvent = {
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-function getStatusLabel(status: string): string {
+/**
+ * Badge de etapa da conversa — mesmo vocabulário visual da caixa de entrada
+ * (`app/(tabs)/whatsapp.tsx`): rótulo curto em caixa alta + ponto da cor do
+ * status. O `status` do backend é open/pending/resolved/closed.
+ */
+function getStageBadge(
+  status: string,
+  colors: ColorTokens,
+): { label: string; background: string; foreground: string; dot: string } {
   switch (status) {
     case "open":
-      return "Aberta";
+      return {
+        label: "Em andamento",
+        background: colors.successSoft,
+        foreground: colors.success,
+        dot: colors.success,
+      };
     case "pending":
-      return "Pendente";
+      return {
+        label: "Aguardando",
+        background: colors.warningSoft,
+        foreground: colors.warning,
+        dot: colors.warning,
+      };
     case "resolved":
-      return "Resolvida";
     case "closed":
-      return "Fechada";
+      return {
+        label: "Resolvida",
+        background: colors.surfaceHover,
+        foreground: colors.textSecondary,
+        dot: colors.textMuted,
+      };
     default:
-      return status;
-  }
-}
-
-function getStatusColor(status: string): string {
-  switch (status) {
-    case "open":
-      return WA_GREEN;
-    case "pending":
-      return "#FF9500";
-    default:
-      return "#8E8E93";
+      return {
+        label: status,
+        background: colors.surfaceHover,
+        foreground: colors.textSecondary,
+        dot: colors.textMuted,
+      };
   }
 }
 
@@ -145,36 +169,28 @@ function buildListData(messages: WaMessage[]): ListItem[] {
 
 // ─── sub-components ───────────────────────────────────────────────────────────
 
-function MessageStatusIcon({ status }: { status: string }) {
-  if (status === "pending") return <Ionicons name="time-outline" size={12} color="#8E8E93" />;
-  if (status === "sent") return <Ionicons name="checkmark" size={12} color="#8E8E93" />;
-  if (status === "delivered") return <Ionicons name="checkmark-done" size={12} color="#8E8E93" />;
-  if (status === "read") return <Ionicons name="checkmark-done" size={12} color="#4FC3F7" />;
-  if (status === "failed") return <Ionicons name="close-circle" size={12} color="#FF3B30" />;
+function MessageStatusIcon({ status, colors }: { status: string; colors: ColorTokens }) {
+  if (status === "pending")
+    return <Ionicons name="time-outline" size={13} color={colors.textMuted} />;
+  if (status === "sent") return <Ionicons name="checkmark" size={13} color={colors.textMuted} />;
+  if (status === "delivered")
+    return <Ionicons name="checkmark-done" size={13} color={colors.textMuted} />;
+  if (status === "read") return <Ionicons name="checkmark-done" size={13} color={colors.info} />;
+  if (status === "failed") return <Ionicons name="alert-circle" size={13} color={colors.error} />;
   return null;
 }
 
-function DateSeparator({ label, colors }: { label: string; colors: ReturnType<typeof useColors> }) {
+function DateSeparator({ label, colors }: { label: string; colors: ColorTokens }) {
   return (
     <View style={styles.dateSeparator}>
-      <View style={[styles.dateLine, { backgroundColor: colors.border }]} />
-      <Text
-        style={[styles.dateLabel, { color: colors.textMuted, backgroundColor: colors.background }]}
-      >
-        {label}
-      </Text>
-      <View style={[styles.dateLine, { backgroundColor: colors.border }]} />
+      <View style={[styles.dayPill, { backgroundColor: colors.surfaceHover }]}>
+        <Text style={[styles.dayPillText, { color: colors.textSecondary }]}>{label}</Text>
+      </View>
     </View>
   );
 }
 
-function MessageBubble({
-  item,
-  colors,
-}: {
-  item: WaMessage;
-  colors: ReturnType<typeof useColors>;
-}) {
+function MessageBubble({ item, colors }: { item: WaMessage; colors: ColorTokens }) {
   const isOutbound = item.direction === "outbound";
   const isNote = item.isInternalNote || item.messageType === "note";
   const text = getMessageText(item);
@@ -185,7 +201,7 @@ function MessageBubble({
       <View style={styles.noteWrapper}>
         <View style={styles.noteBubble}>
           <View style={styles.noteHeaderRow}>
-            <Ionicons name="lock-closed" size={11} color="#856404" />
+            <Ionicons name="lock-closed" size={11} color={NOTE_INK} />
             <Text style={styles.noteHeaderLabel}>Nota interna</Text>
           </View>
           <Text style={styles.noteText}>{text}</Text>
@@ -200,17 +216,23 @@ function MessageBubble({
       <View
         style={[
           styles.bubble,
-          {
-            backgroundColor: isOutbound ? WA_GREEN + "28" : colors.surface,
-            borderTopLeftRadius: isOutbound ? 16 : 4,
-            borderTopRightRadius: isOutbound ? 4 : 16,
-          },
+          isOutbound
+            ? {
+                backgroundColor: WA_GREEN + "24",
+                borderColor: WA_GREEN + "33",
+                borderTopRightRadius: 4,
+              }
+            : {
+                backgroundColor: colors.card,
+                borderColor: colors.borderSoft,
+                borderTopLeftRadius: 4,
+              },
         ]}
       >
         <Text style={[styles.bubbleText, { color: colors.text }]}>{text}</Text>
         <View style={styles.bubbleMeta}>
           <Text style={[styles.bubbleTime, { color: colors.textMuted }]}>{time}</Text>
-          {isOutbound && <MessageStatusIcon status={item.status} />}
+          {isOutbound && <MessageStatusIcon status={item.status} colors={colors} />}
         </View>
       </View>
     </View>
@@ -437,7 +459,7 @@ export default function WhatsAppChatScreen() {
   const contactName = conversation ? getContactName(conversation) : "";
   const contactPhone = conversation ? getContactPhone(conversation) : "";
   const status = conversation?.status ?? "";
-  const statusColor = getStatusColor(status);
+  const stage = getStageBadge(status, colors);
   const isResolved = status === "resolved" || status === "closed";
   const assignedLabel = conversation?.assignedToName || "Sem responsável";
 
@@ -467,23 +489,30 @@ export default function WhatsAppChatScreen() {
       edges={["top"]}
     >
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+      <View
+        style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}
+      >
         <TouchableOpacity
           onPress={() => router.back()}
           style={styles.backBtn}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Voltar"
         >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="chevron-back" size={26} color={colors.text} />
         </TouchableOpacity>
 
         <View style={styles.headerInfo}>
-          <View style={[styles.headerAvatar, { backgroundColor: WA_GREEN + "22" }]}>
+          <View
+            style={[
+              styles.headerAvatar,
+              { backgroundColor: contactName ? avatarColorFor(contactName) : colors.surfaceHover },
+            ]}
+          >
             {isLoading && !conversation ? (
-              <ActivityIndicator size="small" color={WA_GREEN} />
+              <ActivityIndicator size="small" color={colors.textMuted} />
             ) : (
-              <Text style={[styles.headerAvatarText, { color: WA_GREEN }]}>
-                {contactName.charAt(0).toUpperCase()}
-              </Text>
+              <Text style={styles.headerAvatarText}>{contactName.charAt(0).toUpperCase()}</Text>
             )}
           </View>
           <View style={styles.headerText}>
@@ -491,32 +520,11 @@ export default function WhatsAppChatScreen() {
               {contactName || "Carregando..."}
             </Text>
             {contactPhone ? (
-              <Text style={[styles.headerPhone, { color: colors.textMuted }]} numberOfLines={1}>
-                {contactPhone}
-              </Text>
-            ) : null}
-            {status ? (
-              <View style={styles.headerMetaRow}>
-                <Text style={[styles.headerStatus, { color: statusColor }]}>
-                  {getStatusLabel(status)}
+              <View style={styles.headerChannelRow}>
+                <View style={[styles.headerChannelDot, { backgroundColor: WA_GREEN }]} />
+                <Text style={[styles.headerPhone, { color: colors.textSecondary }]} numberOfLines={1}>
+                  {contactPhone}
                 </Text>
-                <Text
-                  style={[styles.headerMetaText, { color: colors.textMuted }]}
-                  numberOfLines={1}
-                >
-                  {assignedLabel}
-                </Text>
-                {conversationTags[0] ? (
-                  <Text
-                    style={[
-                      styles.headerMetaText,
-                      { color: conversationTags[0].color ?? colors.textMuted },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {conversationTags[0].name}
-                  </Text>
-                ) : null}
               </View>
             ) : null}
           </View>
@@ -527,9 +535,11 @@ export default function WhatsAppChatScreen() {
             onPress={handleResolve}
             style={[
               styles.headerBtn,
-              { backgroundColor: isResolved ? colors.surface : WA_GREEN + "22" },
+              { backgroundColor: isResolved ? colors.surfaceHover : WA_GREEN + "1F" },
             ]}
             disabled={updateStatusMutation.isPending}
+            accessibilityRole="button"
+            accessibilityLabel={isResolved ? "Reabrir conversa" : "Marcar como resolvida"}
           >
             {updateStatusMutation.isPending ? (
               <ActivityIndicator size="small" color={WA_GREEN} />
@@ -544,25 +554,68 @@ export default function WhatsAppChatScreen() {
 
           <TouchableOpacity
             onPress={() => setShowActions(true)}
-            style={[styles.headerBtn, { backgroundColor: colors.surface }]}
+            style={[styles.headerBtn, { backgroundColor: colors.surfaceHover }]}
+            accessibilityRole="button"
+            accessibilityLabel="Ações da conversa"
           >
             <Ionicons name="ellipsis-vertical" size={18} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
       </View>
 
+      {/* Faixa de contexto — etapa, responsável e categorias da conversa */}
+      {status ? (
+        <View
+          style={[
+            styles.contextStrip,
+            { backgroundColor: colors.card, borderBottomColor: colors.borderSoft },
+          ]}
+        >
+          <View style={[styles.stagePill, { backgroundColor: stage.background }]}>
+            <View style={[styles.stageDot, { backgroundColor: stage.dot }]} />
+            <Text style={[styles.stageText, { color: stage.foreground }]} numberOfLines={1}>
+              {stage.label}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.ownerPill, { backgroundColor: colors.surfaceHover }]}
+            onPress={() => setShowAssignSheet(true)}
+            activeOpacity={0.75}
+            accessibilityRole="button"
+            accessibilityLabel="Atribuir responsável"
+          >
+            <Ionicons name="person" size={10} color={colors.textSecondary} />
+            <Text style={[styles.ownerText, { color: colors.textSecondary }]} numberOfLines={1}>
+              {assignedLabel}
+            </Text>
+          </TouchableOpacity>
+
+          {conversationTags.slice(0, 2).map((tag) => (
+            <View key={tag.id} style={[styles.tagPill, { borderColor: tag.color ?? colors.border }]}>
+              <Text
+                style={[styles.tagText, { color: tag.color ?? colors.textSecondary }]}
+                numberOfLines={1}
+              >
+                {tag.name}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
       {/* Resolved banner */}
       {isResolved && (
         <View
           style={[
             styles.resolvedBanner,
-            { backgroundColor: "#F0FDF4", borderBottomColor: WA_GREEN + "40" },
+            { backgroundColor: colors.successSoft, borderBottomColor: colors.border },
           ]}
         >
-          <Ionicons name="checkmark-circle" size={15} color={WA_GREEN} />
-          <Text style={[styles.resolvedText, { color: WA_GREEN }]}>Conversa resolvida</Text>
+          <Ionicons name="checkmark-circle" size={15} color={colors.success} />
+          <Text style={[styles.resolvedText, { color: colors.success }]}>Conversa resolvida</Text>
           <TouchableOpacity onPress={handleResolve}>
-            <Text style={[styles.resolvedReopen, { color: WA_GREEN }]}>Reabrir</Text>
+            <Text style={[styles.resolvedReopen, { color: colors.success }]}>Reabrir</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -598,9 +651,9 @@ export default function WhatsAppChatScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
         {/* Note input panel */}
         {showNoteInput && (
-          <View style={[styles.noteInputPanel, { borderTopColor: "#FFC107" }]}>
+          <View style={styles.noteInputPanel}>
             <View style={styles.noteInputHeader}>
-              <Ionicons name="lock-closed" size={13} color="#856404" />
+              <Ionicons name="lock-closed" size={13} color={NOTE_INK} />
               <Text style={styles.noteInputLabel}>Nota interna — visível apenas para a equipe</Text>
               <TouchableOpacity
                 onPress={() => {
@@ -609,14 +662,14 @@ export default function WhatsAppChatScreen() {
                 }}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Ionicons name="close" size={16} color="#856404" />
+                <Ionicons name="close" size={16} color={NOTE_INK} />
               </TouchableOpacity>
             </View>
             <View style={styles.noteInputRow}>
               <TextInput
                 style={styles.noteTextInput}
                 placeholder="Escreva uma nota..."
-                placeholderTextColor="#856404AA"
+                placeholderTextColor={NOTE_INK + "99"}
                 value={noteText}
                 onChangeText={setNoteText}
                 multiline
@@ -642,26 +695,34 @@ export default function WhatsAppChatScreen() {
           <View
             style={[
               styles.quickRepliesPanel,
-              { backgroundColor: colors.surface, borderTopColor: colors.border },
+              { backgroundColor: colors.card, borderTopColor: colors.borderSoft },
             ]}
           >
-            <ScrollView style={{ maxHeight: 176 }} keyboardShouldPersistTaps="handled">
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.quickRepliesContent}
+              keyboardShouldPersistTaps="handled"
+            >
               {quickReplies!.map((qr) => (
                 <TouchableOpacity
                   key={qr.id}
-                  style={[styles.quickReplyItem, { borderBottomColor: colors.border }]}
+                  style={[
+                    styles.quickReplyChip,
+                    { backgroundColor: colors.primaryTint, borderColor: colors.primarySoft },
+                  ]}
                   onPress={() => {
                     setInputText(qr.content);
                     setShowQuickReplies(false);
                     light();
                   }}
+                  activeOpacity={0.75}
                 >
-                  <Text style={[styles.quickReplyTitle, { color: colors.text }]}>{qr.title}</Text>
                   <Text
-                    style={[styles.quickReplyContent, { color: colors.textSecondary }]}
+                    style={[styles.quickReplyTitle, { color: colors.primaryText }]}
                     numberOfLines={1}
                   >
-                    {qr.content}
+                    {qr.title}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -673,7 +734,7 @@ export default function WhatsAppChatScreen() {
         <View
           style={[
             styles.inputBar,
-            { borderTopColor: colors.border, backgroundColor: colors.background },
+            { borderTopColor: colors.borderSoft, backgroundColor: colors.card },
           ]}
         >
           {hasQuickReplies && (
@@ -682,12 +743,14 @@ export default function WhatsAppChatScreen() {
                 setShowQuickReplies(!showQuickReplies);
                 if (showNoteInput) setShowNoteInput(false);
               }}
-              style={styles.inputAction}
+              style={[styles.inputAction, { backgroundColor: colors.surfaceHover }]}
+              accessibilityRole="button"
+              accessibilityLabel="Respostas rápidas"
             >
               <Ionicons
                 name={showQuickReplies ? "chevron-down" : "flash-outline"}
-                size={22}
-                color={showQuickReplies ? WA_GREEN : colors.textSecondary}
+                size={20}
+                color={showQuickReplies ? colors.primary : colors.textSecondary}
               />
             </TouchableOpacity>
           )}
@@ -697,11 +760,11 @@ export default function WhatsAppChatScreen() {
               styles.textInput,
               {
                 color: colors.text,
-                backgroundColor: colors.surface,
+                backgroundColor: colors.background,
                 borderColor: colors.border,
               },
             ]}
-            placeholder="Mensagem..."
+            placeholder="Mensagem"
             placeholderTextColor={colors.textMuted}
             value={inputText}
             onChangeText={setInputText}
@@ -715,13 +778,17 @@ export default function WhatsAppChatScreen() {
             disabled={sendMutation.isPending || !inputText.trim()}
             style={[
               styles.sendBtn,
-              { backgroundColor: inputText.trim() ? WA_GREEN : colors.border },
+              {
+                backgroundColor: inputText.trim() ? WA_GREEN : colors.borderStrong,
+              },
             ]}
+            accessibilityRole="button"
+            accessibilityLabel="Enviar mensagem"
           >
             {sendMutation.isPending ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Ionicons name="send" size={18} color="#fff" />
+              <Ionicons name="send" size={19} color="#fff" />
             )}
           </TouchableOpacity>
         </View>
@@ -741,7 +808,7 @@ export default function WhatsAppChatScreen() {
         >
           {/* stopPropagation: prevents sheet taps from closing the modal */}
           <View
-            style={[styles.actionsSheet, { backgroundColor: colors.surface }]}
+            style={[styles.actionsSheet, { backgroundColor: colors.card }]}
             onStartShouldSetResponder={() => true}
           >
             <View style={[styles.sheetHandle, { backgroundColor: colors.border }]} />
@@ -767,7 +834,7 @@ export default function WhatsAppChatScreen() {
                 style={[styles.actionItem, { borderBottomColor: colors.border }]}
                 onPress={handleSetPending}
               >
-                <Ionicons name="time-outline" size={20} color="#FF9500" />
+                <Ionicons name="time-outline" size={20} color={colors.warning} />
                 <Text style={[styles.actionLabel, { color: colors.text }]}>
                   Marcar como pendente
                 </Text>
@@ -782,7 +849,7 @@ export default function WhatsAppChatScreen() {
                 setShowQuickReplies(false);
               }}
             >
-              <Ionicons name="lock-closed-outline" size={20} color="#856404" />
+              <Ionicons name="lock-closed-outline" size={20} color={NOTE_INK} />
               <Text style={[styles.actionLabel, { color: colors.text }]}>
                 Adicionar nota interna
               </Text>
@@ -806,7 +873,7 @@ export default function WhatsAppChatScreen() {
                 setShowTagSheet(true);
               }}
             >
-              <Ionicons name="pricetags-outline" size={20} color="#0A84FF" />
+              <Ionicons name="pricetags-outline" size={20} color={colors.primary} />
               <Text style={[styles.actionLabel, { color: colors.text }]}>Categorizar conversa</Text>
             </TouchableOpacity>
 
@@ -833,7 +900,7 @@ export default function WhatsAppChatScreen() {
           onPress={() => setShowAssignSheet(false)}
         >
           <View
-            style={[styles.actionsSheet, { backgroundColor: colors.surface }]}
+            style={[styles.actionsSheet, { backgroundColor: colors.card }]}
             onStartShouldSetResponder={() => true}
           >
             <View style={[styles.sheetHandle, { backgroundColor: colors.border }]} />
@@ -853,8 +920,13 @@ export default function WhatsAppChatScreen() {
                       onPress={() => handleAssignTo(member.userId)}
                       disabled={assignMutation.isPending}
                     >
-                      <View style={[styles.memberAvatar, { backgroundColor: WA_GREEN + "18" }]}>
-                        <Text style={[styles.memberAvatarText, { color: WA_GREEN }]}>
+                      <View
+                        style={[
+                          styles.memberAvatar,
+                          { backgroundColor: avatarColorFor(member.name) },
+                        ]}
+                      >
+                        <Text style={styles.memberAvatarText}>
                           {member.name.slice(0, 2).toUpperCase()}
                         </Text>
                       </View>
@@ -896,7 +968,7 @@ export default function WhatsAppChatScreen() {
           onPress={() => setShowTagSheet(false)}
         >
           <View
-            style={[styles.actionsSheet, { backgroundColor: colors.surface }]}
+            style={[styles.actionsSheet, { backgroundColor: colors.card }]}
             onStartShouldSetResponder={() => true}
           >
             <View style={[styles.sheetHandle, { backgroundColor: colors.border }]} />
@@ -915,7 +987,10 @@ export default function WhatsAppChatScreen() {
                       disabled={removeTagMutation.isPending}
                     >
                       <View
-                        style={[styles.tagDotLarge, { backgroundColor: tag.color ?? WA_GREEN }]}
+                        style={[
+                          styles.tagDotLarge,
+                          { backgroundColor: tag.color ?? colors.textMuted },
+                        ]}
                       />
                       <Text style={[styles.sheetOptionTitle, { color: colors.text }]}>
                         {tag.name}
@@ -939,7 +1014,10 @@ export default function WhatsAppChatScreen() {
                     disabled={addTagsMutation.isPending}
                   >
                     <View
-                      style={[styles.tagDotLarge, { backgroundColor: tag.color ?? WA_GREEN }]}
+                      style={[
+                        styles.tagDotLarge,
+                        { backgroundColor: tag.color ?? colors.textMuted },
+                      ]}
                     />
                     <Text style={[styles.sheetOptionTitle, { color: colors.text }]}>
                       {tag.name}
@@ -965,195 +1043,57 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: spacing[3],
+    paddingTop: spacing[1],
+    paddingBottom: spacing[3],
     borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: 10,
+    gap: spacing[2],
   },
-  backBtn: { padding: 4 },
+  backBtn: { paddingHorizontal: 2, paddingVertical: 4 },
   headerInfo: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: spacing[2],
     minWidth: 0,
   },
   headerAvatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
-  headerAvatarText: { fontSize: 15, fontWeight: "700" },
+  headerAvatarText: {
+    color: "#fff",
+    fontFamily: fontFamily.extrabold,
+    fontSize: 14,
+  },
   headerText: { flex: 1, minWidth: 0 },
-  headerName: { fontSize: 16, fontWeight: "600" },
-  headerPhone: { fontSize: 12, marginTop: 1 },
-  headerStatus: { fontSize: 12, fontWeight: "500", marginTop: 1 },
-  headerMetaRow: {
+  headerName: {
+    fontFamily: fontFamily.extrabold,
+    fontSize: 16,
+    letterSpacing: -0.24,
+  },
+  headerChannelRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginTop: 1,
-    minWidth: 0,
+    gap: 5,
+    marginTop: 2,
   },
-  headerMetaText: {
+  headerChannelDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  headerPhone: {
+    fontFamily: fontFamily.semibold,
     fontSize: 11,
-    fontWeight: "500",
     flexShrink: 1,
-    maxWidth: 120,
   },
   headerActions: { flexDirection: "row", gap: 6 },
   headerBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  // resolved banner
-  resolvedBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    gap: 6,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  resolvedText: { flex: 1, fontSize: 13, fontWeight: "500" },
-  resolvedReopen: { fontSize: 13, fontWeight: "700", textDecorationLine: "underline" },
-
-  // messages list
-  loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
-  messagesList: { padding: 12, paddingBottom: 8, flexGrow: 1 },
-
-  // date separator
-  dateSeparator: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 12,
-    gap: 8,
-  },
-  dateLine: { flex: 1, height: StyleSheet.hairlineWidth },
-  dateLabel: {
-    fontSize: 12,
-    fontWeight: "500",
-    paddingHorizontal: 8,
-  },
-
-  // message bubbles
-  bubbleRow: { flexDirection: "row", marginVertical: 2 },
-  bubble: {
-    maxWidth: "78%",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-  },
-  bubbleText: { fontSize: 15, lineHeight: 21 },
-  bubbleMeta: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 4,
-    marginTop: 4,
-  },
-  bubbleTime: { fontSize: 11 },
-
-  // internal notes
-  noteWrapper: { alignItems: "center", marginVertical: 6 },
-  noteBubble: {
-    maxWidth: "88%",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    backgroundColor: "#FFF3CD",
-    borderWidth: 1,
-    borderColor: "#FFC10740",
-  },
-  noteHeaderRow: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 4 },
-  noteHeaderLabel: { fontSize: 11, fontWeight: "600", color: "#856404" },
-  noteText: { fontSize: 14, color: "#856404" },
-  noteTime: { fontSize: 11, color: "#856404AA", marginTop: 4, textAlign: "right" },
-
-  // empty state
-  emptyMessages: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 80,
-    gap: 10,
-  },
-  emptyText: { fontSize: 16, fontWeight: "600" },
-  emptySubText: { fontSize: 13 },
-
-  // note input panel
-  noteInputPanel: {
-    backgroundColor: "#FFF3CD",
-    borderTopWidth: 2,
-    padding: 12,
-  },
-  noteInputHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 8,
-  },
-  noteInputLabel: {
-    flex: 1,
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#856404",
-  },
-  noteInputRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
-  noteTextInput: {
-    flex: 1,
-    fontSize: 14,
-    color: "#856404",
-    maxHeight: 80,
-  },
-  noteSendBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: "#856404",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  // quick replies
-  quickRepliesPanel: { borderTopWidth: StyleSheet.hairlineWidth },
-  quickReplyItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  quickReplyTitle: { fontSize: 14, fontWeight: "600" },
-  quickReplyContent: { fontSize: 13, marginTop: 1 },
-
-  // input bar
-  inputBar: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    paddingBottom: Platform.OS === "ios" ? 24 : 8,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    gap: 8,
-  },
-  inputAction: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
-  textInput: {
-    flex: 1,
-    minHeight: 36,
-    maxHeight: 100,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 18,
-    borderWidth: StyleSheet.hairlineWidth,
-    fontSize: 15,
-  },
-  sendBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
@@ -1161,75 +1101,350 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  // actions modal
+  // faixa de contexto (etapa / responsável / categorias)
+  contextStrip: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 6,
+    paddingHorizontal: spacing[4],
+    paddingBottom: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  stagePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+  },
+  stageDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  stageText: {
+    fontFamily: fontFamily.bold,
+    fontSize: 10,
+    letterSpacing: 0.2,
+    textTransform: "uppercase",
+  },
+  ownerPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    maxWidth: 160,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+  },
+  ownerText: {
+    fontFamily: fontFamily.semibold,
+    fontSize: 10,
+    flexShrink: 1,
+  },
+  tagPill: {
+    maxWidth: 120,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.pill,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+  },
+  tagText: {
+    fontFamily: fontFamily.semibold,
+    fontSize: 10,
+  },
+
+  // resolved banner
+  resolvedBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2],
+    gap: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  resolvedText: {
+    flex: 1,
+    fontFamily: fontFamily.semibold,
+    fontSize: 12,
+  },
+  resolvedReopen: {
+    fontFamily: fontFamily.bold,
+    fontSize: 12,
+  },
+
+  // messages list
+  loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
+  messagesList: {
+    paddingHorizontal: spacing[3],
+    paddingTop: spacing[3],
+    paddingBottom: spacing[2],
+    flexGrow: 1,
+  },
+
+  // separador de dia
+  dateSeparator: {
+    alignItems: "center",
+    marginTop: spacing[3],
+    marginBottom: spacing[2],
+  },
+  dayPill: {
+    paddingHorizontal: 13,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+  },
+  dayPillText: {
+    fontFamily: fontFamily.bold,
+    fontSize: 10,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+  },
+
+  // balões
+  bubbleRow: { flexDirection: "row", marginVertical: 3 },
+  bubble: {
+    maxWidth: "80%",
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  bubbleText: {
+    fontFamily: fontFamily.regular,
+    fontSize: 14.5,
+    lineHeight: 20,
+  },
+  bubbleMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 4,
+    marginTop: 3,
+  },
+  bubbleTime: {
+    fontFamily: fontFamily.semibold,
+    fontSize: 10,
+  },
+
+  // notas internas
+  noteWrapper: { alignItems: "center", marginVertical: 6 },
+  noteBubble: {
+    maxWidth: "88%",
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: radius.sm,
+    backgroundColor: NOTE_BG,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: NOTE_BORDER,
+  },
+  noteHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 4,
+  },
+  noteHeaderLabel: {
+    fontFamily: fontFamily.bold,
+    fontSize: 10,
+    letterSpacing: 0.3,
+    textTransform: "uppercase",
+    color: NOTE_INK,
+  },
+  noteText: {
+    fontFamily: fontFamily.regular,
+    fontSize: 13.5,
+    lineHeight: 19,
+    color: NOTE_INK,
+  },
+  noteTime: {
+    fontFamily: fontFamily.semibold,
+    fontSize: 10,
+    color: NOTE_INK + "AA",
+    marginTop: 4,
+    textAlign: "right",
+  },
+
+  // estado vazio
+  emptyMessages: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 80,
+    paddingHorizontal: spacing[8],
+    gap: spacing[2],
+  },
+  emptyText: { ...typography.h3, textAlign: "center" },
+  emptySubText: { ...typography.body, textAlign: "center" },
+
+  // painel de nota interna
+  noteInputPanel: {
+    backgroundColor: NOTE_BG,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: NOTE_BORDER,
+    padding: spacing[3],
+  },
+  noteInputHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: spacing[2],
+  },
+  noteInputLabel: {
+    flex: 1,
+    fontFamily: fontFamily.semibold,
+    fontSize: 11,
+    color: NOTE_INK,
+  },
+  noteInputRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: spacing[2],
+  },
+  noteTextInput: {
+    flex: 1,
+    fontFamily: fontFamily.regular,
+    fontSize: 14,
+    color: NOTE_INK,
+    maxHeight: 80,
+  },
+  noteSendBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: NOTE_INK,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // respostas rápidas
+  quickRepliesPanel: { borderTopWidth: StyleSheet.hairlineWidth },
+  quickRepliesContent: {
+    paddingHorizontal: spacing[3],
+    paddingVertical: 9,
+    gap: spacing[2],
+    alignItems: "center",
+  },
+  quickReplyChip: {
+    maxWidth: 220,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.pill,
+    paddingHorizontal: 13,
+    paddingVertical: 8,
+  },
+  quickReplyTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: 12.5,
+  },
+
+  // barra de composição
+  inputBar: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
+    paddingBottom: Platform.OS === "ios" ? spacing[6] : spacing[2],
+    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: spacing[2],
+  },
+  inputAction: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  textInput: {
+    flex: 1,
+    minHeight: 40,
+    maxHeight: 110,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+    fontFamily: fontFamily.regular,
+    fontSize: 14.5,
+  },
+  sendBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // folhas de ação
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "rgba(0,0,0,0.38)",
     justifyContent: "flex-end",
   },
   actionsSheet: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 12,
-    paddingBottom: 40,
-    paddingHorizontal: 20,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    paddingTop: spacing[3],
+    paddingBottom: spacing[10],
+    paddingHorizontal: spacing[5],
+    ...shadow.sheet,
   },
   sheetHandle: {
     width: 40,
     height: 4,
     borderRadius: 2,
     alignSelf: "center",
-    marginBottom: 16,
+    marginBottom: spacing[4],
   },
-  sheetTitle: { fontSize: 16, fontWeight: "700", marginBottom: 16 },
+  sheetTitle: {
+    ...typography.h4,
+    fontFamily: fontFamily.extrabold,
+    marginBottom: spacing[4],
+  },
   sheetList: { maxHeight: 360 },
   sheetOption: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
+    paddingVertical: spacing[3],
     borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: 12,
+    gap: spacing[3],
   },
   sheetOptionTitle: {
+    fontFamily: fontFamily.semibold,
     fontSize: 15,
-    fontWeight: "600",
     flex: 1,
   },
   sheetOptionSubtitle: {
-    fontSize: 12,
+    ...typography.small,
     marginTop: 2,
   },
   sheetEmptyText: {
-    fontSize: 13,
-    lineHeight: 18,
-    paddingVertical: 12,
+    ...typography.small,
+    paddingVertical: spacing[3],
   },
   sheetSectionLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0,
-    marginTop: 4,
-    marginBottom: 4,
+    ...typography.eyebrow,
+    marginTop: spacing[1],
+    marginBottom: spacing[1],
   },
   currentTagsBlock: {
     marginBottom: 10,
   },
   memberAvatar: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
   },
   memberAvatarText: {
+    color: "#fff",
+    fontFamily: fontFamily.extrabold,
     fontSize: 12,
-    fontWeight: "800",
   },
   tagDotLarge: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   actionItem: {
     flexDirection: "row",
@@ -1238,5 +1453,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     gap: 14,
   },
-  actionLabel: { fontSize: 16 },
+  actionLabel: {
+    fontFamily: fontFamily.medium,
+    fontSize: 15,
+  },
 });

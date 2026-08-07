@@ -24,7 +24,7 @@ const App = () => {
         "/pacientes", "/patients", "/patient-evolution", "/patient-evolution-report",
         "/session-evolution", "/financial", "/financeiro", "/agenda", "/schedule",
         "/exercises", "/exercicios", "/protocols", "/templates", "/automacoes",
-        "/crm-whatsapp", "/whatsapp", "/analytics", "/ai-hub", "/telemedicine",
+        "/crm-whatsapp", "/crm", "/whatsapp", "/analytics", "/ai-hub", "/telemedicine",
         "/settings", "/profile", "/organization", "/admin", "/base-conhecimento",
         "/notes",
         "/evolucao-clinica", "/avaliacao-inicial", "/eventos",

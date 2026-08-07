@@ -13,6 +13,13 @@ export const APP_ROUTES = {
   TASKS: "/tarefas",
   IA_STUDIO: "/inteligencia?tab=studio",
   INTELLIGENCE: "/inteligencia",
+  CRM: "/crm",
+  CRM_PIPELINE: "/crm/pipeline",
+  CRM_INBOX: "/crm/inbox",
+  CRM_TASKS: "/crm/tasks",
+  CRM_AUTOMATIONS: "/crm/automations",
+  CRM_ANALYTICS: "/crm/analytics",
+  CRM_CAMPAIGNS: "/crm/campaigns",
 } as const;
 
 export const patientRoutes = {

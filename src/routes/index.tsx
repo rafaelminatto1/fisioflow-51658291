@@ -31,3 +31,4 @@ export { aiRoutes } from "./ai";
 export { gamificationRoutes } from "./gamification";
 export { enterpriseRoutes } from "./enterprise";
 export { whatsappRoutes } from "./whatsapp";
+export { crmRoutes } from "./crm";

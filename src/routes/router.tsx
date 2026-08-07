@@ -8,6 +8,7 @@ import {
   authRoutes,
   cadastrosRoutes,
   coreRoutes,
+  crmRoutes,
   enterpriseRoutes,
   financialRoutes,
   gamificationRoutes,
@@ -52,6 +53,7 @@ export const router = createBrowserRouter(
         {gamificationRoutes}
         {enterpriseRoutes}
         {whatsappRoutes}
+        {crmRoutes}
 
         <Route path="/prescricoes/publica/:qrCode" element={<PublicPrescriptionPage />} />
         <Route path="/agendar/:slug" element={<BookingPage />} />

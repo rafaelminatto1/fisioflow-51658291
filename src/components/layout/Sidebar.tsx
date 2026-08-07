@@ -117,7 +117,7 @@ const mainMenuItems = [
     href: APP_ROUTES.AGENDA,
   },
   { icon: Users, label: 'Pacientes', href: APP_ROUTES.PATIENTS },
-  { icon: MessageSquare, label: 'CRM · WhatsApp', href: '/crm-whatsapp' },
+  { icon: MessageSquare, label: 'CRM · WhatsApp', href: '/crm' },
 ];
 
 const clinicaMenuItems = [
@@ -314,7 +314,7 @@ export function Sidebar() {
     const isActive =
       location.pathname === item.href ||
       (item.href !== '/' && location.pathname.startsWith(`${item.href}/`));
-    const unread = item.href === '/crm-whatsapp' ? whatsappUnread : 0;
+    const unread = item.href === '/crm' ? whatsappUnread : 0;
     const unreadLabel = unread > 99 ? '99+' : String(unread);
 
     return (
@@ -449,7 +449,7 @@ export function Sidebar() {
           <div className="space-y-3">
             <SidebarSection label="Atendimento" collapsed={collapsed}>
               {mainMenuItems
-                .filter((item) => item.href !== '/crm-whatsapp' || canSeeCrm)
+                .filter((item) => item.href !== '/crm' || canSeeCrm)
                 .map(renderMenuItem)}
             </SidebarSection>
 
