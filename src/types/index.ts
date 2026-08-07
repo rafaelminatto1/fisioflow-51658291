@@ -268,6 +268,14 @@ export interface Patient {
   /** Canonical camelCase field for medical report sent status */
   medicalReportSent?: boolean;
 
+  partner_company_name?: string;
+  partnerCompanyName?: string;
+  partnership_id?: string;
+  partnershipId?: string;
+  partnership_role?: "professor" | "aluno_cliente";
+  partnershipRole?: "professor" | "aluno_cliente";
+  session_value?: number;
+
   /** Canonical camelCase creation timestamp */
   createdAt: string;
   /**
@@ -280,6 +288,22 @@ export interface Patient {
    * @deprecated Use `updatedAt` instead. Kept for database/API compatibility.
    */
   updated_at?: string;
+}
+
+export interface Partnership {
+  id: string;
+  organizationId?: string;
+  name: string;
+  description?: string;
+  studentSessionFee: number;
+  professorPays: boolean;
+  professorSessionFee: number;
+  isActive: boolean;
+  totalPatients?: number;
+  totalStudents?: number;
+  totalProfessors?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface PatientDocument {

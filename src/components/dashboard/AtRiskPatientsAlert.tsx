@@ -25,8 +25,8 @@ function useAtRiskPatients() {
   return useQuery<AtRiskPatient[]>({
     queryKey: ["at-risk-patients"],
     queryFn: async () => {
-      const res = await request<{ data: AtRiskPatient[] }>("/api/clinic-metrics/at-risk-patients");
-      return (res as { data: AtRiskPatient[] }).data;
+      const res = await request<{ data?: AtRiskPatient[] }>("/api/clinic-metrics/at-risk-patients");
+      return res?.data ?? (Array.isArray(res) ? (res as AtRiskPatient[]) : []);
     },
     staleTime: 10 * 60 * 1000,
   });

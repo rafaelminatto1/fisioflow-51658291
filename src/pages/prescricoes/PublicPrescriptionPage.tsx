@@ -117,22 +117,30 @@ export default function PublicPrescriptionPage() {
 
             <Separator className="my-4" />
 
-            {/* Progress */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Progresso</span>
-                <span className="font-medium">
-                  {completedExercises.length} de {exercises.length} exercícios
-                </span>
+            {/* Progress / Frequency */}
+            {prescription.has_home_exercises === false ? (
+              <div className="rounded-xl bg-slate-50 dark:bg-slate-900/50 p-3 text-center text-xs text-muted-foreground border border-border/40">
+                🏥 <strong>Tratamento Presencial Exclusivo:</strong> Este plano é focado nas suas sessões guiadas na clínica. Não há necessidade de exercícios em casa nesta etapa.
               </div>
-              <Progress value={progressPercent} className="h-2" />
-              {progressPercent === 100 && (
-                <div className="flex items-center gap-2 text-green-600 text-sm">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span>Parabéns! Você completou todos os exercícios!</span>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground flex items-center gap-1.5 font-medium">
+                    🎯 Meta Semanal: <span className="text-primary font-bold">{prescription.target_weekly_frequency ?? 3}x / semana</span>
+                  </span>
+                  <span className="font-medium text-xs text-muted-foreground">
+                    {completedExercises.length} de {exercises.length} concluídos
+                  </span>
                 </div>
-              )}
-            </div>
+                <Progress value={progressPercent} className="h-2" />
+                {progressPercent === 100 && (
+                  <div className="flex items-center gap-2 text-green-600 text-sm font-semibold pt-1">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span>Excelente! Você atingiu sua meta e completou todos os exercícios! 🔥</span>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 

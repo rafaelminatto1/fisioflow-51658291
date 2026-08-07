@@ -198,6 +198,15 @@ _Enviado via FisioFlow_`;
               })}
             </span>
           </div>
+          {prescription.has_home_exercises === false ? (
+            <Badge variant="outline" className="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0">
+              Presencial Exclusivo
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="text-[10px] font-bold bg-primary/10 text-primary border-0">
+              Meta: {prescription.target_weekly_frequency ?? 3}x / semana
+            </Badge>
+          )}
           {prescription.view_count > 0 && (
             <div className="flex items-center gap-1">
               <Eye className="h-4 w-4" />
@@ -207,13 +216,15 @@ _Enviado via FisioFlow_`;
         </div>
 
         {/* Progress */}
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Progresso do paciente</span>
-            <span>{Math.round(progressPercent)}%</span>
+        {prescription.has_home_exercises !== false && (
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>Adesão do paciente</span>
+              <span>{Math.round(progressPercent)}%</span>
+            </div>
+            <Progress value={progressPercent} className="h-1.5" />
           </div>
-          <Progress value={progressPercent} className="h-1.5" />
-        </div>
+        )}
 
         {/* Actions */}
         <div className="flex gap-2 pt-2">

@@ -26,8 +26,8 @@ function useOverduePayments() {
   return useQuery<OverdueData>({
     queryKey: ["overdue-payments"],
     queryFn: async () => {
-      const res = await request<{ data: OverdueData }>("/api/clinic-metrics/overdue-payments");
-      return (res as { data: OverdueData }).data;
+      const res = await request<{ data?: OverdueData }>("/api/clinic-metrics/overdue-payments");
+      return res?.data ?? (res as unknown as OverdueData);
     },
     staleTime: 10 * 60 * 1000,
   });

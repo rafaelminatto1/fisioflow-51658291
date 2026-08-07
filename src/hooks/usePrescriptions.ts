@@ -27,6 +27,8 @@ export interface PrescriptionExercise {
 export type Prescription = ExercisePrescription & {
   exercises: PrescriptionExercise[];
   completed_exercises: string[];
+  target_weekly_frequency?: number;
+  has_home_exercises?: boolean;
 };
 
 export const usePrescriptions = (patientId?: string) => {
@@ -51,6 +53,8 @@ export const usePrescriptions = (patientId?: string) => {
       exercises: PrescriptionExercise[];
       notes?: string;
       validity_days?: number;
+      target_weekly_frequency?: number;
+      has_home_exercises?: boolean;
     }) => {
       const validityDays = input.validity_days ?? 30;
       const validUntil = format(addDays(new Date(), validityDays), "yyyy-MM-dd");
@@ -62,6 +66,8 @@ export const usePrescriptions = (patientId?: string) => {
         notes: input.notes,
         validity_days: validityDays,
         valid_until: validUntil,
+        target_weekly_frequency: input.target_weekly_frequency ?? 3,
+        has_home_exercises: input.has_home_exercises ?? true,
         qr_code: `RX-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         status: "ativo",
         view_count: 0,

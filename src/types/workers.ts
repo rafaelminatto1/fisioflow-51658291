@@ -1343,6 +1343,12 @@ export interface ExercisePrescription {
   id: string;
   patient_id: string;
   status: string;
+  qr_code?: string;
+  title?: string;
+  exercises?: any[];
+  completed_exercises?: string[];
+  target_weekly_frequency?: number;
+  has_home_exercises?: boolean;
 }
 
 export interface PrescribedExercise {

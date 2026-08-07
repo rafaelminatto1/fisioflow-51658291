@@ -27,10 +27,10 @@ function usePackagesExpiring() {
   return useQuery<ExpiringPackage[]>({
     queryKey: ["packages-expiring"],
     queryFn: async () => {
-      const res = await request<{ data: ExpiringPackage[] }>(
+      const res = await request<{ data?: ExpiringPackage[] }>(
         "/api/clinic-metrics/packages-expiring",
       );
-      return (res as { data: ExpiringPackage[] }).data;
+      return res?.data ?? (Array.isArray(res) ? (res as ExpiringPackage[]) : []);
     },
     staleTime: 10 * 60 * 1000,
   });

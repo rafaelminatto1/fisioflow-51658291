@@ -38,6 +38,7 @@ import { MagicTextarea } from "@/components/ai/MagicTextarea";
 import { BrasilService } from "@/services/brasilApi";
 import { toast } from "sonner";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { usePartnerships } from "@/hooks/usePartnerships";
 import {
   PATIENT_CARE_PROFILE_OPTIONS,
   PATIENT_ORIGIN_OPTIONS,
@@ -115,10 +116,15 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
         therapy_focuses: patient?.therapy_focuses || [],
         payer_model: patient?.payer_model || "",
         partner_company_name: patient?.partner_company_name || "",
+        partnership_id: (patient as any)?.partnership_id || (patient as any)?.partnershipId || "",
+        partnership_role: (patient as any)?.partnership_role || (patient as any)?.partnershipRole || "aluno_cliente",
+        session_value: (patient as any)?.session_value ?? (patient as any)?.sessionValue ?? 160.00,
         observations: patient?.observations || "",
         status: (patient?.status as any) || "Inicial",
       },
     });
+
+    const { partnerships } = usePartnerships();
 
     const {
       register,
@@ -754,16 +760,134 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
                       )}
                     />
                   </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="partner_company_name">Parceria</Label>
+                    <Label htmlFor="session_value">Valor por Sessão Avulsa (R$)</Label>
                     <Input
-                      id="partner_company_name"
-                      placeholder="Empresa parceira, assessoria ou origem corporativa"
-                      disabled={watchedPayerModel !== "parceria"}
-                      {...register("partner_company_name")}
+                      id="session_value"
+                      type="number"
+                      step="0.01"
+                      placeholder="160.00"
+                      {...register("session_value", { valueAsNumber: true })}
                     />
                   </div>
                 </div>
+
+                {watchedPayerModel === "parceria" && (
+                  <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <BadgeCheck className="h-4 w-4 text-primary" />
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Configuração da Parceria & Sub-etiqueta
+                      </h4>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="partnership_id">Selecione a Parceria</Label>
+                        <Controller
+                          name="partnership_id"
+                          control={form.control}
+                          render={({ field }) => (
+                            <Select
+                              value={field.value || ""}
+                              onValueChange={(val) => {
+                                field.onChange(val);
+                                const selected = partnerships.find((p) => p.id === val);
+                                if (selected) {
+                                  setValue("partner_company_name", selected.name);
+                                  const currentRole = form.getValues("partnership_role") || "aluno_cliente";
+                                  if (currentRole === "professor") {
+                                    setValue("session_value", selected.professorPays ? selected.professorSessionFee : 0);
+                                  } else {
+                                    setValue("session_value", selected.studentSessionFee);
+                                  }
+                                }
+                              }}
+                            >
+                              <SelectTrigger id="partnership_id">
+                                <SelectValue placeholder="Selecione uma parceria cadastrada" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {partnerships.map((p) => (
+                                  <SelectItem key={p.id} value={p.id}>
+                                    {p.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="partner_company_name">Nome da Parceria (Manual/Exibição)</Label>
+                        <Input
+                          id="partner_company_name"
+                          placeholder="Nome da parceria"
+                          {...register("partner_company_name")}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="partnership_role">Sub-etiqueta (Papel na Parceria)</Label>
+                        <Controller
+                          name="partnership_role"
+                          control={form.control}
+                          render={({ field }) => (
+                            <Select
+                              value={field.value || "aluno_cliente"}
+                              onValueChange={(val) => {
+                                field.onChange(val);
+                                const partId = form.getValues("partnership_id");
+                                const selected = partnerships.find((p) => p.id === partId);
+                                if (selected) {
+                                  if (val === "professor") {
+                                    setValue("session_value", selected.professorPays ? selected.professorSessionFee : 0);
+                                  } else {
+                                    setValue("session_value", selected.studentSessionFee);
+                                  }
+                                } else if (val === "professor") {
+                                  setValue("session_value", 0);
+                                } else {
+                                  setValue("session_value", 160.00);
+                                }
+                              }}
+                            >
+                              <SelectTrigger id="partnership_role">
+                                <SelectValue placeholder="Selecione a sub-etiqueta" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="aluno_cliente">Aluno / Cliente (Paga Sessão)</SelectItem>
+                                <SelectItem value="professor">Professor / Colaborador (Gratuito/Especial)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      </div>
+
+                      <div className="flex items-center">
+                        {watch("partnership_role") === "professor" ? (
+                          <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 text-xs font-bold text-amber-700 dark:text-amber-400">
+                            🏷️ Sub-etiqueta: Professor / Colaborador
+                            <p className="text-[10px] font-normal text-amber-600 dark:text-amber-400 mt-0.5">
+                              Sessão configurada para R$ {watch("session_value") ?? 0},00.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                            🏷️ Sub-etiqueta: Aluno / Cliente
+                            <p className="text-[10px] font-normal text-emerald-600 dark:text-emerald-400 mt-0.5">
+                              Sessão avulsa configurada para R$ {watch("session_value") ?? 160},00.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">

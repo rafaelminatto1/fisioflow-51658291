@@ -181,6 +181,9 @@ export const PatientFormSchema = z.object({
   therapy_focuses: z.array(z.string()).optional().default([]),
   payer_model: z.string().max(50, "Modelo de pagamento inválido").optional().nullable(),
   partner_company_name: z.string().max(150, "Nome da parceria muito longo").optional().nullable(),
+  partnership_id: z.string().uuid().optional().nullable(),
+  partnership_role: z.enum(["professor", "aluno_cliente"]).optional().nullable(),
+  session_value: z.coerce.number().optional().nullable(),
   observations: z.string().max(5000, "Observações muito longas").optional().nullable(),
 
   // Status

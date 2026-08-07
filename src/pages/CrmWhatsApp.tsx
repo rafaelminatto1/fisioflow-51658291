@@ -835,7 +835,7 @@ function MessageBubble({
 
 const MemoMessageBubble = memo(MessageBubble);
 
-export default function CrmWhatsApp() {
+export default function CrmWhatsApp({ embedded = false }: { embedded?: boolean } = {}) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [pipelineFilter, setPipelineFilter] = useState<PipelineFilter>("all");
@@ -1775,17 +1775,8 @@ export default function CrmWhatsApp() {
     conversationRefs.current[selectedId]?.scrollIntoView({ block: "nearest" });
   }, [selectedId]);
 
-  return (
-    <PageLayout
-      fullWidth
-      noPadding
-      compactHeader
-      hideDefaultHeader
-      showBreadcrumbs={false}
-      fillViewport
-    >
-      <PageContainer maxWidth="full" noPadding className="h-full">
-        <div className="flex h-full min-h-0 flex-col bg-background">
+  const innerContent = (
+    <div className="flex h-full min-h-0 flex-col bg-background w-full">
           <div className="z-10 border-b border-border bg-background">
             <div className="flex items-center gap-4 px-6 py-4">
               <h1 className="flex items-center gap-3 text-xl font-extrabold tracking-tight">
@@ -2854,7 +2845,6 @@ export default function CrmWhatsApp() {
               )}
             </aside>
           </div>
-        </div>
 
         {messageMenu ? (
           <div
@@ -3283,6 +3273,24 @@ export default function CrmWhatsApp() {
             toast.info("Recusa enviada no Direct!");
           }}
         />
+      </div>
+  );
+
+  if (embedded) {
+    return innerContent;
+  }
+
+  return (
+    <PageLayout
+      fullWidth
+      noPadding
+      compactHeader
+      hideDefaultHeader
+      showBreadcrumbs={false}
+      fillViewport
+    >
+      <PageContainer maxWidth="full" noPadding className="h-full">
+        {innerContent}
       </PageContainer>
     </PageLayout>
   );

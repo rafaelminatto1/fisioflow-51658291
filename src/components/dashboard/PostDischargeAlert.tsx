@@ -19,6 +19,15 @@ interface AtRiskPatient {
   days_since_discharge: number;
 }
 
+interface RawAtRiskPatient {
+  id?: string;
+  patient_id?: string;
+  name?: string;
+  patient_name?: string;
+  discharge_date: string;
+  days_since_discharge: number;
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -29,8 +38,14 @@ export function PostDischargeAlert() {
   const { data: patients = [], isLoading } = useQuery<AtRiskPatient[]>({
     queryKey: ["post-discharge-at-risk"],
     queryFn: async () => {
-      const res = await request<AtRiskPatient[]>("GET", "/api/post-discharge/at-risk");
-      return res.data ?? [];
+      const res = await request<{ data?: RawAtRiskPatient[] }>("/api/post-discharge/at-risk");
+      const rawList = res?.data ?? (Array.isArray(res) ? (res as RawAtRiskPatient[]) : []);
+      return rawList.map((item) => ({
+        id: item.id || item.patient_id || "",
+        name: item.name || item.patient_name || "Paciente sem nome",
+        discharge_date: item.discharge_date,
+        days_since_discharge: item.days_since_discharge,
+      }));
     },
     staleTime: 5 * 60 * 1000, // 5 min
   });
@@ -38,7 +53,10 @@ export function PostDischargeAlert() {
   // Mutation to trigger a follow-up message
   const { mutate: triggerFollowup, isPending } = useMutation({
     mutationFn: (patientId: string) =>
-      request("POST", "/api/post-discharge/trigger-followup", { patientId }),
+      request("/api/post-discharge/trigger-followup", {
+        method: "POST",
+        body: JSON.stringify({ patientId }),
+      }),
     onSuccess: (_data, patientId) => {
       setContacted((prev) => new Set(prev).add(patientId));
       toast.success("Check-in enviado com sucesso!", {

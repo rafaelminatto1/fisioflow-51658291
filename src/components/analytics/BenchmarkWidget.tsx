@@ -106,6 +106,9 @@ interface MetricRowProps {
 }
 
 function MetricRow({ config, metric, index }: MetricRowProps) {
+  if (!metric || !metric.posicao || !POSITION_CONFIG[metric.posicao]) {
+    return null;
+  }
   const pos = POSITION_CONFIG[metric.posicao];
 
   // For the progress bar: position of our clinic value between 0 and top20*1.2 (give room above top20)
@@ -204,10 +207,14 @@ function MetricRow({ config, metric, index }: MetricRowProps) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+interface BenchmarkApiResponse {
+  metrics?: BenchmarkData;
+}
+
 export function BenchmarkWidget() {
-  const { data, isLoading } = useQuery<BenchmarkData>({
+  const { data, isLoading } = useQuery<BenchmarkApiResponse & BenchmarkData>({
     queryKey: ["benchmark", "market-position"],
-    queryFn: () => request<BenchmarkData>("/api/benchmark/market-position"),
+    queryFn: () => request<BenchmarkApiResponse & BenchmarkData>("/api/benchmark/market-position"),
     staleTime: 60 * 60 * 1000, // 1h — benchmark data doesn't change often
   });
 
@@ -228,6 +235,8 @@ export function BenchmarkWidget() {
 
   if (!data) return null;
 
+  const metricsData = data.metrics ?? data;
+
   return (
     <Card className="premium-glass border-border/40 shadow-sm overflow-hidden">
       <CardHeader className="pb-4 border-b border-border/20">
@@ -247,7 +256,7 @@ export function BenchmarkWidget() {
 
       <CardContent className="pt-5 space-y-3">
         {METRIC_CONFIG.map((config, index) => {
-          const metric = data[config.key];
+          const metric = metricsData[config.key];
           return (
             <MetricRow key={config.key} config={config} metric={metric} index={index} />
           );

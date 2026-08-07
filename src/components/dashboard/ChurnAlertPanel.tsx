@@ -15,16 +15,19 @@ type ChurnRiskLevel = "high" | "medium";
 
 interface ChurnSignal {
   patient_id: string;
-  patient_name: string;
+  patient_name?: string;
+  full_name?: string;
   phone?: string | null;
   whatsapp?: string | null;
   risk_level: ChurnRiskLevel;
   signal_type: ChurnSignalType;
   days_gap?: number; // usado quando signal_type === 'scheduling_gap'
+  days_since_last?: number | null;
 }
 
 interface ChurnAtRiskPayload {
-  signals: ChurnSignal[];
+  signals?: ChurnSignal[];
+  data?: ChurnSignal[];
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -40,7 +43,7 @@ function buildContactUrl(signal: ChurnSignal): string | null {
 function signalLabel(signal: ChurnSignal): string {
   if (signal.signal_type === "increasing_noshow") return "Faltas frequentes";
   if (signal.signal_type === "scheduling_gap") {
-    const days = signal.days_gap ?? 0;
+    const days = signal.days_gap ?? signal.days_since_last ?? 0;
     return `Sumiu há ${days}d`;
   }
   return signal.signal_type;
@@ -66,7 +69,9 @@ function PatientRow({ signal, index }: PatientRowProps) {
     >
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap mb-0.5">
-          <p className="text-sm font-bold truncate">{signal.patient_name}</p>
+          <p className="text-sm font-bold truncate">
+            {signal.patient_name || signal.full_name || "Paciente sem nome"}
+          </p>
           <Badge
             className={cn(
               "text-[9px] px-1.5 py-0 border-0 font-black shrink-0",
@@ -129,7 +134,7 @@ export function ChurnAlertPanel() {
     );
   }
 
-  const signals = data?.signals ?? [];
+  const signals = data?.signals ?? data?.data ?? [];
   const visible = signals.slice(0, 10);
   const highCount = signals.filter((s) => s.risk_level === "high").length;
   const mediumCount = signals.filter((s) => s.risk_level === "medium").length;

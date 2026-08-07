@@ -1,5 +1,6 @@
 import '@/styles/bundles/evolution.css';
-import { Cake, Filter, Users, Plus, Download, LayoutDashboard } from 'lucide-react';
+import { Cake, Filter, Users, Plus, Download, LayoutDashboard, Handshake } from 'lucide-react';
+import { PartnershipsTab } from '@/components/patient/PartnershipsTab';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LazyComponent } from '@/components/common/LazyComponent';
@@ -388,6 +389,13 @@ const Patients = () => {
                     <Cake className="mr-2 h-3.5 w-3.5" />
                     Aniversariantes
                   </TabsTrigger>
+                  <TabsTrigger
+                    value="parcerias"
+                    className="rounded-xl px-6 text-[10px] font-black uppercase tracking-wider data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  >
+                    <Handshake className="mr-2 h-3.5 w-3.5" />
+                    Parcerias & Convênios
+                  </TabsTrigger>
                 </TabsList>
               </div>
 
@@ -530,6 +538,10 @@ const Patients = () => {
               <div className="bento-card overflow-hidden">
                 <AniversariantesContent />
               </div>
+            </TabsContent>
+
+            <TabsContent value="parcerias" className="mt-8">
+              <PartnershipsTab />
             </TabsContent>
           </Tabs>
         </div>
