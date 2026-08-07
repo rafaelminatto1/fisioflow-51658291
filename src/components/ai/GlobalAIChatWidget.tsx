@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { copilotApi } from "@/api/v2/copilot";
+import { copilotApi } from "@/api/v2/communications";
 import { patientsApi } from "@/api/v2/patients";
 import type { PatientRow } from "@/types/workers";
 
