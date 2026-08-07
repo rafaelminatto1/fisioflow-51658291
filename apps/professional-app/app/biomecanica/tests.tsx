@@ -3,8 +3,9 @@ import { View, Text, ScrollView, Pressable, TextInput, StyleSheet } from "react-
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Svg, { Circle, Path, Line } from "react-native-svg";
-import { Plus, Search, Clock, Repeat, Ruler, Camera, ArrowRight } from "lucide-react-native";
+import { Plus, Search, Clock, Repeat, ArrowRight } from "lucide-react-native";
 import { bio, font } from "@/constants/biomecanica";
+import { palette, radius, spacing } from "@/constants/theme";
 import { BioTabBar } from "@/components/biomecanica/BioTabBar";
 import { biomechanicsApi, type BiomechanicsProtocol } from "@/lib/api/biomechanics";
 
@@ -44,7 +45,6 @@ const REGION: Record<
   },
 };
 
-
 const FILTERS = [
   { label: "Todos", dot: null },
   { label: "Joelho", dot: "hsl(211, 70%, 50%)" },
@@ -65,6 +65,7 @@ function TestFigure({ region }: { region: Region }) {
       strokeWidth={4}
       strokeLinecap="round"
       strokeLinejoin="round"
+      opacity={0.92}
     >
       <Circle cx="60" cy="28" r="11" fill={c} />
       <Path d="M60 39 L60 110" />
@@ -147,17 +148,22 @@ export default function TestsScreen() {
       })
     : [];
 
+  // O subtítulo conta o que existe de verdade na biblioteca — não um número fixo.
+  const subtitle = protocols.length
+    ? `${protocols.length} ${protocols.length === 1 ? "protocolo" : "protocolos"} · padronizados`
+    : "Protocolos padronizados de captura";
+
   return (
     <View style={styles.root}>
-      <SafeAreaView edges={["top"]} style={{ backgroundColor: bio.bg }}>
+      <SafeAreaView edges={["top"]} style={styles.safe}>
         <View style={styles.header}>
           <View style={styles.headerTop}>
-            <View style={{ flex: 1 }}>
+            <View style={styles.headerText}>
               <Text style={styles.h1}>Biblioteca de Testes</Text>
-              <Text style={styles.sub}>84 testes · 56 ortopedia · 12 esportiva · 10 pós-op</Text>
+              <Text style={styles.sub}>{subtitle}</Text>
             </View>
             <Pressable style={styles.add} hitSlop={6}>
-              <Plus size={20} color="#fff" strokeWidth={2.4} />
+              <Plus size={20} color={palette.card} strokeWidth={2.4} />
             </Pressable>
           </View>
           <View style={styles.searchBox}>
@@ -185,7 +191,7 @@ export default function TestsScreen() {
                 {!active && f.dot ? (
                   <View style={[styles.chipDot, { backgroundColor: f.dot }]} />
                 ) : null}
-                <Text style={[styles.chipText, active && { color: "#fff" }]}>{f.label}</Text>
+                <Text style={[styles.chipText, active && styles.chipTextSel]}>{f.label}</Text>
               </Pressable>
             );
           })}
@@ -193,11 +199,21 @@ export default function TestsScreen() {
       </SafeAreaView>
 
       <ScrollView
-        style={{ flex: 1 }}
+        style={styles.flex}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.secTitle}>Mais usados</Text>
+
+        {visibleTests.length === 0 ? (
+          <View style={styles.empty}>
+            <Text style={styles.emptyTitle}>Nenhum protocolo cadastrado</Text>
+            <Text style={styles.emptyHint}>
+              Cadastre um protocolo para padronizar a captura e as métricas do teste.
+            </Text>
+          </View>
+        ) : null}
+
         {visibleTests.map((t) => {
           const r = REGION[t.region];
           return (
@@ -222,12 +238,16 @@ export default function TestsScreen() {
               </View>
               <View style={styles.tbody}>
                 <View style={styles.row1}>
-                  <Text style={styles.tnm}>{t.name}</Text>
+                  <Text style={styles.tnm} numberOfLines={1}>
+                    {t.name}
+                  </Text>
                   <View style={[styles.badge, { backgroundColor: r.badgeBg }]}>
                     <Text style={[styles.badgeText, { color: r.badgeFg }]}>{r.label}</Text>
                   </View>
                 </View>
-                <Text style={styles.ds}>{t.desc}</Text>
+                <Text style={styles.ds} numberOfLines={2}>
+                  {t.desc}
+                </Text>
                 <View style={styles.metrics}>
                   {t.metrics.map((m) => (
                     <View key={m} style={styles.mtag}>
@@ -258,16 +278,22 @@ export default function TestsScreen() {
   );
 }
 
+const SCREEN_PAD = spacing[5];
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: bio.bg },
-  header: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 12 },
+  flex: { flex: 1 },
+  safe: { backgroundColor: bio.bg },
+
+  header: { paddingHorizontal: SCREEN_PAD, paddingTop: spacing[1], paddingBottom: spacing[3] },
   headerTop: { flexDirection: "row", alignItems: "center" },
+  headerText: { flex: 1, minWidth: 0 },
   h1: { fontSize: 22, fontFamily: font.extrabold, letterSpacing: -0.5, color: bio.fg },
   sub: { fontSize: 12, fontFamily: font.semibold, color: bio.muted, marginTop: 2 },
   add: {
     width: 42,
     height: 42,
-    borderRadius: 13,
+    borderRadius: radius.sm + 1,
     backgroundColor: bio.primary,
     alignItems: "center",
     justifyContent: "center",
@@ -275,22 +301,28 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 14,
-    backgroundColor: "#EEF1F5",
-    marginTop: 14,
+    gap: spacing[2] + 2,
+    paddingHorizontal: spacing[4] - 2,
+    paddingVertical: spacing[3],
+    borderRadius: radius.md,
+    backgroundColor: palette.surfaceHover,
+    marginTop: spacing[4] - 2,
   },
   searchInput: { flex: 1, fontFamily: font.semibold, fontSize: 14, color: bio.fg, padding: 0 },
-  filters: { gap: 8, paddingHorizontal: 20, paddingTop: 4, paddingBottom: 4 },
+
+  filters: {
+    gap: spacing[2],
+    paddingHorizontal: SCREEN_PAD,
+    paddingTop: spacing[3],
+    paddingBottom: spacing[1],
+  },
   chip: {
     flexDirection: "row",
     alignItems: "center",
     gap: 7,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
+    paddingHorizontal: spacing[4] - 2,
+    paddingVertical: spacing[2],
+    borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: bio.border,
     backgroundColor: bio.card,
@@ -298,21 +330,41 @@ const styles = StyleSheet.create({
   chipSel: { backgroundColor: bio.primary, borderColor: bio.primary },
   chipDot: { width: 8, height: 8, borderRadius: 4 },
   chipText: { fontSize: 12, fontFamily: font.bold, color: bio.muted },
+  chipTextSel: { color: palette.card },
 
-  scroll: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 24, gap: 12 },
+  scroll: {
+    paddingHorizontal: SCREEN_PAD,
+    paddingTop: spacing[4] - 2,
+    paddingBottom: spacing[6],
+    gap: spacing[3],
+  },
   secTitle: {
     fontSize: 11,
     fontFamily: font.extrabold,
     letterSpacing: 0.6,
     textTransform: "uppercase",
     color: bio.muted,
+    marginBottom: -2,
   },
+
+  empty: {
+    backgroundColor: bio.card,
+    borderWidth: 1,
+    borderColor: bio.border,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[4] + 2,
+    gap: 3,
+  },
+  emptyTitle: { fontSize: 13, fontFamily: font.bold, color: bio.fg, letterSpacing: -0.1 },
+  emptyHint: { fontSize: 12, fontFamily: font.semibold, color: bio.muted, lineHeight: 17 },
+
   test: {
     flexDirection: "row",
     backgroundColor: bio.card,
     borderWidth: 1,
     borderColor: bio.border,
-    borderRadius: 16,
+    borderRadius: radius.lg,
     overflow: "hidden",
   },
   vis: { width: 104, alignItems: "center", justifyContent: "center" },
@@ -324,8 +376,13 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.88)",
   },
   viewTagText: { fontSize: 8, fontFamily: font.extrabold, color: "hsl(224, 40%, 35%)" },
-  tbody: { flex: 1, minWidth: 0, paddingHorizontal: 14, paddingVertical: 13 },
-  row1: { flexDirection: "row", alignItems: "center", gap: 8 },
+  tbody: {
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: spacing[4] - 2,
+    paddingVertical: spacing[3] + 1,
+  },
+  row1: { flexDirection: "row", alignItems: "center", gap: spacing[2] },
   tnm: {
     fontSize: 15,
     fontFamily: font.extrabold,
@@ -333,13 +390,23 @@ const styles = StyleSheet.create({
     color: bio.fg,
     flexShrink: 1,
   },
-  badge: { marginLeft: "auto", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+  badge: {
+    marginLeft: "auto",
+    paddingHorizontal: spacing[2],
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+  },
   badgeText: { fontSize: 8, fontFamily: font.extrabold, letterSpacing: 0.4 },
   ds: { fontSize: 11, fontFamily: font.semibold, color: bio.muted, lineHeight: 15.4, marginTop: 4 },
   metrics: { flexDirection: "row", flexWrap: "wrap", gap: 5, marginTop: 9 },
-  mtag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 7, backgroundColor: "#EEF1F5" },
+  mtag: {
+    paddingHorizontal: spacing[2],
+    paddingVertical: 3,
+    borderRadius: 7,
+    backgroundColor: palette.surfaceHover,
+  },
   mtagText: { fontSize: 10, fontFamily: font.bold, color: bio.fg },
-  foot: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 10 },
+  foot: { flexDirection: "row", alignItems: "center", gap: spacing[3], marginTop: spacing[2] + 2 },
   meta: { flexDirection: "row", alignItems: "center", gap: 4 },
   metaText: { fontSize: 10, fontFamily: font.bold, color: bio.muted },
   goRow: { marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 4 },
