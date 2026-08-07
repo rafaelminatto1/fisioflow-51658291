@@ -156,12 +156,10 @@ const biomecanicaSubmenu = [
 const inteligenciaMenuItems = [
   {
     icon: Brain,
-    label: 'Central de Inteligência',
+    label: 'Central de IA & Inteligência',
     href: '/inteligencia',
     badge: 'AI',
   },
-  { icon: MessageSquare, label: 'Copiloto Clínico', href: '/copiloto', badge: 'AI' },
-  { icon: Sparkles, label: 'Base de Conhecimento', href: '/base-conhecimento', badge: 'AI' },
 ];
 
 const rotinaSubmenu = [

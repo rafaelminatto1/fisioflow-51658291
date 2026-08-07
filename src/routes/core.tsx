@@ -232,18 +232,7 @@ export const coreRoutes = (
         </RouteErrorBoundary>
       }
     />
-    <Route
-      path="/copiloto"
-      element={
-        <RouteErrorBoundary routeName="CopilotChat">
-          <ProtectedRoute>
-            <PageLayout fullWidth noPadding>
-              <CopilotChat />
-            </PageLayout>
-          </ProtectedRoute>
-        </RouteErrorBoundary>
-      }
-    />
+    <Route path="/copiloto" element={<Navigate to="/inteligencia?tab=copilot" replace />} />
     <Route
       path="/monitor"
       element={
@@ -281,18 +270,7 @@ export const coreRoutes = (
     <Route path="/exercicios/protocolos" element={<ExercisesLegacyRedirect />} />
     <Route path="/exercicios/ia" element={<ExercisesLegacyRedirect />} />
     <Route path="/exercicios/analytics" element={<ExercisesLegacyRedirect />} />
-    <Route
-      path="/base-conhecimento"
-      element={
-        <RouteErrorBoundary routeName="KnowledgeAsk">
-          <ProtectedRoute>
-            <PageLayout noPadding>
-              <KnowledgeAsk />
-            </PageLayout>
-          </ProtectedRoute>
-        </RouteErrorBoundary>
-      }
-    />
+    <Route path="/base-conhecimento" element={<Navigate to="/inteligencia?tab=knowledge" replace />} />
     <Route
       path="/protocols"
       element={
