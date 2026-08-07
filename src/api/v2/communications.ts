@@ -147,10 +147,10 @@ export const automationApi = {
 export type CopilotChatMessage = { role: "system" | "user" | "assistant" | "tool"; content: string };
 
 export const copilotApi = {
-  chat: (messages: CopilotChatMessage[]) =>
+  chat: (messages: CopilotChatMessage[], model?: string) =>
     request<{ answer: string; toolCalls: Array<{ name: string }> }>("/api/copilot/chat", {
       method: "POST",
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({ messages, model }),
     }),
 };
 

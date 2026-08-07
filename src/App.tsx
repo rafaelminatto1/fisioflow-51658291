@@ -3,8 +3,6 @@ import { RouterProvider } from "react-router-dom";
 import { router } from "./routes/router";
 import { AppProviders, useAppRuntime } from "@/app/AppRuntime";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { GlobalAIChatWidget } from "@/components/ai/GlobalAIChatWidget";
-import { GlobalAISpotlight } from "@/components/ai/GlobalAISpotlight";
 
 const App = () => {
   useAppRuntime("App");
@@ -62,8 +60,6 @@ const App = () => {
   return (
     <AppProviders>
       <RouterProvider router={router} />
-      <GlobalAIChatWidget />
-      <GlobalAISpotlight />
     </AppProviders>
   );
 };

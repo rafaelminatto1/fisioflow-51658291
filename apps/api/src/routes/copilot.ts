@@ -20,13 +20,15 @@ const BodySchema = z.object({
       }),
     )
     .min(1),
-  // A/B: modelo de tool-calling (allowlist de modelos ativos). Default = llama_3_1_8b.
-  model: z.enum(["llama_3_1_8b", "llama_3_3_70b"]).optional(),
+  // Modelos Cloudflare Workers AI ativos
+  model: z.enum(["llama_3_1_8b", "llama_3_3_70b", "deepseek_r1", "qwen_2_5_72b"]).optional(),
 });
 
 const COPILOT_MODELS: Record<string, string> = {
   llama_3_1_8b: "@cf/meta/llama-3.1-8b-instruct-fast",
   llama_3_3_70b: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  deepseek_r1: "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
+  qwen_2_5_72b: "@cf/qwen/qwen2.5-72b-instruct",
 };
 
 const SYSTEM: CopilotMessage = {

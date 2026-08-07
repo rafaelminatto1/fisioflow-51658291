@@ -137,6 +137,9 @@ const NpsPromptPortal = () => {
   return <NpsPrompt open={open} onDismiss={dismiss} />;
 };
 
+import { GlobalAIChatWidget } from "@/components/ai/GlobalAIChatWidget";
+import { GlobalAISpotlight } from "@/components/ai/GlobalAISpotlight";
+
 export const AppShellLayout = () => {
   const location = useLocation();
   const isPublicRoute = isPublicBootPath(location.pathname);
@@ -150,6 +153,8 @@ export const AppShellLayout = () => {
       <Outlet />
       <SetupWizardPortal />
       <NpsPromptPortal />
+      <GlobalAIChatWidget />
+      <GlobalAISpotlight />
     </AuthenticatedAppShell>
   );
 };

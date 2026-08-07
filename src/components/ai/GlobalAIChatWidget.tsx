@@ -13,6 +13,7 @@ import {
   Maximize2,
   RefreshCw,
   Filter,
+  Cpu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,14 @@ import { patientsApi } from "@/api/v2/patients";
 import type { PatientRow } from "@/types/workers";
 
 type FilterCategory = "all" | "clinical" | "pubmed" | "agenda";
+type AIModelOption = "llama_3_3_70b" | "deepseek_r1" | "qwen_2_5_72b" | "llama_3_1_8b";
+
+const MODEL_OPTIONS: Record<AIModelOption, { label: string; badge: string; desc: string }> = {
+  llama_3_3_70b: { label: "Llama 3.3 (70B)", badge: "OURO 70B", desc: "Padrão Ouro • Cloudflare Edge" },
+  deepseek_r1: { label: "DeepSeek R1 (32B)", badge: "REASONING", desc: "Raciocínio Clínico • Cloudflare Edge" },
+  qwen_2_5_72b: { label: "Qwen 2.5 (72B)", badge: "MULTI 72B", desc: "Análise Ampla • Cloudflare Edge" },
+  llama_3_1_8b: { label: "Llama 3.1 (8B)", badge: "SPEED 8B", desc: "Respostas Ultrarrápidas" },
+};
 
 interface ChatMessage {
   id: string;
@@ -29,6 +38,7 @@ interface ChatMessage {
   text: string;
   timestamp: string;
   category?: FilterCategory;
+  modelUsed?: AIModelOption;
 }
 
 const CATEGORY_PROMPTS: Record<FilterCategory, string[]> = {
@@ -64,12 +74,14 @@ export function GlobalAIChatWidget() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeCategory, setActiveCategory] = useState<FilterCategory>("all");
+  const [selectedModel, setSelectedModel] = useState<AIModelOption>("llama_3_3_70b");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
       sender: "ai",
-      text: "Olá! Sou o Assistente de Inteligência da clínica, alimentado por Cloudflare Workers AI & Llama 3.3 70B com acesso ao PubMed e prontuários. Como posso ajudar agora? (Dica: use @ para buscar paciente)",
+      text: "Olá! Sou o Assistente de Inteligência da clínica. Você pode escolher qual motor de IA processará sua consulta (Llama 3.3 70B, DeepSeek R1, Qwen 2.5 ou Llama 3.1) no seletor do topo! Como posso ajudar?",
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      modelUsed: "llama_3_3_70b",
     },
   ]);
 
@@ -148,21 +160,22 @@ export function GlobalAIChatWidget() {
     setLoading(true);
 
     try {
-      // Chama o backend Cloudflare Workers AI (/api/copilot/chat)
-      const res = await copilotApi.chat([{ role: "user", content: formattedQuery }]);
+      // Envia requisição com o modelo escolhido pelo usuário para o backend Cloudflare Workers AI
+      const res = await copilotApi.chat([{ role: "user", content: formattedQuery }], selectedModel);
       const aiMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
         sender: "ai",
         text: res.answer || "Consulta concluída com sucesso.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         category: activeCategory,
+        modelUsed: selectedModel,
       };
       setMessages((prev) => [...prev, aiMsg]);
     } catch (err) {
       const errorMsg: ChatMessage = {
         id: `err-${Date.now()}`,
         sender: "ai",
-        text: "Desculpe, ocorreu uma falha na resposta do Workers AI. Tente novamente.",
+        text: "Desculpe, ocorreu uma falha no motor de IA selecionado. Tente mudar o modelo no topo ou reenviar.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -179,7 +192,7 @@ export function GlobalAIChatWidget() {
           type="button"
           onClick={() => setOpen(true)}
           className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-2xl transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-95"
-          title="Abrir Copiloto Clínico IA (Cloudflare Workers AI)"
+          title="Abrir Copiloto Clínico IA (Selecione o Motor no topo)"
         >
           <BrainCircuit className="h-7 w-7 text-white transition-transform group-hover:rotate-12" />
           <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4">
@@ -194,26 +207,38 @@ export function GlobalAIChatWidget() {
         <div
           className={cn(
             "flex flex-col overflow-hidden rounded-3xl border border-blue-100 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-2xl transition-all duration-300",
-            minimized ? "h-16 w-80" : "h-[560px] w-96 max-w-[calc(100vw-2rem)]",
+            minimized ? "h-16 w-80" : "h-[580px] w-96 max-w-[calc(100vw-2rem)]",
           )}
         >
-          {/* Header do Widget - Azul da Clínica */}
-          <div className="flex items-center justify-between border-b border-blue-900/40 bg-blue-900 px-4 py-3 text-white">
+          {/* Header do Widget - Azul da Clínica com Seletor de Motor IA */}
+          <div className="flex items-center justify-between border-b border-blue-900/40 bg-blue-900 px-4 py-2.5 text-white">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm ring-2 ring-blue-400/30">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm ring-2 ring-blue-400/30 shrink-0">
                 <BrainCircuit className="h-4 w-4" />
               </span>
-              <div>
-                <h3 className="text-xs font-black text-white flex items-center gap-1.5">
-                  FisioFlow Intelligence
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5">
+                  <h3 className="text-xs font-black text-white">FisioFlow AI</h3>
                   <Badge className="border-0 bg-blue-500/30 text-[8px] font-extrabold uppercase text-sky-200 px-1 py-0">
-                    WORKERS AI
+                    {MODEL_OPTIONS[selectedModel].badge}
                   </Badge>
-                </h3>
-                <p className="text-[10px] font-bold text-sky-200 flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse" />
-                  Cloudflare Workers AI • Llama 3.3 70B • RAG
-                </p>
+                </div>
+
+                {/* Seletor de Motor de IA */}
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Cpu className="h-3 w-3 text-sky-300 shrink-0" />
+                  <select
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value as AIModelOption)}
+                    className="bg-blue-950/80 text-sky-100 text-[10px] font-extrabold rounded-md px-1.5 py-0.5 outline-none border border-blue-700/60 focus:border-sky-400 cursor-pointer"
+                    title="Escolha de onde virá a resposta da IA"
+                  >
+                    <option value="llama_3_3_70b">Llama 3.3 (70B) • Padrão Ouro</option>
+                    <option value="deepseek_r1">DeepSeek R1 (32B) • Raciocínio</option>
+                    <option value="qwen_2_5_72b">Qwen 2.5 (72B) • Análise Ampla</option>
+                    <option value="llama_3_1_8b">Llama 3.1 (8B) • Ultrarrápido</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -320,14 +345,21 @@ export function GlobalAIChatWidget() {
                     >
                       <p className="whitespace-pre-wrap">{m.text}</p>
                     </div>
-                    <span className="mt-1 text-[10px] text-slate-400 px-1 font-semibold">{m.timestamp}</span>
+                    <div className="flex items-center gap-1.5 mt-1 px-1">
+                      <span className="text-[10px] text-slate-400 font-semibold">{m.timestamp}</span>
+                      {m.sender === "ai" && m.modelUsed && (
+                        <Badge className="border-0 bg-blue-100 dark:bg-blue-900/40 text-[8px] font-black text-blue-700 dark:text-blue-300 uppercase px-1 py-0">
+                          {MODEL_OPTIONS[m.modelUsed]?.label || m.modelUsed}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 ))}
 
                 {loading && (
                   <div className="flex items-center gap-2 rounded-2xl bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-900/50 p-3 text-xs text-blue-700 dark:text-blue-300 font-bold w-fit shadow-xs">
                     <RefreshCw className="h-3.5 w-3.5 animate-spin text-blue-600" />
-                    Workers AI processando consulta...
+                    Processando via {MODEL_OPTIONS[selectedModel].label}...
                   </div>
                 )}
                 <div ref={messagesEndRef} />
@@ -383,15 +415,7 @@ export function GlobalAIChatWidget() {
                   type="text"
                   value={input}
                   onChange={handleInputChange}
-                  placeholder={
-                    activeCategory === "all"
-                      ? "Pergunte ao Copiloto (ou digite @paciente)..."
-                      : activeCategory === "clinical"
-                      ? "Pergunte sobre condutas e CPGs..."
-                      : activeCategory === "pubmed"
-                      ? "Buscar evidencias no PubMed..."
-                      : "Perguntar sobre agenda e paciente..."
-                  }
+                  placeholder={`Perguntar ao ${MODEL_OPTIONS[selectedModel].label}... (ou @paciente)`}
                   className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/50"
                 />
                 <Button
