@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { BrainCircuit, Search, FileText, RefreshCw, BookOpen, ExternalLink, Award, Sparkles } from "lucide-react";
 import { aiSearchApi, type AskResponse } from "@/api/v2/aiSearch";
 import { evidenceApi, type EvidenceArticle } from "@/api/v2/evidence";
@@ -19,6 +20,7 @@ const PUBMED_ORTHO_QUICK = [
 ];
 
 export default function KnowledgeAsk() {
+  const [searchParams] = useSearchParams();
   const { isAdmin } = usePermissions();
   const [searchMode, setSearchMode] = useState<"wiki" | "pubmed">("wiki");
   const [q, setQ] = useState("");
@@ -28,6 +30,18 @@ export default function KnowledgeAsk() {
   const [error, setError] = useState<string | null>(null);
   const [reindexing, setReindexing] = useState(false);
   const [reindexMsg, setReindexMsg] = useState<string | null>(null);
+
+  const initialQuery = searchParams.get("q");
+  useEffect(() => {
+    if (initialQuery && initialQuery.length >= 3) {
+      // Se a query contiver termos em inglês comuns no PubMed, ativa o modo PubMed
+      if (/guideline|evidence|rehabilitation|cpg|tendinopathy|cruciate|arthroplasty/i.test(initialQuery)) {
+        setSearchMode("pubmed");
+      }
+      setQ(initialQuery);
+      ask(initialQuery);
+    }
+  }, [initialQuery]);
 
   async function reindex() {
     if (reindexing) return;

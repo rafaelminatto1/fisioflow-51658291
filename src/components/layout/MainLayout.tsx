@@ -31,6 +31,8 @@ import { MobileHeader } from "./MobileHeader";
 import { OnlineUsersIndicator } from "./OnlineUsersIndicator";
 import { Sidebar } from "./Sidebar";
 import { ThemeControls } from "@/components/ui/theme";
+import { GlobalAIChatWidget } from "@/components/ai/GlobalAIChatWidget";
+import { GlobalAISpotlight } from "@/components/ai/GlobalAISpotlight";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -303,6 +305,10 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
       {/* Bottom Navigation - Mobile only */}
       <BottomNavigation />
+
+      {/* Global Omnipresent AI Assistant Widget & Spotlight */}
+      <GlobalAIChatWidget />
+      <GlobalAISpotlight />
     </div>
   );
 };
