@@ -68,9 +68,6 @@ const AutomationsDashboard = lazy(
 const AutomationTemplates = lazy(
   () => import(/* webpackChunkName: "automation-templates" */ "@/pages/automations/AutomationTemplatesPage"),
 );
-const CopilotChat = lazy(
-  () => import(/* webpackChunkName: "copilot-chat" */ "@/pages/copilot/CopilotChatPage"),
-);
 const EventMonitor = lazy(
   () => import(/* webpackChunkName: "event-monitor" */ "@/pages/events/EventMonitorPage"),
 );
@@ -85,9 +82,6 @@ const ExerciseCuration = lazy(
 );
 const ExerciseEvidence = lazy(
   () => import(/* webpackChunkName: "exercise-evidence" */ "@/pages/exercises/ExerciseEvidence"),
-);
-const KnowledgeAsk = lazy(
-  () => import(/* webpackChunkName: "knowledge-ask" */ "@/pages/knowledge/KnowledgeAsk"),
 );
 const EvolucaoClinica = lazy(
   () => import(/* webpackChunkName: "evolucao-clinica" */ "@/pages/EvolucaoClinica"),

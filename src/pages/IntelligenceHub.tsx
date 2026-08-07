@@ -3,14 +3,11 @@ import { useSearchParams } from "react-router-dom";
 import {
   Activity,
   BarChart3,
-  Bot,
   Brain,
   Filter,
-  Globe,
   LineChart,
   Lock,
   MessageSquare,
-  Search,
   Settings,
   Shield,
   Sparkles,
@@ -18,8 +15,6 @@ import {
   Zap,
   Calendar,
   BookOpen,
-  Building2,
-  FileCode,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
