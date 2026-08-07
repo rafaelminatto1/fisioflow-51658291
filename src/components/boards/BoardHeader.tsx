@@ -30,7 +30,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Board } from "@/types/boards";
 
-export type BoardView = "kanban" | "list" | "calendar";
+export type BoardView = "kanban" | "list" | "calendar" | "gantt";
 
 interface BoardHeaderProps {
   board: Board;
@@ -261,6 +261,13 @@ export function BoardHeader({
             >
               <Calendar className="h-4 w-4" />
               Calendário
+            </TabsTrigger>
+            <TabsTrigger
+              value="gantt"
+              className="gap-2 rounded-xl px-4 py-2 text-white/78 data-[state=active]:bg-white data-[state=active]:text-slate-950"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Gantt / Cronograma
             </TabsTrigger>
           </TabsList>
         </Tabs>

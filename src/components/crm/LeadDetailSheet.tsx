@@ -39,6 +39,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { PostConversionDialog } from "@/components/crm/PostConversionDialog";
 import { LeadOriginBadge } from "@/components/crm/LeadOriginBadge";
+import { PatientTimeline360 } from "@/components/patients/PatientTimeline360";
 
 const TIPOS_CONTATO = [
   {
@@ -403,8 +404,16 @@ export function LeadDetailSheet({ lead, onClose, onEdit, estagios }: LeadDetailS
                     </div>
                   );
                 })
-              )}
             </div>
+          </div>
+
+          {/* Timeline 360 do Paciente */}
+          <div className="pt-4 border-t">
+            <PatientTimeline360 
+              leadId={lead.id} 
+              patientId={(lead as any).contact_id} 
+              patientName={lead.nome} 
+            />
           </div>
         </div>
       </CustomModalBody>

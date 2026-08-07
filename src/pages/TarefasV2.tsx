@@ -96,9 +96,11 @@ import { safeFormat } from "@/lib/utils";
 import { accentIncludes } from "@/lib/utils/bilingualSearch";
 // Recharts imports removed - moved to TaskInsights
 
+import { WorkloadView } from "@/components/tarefas/v2/WorkloadView";
+
 const TaskInsights = lazy(() => import("@/components/tarefas/v2/TaskInsights"));
 
-type ViewMode = "kanban" | "table" | "minhas" | "timeline" | "insights";
+type ViewMode = "kanban" | "table" | "minhas" | "timeline" | "insights" | "workload";
 
 export default function TarefasV2() {
   const { data: tarefas, isLoading, refetch } = useTarefas();
@@ -850,6 +852,13 @@ export default function TarefasV2() {
                     <BarChart3 className="h-4 w-4 mr-2" />
                     Insights
                   </TabsTrigger>
+                  <TabsTrigger
+                    value="workload"
+                    className="rounded-lg h-9 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Carga da Equipe
+                  </TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
@@ -857,6 +866,9 @@ export default function TarefasV2() {
 
           {/* Content */}
           <div className="flex-1 min-h-0">
+            {/* Workload View */}
+            {viewMode === "workload" && <WorkloadView />}
+
             {/* Kanban View */}
             {viewMode === "kanban" && <KanbanBoardV2 tarefas={filteredTarefas} />}
 

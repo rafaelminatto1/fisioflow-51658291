@@ -4,6 +4,7 @@ import { AlertTriangle } from "lucide-react";
 import { BoardHeader, type BoardView } from "@/components/boards/BoardHeader";
 import { BoardCalendarView } from "@/components/boards/BoardCalendarView";
 import { BoardListView } from "@/components/boards/BoardListView";
+import { GanttView } from "@/components/boards/GanttView";
 import { BoardWorkspaceSidebar } from "@/components/boards/BoardWorkspaceSidebar";
 import { KanbanFull } from "@/components/boards/KanbanFull";
 import { BoardLabelsContext } from "@/contexts/BoardLabelsContext";
@@ -184,6 +185,19 @@ export default function BoardDetail() {
               {view === "calendar" && (
                 <BoardCalendarView tarefas={tarefas} onViewTask={handleViewTask} />
               )}
+
+              {view === "gantt" && (
+                <GanttView
+                  items={tarefas.map((t) => ({
+                    id: t.id,
+                    title: t.titulo,
+                    due_date: t.data_vencimento,
+                    is_completed: t.status === "CONCLUIDO",
+                    priority: t.prioridade,
+                    assignee_name: teamMembers?.find((m) => m.id === t.responsavel_id)?.full_name,
+                  }))}
+                />
+              )}
             </div>
           </div>
 
@@ -220,6 +234,19 @@ export default function BoardDetail() {
 
                     {view === "calendar" && (
                       <BoardCalendarView tarefas={tarefas} onViewTask={handleViewTask} />
+                    )}
+
+                    {view === "gantt" && (
+                      <GanttView
+                        items={tarefas.map((t) => ({
+                          id: t.id,
+                          title: t.titulo,
+                          due_date: t.data_vencimento,
+                          is_completed: t.status === "CONCLUIDO",
+                          priority: t.prioridade,
+                          assignee_name: teamMembers?.find((m) => m.id === t.responsavel_id)?.full_name,
+                        }))}
+                      />
                     )}
                   </div>
                 </div>
