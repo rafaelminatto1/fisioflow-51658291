@@ -4,10 +4,14 @@ export type EvidenceArticle = {
   pmid: string;
   title: string;
   journal?: string;
+  pubDate?: string;
   pub_date?: string;
   doi?: string;
   abstract?: string;
+  studyType?: string;
   study_type?: string;
+  authors?: string[];
+  url?: string;
 };
 
 export type EvidenceLink = {
