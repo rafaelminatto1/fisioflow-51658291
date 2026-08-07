@@ -5,9 +5,11 @@ import { copilotApi, type CopilotChatMessage } from "@/api/v2";
 type ChatTurn = CopilotChatMessage & { tools?: string[] };
 
 const SUGGESTIONS = [
-  "Evidências sobre exercício para dor lombar crônica",
-  "Exercícios de fortalecimento de glúteo sem equipamento",
-  "Protocolo inicial para tendinopatia do manguito rotador",
+  "🦴 Protocolo Nível Ouro: Pós-operatório de Reconstrução do LCA (Semanas 1 a 4)",
+  "🎯 Evidências CPG: Exercícios isométricos vs isotônicos em Tendinopatia do Manguito Rotador",
+  "🧘 Diretrizes Clínicas: Manejo fisioterapêutico para Hérnia Discal Lumbar L4-L5 com Radiculopatia",
+  "⚡ Protocolo de Alfredson Modificado para Tendinopatia de Aquiles com Progressão de Carga",
+  "🦵 Criteriosa Avaliação de Biofeedback e Fortalecimento de Quadríceps na Osteoartrite de Joelho",
 ];
 
 export default function CopilotChatPage() {
