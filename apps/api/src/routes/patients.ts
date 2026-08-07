@@ -326,6 +326,14 @@ function normalizePatientRow(row: DbRow) {
       trimmedString((row.partner_company_name ?? row.partnerCompanyName) as string) ?? null,
     partnerCompanyName:
       trimmedString((row.partner_company_name ?? row.partnerCompanyName) as string) ?? null,
+    partnership_id:
+      trimmedString((row.partnership_id ?? row.partnershipId) as string) ?? null,
+    partnershipId:
+      trimmedString((row.partnership_id ?? row.partnershipId) as string) ?? null,
+    partnership_role:
+      trimmedString((row.partnership_role ?? row.partnershipRole) as string) ?? null,
+    partnershipRole:
+      trimmedString((row.partnership_role ?? row.partnershipRole) as string) ?? null,
     main_condition: trimmedString(mainCondition as string) ?? null,
     mainCondition: trimmedString(mainCondition as string) ?? null,
     profession: trimmedString(row.profession as string) ?? null,
@@ -480,6 +488,12 @@ function buildPatientWritePayload(
     payload.partnerCompanyName = nullableString(
       body.partner_company_name ?? body.partnerCompanyName,
     );
+  }
+  if (body.partnership_id !== undefined || body.partnershipId !== undefined) {
+    payload.partnershipId = nullableString(body.partnership_id ?? body.partnershipId);
+  }
+  if (body.partnership_role !== undefined || body.partnershipRole !== undefined) {
+    payload.partnershipRole = nullableString(body.partnership_role ?? body.partnershipRole);
   }
   if (body.photo_url !== undefined) {
     payload.photoUrl = nullableString(body.photo_url);
@@ -751,6 +765,8 @@ app.get("/", async (c) => {
 						END
 					) AS "payerModel",
 					p.partner_company_name AS "partnerCompanyName",
+					p.partnership_id AS "partnershipId",
+					p.partnership_role AS "partnershipRole",
 					COALESCE(surgery_agg.has_surgery, FALSE) AS "hasSurgery",
 					COALESCE(surgery_agg.recent_surgery, FALSE) AS "recentSurgery",
 					COALESCE(p.sessions_completed, 0) AS "sessionsCompleted",

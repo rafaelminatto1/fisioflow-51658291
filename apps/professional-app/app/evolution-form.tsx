@@ -254,6 +254,37 @@ export default function EvolutionFormScreen() {
     };
   }, [triggerAutoSave]);
 
+  // Repetir última prescrição de casa do paciente
+  const handleRepeatPreviousHomeExercises = async () => {
+    if (!patientId) return;
+    try {
+      const res = await fetchApi<{ data: any[] }>(`/api/sessions?patientId=${patientId}&limit=5`);
+      const previousSessions = res.data || [];
+      const sessionWithHome = previousSessions.find(
+        (s) => Array.isArray(s.home_exercises) && s.home_exercises.length > 0,
+      );
+      if (sessionWithHome && Array.isArray(sessionWithHome.home_exercises)) {
+        const importedChips = arrayToChips(
+          sessionWithHome.home_exercises,
+          (it) => it.frequency || it.prescription,
+        );
+        setHomeExercises((prev) => {
+          const existingIds = new Set(prev.map((p) => p.name.toLowerCase()));
+          const newItems = importedChips.filter((ic) => !existingIds.has(ic.name.toLowerCase()));
+          return [...prev, ...newItems];
+        });
+        success();
+        Alert.alert("Sucesso", `${importedChips.length} exercício(s) importado(s) da evolução anterior!`);
+      } else {
+        hapticError();
+        Alert.alert("Aviso", "Nenhuma prescrição de casa anterior foi encontrada para este paciente.");
+      }
+    } catch (err: any) {
+      hapticError();
+      Alert.alert("Erro", "Não foi possível carregar a prescrição anterior.");
+    }
+  };
+
   // Gerar com IA — endpoint mantém compat com o backend novo (observação narrativa)
   const handleGenerateWithAI = async () => {
     setGeneratingAi(true);
@@ -397,6 +428,11 @@ export default function EvolutionFormScreen() {
             colors={colors}
             withDetail
             detailPlaceholder="2x/dia"
+            headerAction={{
+              label: "Repetir anterior",
+              icon: "repeat-outline",
+              onPress: handleRepeatPreviousHomeExercises,
+            }}
           />
 
           {/* ⚫ Anexos / fotos */}

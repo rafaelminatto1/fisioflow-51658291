@@ -138,6 +138,7 @@ import { cloudflareAnalyticsRoutes } from "./routes/cloudflareAnalytics";
 import { clinicMetricsRoutes } from "./routes/clinicMetrics";
 import { marketBenchmarkRoutes } from "./routes/marketBenchmark";
 import { churnPredictionRoutes } from "./routes/churnPrediction";
+import partnershipsRoutes from "./routes/partnerships";
 import { enterpriseRoutes } from "./routes/enterprise-bi";
 import { aiInsightsRoutes } from "./routes/ai-insights";
 import { lgpdRoutes } from "./routes/lgpd";
@@ -340,6 +341,7 @@ const apiRoutes = [
   ["/api/goal-profiles", goalProfilesRoutes],
   ["/api/financial-analytics", financialAnalyticsRoutes],
   ["/api/financial", financialRoutes],
+  ["/api/partnerships", partnershipsRoutes],
   ["/api/scheduling", schedulingRoutes],
   ["/api/crm", crmRoutes],
   ["/api/contacts", contactsRoutes],

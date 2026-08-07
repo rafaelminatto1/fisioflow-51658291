@@ -195,6 +195,33 @@ export default function EvolutionDetailScreen() {
     }
   };
 
+  const handleShareHomeExercises = async () => {
+    medium();
+    if (!patient || !user) {
+      Alert.alert("Erro", "Dados do paciente ou profissional não carregados.");
+      return;
+    }
+    if (!homeExercises.length) {
+      Alert.alert("Aviso", "Nenhum exercício para casa cadastrado nesta evolução.");
+      return;
+    }
+    setIsSharing(true);
+    try {
+      await reportSharingService.shareHomeExercisesViaWhatsApp(
+        patient,
+        homeExercises as any,
+        user.id,
+      );
+      success();
+      Alert.alert("Sucesso", "Exercícios para casa enviados ao paciente via WhatsApp!");
+    } catch (err: any) {
+      hapticError();
+      Alert.alert("Erro", err.message || "Não foi possível enviar os exercícios para casa.");
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   const handleDelete = () => {
     medium();
     Alert.alert(
@@ -449,12 +476,6 @@ export default function EvolutionDetailScreen() {
                 accent: "#db2777",
                 icon: "speedometer-outline" as const,
               },
-              {
-                title: "Exercícios para Casa",
-                items: homeExercises,
-                accent: palette.textSecondary,
-                icon: "home-outline" as const,
-              },
             ]
               .filter((g) => g.items.length > 0)
               .map((g) => (
@@ -476,6 +497,58 @@ export default function EvolutionDetailScreen() {
                   </View>
                 </View>
               ))}
+
+            {/* 🏠 Exercícios para Casa (Card Especial) */}
+            {homeExercises.length > 0 && (
+              <View style={[styles.section, { backgroundColor: colors.surface }]}>
+                <View style={[styles.accentStrip, { backgroundColor: "#0284c7" }]} />
+                <View style={styles.sectionInner}>
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                    <View style={styles.sectionHeader}>
+                      <Ionicons name="home-outline" size={20} color="#0284c7" />
+                      <Text style={[styles.sectionLabel, { color: colors.text }]}>Exercícios para Casa</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={handleShareHomeExercises}
+                      disabled={isSharing}
+                      style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: colors.success + "15", borderRadius: 8 }}
+                    >
+                      <Ionicons name="logo-whatsapp" size={14} color={colors.success} />
+                      <Text style={{ fontSize: 12, fontWeight: "600", color: colors.success }}>Enviar WhatsApp</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={{ gap: 8, marginTop: 4 }}>
+                    {homeExercises.map((ex) => (
+                      <View
+                        key={ex.id}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: 10,
+                          backgroundColor: colors.background,
+                          borderRadius: 8,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                        }}
+                      >
+                        <Text style={{ fontSize: 14, fontWeight: "600", color: colors.text, flex: 1 }}>
+                          {ex.name}
+                        </Text>
+                        {ex.detail ? (
+                          <View style={{ backgroundColor: "#0284c715", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                            <Text style={{ fontSize: 12, fontWeight: "700", color: "#0284c7" }}>
+                              {ex.detail}
+                            </Text>
+                          </View>
+                        ) : null}
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              </View>
+            )}
 
             {photos.length > 0 && (
               <View style={[styles.section, { backgroundColor: colors.surface }]}>
@@ -514,7 +587,7 @@ export default function EvolutionDetailScreen() {
                   <>
                     <Ionicons name="logo-whatsapp" size={22} color={colors.success} />
                     <Text style={[styles.issueButtonText, { color: colors.success }]}>
-                      Emitir Relatório via WhatsApp
+                      Emitir Relatório Completo via WhatsApp
                     </Text>
                   </>
                 )}

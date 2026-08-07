@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FisioFlow — Mapa de Dados por Paciente</title>
+  <style>
+    body { margin: 0; background: #020617; color: #e2e8f0; font-family: Arial, sans-serif; }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 28px; }
+    h1 { margin: 0 0 6px; font-size: 26px; }
+    p { color: #94a3b8; margin: 0 0 20px; }
+    svg { width: 100%; height: auto; border: 1px solid #1e293b; border-radius: 18px; background: #020617; }
+    .box { fill: #0f172a; stroke-width: 2; rx: 12; }
+    .core { stroke: #38bdf8; }
+    .clinical { stroke: #34d399; }
+    .care { stroke: #fbbf24; }
+    .evo { stroke: #a78bfa; }
+    .fin { stroke: #fb923c; }
+    .ai { stroke: #fb7185; }
+    .title { fill: #f8fafc; font: bold 15px Arial, sans-serif; }
+    .item { fill: #cbd5e1; font: 12px Arial, sans-serif; }
+    .line { stroke: #64748b; stroke-width: 1.8; marker-end: url(#arrow); }
+    .muted { fill: #94a3b8; font: 11px Arial, sans-serif; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>FisioFlow — Dados e indicadores por paciente</h1>
+    <p>Mapa conceitual baseado no schema e nos componentes atuais do sistema.</p>
+    <svg viewBox="0 0 1120 760" role="img" aria-label="Diagrama dos dados por paciente no FisioFlow">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b" />
+        </marker>
+      </defs>
+
+      <rect x="455" y="315" width="210" height="105" class="box core" />
+      <text x="560" y="345" text-anchor="middle" class="title">Paciente</text>
+      <text x="475" y="372" class="item">Identidade + contato</text>
+      <text x="475" y="392" class="item">Status + alertas</text>
+      <text x="475" y="412" class="item">Resumo clínico/operacional</text>
+
+      <rect x="40" y="55" width="300" height="150" class="box core" />
+      <text x="190" y="85" text-anchor="middle" class="title">Cadastro e contato</text>
+      <text x="65" y="112" class="item">Nome, nome social, apelido</text>
+      <text x="65" y="132" class="item">CPF/RG, gênero, nascimento</text>
+      <text x="65" y="152" class="item">Telefone, email, endereço</text>
+      <text x="65" y="172" class="item">Contato de emergência, convênio</text>
+      <text x="65" y="192" class="item">Foto/avatar, profissão</text>
+
+      <rect x="410" y="55" width="300" height="170" class="box clinical" />
+      <text x="560" y="85" text-anchor="middle" class="title">Perfil clínico estruturado</text>
+      <text x="435" y="112" class="item">Esportes praticados</text>
+      <text x="435" y="132" class="item">Alergias gerais e medicamentosas</text>
+      <text x="435" y="152" class="item">Medicações em uso</text>
+      <text x="435" y="172" class="item">Patologias/diagnósticos ativos</text>
+      <text x="435" y="192" class="item">Cirurgias e alertas</text>
+      <text x="435" y="212" class="item">Objetivos prováveis</text>
+
+      <rect x="780" y="55" width="300" height="150" class="box care" />
+      <text x="930" y="85" text-anchor="middle" class="title">Gestão de cuidado</text>
+      <text x="805" y="112" class="item">Perfil de cuidado</text>
+      <text x="805" y="132" class="item">Focos terapêuticos</text>
+      <text x="805" y="152" class="item">Profissional responsável</text>
+      <text x="805" y="172" class="item">Origem/indicação/parceiro</text>
+      <text x="805" y="192" class="item">Preferências de comunicação/IA</text>
+
+      <rect x="40" y="285" width="300" height="170" class="box clinical" />
+      <text x="190" y="315" text-anchor="middle" class="title">Prontuário / anamnese</text>
+      <text x="65" y="342" class="item">Queixa principal, HDA, HMP</text>
+      <text x="65" y="362" class="item">Histórico familiar e hábitos</text>
+      <text x="65" y="382" class="item">Atividade física / lifestyle</text>
+      <text x="65" y="402" class="item">Exame físico: inspeção, palpação</text>
+      <text x="65" y="422" class="item">ADM, força, marcha, postura</text>
+      <text x="65" y="442" class="item">Testes especiais e CID-10</text>
+
+      <rect x="780" y="285" width="300" height="170" class="box evo" />
+      <text x="930" y="315" text-anchor="middle" class="title">Evolução e sessão</text>
+      <text x="805" y="342" class="item">Sessões SOAP / evolução clínica</text>
+      <text x="805" y="362" class="item">Dor antes/depois, local/característica</text>
+      <text x="805" y="382" class="item">Tipo de tratamento e técnicas usadas</text>
+      <text x="805" y="402" class="item">Áreas tratadas, duração, satisfação</text>
+      <text x="805" y="422" class="item">Mapa de dor e pontos corporais</text>
+      <text x="805" y="442" class="item">Assinatura, PDF, histórico recente</text>
+
+      <rect x="40" y="540" width="300" height="145" class="box fin" />
+      <text x="190" y="570" text-anchor="middle" class="title">Financeiro e agenda</text>
+      <text x="65" y="598" class="item">Modelo pagador / convênio / particular</text>
+      <text x="65" y="618" class="item">Pacotes e sessões restantes</text>
+      <text x="65" y="638" class="item">Saldo em aberto / status financeiro</text>
+      <text x="65" y="658" class="item">Última/próxima consulta, faltas</text>
+      <text x="65" y="678" class="item">Total de agendamentos e sessões</text>
+
+      <rect x="410" y="540" width="300" height="145" class="box ai" />
+      <text x="560" y="570" text-anchor="middle" class="title">Indicadores e IA</text>
+      <text x="435" y="598" class="item">Classificação: ativo, novo, risco, alta</text>
+      <text x="435" y="618" class="item">Risco de no-show / inatividade</text>
+      <text x="435" y="638" class="item">Relatório premium e laudo IA</text>
+      <text x="435" y="658" class="item">Resumo longitudinal / alertas</text>
+      <text x="435" y="678" class="item">Objetivos e aderência</text>
+
+      <rect x="780" y="540" width="300" height="145" class="box evo" />
+      <text x="930" y="570" text-anchor="middle" class="title">Arquivos e avaliações</text>
+      <text x="805" y="598" class="item">Avaliação inicial / templates</text>
+      <text x="805" y="618" class="item">Respostas de avaliação ZenFisio</text>
+      <text x="805" y="638" class="item">Testes padronizados e interpretação</text>
+      <text x="805" y="658" class="item">Exercícios prescritos e protocolos</text>
+      <text x="805" y="678" class="item">Documentos, fotos, vídeos, anexos</text>
+
+      <line x1="455" y1="345" x2="340" y2="150" class="line" />
+      <line x1="560" y1="315" x2="560" y2="225" class="line" />
+      <line x1="665" y1="345" x2="780" y2="150" class="line" />
+      <line x1="455" y1="372" x2="340" y2="370" class="line" />
+      <line x1="665" y1="372" x2="780" y2="370" class="line" />
+      <line x1="455" y1="410" x2="340" y2="612" class="line" />
+      <line x1="560" y1="420" x2="560" y2="540" class="line" />
+      <line x1="665" y1="410" x2="780" y2="612" class="line" />
+
+      <text x="560" y="735" text-anchor="middle" class="muted">Fonte: packages/db/src/schema/patients.ts, packages/db/src/schema/clinical.ts e src/types/workers.ts</text>
+    </svg>
+  </div>
+</body>
+</html>

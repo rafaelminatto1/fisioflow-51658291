@@ -16,15 +16,46 @@ export function generateEvolutionTextSummary(patient: Patient, evolution: Evolut
   let summary = `*Fisioterapia - Relatório de Evolução*\n\n`;
   summary += `*Paciente:* ${patient.name}\n`;
   summary += `*Data:* ${dateStr}\n`;
-  summary += `*Nível de Dor:* ${evolution.painLevel}/10\n\n`;
+  const pain = evolution.painScale ?? evolution.painLevel;
+  if (pain != null) {
+    summary += `*Nível de Dor:* ${pain}/10\n\n`;
+  }
 
+  if (evolution.observacao) summary += `*Observação:* ${evolution.observacao}\n\n`;
   if (evolution.subjective) summary += `*Subjetivo:* ${evolution.subjective}\n`;
   if (evolution.objective) summary += `*Objetivo:* ${evolution.objective}\n`;
   if (evolution.assessment) summary += `*Avaliação:* ${evolution.assessment}\n`;
   if (evolution.plan) summary += `*Conduta/Plano:* ${evolution.plan}\n\n`;
 
+  if (evolution.homeExercises && evolution.homeExercises.length > 0) {
+    summary += `*🏠 Exercícios para Casa:*\n`;
+    for (const ex of evolution.homeExercises) {
+      const detailStr = (ex as any).frequency || ex.prescription || (ex as any).detail;
+      summary += `• *${ex.name}*${detailStr ? ` — ${detailStr}` : ""}\n`;
+    }
+    summary += `\n`;
+  }
+
   summary += `_Relatório gerado via FisioFlow_`;
 
+  return summary;
+}
+
+export function generateHomeExercisesTextSummary(
+  patient: Patient,
+  homeExercises: Array<{ name: string; frequency?: string; detail?: string; prescription?: string }>,
+): string {
+  let summary = `*🏠 Prescrição de Exercícios para Casa*\n\n`;
+  summary += `Olá, ${patient.name}! Aqui estão seus exercícios prescritos para realizar em casa:\n\n`;
+
+  homeExercises.forEach((ex, idx) => {
+    const freq = ex.frequency || ex.detail || ex.prescription;
+    summary += `${idx + 1}. *${ex.name}*\n`;
+    if (freq) summary += `   ⏱️ Frequência/Dosagem: ${freq}\n`;
+    summary += `\n`;
+  });
+
+  summary += `Bom treino! Se tiver qualquer dúvida, fale conosco via FisioFlow.`;
   return summary;
 }
 

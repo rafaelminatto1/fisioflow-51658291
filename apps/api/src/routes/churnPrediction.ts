@@ -80,7 +80,7 @@ app.get("/at-risk-signals", requireAuth, async (c) => {
         risk_level: string;
       }>(
         `SELECT p.id, p.full_name, p.phone, p.whatsapp,
-                EXTRACT(DAY FROM CURRENT_DATE - MAX(a.date)) AS days_since_last,
+                (CURRENT_DATE - MAX(a.date)) AS days_since_last,
                 'scheduling_gap' AS signal_type,
                 'medium' AS risk_level
          FROM patients p

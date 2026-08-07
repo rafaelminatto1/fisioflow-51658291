@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Relatório — O que conseguimos no FisioFlow</title>
+  <style>
+    @page { size: A4; margin: 14mm; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: #162033;
+      background: #f4f7fb;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+    .page {
+      width: 100%;
+      min-height: 100vh;
+      background: #ffffff;
+      padding: 0;
+    }
+    .cover {
+      min-height: 265mm;
+      padding: 34mm 22mm 22mm;
+      background:
+        radial-gradient(circle at 82% 16%, rgba(96, 165, 250, .22), transparent 32%),
+        radial-gradient(circle at 18% 82%, rgba(14, 165, 233, .18), transparent 30%),
+        linear-gradient(145deg, #071329 0%, #0f2b55 52%, #163d78 100%);
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+      page-break-after: always;
+    }
+    .cover::after {
+      content: "";
+      position: absolute;
+      right: -58mm;
+      bottom: -44mm;
+      width: 170mm;
+      height: 170mm;
+      border-radius: 50%;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 34mm; }
+    .logo {
+      width: 46px; height: 46px; border-radius: 15px;
+      background: #fff; color: #2563eb;
+      display: grid; place-items: center;
+      font-weight: 900; font-size: 22px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    }
+    .brand-name { font-size: 20px; font-weight: 850; letter-spacing: -.03em; }
+    .cover h1 {
+      max-width: 720px;
+      margin: 0;
+      font-size: 48px;
+      line-height: 1.02;
+      letter-spacing: -.055em;
+      font-weight: 920;
+    }
+    .cover .subtitle {
+      max-width: 560px;
+      margin-top: 20px;
+      color: #c7d7ef;
+      font-size: 18px;
+    }
+    .cover-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 34mm;
+      max-width: 760px;
+    }
+    .metric {
+      border: 1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.12);
+      border-radius: 18px;
+      padding: 16px;
+      backdrop-filter: blur(4px);
+    }
+    .metric strong { display: block; font-size: 27px; letter-spacing: -.05em; }
+    .metric span { display: block; color: #c7d7ef; font-size: 11px; text-transform: uppercase; font-weight: 800; letter-spacing: .08em; }
+    .cover-footer {
+      position: absolute;
+      left: 22mm; right: 22mm; bottom: 18mm;
+      color: #dbeafe;
+      display: flex; justify-content: space-between; align-items: flex-end;
+      font-size: 12px;
+    }
+    .content { padding: 0 0 12mm; }
+    section { padding: 12mm 8mm 0; break-inside: avoid; }
+    section.break { page-break-before: always; }
+    h2 {
+      margin: 0 0 10px;
+      color: #0f172a;
+      font-size: 25px;
+      line-height: 1.1;
+      letter-spacing: -.035em;
+    }
+    h3 { margin: 16px 0 8px; color: #1e293b; font-size: 15px; letter-spacing: -.02em; }
+    p.lead { margin: 0 0 18px; color: #475569; font-size: 14px; max-width: 760px; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+    .card {
+      border: 1px solid #dbe7f5;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #ffffff, #f8fbff);
+      padding: 14px 15px;
+      break-inside: avoid;
+    }
+    .card h3 { margin: 0 0 7px; font-size: 14px; color: #0f172a; display: flex; align-items: center; gap: 7px; }
+    .dot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; background: #2563eb; }
+    .dot.green { background: #059669; } .dot.amber { background: #d97706; } .dot.rose { background: #e11d48; } .dot.violet { background: #7c3aed; }
+    ul { margin: 8px 0 0; padding-left: 17px; color: #334155; font-size: 12.5px; }
+    li { margin: 3px 0; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+    .pill { border: 1px solid #cfe0f5; background: #eff6ff; color: #1d4ed8; border-radius: 999px; padding: 5px 9px; font-size: 11px; font-weight: 750; }
+    .table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 12px; border-radius: 14px; overflow: hidden; }
+    .table th { background: #0f2b55; color: #fff; text-align: left; padding: 9px; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+    .table td { border-bottom: 1px solid #e2e8f0; padding: 9px; vertical-align: top; color: #334155; }
+    .table tr:nth-child(even) td { background: #f8fafc; }
+    .diagram-wrap { border: 1px solid #dbe7f5; border-radius: 22px; padding: 14px; background: #f8fbff; margin-top: 14px; }
+    svg { width: 100%; height: auto; display: block; }
+    .quote {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-left: 5px solid #2563eb;
+      border-radius: 14px;
+      background: #eff6ff;
+      color: #1e3a8a;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .footer-note { margin-top: 18px; color: #64748b; font-size: 11px; }
+    .check { color: #059669; font-weight: 900; }
+    .page-number { position: fixed; bottom: 6mm; right: 10mm; color: #94a3b8; font-size: 9px; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: #f1f5f9; padding: 1px 4px; border-radius: 5px; color: #0f172a; }
+    @media print {
+      body { background: #fff; }
+      .card { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="cover">
+      <div class="brand">
+        <div class="logo">F</div>
+        <div class="brand-name">FisioFlow / MoocaFisio</div>
+      </div>
+      <h1>O que conseguimos no sistema novo</h1>
+      <p class="subtitle">Relatório executivo do prontuário 360°, dados clínicos estruturados, indicadores operacionais e migração ZenFisio → FisioFlow.</p>
+      <div class="cover-grid">
+        <div class="metric"><strong>531</strong><span>avaliações completas</span></div>
+        <div class="metric"><strong>515</strong><span>pacientes com avaliação</span></div>
+        <div class="metric"><strong>532</strong><span>anamneses agendadas</span></div>
+        <div class="metric"><strong>5/5</strong><span>amostras validadas</span></div>
+      </div>
+      <div class="cover-footer">
+        <div>Produção validada visualmente em pacientes reais de amostra</div>
+        <div>Gerado em 30/07/2026</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <section>
+        <h2>Resumo executivo</h2>
+        <p class="lead">O sistema novo centraliza cadastro, prontuário, avaliação inicial, evolução clínica, agenda, financeiro, documentos, indicadores e IA em uma visão única do paciente. A migração preservou o texto clínico original do ZenFisio e estruturou parte importante dos dados em campos pesquisáveis e reutilizáveis.</p>
+        <div class="cards">
+          <div class="card"><h3><span class="dot green"></span> Clínico estruturado</h3><ul><li>Esportes, patologias, medicações, alergias e cirurgias.</li><li>Anamnese, exame físico, diagnóstico e dados ZenFisio preservados.</li></ul></div>
+          <div class="card"><h3><span class="dot"></span> Operação 360°</h3><ul><li>Agenda, faltas, última/próxima consulta, status e classificação.</li><li>Profissional responsável, origem e vínculo comercial.</li></ul></div>
+          <div class="card"><h3><span class="dot violet"></span> Indicadores e IA</h3><ul><li>Relatórios por IA, risco, objetivos prováveis e contexto clínico.</li><li>Evolução longitudinal e apoio ao raciocínio clínico.</li></ul></div>
+        </div>
+        <div class="quote">Resultado prático: o paciente deixou de ser apenas um cadastro e virou um prontuário 360°, com contexto clínico, operacional e financeiro em uma única base.</div>
+      </section>
+
+      <section>
+        <h2>Validação da migração ZenFisio</h2>
+        <table class="table">
+          <thead><tr><th>Item validado</th><th>Resultado</th><th>Observação</th></tr></thead>
+          <tbody>
+            <tr><td>Medical records ZenFisio</td><td><strong>531 registros</strong></td><td>Registros com fonte <code>zenfisio_evaluation_edit</code>.</td></tr>
+            <tr><td>Pacientes com avaliação completa</td><td><strong>515 pacientes</strong></td><td>Pacientes distintos com avaliação clínica importada.</td></tr>
+            <tr><td>ZenFisio - Avaliação completa importada</td><td><strong>531 concluídas</strong></td><td>Template de avaliação completa.</td></tr>
+            <tr><td>ZenFisio - Anamnese importada</td><td><strong>532 agendadas + 3 concluídas</strong></td><td>Template separado para anamnese.</td></tr>
+            <tr><td>Validação visual autenticada</td><td><strong>5/5 amostras OK</strong></td><td>Histórico Clínico + dados brutos expandidos.</td></tr>
+          </tbody>
+        </table>
+        <p class="footer-note">Amostras validadas visualmente: Abbas Abdul Amir Awale, Carlos Henrique Botelho da Silva, Carlos Rodrigues, Isabella Colivat e Thomas Meyer.</p>
+      </section>
+
+      <section class="break">
+        <h2>Mapa visual do paciente 360°</h2>
+        <p class="lead">Cada paciente passa a reunir dimensões clínicas, operacionais, financeiras e documentais em uma estrutura integrada.</p>
+        <div class="diagram-wrap">
+          <svg viewBox="0 0 1020 610" role="img" aria-label="Mapa de dados do paciente FisioFlow">
+            <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#64748b"/></marker></defs>
+            <rect x="410" y="250" width="200" height="92" rx="18" fill="#0f2b55"/><text x="510" y="286" text-anchor="middle" fill="#fff" font-size="22" font-weight="900">Paciente</text><text x="510" y="314" text-anchor="middle" fill="#bfdbfe" font-size="13">Prontuário 360°</text>
+            <g font-size="12" fill="#334155">
+              <rect x="30" y="35" width="250" height="120" rx="18" fill="#eff6ff" stroke="#60a5fa"/><text x="155" y="65" text-anchor="middle" fill="#1e3a8a" font-size="15" font-weight="900">Cadastro</text><text x="55" y="92">Nome, CPF/RG, gênero</text><text x="55" y="114">Telefone, email, endereço</text><text x="55" y="136">Convênio e contato emergência</text>
+              <rect x="385" y="35" width="250" height="140" rx="18" fill="#ecfdf5" stroke="#34d399"/><text x="510" y="65" text-anchor="middle" fill="#065f46" font-size="15" font-weight="900">Perfil clínico</text><text x="410" y="92">Esportes, alergias, medicações</text><text x="410" y="114">Patologias e cirurgias</text><text x="410" y="136">Alertas e objetivos prováveis</text><text x="410" y="158">Dados ZenFisio preservados</text>
+              <rect x="740" y="35" width="250" height="120" rx="18" fill="#fff7ed" stroke="#fb923c"/><text x="865" y="65" text-anchor="middle" fill="#9a3412" font-size="15" font-weight="900">Gestão</text><text x="765" y="92">Profissional responsável</text><text x="765" y="114">Origem, parceiro, modelo pagador</text><text x="765" y="136">Preferências e IA</text>
+              <rect x="30" y="425" width="250" height="125" rx="18" fill="#f5f3ff" stroke="#a78bfa"/><text x="155" y="455" text-anchor="middle" fill="#5b21b6" font-size="15" font-weight="900">Evolução</text><text x="55" y="482">Sessões SOAP e conduta</text><text x="55" y="504">Dor antes/depois e métricas</text><text x="55" y="526">Mapa de dor e testes</text>
+              <rect x="385" y="425" width="250" height="125" rx="18" fill="#fef2f2" stroke="#fb7185"/><text x="510" y="455" text-anchor="middle" fill="#9f1239" font-size="15" font-weight="900">Indicadores / IA</text><text x="410" y="482">Risco, inatividade e no-show</text><text x="410" y="504">Laudo e relatório premium</text><text x="410" y="526">Contexto clínico longitudinal</text>
+              <rect x="740" y="425" width="250" height="125" rx="18" fill="#f8fafc" stroke="#94a3b8"/><text x="865" y="455" text-anchor="middle" fill="#334155" font-size="15" font-weight="900">Financeiro / arquivos</text><text x="765" y="482">Saldo, pacotes, sessões restantes</text><text x="765" y="504">Documentos, fotos e vídeos</text><text x="765" y="526">Anexos e prescrições</text>
+            </g>
+            <g stroke="#64748b" stroke-width="1.7" marker-end="url(#arrow)"><line x1="280" y1="95" x2="410" y2="270"/><line x1="510" y1="175" x2="510" y2="250"/><line x1="740" y1="95" x2="610" y2="270"/><line x1="280" y1="486" x2="410" y2="325"/><line x1="510" y1="425" x2="510" y2="342"/><line x1="740" y1="486" x2="610" y2="325"/></g>
+          </svg>
+        </div>
+      </section>
+
+      <section class="break">
+        <h2>Dados incluídos por paciente</h2>
+        <p class="lead">Abaixo está a lista consolidada dos tipos de dados que o sistema comporta hoje.</p>
+        <div class="cards">
+          <div class="card"><h3><span class="dot"></span>Cadastro e contato</h3><ul><li>Nome, nome social, apelido, CPF, RG e gênero.</li><li>Data de nascimento, foto, profissão e status.</li><li>Telefone, email, endereço e contato de emergência.</li><li>Convênio, plano, carteirinha e validade.</li></ul></div>
+          <div class="card"><h3><span class="dot green"></span>Perfil clínico</h3><ul><li>Esportes praticados e focos terapêuticos.</li><li>Alergias gerais e medicamentosas.</li><li>Medicações em uso.</li><li>Patologias ativas, diagnósticos, CID-10 e alertas.</li><li>Cirurgias e histórico clínico estruturado.</li></ul></div>
+          <div class="card"><h3><span class="dot amber"></span>Gestão do cuidado</h3><ul><li>Perfil de cuidado e profissional responsável.</li><li>Origem, indicação e empresa parceira.</li><li>Modelo pagador e preferências de comunicação.</li><li>Preferências para IA e resumo clínico.</li></ul></div>
+          <div class="card"><h3><span class="dot green"></span>Prontuário / anamnese</h3><ul><li>Queixa principal, HDA, HMP e histórico familiar.</li><li>Hábitos de vida, atividade física e lifestyle.</li><li>Exame físico: inspeção, palpação, postura, marcha.</li><li>ADM, força muscular e testes especiais.</li><li>Texto bruto ZenFisio preservado.</li></ul></div>
+          <div class="card"><h3><span class="dot violet"></span>Evolução clínica</h3><ul><li>Sessões SOAP: subjetivo, objetivo, avaliação e plano.</li><li>Dor, localização, característica e duração.</li><li>Assinatura, PDF, versão e histórico de autosave.</li><li>Técnicas usadas, áreas tratadas e satisfação.</li></ul></div>
+          <div class="card"><h3><span class="dot rose"></span>Indicadores</h3><ul><li>Dor antes/depois e redução de dor.</li><li>Score funcional antes/depois e melhora funcional.</li><li>Humor antes/depois, risco de no-show e inatividade.</li><li>Classificação: ativo, novo, em risco ou concluído.</li></ul></div>
+          <div class="card"><h3><span class="dot violet"></span>Testes e dor</h3><ul><li>Mapa de dor com região, intensidade e coordenadas.</li><li>Testes clínicos, escalas, score e interpretação.</li><li>Templates clínicos e resultados padronizados.</li></ul></div>
+          <div class="card"><h3><span class="dot amber"></span>Exercícios e objetivos</h3><ul><li>Objetivos terapêuticos, prioridade, status e data-alvo.</li><li>Prescrições, séries, repetições, frequência e validade.</li><li>QR code, visualizações e exercícios concluídos.</li></ul></div>
+          <div class="card"><h3><span class="dot"></span>Financeiro e arquivos</h3><ul><li>Valor de sessão, saldo em aberto e status financeiro.</li><li>Pacotes, sessões restantes e total de agendamentos.</li><li>Documentos, fotos, vídeos e anexos médicos.</li></ul></div>
+        </div>
+      </section>
+
+      <section class="break">
+        <h2>Como isso aparece no uso da clínica</h2>
+        <div class="two">
+          <div class="card"><h3><span class="dot green"></span>Na tela do paciente</h3><ul><li>Aba <strong>Histórico Clínico</strong> com resumo estruturado.</li><li>Badges de esportes, patologias, medicações e alertas.</li><li>Lista de avaliações ZenFisio vinculadas ao paciente.</li><li>Dados brutos preservados para auditoria clínica.</li></ul></div>
+          <div class="card"><h3><span class="dot violet"></span>Na evolução</h3><ul><li>Histórico de sessões e registros SOAP.</li><li>Mapa de dor e métricas por sessão.</li><li>Condutas reaproveitáveis e histórico recente.</li><li>Assinatura e exportação em PDF.</li></ul></div>
+          <div class="card"><h3><span class="dot amber"></span>Na gestão</h3><ul><li>Próxima consulta, última consulta e faltas.</li><li>Pacotes, saldo e status financeiro.</li><li>Origem do paciente, profissional responsável e parceiro.</li><li>Filtros por patologia, esporte, foco e perfil de cuidado.</li></ul></div>
+          <div class="card"><h3><span class="dot rose"></span>Na IA</h3><ul><li>Contexto clínico do paciente para chat 360°.</li><li>Laudo médico e relatório premium.</li><li>Objetivos prováveis derivados do texto clínico.</li><li>Alertas e risco operacional/clínico.</li></ul></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Conclusão</h2>
+        <p class="lead">O FisioFlow agora reúne dados clínicos e administrativos que antes ficavam dispersos. A migração ZenFisio não apenas trouxe avaliações: ela criou a base para um prontuário pesquisável, auditável e útil para decisão clínica, operação da clínica e recursos de IA.</p>
+        <div class="pill-row">
+          <span class="pill">Cadastro completo</span>
+          <span class="pill">Histórico clínico</span>
+          <span class="pill">Avaliações ZenFisio</span>
+          <span class="pill">Evolução SOAP</span>
+          <span class="pill">Dor e métricas</span>
+          <span class="pill">Financeiro</span>
+          <span class="pill">Agenda</span>
+          <span class="pill">IA clínica</span>
+          <span class="pill">Documentos</span>
+        </div>
+        <p class="footer-note">Fontes técnicas: <code>packages/db/src/schema/patients.ts</code>, <code>packages/db/src/schema/clinical.ts</code>, <code>src/types/workers.ts</code> e validação no Neon produção.</p>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

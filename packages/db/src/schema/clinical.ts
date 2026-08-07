@@ -265,6 +265,8 @@ export const exercisePrescriptions = pgTable("exercise_prescriptions", {
   viewCount: integer("view_count").default(0),
   lastViewedAt: timestamp("last_viewed_at"),
   completedExercises: jsonb("completed_exercises").default([]),
+  targetWeeklyFrequency: integer("target_weekly_frequency").default(3),
+  hasHomeExercises: boolean("has_home_exercises").default(true),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

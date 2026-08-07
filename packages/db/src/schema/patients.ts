@@ -116,6 +116,8 @@ export const patients = pgTable(
     therapyFocuses: text("therapy_focuses").array().default([]),
     payerModel: varchar("payer_model", { length: 50 }),
     partnerCompanyName: varchar("partner_company_name", { length: 150 }),
+    partnershipId: uuid("partnership_id"),
+    partnershipRole: varchar("partnership_role", { length: 50 }), // 'professor' | 'aluno_cliente'
 
     // Status & Notes
     isActive: boolean("is_active").default(true).notNull(),

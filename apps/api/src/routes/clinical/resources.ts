@@ -792,6 +792,8 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
         notes: body.notes ?? null,
         validityDays: body.validity_days != null ? Number(body.validity_days) : 30,
         validUntil: body.valid_until ? new Date(body.valid_until) : null,
+        targetWeeklyFrequency: body.target_weekly_frequency != null ? Number(body.target_weekly_frequency) : 3,
+        hasHomeExercises: body.has_home_exercises !== undefined ? Boolean(body.has_home_exercises) : true,
         status: body.status ?? "ativo",
       })
       .returning();
@@ -814,6 +816,10 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
     if (body.valid_until !== undefined)
       updateData.validUntil = body.valid_until ? new Date(body.valid_until) : null;
     if (body.validity_days !== undefined) updateData.validityDays = Number(body.validity_days);
+    if (body.target_weekly_frequency !== undefined)
+      updateData.targetWeeklyFrequency = Number(body.target_weekly_frequency);
+    if (body.has_home_exercises !== undefined)
+      updateData.hasHomeExercises = Boolean(body.has_home_exercises);
     if (body.view_count !== undefined) updateData.viewCount = Number(body.view_count);
     if (body.last_viewed_at !== undefined)
       updateData.lastViewedAt = body.last_viewed_at ? new Date(body.last_viewed_at) : null;

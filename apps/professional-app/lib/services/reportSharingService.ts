@@ -1,5 +1,5 @@
 import { fetchApi } from "@/lib/api";
-import { generateEvolutionTextSummary } from "./pdfGenerator";
+import { generateEvolutionTextSummary, generateHomeExercisesTextSummary } from "./pdfGenerator";
 import type { Patient, Evolution } from "@/types";
 
 /**
@@ -19,7 +19,6 @@ export const reportSharingService = {
       const messageContent = generateEvolutionTextSummary(patient, evolution);
 
       // 2. Save the report emission record to Neon DB
-      // Note: Using the direct clinical API endpoint for generated reports
       await fetchApi("/api/clinical/generated-reports", {
         method: "POST",
         data: {
@@ -35,13 +34,12 @@ export const reportSharingService = {
       });
 
       // 3. Send via WhatsApp API
-      // Using the integrated communications endpoint
       await fetchApi("/api/whatsapp/messages", {
         method: "POST",
         data: {
           patient_id: patient.id,
           message_content: messageContent,
-          to_phone: patient.phone, // Automated fallback in backend if missing
+          to_phone: patient.phone,
           message_type: "clinical_report",
         },
       });
@@ -52,4 +50,33 @@ export const reportSharingService = {
       throw new Error(error.message || "Falha ao processar e enviar o relatório.");
     }
   },
+
+  /**
+   * Sends home exercise prescription via WhatsApp.
+   */
+  async shareHomeExercisesViaWhatsApp(
+    patient: Patient,
+    homeExercises: Array<{ name: string; frequency?: string; detail?: string; prescription?: string }>,
+    therapistId: string,
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      const messageContent = generateHomeExercisesTextSummary(patient, homeExercises);
+
+      await fetchApi("/api/whatsapp/messages", {
+        method: "POST",
+        data: {
+          patient_id: patient.id,
+          message_content: messageContent,
+          to_phone: patient.phone,
+          message_type: "exercise_prescription",
+        },
+      });
+
+      return { success: true, message: "Exercícios para casa enviados com sucesso via WhatsApp!" };
+    } catch (error: any) {
+      console.error("[reportSharingService] Error sharing home exercises:", error);
+      throw new Error(error.message || "Falha ao enviar exercícios para casa.");
+    }
+  },
 };
+
