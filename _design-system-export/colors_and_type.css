@@ -12,47 +12,93 @@
   font-display: swap;
 }
 
-/* Body + display fonts (Google Fonts CDN — keep in <head>):
-   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-   Nunito is the brand-approved substitute for VAG Rounded (per Activity Fisioterapia, 2026-05-12).
-*/
+@font-face {
+  font-family: "Futura Condensed";
+  src: url("fonts/futura-condensed-bold-oblique.otf") format("opentype");
+  font-weight: 700;
+  font-style: oblique;
+  font-display: swap;
+}
+
+/* Nunito — fully self-hosted (all weights uploaded by user).
+   Brand-approved substitute for VAG Rounded (per Activity Fisioterapia, 2026-05-12). */
+@font-face {
+  font-family: "Nunito";
+  src: url("fonts/Nunito-ExtraLight.ttf") format("truetype");
+  font-weight: 200; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Nunito";
+  src: url("fonts/Nunito-Light.ttf") format("truetype");
+  font-weight: 300; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Nunito";
+  src: url("fonts/Nunito-Regular.ttf") format("truetype");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Nunito";
+  src: url("fonts/Nunito-Medium.ttf") format("truetype");
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Nunito";
+  src: url("fonts/Nunito-SemiBold.ttf") format("truetype");
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Nunito";
+  src: url("fonts/Nunito-Bold.ttf") format("truetype");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Nunito";
+  src: url("fonts/Nunito-ExtraBold.ttf") format("truetype");
+  font-weight: 800; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Nunito";
+  src: url("fonts/Nunito-Black.ttf") format("truetype");
+  font-weight: 900; font-style: normal; font-display: swap;
+}
 
 /* ============================================================================
    COLOR TOKENS — HSL channels stored as raw "H S% L%" so they compose with
    Tailwind's `hsl(var(--token) / <alpha>)` syntax.
    ============================================================================ */
 :root {
-  /* ---- Semantic surfaces ---- */
-  --background: 210 20% 98%;
-  --foreground: 224 71.4% 4.1%;
-  --card: 0 0% 100%;
-  --card-foreground: 224 71.4% 4.1%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 224 71.4% 4.1%;
+  /* ---- Semantic surfaces ---- (HSL channels — @kind color) */
+  --background: 210 20% 98%;          /* @kind color */
+  --foreground: 224 71.4% 4.1%;       /* @kind color */
+  --card: 0 0% 100%;                  /* @kind color */
+  --card-foreground: 224 71.4% 4.1%;  /* @kind color */
+  --popover: 0 0% 100%;               /* @kind color */
+  --popover-foreground: 224 71.4% 4.1%; /* @kind color */
 
   /* ---- Brand & action ---- */
-  --primary: 211 100% 50%;            /* #0080FF — Activity blue */
-  --primary-foreground: 210 20% 98%;
-  --secondary: 220 14.3% 95.9%;
-  --secondary-foreground: 220.9 39.3% 11%;
-  --muted: 220 14.3% 95.9%;
-  --muted-foreground: 220 8.9% 46.1%;
-  --accent: 158 64% 52%;              /* clinical teal */
-  --accent-foreground: 220.9 39.3% 11%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 20% 98%;
+  --primary: 211 100% 50%;            /* @kind color */ /* #0080FF — Activity blue */
+  --primary-foreground: 210 20% 98%;  /* @kind color */
+  --secondary: 220 14.3% 95.9%;       /* @kind color */
+  --secondary-foreground: 220.9 39.3% 11%; /* @kind color */
+  --muted: 220 14.3% 95.9%;           /* @kind color */
+  --muted-foreground: 220 8.9% 46.1%; /* @kind color */
+  --accent: 158 64% 52%;              /* @kind color */ /* clinical teal */
+  --accent-foreground: 220.9 39.3% 11%; /* @kind color */
+  --destructive: 0 84.2% 60.2%;       /* @kind color */
+  --destructive-foreground: 210 20% 98%; /* @kind color */
 
   /* ---- Structure ---- */
-  --border: 220 13% 91%;
-  --input: 220 13% 91%;
-  --ring: 211 100% 50%;
+  --border: 220 13% 91%;              /* @kind color */
+  --input: 220 13% 91%;              /* @kind color */
+  --ring: 211 100% 50%;              /* @kind color */
 
   /* ---- Sidebar ---- */
-  --sidebar-background: 0 0% 100%;
-  --sidebar-foreground: 222.2 47.4% 11.2%;
-  --sidebar-primary: 210 90% 51%;
-  --sidebar-accent: 220 13% 95%;
-  --sidebar-border: 220 13% 91%;
+  --sidebar-background: 0 0% 100%;    /* @kind color */
+  --sidebar-foreground: 222.2 47.4% 11.2%; /* @kind color */
+  --sidebar-primary: 210 90% 51%;     /* @kind color */
+  --sidebar-accent: 220 13% 95%;      /* @kind color */
+  --sidebar-border: 220 13% 91%;      /* @kind color */
 
   /* ---- Pain scale (domain) ---- */
   --color-pain-0:  #9ca3af;
@@ -102,30 +148,31 @@
   --font-sans: "Nunito", ui-rounded, ui-sans-serif, system-ui, sans-serif;
   --font-display: "Nunito", ui-rounded, ui-sans-serif, system-ui, sans-serif;
   --font-brand: "Nunito", ui-rounded, ui-sans-serif, system-ui, sans-serif;
+  --font-futura: "Futura Condensed", "Nunito", ui-sans-serif, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
 /* -------- Dark mode ------------------------------------------------------ */
 .dark {
-  --background: 222.2 47.4% 7%;
-  --foreground: 210 40% 98%;
-  --card: 222.2 47.4% 9%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222.2 47.4% 9%;
-  --popover-foreground: 210 40% 98%;
-  --primary: 211 100% 50%;
-  --primary-foreground: 210 20% 98%;
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 158 64% 52%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 211 100% 50%;
+  --background: 222.2 47.4% 7%;       /* @kind color */
+  --foreground: 210 40% 98%;          /* @kind color */
+  --card: 222.2 47.4% 9%;             /* @kind color */
+  --card-foreground: 210 40% 98%;     /* @kind color */
+  --popover: 222.2 47.4% 9%;          /* @kind color */
+  --popover-foreground: 210 40% 98%;  /* @kind color */
+  --primary: 211 100% 50%;            /* @kind color */
+  --primary-foreground: 210 20% 98%;  /* @kind color */
+  --secondary: 217.2 32.6% 17.5%;     /* @kind color */
+  --secondary-foreground: 210 40% 98%; /* @kind color */
+  --muted: 217.2 32.6% 17.5%;         /* @kind color */
+  --muted-foreground: 215 20.2% 65.1%; /* @kind color */
+  --accent: 158 64% 52%;              /* @kind color */
+  --accent-foreground: 210 40% 98%;   /* @kind color */
+  --destructive: 0 62.8% 30.6%;       /* @kind color */
+  --destructive-foreground: 210 40% 98%; /* @kind color */
+  --border: 217.2 32.6% 17.5%;        /* @kind color */
+  --input: 217.2 32.6% 17.5%;         /* @kind color */
+  --ring: 211 100% 50%;               /* @kind color */
 }
 
 /* ============================================================================

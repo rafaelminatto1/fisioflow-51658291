@@ -112,7 +112,7 @@ export function GlobalAIChatWidget() {
     setLoading(true);
 
     try {
-      const res = await copilotApi.chat(query);
+      const res = await copilotApi.chat([{ role: "user", content: query }]);
       const aiMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
         sender: "ai",

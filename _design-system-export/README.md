@@ -26,8 +26,12 @@ fonts/                     → vag-rounded.otf (apenas logotipo)
 assets/                    → logos Activity (.svg, .png) + screenshots de referência
 preview/                   → cards do Design System tab (cores, type, componentes)
 ui_kits/web/               → kit do web app (Sidebar, PageHeader, AgendaView, PatientList, ExerciseLibrary, Login)
+                             + telas: evolucao-clinica, crm-whatsapp, avaliacao-inicial (anamnese),
+                             paciente-detalhe (prontuário), protocolos, testes-clinicos, boards,
+                             financeiro, wiki-clinica, configuracoes (shell comum: screen-shell.css)
 ui_kits/patient-app/       → kit mobile do paciente (home: agenda, pain log, protocolo do dia)
-ui_kits/professional-app/  → kit do fisio em atendimento — tela de análise biomecânica (vídeo + ângulos + ROM + notas)
+ui_kits/professional-app/  → app do fisio (rail + 1280×880): dashboard (painel), capture (nova captura),
+                             index (análise biomecânica), comparison (antes/depois), report (laudo), tests (biblioteca)
 ```
 
 ---
@@ -41,7 +45,7 @@ Este sistema foi destilado a partir das seguintes fontes (não assuma que o leit
 - **Variantes CVA:** `apps/web/src/lib/ui-variants.ts`
 - **Logo oficial:** `uploads/logo.svg` (Activity Fisioterapia, runner azul + wordmark cinza)
 - **Screenshots de referência:** Agenda (`moocafisio.com.br/agenda`) e Biblioteca de Exercícios (`moocafisio.com.br/exercises`) capturados em 12/05/2026
-- **Fontes brand:** VAG Rounded (logo Activity) — `fonts/vag-rounded.otf`; Futura Condensed Bold Oblique foi solicitada mas não chegou no upload (ver Caveats)
+- **Fontes brand:** VAG Rounded (logo Activity) — `fonts/vag-rounded.otf`; Futura Condensed Bold Oblique (tagline "FISIOTERAPIA") — `fonts/futura-condensed-bold-oblique.otf`
 
 ---
 
@@ -57,7 +61,7 @@ preview/                   ← cards individuais para o Design System tab
 ui_kits/
   web/                     ← UI kit do FisioFlow Clínica (web app)
     index.html             ← prototype clicável (Login → Agenda → Paciente)
-    Sidebar.jsx, AgendaView.jsx, PatientList.jsx, ...
+    sidebar.jsx, agenda-view.jsx, patient-list.jsx, ...
   patient-app/             ← UI kit do app mobile do paciente
     index.html             ← prototype clicável em moldura iOS
     Home.jsx, ExerciseDetail.jsx, ...
@@ -116,8 +120,9 @@ ui_kits/
 - **Sem cores quentes em backgrounds.** Laranja/âmbar é exclusivamente para alertas e pendências.
 
 ### Type
-- **Primary family:** `Nunito` (Google Fonts) — substituto aprovado pela marca para VAG Rounded (2026-05-12). Pesos 400/500/600/700/800. Usada tanto em body quanto display, mantendo o caractere rounded do logotipo.
+- **Primary family:** `Nunito` — substituto aprovado pela marca para VAG Rounded (2026-05-12). **Totalmente self-hosted** (`fonts/Nunito-*.ttf`, pesos 200–900). Usada tanto em body quanto display, mantendo o caractere rounded do logotipo. Sem dependência de CDN.
 - **Brand wordmark:** `VAG Rounded` usada apenas no SVG do logotipo Activity (não na UI digital).
+- **Brand tagline:** `Futura Condensed Bold Oblique` (self-hosted em `fonts/futura-condensed-bold-oblique.otf`, token `--font-futura`) — exclusiva da tagline "FISIOTERAPIA" do lockup. Não usar na UI.
 - **Numerais:** sempre tabulares em tabelas de horários, doses, KPIs. `font-variant-numeric: tabular-nums`.
 
 ### Spacing & layout
@@ -238,14 +243,13 @@ ui_kits/
 
 **Substituições e flags**
 - **Logo PNG raster** (`assets/activity-logo.png`) deve ser preferido apenas em contextos onde SVG não funciona (impressão, e-mail). UI digital sempre usa SVG.
-- A **fonte Futura Condensed Bold Oblique** do wordmark "FISIOTERAPIA" não foi entregue no upload (apesar de listada). Substituímos por `font-display` (Figtree) em peso 600 italic com tracking aumentado quando precisamos renderizar o wordmark em HTML. **Pedimos ao usuário** que envie o `.otf` original se quiser fidelidade exata.
-- **VAG Rounded** (logo "Activity") foi entregue e está em `fonts/vag-rounded.otf`.
+- A **fonte Futura Condensed Bold Oblique** do wordmark "FISIOTERAPIA" está self-hosted em `fonts/futura-condensed-bold-oblique.otf` e exposta via token `--font-futura`. Uso restrito ao lockup da marca.
+- **VAG Rounded** (logo "Activity") está em `fonts/vag-rounded.otf`.
 
 ---
 
 ## CAVEATS
 
-1. **Fonte Futura Condensed Bold Oblique faltando** — o arquivo listado no upload (`uploads/futura-condensed-bold-oblique.otf`) não estava de fato presente. Substituído por Figtree 600 italic. Por favor reenvie se precisar fidelidade no wordmark.
-2. **Repo monorepo é majoritariamente stub** — o repo `rafaelminatto1/fisioflow-51658291` tem `DESIGN_SYSTEM.md` rico, mas os diretórios `apps/web/src/components/` e `apps/patient-app/components/` estavam quase vazios na inspeção. Os componentes UI foram reconstruídos a partir do `DESIGN_SYSTEM.md` (que é detalhado) cruzado com os screenshots reais do produto em produção.
-3. **Discrepância de cor primária nos screenshots** — o screenshot da agenda mostra um botão `+ AGENDAR` em **roxo**, não no azul Activity definido como `--primary`. Tratamos como override pontual ou A/B test; o sistema canônico permanece azul `#0080FF`. Vale confirmar.
-4. **Sidebar do screenshot usa "FisioFlow" (não Activity)** — o app real é white-labeled como "FisioFlow" com sub-label "MOOCA FISIO". Mantivemos os dois lockups no kit (Activity logo + FisioFlow wordmark).
+1. **Repo monorepo é majoritariamente stub** — o repo `rafaelminatto1/fisioflow-51658291` tem `DESIGN_SYSTEM.md` rico, mas os diretórios `apps/web/src/components/` e `apps/patient-app/components/` estavam quase vazios na inspeção. Os componentes UI foram reconstruídos a partir do `DESIGN_SYSTEM.md` (que é detalhado) cruzado com os screenshots reais do produto em produção.
+2. **Discrepância de cor primária nos screenshots** — o screenshot da agenda mostra um botão `+ AGENDAR` em **roxo**, não no azul Activity definido como `--primary`. Tratamos como override pontual ou A/B test; o sistema canônico permanece azul `#0080FF`. Vale confirmar.
+3. **Sidebar do screenshot usa "FisioFlow" (não Activity)** — o app real é white-labeled como "FisioFlow" com sub-label "MOOCA FISIO". Mantivemos os dois lockups no kit (Activity logo + FisioFlow wordmark).
