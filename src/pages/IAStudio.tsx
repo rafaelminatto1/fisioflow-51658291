@@ -57,8 +57,8 @@ export const IAStudioWorkspace: React.FC<{ embedded?: boolean }> = ({ embedded =
       name: "AI Scribe",
       description: "Evolução por voz e SOAP estruturado",
       icon: Mic,
-      color: "text-violet-500",
-      bg: "bg-violet-500/10",
+      color: "text-indigo-500",
+      bg: "bg-indigo-500/10",
       action: () => setIsScribeOpen(true),
     },
     {

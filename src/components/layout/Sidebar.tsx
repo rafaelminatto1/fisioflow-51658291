@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useNavPreload } from '@/hooks/useIntelligentPreload';
+import { usePrefetchRoute } from '@/hooks/usePrefetchRoute';
 import { useToast } from '@/hooks/use-toast';
 import {
   LayoutDashboard,

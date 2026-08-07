@@ -42,7 +42,7 @@ describe("ExerciseMediaEditModal", () => {
     );
 
     expect(screen.getByText("Editar Mídia do Exercício")).toBeInTheDocument();
-    expect(screen.getByText("Test Exercise Media")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Test Exercise Media")).toBeInTheDocument();
   });
 
   it("renders with open=true and no media prop", () => {
@@ -102,6 +102,9 @@ describe("ExerciseMediaEditModal", () => {
       />,
     );
 
+    const titleInput = screen.getByPlaceholderText("Ex: Rotação de Ombro com Bastão");
+    fireEvent.change(titleInput, { target: { value: "ab" } });
+
     const saveButton = screen.getByText("Salvar Alterações");
     expect(saveButton).toBeDisabled();
   });
@@ -120,11 +123,9 @@ describe("ExerciseMediaEditModal", () => {
     const titleInput = screen.getByPlaceholderText("Ex: Rotação de Ombro com Bastão");
     fireEvent.change(titleInput, { target: { value: "Rotação de Ombro" } });
 
-    const categorySelect = screen.getByRole("combobox");
-    fireEvent.change(categorySelect, { target: { value: "fortalecimento" } });
-
-    const difficultySelect = screen.getByRole("combobox");
-    fireEvent.change(difficultySelect, { target: { value: "intermediário" } });
+    const comboboxes = screen.getAllByRole("combobox");
+    fireEvent.change(comboboxes[0], { target: { value: "fortalecimento" } });
+    fireEvent.change(comboboxes[1], { target: { value: "intermediário" } });
 
     const saveButton = screen.getByText("Salvar Alterações");
     expect(saveButton).not.toBeDisabled();

@@ -578,7 +578,7 @@ export default function CrmWhatsAppSettings() {
                   <div className="rounded-xl border border-border bg-card p-5 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 font-bold text-sm">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 font-bold text-sm">
                           📸
                         </div>
                         <div>

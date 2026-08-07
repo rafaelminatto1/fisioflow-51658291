@@ -45,7 +45,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { exerciseVideosService, MAX_VIDEO_SIZE, ALLOWED_VIDEO_EXTENSIONS, ALLOWED_IMAGE_EXTENSIONS, type ExerciseVideo } from "@/services/exerciseVideos";
+import { exerciseVideosService, VIDEO_CATEGORIES, VIDEO_DIFFICULTY, BODY_PARTS, EQUIPMENT_OPTIONS, MAX_VIDEO_SIZE, ALLOWED_VIDEO_EXTENSIONS, ALLOWED_IMAGE_EXTENSIONS, type ExerciseVideo } from "@/services/exerciseVideos";
 import { uploadToR2, deleteFromR2 } from "@/lib/storage/r2-storage";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { isYouTubeUrl } from "@/lib/imageUtils";
