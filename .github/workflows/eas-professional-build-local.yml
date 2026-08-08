@@ -130,7 +130,7 @@ jobs:
       # ─── Artefato ─────────────────────────────────────────────────────────────
       - name: Upload .ipa
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: fisioflow-pro-${{ env.PROFILE }}-${{ github.run_number }}
           path: build.ipa
