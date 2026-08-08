@@ -1,5 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle as drizzleHttp } from "drizzle-orm/neon-http";
+import { drizzle as drizzleNodePg } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import { Client } from "pg";
 import { type PgDatabase } from "drizzle-orm/pg-core";
 import * as schema from "@fisioflow/db";
@@ -91,12 +93,53 @@ export function isTcpConnection(env: Env, mode: DbMode = "write"): boolean {
   return false;
 }
 
-function createPgClient(env: Env, mode: DbMode = "write"): Client {
-  return new Client({
-    connectionString: getUrl(env, mode),
-    connectionTimeoutMillis: 15000,
-    keepAlive: false,
-  });
+const connectionPools = new Map<string, Pool>();
+
+function getPool(env: Env, mode: DbMode = "write"): Pool {
+  const url = getUrl(env, mode);
+  if (!connectionPools.has(url)) {
+    const pool = new Pool({
+      connectionString: url,
+      max: Number((env as any).DB_POOL_MAX || 10),
+      connectionTimeoutMillis: 15000,
+      idleTimeoutMillis: 30000,
+    });
+    connectionPools.set(url, pool);
+  }
+  return connectionPools.get(url)!;
+}
+
+class RlsPoolWrapper {
+  constructor(private pool: Pool) {}
+  
+  async query(...args: any[]) {
+    const orgId = getOrgContext();
+    if (!orgId) return (this.pool.query as any)(...args);
+    
+    const client = await this.pool.connect();
+    try {
+      await client.query(`SELECT set_config('app.org_id', $1, false)`, [orgId]);
+      return await (client.query as any)(...args);
+    } finally {
+      await client.query(`SELECT set_config('app.org_id', '', false)`).catch(() => {});
+      client.release();
+    }
+  }
+  
+  async connect() {
+    const client = await this.pool.connect();
+    const orgId = getOrgContext();
+    if (orgId) {
+      await client.query(`SELECT set_config('app.org_id', $1, false)`, [orgId]);
+      const originalRelease = client.release.bind(client);
+      client.release = (err?: any) => {
+        client.query(`SELECT set_config('app.org_id', '', false)`).catch(() => {}).finally(() => {
+          originalRelease(err);
+        });
+      };
+    }
+    return client;
+  }
 }
 
 function normalizeQueryArgs(
@@ -156,61 +199,9 @@ export type FisioDb = PgDatabase<any, typeof schema>;
  */
 export function createDb(env: Env, _mode: DbMode = "write"): FisioDb {
   if (isTcpConnection(env, _mode)) {
-    const client = {
-      query: async (
-        queryText: string,
-        queryParams: any[] = [],
-        queryOpts?: Record<string, unknown>,
-      ) => {
-        const pgClient = createPgClient(env, _mode);
-        const orgId = getOrgContext();
-        try {
-          await pgClient.connect();
-          if (orgId) {
-            await pgClient.query(`SELECT set_config('app.org_id', $1, false)`, [orgId]);
-          }
-
-          const result = (await pgClient.query({
-            text: queryText,
-            values: queryParams,
-            rowMode: queryOpts?.arrayMode ? "array" : undefined,
-          } as any)) as any;
-
-          return {
-            rows: result.rows,
-            rowCount: result.rowCount,
-            fields: result.fields,
-            command: result.command,
-          };
-        } catch (dbErr: any) {
-          const errorMsg = `Database Error: ${dbErr.message}${dbErr.detail ? ` (${dbErr.detail})` : ""}${dbErr.constraint ? ` [constraint: ${dbErr.constraint}]` : ""}${dbErr.code ? ` [code: ${dbErr.code}]` : ""}`;
-          console.error(`[DB/PG] Query Error: ${errorMsg}`, {
-            queryText: queryText?.substring(0, 300),
-            queryParams: JSON.stringify(queryParams)?.substring(0, 300),
-            orgId,
-            errorCode: dbErr.code,
-            constraint: dbErr.constraint,
-          });
-
-          const enhancedError = new Error(errorMsg);
-          (enhancedError as any).code = dbErr.code;
-          (enhancedError as any).detail = dbErr.detail;
-          (enhancedError as any).hint = dbErr.hint;
-          (enhancedError as any).constraint = dbErr.constraint;
-          (enhancedError as any).query = queryText;
-          (enhancedError as any).params = queryParams;
-          throw enhancedError;
-        } finally {
-          try {
-            await pgClient.end();
-          } catch {
-            // Hyperdrive/pg can throw synchronously while closing an already-closed socket.
-          }
-        }
-      },
-    } as const;
-
-    return drizzleHttp(client as any, { schema });
+    const pool = getPool(env, _mode);
+    const wrapper = new RlsPoolWrapper(pool);
+    return drizzleNodePg(wrapper as any, { schema }) as any;
   }
 
   const url = getUrl(env, _mode);
@@ -277,17 +268,14 @@ export async function withRls<T>(
   const url = getUrl(env, mode);
 
   if (isTcpConnection(env, mode)) {
-    const client = createPgClient(env, mode);
+    const pool = getPool(env, mode);
+    const client = await pool.connect();
     try {
-      await client.connect();
       await client.query(`SELECT set_config('app.org_id', $1, false)`, [organizationId]);
       return await fn(client);
     } finally {
-      try {
-        await client.end();
-      } catch {
-        // Hyperdrive/pg can throw synchronously while closing an already-closed socket.
-      }
+      await client.query(`SELECT set_config('app.org_id', '', false)`).catch(() => {});
+      client.release();
     }
   }
 
@@ -311,38 +299,48 @@ export function createPool(
   const orgId = getOrgContext();
 
   if (isTcpConnection(env, mode)) {
+    const pool = getPool(env, mode);
+    
     const queryProxy = async <Row extends DbRow = any>(
       textOrStrings: string | TemplateStringsArray,
       ...paramsOrValues: any[]
     ): Promise<DbQueryResult<Row>> => {
       const { text, params } = normalizeQueryArgs(textOrStrings, paramsOrValues);
+      const effectiveOrgId = getOrgContext() || orgId;
+      
+      if (!effectiveOrgId) {
+        const res = await pool.query(text, params);
+        return {
+          rows: res.rows as any[],
+          rowCount: res.rowCount,
+          fields: res.fields as any[],
+          command: res.command,
+        } as DbQueryResult<Row>;
+      }
 
-      const executeQuery = async () => {
-        const client = createPgClient(env, mode);
-        try {
-          await client.connect();
-          const effectiveOrgId = getOrgContext() || orgId;
-          if (effectiveOrgId) {
-            await client.query(
-              `SELECT set_config('app.org_id', $1, true),
-                      set_config('app.organization_id', $1, true),
-                      set_config('app.current_organization_id', $1, true)`,
-              [effectiveOrgId],
-            );
-          }
-          const res = await client.query(text, params);
-          return {
-            rows: res.rows as any[],
-            rowCount: res.rowCount,
-            fields: res.fields as any[],
-            command: res.command,
-          } as DbQueryResult<Row>;
-        } finally {
-          await client.end().catch(() => {});
-        }
-      };
-
-      return await executeQuery();
+      const client = await pool.connect();
+      try {
+        await client.query(
+          `SELECT set_config('app.org_id', $1, true),
+                  set_config('app.organization_id', $1, true),
+                  set_config('app.current_organization_id', $1, true)`,
+          [effectiveOrgId]
+        );
+        const res = await client.query(text, params);
+        return {
+          rows: res.rows as any[],
+          rowCount: res.rowCount,
+          fields: res.fields as any[],
+          command: res.command,
+        } as DbQueryResult<Row>;
+      } finally {
+        await client.query(
+          `SELECT set_config('app.org_id', '', false),
+                  set_config('app.organization_id', '', false),
+                  set_config('app.current_organization_id', '', false)`
+        ).catch(() => {});
+        client.release();
+      }
     };
 
     const wrappedQuery = wrapQueryWithTimeout(queryProxy as any, defaultTimeout);
@@ -350,9 +348,8 @@ export function createPool(
     return {
       query: wrappedQuery,
       transaction: async (queries: { text: string; values?: any[] }[]) => {
-        const client = createPgClient(env, mode);
+        const client = await pool.connect();
         try {
-          await client.connect();
           await client.query("BEGIN");
           const effectiveOrgId = getOrgContext() || orgId;
           if (effectiveOrgId) {
@@ -366,10 +363,13 @@ export function createPool(
           await client.query("COMMIT");
           return results;
         } catch (error) {
-          await client.query("ROLLBACK");
+          await client.query("ROLLBACK").catch(() => {});
           throw error;
         } finally {
-          await client.end().catch(() => {});
+          if (getOrgContext() || orgId) {
+            await client.query(`SELECT set_config('app.org_id', '', false)`).catch(() => {});
+          }
+          client.release();
         }
       },
       end: async () => {},
@@ -424,20 +424,27 @@ export function getRawSql(env: Env, mode: DbMode = "read"): DbQuery {
   const orgId = getOrgContext();
 
   if (isTcpConnection(env, mode)) {
+    const pool = getPool(env, mode);
     const processQuery = async <Row extends DbRow = DbRow>(
       textOrStrings: string | TemplateStringsArray,
       ...paramsOrValues: any[]
     ): Promise<DbQueryResult<Row>> => {
       const { text, params } = normalizeQueryArgs(textOrStrings, paramsOrValues);
+      const effectiveOrgId = getOrgContext() ?? orgId;
 
-      const client = createPgClient(env, mode);
+      if (!effectiveOrgId) {
+        const res = await pool.query(text, params);
+        return {
+          rows: res.rows as any[],
+          rowCount: res.rowCount,
+          fields: res.fields as any[],
+          command: res.command,
+        } as DbQueryResult<Row>;
+      }
+
+      const client = await pool.connect();
       try {
-        await client.connect();
-        const effectiveOrgId = getOrgContext() ?? orgId;
-        if (effectiveOrgId) {
-          await client.query(`SELECT set_config('app.org_id', $1, true)`, [effectiveOrgId]);
-        }
-
+        await client.query(`SELECT set_config('app.org_id', $1, true)`, [effectiveOrgId]);
         const res = await client.query(text, params);
         return {
           rows: res.rows as any[],
@@ -446,7 +453,8 @@ export function getRawSql(env: Env, mode: DbMode = "read"): DbQuery {
           command: res.command,
         } as DbQueryResult<Row>;
       } finally {
-        await client.end().catch(() => {});
+        await client.query(`SELECT set_config('app.org_id', '', false)`).catch(() => {});
+        client.release();
       }
     };
 
