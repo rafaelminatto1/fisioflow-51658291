@@ -93,17 +93,39 @@ export function isTcpConnection(env: Env, mode: DbMode = "write"): boolean {
   return false;
 }
 
-const connectionPools = new Map<string, Pool>();
+class HyperdrivePoolEmulator {
+  constructor(private url: string) {}
 
-function getPool(env: Env, mode: DbMode = "write"): Pool {
+  async query(...args: any[]) {
+    const client = await this.connect();
+    try {
+      return await (client as any).query(...args);
+    } finally {
+      (client as any).release();
+    }
+  }
+
+  async connect() {
+    const client = new Client({ connectionString: this.url });
+    await client.connect();
+    (client as any).release = (err?: Error) => {
+      client.end().catch(() => {});
+    };
+    return client;
+  }
+
+  async end() {}
+}
+
+const connectionPools = new Map<string, any>();
+
+function getPool(env: Env, mode: DbMode = "write"): any {
   const url = getUrl(env, mode);
   if (!connectionPools.has(url)) {
-    const pool = new Pool({
-      connectionString: url,
-      max: Number((env as any).DB_POOL_MAX || 10),
-      connectionTimeoutMillis: 15000,
-      idleTimeoutMillis: 30000,
-    });
+    // Para Cloudflare Hyperdrive, NÃO devemos usar pg.Pool porque ele gerencia o ciclo
+    // de vida de sockets TCP de forma assíncrona, o que falha em isolates que são suspensos.
+    // Hyperdrive já é o connection pooler; a recomendação oficial é instanciar um novo Client por request.
+    const pool = new HyperdrivePoolEmulator(url);
     connectionPools.set(url, pool);
   }
   return connectionPools.get(url)!;

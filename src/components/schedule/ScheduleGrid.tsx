@@ -152,7 +152,7 @@ const ScheduleGridComponent: React.FC<ScheduleGridProps> = ({
                   <User className="h-4 w-4 text-gray-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-base font-semibold text-gray-900">
+                  <CardTitle className="text-base font-semibold text-gray-900 line-clamp-3">
                     {appointment.patientName}
                   </CardTitle>
                   <p className="text-sm text-gray-600 mt-0.5">{appointment.type}</p>

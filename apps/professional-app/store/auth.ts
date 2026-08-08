@@ -35,6 +35,12 @@ export const isAuthorized = (role: string): boolean => {
   return AUTHORIZED_ROLES.includes(role as UserRole);
 };
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+// ... existing code ...
+
+const USER_CACHE_KEY = "FISIOFLOW_USER_CACHE";
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isLoading: true,
@@ -65,6 +71,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       };
 
       await auditLogger.logLogin(user.id);
+      await AsyncStorage.setItem(USER_CACHE_KEY, JSON.stringify(user));
 
       set({
         user,
@@ -75,8 +82,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       registerForPushNotificationsAsync()
         .then((token) => {
           if (token) {
-            // /api/push-subscriptions é web push (VAPID) e exige `endpoint` — devolvia 400.
-            // Device token do Expo vai para /api/fcm-tokens.
             fetchApi("/api/fcm-tokens", {
               method: "POST",
               data: { token, deviceInfo: { platform: Platform.OS } },
@@ -116,6 +121,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       await authApi.logout();
+      await AsyncStorage.removeItem(USER_CACHE_KEY);
       set({
         user: null,
         isAuthenticated: false,
@@ -132,12 +138,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   updateUserData: (data: Partial<User>) => {
     const currentUser = get().user;
     if (currentUser) {
-      set({
-        user: {
-          ...currentUser,
-          ...data,
-        },
-      });
+      const updatedUser = { ...currentUser, ...data };
+      AsyncStorage.setItem(USER_CACHE_KEY, JSON.stringify(updatedUser)).catch(console.error);
+      set({ user: updatedUser });
     }
   },
 
@@ -148,10 +151,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialize: async () => {
     set({ isLoading: true });
     try {
+      // 1. Tenta carregar o cache primeiro para liberar a UI rápida
+      const cachedUser = await AsyncStorage.getItem(USER_CACHE_KEY);
+      if (cachedUser) {
+        const parsedUser = JSON.parse(cachedUser);
+        set({ user: parsedUser, isAuthenticated: true, isLoading: false });
+      }
+
+      // 2. Valida com a API
       const userData = await authApi.getMe();
 
       if (!isAuthorized(userData.role)) {
         await authApi.logout();
+        await AsyncStorage.removeItem(USER_CACHE_KEY);
         set({
           user: null,
           isAuthenticated: false,
@@ -172,6 +184,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         crefito: userData.crefito,
       };
 
+      await AsyncStorage.setItem(USER_CACHE_KEY, JSON.stringify(user));
+
       set({
         user,
         isAuthenticated: true,
@@ -181,8 +195,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       registerForPushNotificationsAsync()
         .then((token) => {
           if (token) {
-            // /api/push-subscriptions é web push (VAPID) e exige `endpoint` — devolvia 400.
-            // Device token do Expo vai para /api/fcm-tokens.
             fetchApi("/api/fcm-tokens", {
               method: "POST",
               data: { token, deviceInfo: { platform: Platform.OS } },
@@ -191,12 +203,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           }
         })
         .catch(console.error);
-    } catch {
-      set({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
+    } catch (e: any) {
+      // Se deu erro de rede (não 401), e já temos um cache, mantém a sessão ativa.
+      const isAuthError = e.message === "Falha ao validar sessão";
+      if (isAuthError) {
+        await AsyncStorage.removeItem(USER_CACHE_KEY);
+        set({
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+      } else {
+        // Erro genérico/offline - mantém o cache se existir
+        set({ isLoading: false });
+      }
     }
   },
 }));

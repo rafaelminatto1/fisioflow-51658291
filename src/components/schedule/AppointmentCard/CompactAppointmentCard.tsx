@@ -137,7 +137,7 @@ export const CompactAppointmentCard: React.FC<CompactAppointmentCardProps> = ({
           )}
         </div>
 
-        <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 truncate group-hover:text-blue-600 transition-colors pr-8">
+        <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 line-clamp-3 group-hover:text-blue-600 transition-colors pr-8">
           {appointment.patientName}
         </h3>
 

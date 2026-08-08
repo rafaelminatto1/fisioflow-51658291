@@ -376,7 +376,7 @@ export default function OrganizationSettings() {
                           className="px-0 h-auto mt-2 gap-1 text-xs"
                           asChild
                         >
-                          <a href="/settings/security">
+                          <a href="/profile?tab=security">
                             Ir para Segurança <ExternalLink className="h-3 w-3" />
                           </a>
                         </Button>

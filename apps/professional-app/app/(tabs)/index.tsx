@@ -12,7 +12,7 @@ import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router, type Href } from "expo-router";
-import { addHours, isBefore } from "date-fns";
+import { addHours, isBefore, isValid } from "date-fns";
 import { useColors } from "@/hooks/useColorScheme";
 import { useAuthStore } from "@/store/auth";
 import { Card, Skeleton, SummaryCardSkeleton } from "@/components";
@@ -181,6 +181,7 @@ export default function DashboardScreen() {
   const upcomingAppointments = appointments
     .filter((apt) => {
       const aptDate = apt.date instanceof Date ? apt.date : new Date(apt.date);
+      if (!isValid(aptDate)) return false;
       return isBefore(aptDate, in24Hours) && isBefore(now, aptDate);
     })
     .sort((a, b) => {

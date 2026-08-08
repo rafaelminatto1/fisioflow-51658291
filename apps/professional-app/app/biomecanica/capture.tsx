@@ -8,7 +8,7 @@ import {
   StyleSheet,
   useWindowDimensions,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -92,7 +92,7 @@ const PROTOCOLS = [
 ];
 
 const VIEWS = ["Frontal", "Sagital", "Posterior"];
-const COLLAPSED = 300;
+const COLLAPSED = 360;
 
 /** Rótulo em PT-BR da UI -> plano canônico usado pelo pipeline. */
 function viewToPlane(label: string): CaptureView {
@@ -111,6 +111,7 @@ export default function CaptureScreen() {
     protocolName?: string;
   }>();
   const { height } = useWindowDimensions();
+  const { top } = useSafeAreaInsets();
 
   // A tela podia ser aberta sem paciente (o fluxo vindo de /biomecanica/tests
   // nunca passava patientId), e não havia como escolher um — a captura ficava
@@ -386,7 +387,12 @@ export default function CaptureScreen() {
         */}
         {!poseDetectionAvailable && (
           <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-            <Svg style={StyleSheet.absoluteFill} viewBox="0 0 100 100" preserveAspectRatio="none">
+            <Svg
+              style={StyleSheet.absoluteFill}
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              pointerEvents="none"
+            >
               {EDGES.map(([a, b], i) => (
                 <Line
                   key={i}
@@ -408,8 +414,11 @@ export default function CaptureScreen() {
       </View>
 
       {/* top controls */}
-      <SafeAreaView edges={["top"]} style={styles.topSafe} pointerEvents="box-none">
-        <View style={styles.topctl}>
+      <View
+        style={[styles.topSafe, { paddingTop: Math.max(top, 16) }]}
+        pointerEvents="box-none"
+      >
+        <View style={styles.topctl} pointerEvents="box-none">
           <Pressable style={styles.roundBtn} onPress={fecharCaptura} hitSlop={6}>
             <X size={19} color="#fff" strokeWidth={2.2} />
           </Pressable>
@@ -447,7 +456,7 @@ export default function CaptureScreen() {
             </Text>
           </View>
         </View>
-      </SafeAreaView>
+      </View>
 
       {/* hint */}
       {!recording && !open && (
@@ -479,7 +488,7 @@ export default function CaptureScreen() {
 
       {/* record controls */}
       {!open && (
-        <View style={styles.recRow}>
+        <View style={styles.recRow} pointerEvents="box-none">
           <Pressable style={styles.recSide} hitSlop={6} onPress={handlePickVideo}>
             <FolderUp size={20} color="#fff" strokeWidth={2.2} />
           </Pressable>
@@ -517,7 +526,7 @@ export default function CaptureScreen() {
         </GestureDetector>
 
         <View style={styles.sheetBody}>
-          <Pressable style={styles.patientSel}>
+          <Pressable style={styles.patientSel} onPress={() => setPickerAberto(true)}>
             <View style={styles.patientPa}>
               <Text style={styles.patientPaText}>{initials}</Text>
             </View>

@@ -151,7 +151,7 @@ export const ExpandedAppointmentCard: React.FC<ExpandedAppointmentCardProps> = (
         )}
 
         <div className="mb-12">
-          <h3 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white leading-[0.9] mb-4 tracking-tightest group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+          <h3 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white leading-[0.9] mb-4 tracking-tightest line-clamp-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
             {appointment.patientName}
           </h3>
           <div className="flex items-center gap-2.5">

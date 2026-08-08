@@ -106,14 +106,14 @@ export function TransactionCard({
                     style={[styles.avatarPlaceholder, { backgroundColor: colors.primary + "15" }]}
                   >
                     <Text style={[styles.avatarInitials, { color: colors.primary }]}>
-                      {patientName.charAt(0).toUpperCase()}
+                      {(patientName || "?").charAt(0).toUpperCase()}
                     </Text>
                   </View>
                 )}
               </View>
               <View style={styles.nameContainer}>
                 <Text style={[styles.patientName, { color: colors.text }]} numberOfLines={1}>
-                  {patientName}
+                  {patientName || "Registro Geral"}
                 </Text>
                 <Text style={[styles.date, { color: colors.textSecondary }]}>
                   {(() => {

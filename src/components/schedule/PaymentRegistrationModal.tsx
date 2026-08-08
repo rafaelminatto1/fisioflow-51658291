@@ -37,7 +37,9 @@ import type { Appointment } from "@/types/appointment";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const AVULSA_PRICE = 180;
-const PACOTE_PRICE = 170;
+const PACOTE_10_PRICE = 1700;
+const PACOTE_10_PIX_PRICE = 1600;
+const PACOTE_5_PRICE = 900;
 
 const paymentSchema = z.object({
   type: z.enum(["single_session", "package"]),
@@ -78,13 +80,48 @@ const PAYMENT_TYPE_CONFIG = {
     label: "Pacote / Plano",
     badge: "Fidelizado",
     icon: <Package className="h-5 w-5 text-blue-500" />,
-    description: `R$ ${PACOTE_PRICE}/sessão contratado`,
-    price: PACOTE_PRICE,
+    description: `A partir de R$ ${PACOTE_10_PRICE}`,
+    price: PACOTE_10_PRICE,
     gradient: "from-blue-500/10 to-blue-500/5",
     border: "border-blue-500/25",
     badgeColor: "bg-blue-500/10 text-blue-700",
   },
 };
+
+const PRESET_OPTIONS = [
+  {
+    id: "avulsa",
+    label: "Sessão Avulsa",
+    price: 180,
+    type: "single_session" as const,
+    badge: "R$ 180",
+    subtext: "1 sessão",
+  },
+  {
+    id: "pacote10",
+    label: "Pacote 10 Sessões",
+    price: 1700,
+    type: "package" as const,
+    badge: "R$ 1.700",
+    subtext: "10 sessões (R$ 170/ea)",
+  },
+  {
+    id: "pacote10_pix",
+    label: "Pacote 10 PIX",
+    price: 1600,
+    type: "package" as const,
+    badge: "R$ 1.600",
+    subtext: "10 sessões no PIX",
+  },
+  {
+    id: "pacote5",
+    label: "Pacote 5 Sessões",
+    price: 900,
+    type: "package" as const,
+    badge: "R$ 900",
+    subtext: "5 sessões (R$ 180/ea)",
+  },
+];
 
 export function PaymentRegistrationModal({
   appointment,
@@ -99,13 +136,13 @@ export function PaymentRegistrationModal({
 
   const isPackage = Boolean(appointment.session_package_id);
   const defaultType = isPackage ? "package" : "single_session";
-  const defaultAmount = isPackage ? PACOTE_PRICE : AVULSA_PRICE;
+  const defaultAmount = appointment.payment_amount ? Number(appointment.payment_amount) : (isPackage ? PACOTE_10_PRICE : AVULSA_PRICE);
 
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
       type: defaultType,
-      amount: appointment.payment_amount ? Number(appointment.payment_amount) : defaultAmount,
+      amount: defaultAmount,
       method: "pix",
       date: new Date(),
       description: "",
@@ -117,10 +154,10 @@ export function PaymentRegistrationModal({
   useEffect(() => {
     if (open) {
       const type = isPackage ? "package" : "single_session";
-      const amount = isPackage ? PACOTE_PRICE : AVULSA_PRICE;
+      const amount = appointment.payment_amount ? Number(appointment.payment_amount) : (isPackage ? PACOTE_10_PRICE : AVULSA_PRICE);
       reset({
         type,
-        amount: appointment.payment_amount ? Number(appointment.payment_amount) : amount,
+        amount,
         method: "pix",
         date: new Date(),
         description: `Pagamento referente ao atendimento de ${appointment.patientName}`,
@@ -136,7 +173,12 @@ export function PaymentRegistrationModal({
   // Auto-fill price when type changes
   const handleTypeChange = (type: "single_session" | "package") => {
     setValue("type", type);
-    setValue("amount", type === "single_session" ? AVULSA_PRICE : PACOTE_PRICE);
+    setValue("amount", type === "single_session" ? AVULSA_PRICE : PACOTE_10_PRICE);
+  };
+
+  const handleApplyPreset = (price: number, type: "single_session" | "package") => {
+    setValue("type", type);
+    setValue("amount", price);
   };
 
   const onSubmit = async (data: PaymentFormValues) => {
@@ -254,11 +296,44 @@ export function PaymentRegistrationModal({
               </div>
             </div>
 
+            {/* Quick Presets */}
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+                <span>Valores & Pacotes Rápidos</span>
+              </Label>
+              <div className="grid grid-cols-2 gap-2">
+                {PRESET_OPTIONS.map((preset) => {
+                  const isSelected = watchedAmount === preset.price && watchedType === preset.type;
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => handleApplyPreset(preset.price, preset.type)}
+                      className={cn(
+                        "flex flex-col items-start p-2.5 rounded-xl border text-left transition-all duration-150 active:scale-95",
+                        isSelected
+                          ? "border-emerald-600 bg-emerald-50 text-emerald-900 shadow-sm ring-1 ring-emerald-500/30"
+                          : "border-border/60 bg-muted/20 text-slate-700 hover:border-slate-300 hover:bg-muted/40",
+                      )}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-xs font-bold">{preset.badge}</span>
+                        {isSelected && <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground font-medium mt-0.5">
+                        {preset.subtext}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Amount with smart hint */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label htmlFor="amount" className="text-xs font-bold uppercase tracking-wider text-muted-foreground cursor-pointer">
-                  Valor Recebido
+                  Valor Recebido (Editável)
                 </Label>
                 <AnimatePresence mode="wait">
                   <motion.span
@@ -274,7 +349,7 @@ export function PaymentRegistrationModal({
                     )}
                   >
                     <Sparkles className="h-2.5 w-2.5" />
-                    {watchedType === "single_session" ? "Avulso: R$180" : "Pacote: R$170/sessão"}
+                    {watchedType === "single_session" ? "Avulso: R$ 180" : "Pacote 10x: R$ 1.700"}
                   </motion.span>
                 </AnimatePresence>
               </div>

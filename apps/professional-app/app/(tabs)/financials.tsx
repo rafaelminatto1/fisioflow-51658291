@@ -378,7 +378,15 @@ export default function FinancialsScreen() {
                                 style: "currency",
                                 currency: "BRL",
                               }).format(record.final_value),
-                              date: format(new Date(record.session_date), "dd/MM/yyyy"),
+                              date: (() => {
+                                try {
+                                  const d = new Date(record.session_date);
+                                  if (isNaN(d.getTime())) return "--/--/----";
+                                  return format(d, "dd/MM/yyyy");
+                                } catch {
+                                  return "--/--/----";
+                                }
+                              })(),
                               link: "Disponível no seu Portal do Paciente",
                             },
                           }).catch((e) => console.error("Erro ao enviar WhatsApp:", e));
@@ -441,7 +449,15 @@ export default function FinancialsScreen() {
                         {nfse.tomador_nome || "Sem tomador"}
                       </Text>
                       <Text style={[styles.nfseDate, { color: colors.textSecondary }]}>
-                        {format(new Date(nfse.data_emissao), "dd/MM/yyyy")} • RPS {nfse.numero_rps}
+                        {(() => {
+                          try {
+                            const d = new Date(nfse.data_emissao);
+                            if (isNaN(d.getTime())) return "--/--/----";
+                            return format(d, "dd/MM/yyyy");
+                          } catch {
+                            return "--/--/----";
+                          }
+                        })()} • RPS {nfse.numero_rps}
                       </Text>
                     </View>
                     <View

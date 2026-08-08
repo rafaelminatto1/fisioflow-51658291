@@ -5,7 +5,7 @@ import { useColors } from "@/hooks/useColorScheme";
 import { useQuery } from "@tanstack/react-query";
 import { fetchApi } from "@/lib/api";
 import { Ionicons } from "@expo/vector-icons";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface WearableReading {
@@ -112,7 +112,9 @@ export const WearablesSummaryWidget: React.FC<WearablesSummaryWidgetProps> = ({ 
               </Text>
               <Text style={[styles.metricValue, { color: colors.text }]}>{formatValue(item)}</Text>
               <Text style={[styles.metricTime, { color: colors.textMuted }]}>
-                {format(new Date(item.timestamp), "HH:mm", { locale: ptBR })}
+                {item.timestamp && isValid(new Date(item.timestamp))
+                  ? format(new Date(item.timestamp), "HH:mm", { locale: ptBR })
+                  : "--:--"}
               </Text>
             </View>
           </View>

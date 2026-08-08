@@ -22,7 +22,11 @@ import {
   UserRound,
   ClipboardList,
   ExternalLink,
+  Save,
+  Plus,
+  Loader2,
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { LazyTaskQuickCreateModal } from "@/components/tarefas/v2/LazyComponents";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
@@ -115,11 +119,18 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
     handleTherapistChange,
     handlePaymentStatusChange,
     handlePaymentSuccess,
+    localNotes,
+    isEditingNotes,
+    setIsEditingNotes,
+    isSavingNotes,
+    handleSaveNotes,
     patientPackages,
     isUpdatingStatus,
     isUpdatingAppointment,
     pendingAppointmentField,
   } = logic;
+
+  const [notesDraft, setNotesDraft] = useState(localNotes);
 
   const { statusConfig: statusConfigMap, allStatuses } = useStatusConfig();
   const statusConfig = statusConfigMap[localStatus] || statusConfigMap.agendado;
@@ -400,17 +411,86 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           </div>
         </div>
 
-        {appointment.notes && (
-          <div className="space-y-2 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 border-dashed">
-            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">
-              <NotepadText className="h-3 w-3" />
-              Observações
+        {/* Observações do Agendamento com Edição Direta */}
+        <div className="space-y-2 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+              <NotepadText className="h-3.5 w-3.5 text-primary" />
+              Observações do Agendamento
             </div>
-            <p className="text-sm text-slate-600 dark:text-slate-400 italic leading-relaxed">
-              "{appointment.notes}"
-            </p>
+            {!isEditingNotes && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-[11px] font-bold text-primary hover:bg-primary/10 rounded-lg gap-1"
+                onClick={() => {
+                  setNotesDraft(localNotes);
+                  setIsEditingNotes(true);
+                }}
+              >
+                <Edit className="h-3 w-3" />
+                {localNotes ? "Editar" : "Adicionar"}
+              </Button>
+            )}
           </div>
-        )}
+
+          {isEditingNotes ? (
+            <div className="space-y-2.5 pt-1">
+              <Textarea
+                value={notesDraft}
+                onChange={(e) => setNotesDraft(e.target.value)}
+                placeholder="Escreva observações importantes sobre este agendamento..."
+                className="min-h-[80px] text-xs bg-background resize-none border-border"
+                autoFocus
+              />
+              <div className="flex items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs font-semibold rounded-lg"
+                  onClick={() => setIsEditingNotes(false)}
+                  disabled={isSavingNotes}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-8 text-xs font-semibold rounded-lg gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  onClick={() => handleSaveNotes(notesDraft)}
+                  disabled={isSavingNotes}
+                >
+                  {isSavingNotes ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Save className="h-3.5 w-3.5" />
+                  )}
+                  Salvar
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div
+              onClick={() => {
+                setNotesDraft(localNotes);
+                setIsEditingNotes(true);
+              }}
+              className="group/note cursor-pointer rounded-lg p-2 -mx-2 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
+            >
+              {localNotes ? (
+                <p className="text-xs text-slate-700 dark:text-slate-300 italic leading-relaxed">
+                  "{localNotes}"
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground/70 italic flex items-center gap-1">
+                  <Plus className="h-3 w-3" /> Nenhuma observação inserida. Clique para adicionar.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
 
         {linkedPackage != null &&
           sessionNumber != null &&

@@ -142,45 +142,52 @@ app.get("/", async (c) => {
 // ===== DETALHE DO PROTOCOLO =====
 app.get("/:id", async (c) => {
   const db = await createDb(c.env);
-  const { id } = c.req.param();
+  const rawId = c.req.param("id") || "";
+  const id = rawId.trim();
+  
+  if (!id || id === "undefined" || id === "null") {
+    return c.json({ error: "ID inválido" }, 400);
+  }
 
+  const professionalId = c.req.header("x-professional-id") || c.req.query("professionalId");
   const isUuid = /^[0-9a-f-]{36}$/i.test(id);
   const condition = isUuid ? eq(exerciseProtocols.id, id) : eq(exerciseProtocols.slug, id);
 
-  const [protocol, protocolExs] = await Promise.all([
-    db
+  const visibilityCondition = professionalId
+    ? or(eq(exerciseProtocols.isPublic, true), eq(exerciseProtocols.createdBy, professionalId))
+    : eq(exerciseProtocols.isPublic, true);
+
+  try {
+    const protocol = await db
       .select()
       .from(exerciseProtocols)
       .where(
         and(
           condition,
           eq(exerciseProtocols.isActive, true),
-          isUuid ? undefined : eq(exerciseProtocols.isPublic, true)
+          isUuid ? undefined : visibilityCondition
         )
       )
-      .limit(1),
-    db
+      .limit(1);
+
+    if (!protocol.length) return c.json({ error: "Protocolo não encontrado" }, 404);
+
+    const protocolExs = await db
       .select()
       .from(protocolExercises)
-      .where(
-        // Join lazy: buscamos depois pelo protocolId
-        sql`${protocolExercises.protocolId} = (
-          SELECT id FROM exercise_protocols WHERE ${
-            isUuid ? sql`id = ${id}` : sql`slug = ${id}`
-          } LIMIT 1
-        )`,
-      )
-      .orderBy(protocolExercises.phaseWeekStart, protocolExercises.orderIndex),
-  ]);
+      .where(eq(protocolExercises.protocolId, protocol[0].id))
+      .orderBy(protocolExercises.phaseWeekStart, protocolExercises.orderIndex);
 
-  if (!protocol.length) return c.json({ error: "Protocolo não encontrado" }, 404);
-
-  return c.json({
-    data: {
-      ...protocol[0],
-      protocolExercises: protocolExs,
-    },
-  });
+    return c.json({
+      data: {
+        ...protocol[0],
+        protocolExercises: protocolExs,
+      },
+    });
+  } catch (error: any) {
+    console.error("[API/Protocols] Error fetching protocol:", error);
+    return c.json({ error: "Erro interno", details: error.message }, 500);
+  }
 });
 
 // ===== CRIAR PROTOCOLO (AUTH) =====

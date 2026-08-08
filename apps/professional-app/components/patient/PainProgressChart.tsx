@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { useColors } from "@/hooks/useColorScheme";
 import type { Evolution } from "@/types";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 
 interface PainProgressChartProps {
   evolutions: Evolution[];
@@ -23,7 +23,7 @@ export const PainProgressChart = ({ evolutions }: PainProgressChartProps) => {
     .map((evolution, index) => ({
       id: `${evolution.id}-${index}`,
       value: Math.max(0, Math.min(10, evolution.painLevel || 0)),
-      label: evolution.date ? format(new Date(evolution.date), "dd/MM") : "",
+      label: evolution.date && isValid(new Date(evolution.date)) ? format(new Date(evolution.date), "dd/MM") : "",
     }));
 
   if (chartData.length < 2) {

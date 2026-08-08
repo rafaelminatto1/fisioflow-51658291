@@ -43,6 +43,9 @@ export const useAppointmentQuickViewLogic = ({
     ((appointment.payment_status ?? "pending") as string).toLowerCase(),
   );
   const [localTherapistId, setLocalTherapistId] = useState(appointment.therapistId ?? "");
+  const [localNotes, setLocalNotes] = useState(appointment.notes || "");
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [isSavingNotes, setIsSavingNotes] = useState(false);
 
   // Track whether the user initiated a local status, payment or therapist change
   // that hasn't been confirmed by the server yet. While these are set, we block
@@ -81,7 +84,25 @@ export const useAppointmentQuickViewLogic = ({
     if (pendingTherapistChangeRef.current === null) {
       setLocalTherapistId(serverTherapistId);
     }
-  }, [appointment.status, appointment.payment_status, appointment.therapistId]);
+    setLocalNotes(appointment.notes || "");
+  }, [appointment.status, appointment.payment_status, appointment.therapistId, appointment.notes]);
+
+  const handleSaveNotes = useCallback(async (newNotes: string) => {
+    setIsSavingNotes(true);
+    try {
+      await updateAppointment({
+        appointmentId: appointment.id,
+        updates: { notes: newNotes },
+      });
+      setLocalNotes(newNotes);
+      setIsEditingNotes(false);
+      toast.success("Observações salvas com sucesso!");
+    } catch (err) {
+      toast.error("Erro ao salvar observações: " + (err as Error).message);
+    } finally {
+      setIsSavingNotes(false);
+    }
+  }, [appointment.id, updateAppointment]);
 
   const appointmentDate = useMemo((): Date => {
     const d = appointment.date;
@@ -281,6 +302,11 @@ export const useAppointmentQuickViewLogic = ({
     handleTherapistChange,
     handlePaymentStatusChange,
     handlePaymentSuccess,
+    localNotes,
+    isEditingNotes,
+    setIsEditingNotes,
+    isSavingNotes,
+    handleSaveNotes,
     patientPackages,
     isUpdatingStatus,
     isUpdatingAppointment,

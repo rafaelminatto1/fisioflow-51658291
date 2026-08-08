@@ -124,10 +124,10 @@
   width: 100% !important;
 }
 
-/* Nome do paciente: até 4 linhas, sem truncar numa linha só */
+/* Nome do paciente: até 3 linhas, sem truncar numa linha só */
 .fc-event-patient-name {
   display: -webkit-box !important;
-  -webkit-line-clamp: 4 !important;
+  -webkit-line-clamp: 3 !important;
   -webkit-box-orient: vertical !important;
   overflow: hidden !important;
   overflow-wrap: break-word !important;

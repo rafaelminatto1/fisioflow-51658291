@@ -150,7 +150,7 @@ const SlotItem = memo(
                   height: `${Math.max((apt.duration / slotDuration) * SLOT_CONFIG.slotHeight - 4, 24)}px`,
                 }}
               >
-                <div className="font-medium truncate">{apt.patientName || apt.patient?.name}</div>
+                <div className="font-medium line-clamp-3">{apt.patientName || apt.patient?.name}</div>
                 {apt.service && (
                   <div className="text-[10px] opacity-80 truncate">{apt.service}</div>
                 )}

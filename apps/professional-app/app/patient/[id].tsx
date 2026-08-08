@@ -43,6 +43,18 @@ import {
 } from "@/hooks/usePatientFinancial";
 import { fetchApi, type ApiFinancialRecord } from "@/lib/api";
 
+const safeFormat = (dateVal: any, fmt: string, options?: any) => {
+  try {
+    if (!dateVal) return "--/--/----";
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return "--/--/----";
+    return format(d, fmt, options);
+  } catch {
+    return "--/--/----";
+  }
+};
+
+
 export default function PatientDetailScreen() {
   const params = useLocalSearchParams();
   const { id, patientName, tab, autoCreate, date: initialDateParam } = params;
@@ -371,9 +383,9 @@ export default function PatientDetailScreen() {
                           {assessment.type.toUpperCase()}
                         </Text>
                         <Text style={{ color: colors.textSecondary }}>
-                          {format(new Date(assessment.createdAt), "dd 'de' MMM, yyyy", {
-                            locale: ptBR,
-                          })}
+                        {safeFormat(assessment.createdAt, "dd 'de' MMM, yyyy", {
+                          locale: ptBR,
+                        })}
                         </Text>
                       </View>
                       <View
@@ -483,7 +495,7 @@ export default function PatientDetailScreen() {
                         {ex.exerciseName}
                       </Text>
                       <Text style={{ fontSize: 12, color: colors.textSecondary }}>
-                        {format(new Date(ex.createdAt), "dd/MM HH:mm")}
+                        {safeFormat(ex.createdAt, "dd/MM HH:mm")}
                       </Text>
                     </View>
                     <Text style={{ fontSize: 13, color: colors.textSecondary }}>
@@ -623,7 +635,7 @@ export default function PatientDetailScreen() {
               {/* Inteligência Clínica Ativa (Recomendador Semântico) */}
               <SemanticRecommenderMobileWidget condition={patient?.condition} />
 
-              {(patient as any).insurance?.provider && (
+              {(patient as any)?.insurance?.provider && (
                 <Card
                   style={[
                     styles.infoCard,
@@ -645,26 +657,26 @@ export default function PatientDetailScreen() {
                       Operadora:
                     </Text>
                     <Text style={[styles.infoValue, { color: colors.text }]}>
-                      {(patient as any).insurance.provider}
+                      {(patient as any)?.insurance?.provider}
                     </Text>
                   </View>
-                  {(patient as any).insurance.plan && (
+                  {(patient as any)?.insurance?.plan && (
                     <View style={styles.infoRow}>
                       <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
                         Plano:
                       </Text>
                       <Text style={[styles.infoValue, { color: colors.text }]}>
-                        {(patient as any).insurance.plan}
+                        {(patient as any)?.insurance?.plan}
                       </Text>
                     </View>
                   )}
-                  {(patient as any).insurance.cardNumber && (
+                  {(patient as any)?.insurance?.cardNumber && (
                     <View style={styles.infoRow}>
                       <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
                         Carteirinha:
                       </Text>
                       <Text style={[styles.infoValue, { color: colors.text }]}>
-                        {(patient as any).insurance.cardNumber}
+                        {(patient as any)?.insurance?.cardNumber}
                       </Text>
                     </View>
                   )}
@@ -819,7 +831,7 @@ export default function PatientDetailScreen() {
                     <View style={styles.evolutionHeader}>
                       <Text style={[styles.evolutionDate, { color: colors.text }]}>
                         {evolution.date
-                          ? format(new Date(evolution.date), "dd/MM/yyyy HH:mm")
+                          ? safeFormat(evolution.date, "dd/MM/yyyy HH:mm")
                           : "Data não disponível"}
                       </Text>
                       {evolution.painLevel !== undefined && (
@@ -967,7 +979,7 @@ export default function PatientDetailScreen() {
                     <View style={styles.recordHeader}>
                       <View style={styles.recordDateContainer}>
                         <Text style={[styles.recordDate, { color: colors.text }]}>
-                          {format(new Date(record.session_date), "dd/MM/yyyy")}
+                          {safeFormat(record.session_date, "dd/MM/yyyy")}
                         </Text>
                         {(record as any).partnership && (
                           <View
@@ -1052,7 +1064,7 @@ export default function PatientDetailScreen() {
                             Pago em:
                           </Text>
                           <Text style={[styles.valuePaid, { color: colors.success }]}>
-                            {format(new Date(record.paid_date), "dd/MM/yyyy")}
+                            {safeFormat(record.paid_date, "dd/MM/yyyy")}
                           </Text>
                         </View>
                       )}

@@ -146,6 +146,20 @@ app.get("/dashboard", async (c) => {
 
   try {
     const period = c.req.query("period") || "month";
+
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(user.organizationId || "");
+    if (!user.organizationId || !isUUID) {
+      return c.json({
+        data: {
+          period,
+          appointments: { total: 0, completed: 0, no_shows: 0, upcoming: 0 },
+          financial: { total_revenue: 0, total_payments: 0, avg_ticket: 0 },
+          new_patients: 0,
+          active_patients: 0,
+        },
+      });
+    }
+
     let dateFilter = "";
     let truncPeriod = "month";
 

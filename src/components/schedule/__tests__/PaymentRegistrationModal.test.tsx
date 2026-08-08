@@ -179,7 +179,30 @@ describe("PaymentRegistrationModal", () => {
 
     // Should NOT update appointment if transaction failed
     expect(mockUpdateAppointment).not.toHaveBeenCalled();
-    // Should NOT close modal
-    expect(mockOnOpenChange).not.toHaveBeenCalledWith(false);
+    expect(mockOnOpenChange).not.toHaveBeenCalled();
+  });
+
+  it("defaults to 180 when appointment has no payment_amount and handles preset selection", async () => {
+    const user = userEvent.setup();
+    const aptWithoutAmount = { ...defaultAppointment, payment_amount: undefined };
+
+    render(
+      <PaymentRegistrationModal
+        open={true}
+        onOpenChange={mockOnOpenChange}
+        appointment={aptWithoutAmount as any}
+      />,
+    );
+
+    const amountInput = screen.getByLabelText(/Valor/i);
+    expect(amountInput).toHaveValue(180);
+
+    const pacote10Btn = screen.getByText("R$ 1.700");
+    await user.click(pacote10Btn);
+    expect(amountInput).toHaveValue(1700);
+
+    const pix10Btn = screen.getByText("R$ 1.600");
+    await user.click(pix10Btn);
+    expect(amountInput).toHaveValue(1600);
   });
 });

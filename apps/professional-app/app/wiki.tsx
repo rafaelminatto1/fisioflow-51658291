@@ -18,6 +18,17 @@ import { useWikiPages } from "@/hooks/useWiki";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+const safeFormat = (dateVal: any, fmt: string, options?: any) => {
+  try {
+    if (!dateVal) return "--/--/----";
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return "--/--/----";
+    return format(d, fmt, options);
+  } catch {
+    return "--/--/----";
+  }
+};
+
 export default function WikiScreen() {
   const colors = useColors();
   const { light } = useHaptics();
@@ -133,7 +144,7 @@ export default function WikiScreen() {
                     </ScrollView>
                   )}
                   <Text style={[styles.cardDate, { color: colors.textMuted }]}>
-                    {format(new Date(page.updatedAt), "dd 'de' MMM, yyyy", { locale: ptBR })}
+                    {safeFormat(page.updated_at || page.created_at || new Date().toISOString(), "dd 'de' MMM, yyyy", { locale: ptBR })}
                   </Text>
                 </View>
               </TouchableOpacity>

@@ -109,7 +109,7 @@ export function DailyAppointmentList({
                     {/* Paciente */}
                     <div className="flex items-center gap-2 text-sm mb-2">
                       <User className="w-4 h-4 text-muted-foreground" />
-                      <span className="font-medium truncate">{appointment.patientName}</span>
+                      <span className="font-medium line-clamp-3">{appointment.patientName}</span>
                     </div>
 
                     {/* Tipo de Consulta */}

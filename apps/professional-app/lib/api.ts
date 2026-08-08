@@ -978,9 +978,13 @@ function mapDbRecordToApiRecord(dbRecord: any): ApiFinancialRecord {
     organization_id: dbRecord.organization_id,
     patient_id: dbRecord.patient_id,
     appointment_id: dbRecord.appointment_id,
-    session_date:
-      (dbRecord.due_date || dbRecord.data_vencimento || dbRecord.created_at)?.split("T")[0] ||
-      new Date().toISOString().split("T")[0],
+    session_date: (() => {
+      const d = dbRecord.due_date || dbRecord.data_vencimento || dbRecord.created_at;
+      if (!d) return new Date().toISOString().split("T")[0];
+      if (typeof d === "string") return d.split("T")[0];
+      if (d instanceof Date) return d.toISOString().split("T")[0];
+      return new Date().toISOString().split("T")[0];
+    })(),
     session_value: amount,
     discount_value: 0,
     discount_type: undefined,

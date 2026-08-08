@@ -129,10 +129,19 @@ export const coreRoutes = (
     <Route path="/" element={<Navigate to="/agenda" replace />} />
     <Route path="/calendar" element={<Navigate to="/agenda" replace />} />
     <Route path="/pacientes" element={<Navigate to="/patients" replace />} />
+    <Route path="/pacientes/novo" element={<Navigate to="/patients/new" replace />} />
     <Route path="/schedule" element={<Navigate to="/agenda" replace />} />
+    <Route path="/atendimentos" element={<Navigate to="/agenda" replace />} />
+    <Route path="/evolucao" element={<Navigate to="/evolucao-clinica" replace />} />
+    <Route path="/comunicacao" element={<Navigate to="/communications" replace />} />
+    <Route path="/notificacoes" element={<Navigate to="/notifications" replace />} />
+    <Route path="/relatorios" element={<Navigate to="/reports" replace />} />
+    <Route path="/ai-studio" element={<Navigate to="/inteligencia?tab=studio" replace />} />
     <Route path="/login" element={<Navigate to="/auth" replace />} />
+    <Route path="/auth/register" element={<Navigate to="/auth?mode=register" replace />} />
     <Route path="/perfil" element={<Navigate to="/profile" replace />} />
     <Route path="/configuracoes" element={<Navigate to="/profile" replace />} />
+    <Route path="/timetracking/reports" element={<Navigate to="/timetracking" replace />} />
 
     {/* Core protected routes */}
     <Route
@@ -324,6 +333,8 @@ export const coreRoutes = (
       }
     />
     <Route path="/settings" element={<Settings />} />
+    <Route path="/settings/security" element={<Navigate to="/profile?tab=security" replace />} />
+    <Route path="/settings/organization" element={<Navigate to="/profile?tab=clinic" replace />} />
     <Route
       path="/profile"
       element={
