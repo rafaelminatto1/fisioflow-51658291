@@ -133,7 +133,7 @@ export default function WikiScreen() {
                     </ScrollView>
                   )}
                   <Text style={[styles.cardDate, { color: colors.textMuted }]}>
-                    {format(new Date(page.updated_at), "dd 'de' MMM, yyyy", { locale: ptBR })}
+                    {format(new Date(page.updatedAt), "dd 'de' MMM, yyyy", { locale: ptBR })}
                   </Text>
                 </View>
               </TouchableOpacity>

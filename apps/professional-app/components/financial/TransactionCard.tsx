@@ -116,7 +116,15 @@ export function TransactionCard({
                   {patientName}
                 </Text>
                 <Text style={[styles.date, { color: colors.textSecondary }]}>
-                  {format(new Date(date), "dd/MM/yyyy")}
+                  {(() => {
+                    try {
+                      const d = new Date(date);
+                      if (isNaN(d.getTime())) return "--/--/----";
+                      return format(d, "dd/MM/yyyy");
+                    } catch {
+                      return "--/--/----";
+                    }
+                  })()}
                 </Text>
               </View>
             </View>

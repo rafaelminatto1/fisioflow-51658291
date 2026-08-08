@@ -252,20 +252,6 @@ storage = "sqlite"
 type = "durable-object"
 storage = "sqlite"
 
-# Tombstones — classes KV aposentadas, já deletadas nas migrations v12 e v14.
-# Ficam declaradas para a Cloudflare reconciliar explicitamente.
-[exports.PatientAgent]
-type = "durable-object"
-state = "deleted"
-
-[exports.ClinicAgent]
-type = "durable-object"
-state = "deleted"
-
-[exports.EvolutionCollaboration]
-type = "durable-object"
-state = "deleted"
-
 # ===== AI & BROWSER RENDERING =====
 [ai]
 binding = "AI"

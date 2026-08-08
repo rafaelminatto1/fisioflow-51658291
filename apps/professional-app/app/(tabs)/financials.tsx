@@ -171,7 +171,14 @@ export default function FinancialsScreen() {
 
     const byDate = new Map<string, number>();
     records.forEach((r) => {
-      const date = format(new Date(r.session_date), "dd/MM");
+      let date = "Inválido";
+      try {
+        const d = new Date(r.session_date);
+        if (!isNaN(d.getTime())) {
+          date = format(d, "dd/MM");
+        }
+      } catch {}
+      
       const current = byDate.get(date) || 0;
       byDate.set(date, current + (r.payment_status === "paid" ? r.final_value : 0));
     });

@@ -197,6 +197,7 @@ app.get("/me", requireAuth, async (c) => {
         full_name: row.full_name ?? fallbackProfile.full_name,
         role: row.role ?? fallbackProfile.role,
         organization_id: row.organization_id ?? fallbackProfile.organization_id,
+        organizationId: row.organization_id ?? fallbackProfile.organization_id,
         email_verified: Boolean(row.email_verified),
       },
     });

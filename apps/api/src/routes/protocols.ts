@@ -152,7 +152,11 @@ app.get("/:id", async (c) => {
       .select()
       .from(exerciseProtocols)
       .where(
-        and(condition, eq(exerciseProtocols.isActive, true), eq(exerciseProtocols.isPublic, true)),
+        and(
+          condition,
+          eq(exerciseProtocols.isActive, true),
+          isUuid ? undefined : eq(exerciseProtocols.isPublic, true)
+        )
       )
       .limit(1),
     db

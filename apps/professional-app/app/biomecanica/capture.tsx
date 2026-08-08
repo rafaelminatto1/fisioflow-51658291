@@ -385,7 +385,7 @@ export default function CaptureScreen() {
           faria a tela mentir sobre o que está sendo rastreado.
         */}
         {!poseDetectionAvailable && (
-          <>
+          <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
             <Svg style={StyleSheet.absoluteFill} viewBox="0 0 100 100" preserveAspectRatio="none">
               {EDGES.map(([a, b], i) => (
                 <Line
@@ -403,7 +403,7 @@ export default function CaptureScreen() {
             {Object.values(JOINTS).map(([x, y], i) => (
               <View key={i} style={[styles.joint, { left: `${x}%`, top: `${y}%` }]} />
             ))}
-          </>
+          </View>
         )}
       </View>
 

@@ -1,0 +1,16 @@
+{
+  "rules": [
+    {
+      "id": "expire-tmp-biomechanics",
+      "conditions": {
+        "prefix": "tmp/biomechanics/"
+      },
+      "action": {
+        "type": "Delete"
+      },
+      "condition": {
+        "age": 7
+      }
+    }
+  ]
+}

@@ -979,7 +979,8 @@ function mapDbRecordToApiRecord(dbRecord: any): ApiFinancialRecord {
     patient_id: dbRecord.patient_id,
     appointment_id: dbRecord.appointment_id,
     session_date:
-      dbRecord.due_date ?? dbRecord.data_vencimento ?? dbRecord.created_at?.split("T")[0],
+      (dbRecord.due_date || dbRecord.data_vencimento || dbRecord.created_at)?.split("T")[0] ||
+      new Date().toISOString().split("T")[0],
     session_value: amount,
     discount_value: 0,
     discount_type: undefined,

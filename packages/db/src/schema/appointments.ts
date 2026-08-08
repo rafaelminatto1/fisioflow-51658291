@@ -135,12 +135,11 @@ export const appointments = pgTable(
   },
   (table) => [
     index("idx_appointments_organization_id").on(table.organizationId),
-    index("idx_appointments_patient_id").on(table.patientId),
     index("idx_appointments_org_patient").on(table.organizationId, table.patientId),
     index("idx_appointments_org_date").on(table.organizationId, table.date),
-    index("idx_appointments_therapist_date").on(table.therapistId, table.date),
-    index("idx_appointments_status").on(table.status),
-    index("idx_appointments_room_id").on(table.roomId),
+    index("idx_appointments_org_therapist_date").on(table.organizationId, table.therapistId, table.date),
+    index("idx_appointments_org_status").on(table.organizationId, table.status),
+    index("idx_appointments_org_room").on(table.organizationId, table.roomId),
     withOrganizationPolicy("appointments", table.organizationId),
   ],
 );
