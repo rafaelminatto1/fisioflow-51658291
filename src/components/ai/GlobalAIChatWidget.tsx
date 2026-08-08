@@ -191,14 +191,10 @@ export function GlobalAIChatWidget() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-2xl transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-95"
-          title="Abrir Copiloto Clínico IA (Selecione o Motor no topo)"
+          className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-95"
+          title="Abrir Copiloto Clínico IA"
         >
           <BrainCircuit className="h-7 w-7 text-white transition-transform group-hover:rotate-12" />
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75" />
-            <span className="relative inline-flex h-4 w-4 rounded-full bg-sky-300 border-2 border-white dark:border-slate-950" />
-          </span>
         </button>
       )}
 
@@ -206,12 +202,12 @@ export function GlobalAIChatWidget() {
       {open && (
         <div
           className={cn(
-            "flex flex-col overflow-hidden rounded-3xl border border-blue-100 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-2xl transition-all duration-300",
+            "flex flex-col overflow-hidden rounded-3xl border border-white/20 bg-white/70 dark:bg-slate-950/70 backdrop-blur-md shadow-xl transition-all duration-300",
             minimized ? "h-16 w-80" : "h-[580px] w-96 max-w-[calc(100vw-2rem)]",
           )}
         >
           {/* Header do Widget - Azul da Clínica com Seletor de Motor IA */}
-          <div className="flex items-center justify-between border-b border-blue-900/40 bg-blue-900 px-4 py-2.5 text-white">
+          <div className="flex items-center justify-between border-b border-white/10 bg-blue-600/90 backdrop-blur-sm px-4 py-2.5 text-white">
             <div className="flex items-center gap-2.5">
               <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm ring-2 ring-blue-400/30 shrink-0">
                 <BrainCircuit className="h-4 w-4" />
@@ -326,7 +322,7 @@ export function GlobalAIChatWidget() {
               </div>
 
               {/* Mensagens */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50/40 dark:bg-slate-900/30">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-transparent">
                 {messages.map((m) => (
                   <div
                     key={m.id}
@@ -366,7 +362,7 @@ export function GlobalAIChatWidget() {
               </div>
 
               {/* Quick Prompts Chips por Categoria */}
-              <div className="border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 p-2 overflow-x-auto flex gap-1.5">
+              <div className="border-t border-white/20 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-2 overflow-x-auto flex gap-1.5">
                 {CATEGORY_PROMPTS[activeCategory].map((qp) => (
                   <button
                     key={qp}
@@ -409,7 +405,7 @@ export function GlobalAIChatWidget() {
                   e.preventDefault();
                   sendMessage();
                 }}
-                className="flex items-center gap-2 border-t border-slate-100 dark:border-slate-800 p-3 bg-white dark:bg-slate-950"
+                className="flex items-center gap-2 border-t border-white/20 p-3 bg-white/50 dark:bg-slate-950/50 backdrop-blur-md"
               >
                 <input
                   type="text"

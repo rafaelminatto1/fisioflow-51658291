@@ -4,7 +4,10 @@
  */
 
 import { useEffect, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { APP_ROUTES } from "@/lib/routing/appRoutes";
+import { patientsApi } from "@/api/v2/patients";
+import { PatientService } from "@/services/patientService";
 
 // Mapa de componentes para prefetch manual
 // Usamos a função de import que o React.lazy usa internamente
@@ -101,4 +104,31 @@ export const useNavPreload = () => {
   }, []);
 
   return { preloadRoute };
+};
+
+/**
+ * Hook para prefetch inteligente de dados (React Query)
+ * Chamado no hover de cards de paciente, reduzindo espera no próximo clique
+ */
+export const usePatientDataPreload = () => {
+  const queryClient = useQueryClient();
+
+  const preloadPatientData = useCallback(
+    (patientId: string | undefined) => {
+      if (!patientId) return;
+
+      // Prefetch do perfil do paciente
+      queryClient.prefetchQuery({
+        queryKey: ["patient", patientId],
+        queryFn: async () => {
+          const response = await patientsApi.get(patientId);
+          return PatientService.mapToApp(response.data);
+        },
+        staleTime: 1000 * 60 * 10, // 10 minutes
+      }).catch(() => {}); // catch silencioso para não sujar o console
+    },
+    [queryClient]
+  );
+
+  return { preloadPatientData };
 };

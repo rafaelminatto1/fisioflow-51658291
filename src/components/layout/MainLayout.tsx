@@ -33,6 +33,7 @@ import { Sidebar } from "./Sidebar";
 import { ThemeControls } from "@/components/ui/theme";
 import { GlobalAIChatWidget } from "@/components/ai/GlobalAIChatWidget";
 import { GlobalAISpotlight } from "@/components/ai/GlobalAISpotlight";
+import { QuickActionsHeader } from "./QuickActionsHeader";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -169,38 +170,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
                   <div className="flex items-center gap-3">
                     {/* Barra de Ação Rápida Clínicas */}
-                    <div className="hidden xl:flex items-center gap-1.5 bg-slate-100/80 dark:bg-slate-900/80 p-1 rounded-xl border border-slate-200/80 dark:border-slate-800">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate("/agenda")}
-                        className="h-8 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 hover:text-blue-600 rounded-lg transition-all"
-                        title="Ir para a Agenda Rápidamente"
-                      >
-                        <Calendar className="h-3.5 w-3.5 mr-1 text-blue-600" />
-                        + Agenda
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate("/evolucao")}
-                        className="h-8 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 hover:text-indigo-600 rounded-lg transition-all"
-                        title="Nova Evolução de Paciente (SOAP / Voz)"
-                      >
-                        <Mic className="h-3.5 w-3.5 mr-1 text-indigo-500" />
-                        Evolução
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate("/ai-studio")}
-                        className="h-8 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 hover:text-emerald-600 rounded-lg transition-all"
-                        title="AI Studio & Goniometria"
-                      >
-                        <Target className="h-3.5 w-3.5 mr-1 text-emerald-500" />
-                        AI Studio
-                      </Button>
-                    </div>
+                    <QuickActionsHeader className="hidden xl:flex" />
 
                     <div className="relative group">
                       <GlobalSearch />

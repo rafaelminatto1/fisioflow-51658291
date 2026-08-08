@@ -42,7 +42,7 @@ SKIP_DIRS = {
     'test-results', 'screenshots', '.gemini', '.claude', '.cursor', '.trae',
     '.jules', '.kiro', 'docs2026', 'docker', 'e2e', 'e2e-tests', 'claude-skills',
     'fisioflow-screenshots', 'public', 'temp', 'tmp', 'out', 'scripts', 'android', '_design-system-export', 'components', 'contexts', 'styles', 'hooks', 'utils', 'evolucao',
-    'design-system', 'design-system-handoff'
+    'design-system', 'design-system-handoff', 'claudedesign', 'testsprite_tests'
 }
 
 # Files to skip (not pages)

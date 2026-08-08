@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { DashboardViewMode } from "@/hooks/useSmartDashboard";
 import { useSmartDashboardData } from "@/hooks/useSmartDashboard";
+import { usePatientDataPreload } from "@/hooks/useIntelligentPreload";
 
 interface BentoDashboardProps {
   viewMode?: DashboardViewMode;
@@ -25,6 +26,7 @@ interface BentoDashboardProps {
 
 export const BentoDashboard: React.FC<BentoDashboardProps> = ({ viewMode = "today" }) => {
   const navigate = useNavigate();
+  const { preloadPatientData } = usePatientDataPreload();
 
   const { data, isLoading: metricsLoading } = useSmartDashboardData(viewMode);
   const metrics = data?.metrics;
@@ -175,6 +177,11 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({ viewMode = "toda
                   <div
                     key={apt.id}
                     className="flex items-center justify-between p-6 bg-[#f7f9fb] dark:bg-slate-900/50 rounded-[2rem] hover:bg-white hover:shadow-xl hover:scale-[1.01] transition-all duration-300 group/item cursor-pointer border border-transparent hover:border-slate-100"
+                    onMouseEnter={() => preloadPatientData(apt.patient_id || apt.patientId)}
+                    onClick={() => {
+                      const id = apt.patient_id || apt.patientId;
+                      if (id) navigate(`/pacientes/${id}`);
+                    }}
                   >
                     <div className="flex items-center gap-6">
                       <div className="flex flex-col items-center justify-center w-16 h-16 rounded-2xl bg-white shadow-sm group-hover/item:shadow-md transition-all">
