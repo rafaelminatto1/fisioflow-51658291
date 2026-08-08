@@ -3,7 +3,7 @@
  */
 
 import type React from "react";
-import { Bell, ChevronDown, LogOut, User, AlertTriangle } from "lucide-react";
+import { Bell, ChevronDown, LogOut, User, AlertTriangle, Calendar, Mic, Target } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { SkipLinks } from "@/components/accessibility/SkipLinks";
@@ -167,14 +167,49 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                     )}
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    {/* Barra de Ação Rápida Clínicas */}
+                    <div className="hidden xl:flex items-center gap-1.5 bg-slate-100/80 dark:bg-slate-900/80 p-1 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate("/agenda")}
+                        className="h-8 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 hover:text-blue-600 rounded-lg transition-all"
+                        title="Ir para a Agenda Rápidamente"
+                      >
+                        <Calendar className="h-3.5 w-3.5 mr-1 text-blue-600" />
+                        + Agenda
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate("/evolucao")}
+                        className="h-8 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 hover:text-indigo-600 rounded-lg transition-all"
+                        title="Nova Evolução de Paciente (SOAP / Voz)"
+                      >
+                        <Mic className="h-3.5 w-3.5 mr-1 text-indigo-500" />
+                        Evolução
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate("/ai-studio")}
+                        className="h-8 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 hover:text-emerald-600 rounded-lg transition-all"
+                        title="AI Studio & Goniometria"
+                      >
+                        <Target className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+                        AI Studio
+                      </Button>
+                    </div>
+
                     <div className="relative group">
                       <GlobalSearch />
                     </div>
 
-                    <div className="h-6 w-px bg-border/40 mx-2" />
+                    <div className="h-6 w-px bg-border/40 mx-1" />
 
                     <div className="flex items-center gap-3">
+
                       <Button
                         variant="ghost"
                         size="icon"
