@@ -139,6 +139,7 @@ jobs:
       # ─── TestFlight ───────────────────────────────────────────────────────────
       - name: Submeter ao TestFlight
         if: ${{ success() && (env.PROFILE == 'testflight' || env.PROFILE == 'production') }}
+        continue-on-error: true
         working-directory: apps/professional-app
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
