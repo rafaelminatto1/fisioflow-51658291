@@ -180,32 +180,53 @@ describe("pelvicDrop", () => {
 describe("dynamicValgusFPPA", () => {
   it("alinhamento perfeito = 0°", () => {
     const frame = frameFrom({
-      [LANDMARK_INDEX.right_hip]: { x: 0.5, y: 0.4 },
-      [LANDMARK_INDEX.right_knee]: { x: 0.5, y: 0.6 },
-      [LANDMARK_INDEX.right_ankle]: { x: 0.5, y: 0.8 },
+      [LANDMARK_INDEX.right_hip]: { x: 0.4, y: 0.4 },
+      [LANDMARK_INDEX.right_knee]: { x: 0.4, y: 0.6 },
+      [LANDMARK_INDEX.right_ankle]: { x: 0.4, y: 0.8 },
     });
     expect(dynamicValgusFPPA(frame, "right")).toBeCloseTo(0, 4);
   });
 
-  it("desvio do joelho produz magnitude não nula", () => {
-    const frame = frameFrom({
-      [LANDMARK_INDEX.right_hip]: { x: 0.5, y: 0.4 },
-      [LANDMARK_INDEX.right_knee]: { x: 0.55, y: 0.6 },
-      [LANDMARK_INDEX.right_ankle]: { x: 0.5, y: 0.8 },
+  it("joelho direito em valgo (colapso medial em direção ao centro x=0.5) dá valor positivo", () => {
+    const valgo = frameFrom({
+      [LANDMARK_INDEX.right_hip]: { x: 0.4, y: 0.4 },
+      [LANDMARK_INDEX.right_knee]: { x: 0.45, y: 0.6 },
+      [LANDMARK_INDEX.right_ankle]: { x: 0.4, y: 0.8 },
     });
-    expect(Math.abs(dynamicValgusFPPA(frame, "right")!)).toBeGreaterThan(1);
+    const varo = frameFrom({
+      [LANDMARK_INDEX.right_hip]: { x: 0.4, y: 0.4 },
+      [LANDMARK_INDEX.right_knee]: { x: 0.35, y: 0.6 },
+      [LANDMARK_INDEX.right_ankle]: { x: 0.4, y: 0.8 },
+    });
+    expect(dynamicValgusFPPA(valgo, "right")!).toBeGreaterThan(0);
+    expect(dynamicValgusFPPA(varo, "right")!).toBeLessThan(0);
+  });
+
+  it("joelho esquerdo em valgo (colapso medial em direção ao centro x=0.5) dá valor positivo", () => {
+    const valgo = frameFrom({
+      [LANDMARK_INDEX.left_hip]: { x: 0.6, y: 0.4 },
+      [LANDMARK_INDEX.left_knee]: { x: 0.55, y: 0.6 },
+      [LANDMARK_INDEX.left_ankle]: { x: 0.6, y: 0.8 },
+    });
+    const varo = frameFrom({
+      [LANDMARK_INDEX.left_hip]: { x: 0.6, y: 0.4 },
+      [LANDMARK_INDEX.left_knee]: { x: 0.65, y: 0.6 },
+      [LANDMARK_INDEX.left_ankle]: { x: 0.6, y: 0.8 },
+    });
+    expect(dynamicValgusFPPA(valgo, "left")!).toBeGreaterThan(0);
+    expect(dynamicValgusFPPA(varo, "left")!).toBeLessThan(0);
   });
 
   it("desvios opostos trocam o sinal", () => {
     const medial = frameFrom({
-      [LANDMARK_INDEX.right_hip]: { x: 0.5, y: 0.4 },
-      [LANDMARK_INDEX.right_knee]: { x: 0.55, y: 0.6 },
-      [LANDMARK_INDEX.right_ankle]: { x: 0.5, y: 0.8 },
+      [LANDMARK_INDEX.right_hip]: { x: 0.4, y: 0.4 },
+      [LANDMARK_INDEX.right_knee]: { x: 0.45, y: 0.6 },
+      [LANDMARK_INDEX.right_ankle]: { x: 0.4, y: 0.8 },
     });
     const lateral = frameFrom({
-      [LANDMARK_INDEX.right_hip]: { x: 0.5, y: 0.4 },
-      [LANDMARK_INDEX.right_knee]: { x: 0.45, y: 0.6 },
-      [LANDMARK_INDEX.right_ankle]: { x: 0.5, y: 0.8 },
+      [LANDMARK_INDEX.right_hip]: { x: 0.4, y: 0.4 },
+      [LANDMARK_INDEX.right_knee]: { x: 0.35, y: 0.6 },
+      [LANDMARK_INDEX.right_ankle]: { x: 0.4, y: 0.8 },
     });
     expect(Math.sign(dynamicValgusFPPA(medial, "right")!)).toBe(
       -Math.sign(dynamicValgusFPPA(lateral, "right")!),

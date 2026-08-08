@@ -176,8 +176,8 @@ export function dynamicValgusFPPA(
   if (offset === null) return null;
 
   // Medial depende do lado: para a perna esquerda (à direita da imagem quando
-  // o paciente está de frente), medial é o sentido oposto ao da direita.
-  const medialSign = side === "left" ? -1 : 1;
+  // o paciente está de frente, x decrece até o centro), medial é a direção +x/ -x oposta.
+  const medialSign = side === "left" ? 1 : -1;
   return round2(deviation * Math.sign(offset) * medialSign || 0);
 }
 
