@@ -71,6 +71,13 @@
       "when": 1785427200000,
       "tag": "0009_notes_force_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1786189192885,
+      "tag": "0010_chubby_owl",
+      "breakpoints": true
     }
   ]
 }
