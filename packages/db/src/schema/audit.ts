@@ -46,3 +46,34 @@ export const auditLogs = pgTable(
 
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type NewAuditLog = typeof auditLogs.$inferInsert;
+
+/**
+ * Restore Audit Logs Schema - LGPD Compliance
+ * 
+ * Tracks point-in-time recovery operations (Neon Instant Restore)
+ * Required for LGPD auditability when restoring databases.
+ */
+export const restoreAuditLogs = pgTable(
+  "restore_audit_logs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .references(() => organizations.id)
+      .notNull(),
+    restoredAt: timestamp("restored_at").defaultNow().notNull(),
+    restorePointTimestamp: timestamp("restore_point_timestamp").notNull(),
+    reason: text("reason").notNull(), // E.g., 'Accidental deletion of patient X data'
+    operatorId: uuid("operator_id").notNull(), // User who executed the restore
+    branchName: varchar("branch_name", { length: 255 }).notNull(), // The Neon branch created
+    status: varchar("status", { length: 50 }).notNull(), // 'SUCCESS', 'FAILED', 'VERIFYING'
+    notes: text("notes"), // Additional audit notes
+  },
+  (table) => [
+    index("idx_restore_audit_logs_org_date").on(table.organizationId, table.restoredAt),
+    index("idx_restore_audit_logs_operator").on(table.operatorId),
+    withOrganizationPolicy("restore_audit_logs", table.organizationId),
+  ]
+);
+
+export type RestoreAuditLog = typeof restoreAuditLogs.$inferSelect;
+export type NewRestoreAuditLog = typeof restoreAuditLogs.$inferInsert;

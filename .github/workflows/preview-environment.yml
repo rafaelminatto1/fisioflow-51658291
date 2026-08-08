@@ -1,0 +1,143 @@
+name: Preview Environment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+# Required Secrets:
+# - NEON_API_KEY: Neon API key for neonctl
+# - NEON_PROJECT_ID: Neon project ID
+# - CLOUDFLARE_API_TOKEN: CF API token for wrangler
+# - CLOUDFLARE_ACCOUNT_ID: CF account ID
+
+jobs:
+  deploy-preview:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    environment:
+      name: preview
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        with:
+          node-version: '22'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v3.0.0
+        with:
+          version: '11'
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create Neon Branch
+        id: create-branch
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+        run: |
+          BRANCH_NAME="preview/pr-${{ github.event.pull_request.number }}"
+          
+          # Create branch
+          BRANCH_OUT=$(npx neonctl branches create --project-id $NEON_PROJECT_ID --name $BRANCH_NAME --output json)
+          BRANCH_ID=$(echo $BRANCH_OUT | jq -r '.branch.id')
+          
+          # Get connection string
+          CONN_STR=$(npx neonctl connection-string --project-id $NEON_PROJECT_ID --branch $BRANCH_ID --output json | jq -r '.connection_string')
+          
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "branch_id=$BRANCH_ID" >> $GITHUB_OUTPUT
+          echo "db_url=$CONN_STR" >> $GITHUB_OUTPUT
+          
+          # Mask the connection string in logs
+          echo "::add-mask::$CONN_STR"
+
+      - name: Run Migrations
+        env:
+          DATABASE_URL: ${{ steps.create-branch.outputs.db_url }}
+        run: pnpm db:migrate
+
+      - name: Deploy Preview Worker
+        id: deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          DATABASE_URL: ${{ steps.create-branch.outputs.db_url }}
+        run: |
+          WORKER_NAME="fisioflow-api-pr-${{ github.event.pull_request.number }}"
+          
+          # Deploy with preview overrides
+          DEPLOY_OUT=$(pnpm --dir apps/api exec wrangler deploy --name $WORKER_NAME --var DATABASE_URL:"$DATABASE_URL" --var ENVIRONMENT:"preview")
+          
+          # Extract URL from wrangler output
+          WORKER_URL=$(echo "$DEPLOY_OUT" | grep -oE 'https://[a-zA-Z0-9-]+\.workers\.dev' | head -n 1)
+          echo "url=$WORKER_URL" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR
+        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
+        with:
+          header: preview-env
+          message: |
+            ### 🚀 Preview Environment
+            
+            ✅ Deployment successful for latest changes.
+            
+            - 🌐 **Preview API URL:** ${{ steps.deploy.outputs.url }}
+            - 🗄️ **Database Branch:** `${{ steps.create-branch.outputs.branch_name }}`
+            - 📋 **Last Commit:** `${{ github.event.pull_request.head.sha }}`
+            
+            *Last updated: ${{ github.event.pull_request.updated_at }}*
+
+  cleanup-preview:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        with:
+          node-version: '22'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v3.0.0
+        with:
+          version: '11'
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Delete Neon Branch
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+        continue-on-error: true
+        run: |
+          BRANCH_NAME="preview/pr-${{ github.event.pull_request.number }}"
+          # Find branch id by name
+          BRANCH_ID=$(npx neonctl branches list --project-id $NEON_PROJECT_ID --output json | jq -r ".[] | select(.name==\"$BRANCH_NAME\") | .id")
+          if [ -n "$BRANCH_ID" ]; then
+            npx neonctl branches delete $BRANCH_ID --project-id $NEON_PROJECT_ID
+            echo "Deleted Neon branch: $BRANCH_NAME"
+          else
+            echo "Branch $BRANCH_NAME not found."
+          fi
+
+      - name: Delete Preview Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        continue-on-error: true
+        run: |
+          WORKER_NAME="fisioflow-api-pr-${{ github.event.pull_request.number }}"
+          pnpm --dir apps/api exec wrangler delete $WORKER_NAME --force
+          echo "Deleted Worker: $WORKER_NAME"

@@ -7,7 +7,7 @@ interface LeadFunnelProps {
   estagios: { value: string; label: string; color: string }[];
 }
 
-export function LeadFunnel({ leads, estagios }: LeadFunnelProps) {
+export function LeadFunnel({ leads = [], estagios = [] }: LeadFunnelProps) {
   // Calcular dados do funil
   const funnelData = estagios.map((estagio) => {
     const count = leads.filter((l) => l.estagio === estagio.value).length;
@@ -23,7 +23,7 @@ export function LeadFunnel({ leads, estagios }: LeadFunnelProps) {
 
   // Calcular conversão entre estágios
   const estagiosAtivos = funnelData.filter((f) => f.value !== "nao_efetivado");
-  const maxCount = Math.max(...estagiosAtivos.map((f) => f.count), 1);
+  const maxCount = estagiosAtivos.length > 0 ? Math.max(...estagiosAtivos.map((f) => f.count), 1) : 1;
 
   return (
     <div className="space-y-6">
@@ -144,7 +144,7 @@ export function LeadFunnel({ leads, estagios }: LeadFunnelProps) {
           <div className="mt-8">
             <h4 className="font-medium mb-4">Conversão por Origem</h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Array.from(new Set(leads.map((l) => l.origem).filter(Boolean))).map((origem) => {
+              {Array.from(new Set((leads || []).map((l) => l.origem).filter(Boolean))).map((origem) => {
                 const leadsOrigem = leads.filter((l) => l.origem === origem);
                 const convertidosOrigem = leadsOrigem.filter(
                   (l) => l.estagio === "efetivado",
